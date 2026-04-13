@@ -453,7 +453,7 @@
 - [x] TC-115: verify_regenerates_checklist (scenario) — passing
 - [x] TC-167: FT-023 implement and verify orchestrate (exit-criteria) — passing
 
-### FT-027 — Context Bundle [~]
+### FT-027 — Context Bundle [x]
 
 - [x] ADR-026: Pre-flight Analysis — Systematic Coverage Before Authoring (accepted)
 - [x] TC-140: preflight_clean_exits_0 (exit-criteria) — passing

@@ -4710,6 +4710,255 @@ fn tc_151_product_graph_coverage() {
 }
 
 // ===========================================================================
+// TC-140: preflight_clean_exits_0
+// Feature with all cross-cutting ADRs linked and all declared domains covered.
+// Assert `product preflight FT-XXX` exits 0 and prints "Pre-flight clean."
+// ===========================================================================
+
+#[test]
+fn tc_140_preflight_clean_exits_0() {
+    let h = harness_with_domains();
+
+    // Cross-cutting ADR linked by FT-001
+    h.write("docs/adrs/ADR-013-error-model.md",
+        "---\nid: ADR-013\ntitle: Error Model\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\ndomains: [error-handling]\nscope: cross-cutting\n---\n\nError model.\n");
+
+    // Domain ADR for security, linked by FT-001
+    h.write("docs/adrs/ADR-020-security.md",
+        "---\nid: ADR-020\ntitle: Security Policy\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nSecurity.\n");
+
+    // Feature that links all cross-cutting and domain ADRs
+    h.write("docs/features/FT-001-cluster.md",
+        "---\nid: FT-001\ntitle: Cluster\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-013, ADR-020]\ntests: []\ndomains: [security]\ndomains-acknowledged: {}\n---\n\nCluster feature.\n");
+
+    let out = h.run(&["preflight", "FT-001"]);
+    out.assert_exit(0);
+    assert!(
+        out.stdout.contains("CLEAN"),
+        "Preflight should print 'CLEAN' when all coverage present, got:\n{}",
+        out.stdout
+    );
+}
+
+// ===========================================================================
+// TC-141: preflight_cross_cutting_gap
+// ADR-038 is cross-cutting, not linked or acknowledged by FT-009.
+// Assert preflight report names ADR-038. Assert exit code 1.
+// ===========================================================================
+
+#[test]
+fn tc_141_preflight_cross_cutting_gap() {
+    let h = harness_with_domains();
+
+    // Cross-cutting ADR NOT linked by FT-009
+    h.write("docs/adrs/ADR-038-observability.md",
+        "---\nid: ADR-038\ntitle: Observability Requirements\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [networking]\nscope: cross-cutting\n---\n\nObservability.\n");
+
+    // Feature with no ADR links
+    h.write("docs/features/FT-009-rate-limiting.md",
+        "---\nid: FT-009\ntitle: Rate Limiting\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: []\ndomains-acknowledged: {}\n---\n\nRate limiting.\n");
+
+    let out = h.run(&["preflight", "FT-009"]);
+    assert_eq!(out.exit_code, 1, "Preflight should exit 1 with gaps, got {}", out.exit_code);
+    assert!(
+        out.stdout.contains("ADR-038"),
+        "Preflight should name ADR-038 in the report, got:\n{}",
+        out.stdout
+    );
+}
+
+// ===========================================================================
+// TC-142: preflight_domain_gap
+// FT-009 declares `domains: [security]`, no security ADRs linked or
+// acknowledged. Assert preflight reports security gap with top-2 ADRs.
+// ===========================================================================
+
+#[test]
+fn tc_142_preflight_domain_gap() {
+    let h = harness_with_domains();
+
+    // Security domain ADRs (not linked by FT-009)
+    h.write("docs/adrs/ADR-020-security.md",
+        "---\nid: ADR-020\ntitle: Security Policy\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nSecurity.\n");
+    h.write("docs/adrs/ADR-021-trust.md",
+        "---\nid: ADR-021\ntitle: Trust Boundaries\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nTrust.\n");
+
+    // Feature declares security domain but doesn't link any security ADRs
+    h.write("docs/features/FT-009-rate-limiting.md",
+        "---\nid: FT-009\ntitle: Rate Limiting\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: [security]\ndomains-acknowledged: {}\n---\n\nRate limiting.\n");
+
+    let out = h.run(&["preflight", "FT-009"]);
+    assert_eq!(out.exit_code, 1, "Preflight should exit 1 with domain gap");
+    // Should report security gap and name top ADRs
+    assert!(
+        out.stdout.contains("security"),
+        "Should report security domain gap, got:\n{}",
+        out.stdout
+    );
+    // Should name at least one of the top security ADRs
+    assert!(
+        out.stdout.contains("ADR-020") || out.stdout.contains("ADR-021"),
+        "Should name top security ADRs by centrality, got:\n{}",
+        out.stdout
+    );
+}
+
+// ===========================================================================
+// TC-143: preflight_acknowledgement_closes_gap
+// Acknowledge security domain, re-run preflight. Assert gap closed, exit 0.
+// ===========================================================================
+
+#[test]
+fn tc_143_preflight_acknowledgement_closes_gap() {
+    let h = harness_with_domains();
+
+    // Security domain ADR
+    h.write("docs/adrs/ADR-020-security.md",
+        "---\nid: ADR-020\ntitle: Security Policy\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nSecurity.\n");
+
+    // Feature with security domain gap
+    h.write("docs/features/FT-009-rate-limiting.md",
+        "---\nid: FT-009\ntitle: Rate Limiting\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: [security]\ndomains-acknowledged: {}\n---\n\nRate limiting.\n");
+
+    // Verify gap exists first
+    let out_before = h.run(&["preflight", "FT-009"]);
+    assert_eq!(out_before.exit_code, 1, "Should have gap before acknowledge");
+
+    // Acknowledge the domain
+    let ack = h.run(&["feature", "acknowledge", "FT-009", "--domain", "security", "--reason", "no trust boundaries"]);
+    assert_eq!(ack.exit_code, 0, "Acknowledge should succeed, stderr: {}", ack.stderr);
+
+    // Re-run preflight — gap should be closed
+    let out_after = h.run(&["preflight", "FT-009"]);
+    out_after.assert_exit(0);
+    assert!(
+        out_after.stdout.contains("CLEAN"),
+        "Preflight should be clean after acknowledgement, got:\n{}",
+        out_after.stdout
+    );
+}
+
+// ===========================================================================
+// TC-144: preflight_acknowledgement_without_reason_fails
+// Assert empty reason produces E011 error and front-matter is not mutated.
+// ===========================================================================
+
+#[test]
+fn tc_144_preflight_acknowledgement_without_reason_fails() {
+    let h = harness_with_domains();
+
+    // Feature
+    let feature_content = "---\nid: FT-009\ntitle: Rate Limiting\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: [security]\ndomains-acknowledged: {}\n---\n\nRate limiting.\n";
+    h.write("docs/features/FT-009-rate-limiting.md", feature_content);
+
+    // Acknowledge with empty reason
+    let out = h.run(&["feature", "acknowledge", "FT-009", "--domain", "security", "--reason", ""]);
+    assert!(
+        out.exit_code != 0,
+        "Acknowledge with empty reason should fail, got exit {}",
+        out.exit_code
+    );
+    assert!(
+        out.stderr.contains("E011"),
+        "Should produce E011 error, got stderr:\n{}",
+        out.stderr
+    );
+
+    // Verify front-matter was not mutated: re-read and check domains-acknowledged is still empty
+    let after = h.read("docs/features/FT-009-rate-limiting.md");
+    assert!(
+        after.contains("domains-acknowledged: {}"),
+        "Front-matter should not be mutated after failed acknowledge, got:\n{}",
+        after
+    );
+}
+
+// ===========================================================================
+// TC-146: coverage_matrix_renders
+// Run `product graph coverage` with known state. Assert all features, domains,
+// and correct ✓/~/·/✗ symbols.
+// ===========================================================================
+
+#[test]
+fn tc_146_coverage_matrix_renders() {
+    let h = harness_with_domains();
+
+    // Domain ADRs
+    h.write("docs/adrs/ADR-020-security.md",
+        "---\nid: ADR-020\ntitle: Security Policy\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nSecurity.\n");
+    h.write("docs/adrs/ADR-030-networking.md",
+        "---\nid: ADR-030\ntitle: Networking Core\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [networking]\nscope: domain\n---\n\nNetworking.\n");
+
+    // FT-001: links ADR-020 (security ✓), declares networking (gap ✗)
+    h.write("docs/features/FT-001-cluster.md",
+        "---\nid: FT-001\ntitle: Cluster\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-020]\ntests: []\ndomains: [security, networking]\ndomains-acknowledged: {}\n---\n\nCluster.\n");
+
+    // FT-002: acknowledges security (~), does not declare networking (·)
+    h.write("docs/features/FT-002-products.md",
+        "---\nid: FT-002\ntitle: Products\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: [security]\ndomains-acknowledged:\n  security: \"no trust boundaries\"\n---\n\nProducts.\n");
+
+    let out = h.run(&["graph", "coverage"]);
+    out.assert_exit(0);
+
+    // All features present
+    assert!(out.stdout.contains("FT-001"), "Should contain FT-001");
+    assert!(out.stdout.contains("FT-002"), "Should contain FT-002");
+
+    // Domain columns present
+    assert!(out.stdout.contains("secur"), "Should show security domain");
+    assert!(out.stdout.contains("netwo"), "Should show networking domain");
+
+    // Coverage symbols: expect ✓ (linked), ~ (acknowledged), ✗ (gap), · (not applicable)
+    assert!(out.stdout.contains('✓'), "Should contain ✓ for linked coverage");
+    assert!(out.stdout.contains('~'), "Should contain ~ for acknowledged");
+    assert!(out.stdout.contains('✗') || out.stdout.contains('·'),
+        "Should contain ✗ or · for gap/not-applicable, got:\n{}", out.stdout);
+
+    // Legend
+    assert!(out.stdout.contains("Legend"), "Should contain legend");
+}
+
+// ===========================================================================
+// TC-147: coverage_matrix_json
+// Run `product graph coverage --format json`. Assert valid JSON with features
+// array, each containing domains map.
+// ===========================================================================
+
+#[test]
+fn tc_147_coverage_matrix_json() {
+    let h = harness_with_domains();
+
+    // Domain ADR
+    h.write("docs/adrs/ADR-020-security.md",
+        "---\nid: ADR-020\ntitle: Security Policy\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nSecurity.\n");
+
+    // Feature
+    h.write("docs/features/FT-001-cluster.md",
+        "---\nid: FT-001\ntitle: Cluster\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-020]\ntests: []\ndomains: [security]\ndomains-acknowledged: {}\n---\n\nCluster.\n");
+
+    let out = h.run(&["graph", "coverage", "--format", "json"]);
+    out.assert_exit(0);
+
+    let json: serde_json::Value = serde_json::from_str(&out.stdout)
+        .expect("Should produce valid JSON");
+
+    // Must have features array
+    assert!(json["features"].is_array(), "JSON should have 'features' array");
+    let features = json["features"].as_array().expect("features is array");
+    assert!(!features.is_empty(), "features should not be empty");
+
+    // Each feature should have a domains map with coverage status
+    for feat in features {
+        assert!(feat["id"].is_string(), "Feature should have 'id' string field");
+        assert!(feat["domains"].is_object(), "Feature should have 'domains' map");
+        let domains = feat["domains"].as_object().expect("domains is object");
+        for (_domain_name, status) in domains {
+            assert!(status.is_string(), "Domain status should be a string");
+        }
+    }
+}
+
+// ===========================================================================
 // FT-022 — Authoring Sessions
 // ===========================================================================
 

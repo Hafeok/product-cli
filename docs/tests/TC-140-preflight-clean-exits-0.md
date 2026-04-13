@@ -10,6 +10,9 @@ validates:
   adrs:
   - ADR-026
 phase: 1
+runner: cargo-test
+runner-args: "tc_140_preflight_clean_exits_0"
+last-run: 2026-04-13T14:12:26.396687298+00:00
 ---
 
 feature with all cross-cutting ADRs linked and all declared domains covered. Assert `product preflight FT-XXX` exits 0 and prints "Pre-flight clean."

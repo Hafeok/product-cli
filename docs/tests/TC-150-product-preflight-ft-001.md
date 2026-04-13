@@ -12,4 +12,5 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_150_product_preflight_ft_001"
+last-run: 2026-04-13T14:12:26.396687298+00:00
 ---

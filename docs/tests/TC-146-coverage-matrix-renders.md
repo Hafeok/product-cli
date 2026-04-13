@@ -10,6 +10,9 @@ validates:
   adrs:
   - ADR-026
 phase: 1
+runner: cargo-test
+runner-args: "tc_146_coverage_matrix_renders"
+last-run: 2026-04-13T14:12:26.396687298+00:00
 ---
 
 run `product graph coverage` on a fixture with known coverage state. Assert output contains all features and all domains. Assert correct ✓/~/·/✗ symbols.

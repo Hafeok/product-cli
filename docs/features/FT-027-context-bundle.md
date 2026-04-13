@@ -2,7 +2,7 @@
 id: FT-027
 title: Context Bundle
 phase: 5
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-026
