@@ -121,7 +121,8 @@ pub fn run_implement(
     // Step 4 — Agent invocation
     println!("  Step 4: Invoking agent...");
     let agent_result = Command::new("claude")
-        .args(["--print", "--context-file", &tmp_path.display().to_string()])
+        .args(["--dangerously-skip-permissions", "--system-prompt-file", &tmp_path.display().to_string()])
+        .current_dir(root)
         .status();
 
     match agent_result {
