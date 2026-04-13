@@ -93,9 +93,7 @@ pub fn start_session(
         Ok(s) if s.success() => {
             println!();
             println!("Authoring session complete.");
-            println!("Next steps:");
-            println!("  product graph check   — verify structural health");
-            println!("  git add . && git commit");
+            auto_commit(&session_type, root);
         }
         Ok(s) => {
             eprintln!("Agent exited with status: {}", s);
@@ -182,6 +180,87 @@ pub fn review_staged(root: &Path) -> Result<Vec<String>> {
     }
 
     Ok(findings)
+}
+
+/// Auto-commit changed docs after a successful authoring session
+fn auto_commit(session_type: &SessionType, root: &Path) {
+    // Check for changes in docs/
+    let status_output = Command::new("git")
+        .args(["status", "--porcelain", "docs/"])
+        .current_dir(root)
+        .output();
+
+    let changed_files = match status_output {
+        Ok(out) => {
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            let files: Vec<String> = stdout
+                .lines()
+                .filter(|l| !l.is_empty())
+                .map(|l| l.to_string())
+                .collect();
+            files
+        }
+        Err(_) => return,
+    };
+
+    if changed_files.is_empty() {
+        println!("No artifact changes to commit.");
+        return;
+    }
+
+    // Extract artifact IDs from changed filenames for the commit message
+    let mut ids: Vec<String> = changed_files.iter()
+        .filter_map(|line| {
+            // porcelain format: "XY filename" — extract the filename part
+            let path = line.get(3..)?.trim();
+            let fname = std::path::Path::new(path).file_stem()?.to_str()?;
+            // ID is the prefix before the first dash-separated word (e.g. FT-030 from FT-030-title)
+            let parts: Vec<&str> = fname.splitn(3, '-').collect();
+            if parts.len() >= 2 {
+                Some(format!("{}-{}", parts[0], parts[1]))
+            } else {
+                None
+            }
+        })
+        .collect();
+    ids.sort();
+    ids.dedup();
+
+    let id_summary = if ids.len() <= 5 {
+        ids.join(", ")
+    } else {
+        format!("{} artifacts", ids.len())
+    };
+
+    let message = format!(
+        "author({}): {}\n\nAuto-committed by product author session.",
+        session_type, id_summary
+    );
+
+    // git add docs/
+    let add = Command::new("git")
+        .args(["add", "docs/"])
+        .current_dir(root)
+        .status();
+    if !matches!(add, Ok(s) if s.success()) {
+        eprintln!("Failed to stage changes. Commit manually.");
+        return;
+    }
+
+    // git commit
+    let commit = Command::new("git")
+        .args(["commit", "-m", &message])
+        .current_dir(root)
+        .status();
+
+    match commit {
+        Ok(s) if s.success() => {
+            println!("Committed: {}", message.lines().next().unwrap_or(&message));
+        }
+        _ => {
+            eprintln!("Commit failed. Changes are staged — commit manually.");
+        }
+    }
 }
 
 fn default_prompt(session_type: &SessionType) -> String {
