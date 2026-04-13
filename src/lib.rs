@@ -15,6 +15,7 @@ pub mod implement;
 pub mod mcp;
 pub mod metrics;
 pub mod migrate;
+pub mod onboard;
 pub mod parser;
 pub mod rdf;
 pub mod types;

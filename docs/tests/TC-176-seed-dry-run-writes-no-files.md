@@ -2,11 +2,16 @@
 id: TC-176
 title: Seed dry-run writes no files
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-030
+  adrs:
+  - ADR-027
 phase: 1
+runner: cargo-test
+runner-args: "tc_176_seed_dry_run_writes_no_files"
+last-run: 2026-04-13T14:45:04.298783396+00:00
 ---
 
 ## Description

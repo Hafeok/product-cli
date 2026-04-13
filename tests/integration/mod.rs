@@ -99,6 +99,30 @@ test = "TC"
     pub fn exists(&self, path: &str) -> bool {
         self.dir.path().join(path).exists()
     }
+
+    pub fn run_with_stdin(&self, args: &[&str], stdin_data: &str) -> Output {
+        use std::io::Write;
+        let mut child = Command::new(&self.bin)
+            .args(args)
+            .current_dir(self.dir.path())
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .expect("spawn binary");
+
+        if let Some(ref mut stdin) = child.stdin {
+            let _ = stdin.write_all(stdin_data.as_bytes());
+        }
+        drop(child.stdin.take());
+
+        let output = child.wait_with_output().expect("wait");
+        Output {
+            stdout: String::from_utf8_lossy(&output.stdout).to_string(),
+            stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+            exit_code: output.status.code().unwrap_or(-1),
+        }
+    }
 }
 
 impl Output {
@@ -6020,5 +6044,890 @@ fn tc_131_metrics_jsonl_merge_conflict_safe() {
     assert!(
         !out.stdout.is_empty(),
         "Should still render trend output despite malformed line"
+    );
+}
+
+// ===========================================================================
+// TC-168: Scan produces candidates with valid evidence paths
+// ===========================================================================
+
+#[test]
+fn tc_168_scan_produces_candidates_with_valid_evidence_paths() {
+    let h = Harness::new();
+    let fixture_dir = format!(
+        "{}/tests/fixtures/onboard-sample",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let output_path = h.dir.path().join("candidates.json").to_string_lossy().to_string();
+
+    let out = h.run(&["onboard", "scan", &fixture_dir, "--output", &output_path]);
+    out.assert_exit(0);
+
+    let content = std::fs::read_to_string(&output_path)
+        .expect("read candidates.json");
+    let scan: serde_json::Value = serde_json::from_str(&content)
+        .expect("parse candidates.json");
+
+    let candidates = scan["candidates"].as_array().expect("candidates array");
+
+    // Assert at least 2 candidates produced
+    assert!(
+        candidates.len() >= 2,
+        "Expected at least 2 candidates, got {}",
+        candidates.len()
+    );
+
+    // Assert every evidence entry has a valid file path and line number
+    for candidate in candidates {
+        let evidence = candidate["evidence"].as_array().expect("evidence array");
+        for ev in evidence {
+            let file = ev["file"].as_str().expect("evidence file");
+            let line = ev["line"].as_u64().expect("evidence line");
+            let full_path = std::path::Path::new(&fixture_dir).join(file);
+            assert!(
+                full_path.exists(),
+                "Evidence file does not exist: {} (full: {})",
+                file,
+                full_path.display()
+            );
+            let file_content = std::fs::read_to_string(&full_path).expect("read evidence file");
+            let line_count = file_content.lines().count();
+            assert!(
+                line as usize <= line_count,
+                "Evidence line {} exceeds file length {} in {}",
+                line,
+                line_count,
+                file
+            );
+            assert!(
+                ev["evidence_valid"].as_bool().unwrap_or(false),
+                "Evidence should be valid for file {}",
+                file
+            );
+        }
+    }
+}
+
+// ===========================================================================
+// TC-169: Scan rejects candidates citing non-existent files
+// ===========================================================================
+
+#[test]
+fn tc_169_scan_rejects_candidates_citing_non_existent_files() {
+    let h = Harness::new();
+
+    // Create a scan output with a fabricated evidence file
+    let scan_json = r#"{
+        "candidates": [
+            {
+                "id": "DC-001",
+                "signal_type": "boundary",
+                "title": "Test valid decision",
+                "observation": "Observed valid pattern",
+                "evidence": [
+                    {"file": "src/main.rs", "line": 1, "snippet": "fn main()", "evidence_valid": true}
+                ],
+                "hypothesised_consequence": "Bad things",
+                "confidence": "high",
+                "warnings": []
+            },
+            {
+                "id": "DC-002",
+                "signal_type": "boundary",
+                "title": "Test invalid decision",
+                "observation": "Observed fake pattern",
+                "evidence": [
+                    {"file": "src/nonexistent.rs", "line": 42, "snippet": "fake code", "evidence_valid": true}
+                ],
+                "hypothesised_consequence": "Bad things",
+                "confidence": "high",
+                "warnings": []
+            }
+        ],
+        "scan_metadata": {"files_scanned": 5, "prompt_version": "test"}
+    }"#;
+
+    // Create a minimal source directory with only main.rs
+    let source_dir = h.dir.path().join("source");
+    std::fs::create_dir_all(source_dir.join("src")).expect("mkdir");
+    std::fs::write(source_dir.join("src/main.rs"), "fn main() {}\n").expect("write");
+
+    // Run post-validation through the library directly
+    use product_lib::onboard;
+    let mut scan_output: onboard::ScanOutput = serde_json::from_str(scan_json).expect("parse");
+    onboard::validate_all_evidence(&source_dir, &mut scan_output.candidates);
+
+    // The valid candidate should remain valid
+    assert!(
+        scan_output.candidates[0].evidence[0].evidence_valid,
+        "Valid evidence should remain valid"
+    );
+    assert!(
+        scan_output.candidates[0].warnings.is_empty(),
+        "Valid candidate should have no warnings"
+    );
+
+    // The invalid candidate should be flagged
+    assert!(
+        !scan_output.candidates[1].evidence[0].evidence_valid,
+        "Invalid evidence should be marked as invalid"
+    );
+    assert!(
+        !scan_output.candidates[1].warnings.is_empty(),
+        "Invalid candidate should have warnings"
+    );
+}
+
+// ===========================================================================
+// TC-170: Scan respects max-candidates cap
+// ===========================================================================
+
+#[test]
+fn tc_170_scan_respects_max_candidates_cap() {
+    let h = Harness::new();
+    let fixture_dir = format!(
+        "{}/tests/fixtures/onboard-large",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let output_path = h.dir.path().join("candidates.json").to_string_lossy().to_string();
+
+    let out = h.run(&[
+        "onboard",
+        "scan",
+        &fixture_dir,
+        "--max-candidates",
+        "5",
+        "--output",
+        &output_path,
+    ]);
+    out.assert_exit(0);
+
+    let content = std::fs::read_to_string(&output_path).expect("read candidates.json");
+    let scan: serde_json::Value = serde_json::from_str(&content).expect("parse");
+
+    let candidates = scan["candidates"].as_array().expect("candidates array");
+    assert!(
+        candidates.len() <= 5,
+        "Expected at most 5 candidates, got {}",
+        candidates.len()
+    );
+
+    // Verify the fixture would produce more than 5 without the cap
+    let output_uncapped = h.dir.path().join("candidates_full.json").to_string_lossy().to_string();
+    let out2 = h.run(&[
+        "onboard",
+        "scan",
+        &fixture_dir,
+        "--output",
+        &output_uncapped,
+    ]);
+    out2.assert_exit(0);
+    let content2 = std::fs::read_to_string(&output_uncapped).expect("read full candidates");
+    let scan2: serde_json::Value = serde_json::from_str(&content2).expect("parse");
+    let candidates2 = scan2["candidates"].as_array().expect("candidates array");
+    assert!(
+        candidates2.len() > 5,
+        "Uncapped scan should produce more than 5 candidates, got {}",
+        candidates2.len()
+    );
+}
+
+// ===========================================================================
+// TC-171: Triage confirm converts candidate to ADR
+// ===========================================================================
+
+#[test]
+fn tc_171_triage_confirm_converts_candidate_to_adr() {
+    let h = Harness::new();
+
+    // Write a single candidate
+    let candidates_json = r#"{
+        "candidates": [
+            {
+                "id": "DC-001",
+                "signal_type": "boundary",
+                "title": "Database access exclusively through the repository layer",
+                "observation": "All database queries are in src/repo/. No other module imports sqlx.",
+                "evidence": [
+                    {"file": "src/repo/users.rs", "line": 3, "snippet": "use sqlx;", "evidence_valid": true}
+                ],
+                "hypothesised_consequence": "Adding queries outside src/repo/ would bypass transaction boundaries.",
+                "confidence": "high",
+                "warnings": []
+            }
+        ],
+        "scan_metadata": {"files_scanned": 10, "prompt_version": "onboard-scan-v1"}
+    }"#;
+
+    let candidates_path = h.dir.path().join("candidates.json");
+    std::fs::write(&candidates_path, candidates_json).expect("write candidates");
+
+    let triaged_path = h.dir.path().join("triaged.json").to_string_lossy().to_string();
+
+    // Triage: confirm the candidate
+    let out = h.run_with_stdin(
+        &[
+            "onboard",
+            "triage",
+            &candidates_path.to_string_lossy(),
+            "--interactive",
+            "--output",
+            &triaged_path,
+        ],
+        "c\n",
+    );
+    out.assert_exit(0);
+    out.assert_stdout_contains("1 confirmed");
+
+    // Seed the triaged output
+    let out = h.run(&["onboard", "seed", &triaged_path]);
+    out.assert_exit(0);
+
+    // Find the created ADR file
+    let adrs_dir = h.dir.path().join("docs/adrs");
+    let adr_files: Vec<_> = std::fs::read_dir(&adrs_dir)
+        .expect("read adrs dir")
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            let name = e.file_name().to_string_lossy().to_string();
+            name.starts_with("ADR-") && name.ends_with(".md")
+        })
+        .collect();
+
+    assert!(
+        !adr_files.is_empty(),
+        "Expected at least one ADR file created"
+    );
+
+    // Read the ADR and verify content
+    let adr_content = std::fs::read_to_string(adr_files[0].path()).expect("read ADR");
+    assert!(
+        adr_content.contains("status: proposed"),
+        "ADR should have status: proposed"
+    );
+    assert!(
+        adr_content.contains("database") || adr_content.contains("Database") || adr_content.contains("repository"),
+        "ADR should contain observation text"
+    );
+    assert!(
+        adr_content.contains("## Context") || adr_content.contains("## Decision"),
+        "ADR should have Context/Decision sections"
+    );
+}
+
+// ===========================================================================
+// TC-172: Triage reject discards candidate permanently
+// ===========================================================================
+
+#[test]
+fn tc_172_triage_reject_discards_candidate_permanently() {
+    let h = Harness::new();
+
+    let candidates_json = r#"{
+        "candidates": [
+            {
+                "id": "DC-001",
+                "signal_type": "boundary",
+                "title": "Rejected decision",
+                "observation": "Observed pattern to reject",
+                "evidence": [
+                    {"file": "src/test.rs", "line": 1, "snippet": "test", "evidence_valid": true}
+                ],
+                "hypothesised_consequence": "Bad things",
+                "confidence": "low",
+                "warnings": []
+            },
+            {
+                "id": "DC-002",
+                "signal_type": "consistency",
+                "title": "Confirmed decision",
+                "observation": "Observed pattern to confirm",
+                "evidence": [
+                    {"file": "src/other.rs", "line": 1, "snippet": "test", "evidence_valid": true}
+                ],
+                "hypothesised_consequence": "Also bad",
+                "confidence": "high",
+                "warnings": []
+            }
+        ],
+        "scan_metadata": {"files_scanned": 5, "prompt_version": "test"}
+    }"#;
+
+    let candidates_path = h.dir.path().join("candidates.json");
+    std::fs::write(&candidates_path, candidates_json).expect("write");
+
+    let triaged_path = h.dir.path().join("triaged.json").to_string_lossy().to_string();
+
+    // Reject DC-001, confirm DC-002
+    let out = h.run_with_stdin(
+        &[
+            "onboard",
+            "triage",
+            &candidates_path.to_string_lossy(),
+            "--interactive",
+            "--output",
+            &triaged_path,
+        ],
+        "r\nc\n",
+    );
+    out.assert_exit(0);
+    out.assert_stdout_contains("1 confirmed");
+    out.assert_stdout_contains("1 rejected");
+
+    // Verify triaged.json
+    let triaged_content = std::fs::read_to_string(&triaged_path).expect("read triaged");
+    let triaged: serde_json::Value = serde_json::from_str(&triaged_content).expect("parse");
+    let candidates = triaged["candidates"].as_array().expect("candidates");
+
+    // DC-001 should be rejected
+    let dc001 = candidates.iter().find(|c| c["id"] == "DC-001").expect("DC-001");
+    assert_eq!(dc001["triage_status"], "rejected");
+
+    // DC-002 should be confirmed
+    let dc002 = candidates.iter().find(|c| c["id"] == "DC-002").expect("DC-002");
+    assert_eq!(dc002["triage_status"], "confirmed");
+
+    // Seed — only DC-002 should become an ADR
+    let out = h.run(&["onboard", "seed", &triaged_path]);
+    out.assert_exit(0);
+
+    // Count ADR files
+    let adrs_dir = h.dir.path().join("docs/adrs");
+    let adr_count = std::fs::read_dir(&adrs_dir)
+        .expect("read adrs dir")
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            let name = e.file_name().to_string_lossy().to_string();
+            name.starts_with("ADR-") && name.ends_with(".md")
+        })
+        .count();
+
+    assert_eq!(adr_count, 1, "Expected exactly 1 ADR file (rejected should not produce an ADR)");
+}
+
+// ===========================================================================
+// TC-173: Triage merge combines two candidates into one ADR
+// ===========================================================================
+
+#[test]
+fn tc_173_triage_merge_combines_two_candidates_into_one_adr() {
+    let h = Harness::new();
+
+    let candidates_json = r#"{
+        "candidates": [
+            {
+                "id": "DC-001",
+                "signal_type": "boundary",
+                "title": "Database access exclusively through the repository layer",
+                "observation": "All queries are in src/repo/.",
+                "evidence": [
+                    {"file": "src/repo/users.rs", "line": 3, "snippet": "use sqlx;", "evidence_valid": true}
+                ],
+                "hypothesised_consequence": "Bypass transaction boundaries.",
+                "confidence": "high",
+                "warnings": []
+            },
+            {
+                "id": "DC-002",
+                "signal_type": "absence",
+                "title": "No direct sqlx imports outside the repository module",
+                "observation": "No file outside src/repo/ imports sqlx.",
+                "evidence": [
+                    {"file": "src/handlers/mod.rs", "line": 1, "snippet": "// no sqlx import here", "evidence_valid": true}
+                ],
+                "hypothesised_consequence": "Adding sqlx outside repo breaks boundary.",
+                "confidence": "high",
+                "warnings": []
+            }
+        ],
+        "scan_metadata": {"files_scanned": 10, "prompt_version": "test"}
+    }"#;
+
+    let candidates_path = h.dir.path().join("candidates.json");
+    std::fs::write(&candidates_path, candidates_json).expect("write");
+
+    let triaged_path = h.dir.path().join("triaged.json").to_string_lossy().to_string();
+
+    // Merge DC-002 into DC-001, then confirm DC-001 (which has DC-002's merge already)
+    let out = h.run_with_stdin(
+        &[
+            "onboard",
+            "triage",
+            &candidates_path.to_string_lossy(),
+            "--interactive",
+            "--output",
+            &triaged_path,
+        ],
+        "m\nDC-002\n",
+    );
+    out.assert_exit(0);
+
+    // Verify triaged output has one confirmed candidate with combined evidence
+    let triaged_content = std::fs::read_to_string(&triaged_path).expect("read triaged");
+    let triaged: serde_json::Value = serde_json::from_str(&triaged_content).expect("parse");
+    let candidates = triaged["candidates"].as_array().expect("candidates");
+
+    // Find confirmed candidates
+    let confirmed: Vec<&serde_json::Value> = candidates
+        .iter()
+        .filter(|c| c["triage_status"] == "confirmed")
+        .collect();
+
+    assert_eq!(
+        confirmed.len(),
+        1,
+        "Expected 1 confirmed candidate after merge, got {}",
+        confirmed.len()
+    );
+
+    // The confirmed candidate should have evidence from both DC-001 and DC-002
+    let evidence = confirmed[0]["evidence"].as_array().expect("evidence");
+    assert!(
+        evidence.len() >= 2,
+        "Merged candidate should have evidence from both sources, got {}",
+        evidence.len()
+    );
+
+    // Seed — should create exactly 1 ADR
+    let out = h.run(&["onboard", "seed", &triaged_path]);
+    out.assert_exit(0);
+
+    let adrs_dir = h.dir.path().join("docs/adrs");
+    let adr_count = std::fs::read_dir(&adrs_dir)
+        .expect("read adrs dir")
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            let name = e.file_name().to_string_lossy().to_string();
+            name.starts_with("ADR-") && name.ends_with(".md")
+        })
+        .count();
+
+    assert_eq!(adr_count, 1, "Expected exactly 1 ADR file after merge");
+
+    // Verify evidence from both files appears in the ADR body
+    let adr_file = std::fs::read_dir(&adrs_dir)
+        .expect("read adrs dir")
+        .filter_map(|e| e.ok())
+        .find(|e| {
+            let name = e.file_name().to_string_lossy().to_string();
+            name.starts_with("ADR-") && name.ends_with(".md")
+        })
+        .expect("find ADR file");
+    let adr_content = std::fs::read_to_string(adr_file.path()).expect("read ADR");
+    assert!(
+        adr_content.contains("src/repo/users.rs"),
+        "ADR should reference src/repo/users.rs evidence"
+    );
+    assert!(
+        adr_content.contains("src/handlers/mod.rs"),
+        "ADR should reference src/handlers/mod.rs evidence from merged candidate"
+    );
+}
+
+// ===========================================================================
+// TC-174: Seed creates ADR files with correct front-matter
+// ===========================================================================
+
+#[test]
+fn tc_174_seed_creates_adr_files_with_correct_front_matter() {
+    let h = Harness::new();
+    let fixture_dir = format!(
+        "{}/tests/fixtures/onboard-sample",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let candidates_path = h.dir.path().join("candidates.json").to_string_lossy().to_string();
+
+    // Scan
+    let out = h.run(&["onboard", "scan", &fixture_dir, "--output", &candidates_path]);
+    out.assert_exit(0);
+
+    // Triage — confirm all
+    let triaged_path = h.dir.path().join("triaged.json").to_string_lossy().to_string();
+    let content = std::fs::read_to_string(&candidates_path).expect("read");
+    let scan: serde_json::Value = serde_json::from_str(&content).expect("parse");
+    let num_candidates = scan["candidates"].as_array().expect("arr").len();
+    let confirms: String = (0..num_candidates).map(|_| "c\n").collect();
+    let out = h.run_with_stdin(
+        &["onboard", "triage", &candidates_path, "--interactive", "--output", &triaged_path],
+        &confirms,
+    );
+    out.assert_exit(0);
+
+    // Seed
+    let out = h.run(&["onboard", "seed", &triaged_path]);
+    out.assert_exit(0);
+
+    // Verify each ADR file has correct front-matter
+    let adrs_dir = h.dir.path().join("docs/adrs");
+    let adr_files: Vec<_> = std::fs::read_dir(&adrs_dir)
+        .expect("read adrs dir")
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            let name = e.file_name().to_string_lossy().to_string();
+            name.starts_with("ADR-") && name.ends_with(".md")
+        })
+        .collect();
+
+    assert!(!adr_files.is_empty(), "Should create at least one ADR file");
+
+    for adr_file in &adr_files {
+        let content = std::fs::read_to_string(adr_file.path()).expect("read ADR");
+        let name = adr_file.file_name().to_string_lossy().to_string();
+
+        // ID pattern
+        assert!(
+            name.starts_with("ADR-"),
+            "ADR filename should start with ADR-: {}",
+            name
+        );
+
+        // Status
+        assert!(
+            content.contains("status: proposed"),
+            "ADR {} should have status: proposed",
+            name
+        );
+
+        // Front-matter structure
+        assert!(
+            content.starts_with("---\n"),
+            "ADR {} should start with YAML front-matter",
+            name
+        );
+        assert!(
+            content.contains("features: []") || content.contains("features:"),
+            "ADR {} should have features field",
+            name
+        );
+        assert!(
+            content.contains("supersedes: []") || content.contains("supersedes:"),
+            "ADR {} should have supersedes field",
+            name
+        );
+    }
+
+    // Run graph check — should report no E-class errors
+    let out = h.run(&["graph", "check"]);
+    // Exit 0 or 2 (warnings only) is acceptable
+    assert!(
+        out.exit_code == 0 || out.exit_code == 2,
+        "Expected exit 0 or 2, got {}. stderr: {}",
+        out.exit_code,
+        out.stderr
+    );
+    // No E001 errors
+    assert!(
+        !out.stderr.contains("E001"),
+        "Should have no E001 malformed front-matter errors: {}",
+        out.stderr
+    );
+}
+
+// ===========================================================================
+// TC-175: Seed groups candidates into feature stubs by signal proximity
+// ===========================================================================
+
+#[test]
+fn tc_175_seed_groups_candidates_into_feature_stubs_by_signal_proximity() {
+    let h = Harness::new();
+
+    // Create triaged candidates from two distinct evidence clusters
+    let triaged_json = r#"{
+        "candidates": [
+            {
+                "id": "DC-001",
+                "signal_type": "consistency",
+                "title": "API error handling convention",
+                "observation": "All API handlers use AppError",
+                "evidence": [{"file": "src/api/handler.rs", "line": 1, "snippet": "use AppError;", "evidence_valid": true}],
+                "hypothesised_consequence": "Breaks error contract",
+                "confidence": "high",
+                "warnings": [],
+                "triage_status": "confirmed"
+            },
+            {
+                "id": "DC-002",
+                "signal_type": "convention",
+                "title": "API response format",
+                "observation": "All responses use JSON",
+                "evidence": [{"file": "src/api/routes.rs", "line": 1, "snippet": "use serde_json;", "evidence_valid": true}],
+                "hypothesised_consequence": "Breaks API contract",
+                "confidence": "high",
+                "warnings": [],
+                "triage_status": "confirmed"
+            },
+            {
+                "id": "DC-003",
+                "signal_type": "consistency",
+                "title": "API middleware pattern",
+                "observation": "All endpoints use auth middleware",
+                "evidence": [{"file": "src/api/middleware.rs", "line": 1, "snippet": "auth check", "evidence_valid": true}],
+                "hypothesised_consequence": "Bypasses auth",
+                "confidence": "high",
+                "warnings": [],
+                "triage_status": "confirmed"
+            },
+            {
+                "id": "DC-004",
+                "signal_type": "boundary",
+                "title": "Storage access through repository only",
+                "observation": "Only repo accesses DB",
+                "evidence": [{"file": "src/storage/db.rs", "line": 1, "snippet": "use sqlx;", "evidence_valid": true}],
+                "hypothesised_consequence": "Bypasses transactions",
+                "confidence": "high",
+                "warnings": [],
+                "triage_status": "confirmed"
+            },
+            {
+                "id": "DC-005",
+                "signal_type": "constraint",
+                "title": "Storage caching constraint",
+                "observation": "All caches in-process",
+                "evidence": [{"file": "src/storage/cache.rs", "line": 1, "snippet": "in-memory only", "evidence_valid": true}],
+                "hypothesised_consequence": "Breaks deployment model",
+                "confidence": "high",
+                "warnings": [],
+                "triage_status": "confirmed"
+            }
+        ]
+    }"#;
+
+    let triaged_path = h.dir.path().join("triaged.json");
+    std::fs::write(&triaged_path, triaged_json).expect("write triaged");
+
+    let out = h.run(&["onboard", "seed", &triaged_path.to_string_lossy()]);
+    out.assert_exit(0);
+
+    // Check feature stubs
+    let features_dir = h.dir.path().join("docs/features");
+    let feature_files: Vec<_> = std::fs::read_dir(&features_dir)
+        .expect("read features dir")
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            let name = e.file_name().to_string_lossy().to_string();
+            name.starts_with("FT-") && name.ends_with(".md")
+        })
+        .collect();
+
+    // At least 2 feature stubs (one for api/ cluster, one for storage/ cluster)
+    assert!(
+        feature_files.len() >= 2,
+        "Expected at least 2 feature stubs, got {}",
+        feature_files.len()
+    );
+
+    // All feature stubs should have status: planned
+    for ft_file in &feature_files {
+        let content = std::fs::read_to_string(ft_file.path()).expect("read feature");
+        assert!(
+            content.contains("status: planned"),
+            "Feature stub {} should have status: planned",
+            ft_file.file_name().to_string_lossy()
+        );
+    }
+
+    // Verify API-related ADRs and storage-related ADRs are in different features
+    let mut api_feature: Option<String> = None;
+    let mut storage_feature: Option<String> = None;
+
+    for ft_file in &feature_files {
+        let content = std::fs::read_to_string(ft_file.path()).expect("read feature");
+        let name = ft_file.file_name().to_string_lossy().to_string();
+        if content.contains("api") {
+            api_feature = Some(name.clone());
+        }
+        if content.contains("storage") {
+            storage_feature = Some(name.clone());
+        }
+    }
+
+    // They should be different features (or at least both exist)
+    if let (Some(ref api), Some(ref storage)) = (&api_feature, &storage_feature) {
+        assert_ne!(
+            api, storage,
+            "API and storage ADRs should be in different feature stubs"
+        );
+    }
+}
+
+// ===========================================================================
+// TC-176: Seed dry-run writes no files
+// ===========================================================================
+
+#[test]
+fn tc_176_seed_dry_run_writes_no_files() {
+    let h = Harness::new();
+
+    let triaged_json = r#"{
+        "candidates": [
+            {
+                "id": "DC-001",
+                "signal_type": "boundary",
+                "title": "Decision one",
+                "observation": "Observed one",
+                "evidence": [{"file": "src/a.rs", "line": 1, "snippet": "test", "evidence_valid": true}],
+                "hypothesised_consequence": "Bad one",
+                "confidence": "high",
+                "warnings": [],
+                "triage_status": "confirmed"
+            },
+            {
+                "id": "DC-002",
+                "signal_type": "consistency",
+                "title": "Decision two",
+                "observation": "Observed two",
+                "evidence": [{"file": "src/b.rs", "line": 1, "snippet": "test", "evidence_valid": true}],
+                "hypothesised_consequence": "Bad two",
+                "confidence": "medium",
+                "warnings": [],
+                "triage_status": "confirmed"
+            },
+            {
+                "id": "DC-003",
+                "signal_type": "constraint",
+                "title": "Decision three",
+                "observation": "Observed three",
+                "evidence": [{"file": "src/c.rs", "line": 1, "snippet": "test", "evidence_valid": true}],
+                "hypothesised_consequence": "Bad three",
+                "confidence": "high",
+                "warnings": [],
+                "triage_status": "confirmed"
+            }
+        ]
+    }"#;
+
+    let triaged_path = h.dir.path().join("triaged.json");
+    std::fs::write(&triaged_path, triaged_json).expect("write triaged");
+
+    // Count files before
+    let adrs_dir = h.dir.path().join("docs/adrs");
+    let before_count = std::fs::read_dir(&adrs_dir)
+        .expect("read adrs dir")
+        .count();
+
+    // Run dry-run
+    let out = h.run(&["onboard", "seed", &triaged_path.to_string_lossy(), "--dry-run"]);
+    out.assert_exit(0);
+
+    // Stdout should mention proposed files
+    out.assert_stdout_contains("ADR-001");
+    out.assert_stdout_contains("Dry run");
+
+    // No files should be created
+    let after_count = std::fs::read_dir(&adrs_dir)
+        .expect("read adrs dir")
+        .count();
+    assert_eq!(
+        before_count, after_count,
+        "Dry run should not create any files"
+    );
+
+    // Now run for real
+    let out = h.run(&["onboard", "seed", &triaged_path.to_string_lossy()]);
+    out.assert_exit(0);
+
+    let final_count = std::fs::read_dir(&adrs_dir)
+        .expect("read adrs dir")
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_name().to_string_lossy().ends_with(".md"))
+        .count();
+    assert_eq!(
+        final_count, 3,
+        "Real seed should create exactly 3 ADR files"
+    );
+}
+
+// ===========================================================================
+// TC-177: End-to-end onboard produces graph with no structural errors
+// ===========================================================================
+
+#[test]
+fn tc_177_end_to_end_onboard_produces_graph_with_no_structural_errors() {
+    let h = Harness::new();
+    let fixture_dir = format!(
+        "{}/tests/fixtures/onboard-sample",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let candidates_path = h.dir.path().join("candidates.json").to_string_lossy().to_string();
+    let triaged_path = h.dir.path().join("triaged.json").to_string_lossy().to_string();
+
+    // Phase 1: Scan
+    let out = h.run(&["onboard", "scan", &fixture_dir, "--output", &candidates_path]);
+    out.assert_exit(0);
+
+    // Phase 2: Triage — batch confirm all (non-interactive)
+    let out = h.run(&["onboard", "triage", &candidates_path, "--output", &triaged_path]);
+    out.assert_exit(0);
+
+    // Phase 3: Seed
+    let out = h.run(&["onboard", "seed", &triaged_path]);
+    out.assert_exit(0);
+
+    // Run graph check
+    let out = h.run(&["graph", "check"]);
+    // Exit 0 (clean) or 2 (warnings only) is acceptable
+    assert!(
+        out.exit_code == 0 || out.exit_code == 2,
+        "Expected exit 0 or 2, got {}. stderr: {}",
+        out.exit_code,
+        out.stderr
+    );
+
+    // No E-class errors
+    assert!(
+        !out.stderr.contains("E001"),
+        "No E001 malformed front-matter errors expected"
+    );
+    assert!(
+        !out.stderr.contains("E002"),
+        "No E002 broken link errors expected"
+    );
+    assert!(
+        !out.stderr.contains("E003"),
+        "No E003 dependency cycle errors expected"
+    );
+
+    // W001 (orphaned) and W002 (no tests) are acceptable
+}
+
+// ===========================================================================
+// TC-178: Seeded ADRs have no G005 contradictions after gap check
+// ===========================================================================
+
+#[test]
+fn tc_178_seeded_adrs_have_no_g005_contradictions_after_gap_check() {
+    let h = Harness::new();
+    let fixture_dir = format!(
+        "{}/tests/fixtures/onboard-sample",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let candidates_path = h.dir.path().join("candidates.json").to_string_lossy().to_string();
+    let triaged_path = h.dir.path().join("triaged.json").to_string_lossy().to_string();
+
+    // Full pipeline: scan → triage (batch confirm) → seed
+    let out = h.run(&["onboard", "scan", &fixture_dir, "--output", &candidates_path]);
+    out.assert_exit(0);
+
+    let out = h.run(&["onboard", "triage", &candidates_path, "--output", &triaged_path]);
+    out.assert_exit(0);
+
+    let out = h.run(&["onboard", "seed", &triaged_path]);
+    out.assert_exit(0);
+
+    // Run gap check
+    let out = h.run(&["--format", "json", "gap", "check"]);
+    // Gap check may exit 0 or 1 (findings exist), not 2 (error)
+    assert!(
+        out.exit_code != 2,
+        "Gap check should not error, got exit code {}. stderr: {}",
+        out.exit_code,
+        out.stderr
+    );
+
+    // No G005 contradictions
+    assert!(
+        !out.stdout.contains("G005"),
+        "Should have no G005 architectural contradiction findings. stdout: {}",
+        out.stdout
     );
 }

@@ -485,18 +485,18 @@
 - [x] TC-130: metrics_trend_renders (scenario) — passing
 - [x] TC-131: metrics_jsonl_merge_conflict_safe (scenario) — passing
 
-### FT-030 — Codebase Onboarding [ ]
+### FT-030 — Codebase Onboarding [x]
 
 - [ ] ADR-027: Codebase Onboarding — Decision Discovery from Existing Code (proposed)
-- [ ] TC-168: Scan produces candidates with valid evidence paths (scenario) — unimplemented
-- [ ] TC-169: Scan rejects candidates citing non-existent files (scenario) — unimplemented
-- [ ] TC-170: Scan respects max-candidates cap (scenario) — unimplemented
-- [ ] TC-171: Triage confirm converts candidate to ADR (scenario) — unimplemented
-- [ ] TC-172: Triage reject discards candidate permanently (scenario) — unimplemented
-- [ ] TC-173: Triage merge combines two candidates into one ADR (scenario) — unimplemented
-- [ ] TC-174: Seed creates ADR files with correct front-matter (scenario) — unimplemented
-- [ ] TC-175: Seed groups candidates into feature stubs by signal proximity (scenario) — unimplemented
-- [ ] TC-176: Seed dry-run writes no files (scenario) — unimplemented
-- [ ] TC-177: End-to-end onboard produces graph with no structural errors (exit-criteria) — unimplemented
-- [ ] TC-178: Seeded ADRs have no G005 contradictions after gap check (exit-criteria) — unimplemented
+- [x] TC-168: Scan produces candidates with valid evidence paths (scenario) — passing
+- [x] TC-169: Scan rejects candidates citing non-existent files (scenario) — passing
+- [x] TC-170: Scan respects max-candidates cap (scenario) — passing
+- [x] TC-171: Triage confirm converts candidate to ADR (scenario) — passing
+- [x] TC-172: Triage reject discards candidate permanently (scenario) — passing
+- [x] TC-173: Triage merge combines two candidates into one ADR (scenario) — passing
+- [x] TC-174: Seed creates ADR files with correct front-matter (scenario) — passing
+- [x] TC-175: Seed groups candidates into feature stubs by signal proximity (scenario) — passing
+- [x] TC-176: Seed dry-run writes no files (scenario) — passing
+- [x] TC-177: End-to-end onboard produces graph with no structural errors (exit-criteria) — passing
+- [x] TC-178: Seeded ADRs have no G005 contradictions after gap check (exit-criteria) — passing
 

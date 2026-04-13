@@ -2,11 +2,16 @@
 id: TC-170
 title: Scan respects max-candidates cap
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-030
+  adrs:
+  - ADR-027
 phase: 1
+runner: cargo-test
+runner-args: "tc_170_scan_respects_max_candidates_cap"
+last-run: 2026-04-13T14:45:04.298783396+00:00
 ---
 
 ## Description

@@ -2,11 +2,16 @@
 id: TC-173
 title: Triage merge combines two candidates into one ADR
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-030
+  adrs:
+  - ADR-027
 phase: 1
+runner: cargo-test
+runner-args: "tc_173_triage_merge_combines_two_candidates_into_one_adr"
+last-run: 2026-04-13T14:45:04.298783396+00:00
 ---
 
 ## Description

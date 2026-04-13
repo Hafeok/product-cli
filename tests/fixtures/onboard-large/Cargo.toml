@@ -1,0 +1,16 @@
+[package]
+name = "onboard-large"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# PINNED: serde pinned for ABI compat with internal crates
+serde = "=1.0.188"
+# PINNED: sqlx pinned due to breaking migration format change in 0.8
+sqlx = "=0.7.3"
+# PINNED: axum pinned to match tower middleware compat
+axum = "=0.7.4"
+tokio = { version = "1", features = ["full"] }
+serde_json = "1"
+tracing = "0.1"
+uuid = { version = "1", features = ["v4"] }

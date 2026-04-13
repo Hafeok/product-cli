@@ -2,11 +2,16 @@
 id: TC-177
 title: End-to-end onboard produces graph with no structural errors
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-030
+  adrs:
+  - ADR-027
 phase: 1
+runner: cargo-test
+runner-args: "tc_177_end_to_end_onboard_produces_graph_with_no_structural_errors"
+last-run: 2026-04-13T14:45:04.298783396+00:00
 ---
 
 ## Description

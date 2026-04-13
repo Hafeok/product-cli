@@ -2,11 +2,16 @@
 id: TC-168
 title: Scan produces candidates with valid evidence paths
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-030
+  adrs:
+  - ADR-027
 phase: 1
+runner: cargo-test
+runner-args: "tc_168_scan_produces_candidates_with_valid_evidence_paths"
+last-run: 2026-04-13T14:45:04.298783396+00:00
 ---
 
 ## Description

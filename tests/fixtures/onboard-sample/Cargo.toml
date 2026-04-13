@@ -1,0 +1,8 @@
+[package]
+name = "sample-app"
+version = "0.1.0"
+
+[dependencies]
+serde = "1.0"  # pinned to 1.x — serialization contract
+serde_json = "1.0" # CONSTRAINT: must stay in sync with serde
+sqlx = "0.7" # pinned — do not upgrade past 0.7, schema changes required

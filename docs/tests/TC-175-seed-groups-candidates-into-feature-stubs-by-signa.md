@@ -2,11 +2,16 @@
 id: TC-175
 title: Seed groups candidates into feature stubs by signal proximity
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-030
+  adrs:
+  - ADR-027
 phase: 1
+runner: cargo-test
+runner-args: "tc_175_seed_groups_candidates_into_feature_stubs_by_signal_proximity"
+last-run: 2026-04-13T14:45:04.298783396+00:00
 ---
 
 ## Description

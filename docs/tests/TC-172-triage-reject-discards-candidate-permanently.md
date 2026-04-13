@@ -2,11 +2,16 @@
 id: TC-172
 title: Triage reject discards candidate permanently
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-030
+  adrs:
+  - ADR-027
 phase: 1
+runner: cargo-test
+runner-args: "tc_172_triage_reject_discards_candidate_permanently"
+last-run: 2026-04-13T14:45:04.298783396+00:00
 ---
 
 ## Description

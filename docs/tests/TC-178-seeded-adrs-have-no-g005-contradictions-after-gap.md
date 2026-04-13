@@ -2,11 +2,16 @@
 id: TC-178
 title: Seeded ADRs have no G005 contradictions after gap check
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-030
+  adrs:
+  - ADR-027
 phase: 1
+runner: cargo-test
+runner-args: "tc_178_seeded_adrs_have_no_g005_contradictions_after_gap_check"
+last-run: 2026-04-13T14:45:04.298783396+00:00
 ---
 
 ## Description
