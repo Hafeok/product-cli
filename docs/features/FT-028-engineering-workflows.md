@@ -2,7 +2,7 @@
 id: FT-028
 title: Engineering Workflows
 phase: 5
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-023

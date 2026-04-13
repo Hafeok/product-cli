@@ -2324,7 +2324,10 @@ fn handle_metrics(cmd: MetricsCommands) -> BoxResult {
             }
         }
         MetricsCommands::Trend { metric } => {
-            let snapshots = metrics::load_snapshots(&jsonl_path);
+            let (snapshots, warnings) = metrics::load_snapshots_with_warnings(&jsonl_path);
+            for w in &warnings {
+                eprintln!("{}", w);
+            }
             if snapshots.is_empty() {
                 println!("No snapshots found. Run `product metrics record` first.");
                 return Ok(());

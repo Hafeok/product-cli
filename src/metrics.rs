@@ -126,16 +126,89 @@ pub fn append_snapshot(snapshot: &MetricSnapshot, path: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Load all snapshots from metrics.jsonl
-pub fn load_snapshots(path: &Path) -> Vec<MetricSnapshot> {
+/// Load all snapshots from metrics.jsonl, returning snapshots and any warnings
+pub fn load_snapshots_with_warnings(path: &Path) -> (Vec<MetricSnapshot>, Vec<String>) {
     if !path.exists() {
-        return Vec::new();
+        return (Vec::new(), Vec::new());
     }
     let content = std::fs::read_to_string(path).unwrap_or_default();
-    content.lines()
-        .filter(|l| !l.trim().is_empty())
-        .filter_map(|l| serde_json::from_str(l).ok())
-        .collect()
+    let mut snapshots = Vec::new();
+    let mut warnings = Vec::new();
+
+    for (line_num, line) in content.lines().enumerate() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        // Skip git merge conflict markers
+        if trimmed.starts_with('<') || trimmed.starts_with('>') || trimmed.starts_with('=') {
+            warnings.push(format!(
+                "warning[W009]: metrics.jsonl line {}: merge conflict marker detected, skipping",
+                line_num + 1
+            ));
+            continue;
+        }
+        match serde_json::from_str::<MetricSnapshot>(trimmed) {
+            Ok(s) => snapshots.push(s),
+            Err(_) => {
+                // Try to recover multiple JSON objects on one line (bad merge)
+                let mut recovered = try_split_json_objects(trimmed);
+                if recovered.is_empty() {
+                    warnings.push(format!(
+                        "warning[W009]: metrics.jsonl line {}: malformed record, skipping",
+                        line_num + 1
+                    ));
+                } else {
+                    warnings.push(format!(
+                        "warning[W009]: metrics.jsonl line {}: recovered {} records from malformed line (possible merge conflict)",
+                        line_num + 1,
+                        recovered.len()
+                    ));
+                    snapshots.append(&mut recovered);
+                }
+            }
+        }
+    }
+
+    (snapshots, warnings)
+}
+
+/// Load all snapshots from metrics.jsonl (legacy interface, no warnings)
+pub fn load_snapshots(path: &Path) -> Vec<MetricSnapshot> {
+    load_snapshots_with_warnings(path).0
+}
+
+/// Try to split a line containing multiple concatenated JSON objects
+fn try_split_json_objects(line: &str) -> Vec<MetricSnapshot> {
+    let mut results = Vec::new();
+    let mut depth = 0i32;
+    let mut start = None;
+
+    for (i, ch) in line.char_indices() {
+        match ch {
+            '{' => {
+                if depth == 0 {
+                    start = Some(i);
+                }
+                depth += 1;
+            }
+            '}' => {
+                depth -= 1;
+                if depth == 0 {
+                    if let Some(s) = start {
+                        let fragment = &line[s..=i];
+                        if let Ok(snapshot) = serde_json::from_str::<MetricSnapshot>(fragment) {
+                            results.push(snapshot);
+                        }
+                    }
+                    start = None;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    results
 }
 
 // ---------------------------------------------------------------------------

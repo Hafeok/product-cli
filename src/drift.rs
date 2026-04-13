@@ -250,11 +250,91 @@ pub fn check_adr(
             suggested_action: "Add source-files to ADR front-matter or check drift.source-roots config".to_string(),
             suppressed,
         });
-    }
+    } else {
+        // Structural D001/D002 checks — compare ADR decision keywords against source
+        let decision_keywords = extract_decision_keywords(&adr.body);
+        if !decision_keywords.is_empty() {
+            let source_contents: Vec<(String, String)> = source_files
+                .iter()
+                .filter_map(|p| {
+                    std::fs::read_to_string(p).ok().map(|c| {
+                        (p.to_string_lossy().to_string(), c)
+                    })
+                })
+                .collect();
 
-    // D003: Partial implementation heuristic — ADR mentions multiple concepts but
-    // source files only reference some of them
-    // (This is a simplified structural check — full D001/D002 require LLM)
+            if !source_contents.is_empty() {
+                let file_names: Vec<String> = source_contents.iter().map(|(p, _)| p.clone()).collect();
+                let all_source = source_contents.iter().map(|(_, c)| c.as_str()).collect::<Vec<_>>().join("\n");
+
+                // Check which decision keywords appear in source
+                let matched: Vec<&str> = decision_keywords
+                    .iter()
+                    .filter(|kw| all_source.contains(kw.as_str()))
+                    .map(|s| s.as_str())
+                    .collect();
+                let unmatched: Vec<&str> = decision_keywords
+                    .iter()
+                    .filter(|kw| !all_source.contains(kw.as_str()))
+                    .map(|s| s.as_str())
+                    .collect();
+
+                if !unmatched.is_empty() && matched.is_empty() {
+                    // No decision keywords found in source at all
+                    // Distinguish D001 vs D002 by checking if source has substantial code
+                    let has_substantial_code = source_contents.iter().any(|(_, c)| {
+                        let code_lines = c.lines()
+                            .filter(|l| {
+                                let t = l.trim();
+                                !t.is_empty() && !t.starts_with("//") && !t.starts_with('#')
+                            })
+                            .count();
+                        code_lines > 3
+                    });
+
+                    if has_substantial_code {
+                        // D002: Source has code but doesn't use the mandated approach
+                        let hash = compute_short_hash(&format!("{}-D002-{}", adr_id, unmatched.join(",")));
+                        let id = format!("DRIFT-{}-D002-{}", adr_id, hash);
+                        let suppressed = baseline.is_suppressed(&id);
+                        findings.push(DriftFinding {
+                            id,
+                            code: "D002".to_string(),
+                            severity: DriftSeverity::High,
+                            description: format!(
+                                "Decision overridden — {} mandates [{}] but source files use a different approach",
+                                adr_id,
+                                unmatched.join(", ")
+                            ),
+                            adr_id: adr_id.to_string(),
+                            source_files: file_names,
+                            suggested_action: "Update source to match the ADR decision, or update the ADR to reflect the actual approach".to_string(),
+                            suppressed,
+                        });
+                    } else {
+                        // D001: Source files exist but are minimal — decision not implemented
+                        let hash = compute_short_hash(&format!("{}-D001-{}", adr_id, unmatched.join(",")));
+                        let id = format!("DRIFT-{}-D001-{}", adr_id, hash);
+                        let suppressed = baseline.is_suppressed(&id);
+                        findings.push(DriftFinding {
+                            id,
+                            code: "D001".to_string(),
+                            severity: DriftSeverity::High,
+                            description: format!(
+                                "Decision not implemented — {} mandates [{}] but no code implements it",
+                                adr_id,
+                                unmatched.join(", ")
+                            ),
+                            adr_id: adr_id.to_string(),
+                            source_files: file_names,
+                            suggested_action: "Implement the decision described in the ADR".to_string(),
+                            suppressed,
+                        });
+                    }
+                }
+            }
+        }
+    }
 
     findings
 }
@@ -278,6 +358,103 @@ pub fn scan_source(
     }
 
     relevant
+}
+
+// ---------------------------------------------------------------------------
+// Decision keyword extraction
+// ---------------------------------------------------------------------------
+
+/// Extract key technical terms from the ADR's Decision section.
+/// Looks for identifiers like crate names, type names, interface names.
+fn extract_decision_keywords(body: &str) -> Vec<String> {
+    let mut keywords = Vec::new();
+
+    // Find the Decision section
+    let decision_text = extract_decision_section(body);
+    if decision_text.is_empty() {
+        return keywords;
+    }
+
+    // Extract backtick-quoted terms (e.g., `openraft`, `ConsensusInterface`)
+    let backtick_re = regex::Regex::new(r"`([A-Za-z_][A-Za-z0-9_:.-]*)`").unwrap_or_else(|_| {
+        // Fallback: this regex is always valid
+        regex::Regex::new(r"`([A-Za-z_]\w*)`").expect("valid regex")
+    });
+    for cap in backtick_re.captures_iter(&decision_text) {
+        if let Some(m) = cap.get(1) {
+            let term = m.as_str().to_string();
+            // Filter out very short or common terms
+            if term.len() >= 3 && !is_common_word(&term) && !keywords.contains(&term) {
+                keywords.push(term);
+            }
+        }
+    }
+
+    // Extract "use X" patterns (e.g., "use openraft", "use Oxigraph")
+    let use_re = regex::Regex::new(r"(?i)\buse\s+([A-Za-z_][A-Za-z0-9_-]+)").unwrap_or_else(|_| {
+        regex::Regex::new(r"use\s+(\w+)").expect("valid regex")
+    });
+    for cap in use_re.captures_iter(&decision_text) {
+        if let Some(m) = cap.get(1) {
+            let term = m.as_str().to_string();
+            if term.len() >= 3 && !is_common_word(&term) && !keywords.contains(&term) {
+                keywords.push(term);
+            }
+        }
+    }
+
+    keywords
+}
+
+/// Extract the Decision section from an ADR body
+fn extract_decision_section(body: &str) -> String {
+    let mut in_decision = false;
+    let mut lines = Vec::new();
+
+    for line in body.lines() {
+        let trimmed = line.trim();
+        // Look for Decision header (markdown: ## Decision, **Decision:**, etc.)
+        if trimmed.contains("Decision") && (trimmed.starts_with('#') || trimmed.starts_with("**") || trimmed.starts_with("Decision")) {
+            in_decision = true;
+            continue;
+        }
+        if in_decision {
+            // Stop at next section header
+            if (trimmed.starts_with('#') || (trimmed.starts_with("**") && trimmed.ends_with("**")))
+                && !trimmed.contains("Decision")
+            {
+                break;
+            }
+            lines.push(line);
+        }
+    }
+
+    // If no Decision section found, use the full body
+    if lines.is_empty() {
+        body.to_string()
+    } else {
+        lines.join("\n")
+    }
+}
+
+fn is_common_word(word: &str) -> bool {
+    matches!(
+        word.to_lowercase().as_str(),
+        "the" | "and" | "for" | "not" | "are" | "was" | "has" | "had" | "but"
+            | "all" | "can" | "her" | "his" | "one" | "our" | "out" | "you"
+            | "use" | "may" | "will" | "shall" | "should" | "must" | "this"
+            | "that" | "with" | "from" | "into" | "when" | "each" | "which"
+            | "their" | "there" | "these" | "those" | "been" | "have" | "does"
+            | "code" | "file" | "data" | "type" | "test" | "true" | "false"
+            | "none" | "some" | "impl" | "self" | "pub" | "mod" | "let"
+            | "mut" | "ref" | "str" | "any" | "new"
+    )
+}
+
+fn compute_short_hash(input: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let hash = Sha256::digest(input.as_bytes());
+    format!("{:x}", hash)[..4].to_string()
 }
 
 #[cfg(test)]

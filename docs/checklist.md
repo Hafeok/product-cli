@@ -469,21 +469,21 @@
 - [x] TC-150: product preflight FT-001 (scenario) — passing
 - [x] TC-151: product graph coverage (scenario) — passing
 
-### FT-028 — Engineering Workflows [~]
+### FT-028 — Engineering Workflows [x]
 
 - [x] ADR-023: Drift Detection — Spec vs. Implementation Verification (accepted)
 - [x] ADR-024: Architectural Fitness Functions — Continuous Metric Tracking (accepted)
-- [ ] TC-121: drift_check_d002_detected (scenario) — unimplemented
-- [ ] TC-122: drift_check_d001_detected (scenario) — unimplemented
+- [x] TC-121: drift_check_d002_detected (scenario) — passing
+- [x] TC-122: drift_check_d001_detected (scenario) — passing
 - [x] TC-123: drift_scan_returns_adrs (scenario) — passing
-- [ ] TC-124: drift_suppressed_passes (scenario) — unimplemented
+- [x] TC-124: drift_suppressed_passes (scenario) — passing
 - [x] TC-125: drift_source_files_frontmatter (scenario) — passing
 - [x] TC-126: metrics_record_appends (scenario) — passing
 - [x] TC-127: metrics_threshold_error_exits_1 (exit-criteria) — passing
 - [x] TC-128: metrics_threshold_warning_exits_2 (exit-criteria) — passing
 - [x] TC-129: metrics_threshold_clean_exits_0 (exit-criteria) — passing
 - [x] TC-130: metrics_trend_renders (scenario) — passing
-- [ ] TC-131: metrics_jsonl_merge_conflict_safe (scenario) — unimplemented
+- [x] TC-131: metrics_jsonl_merge_conflict_safe (scenario) — passing
 
 ### FT-030 — Codebase Onboarding [ ]
 
