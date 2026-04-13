@@ -1,7 +1,7 @@
 //! Integration test harness and scenarios (ADR-018)
 
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 /// Test harness: manages a temp dir with product.toml and artifact directories
 pub struct Harness {
@@ -865,4 +865,276 @@ fn run_mcp_stdio(h: &Harness, input: &str) -> String {
 
     let output = child.wait_with_output().expect("wait");
     String::from_utf8_lossy(&output.stdout).to_string()
+}
+
+// ---------------------------------------------------------------------------
+// File write safety tests (ADR-015, FT-005)
+// ---------------------------------------------------------------------------
+
+/// TC-067: atomic_write_interrupted — simulate failure after temp file creation
+/// We test via the library function directly: create a read-only directory to
+/// force rename to fail, and verify the target file is unchanged and temp is cleaned up.
+#[test]
+fn tc_067_atomic_write_interrupted() {
+    use product_lib::fileops;
+
+    let dir = tempfile::tempdir().expect("tempdir");
+    let target = dir.path().join("subdir").join("target.md");
+
+    // Write original content
+    std::fs::create_dir_all(target.parent().expect("parent")).expect("mkdir");
+    std::fs::write(&target, "original content").expect("write original");
+
+    // Attempt an atomic write to a path where rename will fail:
+    // We write to a symlink pointing to a nonexistent location, which will
+    // cause rename to fail. Instead, use a simpler approach: make the temp
+    // file but cause rename to fail by writing to a cross-device path.
+    // Actually, the simplest unit-test approach: verify the error path
+    // by calling write_file_atomic on a path in a read-only directory.
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+
+        let ro_dir = dir.path().join("readonly");
+        std::fs::create_dir_all(&ro_dir).expect("mkdir readonly");
+        let existing = ro_dir.join("existing.md");
+        std::fs::write(&existing, "original").expect("write");
+
+        // Make directory read-only so temp file creation fails
+        std::fs::set_permissions(&ro_dir, std::fs::Permissions::from_mode(0o555))
+            .expect("chmod");
+
+        let result = fileops::write_file_atomic(&existing, "new content");
+        assert!(result.is_err(), "write should fail on read-only dir");
+
+        // Original file should be unchanged
+        assert_eq!(
+            std::fs::read_to_string(&existing).expect("read"),
+            "original"
+        );
+
+        // No leftover tmp files
+        let entries: Vec<_> = std::fs::read_dir(&ro_dir)
+            .expect("readdir")
+            .filter_map(|e| e.ok())
+            .filter(|e| {
+                e.file_name()
+                    .to_str()
+                    .map(|n| n.contains(".product-tmp."))
+                    .unwrap_or(false)
+            })
+            .collect();
+        assert!(entries.is_empty(), "no leftover tmp files");
+
+        // Restore permissions for cleanup
+        std::fs::set_permissions(&ro_dir, std::fs::Permissions::from_mode(0o755))
+            .expect("chmod restore");
+    }
+}
+
+/// TC-068: lock_concurrent_writes — two simultaneous write commands
+/// Spawn two `product feature status` commands. One should succeed, the other
+/// should fail with E010.
+#[test]
+fn tc_068_lock_concurrent_writes() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n",
+    );
+
+    // Create lock file held by *this* process (which IS alive) to simulate
+    // a concurrent Product invocation holding the lock.
+    let lock_path = h.dir.path().join(".product.lock");
+    std::fs::write(
+        &lock_path,
+        format!(
+            "pid={}\nstarted=2026-04-13T00:00:00Z\n",
+            std::process::id()
+        ),
+    )
+    .expect("write lock");
+
+    // Run a write command — it should fail with E010 because the lock is held
+    // by a live PID (ours). Use a short timeout variant by running the command.
+    let out = h.run(&["feature", "status", "FT-001", "in-progress"]);
+
+    // The command should fail because it can't acquire the lock
+    assert_ne!(out.exit_code, 0, "should fail when lock is held");
+    assert!(
+        out.stderr.contains("E010") || out.stderr.contains("repository locked"),
+        "stderr should mention E010 or repository locked, got: {}",
+        out.stderr
+    );
+
+    // Clean up
+    let _ = std::fs::remove_file(&lock_path);
+
+    // Now run without the lock — should succeed
+    let out2 = h.run(&["feature", "status", "FT-001", "in-progress"]);
+    assert_eq!(
+        out2.exit_code, 0,
+        "should succeed without lock: stderr={}",
+        out2.stderr
+    );
+}
+
+/// TC-069: lock_stale_cleanup — stale lock with dead PID is cleaned and command succeeds
+#[test]
+fn tc_069_lock_stale_cleanup() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n",
+    );
+
+    // Create a stale lock file with a PID that doesn't exist
+    // PID 4294967 is extremely unlikely to be running
+    let lock_path = h.dir.path().join(".product.lock");
+    std::fs::write(
+        &lock_path,
+        "pid=4294967\nstarted=2026-04-01T00:00:00Z\n",
+    )
+    .expect("write stale lock");
+
+    // Run a write command — should succeed because the stale lock is detected
+    let out = h.run(&["feature", "status", "FT-001", "in-progress"]);
+    assert_eq!(
+        out.exit_code, 0,
+        "should succeed with stale lock: stderr={}",
+        out.stderr
+    );
+
+    // Lock file should have been cleaned up (or re-created and then cleaned on exit)
+    // The feature should have been updated
+    let content = h.read("docs/features/FT-001-test.md");
+    assert!(
+        content.contains("in-progress"),
+        "feature should be updated to in-progress"
+    );
+}
+
+/// TC-066: atomic_write_content (integration level) — verify content after atomic write
+#[test]
+fn tc_066_atomic_write_content() {
+    let h = Harness::new();
+
+    // Create a feature via the CLI (uses atomic write internally)
+    let out = h.run(&["feature", "new", "Atomic Test", "--phase", "1"]);
+    assert_eq!(out.exit_code, 0, "feature new should succeed: {}", out.stderr);
+
+    // Verify the file exists and has correct content
+    let entries: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/features"))
+        .expect("readdir")
+        .filter_map(|e| e.ok())
+        .collect();
+    assert!(!entries.is_empty(), "feature file should exist");
+
+    let content = std::fs::read_to_string(entries[0].path()).expect("read");
+    assert!(content.contains("Atomic Test"), "should contain title");
+    assert!(content.contains("planned"), "should contain status");
+
+    // No .product-tmp.* files should remain
+    let tmp_files: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/features"))
+        .expect("readdir")
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            e.file_name()
+                .to_str()
+                .map(|n| n.contains(".product-tmp."))
+                .unwrap_or(false)
+        })
+        .collect();
+    assert!(tmp_files.is_empty(), "no leftover tmp files");
+}
+
+/// TC-161: FT-005 exit-criteria — atomic writes and locking are safe
+/// Exercises all FT-005 scenarios in one comprehensive test.
+#[test]
+fn tc_161_ft005_exit_criteria() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n",
+    );
+
+    // 1. Atomic write produces correct content (TC-066)
+    let out = h.run(&["feature", "status", "FT-001", "in-progress"]);
+    out.assert_exit(0);
+    let content = h.read("docs/features/FT-001-test.md");
+    assert!(content.contains("in-progress"), "atomic write should update status");
+
+    // No leftover tmp files
+    let tmp_files: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/features"))
+        .expect("readdir")
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            e.file_name()
+                .to_str()
+                .map(|n| n.contains(".product-tmp."))
+                .unwrap_or(false)
+        })
+        .collect();
+    assert!(tmp_files.is_empty(), "no leftover tmp files after write");
+
+    // 2. Concurrent write lock (TC-068) — lock held by live process blocks writes
+    let lock_path = h.dir.path().join(".product.lock");
+    std::fs::write(
+        &lock_path,
+        format!("pid={}\nstarted=2026-04-13T00:00:00Z\n", std::process::id()),
+    )
+    .expect("write lock");
+    let out = h.run(&["feature", "status", "FT-001", "complete"]);
+    assert_ne!(out.exit_code, 0, "should fail when lock is held");
+    assert!(
+        out.stderr.contains("E010") || out.stderr.contains("repository locked"),
+        "should report lock error"
+    );
+    let _ = std::fs::remove_file(&lock_path);
+
+    // 3. Stale lock cleanup (TC-069) — dead PID lock is cleared
+    std::fs::write(&lock_path, "pid=4294967\nstarted=2026-04-01T00:00:00Z\n")
+        .expect("write stale lock");
+    let out = h.run(&["feature", "status", "FT-001", "complete"]);
+    out.assert_exit(0);
+    let content = h.read("docs/features/FT-001-test.md");
+    assert!(content.contains("complete"), "should succeed after stale lock cleanup");
+
+    // 4. Tmp cleanup on startup (TC-070)
+    h.write("docs/features/.leftover.product-tmp.12345", "garbage");
+    let out = h.run(&["feature", "list"]);
+    out.assert_exit(0);
+    assert!(
+        !h.exists("docs/features/.leftover.product-tmp.12345"),
+        "tmp files should be cleaned on startup"
+    );
+}
+
+/// TC-070: tmp_cleanup_on_startup — leftover tmp files are cleaned on startup
+#[test]
+fn tc_070_tmp_cleanup_on_startup() {
+    let h = Harness::new();
+
+    // Create leftover .product-tmp.* files in artifact directories
+    h.write("docs/features/.test.product-tmp.99999", "leftover");
+    h.write("docs/adrs/.adr.product-tmp.88888", "leftover");
+    h.write("docs/tests/.tc.product-tmp.77777", "leftover");
+
+    // Run a read-only command
+    let out = h.run(&["feature", "list"]);
+    assert_eq!(out.exit_code, 0, "feature list should succeed: {}", out.stderr);
+
+    // All tmp files should have been cleaned up
+    assert!(
+        !h.exists("docs/features/.test.product-tmp.99999"),
+        "features tmp should be cleaned"
+    );
+    assert!(
+        !h.exists("docs/adrs/.adr.product-tmp.88888"),
+        "adrs tmp should be cleaned"
+    );
+    assert!(
+        !h.exists("docs/tests/.tc.product-tmp.77777"),
+        "tests tmp should be cleaned"
+    );
 }

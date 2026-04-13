@@ -499,9 +499,16 @@ fn main() {
 }
 
 fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
-    // Clean up any leftover tmp files from prior crashes
-    if let Ok(cwd) = std::env::current_dir() {
-        fileops::cleanup_tmp_files(&cwd);
+    // Clean up any leftover tmp files from prior crashes (ADR-015)
+    if let Ok((config, root)) = ProductConfig::discover() {
+        let dirs = [
+            config.resolve_path(&root, &config.paths.features),
+            config.resolve_path(&root, &config.paths.adrs),
+            config.resolve_path(&root, &config.paths.tests),
+        ];
+        for dir in &dirs {
+            fileops::cleanup_tmp_files(dir);
+        }
     }
 
     let fmt = &cli.format;
@@ -539,6 +546,13 @@ fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 type BoxResult = Result<(), Box<dyn std::error::Error>>;
+
+/// Acquire the advisory lock for write operations (ADR-015).
+/// Returns a `RepoLock` that must be held for the duration of the write.
+fn acquire_write_lock() -> Result<fileops::RepoLock, Box<dyn std::error::Error>> {
+    let (_, root) = ProductConfig::discover()?;
+    Ok(fileops::RepoLock::acquire(&root)?)
+}
 
 fn load_graph() -> Result<(ProductConfig, PathBuf, KnowledgeGraph), Box<dyn std::error::Error>> {
     let (config, root) = ProductConfig::discover()?;
@@ -681,6 +695,7 @@ fn handle_feature(cmd: FeatureCommands, fmt: &str) -> BoxResult {
             }
         }
         FeatureCommands::New { title, phase } => {
+            let _lock = acquire_write_lock()?;
             let (config, root, graph) = load_graph()?;
             let existing: Vec<String> = graph.features.keys().cloned().collect();
             let id = parser::next_id(&config.prefixes.feature, &existing);
@@ -706,6 +721,7 @@ fn handle_feature(cmd: FeatureCommands, fmt: &str) -> BoxResult {
             println!("Created: {} at {}", id, path.display());
         }
         FeatureCommands::Link { id, adr, test, dep } => {
+            let _lock = acquire_write_lock()?;
             let (_config, _root, graph) = load_graph()?;
             let f = graph
                 .features
@@ -766,6 +782,7 @@ fn handle_feature(cmd: FeatureCommands, fmt: &str) -> BoxResult {
             }
         }
         FeatureCommands::Status { id, new_status } => {
+            let _lock = acquire_write_lock()?;
             let (_, _, graph) = load_graph()?;
             let f = graph
                 .features
@@ -797,6 +814,7 @@ fn handle_feature(cmd: FeatureCommands, fmt: &str) -> BoxResult {
             }
         }
         FeatureCommands::Acknowledge { id, domain, adr, reason } => {
+            let _lock = acquire_write_lock()?;
             let (_, _, graph) = load_graph()?;
             let feature = graph
                 .features
@@ -945,6 +963,7 @@ fn handle_adr(cmd: AdrCommands, fmt: &str) -> BoxResult {
             }
         }
         AdrCommands::New { title } => {
+            let _lock = acquire_write_lock()?;
             let (config, root, graph) = load_graph()?;
             let existing: Vec<String> = graph.adrs.keys().cloned().collect();
             let id = parser::next_id(&config.prefixes.adr, &existing);
@@ -973,6 +992,7 @@ fn handle_adr(cmd: AdrCommands, fmt: &str) -> BoxResult {
             new_status,
             by,
         } => {
+            let _lock = acquire_write_lock()?;
             let (_, _, graph) = load_graph()?;
             let a = graph
                 .adrs
@@ -1143,6 +1163,7 @@ fn handle_test(cmd: TestCommands, fmt: &str) -> BoxResult {
             }
         }
         TestCommands::New { title, test_type } => {
+            let _lock = acquire_write_lock()?;
             let (config, root, graph) = load_graph()?;
             let existing: Vec<String> = graph.tests.keys().cloned().collect();
             let id = parser::next_id(&config.prefixes.test, &existing);
@@ -1173,6 +1194,7 @@ fn handle_test(cmd: TestCommands, fmt: &str) -> BoxResult {
             println!("Created: {} at {}", id, path.display());
         }
         TestCommands::Status { id, new_status } => {
+            let _lock = acquire_write_lock()?;
             let (_, _, graph) = load_graph()?;
             let t = graph
                 .tests
@@ -1254,6 +1276,7 @@ fn handle_graph(cmd: GraphCommands, global_format: &str) -> BoxResult {
             }
         }
         GraphCommands::Rebuild => {
+            let _lock = acquire_write_lock()?;
             let (config, root, graph) = load_graph()?;
             let graph_dir = config.resolve_path(&root, &config.paths.graph);
             std::fs::create_dir_all(&graph_dir)?;
@@ -1349,6 +1372,7 @@ fn handle_graph(cmd: GraphCommands, global_format: &str) -> BoxResult {
             }
         }
         GraphCommands::Autolink { dry_run } => {
+            let _lock = acquire_write_lock()?;
             let (_, _, graph) = load_graph()?;
 
             // Build a map: ADR ID -> list of feature IDs that link to it
@@ -1736,6 +1760,7 @@ fn handle_status(phase: Option<u32>, untested: bool, failing: bool, fmt: &str) -
 fn handle_checklist(cmd: ChecklistCommands) -> BoxResult {
     match cmd {
         ChecklistCommands::Generate => {
+            let _lock = acquire_write_lock()?;
             let (config, root, graph) = load_graph()?;
             // Git-aware warning: check for uncommitted artifact files
             fileops::warn_uncommitted_changes(&root);
@@ -1787,6 +1812,7 @@ fn handle_migrate(cmd: MigrateCommands) -> BoxResult {
             overwrite,
             interactive,
         } => {
+            let _lock = acquire_write_lock()?;
             let (config, root, _) = load_graph()?;
             let features_dir = config.resolve_path(&root, &config.paths.features);
             let plan =
@@ -1811,6 +1837,7 @@ fn handle_migrate(cmd: MigrateCommands) -> BoxResult {
             overwrite,
             interactive,
         } => {
+            let _lock = acquire_write_lock()?;
             let (config, root, _) = load_graph()?;
             let adrs_dir = config.resolve_path(&root, &config.paths.adrs);
             let tests_dir = config.resolve_path(&root, &config.paths.tests);
@@ -1835,6 +1862,7 @@ fn handle_migrate(cmd: MigrateCommands) -> BoxResult {
             }
         }
         MigrateCommands::Schema { dry_run } => {
+            let _lock = acquire_write_lock()?;
             let (cfg, root, _) = load_graph()?;
             let version: u32 = cfg.schema_version.parse().unwrap_or(0);
             if version >= config::CURRENT_SCHEMA_VERSION {
@@ -2091,6 +2119,7 @@ fn handle_implement(id: &str, dry_run: bool, no_verify: bool) -> BoxResult {
 // ---------------------------------------------------------------------------
 
 fn handle_verify(id: &str) -> BoxResult {
+    let _lock = acquire_write_lock()?;
     let (config, root, graph) = load_graph()?;
     implement::run_verify(id, &config, &root, &graph)?;
     Ok(())
@@ -2238,6 +2267,7 @@ fn handle_metrics(cmd: MetricsCommands) -> BoxResult {
 // ---------------------------------------------------------------------------
 
 fn handle_install_hooks() -> BoxResult {
+    let _lock = acquire_write_lock()?;
     let (_config, root) = ProductConfig::discover()?;
 
     // Write pre-commit hook

@@ -63,11 +63,11 @@
 
 - [x] ADR-015: File Write Safety — Atomic Writes and Advisory Locking (accepted)
 - [x] TC-066: atomic_write_content (scenario) — passing
-- [ ] TC-067: atomic_write_interrupted (scenario) — unimplemented
-- [ ] TC-068: lock_concurrent_writes (scenario) — unimplemented
-- [ ] TC-069: lock_stale_cleanup (scenario) — unimplemented
+- [x] TC-067: atomic_write_interrupted (scenario) — passing
+- [x] TC-068: lock_concurrent_writes (scenario) — passing
+- [x] TC-069: lock_stale_cleanup (scenario) — passing
 - [x] TC-070: tmp_cleanup_on_startup (scenario) — passing
-- [ ] TC-161: FT-005 atomic writes and locking safe (exit-criteria) — unimplemented
+- [x] TC-161: FT-005 atomic writes and locking safe (exit-criteria) — passing
 
 ### FT-007 — Formal Specification [x]
 

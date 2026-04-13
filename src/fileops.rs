@@ -96,7 +96,6 @@ pub fn cleanup_tmp_files(dir: &Path) {
 }
 
 /// Advisory lock on .product.lock file (ADR-015)
-#[allow(dead_code)]
 pub struct RepoLock {
     _lock_file: fs::File,
     lock_path: std::path::PathBuf,
@@ -105,7 +104,6 @@ pub struct RepoLock {
 impl RepoLock {
     /// Acquire an exclusive advisory lock with a 3-second timeout.
     /// If a stale lock is detected (holding PID no longer running), it is cleared.
-    #[allow(dead_code)]
     pub fn acquire(repo_root: &Path) -> Result<Self> {
         let lock_path = repo_root.join(".product.lock");
 
@@ -175,7 +173,6 @@ impl Drop for RepoLock {
     }
 }
 
-#[allow(dead_code)]
 fn parse_lock_pid(content: &str) -> Option<u32> {
     for line in content.lines() {
         if let Some(pid_str) = line.strip_prefix("pid=") {
@@ -186,7 +183,6 @@ fn parse_lock_pid(content: &str) -> Option<u32> {
 }
 
 /// Check if a process with the given PID is still running
-#[allow(dead_code)]
 fn is_pid_alive(pid: u32) -> bool {
     // On Unix, kill(pid, 0) checks existence without sending a signal
     #[cfg(unix)]
