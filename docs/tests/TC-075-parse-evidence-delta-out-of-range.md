@@ -15,4 +15,4 @@ runner: cargo-test
 runner-args: "tc_075_parse_evidence_delta_out_of_range"
 ---
 
-parse `⟦Ε⟧⟨δ≜1.5;φ≜100;τ≜◊⁺⟩`. Assert E001 with the file path, line number, and the out-of-range value.
+Parse an evidence block with delta=1.5 (out of range [0.0, 1.0]). Assert E001 with the file path, line number, and the out-of-range value.

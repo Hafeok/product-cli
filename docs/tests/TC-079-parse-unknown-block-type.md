@@ -15,4 +15,4 @@ runner: cargo-test
 runner-args: "tc_079_parse_unknown_block_type"
 ---
 
-parse `⟦X:Unknown⟧{ ... }`. Assert E001 with "unrecognised block type".
+Parse a block with an unrecognised type label "X:Unknown". Assert E001 with "unrecognised block type".

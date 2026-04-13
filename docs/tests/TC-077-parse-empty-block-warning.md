@@ -15,4 +15,4 @@ runner: cargo-test
 runner-args: "tc_077_parse_empty_block_warning"
 ---
 
-parse `⟦Γ:Invariants⟧{}`. Assert W004. Assert no error.
+Parse an invariants block with an empty body. Assert W004. Assert no error.

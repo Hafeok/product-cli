@@ -7,7 +7,8 @@ depends-on:
 - FT-024
 adrs:
 - ADR-018
-tests: []
+tests:
+- TC-180
 domains: []
 domains-acknowledged: {}
 ---

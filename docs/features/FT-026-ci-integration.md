@@ -9,7 +9,8 @@ depends-on:
 adrs:
 - ADR-009
 - ADR-013
-tests: []
+tests:
+- TC-181
 domains: []
 domains-acknowledged: {}
 ---
