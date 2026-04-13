@@ -199,6 +199,12 @@ impl ToolRegistry {
                 requires_write: true,
                 input_schema: serde_json::json!({"type": "object", "properties": {"id": {"type": "string"}, "status": {"type": "string"}}, "required": ["id", "status"]}),
             },
+            ToolDef {
+                name: "product_body_update".to_string(),
+                description: "Update the markdown body of a feature, ADR, or test criterion (preserves front-matter)".to_string(),
+                requires_write: true,
+                input_schema: serde_json::json!({"type": "object", "properties": {"id": {"type": "string"}, "body": {"type": "string"}}, "required": ["id", "body"]}),
+            },
         ];
 
         Self { tools, write_enabled, repo_root }
@@ -432,6 +438,28 @@ impl ToolRegistry {
                 let status = args.get("status").and_then(|v| v.as_str()).unwrap_or_default();
                 // Delegate to CLI logic by running the binary — simplest for now
                 Ok(serde_json::json!({"id": id, "status": status, "note": "Use CLI for status updates with full side-effects"}))
+            }
+            "product_body_update" => {
+                let id = args.get("id").and_then(|v| v.as_str()).unwrap_or_default();
+                let body = args.get("body").and_then(|v| v.as_str()).unwrap_or_default();
+                let config = ProductConfig::load(&self.repo_root.join("product.toml"))
+                    .map_err(|e| format!("{}", e))?;
+                if id.starts_with(&config.prefixes.feature) {
+                    let f = graph.features.get(id).ok_or_else(|| format!("Feature {} not found", id))?;
+                    let content = crate::parser::render_feature(&f.front, body);
+                    crate::fileops::write_file_atomic(&f.path, &content).map_err(|e| format!("{}", e))?;
+                } else if id.starts_with(&config.prefixes.adr) {
+                    let a = graph.adrs.get(id).ok_or_else(|| format!("ADR {} not found", id))?;
+                    let content = crate::parser::render_adr(&a.front, body);
+                    crate::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))?;
+                } else if id.starts_with(&config.prefixes.test) {
+                    let t = graph.tests.get(id).ok_or_else(|| format!("TC {} not found", id))?;
+                    let content = crate::parser::render_test(&t.front, body);
+                    crate::fileops::write_file_atomic(&t.path, &content).map_err(|e| format!("{}", e))?;
+                } else {
+                    return Err(format!("Unknown artifact ID prefix: {}", id));
+                }
+                Ok(serde_json::json!({"id": id, "updated": true}))
             }
             _ => Err(format!("Tool handler not implemented: {}", name)),
         }

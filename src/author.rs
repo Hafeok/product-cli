@@ -38,11 +38,12 @@ pub fn start_session(
     };
 
     let prompt_path = root.join("benchmarks/prompts").join(prompt_name);
-    let prompt = if prompt_path.exists() {
+    let base_prompt = if prompt_path.exists() {
         std::fs::read_to_string(&prompt_path).unwrap_or_default()
     } else {
         default_prompt(&session_type)
     };
+    let prompt = format!("{}\n\n{}", base_prompt, schema_prompt());
 
     // Write prompt to temp file for agent
     let tmp_dir = std::env::temp_dir();
@@ -57,9 +58,34 @@ pub fn start_session(
     println!("  Repo: {}", root.display());
     println!();
 
-    // Invoke Claude Code with the system prompt
+    // Build inline MCP config using the current executable
+    let exe = std::env::current_exe()
+        .unwrap_or_else(|_| "product".into());
+    let mcp_config = serde_json::json!({
+        "mcpServers": {
+            "product": {
+                "command": exe.display().to_string(),
+                "args": ["mcp", "--write"],
+                "cwd": root.display().to_string()
+            }
+        }
+    });
+    let mcp_json = serde_json::to_string(&mcp_config).unwrap_or_default();
+
+    // Invoke Claude Code in bare mode with restricted tool access:
+    // - --bare: skip LSP, hooks, auto-memory, CLAUDE.md discovery
+    // - --tools "Read": only built-in Read tool (no Bash/Edit/Write)
+    // - --allowedTools: auto-approve Read + all product MCP tools
+    // - --strict-mcp-config + --mcp-config: only the product MCP server
     let status = Command::new("claude")
-        .args(["--system-prompt-file", &tmp_path.display().to_string()])
+        .args([
+            "--bare",
+            "--system-prompt-file", &tmp_path.display().to_string(),
+            "--tools", "Read",
+            "--allowedTools", "Read,mcp__product__*",
+            "--mcp-config", &mcp_json,
+            "--strict-mcp-config",
+        ])
         .current_dir(root)
         .status();
 
@@ -196,14 +222,146 @@ Do not create new features or ADRs unless fixing a specific identified gap.
     }
 }
 
+fn schema_prompt() -> String {
+    r#"# Artifact Schemas
+
+All artifacts use YAML front-matter between `---` delimiters, followed by a markdown body.
+
+## Feature (FT-XXX)
+
+```yaml
+---
+id: FT-001
+title: Feature Title
+phase: 1                    # u32, default 1
+status: planned             # planned | in-progress | complete | abandoned
+depends-on: []              # FT-NNN references
+adrs: []                    # ADR-NNN references
+tests: []                   # TC-NNN references
+domains: []                 # concern domain names
+domains-acknowledged: {}    # domain -> reason (for intentional gaps)
+---
+```
+
+Body: free-form markdown. Typically starts with `## Description`.
+
+## ADR (ADR-XXX)
+
+```yaml
+---
+id: ADR-001
+title: Decision Title
+status: proposed            # proposed | accepted | superseded | abandoned
+features: []                # FT-NNN references
+supersedes: []              # ADR-NNN references
+superseded-by: []           # ADR-NNN references
+domains: []                 # concern domain names
+scope: feature-specific     # cross-cutting | domain | feature-specific
+---
+```
+
+Body **must** contain these five sections:
+- **Context:** — the problem or situation
+- **Decision:** — what was decided
+- **Rationale:** — why this decision
+- **Rejected alternatives:** — what was considered but not chosen
+- **Test coverage:** — how to verify the decision
+
+## Test Criterion (TC-XXX)
+
+```yaml
+---
+id: TC-001
+title: test_name_snake_case
+type: scenario              # scenario | invariant | chaos | exit-criteria
+status: unimplemented       # unimplemented | implemented | passing | failing
+validates:
+  features: []              # FT-NNN references
+  adrs: []                  # ADR-NNN references
+phase: 1                    # u32, default 1
+---
+```
+
+Body: prose description of what the test verifies.
+"#.to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::*;
 
     #[test]
     fn default_prompts_not_empty() {
         assert!(!default_prompt(&SessionType::Feature).is_empty());
         assert!(!default_prompt(&SessionType::Adr).is_empty());
         assert!(!default_prompt(&SessionType::Review).is_empty());
+    }
+
+    #[test]
+    fn schema_prompt_covers_all_fields() {
+        let doc = schema_prompt();
+
+        // Feature fields
+        let feature = FeatureFrontMatter {
+            id: "FT-000".into(),
+            title: "t".into(),
+            phase: 1,
+            status: FeatureStatus::Planned,
+            depends_on: vec![],
+            adrs: vec![],
+            tests: vec![],
+            domains: vec![],
+            domains_acknowledged: Default::default(),
+        };
+        let yaml = serde_yaml::to_string(&feature).unwrap();
+        for line in yaml.lines() {
+            if let Some(key) = line.split(':').next() {
+                let key = key.trim();
+                if !key.is_empty() && key != "---" {
+                    assert!(doc.contains(key), "schema_prompt missing feature field: {}", key);
+                }
+            }
+        }
+
+        // ADR fields
+        let adr = AdrFrontMatter {
+            id: "ADR-000".into(),
+            title: "t".into(),
+            status: AdrStatus::Proposed,
+            features: vec![],
+            supersedes: vec![],
+            superseded_by: vec![],
+            domains: vec![],
+            scope: AdrScope::FeatureSpecific,
+        };
+        let yaml = serde_yaml::to_string(&adr).unwrap();
+        for line in yaml.lines() {
+            if let Some(key) = line.split(':').next() {
+                let key = key.trim();
+                if !key.is_empty() && key != "---" {
+                    assert!(doc.contains(key), "schema_prompt missing ADR field: {}", key);
+                }
+            }
+        }
+
+        // Test criterion fields
+        let tc = TestFrontMatter {
+            id: "TC-000".into(),
+            title: "t".into(),
+            test_type: TestType::Scenario,
+            status: TestStatus::Unimplemented,
+            validates: ValidatesBlock { features: vec![], adrs: vec![] },
+            phase: 1,
+        };
+        let yaml = serde_yaml::to_string(&tc).unwrap();
+        for line in yaml.lines() {
+            if let Some(key) = line.split(':').next() {
+                let key = key.trim();
+                if !key.is_empty() && key != "---" {
+                    assert!(doc.contains(key), "schema_prompt missing TC field: {}", key);
+                }
+            }
+        }
     }
 }

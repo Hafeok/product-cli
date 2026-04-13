@@ -122,6 +122,9 @@ enum Commands {
         /// Explicit repo path
         #[arg(long)]
         repo: Option<String>,
+        /// Enable write tools (overrides product.toml mcp.write)
+        #[arg(long)]
+        write: bool,
     },
     /// Implement a feature (gap gate, context assembly, agent invocation)
     Implement {
@@ -527,7 +530,7 @@ fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
         Commands::Implement { id, dry_run, no_verify } => handle_implement(&id, dry_run, no_verify),
         Commands::Verify { id } => handle_verify(&id),
         Commands::Author { command } => handle_author(command),
-        Commands::Mcp { http, port, bind, token, repo } => handle_mcp(http, port, &bind, token, repo),
+        Commands::Mcp { http, port, bind, token, repo, write } => handle_mcp(http, port, &bind, token, repo, write),
         Commands::InstallHooks => handle_install_hooks(),
         Commands::Drift { command } => handle_drift(command, fmt),
         Commands::Metrics { command } => handle_metrics(command),
@@ -2118,6 +2121,7 @@ fn handle_mcp(
     bind: &str,
     token: Option<String>,
     repo: Option<String>,
+    write_flag: bool,
 ) -> BoxResult {
     let repo_root = if let Some(ref path) = repo {
         PathBuf::from(path)
@@ -2126,8 +2130,8 @@ fn handle_mcp(
         root
     };
 
-    // Read mcp.write from product.toml (default false)
-    let write_enabled = {
+    // --write flag overrides product.toml mcp.write
+    let write_enabled = write_flag || {
         let toml_path = repo_root.join("product.toml");
         if toml_path.exists() {
             let cfg = ProductConfig::load(&toml_path)?;
