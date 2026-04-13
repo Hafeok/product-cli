@@ -1,0 +1,55 @@
+# GitHub Actions CI workflow for the Product CLI
+# Gates PRs on: graph check, tests, clippy, benchmarks
+#
+# Usage: copy this file to .github/workflows/product-ci.yml in your repo
+
+name: Product CI
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'product.toml'
+      - 'crates/product/**'
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'product.toml'
+      - 'crates/product/**'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates/product
+
+      - name: Build
+        run: cargo build -p product
+
+      - name: Unit tests
+        run: cargo test -p product
+
+      - name: Clippy
+        run: cargo clippy -p product -- -D clippy::unwrap_used -D warnings
+
+      - name: Graph check
+        run: |
+          # Exits 0 (clean), 2 (warnings only) = pass
+          # Exits 1 (errors) = fail
+          cargo run -p product -- graph check || [ $? -eq 2 ]
+
+      - name: Graph check JSON
+        run: |
+          cargo run -p product -- graph check --format json 2>/dev/null
+          # Verify JSON is valid
+          cargo run -p product -- graph check --format json 2>&1 | python3 -c "import sys,json; json.load(sys.stdin)"
+
+      - name: Benchmarks
+        run: cargo bench -p product --bench graph_bench
