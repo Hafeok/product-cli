@@ -1,7 +1,7 @@
 ---
 id: FT-029
 title: Gap Analysis
-phase: 5
+phase: 4
 status: in-progress
 depends-on: []
 adrs:

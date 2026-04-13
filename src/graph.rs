@@ -547,7 +547,10 @@ impl KnowledgeGraph {
         }
 
         for t in self.tests.values() {
-            let has_incoming = self.features.values().any(|f| f.front.tests.contains(&t.front.id));
+            // ADR-010: Exclude abandoned features from incoming check
+            let has_incoming = self.features.values().any(|f| {
+                f.front.status != FeatureStatus::Abandoned && f.front.tests.contains(&t.front.id)
+            });
             if !has_incoming && t.front.validates.features.is_empty() {
                 result.warnings.push(
                     Diagnostic::warning("W001", "orphaned artifact")

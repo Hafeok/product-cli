@@ -2552,3 +2552,300 @@ fn tc_159_checklist_generation_idempotent() {
         checklist_first, checklist_second
     );
 }
+
+// ---------------------------------------------------------------------------
+// FT-018: Validation and Graph Health — Abandon + Domain tests
+// ---------------------------------------------------------------------------
+
+const CONFIG_WITH_DOMAINS: &str = r#"name = "test"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+[domains]
+security = "Auth, authz, secrets, trust boundaries"
+storage = "Persistence, durability, volumes"
+networking = "mDNS, mTLS, DNS, service discovery"
+error-handling = "Error model, diagnostics, exit codes"
+"#;
+
+fn harness_with_domains() -> Harness {
+    let h = Harness::new();
+    h.write("product.toml", CONFIG_WITH_DOMAINS);
+    h
+}
+
+/// Fixture for abandon tests: FT-001 linked to TC-001 and TC-002
+fn fixture_abandon() -> Harness {
+    let h = Harness::new();
+    h.write("docs/features/FT-001-test-feature.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001, TC-002]\ndomains: []\ndomains-acknowledged: {}\n---\n\nFeature body.\n");
+    h.write("docs/tests/TC-001-test-one.md",
+        "---\nid: TC-001\ntitle: Test One\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\nTest one.\n");
+    h.write("docs/tests/TC-002-test-two.md",
+        "---\nid: TC-002\ntitle: Test Two\ntype: exit-criteria\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\nTest two.\n");
+    h
+}
+
+// TC-031: abandon_feature_orphans_tests
+// Create FT-001 linked to TC-001 and TC-002. Set FT-001 to abandoned.
+// Assert TC-001/TC-002 have FT-001 removed from validates.features.
+#[test]
+fn tc_031_abandon_feature_orphans_tests() {
+    let h = fixture_abandon();
+
+    // Abandon the feature
+    let out = h.run(&["feature", "status", "FT-001", "abandoned"]);
+    out.assert_exit(0);
+
+    // Read TC files and verify FT-001 removed from validates.features
+    let tc1 = h.read("docs/tests/TC-001-test-one.md");
+    let tc2 = h.read("docs/tests/TC-002-test-two.md");
+
+    assert!(
+        !tc1.contains("FT-001"),
+        "TC-001 should have FT-001 removed from validates.features, got:\n{}",
+        tc1
+    );
+    assert!(
+        !tc2.contains("FT-001"),
+        "TC-002 should have FT-001 removed from validates.features, got:\n{}",
+        tc2
+    );
+}
+
+// TC-032: abandon_feature_exit_code
+// After abandoning a feature with linked tests, graph check → exit 2 (warning) not 1 (error).
+#[test]
+fn tc_032_abandon_feature_exit_code() {
+    let h = fixture_abandon();
+
+    // Abandon the feature
+    h.run(&["feature", "status", "FT-001", "abandoned"]).assert_exit(0);
+
+    // graph check should return 2 (warnings: orphaned tests) not 1 (errors)
+    let out = h.run(&["graph", "check"]);
+    out.assert_exit(2);
+    // Should have W001 (orphaned tests) but no E-level errors
+    out.assert_stderr_contains("W001");
+}
+
+// TC-033: abandon_feature_stdout
+// Assert the abandonment command prints the list of test criteria that were auto-orphaned.
+#[test]
+fn tc_033_abandon_feature_stdout() {
+    let h = fixture_abandon();
+
+    let out = h.run(&["feature", "status", "FT-001", "abandoned"]);
+    out.assert_exit(0);
+
+    // stdout should list the orphaned tests
+    out.assert_stdout_contains("TC-001");
+    out.assert_stdout_contains("TC-002");
+    out.assert_stdout_contains("Auto-orphaning");
+}
+
+// TC-034: abandon_feature_tests_preserved
+// Assert test criterion files are not deleted during abandonment, only their feature links removed.
+#[test]
+fn tc_034_abandon_feature_tests_preserved() {
+    let h = fixture_abandon();
+
+    h.run(&["feature", "status", "FT-001", "abandoned"]).assert_exit(0);
+
+    // Both test files should still exist
+    assert!(
+        h.exists("docs/tests/TC-001-test-one.md"),
+        "TC-001 file should still exist after abandonment"
+    );
+    assert!(
+        h.exists("docs/tests/TC-002-test-two.md"),
+        "TC-002 file should still exist after abandonment"
+    );
+
+    // Verify files still have content (not empty)
+    let tc1 = h.read("docs/tests/TC-001-test-one.md");
+    let tc2 = h.read("docs/tests/TC-002-test-two.md");
+    assert!(tc1.contains("Test One"), "TC-001 should still have its title");
+    assert!(tc2.contains("Test Two"), "TC-002 should still have its title");
+}
+
+// TC-132: cross_cutting_always_in_bundle
+// ADR-013 marked scope: cross-cutting. Feature FT-009 has no explicit link to ADR-013.
+// Assert `product context FT-009` includes ADR-013 in the bundle.
+#[test]
+fn tc_132_cross_cutting_always_in_bundle() {
+    let h = harness_with_domains();
+
+    // Cross-cutting ADR with no link from the feature
+    h.write("docs/adrs/ADR-013-error-model.md",
+        "---\nid: ADR-013\ntitle: Error Model\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [error-handling]\nscope: cross-cutting\n---\n\nAll errors must use structured diagnostics.\n");
+
+    // Feature that does NOT link ADR-013
+    h.write("docs/features/FT-009-rate-limiting.md",
+        "---\nid: FT-009\ntitle: Rate Limiting\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: []\ndomains-acknowledged: {}\n---\n\nRate limiting feature.\n");
+
+    let out = h.run(&["context", "FT-009"]);
+    out.assert_exit(0);
+
+    // ADR-013 should be included even though not explicitly linked
+    assert!(
+        out.stdout.contains("ADR-013"),
+        "Cross-cutting ADR-013 should appear in bundle even without explicit link.\nBundle:\n{}",
+        out.stdout
+    );
+    assert!(
+        out.stdout.contains("Error Model"),
+        "ADR-013 title should appear in bundle"
+    );
+}
+
+// TC-133: cross_cutting_bundle_position
+// Assert cross-cutting ADRs appear before domain ADRs, which appear before feature-linked ADRs.
+#[test]
+fn tc_133_cross_cutting_bundle_position() {
+    let h = harness_with_domains();
+
+    // Cross-cutting ADR
+    h.write("docs/adrs/ADR-013-error-model.md",
+        "---\nid: ADR-013\ntitle: Error Model\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [error-handling]\nscope: cross-cutting\n---\n\nCross-cutting error model.\n");
+
+    // Domain ADR (security, scope: domain)
+    h.write("docs/adrs/ADR-020-security-policy.md",
+        "---\nid: ADR-020\ntitle: Security Policy\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nDomain-scoped security policy.\n");
+
+    // Feature-linked ADR
+    h.write("docs/adrs/ADR-004-rate-algo.md",
+        "---\nid: ADR-004\ntitle: Rate Algorithm\nstatus: accepted\nfeatures: [FT-009]\nsupersedes: []\nsuperseded-by: []\ndomains: []\nscope: feature-specific\n---\n\nFeature-specific rate algorithm.\n");
+
+    // Feature that links ADR-004, declares security domain, does not link ADR-013
+    h.write("docs/features/FT-009-rate-limiting.md",
+        "---\nid: FT-009\ntitle: Rate Limiting\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-004]\ntests: []\ndomains: [security]\ndomains-acknowledged: {}\n---\n\nRate limiting feature.\n");
+
+    let out = h.run(&["context", "FT-009"]);
+    out.assert_exit(0);
+
+    let bundle = &out.stdout;
+
+    // Find positions of each ADR section
+    let pos_cross_cutting = bundle.find("ADR-013")
+        .unwrap_or_else(|| panic!("ADR-013 (cross-cutting) not in bundle:\n{}", bundle));
+    let pos_domain = bundle.find("ADR-020")
+        .unwrap_or_else(|| panic!("ADR-020 (domain) not in bundle:\n{}", bundle));
+    let pos_linked = bundle.find("ADR-004")
+        .unwrap_or_else(|| panic!("ADR-004 (feature-linked) not in bundle:\n{}", bundle));
+
+    // Cross-cutting before domain
+    assert!(
+        pos_cross_cutting < pos_domain,
+        "Cross-cutting ADR-013 (pos {}) should appear before domain ADR-020 (pos {})",
+        pos_cross_cutting, pos_domain
+    );
+    // Domain before feature-linked
+    assert!(
+        pos_domain < pos_linked,
+        "Domain ADR-020 (pos {}) should appear before feature-linked ADR-004 (pos {})",
+        pos_domain, pos_linked
+    );
+}
+
+// TC-134: domain_top2_centrality
+// Domain security has 6 ADRs. Feature declares domains: [security].
+// Assert the context bundle includes exactly the 2 highest-centrality security ADRs.
+#[test]
+fn tc_134_domain_top2_centrality() {
+    let h = harness_with_domains();
+
+    // Create 6 security-domain ADRs. ADR-001 and ADR-002 will have higher centrality
+    // because they are linked from more features.
+    h.write("docs/adrs/ADR-001-sec-core.md",
+        "---\nid: ADR-001\ntitle: Security Core\nstatus: accepted\nfeatures: [FT-001, FT-002, FT-003]\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nCore security ADR.\n");
+    h.write("docs/adrs/ADR-002-sec-auth.md",
+        "---\nid: ADR-002\ntitle: Security Auth\nstatus: accepted\nfeatures: [FT-001, FT-002]\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nAuth security ADR.\n");
+    h.write("docs/adrs/ADR-003-sec-encrypt.md",
+        "---\nid: ADR-003\ntitle: Security Encrypt\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nEncryption ADR.\n");
+    h.write("docs/adrs/ADR-004-sec-audit.md",
+        "---\nid: ADR-004\ntitle: Security Audit\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nAudit ADR.\n");
+    h.write("docs/adrs/ADR-005-sec-tokens.md",
+        "---\nid: ADR-005\ntitle: Security Tokens\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nTokens ADR.\n");
+    h.write("docs/adrs/ADR-006-sec-rbac.md",
+        "---\nid: ADR-006\ntitle: Security RBAC\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nRBAC ADR.\n");
+
+    // Create the features referenced by ADR-001 and ADR-002 (to establish centrality)
+    h.write("docs/features/FT-001-alpha.md",
+        "---\nid: FT-001\ntitle: Alpha\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001, ADR-002]\ntests: []\ndomains: []\ndomains-acknowledged: {}\n---\n\nAlpha.\n");
+    h.write("docs/features/FT-002-beta.md",
+        "---\nid: FT-002\ntitle: Beta\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001, ADR-002]\ntests: []\ndomains: []\ndomains-acknowledged: {}\n---\n\nBeta.\n");
+    h.write("docs/features/FT-003-gamma.md",
+        "---\nid: FT-003\ntitle: Gamma\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: []\ndomains: []\ndomains-acknowledged: {}\n---\n\nGamma.\n");
+
+    // Target feature: declares security domain, does not link any security ADRs
+    h.write("docs/features/FT-009-rate-limiting.md",
+        "---\nid: FT-009\ntitle: Rate Limiting\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: [security]\ndomains-acknowledged: {}\n---\n\nRate limiting.\n");
+
+    let out = h.run(&["context", "FT-009"]);
+    out.assert_exit(0);
+
+    let bundle = &out.stdout;
+
+    // Should include the top-2 by centrality: ADR-001 (highest) and ADR-002 (second)
+    assert!(
+        bundle.contains("ADR-001") && bundle.contains("Security Core"),
+        "Bundle should include ADR-001 (highest centrality security ADR).\nBundle:\n{}",
+        bundle
+    );
+    assert!(
+        bundle.contains("ADR-002") && bundle.contains("Security Auth"),
+        "Bundle should include ADR-002 (second-highest centrality security ADR).\nBundle:\n{}",
+        bundle
+    );
+
+    // Should NOT include the other 4 security ADRs (only top-2)
+    assert!(
+        !bundle.contains("Security Encrypt"),
+        "Bundle should NOT include ADR-003 (not top-2).\nBundle:\n{}",
+        bundle
+    );
+    assert!(
+        !bundle.contains("Security Audit"),
+        "Bundle should NOT include ADR-004 (not top-2).\nBundle:\n{}",
+        bundle
+    );
+    assert!(
+        !bundle.contains("Security Tokens"),
+        "Bundle should NOT include ADR-005 (not top-2).\nBundle:\n{}",
+        bundle
+    );
+    assert!(
+        !bundle.contains("Security RBAC"),
+        "Bundle should NOT include ADR-006 (not top-2).\nBundle:\n{}",
+        bundle
+    );
+}
+
+// TC-139: domains_vocab_unknown
+// Feature declares domains: [unknown-domain]. Assert E012 (unknown domain).
+#[test]
+fn tc_139_domains_vocab_unknown() {
+    let h = harness_with_domains();
+
+    // Feature declares a domain not in product.toml vocabulary
+    h.write("docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: [unknown-domain]\ndomains-acknowledged: {}\n---\n\nBody.\n");
+
+    let out = h.run(&["graph", "check"]);
+    out.assert_exit(1)
+        .assert_stderr_contains("E012");
+    assert!(
+        out.stderr.contains("unknown-domain"),
+        "E012 should mention the unknown domain name, got stderr:\n{}",
+        out.stderr
+    );
+}

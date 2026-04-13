@@ -2,7 +2,7 @@
 id: FT-018
 title: Validation and Graph Health
 phase: 1
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-010

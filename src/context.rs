@@ -1,4 +1,4 @@
-//! Context bundle assembly (ADR-006, ADR-012)
+//! Context bundle assembly (ADR-006, ADR-012, ADR-025)
 
 use crate::formal;
 use crate::graph::KnowledgeGraph;
@@ -24,9 +24,10 @@ fn bundle_feature_inner(
 ) -> Option<String> {
     let feature = graph.features.get(feature_id)?;
     let reachable = graph.bfs(feature_id, depth);
+    let centrality = graph.betweenness_centrality();
 
-    // Collect ADRs and tests from reachable set
-    let mut adr_ids: Vec<String> = reachable
+    // Collect feature-linked ADRs from reachable set
+    let feature_linked_adr_ids: HashSet<String> = reachable
         .iter()
         .filter(|id| graph.adrs.contains_key(id.as_str()))
         .cloned()
@@ -41,18 +42,6 @@ fn bundle_feature_inner(
             .cloned()
             .collect()
     };
-
-    // Order ADRs
-    if order_by_centrality {
-        let centrality = graph.betweenness_centrality();
-        adr_ids.sort_by(|a, b| {
-            let ca = centrality.get(a).copied().unwrap_or(0.0);
-            let cb = centrality.get(b).copied().unwrap_or(0.0);
-            cb.partial_cmp(&ca).unwrap_or(std::cmp::Ordering::Equal)
-        });
-    } else {
-        adr_ids.sort();
-    }
 
     // Order tests by phase then type (exit-criteria first, then scenario, invariant, chaos)
     test_ids.sort_by(|a, b| {
@@ -73,12 +62,63 @@ fn bundle_feature_inner(
         phase_a.cmp(&phase_b).then(type_a.cmp(&type_b))
     });
 
-    // Handle ADR supersession: include superseded ADRs with annotation (TC-019)
-    let mut final_adr_ids = Vec::new();
-    let mut seen = HashSet::new();
-    for id in &adr_ids {
-        if !seen.contains(id) {
-            seen.insert(id.clone());
+    // ADR-025: Three-tier ADR ordering
+    // 1. Cross-cutting ADRs (all, ordered by betweenness centrality)
+    let mut cross_cutting_ids: Vec<String> = graph.adrs.values()
+        .filter(|a| a.front.scope == AdrScope::CrossCutting)
+        .map(|a| a.front.id.clone())
+        .collect();
+    cross_cutting_ids.sort_by(|a, b| {
+        let ca = centrality.get(a).copied().unwrap_or(0.0);
+        let cb = centrality.get(b).copied().unwrap_or(0.0);
+        cb.partial_cmp(&ca).unwrap_or(std::cmp::Ordering::Equal)
+    });
+
+    // 2. Domain ADRs (top-2 by centrality per domain, excluding cross-cutting)
+    let mut domain_adr_ids: Vec<String> = Vec::new();
+    let mut domain_seen: HashSet<String> = HashSet::new();
+    for domain in &feature.front.domains {
+        let mut domain_adrs: Vec<(String, f64)> = graph.adrs.values()
+            .filter(|a| {
+                a.front.domains.contains(domain)
+                    && a.front.scope != AdrScope::CrossCutting
+                    && !feature_linked_adr_ids.contains(&a.front.id)
+            })
+            .map(|a| {
+                let c = centrality.get(&a.front.id).copied().unwrap_or(0.0);
+                (a.front.id.clone(), c)
+            })
+            .collect();
+        domain_adrs.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        for (id, _) in domain_adrs.into_iter().take(2) {
+            if domain_seen.insert(id.clone()) {
+                domain_adr_ids.push(id);
+            }
+        }
+    }
+
+    // 3. Feature-linked ADRs (excluding cross-cutting and domain ADRs already included)
+    let mut linked_ids: Vec<String> = feature_linked_adr_ids.iter()
+        .filter(|id| {
+            !cross_cutting_ids.contains(id) && !domain_adr_ids.contains(id)
+        })
+        .cloned()
+        .collect();
+    if order_by_centrality {
+        linked_ids.sort_by(|a, b| {
+            let ca = centrality.get(a).copied().unwrap_or(0.0);
+            let cb = centrality.get(b).copied().unwrap_or(0.0);
+            cb.partial_cmp(&ca).unwrap_or(std::cmp::Ordering::Equal)
+        });
+    } else {
+        linked_ids.sort();
+    }
+
+    // Build final ordered ADR list: cross-cutting → domain → feature-linked
+    let mut final_adr_ids: Vec<String> = Vec::new();
+    let mut seen: HashSet<String> = HashSet::new();
+    for id in cross_cutting_ids.iter().chain(domain_adr_ids.iter()).chain(linked_ids.iter()) {
+        if seen.insert(id.clone()) {
             final_adr_ids.push(id.clone());
         }
     }

@@ -193,7 +193,7 @@
 - [x] TC-054: product impact ADR-001 (scenario) — passing
 - [x] TC-157: FT-016 graph model queries pass (exit-criteria) — passing
 
-### FT-017 — Generated Checklist [~]
+### FT-017 — Generated Checklist [x]
 
 - [x] ADR-007: Checklist is Generated, Never Hand-Edited (accepted)
 - [x] TC-021: checklist_generate (scenario) — passing
@@ -201,47 +201,22 @@
 - [x] TC-023: checklist_roundtrip (scenario) — passing
 - [x] TC-159: FT-017 checklist generation idempotent (exit-criteria) — passing
 
-### FT-018 — Validation and Graph Health [~]
+### FT-018 — Validation and Graph Health [x]
 
 - [x] ADR-010: Auto-Orphan Test Criteria on Feature Abandonment (accepted)
 - [x] ADR-025: Concern Domains — ADR Classification and Cross-Cutting Scope (accepted)
-- [ ] TC-031: abandon_feature_orphans_tests (scenario) — unimplemented
-- [ ] TC-032: abandon_feature_exit_code (exit-criteria) — unimplemented
-- [ ] TC-033: abandon_feature_stdout (scenario) — unimplemented
-- [ ] TC-034: abandon_feature_tests_preserved (scenario) — unimplemented
-- [ ] TC-132: cross_cutting_always_in_bundle (scenario) — unimplemented
-- [ ] TC-133: cross_cutting_bundle_position (scenario) — unimplemented
-- [ ] TC-134: domain_top2_centrality (scenario) — unimplemented
+- [x] TC-031: abandon_feature_orphans_tests (scenario) — passing
+- [x] TC-032: abandon_feature_exit_code (exit-criteria) — passing
+- [x] TC-033: abandon_feature_stdout (scenario) — passing
+- [x] TC-034: abandon_feature_tests_preserved (scenario) — passing
+- [x] TC-132: cross_cutting_always_in_bundle (scenario) — passing
+- [x] TC-133: cross_cutting_bundle_position (scenario) — passing
+- [x] TC-134: domain_top2_centrality (scenario) — passing
 - [x] TC-135: acknowledgement_requires_reason (scenario) — passing
 - [x] TC-136: w010_unacknowledged_cross_cutting (scenario) — passing
 - [x] TC-137: w011_domain_gap (scenario) — passing
 - [x] TC-138: acknowledgement_closes_gap (scenario) — passing
-- [ ] TC-139: domains_vocab_unknown (scenario) — unimplemented
-
-### FT-019 — Domain Coverage Matrix [~]
-
-- [x] ADR-025: Concern Domains — ADR Classification and Cross-Cutting Scope (accepted)
-- [x] ADR-026: Pre-flight Analysis — Systematic Coverage Before Authoring (accepted)
-- [ ] TC-132: cross_cutting_always_in_bundle (scenario) — unimplemented
-- [ ] TC-133: cross_cutting_bundle_position (scenario) — unimplemented
-- [ ] TC-134: domain_top2_centrality (scenario) — unimplemented
-- [x] TC-135: acknowledgement_requires_reason (scenario) — passing
-- [x] TC-136: w010_unacknowledged_cross_cutting (scenario) — passing
-- [x] TC-137: w011_domain_gap (scenario) — passing
-- [x] TC-138: acknowledgement_closes_gap (scenario) — passing
-- [ ] TC-139: domains_vocab_unknown (scenario) — unimplemented
-- [x] TC-140: preflight_clean_exits_0 (exit-criteria) — passing
-- [x] TC-141: preflight_cross_cutting_gap (scenario) — passing
-- [x] TC-142: preflight_domain_gap (scenario) — passing
-- [x] TC-143: preflight_acknowledgement_closes_gap (scenario) — passing
-- [x] TC-144: preflight_acknowledgement_without_reason_fails (scenario) — passing
-- [ ] TC-145: implement_blocked_by_preflight (scenario) — unimplemented
-- [x] TC-146: coverage_matrix_renders (scenario) — passing
-- [x] TC-147: coverage_matrix_json (scenario) — passing
-- [ ] TC-148: coverage_matrix_domain_filter (scenario) — unimplemented
-- [ ] TC-149: author_session_preflight_first (scenario) — unimplemented
-- [ ] TC-150: product preflight FT-001 (scenario) — unimplemented
-- [ ] TC-151: product graph coverage (scenario) — unimplemented
+- [x] TC-139: domains_vocab_unknown (scenario) — passing
 
 ### FT-020 — Migration Path [~]
 
@@ -261,7 +236,88 @@
 - [ ] TC-085: validates.features (scenario) — unimplemented
 - [ ] TC-162: FT-020 migration extracts and confirms (exit-criteria) — unimplemented
 
+## Phase 2
+
+### FT-008 — Schema Migration [ ]
+
+- [x] ADR-014: Schema Versioning and Migration Path (accepted)
+
+### FT-004 — Artifact Authoring [ ]
+
+- [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
+- [x] ADR-005: Numeric ID Scheme (FT-XXX, ADR-XXX, TC-XXX) (accepted)
+- [x] ADR-015: File Write Safety — Atomic Writes and Advisory Locking (accepted)
+
+### FT-006 — Impact Analysis [ ]
+
+- [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
+
+### FT-014 — Status and Filters [ ]
+
+- [x] ADR-007: Checklist is Generated, Never Hand-Edited (accepted)
+- [x] ADR-009: CI Integration via Exit Codes (accepted)
+
+## Phase 3
+
+### FT-024 — Graph Intelligence [ ]
+
+- [x] ADR-008: Embedded Oxigraph for SPARQL Queries (accepted)
+- [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
+
+### FT-025 — Benchmarks [ ]
+
+- [x] ADR-018: Testing Strategy — Property-Based, Integration, and LLM Benchmark (accepted)
+
+### FT-026 — CI Integration [ ]
+
+- [x] ADR-009: CI Integration via Exit Codes (accepted)
+- [x] ADR-013: Error Model and User-Facing Error Format (accepted)
+
+## Phase 4
+
+### FT-029 — Gap Analysis [~]
+
+- [x] ADR-019: Continuous Gap Analysis — LLM-Driven Specification Review in CI (accepted)
+- [ ] TC-086: gap_check_single_adr (scenario) — unimplemented
+- [x] TC-087: gap_check_no_gaps (scenario) — passing
+- [x] TC-088: gap_check_suppressed (scenario) — passing
+- [ ] TC-089: gap_check_resolved (scenario) — unimplemented
+- [ ] TC-090: gap_check_changed_scoping (scenario) — unimplemented
+- [ ] TC-091: gap_check_model_error_exits_2 (exit-criteria) — unimplemented
+- [ ] TC-092: gap_check_invalid_json_discarded (scenario) — unimplemented
+- [x] TC-093: gap_id_deterministic (scenario) — passing
+- [x] TC-094: gap_suppress_mutates_baseline (scenario) — passing
+- [ ] TC-095: gap_changed_expansion (scenario) — unimplemented
+- [x] TC-096: gap_id_format (scenario) — passing
+- [ ] TC-097: gap_stdout_stderr_separation (scenario) — unimplemented
+- [ ] TC-098: gap_json_schema (scenario) — unimplemented
+
 ## Phase 5
+
+### FT-019 — Domain Coverage Matrix [~]
+
+- [x] ADR-025: Concern Domains — ADR Classification and Cross-Cutting Scope (accepted)
+- [x] ADR-026: Pre-flight Analysis — Systematic Coverage Before Authoring (accepted)
+- [x] TC-132: cross_cutting_always_in_bundle (scenario) — passing
+- [x] TC-133: cross_cutting_bundle_position (scenario) — passing
+- [x] TC-134: domain_top2_centrality (scenario) — passing
+- [x] TC-135: acknowledgement_requires_reason (scenario) — passing
+- [x] TC-136: w010_unacknowledged_cross_cutting (scenario) — passing
+- [x] TC-137: w011_domain_gap (scenario) — passing
+- [x] TC-138: acknowledgement_closes_gap (scenario) — passing
+- [x] TC-139: domains_vocab_unknown (scenario) — passing
+- [x] TC-140: preflight_clean_exits_0 (exit-criteria) — passing
+- [x] TC-141: preflight_cross_cutting_gap (scenario) — passing
+- [x] TC-142: preflight_domain_gap (scenario) — passing
+- [x] TC-143: preflight_acknowledgement_closes_gap (scenario) — passing
+- [x] TC-144: preflight_acknowledgement_without_reason_fails (scenario) — passing
+- [ ] TC-145: implement_blocked_by_preflight (scenario) — unimplemented
+- [x] TC-146: coverage_matrix_renders (scenario) — passing
+- [x] TC-147: coverage_matrix_json (scenario) — passing
+- [ ] TC-148: coverage_matrix_domain_filter (scenario) — unimplemented
+- [ ] TC-149: author_session_preflight_first (scenario) — unimplemented
+- [ ] TC-150: product preflight FT-001 (scenario) — unimplemented
+- [ ] TC-151: product graph coverage (scenario) — unimplemented
 
 ### FT-021 — MCP Server [~]
 
@@ -331,23 +387,6 @@
 - [x] TC-129: metrics_threshold_clean_exits_0 (exit-criteria) — passing
 - [x] TC-130: metrics_trend_renders (scenario) — passing
 - [ ] TC-131: metrics_jsonl_merge_conflict_safe (scenario) — unimplemented
-
-### FT-029 — Gap Analysis [~]
-
-- [x] ADR-019: Continuous Gap Analysis — LLM-Driven Specification Review in CI (accepted)
-- [ ] TC-086: gap_check_single_adr (scenario) — unimplemented
-- [x] TC-087: gap_check_no_gaps (scenario) — passing
-- [x] TC-088: gap_check_suppressed (scenario) — passing
-- [ ] TC-089: gap_check_resolved (scenario) — unimplemented
-- [ ] TC-090: gap_check_changed_scoping (scenario) — unimplemented
-- [ ] TC-091: gap_check_model_error_exits_2 (exit-criteria) — unimplemented
-- [ ] TC-092: gap_check_invalid_json_discarded (scenario) — unimplemented
-- [x] TC-093: gap_id_deterministic (scenario) — passing
-- [x] TC-094: gap_suppress_mutates_baseline (scenario) — passing
-- [ ] TC-095: gap_changed_expansion (scenario) — unimplemented
-- [x] TC-096: gap_id_format (scenario) — passing
-- [ ] TC-097: gap_stdout_stderr_separation (scenario) — unimplemented
-- [ ] TC-098: gap_json_schema (scenario) — unimplemented
 
 ### FT-030 — Codebase Onboarding [ ]
 
