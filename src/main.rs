@@ -1916,26 +1916,88 @@ fn handle_gap(cmd: GapCommands, _global_fmt: &str) -> BoxResult {
 
     match cmd {
         GapCommands::Check { adr_id, changed, format } => {
-            let reports = if let Some(ref id) = adr_id {
-                let findings = gap::check_adr(&graph, id, &baseline);
+            // Determine which ADR IDs to check
+            let adr_ids_to_check: Vec<String> = if let Some(ref id) = adr_id {
+                vec![id.clone()]
+            } else if changed {
+                // check_changed returns reports; we need IDs for model analysis
+                // We'll use the existing check_changed for structural + build reports
+                let reports = gap::check_changed(&graph, &baseline, &root);
+                // Update resolved in baseline
+                let all_finding_ids: Vec<String> = reports
+                    .iter()
+                    .flat_map(|r| r.findings.iter().map(|f| f.id.clone()))
+                    .collect();
+                baseline.update_resolved(&all_finding_ids);
+                baseline.save(&baseline_path)?;
+
+                if format == "json" {
+                    println!("{}", serde_json::to_string_pretty(&reports).unwrap_or_default());
+                } else {
+                    for report in &reports {
+                        if report.findings.is_empty() {
+                            continue;
+                        }
+                        println!("--- {} ---", report.adr);
+                        for finding in &report.findings {
+                            let suppressed_tag = if finding.suppressed { " [suppressed]" } else { "" };
+                            println!(
+                                "  [{:>6}] {} — {}{}",
+                                finding.severity, finding.code, finding.description, suppressed_tag
+                            );
+                        }
+                    }
+                }
+
+                let has_new_high = reports.iter().any(|r| {
+                    r.findings.iter().any(|f| f.severity == gap::GapSeverity::High && !f.suppressed)
+                });
+                if has_new_high {
+                    process::exit(1);
+                }
+                return Ok(());
+            } else {
+                graph.adrs.keys().cloned().collect()
+            };
+
+            // For each ADR: structural checks + model analysis
+            let mut reports = Vec::new();
+            for id in &adr_ids_to_check {
+                let mut findings = gap::check_adr(&graph, id, &baseline);
+
+                // Try model-based analysis (may use injected response in tests)
+                match gap::try_model_analysis(id, &baseline) {
+                    Ok(model_findings) => {
+                        findings.extend(model_findings);
+                    }
+                    Err(e) => {
+                        eprintln!("error: gap analysis model failure for {}: {}", id, e);
+                        process::exit(2);
+                    }
+                }
+
                 let summary = gap::GapSummary {
                     high: findings.iter().filter(|f| f.severity == gap::GapSeverity::High && !f.suppressed).count(),
                     medium: findings.iter().filter(|f| f.severity == gap::GapSeverity::Medium && !f.suppressed).count(),
                     low: findings.iter().filter(|f| f.severity == gap::GapSeverity::Low && !f.suppressed).count(),
                     suppressed: findings.iter().filter(|f| f.suppressed).count(),
                 };
-                vec![gap::GapReport {
+                reports.push(gap::GapReport {
                     adr: id.clone(),
                     run_date: chrono::Utc::now().to_rfc3339(),
                     product_version: env!("CARGO_PKG_VERSION").to_string(),
                     findings,
                     summary,
-                }]
-            } else if changed {
-                gap::check_changed(&graph, &baseline, &root)
-            } else {
-                gap::check_all(&graph, &baseline)
-            };
+                });
+            }
+
+            // Update resolved in baseline
+            let all_finding_ids: Vec<String> = reports
+                .iter()
+                .flat_map(|r| r.findings.iter().map(|f| f.id.clone()))
+                .collect();
+            baseline.update_resolved(&all_finding_ids);
+            baseline.save(&baseline_path)?;
 
             if format == "json" {
                 println!("{}", serde_json::to_string_pretty(&reports).unwrap_or_default());

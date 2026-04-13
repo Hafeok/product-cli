@@ -78,6 +78,20 @@ test = "TC"
         }
     }
 
+    pub fn run_with_env(&self, args: &[&str], env: &[(&str, &str)]) -> Output {
+        let mut cmd = Command::new(&self.bin);
+        cmd.args(args).current_dir(self.dir.path());
+        for (k, v) in env {
+            cmd.env(k, v);
+        }
+        let output = cmd.output().expect("run binary");
+        Output {
+            stdout: String::from_utf8_lossy(&output.stdout).to_string(),
+            stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+            exit_code: output.status.code().unwrap_or(-1),
+        }
+    }
+
     pub fn read(&self, path: &str) -> String {
         std::fs::read_to_string(self.dir.path().join(path)).unwrap_or_default()
     }
@@ -3801,4 +3815,378 @@ fn tc_181_ft_026_ci_integration_pass() {
         .unwrap_or_else(|e| panic!("graph check JSON invalid on broken link: {}\nstdout: {}", e, out3.stdout));
     let errors = json2["errors"].as_array().expect("errors should be an array");
     assert!(!errors.is_empty(), "CI gate should report errors on broken link");
+}
+
+// ---------------------------------------------------------------------------
+// Gap Analysis Tests (FT-029, ADR-019)
+// ---------------------------------------------------------------------------
+
+/// Helper: fixture with an ADR that has a "Test coverage" section but no linked TC
+fn fixture_gap_g001() -> Harness {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: []\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Decision:** Use caching.\n\n## Test coverage\n\nPerformance under load must stay below 200ms.\n\n**Rejected alternatives:**\n- No caching\n",
+    );
+    h
+}
+
+/// Helper: fixture with full coverage — ADR has a linked TC and rejected alternatives
+fn fixture_gap_clean() -> Harness {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Decision:** Use caching.\n\n**Rejected alternatives:**\n- No caching\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test TC\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nTest body.\n",
+    );
+    h
+}
+
+/// TC-086: gap_check_single_adr — ADR with testable claim but no linked TC → exit 1 + G001
+#[test]
+fn tc_086_gap_check_single_adr() {
+    let h = fixture_gap_g001();
+    let out = h.run(&["gap", "check", "ADR-001"]);
+    assert_eq!(
+        out.exit_code, 1,
+        "Expected exit 1 for ADR with uncovered testable claim.\nstdout: {}\nstderr: {}",
+        out.stdout, out.stderr
+    );
+
+    let reports: serde_json::Value = serde_json::from_str(&out.stdout)
+        .unwrap_or_else(|e| panic!("gap check output is not valid JSON: {}\nstdout: {}", e, out.stdout));
+    let findings = reports[0]["findings"].as_array().expect("findings should be array");
+    assert!(
+        findings.iter().any(|f| f["code"].as_str() == Some("G001")),
+        "Expected G001 finding in output. Got: {}",
+        out.stdout
+    );
+}
+
+/// TC-089: gap_check_resolved — suppress a gap, fix it, verify resolved list updated
+#[test]
+fn tc_089_gap_check_resolved() {
+    let h = fixture_gap_g001();
+
+    // Step 1: Run gap check to get findings
+    let out = h.run(&["gap", "check", "ADR-001"]);
+    assert_eq!(out.exit_code, 1);
+    let reports: serde_json::Value = serde_json::from_str(&out.stdout).expect("valid JSON");
+    let findings = reports[0]["findings"].as_array().expect("findings");
+    let g001_finding = findings.iter().find(|f| f["code"].as_str() == Some("G001")).expect("G001 finding");
+    let gap_id = g001_finding["id"].as_str().expect("gap id").to_string();
+
+    // Step 2: Suppress the gap
+    let out2 = h.run(&["gap", "suppress", &gap_id, "--reason", "testing resolved"]);
+    assert_eq!(out2.exit_code, 0, "suppress should succeed: {}", out2.stderr);
+
+    // Step 3: Fix the gap by adding a linked TC
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test Coverage\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nTest body.\n",
+    );
+
+    // Step 4: Run gap check again — gap should not appear in findings
+    let out3 = h.run(&["gap", "check", "ADR-001"]);
+    assert_eq!(out3.exit_code, 0, "Expected exit 0 after fix.\nstdout: {}\nstderr: {}", out3.stdout, out3.stderr);
+    let reports3: serde_json::Value = serde_json::from_str(&out3.stdout).expect("valid JSON");
+    let findings3 = reports3[0]["findings"].as_array().expect("findings");
+    assert!(
+        !findings3.iter().any(|f| f["id"].as_str() == Some(gap_id.as_str())),
+        "Resolved gap should not appear in findings"
+    );
+
+    // Step 5: Verify gaps.json has the resolved entry
+    let baseline_content = h.read("gaps.json");
+    let baseline: serde_json::Value = serde_json::from_str(&baseline_content)
+        .unwrap_or_else(|e| panic!("gaps.json not valid JSON: {}\ncontent: {}", e, baseline_content));
+    let resolved = baseline["resolved"].as_array().expect("resolved array");
+    assert!(
+        resolved.iter().any(|r| r["id"].as_str() == Some(gap_id.as_str())),
+        "gaps.json resolved list should contain the fixed gap. Got: {}",
+        baseline_content
+    );
+}
+
+/// TC-090: gap_check_changed_scoping — --changed only analyses changed ADRs + 1-hop neighbours
+#[test]
+fn tc_090_gap_check_changed_scoping() {
+    let h = Harness::new();
+
+    // Initialize git repo
+    std::process::Command::new("git")
+        .args(["init"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git init");
+    std::process::Command::new("git")
+        .args(["config", "user.email", "test@test.com"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git config email");
+    std::process::Command::new("git")
+        .args(["config", "user.name", "Test"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git config name");
+
+    // Create fixtures: ADR-002 shares FT-001 with ADR-005. ADR-007 is isolated.
+    h.write("docs/features/FT-001-shared.md", "---\nid: FT-001\ntitle: Shared Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-002, ADR-005]\ntests: []\n---\n\nShared feature body.\n");
+    h.write("docs/features/FT-002-isolated.md", "---\nid: FT-002\ntitle: Isolated Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-007]\ntests: []\n---\n\nIsolated feature body.\n");
+    h.write("docs/adrs/ADR-002-test.md", "---\nid: ADR-002\ntitle: ADR Two\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n");
+    h.write("docs/adrs/ADR-005-test.md", "---\nid: ADR-005\ntitle: ADR Five\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n");
+    h.write("docs/adrs/ADR-007-test.md", "---\nid: ADR-007\ntitle: ADR Seven\nstatus: accepted\nfeatures: [FT-002]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n");
+
+    // Initial commit
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+    std::process::Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git commit");
+
+    // Modify ADR-002
+    h.write("docs/adrs/ADR-002-test.md", "---\nid: ADR-002\ntitle: ADR Two Updated\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\nUpdated content.\n");
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+    std::process::Command::new("git")
+        .args(["commit", "-m", "modify ADR-002"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git commit");
+
+    // Run --changed
+    let out = h.run(&["gap", "check", "--changed"]);
+    assert_eq!(out.exit_code, 0, "Expected exit 0.\nstdout: {}\nstderr: {}", out.stdout, out.stderr);
+
+    let reports: serde_json::Value = serde_json::from_str(&out.stdout)
+        .unwrap_or_else(|e| panic!("gap check --changed output not valid JSON: {}\nstdout: {}", e, out.stdout));
+    let report_arr = reports.as_array().expect("reports should be array");
+
+    // ADR-002 and ADR-005 (1-hop neighbour) should be analysed
+    let analysed_adrs: Vec<&str> = report_arr.iter().filter_map(|r| r["adr"].as_str()).collect();
+    assert!(
+        analysed_adrs.contains(&"ADR-002"),
+        "ADR-002 (changed) should be analysed. Got: {:?}",
+        analysed_adrs
+    );
+    assert!(
+        analysed_adrs.contains(&"ADR-005"),
+        "ADR-005 (1-hop neighbour) should be analysed. Got: {:?}",
+        analysed_adrs
+    );
+    // ADR-007 (no shared features) should NOT be analysed
+    assert!(
+        !analysed_adrs.contains(&"ADR-007"),
+        "ADR-007 (isolated) should NOT be analysed. Got: {:?}",
+        analysed_adrs
+    );
+}
+
+/// TC-091: gap_check_model_error_exits_2 — model failure → exit 2, error on stderr
+#[test]
+fn tc_091_gap_check_model_error_exits_2() {
+    let h = fixture_gap_clean();
+    let out = h.run_with_env(
+        &["gap", "check", "ADR-001"],
+        &[("PRODUCT_GAP_INJECT_ERROR", "simulated network failure")],
+    );
+    assert_eq!(
+        out.exit_code, 2,
+        "Expected exit 2 for model error.\nstdout: {}\nstderr: {}",
+        out.stdout, out.stderr
+    );
+    assert!(
+        out.stderr.contains("model failure") || out.stderr.contains("simulated network failure"),
+        "Expected error message on stderr. Got: {}",
+        out.stderr
+    );
+}
+
+/// TC-092: gap_check_invalid_json_discarded — valid findings kept, malformed discarded to stderr
+#[test]
+fn tc_092_gap_check_invalid_json_discarded() {
+    let h = fixture_gap_clean();
+
+    // Inject a response with one valid and one malformed finding
+    let mock_response = r#"[
+        {
+            "id": "GAP-ADR-001-G004-abcd",
+            "code": "G004",
+            "severity": "medium",
+            "description": "Undocumented constraint found",
+            "affected_artifacts": ["ADR-001"],
+            "suggested_action": "Document the constraint"
+        },
+        {
+            "id": "GAP-ADR-001-G005-bad",
+            "code": "G005",
+            "severity": "invalid_severity"
+        }
+    ]"#;
+
+    let out = h.run_with_env(
+        &["gap", "check", "ADR-001"],
+        &[("PRODUCT_GAP_INJECT_RESPONSE", mock_response)],
+    );
+
+    // Should not exit 1 (model findings are medium severity here)
+    assert_eq!(out.exit_code, 0, "Expected exit 0.\nstdout: {}\nstderr: {}", out.stdout, out.stderr);
+
+    let reports: serde_json::Value = serde_json::from_str(&out.stdout)
+        .unwrap_or_else(|e| panic!("output not valid JSON: {}\nstdout: {}", e, out.stdout));
+    let findings = reports[0]["findings"].as_array().expect("findings array");
+
+    // Valid finding should be present
+    assert!(
+        findings.iter().any(|f| f["id"].as_str() == Some("GAP-ADR-001-G004-abcd")),
+        "Valid finding should be in output. Got: {}",
+        out.stdout
+    );
+
+    // Malformed finding should be discarded and logged to stderr
+    assert!(
+        out.stderr.contains("discarding malformed finding"),
+        "Malformed finding should be logged to stderr. stderr: {}",
+        out.stderr
+    );
+}
+
+/// TC-095: gap_changed_expansion — ADR-002 and ADR-005 share FT-001, modifying ADR-002 includes ADR-005
+#[test]
+fn tc_095_gap_changed_expansion() {
+    let h = Harness::new();
+
+    // Initialize git repo
+    std::process::Command::new("git")
+        .args(["init"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git init");
+    std::process::Command::new("git")
+        .args(["config", "user.email", "test@test.com"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git config email");
+    std::process::Command::new("git")
+        .args(["config", "user.name", "Test"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git config name");
+
+    // FT-001 links ADR-002 and ADR-005
+    h.write("docs/features/FT-001-shared.md", "---\nid: FT-001\ntitle: Shared\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-002, ADR-005]\ntests: []\n---\n\nBody.\n");
+    h.write("docs/adrs/ADR-002-two.md", "---\nid: ADR-002\ntitle: Two\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n");
+    h.write("docs/adrs/ADR-005-five.md", "---\nid: ADR-005\ntitle: Five\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n");
+
+    // Initial commit
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+    std::process::Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git commit");
+
+    // Modify ADR-002
+    h.write("docs/adrs/ADR-002-two.md", "---\nid: ADR-002\ntitle: Two Updated\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\nUpdated.\n");
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+    std::process::Command::new("git")
+        .args(["commit", "-m", "update ADR-002"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git commit");
+
+    let out = h.run(&["gap", "check", "--changed"]);
+    let reports: serde_json::Value = serde_json::from_str(&out.stdout)
+        .unwrap_or_else(|e| panic!("not valid JSON: {}\nstdout: {}", e, out.stdout));
+    let report_arr = reports.as_array().expect("reports array");
+    let analysed_adrs: Vec<&str> = report_arr.iter().filter_map(|r| r["adr"].as_str()).collect();
+
+    assert!(
+        analysed_adrs.contains(&"ADR-005"),
+        "ADR-005 should be included via 1-hop expansion. Analysed: {:?}",
+        analysed_adrs
+    );
+}
+
+/// TC-097: gap_stdout_stderr_separation — findings on stdout (valid JSON), errors on stderr
+#[test]
+fn tc_097_gap_stdout_stderr_separation() {
+    // Test 1: normal run — stdout is valid JSON
+    let h = fixture_gap_g001();
+    let out = h.run(&["gap", "check", "ADR-001"]);
+    // stdout should be valid JSON regardless of exit code
+    let _parsed: serde_json::Value = serde_json::from_str(&out.stdout)
+        .unwrap_or_else(|e| panic!("stdout should be valid JSON: {}\nstdout: {}", e, out.stdout));
+
+    // Test 2: with model error — error on stderr, not on stdout
+    let h2 = fixture_gap_clean();
+    let out2 = h2.run_with_env(
+        &["gap", "check", "ADR-001"],
+        &[("PRODUCT_GAP_INJECT_ERROR", "test error")],
+    );
+    assert_eq!(out2.exit_code, 2);
+    assert!(
+        out2.stderr.contains("error"),
+        "Error should be on stderr: {}",
+        out2.stderr
+    );
+}
+
+/// TC-098: gap_json_schema — every finding has all required fields
+#[test]
+fn tc_098_gap_json_schema() {
+    let h = fixture_gap_g001();
+    let out = h.run(&["gap", "check", "ADR-001"]);
+
+    let reports: serde_json::Value = serde_json::from_str(&out.stdout)
+        .unwrap_or_else(|e| panic!("stdout not valid JSON: {}\nstdout: {}", e, out.stdout));
+
+    let required_fields = ["id", "code", "severity", "description", "affected_artifacts", "suggested_action"];
+
+    for report in reports.as_array().expect("reports array") {
+        for finding in report["findings"].as_array().expect("findings array") {
+            for field in &required_fields {
+                assert!(
+                    !finding[field].is_null(),
+                    "Finding missing required field '{}': {}",
+                    field,
+                    finding
+                );
+            }
+            // Verify types
+            assert!(finding["id"].is_string(), "id should be string");
+            assert!(finding["code"].is_string(), "code should be string");
+            assert!(finding["severity"].is_string(), "severity should be string");
+            assert!(finding["description"].is_string(), "description should be string");
+            assert!(finding["affected_artifacts"].is_array(), "affected_artifacts should be array");
+            assert!(finding["suggested_action"].is_string(), "suggested_action should be string");
+        }
+    }
 }

@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-019
 phase: 1
+runner: cargo-test
+runner-args: "g003_not_detected_when_present"
 ---
 
 run `product gap check ADR-001` against a fixture with full TC coverage. Assert exit code 0 and an empty findings array.
