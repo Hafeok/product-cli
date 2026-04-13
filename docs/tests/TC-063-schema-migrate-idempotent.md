@@ -10,6 +10,8 @@ validates:
   adrs:
   - ADR-014
 phase: 1
+runner: cargo-test
+runner-args: "tc_063_schema_migrate_idempotent"
 ---
 
 run `product migrate schema` twice. Assert the second run reports zero files changed.

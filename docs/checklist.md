@@ -218,7 +218,7 @@
 - [x] TC-138: acknowledgement_closes_gap (scenario) — passing
 - [x] TC-139: domains_vocab_unknown (scenario) — passing
 
-### FT-020 — Migration Path [~]
+### FT-020 — Migration Path [x]
 
 - [x] ADR-017: Migration Command Specification (accepted)
 - [x] ADR-014: Schema Versioning and Migration Path (accepted)
@@ -228,19 +228,15 @@
 - [x] TC-063: schema_migrate_idempotent (scenario) — passing
 - [x] TC-064: schema_migrate_preserves_unknown_fields (scenario) — passing
 - [x] TC-065: schema_version_mismatch_format (scenario) — passing
-- [ ] TC-080: ### Exit criteria (exit-criteria) — unimplemented
-- [ ] TC-081: title (scenario) — unimplemented
-- [ ] TC-082: type (scenario) — unimplemented
-- [ ] TC-083: status (scenario) — unimplemented
-- [ ] TC-084: validates.adrs (scenario) — unimplemented
-- [ ] TC-085: validates.features (scenario) — unimplemented
-- [ ] TC-162: FT-020 migration extracts and confirms (exit-criteria) — unimplemented
+- [x] TC-080: exit_criteria (exit-criteria) — passing
+- [x] TC-081: title (scenario) — passing
+- [x] TC-082: type (scenario) — passing
+- [x] TC-083: status (scenario) — passing
+- [x] TC-084: validates.adrs (scenario) — passing
+- [x] TC-085: validates.features (scenario) — passing
+- [x] TC-162: FT-020 migration extracts and confirms (exit-criteria) — passing
 
 ## Phase 2
-
-### FT-008 — Schema Migration [ ]
-
-- [x] ADR-014: Schema Versioning and Migration Path (accepted)
 
 ### FT-004 — Artifact Authoring [ ]
 
@@ -251,6 +247,10 @@
 ### FT-006 — Impact Analysis [ ]
 
 - [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
+
+### FT-008 — Schema Migration [ ]
+
+- [x] ADR-014: Schema Versioning and Migration Path (accepted)
 
 ### FT-014 — Status and Filters [ ]
 

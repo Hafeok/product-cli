@@ -2,7 +2,7 @@
 id: FT-020
 title: Migration Path
 phase: 1
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-017

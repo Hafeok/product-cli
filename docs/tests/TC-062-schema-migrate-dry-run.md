@@ -10,6 +10,8 @@ validates:
   adrs:
   - ADR-014
 phase: 1
+runner: cargo-test
+runner-args: "tc_062_schema_migrate_dry_run"
 ---
 
 run `product migrate schema --dry-run` on a v1 repo. Assert no files are modified. Assert stdout describes what would change.

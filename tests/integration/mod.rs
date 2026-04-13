@@ -432,6 +432,71 @@ fn tc_078_parse_raw_roundtrip() {
     );
 }
 
+// --- TC-060: schema_version_forward_error ---
+// Write schema-version = "99". Run any command. Assert exit code 1 and error E008.
+
+#[test]
+fn tc_060_schema_version_forward_error() {
+    let h = Harness::new();
+    h.write("product.toml", "name = \"test\"\nschema-version = \"99\"\n[paths]\nfeatures = \"docs/features\"\nadrs = \"docs/adrs\"\ntests = \"docs/tests\"\ngraph = \"docs/graph\"\nchecklist = \"docs/checklist.md\"\n");
+    let out = h.run(&["feature", "list"]);
+    out.assert_exit(1)
+        .assert_stderr_contains("E008");
+}
+
+// --- TC-061: schema_version_backward_warning ---
+// Write schema-version = "0". Run graph check. Assert W007 on stderr and command succeeds.
+
+#[test]
+fn tc_061_schema_version_backward_warning() {
+    let h = Harness::new();
+    h.write("product.toml", "name = \"test\"\nschema-version = \"0\"\n[paths]\nfeatures = \"docs/features\"\nadrs = \"docs/adrs\"\ntests = \"docs/tests\"\ngraph = \"docs/graph\"\nchecklist = \"docs/checklist.md\"\n[prefixes]\nfeature = \"FT\"\nadr = \"ADR\"\ntest = \"TC\"\n");
+    let out = h.run(&["graph", "check"]);
+    // Should complete (exit 0 or 2 for warnings) and show W007
+    assert!(
+        out.exit_code == 0 || out.exit_code == 2,
+        "backward compat should not hard-error, got exit code {}: stderr={}",
+        out.exit_code, out.stderr
+    );
+    out.assert_stderr_contains("W007");
+}
+
+// --- TC-062: schema_migrate_dry_run ---
+// Run migrate schema --dry-run on an old repo. Assert no files modified.
+
+#[test]
+fn tc_062_schema_migrate_dry_run() {
+    let h = Harness::new();
+    h.write("product.toml", "name = \"test\"\nschema-version = \"0\"\n[paths]\nfeatures = \"docs/features\"\nadrs = \"docs/adrs\"\ntests = \"docs/tests\"\ngraph = \"docs/graph\"\nchecklist = \"docs/checklist.md\"\n[prefixes]\nfeature = \"FT\"\nadr = \"ADR\"\ntest = \"TC\"\n");
+    h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\nadrs: []\ntests: []\n---\n");
+    let before_feature = h.read("docs/features/FT-001-test.md");
+    let before_config = h.read("product.toml");
+    h.run(&["migrate", "schema", "--dry-run"]).assert_exit(0);
+    let after_feature = h.read("docs/features/FT-001-test.md");
+    let after_config = h.read("product.toml");
+    assert_eq!(before_feature, after_feature, "dry-run should not modify feature files");
+    assert_eq!(before_config, after_config, "dry-run should not modify product.toml");
+}
+
+// --- TC-063: schema_migrate_idempotent ---
+// Run migrate schema twice. Second run reports zero files changed.
+
+#[test]
+fn tc_063_schema_migrate_idempotent() {
+    let h = Harness::new();
+    h.write("product.toml", "name = \"test\"\nschema-version = \"0\"\n[paths]\nfeatures = \"docs/features\"\nadrs = \"docs/adrs\"\ntests = \"docs/tests\"\ngraph = \"docs/graph\"\nchecklist = \"docs/checklist.md\"\n[prefixes]\nfeature = \"FT\"\nadr = \"ADR\"\ntest = \"TC\"\n");
+    h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\nadrs: []\ntests: []\n---\n");
+    h.run(&["migrate", "schema"]).assert_exit(0);
+    let out2 = h.run(&["migrate", "schema"]);
+    out2.assert_exit(0);
+    // Second run should report 0 files changed (already at current schema)
+    assert!(
+        out2.stdout.contains("0 files") || out2.stdout.contains("already at") || out2.stdout.contains("up to date"),
+        "second run should report no changes needed, got stdout:\n{}",
+        out2.stdout
+    );
+}
+
 // --- TC-064: schema_migrate_preserves_unknown_fields ---
 // Add custom-tag: foo to a feature. Run migrate schema. Assert custom-tag: foo is still present.
 
@@ -2944,5 +3009,422 @@ fn tc_139_domains_vocab_unknown() {
         out.stderr.contains("unknown-domain"),
         "E012 should mention the unknown domain name, got stderr:\n{}",
         out.stderr
+    );
+}
+
+// ===========================================================================
+// TC-080: exit_criteria — migration extracts exit-criteria test type from headings
+// ===========================================================================
+
+#[test]
+fn tc_080_exit_criteria() {
+    let h = Harness::new();
+    let adr_source = r#"# ADRs
+
+## ADR-001: Test ADR
+
+**Status:** Accepted
+
+Some context.
+
+### Exit criteria
+
+- `exit_binary_compiles` — binary compiles successfully
+- `exit_all_tests_pass` — all tests pass
+"#;
+    h.write("source-adrs.md", adr_source);
+    let out = h.run(&["migrate", "from-adrs", "source-adrs.md", "--execute"]);
+    out.assert_exit(0);
+
+    // Check that test criteria files were created
+    let entries: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/tests"))
+        .expect("readdir")
+        .flatten()
+        .collect();
+    assert!(
+        !entries.is_empty(),
+        "should have created test criteria files"
+    );
+
+    // Verify at least one test file has type: exit-criteria
+    let mut found_exit_criteria = false;
+    for entry in &entries {
+        let content = std::fs::read_to_string(entry.path()).unwrap_or_default();
+        if content.contains("type: exit-criteria") {
+            found_exit_criteria = true;
+            break;
+        }
+    }
+    assert!(
+        found_exit_criteria,
+        "should have extracted at least one exit-criteria test from ### Exit criteria heading"
+    );
+}
+
+// ===========================================================================
+// TC-081: title — migration extracts correct titles from headings
+// ===========================================================================
+
+#[test]
+fn tc_081_title() {
+    let h = Harness::new();
+    let prd_source = "# PRD\n\n## 5. Products and IAM\n\nContent about products.\n\n## Storage Model\n\nStorage stuff.\n";
+    h.write("source-prd.md", prd_source);
+    let out = h.run(&["migrate", "from-prd", "source-prd.md", "--execute"]);
+    out.assert_exit(0);
+
+    // Check that feature files were created with correct titles
+    let entries: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/features"))
+        .expect("readdir")
+        .flatten()
+        .collect();
+    assert_eq!(entries.len(), 2, "should create 2 feature files");
+
+    // Verify titles: "5. Products and IAM" should become "Products and IAM" (stripped number)
+    let mut found_products = false;
+    let mut found_storage = false;
+    for entry in &entries {
+        let content = std::fs::read_to_string(entry.path()).unwrap_or_default();
+        if content.contains("title: Products and IAM") {
+            found_products = true;
+        }
+        if content.contains("title: Storage Model") {
+            found_storage = true;
+        }
+    }
+    assert!(found_products, "title should strip leading number: '5. Products and IAM' → 'Products and IAM'");
+    assert!(found_storage, "title 'Storage Model' should be preserved as-is");
+}
+
+// ===========================================================================
+// TC-082: type — migration infers correct test types from keywords
+// ===========================================================================
+
+#[test]
+fn tc_082_type() {
+    let h = Harness::new();
+    let adr_source = r#"# ADRs
+
+## ADR-001: Test Types
+
+**Status:** Accepted
+
+Context.
+
+### Test coverage
+
+- `chaos_network_partition` — chaos test for partitions
+- `invariant_monotonic_clock` — invariant for clock
+- `binary_compiles` — scenario test
+"#;
+    h.write("source-adrs.md", adr_source);
+    let out = h.run(&["migrate", "from-adrs", "source-adrs.md", "--execute"]);
+    out.assert_exit(0);
+
+    let entries: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/tests"))
+        .expect("readdir")
+        .flatten()
+        .collect();
+
+    let mut found_chaos = false;
+    let mut found_invariant = false;
+    let mut found_scenario = false;
+    for entry in &entries {
+        let content = std::fs::read_to_string(entry.path()).unwrap_or_default();
+        if content.contains("type: chaos") {
+            found_chaos = true;
+        }
+        if content.contains("type: invariant") {
+            found_invariant = true;
+        }
+        if content.contains("type: scenario") {
+            found_scenario = true;
+        }
+    }
+    assert!(found_chaos, "bullet containing 'chaos' should produce type: chaos");
+    assert!(found_invariant, "bullet containing 'invariant' should produce type: invariant");
+    assert!(found_scenario, "other bullets should produce type: scenario");
+}
+
+// ===========================================================================
+// TC-083: status — migration extracts correct status from ADR bodies
+// ===========================================================================
+
+#[test]
+fn tc_083_status() {
+    let h = Harness::new();
+    let adr_source = r#"# ADRs
+
+## ADR-001: Accepted ADR
+
+**Status:** Accepted
+
+Context for accepted.
+
+### Test coverage
+
+- `test_one_accepted` — a test
+
+## ADR-002: Proposed ADR
+
+**Status:** Proposed
+
+Context for proposed.
+
+### Test coverage
+
+- `test_two_proposed` — another test
+
+## ADR-003: No Status ADR
+
+Context without status line.
+
+### Test coverage
+
+- `test_three_nostatus` — yet another test
+"#;
+    h.write("source-adrs.md", adr_source);
+    let out = h.run(&["migrate", "from-adrs", "source-adrs.md", "--execute"]);
+    out.assert_exit(0);
+
+    // Check ADR-001 has status: accepted
+    let adr1_files: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/adrs"))
+        .expect("readdir")
+        .flatten()
+        .filter(|e| e.file_name().to_string_lossy().contains("ADR-001"))
+        .collect();
+    assert_eq!(adr1_files.len(), 1, "should create ADR-001");
+    let adr1_content = std::fs::read_to_string(adr1_files[0].path()).unwrap_or_default();
+    assert!(adr1_content.contains("status: accepted"), "ADR-001 should have status: accepted, got:\n{}", adr1_content);
+
+    // Check ADR-002 has status: proposed
+    let adr2_files: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/adrs"))
+        .expect("readdir")
+        .flatten()
+        .filter(|e| e.file_name().to_string_lossy().contains("ADR-002"))
+        .collect();
+    assert_eq!(adr2_files.len(), 1, "should create ADR-002");
+    let adr2_content = std::fs::read_to_string(adr2_files[0].path()).unwrap_or_default();
+    assert!(adr2_content.contains("status: proposed"), "ADR-002 should have status: proposed, got:\n{}", adr2_content);
+
+    // Check ADR-003 defaults to proposed (no status found) and W008 warning
+    let adr3_files: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/adrs"))
+        .expect("readdir")
+        .flatten()
+        .filter(|e| e.file_name().to_string_lossy().contains("ADR-003"))
+        .collect();
+    assert_eq!(adr3_files.len(), 1, "should create ADR-003");
+    let adr3_content = std::fs::read_to_string(adr3_files[0].path()).unwrap_or_default();
+    assert!(adr3_content.contains("status: proposed"), "ADR-003 should default to proposed, got:\n{}", adr3_content);
+
+    // W008 warning should appear in stdout for ADR-003
+    assert!(
+        out.stdout.contains("W008"),
+        "should warn W008 for missing status, got stdout:\n{}",
+        out.stdout
+    );
+}
+
+// ===========================================================================
+// TC-084: validates.adrs — extracted TCs have correct validates.adrs
+// ===========================================================================
+
+#[test]
+fn tc_084_validates_adrs() {
+    let h = Harness::new();
+    let adr_source = r#"# ADRs
+
+## ADR-005: Storage Engine
+
+**Status:** Accepted
+
+Context.
+
+### Test coverage
+
+- `storage_init` — initializes storage
+- `storage_read` — reads from storage
+"#;
+    h.write("source-adrs.md", adr_source);
+    let out = h.run(&["migrate", "from-adrs", "source-adrs.md", "--execute"]);
+    out.assert_exit(0);
+
+    let entries: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/tests"))
+        .expect("readdir")
+        .flatten()
+        .collect();
+    assert!(entries.len() >= 2, "should create at least 2 test criteria");
+
+    // Every test extracted from ADR-005 must validate ADR-005
+    for entry in &entries {
+        let content = std::fs::read_to_string(entry.path()).unwrap_or_default();
+        assert!(
+            content.contains("ADR-005"),
+            "test file {} should have validates.adrs containing ADR-005, got:\n{}",
+            entry.file_name().to_string_lossy(),
+            content
+        );
+    }
+}
+
+// ===========================================================================
+// TC-085: validates.features — extracted features have empty validates.features (by design)
+// ===========================================================================
+
+#[test]
+fn tc_085_validates_features() {
+    let h = Harness::new();
+    let prd_source = "# PRD\n\n## Feature Alpha\n\nAlpha content.\n\n## Feature Beta\n\nBeta content.\n";
+    h.write("source-prd.md", prd_source);
+    let out = h.run(&["migrate", "from-prd", "source-prd.md", "--execute"]);
+    out.assert_exit(0);
+
+    // Features extracted from PRD should have empty adrs and tests lists (not inferred)
+    let entries: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/features"))
+        .expect("readdir")
+        .flatten()
+        .collect();
+    assert_eq!(entries.len(), 2, "should create 2 features");
+
+    for entry in &entries {
+        let content = std::fs::read_to_string(entry.path()).unwrap_or_default();
+        // adrs and tests should be empty arrays
+        assert!(
+            content.contains("adrs: []"),
+            "feature {} should have empty adrs (not inferred), got:\n{}",
+            entry.file_name().to_string_lossy(),
+            content
+        );
+        assert!(
+            content.contains("tests: []"),
+            "feature {} should have empty tests (not inferred), got:\n{}",
+            entry.file_name().to_string_lossy(),
+            content
+        );
+    }
+}
+
+// ===========================================================================
+// TC-162: FT-020 migration extracts and confirms (exit-criteria)
+// ===========================================================================
+
+#[test]
+fn tc_162_ft_020_migration_extracts_and_confirms() {
+    let h = Harness::new();
+
+    // Create a combined test: PRD migration + ADR migration end-to-end
+    let prd_source = r#"# PRD
+
+## Vision
+
+Our grand vision.
+
+## Cluster Foundation
+
+Foundation content.
+- [x] foundation done
+
+## Storage Model
+
+Storage content.
+- [ ] pending work
+
+## Non-Goals
+
+Not doing this.
+"#;
+    let adr_source = r#"# ADRs
+
+## ADR-001: Rust Language
+
+**Status:** Accepted
+
+Rust for implementation.
+
+### Test coverage
+
+- `binary_compiles_arm64` — compiles on ARM64
+- `chaos_network_partition` — chaos test for network
+
+## ADR-002: YAML Front-Matter
+
+**Status:** Accepted
+
+YAML for front-matter.
+"#;
+    h.write("prd.md", prd_source);
+    h.write("adrs.md", adr_source);
+
+    // Phase 1: Validate (dry-run) — no files written
+    let out = h.run(&["migrate", "from-prd", "prd.md", "--validate"]);
+    out.assert_exit(0)
+        .assert_stdout_contains("Migration plan");
+    let feature_count = std::fs::read_dir(h.dir.path().join("docs/features"))
+        .expect("readdir")
+        .flatten()
+        .count();
+    assert_eq!(feature_count, 0, "validate should not write files");
+
+    // Phase 2: Execute PRD migration
+    let out = h.run(&["migrate", "from-prd", "prd.md", "--execute"]);
+    out.assert_exit(0);
+    let feature_entries: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/features"))
+        .expect("readdir")
+        .flatten()
+        .collect();
+    // Vision and Non-Goals excluded → 2 features (Cluster Foundation, Storage Model)
+    assert_eq!(feature_entries.len(), 2, "should create exactly 2 features (Vision + Non-Goals excluded)");
+
+    // Verify status inference: Cluster Foundation has all checked → complete, Storage Model has unchecked → planned
+    let mut found_complete = false;
+    let mut found_planned = false;
+    for entry in &feature_entries {
+        let content = std::fs::read_to_string(entry.path()).unwrap_or_default();
+        if content.contains("Cluster Foundation") && content.contains("status: complete") {
+            found_complete = true;
+        }
+        if content.contains("Storage Model") && content.contains("status: planned") {
+            found_planned = true;
+        }
+    }
+    assert!(found_complete, "Cluster Foundation (all [x]) should have status: complete");
+    assert!(found_planned, "Storage Model (has [ ]) should have status: planned");
+
+    // Phase 3: Execute ADR migration
+    let out = h.run(&["migrate", "from-adrs", "adrs.md", "--execute"]);
+    out.assert_exit(0);
+    let adr_entries: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/adrs"))
+        .expect("readdir")
+        .flatten()
+        .collect();
+    assert_eq!(adr_entries.len(), 2, "should create 2 ADR files");
+
+    let test_entries: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/tests"))
+        .expect("readdir")
+        .flatten()
+        .collect();
+    assert!(test_entries.len() >= 2, "should extract at least 2 test criteria from ADR-001");
+
+    // Verify source files are unchanged
+    let prd_after = h.read("prd.md");
+    assert_eq!(prd_source, prd_after, "PRD source must be unchanged after migration");
+    let adr_after = h.read("adrs.md");
+    assert_eq!(adr_source, adr_after, "ADR source must be unchanged after migration");
+
+    // Phase 4: Re-run should skip existing files
+    let out = h.run(&["migrate", "from-prd", "prd.md", "--execute"]);
+    out.assert_exit(0);
+    assert!(
+        out.stdout.contains("skip"),
+        "re-run should report skipping existing files, got:\n{}",
+        out.stdout
+    );
+
+    // W009 warning for ADR-002 (no test subsection)
+    let out_adrs = h.run(&["migrate", "from-adrs", "adrs.md", "--validate"]);
+    assert!(
+        out_adrs.stdout.contains("W009"),
+        "should warn W009 for ADR-002 missing tests, got:\n{}",
+        out_adrs.stdout
     );
 }

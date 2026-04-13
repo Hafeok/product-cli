@@ -10,6 +10,8 @@ validates:
   adrs:
   - ADR-014
 phase: 1
+runner: cargo-test
+runner-args: "tc_060_schema_version_forward_error"
 ---
 
 write `schema-version = "99"` to `product.toml`. Run any command. Assert exit code 1 and error E008 with the upgrade hint.
