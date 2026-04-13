@@ -1,0 +1,1 @@
+It looks like the write permission for `docs/guide/` keeps getting denied. Would you like to approve the write to `docs/guide/FT-001-core-concepts.md`, or would you prefer I output the documentation directly so you can save it yourself?
