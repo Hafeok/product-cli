@@ -134,7 +134,7 @@
 - [x] TC-002: binary_compiles_x86 (scenario) — passing
 - [x] TC-003: binary_no_deps.sh (scenario) — passing
 - [x] TC-004: cargo build --release (scenario) — passing
-- [ ] TC-163: FT-012 cluster foundation binary validated (exit-criteria) — unimplemented
+- [x] TC-163: FT-012 cluster foundation binary validated (exit-criteria) — passing
 
 ### FT-013 — ADR-001 — Rust as Implementation Language [~]
 

@@ -2070,3 +2070,86 @@ fn tc_051_impact_transitive() {
     // FT-007 depends on FT-001 which is linked to ADR-002 — should appear as transitive
     out.assert_stdout_contains("FT-007");
 }
+
+// --- TC-163: FT-012 cluster foundation binary validated (exit-criteria) ---
+// All FT-012 cluster foundation scenarios pass: binary builds for ARM64, x86_64,
+// has no unexpected dynamic dependencies, and cargo build --release succeeds.
+
+#[test]
+fn tc_163_ft012_cluster_foundation_binary_validated() {
+    // TC-004: cargo build --release succeeds
+    let output = Command::new("cargo")
+        .args(["build", "--release"])
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .expect("cargo build --release");
+    assert!(
+        output.status.success(),
+        "TC-004 cargo build --release failed:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // TC-001: binary compiles for ARM64
+    let output = Command::new("cargo")
+        .args(["build", "--release", "--target", "aarch64-unknown-linux-gnu"])
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .expect("cargo build arm64");
+    assert!(
+        output.status.success(),
+        "TC-001 ARM64 build failed:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // TC-002: binary compiles for x86_64
+    let output = Command::new("cargo")
+        .args(["build", "--release", "--target", "x86_64-unknown-linux-musl"])
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .expect("cargo build x86_64");
+    assert!(
+        output.status.success(),
+        "TC-002 x86_64 build failed:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // TC-003: binary has no unexpected dynamic dependencies
+    let h = Harness::new();
+    let ldd_out = Command::new("ldd")
+        .arg(&h.bin)
+        .output();
+    match ldd_out {
+        Ok(output) => {
+            let ldd_output = String::from_utf8_lossy(&output.stdout).to_string();
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            let is_static = ldd_output.contains("not a dynamic executable")
+                || ldd_output.contains("statically linked")
+                || stderr.contains("not a dynamic executable");
+            if !is_static {
+                for line in ldd_output.lines() {
+                    let line = line.trim();
+                    if line.is_empty() {
+                        continue;
+                    }
+                    let allowed = line.contains("libc")
+                        || line.contains("libm")
+                        || line.contains("libgcc")
+                        || line.contains("libpthread")
+                        || line.contains("libdl")
+                        || line.contains("librt")
+                        || line.contains("ld-linux")
+                        || line.contains("linux-vdso")
+                        || line.contains("linux-gnu");
+                    assert!(
+                        allowed,
+                        "Unexpected dynamic dependency: {}",
+                        line
+                    );
+                }
+            }
+        }
+        Err(_) => {
+            eprintln!("ldd not available (e.g., macOS) — skipping dependency check");
+        }
+    }
+}
