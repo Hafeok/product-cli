@@ -6,6 +6,7 @@ status: passing
 validates:
   features:
   - FT-017
+  - FT-014
   adrs:
   - ADR-007
 phase: 1

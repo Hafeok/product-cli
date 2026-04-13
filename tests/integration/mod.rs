@@ -797,6 +797,33 @@ fn tc_065_schema_version_mismatch_format() {
     );
 }
 
+// --- TC-027: exit_code_clean ---
+// Run `product graph check` on a fully consistent repository. Assert exit code 0.
+
+#[test]
+fn tc_027_exit_code_clean() {
+    let h = fixture_minimal();
+    h.run(&["graph", "check"]).assert_exit(0);
+}
+
+// --- TC-028: exit_code_broken_link ---
+// Add a feature that references a non-existent ADR. Assert exit code 1.
+
+#[test]
+fn tc_028_exit_code_broken_link() {
+    let h = fixture_broken_link();
+    h.run(&["graph", "check"]).assert_exit(1);
+}
+
+// --- TC-029: exit_code_warnings_only ---
+// Create an ADR with no feature links (orphan). Assert exit code 2.
+
+#[test]
+fn tc_029_exit_code_warnings_only() {
+    let h = fixture_orphaned_adr();
+    h.run(&["graph", "check"]).assert_exit(2);
+}
+
 // --- TC-030: exit_code_ci_pipeline ---
 // Shell-like test: graph check exits 0 on clean, 1 on errors, 2 on warnings-only.
 

@@ -321,6 +321,9 @@ enum TestCommands {
         test_type: Option<String>,
         #[arg(long)]
         status: Option<String>,
+        /// Show only failing tests
+        #[arg(long)]
+        failing: bool,
     },
     /// Show a test criterion's details
     Show { id: String },
@@ -1062,6 +1065,7 @@ fn handle_test(cmd: TestCommands, fmt: &str) -> BoxResult {
             phase,
             test_type,
             status,
+            failing,
         } => {
             let (_, _, graph) = load_graph()?;
             let mut tests: Vec<&types::TestCriterion> = graph.tests.values().collect();
@@ -1074,7 +1078,9 @@ fn handle_test(cmd: TestCommands, fmt: &str) -> BoxResult {
                 let target: types::TestType = tt.parse().map_err(|e: String| ProductError::ConfigError(e))?;
                 tests.retain(|t| t.front.test_type == target);
             }
-            if let Some(ref s) = status {
+            if failing {
+                tests.retain(|t| t.front.status == types::TestStatus::Failing);
+            } else if let Some(ref s) = status {
                 let target: types::TestStatus = s.parse().map_err(|e: String| ProductError::ConfigError(e))?;
                 tests.retain(|t| t.front.status == target);
             }

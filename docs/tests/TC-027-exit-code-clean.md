@@ -6,9 +6,12 @@ status: passing
 validates:
   features:
   - FT-010
+  - FT-014
   adrs:
   - ADR-009
 phase: 1
+runner: cargo-test
+runner-args: "tc_027_exit_code_clean"
 ---
 
 run `product graph check` on a fully consistent repository. Assert exit code 0.

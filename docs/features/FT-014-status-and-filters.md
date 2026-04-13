@@ -2,14 +2,42 @@
 id: FT-014
 title: Status and Filters
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-017
 - FT-016
 adrs:
 - ADR-007
 - ADR-009
-tests: []
+tests:
+- TC-009
+- TC-010
+- TC-021
+- TC-022
+- TC-023
+- TC-024
+- TC-025
+- TC-026
+- TC-027
+- TC-028
+- TC-029
+- TC-030
+- TC-041
+- TC-042
+- TC-043
+- TC-044
+- TC-045
+- TC-046
+- TC-047
+- TC-048
+- TC-049
+- TC-050
+- TC-051
+- TC-052
+- TC-053
+- TC-054
+- TC-157
+- TC-159
 domains: []
 domains-acknowledged: {}
 ---
