@@ -1584,6 +1584,20 @@ fn handle_status(phase: Option<u32>, untested: bool, failing: bool, fmt: &str) -
         .collect();
     phases.sort();
 
+    // Compute topological order for deterministic display (same as `feature next`)
+    let topo_order: std::collections::HashMap<String, usize> = graph
+        .topological_sort()
+        .unwrap_or_else(|_| {
+            // Fallback to ID sort if cycle detected
+            let mut ids: Vec<String> = graph.features.keys().cloned().collect();
+            ids.sort();
+            ids
+        })
+        .into_iter()
+        .enumerate()
+        .map(|(i, id)| (id, i))
+        .collect();
+
     if fmt == "json" {
         let mut phase_arr: Vec<serde_json::Value> = Vec::new();
         for p in &phases {
@@ -1592,11 +1606,12 @@ fn handle_status(phase: Option<u32>, untested: bool, failing: bool, fmt: &str) -
                     continue;
                 }
             }
-            let phase_features: Vec<&types::Feature> = graph
+            let mut phase_features: Vec<&types::Feature> = graph
                 .features
                 .values()
                 .filter(|f| f.front.phase == *p)
                 .collect();
+            phase_features.sort_by_key(|f| topo_order.get(&f.front.id).copied().unwrap_or(usize::MAX));
             let name = config
                 .phases
                 .get(&p.to_string())
@@ -1657,11 +1672,12 @@ fn handle_status(phase: Option<u32>, untested: bool, failing: bool, fmt: &str) -
                 }
             }
 
-            let phase_features: Vec<&types::Feature> = graph
+            let mut phase_features: Vec<&types::Feature> = graph
                 .features
                 .values()
                 .filter(|f| f.front.phase == *p)
                 .collect();
+            phase_features.sort_by_key(|f| topo_order.get(&f.front.id).copied().unwrap_or(usize::MAX));
 
             let name = config
                 .phases
