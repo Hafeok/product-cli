@@ -2,7 +2,7 @@
 id: TC-008
 title: frontmatter_missing_required
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-002

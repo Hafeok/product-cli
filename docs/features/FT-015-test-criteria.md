@@ -2,7 +2,7 @@
 id: FT-015
 title: Test Criteria
 phase: 1
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-011
@@ -24,6 +24,7 @@ tests:
 - TC-077
 - TC-078
 - TC-079
+- TC-153
 domains: []
 domains-acknowledged: {}
 ---

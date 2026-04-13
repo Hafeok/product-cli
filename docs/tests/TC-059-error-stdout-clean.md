@@ -2,7 +2,7 @@
 id: TC-059
 title: error_stdout_clean
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-010

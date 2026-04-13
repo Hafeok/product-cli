@@ -12,3 +12,9 @@ phase: 1
 ---
 
 parse a `⟦Γ:Invariants⟧` block with a universal quantifier. Assert the parsed expression tree matches the expected structure.
+
+⟦Γ:Invariants⟧{
+  ∀b:Block where b.type = "Invariants":
+    parse(b.raw).expressions.len() ≥ 1
+    ∧ parse(b.raw).quantifiers ⊇ {"∀"}
+}

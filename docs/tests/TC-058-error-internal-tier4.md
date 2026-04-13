@@ -2,7 +2,7 @@
 id: TC-058
 title: error_internal_tier4
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-010

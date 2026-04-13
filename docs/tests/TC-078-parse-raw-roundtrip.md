@@ -2,7 +2,7 @@
 id: TC-078
 title: parse_raw_roundtrip
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-003

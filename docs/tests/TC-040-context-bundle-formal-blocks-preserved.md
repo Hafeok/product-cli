@@ -2,7 +2,7 @@
 id: TC-040
 title: context_bundle_formal_blocks_preserved
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-015

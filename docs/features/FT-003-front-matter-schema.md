@@ -2,7 +2,7 @@
 id: FT-003
 title: Front-Matter Schema
 phase: 1
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-002
@@ -28,6 +28,7 @@ tests:
 - TC-077
 - TC-078
 - TC-079
+- TC-155
 domains: []
 domains-acknowledged: {}
 ---

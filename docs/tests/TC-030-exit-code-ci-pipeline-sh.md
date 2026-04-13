@@ -2,7 +2,7 @@
 id: TC-030
 title: exit_code_ci_pipeline.sh
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-010

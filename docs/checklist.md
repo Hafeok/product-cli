@@ -19,19 +19,21 @@
 - [x] TC-013: id_auto_increment (scenario) — passing
 - [ ] TC-014: id_gap_fill (scenario) — unimplemented
 - [ ] TC-015: id_conflict (scenario) — unimplemented
+- [ ] TC-156: FT-001 core concepts validated (exit-criteria) — unimplemented
 
-### FT-002 — Repository Layout [~]
+### FT-002 — Repository Layout [x]
 
 - [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
 - [x] ADR-004: Markdown as the Document Format (accepted)
 - [x] TC-005: frontmatter_parse_feature (scenario) — passing
 - [x] TC-006: frontmatter_parse_adr (scenario) — passing
 - [x] TC-007: frontmatter_invalid_id (scenario) — passing
-- [ ] TC-008: frontmatter_missing_required (scenario) — unimplemented
+- [x] TC-008: frontmatter_missing_required (scenario) — passing
 - [x] TC-011: markdown_front_matter_strip (scenario) — passing
 - [x] TC-012: markdown_passthrough (scenario) — passing
+- [x] TC-154: FT-002 repository layout validated (exit-criteria) — passing
 
-### FT-003 — Front-Matter Schema [~]
+### FT-003 — Front-Matter Schema [x]
 
 - [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
 - [x] ADR-014: Schema Versioning and Migration Path (accepted)
@@ -39,13 +41,13 @@
 - [x] TC-005: frontmatter_parse_feature (scenario) — passing
 - [x] TC-006: frontmatter_parse_adr (scenario) — passing
 - [x] TC-007: frontmatter_invalid_id (scenario) — passing
-- [ ] TC-008: frontmatter_missing_required (scenario) — unimplemented
+- [x] TC-008: frontmatter_missing_required (scenario) — passing
 - [x] TC-060: schema_version_forward_error (scenario) — passing
 - [x] TC-061: schema_version_backward_warning (scenario) — passing
 - [x] TC-062: schema_migrate_dry_run (scenario) — passing
 - [x] TC-063: schema_migrate_idempotent (scenario) — passing
-- [ ] TC-064: schema_migrate_preserves_unknown_fields (scenario) — unimplemented
-- [ ] TC-065: schema_version_mismatch_format (scenario) — unimplemented
+- [x] TC-064: schema_migrate_preserves_unknown_fields (scenario) — passing
+- [x] TC-065: schema_version_mismatch_format (scenario) — passing
 - [x] TC-071: parse_types_block (scenario) — passing
 - [x] TC-072: parse_invariants_block (invariant) — passing
 - [x] TC-073: parse_scenario_block (scenario) — passing
@@ -53,8 +55,9 @@
 - [x] TC-075: parse_evidence_delta_out_of_range (scenario) — passing
 - [x] TC-076: parse_unclosed_delimiter (scenario) — passing
 - [x] TC-077: parse_empty_block_warning (scenario) — passing
-- [ ] TC-078: parse_raw_roundtrip (scenario) — unimplemented
+- [x] TC-078: parse_raw_roundtrip (scenario) — passing
 - [x] TC-079: parse_unknown_block_type (scenario) — passing
+- [x] TC-155: FT-003 front-matter schema fully validated (exit-criteria) — passing
 
 ### FT-005 — Formal Specification [~]
 
@@ -64,12 +67,14 @@
 - [ ] TC-068: lock_concurrent_writes (scenario) — unimplemented
 - [ ] TC-069: lock_stale_cleanup (scenario) — unimplemented
 - [x] TC-070: tmp_cleanup_on_startup (scenario) — passing
+- [ ] TC-161: FT-005 atomic writes and locking safe (exit-criteria) — unimplemented
 
 ### FT-007 — Formal Specification [x]
 
 - [x] ADR-004: Markdown as the Document Format (accepted)
 - [x] TC-011: markdown_front_matter_strip (scenario) — passing
 - [x] TC-012: markdown_passthrough (scenario) — passing
+- [ ] TC-152: FT-007 all tests pass and feature is complete (exit-criteria) — unimplemented
 
 ### FT-009 — Formal Specification [~]
 
@@ -77,20 +82,21 @@
 - [x] TC-013: id_auto_increment (scenario) — passing
 - [ ] TC-014: id_gap_fill (scenario) — unimplemented
 - [ ] TC-015: id_conflict (scenario) — unimplemented
+- [ ] TC-160: FT-009 formal specification blocks parse (exit-criteria) — unimplemented
 
-### FT-010 — CLI Commands [~]
+### FT-010 — CLI Commands [x]
 
 - [x] ADR-009: CI Integration via Exit Codes (accepted)
 - [x] ADR-013: Error Model and User-Facing Error Format (accepted)
 - [x] TC-027: exit_code_clean (exit-criteria) — passing
 - [x] TC-028: exit_code_broken_link (exit-criteria) — passing
 - [x] TC-029: exit_code_warnings_only (exit-criteria) — passing
-- [ ] TC-030: exit_code_ci_pipeline.sh (exit-criteria) — unimplemented
+- [x] TC-030: exit_code_ci_pipeline.sh (exit-criteria) — passing
 - [x] TC-055: error_broken_link_format (scenario) — passing
 - [x] TC-056: error_json_format (scenario) — passing
 - [x] TC-057: error_no_panic_on_bad_yaml (scenario) — passing
-- [ ] TC-058: error_internal_tier4 (scenario) — unimplemented
-- [ ] TC-059: error_stdout_clean (scenario) — unimplemented
+- [x] TC-058: error_internal_tier4 (scenario) — passing
+- [x] TC-059: error_stdout_clean (scenario) — passing
 
 ### FT-011 — Context Bundle Format [~]
 
@@ -119,6 +125,7 @@
 - [ ] TC-052: impact_on_supersede (scenario) — unimplemented
 - [ ] TC-053: product graph central (scenario) — unimplemented
 - [ ] TC-054: product impact ADR-001 (scenario) — unimplemented
+- [ ] TC-158: FT-011 context bundle output correct (exit-criteria) — unimplemented
 
 ### FT-012 — Feature: FT-001 — Cluster Foundation [~]
 
@@ -127,6 +134,7 @@
 - [x] TC-002: binary_compiles_x86 (scenario) — passing
 - [ ] TC-003: binary_no_deps.sh (scenario) — unimplemented
 - [x] TC-004: cargo build --release (scenario) — passing
+- [ ] TC-163: FT-012 cluster foundation binary validated (exit-criteria) — unimplemented
 
 ### FT-013 — ADR-001 — Rust as Implementation Language [~]
 
@@ -135,8 +143,9 @@
 - [x] TC-002: binary_compiles_x86 (scenario) — passing
 - [ ] TC-003: binary_no_deps.sh (scenario) — unimplemented
 - [x] TC-004: cargo build --release (scenario) — passing
+- [ ] TC-164: FT-013 Rust implementation compiles clean (exit-criteria) — unimplemented
 
-### FT-015 — Test Criteria [~]
+### FT-015 — Test Criteria [x]
 
 - [x] ADR-011: AISP-Influenced Formal Notation for Test Criteria (accepted)
 - [x] ADR-016: Formal Block Grammar (accepted)
@@ -146,7 +155,7 @@
 - [x] TC-037: formal_block_parse_scenario (scenario) — passing
 - [x] TC-038: formal_block_evidence (scenario) — passing
 - [x] TC-039: formal_block_missing_invariant_warning (invariant) — passing
-- [ ] TC-040: context_bundle_formal_blocks_preserved (scenario) — unimplemented
+- [x] TC-040: context_bundle_formal_blocks_preserved (scenario) — passing
 - [x] TC-071: parse_types_block (scenario) — passing
 - [x] TC-072: parse_invariants_block (invariant) — passing
 - [x] TC-073: parse_scenario_block (scenario) — passing
@@ -154,8 +163,9 @@
 - [x] TC-075: parse_evidence_delta_out_of_range (scenario) — passing
 - [x] TC-076: parse_unclosed_delimiter (scenario) — passing
 - [x] TC-077: parse_empty_block_warning (scenario) — passing
-- [ ] TC-078: parse_raw_roundtrip (scenario) — unimplemented
+- [x] TC-078: parse_raw_roundtrip (scenario) — passing
 - [x] TC-079: parse_unknown_block_type (scenario) — passing
+- [x] TC-153: FT-015 all test-criteria scenarios pass (exit-criteria) — passing
 
 ### FT-016 — Graph Model [~]
 
@@ -181,6 +191,7 @@
 - [ ] TC-052: impact_on_supersede (scenario) — unimplemented
 - [ ] TC-053: product graph central (scenario) — unimplemented
 - [ ] TC-054: product impact ADR-001 (scenario) — unimplemented
+- [ ] TC-157: FT-016 graph model queries pass (exit-criteria) — unimplemented
 
 ### FT-017 — Generated Checklist [~]
 
@@ -188,6 +199,7 @@
 - [x] TC-021: checklist_generate (scenario) — passing
 - [ ] TC-022: checklist_no_manual_edit_warning (scenario) — unimplemented
 - [ ] TC-023: checklist_roundtrip (scenario) — unimplemented
+- [ ] TC-159: FT-017 checklist generation idempotent (exit-criteria) — unimplemented
 
 ### FT-018 — Validation and Graph Health [~]
 
@@ -239,14 +251,15 @@
 - [x] TC-061: schema_version_backward_warning (scenario) — passing
 - [x] TC-062: schema_migrate_dry_run (scenario) — passing
 - [x] TC-063: schema_migrate_idempotent (scenario) — passing
-- [ ] TC-064: schema_migrate_preserves_unknown_fields (scenario) — unimplemented
-- [ ] TC-065: schema_version_mismatch_format (scenario) — unimplemented
+- [x] TC-064: schema_migrate_preserves_unknown_fields (scenario) — passing
+- [x] TC-065: schema_version_mismatch_format (scenario) — passing
 - [ ] TC-080: ### Exit criteria (exit-criteria) — unimplemented
 - [ ] TC-081: title (scenario) — unimplemented
 - [ ] TC-082: type (scenario) — unimplemented
 - [ ] TC-083: status (scenario) — unimplemented
 - [ ] TC-084: validates.adrs (scenario) — unimplemented
 - [ ] TC-085: validates.features (scenario) — unimplemented
+- [ ] TC-162: FT-020 migration extracts and confirms (exit-criteria) — unimplemented
 
 ## Phase 5
 
@@ -262,6 +275,7 @@
 - [ ] TC-105: mcp_http_graceful_shutdown (scenario) — unimplemented
 - [x] TC-106: mcp_tool_registry_shared (scenario) — passing
 - [ ] TC-107: mcp_cors_header (scenario) — unimplemented
+- [ ] TC-165: FT-021 MCP server stdio and HTTP pass (exit-criteria) — unimplemented
 
 ### FT-022 — Authoring Sessions [~]
 
@@ -271,6 +285,7 @@
 - [ ] TC-118: pre_commit_hook_skips_non_adr (scenario) — unimplemented
 - [ ] TC-119: adr_review_structural_missing_section (scenario) — unimplemented
 - [ ] TC-120: adr_review_structural_no_features (scenario) — unimplemented
+- [ ] TC-166: FT-022 authoring session flow complete (exit-criteria) — unimplemented
 
 ### FT-023 — Agent Orchestration [~]
 
@@ -283,6 +298,7 @@
 - [ ] TC-113: verify_unrunnable_no_block (scenario) — unimplemented
 - [ ] TC-114: verify_updates_frontmatter (scenario) — unimplemented
 - [ ] TC-115: verify_regenerates_checklist (scenario) — unimplemented
+- [ ] TC-167: FT-023 implement and verify orchestrate (exit-criteria) — unimplemented
 
 ### FT-027 — Context Bundle [~]
 

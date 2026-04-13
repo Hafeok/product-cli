@@ -2,7 +2,7 @@
 id: TC-064
 title: schema_migrate_preserves_unknown_fields
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-003

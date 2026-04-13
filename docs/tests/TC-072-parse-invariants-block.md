@@ -13,3 +13,9 @@ phase: 1
 ---
 
 parse a block with a universal quantifier. Assert `Invariant.raw` matches the input verbatim.
+
+⟦Γ:Invariants⟧{
+  ∀b:Block where b.type = "Invariants":
+    roundtrip(b) = b.raw
+    ∧ parse(b.raw).is_ok()
+}

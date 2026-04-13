@@ -2,7 +2,7 @@
 id: TC-065
 title: schema_version_mismatch_format
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-003
