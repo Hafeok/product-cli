@@ -2368,3 +2368,187 @@ fn tc_157_ft016_graph_model_queries_pass() {
         out.exit_code, out.stdout, out.stderr
     );
 }
+
+// --- Checklist generation tests (FT-017) ---
+
+fn fixture_checklist_three_features() -> Harness {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-alpha.md",
+        "---\nid: FT-001\ntitle: Alpha Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nAlpha body.\n",
+    );
+    h.write(
+        "docs/features/FT-002-beta.md",
+        "---\nid: FT-002\ntitle: Beta Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: [TC-002]\n---\n\nBeta body.\n",
+    );
+    h.write(
+        "docs/features/FT-003-gamma.md",
+        "---\nid: FT-003\ntitle: Gamma Feature\nphase: 2\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nGamma body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test Decision\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nADR body.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-alpha-test.md",
+        "---\nid: TC-001\ntitle: Alpha Test\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\nTest body.\n",
+    );
+    h.write(
+        "docs/tests/TC-002-beta-test.md",
+        "---\nid: TC-002\ntitle: Beta Test\ntype: exit-criteria\nstatus: unimplemented\nvalidates:\n  features: [FT-002]\n  adrs: []\nphase: 1\n---\n\nTest body.\n",
+    );
+    h
+}
+
+#[test]
+fn tc_021_checklist_generate() {
+    let h = fixture_checklist_three_features();
+
+    let out = h.run(&["checklist", "generate"]);
+    out.assert_exit(0);
+
+    let checklist = h.read("docs/checklist.md");
+
+    // Should contain correct status markers
+    assert!(
+        checklist.contains("FT-001") && checklist.contains("[~]"),
+        "Checklist should show FT-001 as in-progress [~].\nChecklist:\n{}",
+        checklist
+    );
+    assert!(
+        checklist.contains("FT-002") && checklist.contains("[x]"),
+        "Checklist should show FT-002 as complete [x].\nChecklist:\n{}",
+        checklist
+    );
+    assert!(
+        checklist.contains("FT-003") && checklist.contains("[ ]"),
+        "Checklist should show FT-003 as planned [ ].\nChecklist:\n{}",
+        checklist
+    );
+
+    // Should not contain YAML front-matter delimiters
+    assert!(
+        !checklist.starts_with("---"),
+        "Checklist should not contain YAML front-matter.\nChecklist:\n{}",
+        checklist
+    );
+
+    // Should contain phase headers
+    assert!(
+        checklist.contains("## Phase 1"),
+        "Checklist should have Phase 1 header.\nChecklist:\n{}",
+        checklist
+    );
+    assert!(
+        checklist.contains("## Phase 2"),
+        "Checklist should have Phase 2 header.\nChecklist:\n{}",
+        checklist
+    );
+}
+
+#[test]
+fn tc_022_checklist_no_manual_edit_warning() {
+    let h = fixture_checklist_three_features();
+
+    let out = h.run(&["checklist", "generate"]);
+    out.assert_exit(0);
+
+    let checklist = h.read("docs/checklist.md");
+
+    // Must begin with the header and warning block
+    assert!(
+        checklist.starts_with("# Implementation Checklist"),
+        "Checklist should start with '# Implementation Checklist'.\nChecklist:\n{}",
+        checklist
+    );
+    assert!(
+        checklist.contains("Do not edit directly"),
+        "Checklist should contain 'Do not edit directly' warning.\nChecklist:\n{}",
+        checklist
+    );
+    assert!(
+        checklist.contains("product checklist generate"),
+        "Warning should reference 'product checklist generate'.\nChecklist:\n{}",
+        checklist
+    );
+}
+
+#[test]
+fn tc_023_checklist_roundtrip() {
+    let h = fixture_checklist_three_features();
+
+    // First generation
+    let out = h.run(&["checklist", "generate"]);
+    out.assert_exit(0);
+
+    let checklist_v1 = h.read("docs/checklist.md");
+    // FT-001 starts as in-progress
+    assert!(
+        checklist_v1.contains("FT-001") && checklist_v1.contains("[~]"),
+        "Initial checklist should show FT-001 as in-progress.\nChecklist:\n{}",
+        checklist_v1
+    );
+
+    // Change FT-001 status from in-progress to complete
+    h.write(
+        "docs/features/FT-001-alpha.md",
+        "---\nid: FT-001\ntitle: Alpha Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nAlpha body.\n",
+    );
+
+    // Regenerate
+    let out = h.run(&["checklist", "generate"]);
+    out.assert_exit(0);
+
+    let checklist_v2 = h.read("docs/checklist.md");
+
+    // FT-001 should now show as complete
+    // Find the line containing FT-001 and verify it has [x] not [~]
+    let ft001_line = checklist_v2
+        .lines()
+        .find(|l| l.contains("FT-001"))
+        .expect("FT-001 should appear in checklist");
+    assert!(
+        ft001_line.contains("[x]"),
+        "After status change, FT-001 should show [x] (complete), got: {}",
+        ft001_line
+    );
+    assert!(
+        !ft001_line.contains("[~]"),
+        "After status change, FT-001 should no longer show [~] (in-progress), got: {}",
+        ft001_line
+    );
+
+    // No residue: the old in-progress marker for FT-001 should not appear
+    // (count occurrences of FT-001 — should appear exactly once as a heading)
+    let ft001_headings: Vec<&str> = checklist_v2
+        .lines()
+        .filter(|l| l.contains("FT-001") && l.starts_with("###"))
+        .collect();
+    assert_eq!(
+        ft001_headings.len(),
+        1,
+        "FT-001 should appear exactly once as a heading (no residue).\nHeadings: {:?}\nChecklist:\n{}",
+        ft001_headings, checklist_v2
+    );
+}
+
+#[test]
+fn tc_159_checklist_generation_idempotent() {
+    let h = fixture_checklist_three_features();
+
+    // Generate twice
+    let out1 = h.run(&["checklist", "generate"]);
+    out1.assert_exit(0);
+    let checklist_first = h.read("docs/checklist.md");
+
+    let out2 = h.run(&["checklist", "generate"]);
+    out2.assert_exit(0);
+    let checklist_second = h.read("docs/checklist.md");
+
+    // Both generations should produce identical output (ignoring timestamp which uses the same day)
+    assert_eq!(
+        checklist_first, checklist_second,
+        "Two consecutive checklist generations should produce identical output.\nFirst:\n{}\nSecond:\n{}",
+        checklist_first, checklist_second
+    );
+}

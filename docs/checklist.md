@@ -197,9 +197,9 @@
 
 - [x] ADR-007: Checklist is Generated, Never Hand-Edited (accepted)
 - [x] TC-021: checklist_generate (scenario) — passing
-- [ ] TC-022: checklist_no_manual_edit_warning (scenario) — unimplemented
-- [ ] TC-023: checklist_roundtrip (scenario) — unimplemented
-- [ ] TC-159: FT-017 checklist generation idempotent (exit-criteria) — unimplemented
+- [x] TC-022: checklist_no_manual_edit_warning (scenario) — passing
+- [x] TC-023: checklist_roundtrip (scenario) — passing
+- [x] TC-159: FT-017 checklist generation idempotent (exit-criteria) — passing
 
 ### FT-018 — Validation and Graph Health [~]
 
