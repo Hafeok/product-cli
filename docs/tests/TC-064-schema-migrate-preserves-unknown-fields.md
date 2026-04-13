@@ -6,6 +6,7 @@ status: passing
 validates:
   features:
   - FT-003
+  - FT-008
   - FT-020
   adrs:
   - ADR-014

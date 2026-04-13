@@ -288,7 +288,15 @@
 
 ### FT-008 — Schema Migration [ ]
 
+- [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
 - [x] ADR-014: Schema Versioning and Migration Path (accepted)
+- [x] ADR-016: Formal Block Grammar (accepted)
+- [x] TC-060: schema_version_forward_error (scenario) — passing
+- [x] TC-061: schema_version_backward_warning (scenario) — passing
+- [x] TC-062: schema_migrate_dry_run (scenario) — passing
+- [x] TC-063: schema_migrate_idempotent (scenario) — passing
+- [x] TC-064: schema_migrate_preserves_unknown_fields (scenario) — passing
+- [x] TC-065: schema_version_mismatch_format (scenario) — passing
 
 ### FT-014 — Status and Filters [ ]
 

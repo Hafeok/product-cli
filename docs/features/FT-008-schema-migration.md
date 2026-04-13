@@ -2,12 +2,20 @@
 id: FT-008
 title: Schema Migration
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-003
 adrs:
+- ADR-002
 - ADR-014
-tests: []
+- ADR-016
+tests:
+- TC-060
+- TC-061
+- TC-062
+- TC-063
+- TC-064
+- TC-065
 domains: []
 domains-acknowledged: {}
 ---
