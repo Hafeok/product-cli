@@ -5,7 +5,6 @@
 //!   - Impact analysis < 50ms
 //!   - BFS depth 2 on 500 edges < 50ms
 
-use std::path::PathBuf;
 use std::time::Instant;
 
 // We can't import from the binary crate directly in benches,
@@ -18,13 +17,23 @@ fn main() {
     println!("==========================");
     println!();
 
-    bench_parse_200_files();
-    bench_centrality_200_nodes();
-    bench_impact_analysis();
-    bench_bfs_depth_2();
+    let mut passed = 0u32;
+    let mut failed = 0u32;
+
+    if bench_parse_200_files() { passed += 1; } else { failed += 1; }
+    if bench_centrality_200_nodes() { passed += 1; } else { failed += 1; }
+    if bench_impact_analysis() { passed += 1; } else { failed += 1; }
+    if bench_bfs_depth_2() { passed += 1; } else { failed += 1; }
+
+    println!();
+    println!("Results: {} passed, {} failed, {} total", passed, failed, passed + failed);
+
+    if failed > 0 {
+        std::process::exit(1);
+    }
 }
 
-fn bench_parse_200_files() {
+fn bench_parse_200_files() -> bool {
     // Generate 200 feature files in a temp dir and time parsing
     let dir = tempfile::tempdir().expect("tempdir");
     let features_dir = dir.path().join("features");
@@ -74,9 +83,10 @@ fn bench_parse_200_files() {
         ms,
         if pass { "PASS" } else { "FAIL" }
     );
+    pass
 }
 
-fn bench_centrality_200_nodes() {
+fn bench_centrality_200_nodes() -> bool {
     // Build a graph with 200 nodes and ~800 edges
     let mut features = Vec::new();
     let mut adrs = Vec::new();
@@ -143,9 +153,10 @@ fn bench_centrality_200_nodes() {
         ms,
         if pass { "PASS" } else { "FAIL" }
     );
+    pass
 }
 
-fn bench_impact_analysis() {
+fn bench_impact_analysis() -> bool {
     // Impact is O(V+E) reverse-graph BFS — should be trivially fast
     let start = Instant::now();
     let n = 200;
@@ -169,9 +180,10 @@ fn bench_impact_analysis() {
         ms,
         if pass { "PASS" } else { "FAIL" }
     );
+    pass
 }
 
-fn bench_bfs_depth_2() {
+fn bench_bfs_depth_2() -> bool {
     // BFS depth 2 on a graph with ~500 edges
     let n = 200;
     let start = Instant::now();
@@ -198,6 +210,7 @@ fn bench_bfs_depth_2() {
         ms,
         if pass { "PASS" } else { "FAIL" }
     );
+    pass
 }
 
 // ---------------------------------------------------------------------------

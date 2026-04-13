@@ -297,6 +297,7 @@
 - [x] TC-063: schema_migrate_idempotent (scenario) — passing
 - [x] TC-064: schema_migrate_preserves_unknown_fields (scenario) — passing
 - [x] TC-065: schema_version_mismatch_format (scenario) — passing
+- [ ] TC-179: ft_008_schema_migration_exit_criteria (exit-criteria) — unimplemented
 
 ### FT-014 — Status and Filters [x]
 
@@ -333,7 +334,7 @@
 
 ## Phase 3
 
-### FT-024 — Graph Intelligence [ ]
+### FT-024 — Graph Intelligence [x]
 
 - [x] ADR-008: Embedded Oxigraph for SPARQL Queries (accepted)
 - [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
@@ -358,14 +359,16 @@
 - [x] TC-009: graph_rebuild_from_scratch (scenario) — passing
 - [x] TC-010: graph_stale_ttl (scenario) — passing
 
-### FT-025 — Benchmarks [ ]
+### FT-025 — Benchmarks [x]
 
 - [x] ADR-018: Testing Strategy — Property-Based, Integration, and LLM Benchmark (accepted)
+- [x] TC-180: ft_025_benchmarks_pass (exit-criteria) — passing
 
 ### FT-026 — CI Integration [ ]
 
 - [x] ADR-009: CI Integration via Exit Codes (accepted)
 - [x] ADR-013: Error Model and User-Facing Error Format (accepted)
+- [ ] TC-181: ft_026_ci_integration_pass (exit-criteria) — unimplemented
 
 ## Phase 4
 

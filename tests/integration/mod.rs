@@ -3714,3 +3714,57 @@ YAML for front-matter.
         out_adrs.stdout
     );
 }
+
+// ---------------------------------------------------------------------------
+// TC-180: ft_025_benchmarks_pass — cargo bench completes successfully
+// ---------------------------------------------------------------------------
+
+#[test]
+fn tc_180_ft_025_benchmarks_pass() {
+    // Run `cargo bench` and verify all four benchmarks complete and pass
+    let output = std::process::Command::new("cargo")
+        .args(["bench"])
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .expect("failed to run cargo bench");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    // The benchmark binary should exit successfully
+    assert!(
+        output.status.success(),
+        "cargo bench failed.\nstdout:\n{}\nstderr:\n{}",
+        stdout,
+        stderr
+    );
+
+    // All four benchmarks must appear with PASS
+    assert!(
+        stdout.contains("Parse 200 files:") && stdout.contains("PASS"),
+        "Parse 200 files benchmark missing or failed.\nstdout:\n{}",
+        stdout
+    );
+    assert!(
+        stdout.contains("Centrality 200 nodes") && stdout.contains("PASS"),
+        "Centrality benchmark missing or failed.\nstdout:\n{}",
+        stdout
+    );
+    assert!(
+        stdout.contains("Impact analysis:") && stdout.contains("PASS"),
+        "Impact analysis benchmark missing or failed.\nstdout:\n{}",
+        stdout
+    );
+    assert!(
+        stdout.contains("BFS depth 2:") && stdout.contains("PASS"),
+        "BFS depth 2 benchmark missing or failed.\nstdout:\n{}",
+        stdout
+    );
+
+    // Verify the summary line shows 4 passed, 0 failed
+    assert!(
+        stdout.contains("4 passed, 0 failed, 4 total"),
+        "Expected all 4 benchmarks to pass.\nstdout:\n{}",
+        stdout
+    );
+}

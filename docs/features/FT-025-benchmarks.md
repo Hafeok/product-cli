@@ -2,7 +2,7 @@
 id: FT-025
 title: Benchmarks
 phase: 3
-status: planned
+status: complete
 depends-on:
 - FT-024
 adrs:
