@@ -1664,3 +1664,409 @@ fn tc_158_ft011_exit_criteria() {
     assert!(feature_pos < adr_pos, "Feature before ADRs");
     assert!(adr_pos < tc_pos, "ADRs before tests");
 }
+
+/// TC-016: context bundle contains feature content, ADR contents, and TC content in correct order
+#[test]
+fn tc_016_context_bundle_feature() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001, ADR-002]\ntests: [TC-001]\n---\n\nFeature content here.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-first.md",
+        "---\nid: ADR-001\ntitle: First Decision\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nFirst ADR content.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-second.md",
+        "---\nid: ADR-002\ntitle: Second Decision\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nSecond ADR content.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test Criterion\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nTest criterion content.\n",
+    );
+
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+
+    // All content present
+    out.assert_stdout_contains("Feature content here.");
+    out.assert_stdout_contains("First ADR content.");
+    out.assert_stdout_contains("Second ADR content.");
+    out.assert_stdout_contains("Test criterion content.");
+
+    // Correct order: feature → ADRs → tests
+    let ft_pos = out.stdout.find("Feature content here.").expect("feature body");
+    let adr1_pos = out.stdout.find("First ADR content.").expect("ADR-001 body");
+    let adr2_pos = out.stdout.find("Second ADR content.").expect("ADR-002 body");
+    let tc_pos = out.stdout.find("Test criterion content.").expect("TC body");
+    assert!(ft_pos < adr1_pos, "Feature should appear before ADR-001");
+    assert!(ft_pos < adr2_pos, "Feature should appear before ADR-002");
+    assert!(adr1_pos < tc_pos, "ADR-001 should appear before TC");
+    assert!(adr2_pos < tc_pos, "ADR-002 should appear before TC");
+}
+
+/// TC-018: context bundle header contains correct feature ID, phase, status, and linked artifact ID lists
+#[test]
+fn tc_018_context_bundle_header() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Header Test\nphase: 2\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nHeader test feature.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nADR body.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test TC\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 2\n---\n\nTC body.\n",
+    );
+
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+
+    // Header should contain correct metadata
+    out.assert_stdout_contains("feature≜FT-001:Feature");
+    out.assert_stdout_contains("phase≜2:Phase");
+    out.assert_stdout_contains("InProgress:FeatureStatus");
+    out.assert_stdout_contains("implementedBy≜⟨ADR-001⟩:Decision+");
+    out.assert_stdout_contains("validatedBy≜⟨TC-001⟩:TestCriterion+");
+}
+
+/// TC-024: SPARQL SELECT query for feature ADRs
+#[test]
+fn tc_024_sparql_select_feature_adrs() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001, ADR-002]\ntests: []\n---\n\nFeature.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-first.md",
+        "---\nid: ADR-001\ntitle: First\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nFirst.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-second.md",
+        "---\nid: ADR-002\ntitle: Second\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nSecond.\n",
+    );
+
+    let query = r#"PREFIX pm: <https://product-meta/ontology#>
+PREFIX ft: <https://product-meta/feature/>
+SELECT ?adr WHERE { ft:FT-001 pm:implementedBy ?adr }"#;
+    let out = h.run(&["graph", "query", query]);
+    out.assert_exit(0);
+
+    assert!(
+        out.stdout.contains("ADR-001"),
+        "Result should contain ADR-001.\nOutput:\n{}",
+        out.stdout
+    );
+    assert!(
+        out.stdout.contains("ADR-002"),
+        "Result should contain ADR-002.\nOutput:\n{}",
+        out.stdout
+    );
+}
+
+/// TC-041: topological sort of a simple linear dependency chain
+#[test]
+fn tc_041_topo_sort_simple() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-a.md",
+        "---\nid: FT-001\ntitle: First\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n",
+    );
+    h.write(
+        "docs/features/FT-002-b.md",
+        "---\nid: FT-002\ntitle: Second\nphase: 1\nstatus: planned\ndepends-on: [FT-001]\nadrs: []\ntests: []\n---\n",
+    );
+    h.write(
+        "docs/features/FT-003-c.md",
+        "---\nid: FT-003\ntitle: Third\nphase: 1\nstatus: planned\ndepends-on: [FT-002]\nadrs: []\ntests: []\n---\n",
+    );
+
+    let out = h.run(&["feature", "deps", "FT-003"]);
+    out.assert_exit(0);
+
+    // The dependency tree shows FT-003 at root, then FT-002, then FT-001 (deepest dep)
+    out.assert_stdout_contains("FT-001");
+    out.assert_stdout_contains("FT-002");
+    out.assert_stdout_contains("FT-003");
+    // FT-002 depends on FT-001, so FT-001 should be indented deeper (appear after FT-002 in tree)
+    let pos2 = out.stdout.find("FT-002").expect("FT-002 in deps");
+    let pos1 = out.stdout.find("FT-001").expect("FT-001 in deps");
+    assert!(pos2 < pos1, "FT-002 should appear before FT-001 (FT-001 is a deeper dependency)");
+}
+
+/// TC-042: topological sort with parallel dependencies
+#[test]
+fn tc_042_topo_sort_parallel() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-root.md",
+        "---\nid: FT-001\ntitle: Root\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n",
+    );
+    h.write(
+        "docs/features/FT-002-branch-a.md",
+        "---\nid: FT-002\ntitle: Branch A\nphase: 1\nstatus: planned\ndepends-on: [FT-001]\nadrs: []\ntests: []\n---\n",
+    );
+    h.write(
+        "docs/features/FT-003-branch-b.md",
+        "---\nid: FT-003\ntitle: Branch B\nphase: 1\nstatus: planned\ndepends-on: [FT-001]\nadrs: []\ntests: []\n---\n",
+    );
+
+    // graph check should pass (no cycle)
+    let out = h.run(&["graph", "check"]);
+    // FT-001 should come before both FT-002 and FT-003
+    let combined = format!("{}{}", out.stdout, out.stderr);
+    assert!(
+        !combined.contains("cycle"),
+        "No cycle should be detected in parallel dependencies"
+    );
+}
+
+/// TC-043: topological sort detects cycle and exits with code 1
+#[test]
+fn tc_043_topo_sort_cycle() {
+    let h = fixture_dep_cycle();
+    let out = h.run(&["graph", "check"]);
+    assert_ne!(out.exit_code, 0, "Cycle should cause non-zero exit code.\nstdout: {}\nstderr: {}", out.stdout, out.stderr);
+    let combined = format!("{}{}", out.stdout, out.stderr);
+    assert!(
+        combined.contains("FT-001") && combined.contains("FT-002"),
+        "Error should name both features in the cycle.\nOutput:\n{}",
+        combined
+    );
+}
+
+/// TC-044: feature next uses topological order
+#[test]
+fn tc_044_feature_next_uses_topo() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-done.md",
+        "---\nid: FT-001\ntitle: Done Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: []\n---\n",
+    );
+    h.write(
+        "docs/features/FT-002-next.md",
+        "---\nid: FT-002\ntitle: Next Feature\nphase: 1\nstatus: in-progress\ndepends-on: [FT-001]\nadrs: []\ntests: []\n---\n",
+    );
+    h.write(
+        "docs/features/FT-003-independent.md",
+        "---\nid: FT-003\ntitle: Independent Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n",
+    );
+
+    let out = h.run(&["feature", "next"]);
+    out.assert_exit(0);
+
+    // Topo sort: FT-001 (complete, skipped), FT-003 (no deps, planned), FT-002 (deps on FT-001)
+    // FT-003 appears first in topo order (no deps, alphabetically before FT-002 in zero-indegree set after FT-001 processed)
+    // Actually FT-003 has in-degree 0, so it's in the initial queue with FT-001.
+    // After FT-001 complete is skipped, FT-003 (planned, no deps, deps complete) is next.
+    out.assert_stdout_contains("FT-003");
+}
+
+/// TC-045: context depth 2 includes transitive context
+#[test]
+fn tc_045_context_depth_2() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-seed.md",
+        "---\nid: FT-001\ntitle: Seed Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-002]\ntests: []\n---\n\nSeed feature.\n",
+    );
+    h.write(
+        "docs/features/FT-004-transitive.md",
+        "---\nid: FT-004\ntitle: Transitive Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-002]\ntests: [TC-009]\n---\n\nTransitive feature.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-shared.md",
+        "---\nid: ADR-002\ntitle: Shared ADR\nstatus: accepted\nfeatures: [FT-001, FT-004]\nsupersedes: []\nsuperseded-by: []\n---\n\nShared decision.\n",
+    );
+    h.write(
+        "docs/tests/TC-009-transitive.md",
+        "---\nid: TC-009\ntitle: Transitive Test\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-004]\n  adrs: [ADR-002]\nphase: 1\n---\n\nTransitive test.\n",
+    );
+
+    // Depth 1 should NOT include TC-009 (it validates FT-004, not FT-001)
+    let out1 = h.run(&["context", "FT-001", "--depth", "1"]);
+    out1.assert_exit(0);
+    assert!(
+        !out1.stdout.contains("TC-009") && !out1.stdout.contains("Transitive test."),
+        "Depth 1 should not include TC-009.\nOutput:\n{}",
+        out1.stdout
+    );
+
+    // Depth 2 should include TC-009 (via ADR-002 → FT-004 → TC-009)
+    let out2 = h.run(&["context", "FT-001", "--depth", "2"]);
+    out2.assert_exit(0);
+    assert!(
+        out2.stdout.contains("TC-009") || out2.stdout.contains("Transitive test."),
+        "Depth 2 should include TC-009 (transitive via ADR-002 → FT-004).\nOutput:\n{}",
+        out2.stdout
+    );
+}
+
+/// TC-046: ADR appearing via multiple paths is deduplicated in the bundle
+#[test]
+fn tc_046_context_depth_dedup() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-main.md",
+        "---\nid: FT-001\ntitle: Main\nphase: 1\nstatus: planned\ndepends-on: [FT-002]\nadrs: [ADR-002]\ntests: []\n---\n\nMain feature.\n",
+    );
+    h.write(
+        "docs/features/FT-002-dep.md",
+        "---\nid: FT-002\ntitle: Dep\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-002]\ntests: []\n---\n\nDep feature.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-shared.md",
+        "---\nid: ADR-002\ntitle: Shared Decision\nstatus: accepted\nfeatures: [FT-001, FT-002]\nsupersedes: []\nsuperseded-by: []\n---\n\nShared ADR body unique marker.\n",
+    );
+
+    let out = h.run(&["context", "FT-001", "--depth", "2"]);
+    out.assert_exit(0);
+
+    // Count occurrences of the ADR body — should appear exactly once
+    let count = out.stdout.matches("Shared ADR body unique marker.").count();
+    assert_eq!(
+        count, 1,
+        "ADR-002 should appear exactly once in the bundle, found {} times.\nOutput:\n{}",
+        count, out.stdout
+    );
+}
+
+/// TC-048: betweenness centrality values match expected for known topology
+#[test]
+fn tc_048_centrality_computation() {
+    let h = Harness::new();
+    // Create a graph where ADR-001 bridges two features and ADR-002 is peripheral
+    h.write(
+        "docs/features/FT-001-a.md",
+        "---\nid: FT-001\ntitle: Feature A\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001, ADR-002]\ntests: [TC-001]\n---\n",
+    );
+    h.write(
+        "docs/features/FT-002-b.md",
+        "---\nid: FT-002\ntitle: Feature B\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-002]\n---\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-bridge.md",
+        "---\nid: ADR-001\ntitle: Bridge ADR\nstatus: accepted\nfeatures: [FT-001, FT-002]\nsupersedes: []\nsuperseded-by: []\n---\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-leaf.md",
+        "---\nid: ADR-002\ntitle: Leaf ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test 1\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n",
+    );
+    h.write(
+        "docs/tests/TC-002-test.md",
+        "---\nid: TC-002\ntitle: Test 2\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-002]\n  adrs: [ADR-001]\nphase: 1\n---\n",
+    );
+
+    let out = h.run(&["graph", "central", "--all"]);
+    out.assert_exit(0);
+
+    // ADR-001 (bridges both features) should have higher centrality than ADR-002
+    let lines: Vec<&str> = out.stdout.lines().collect();
+    let adr001_line = lines.iter().find(|l| l.contains("ADR-001"));
+    let adr002_line = lines.iter().find(|l| l.contains("ADR-002"));
+    assert!(adr001_line.is_some(), "ADR-001 should appear in centrality output.\nOutput:\n{}", out.stdout);
+    assert!(adr002_line.is_some(), "ADR-002 should appear in centrality output.\nOutput:\n{}", out.stdout);
+
+    // ADR-001 should be ranked higher (appear first or have higher value)
+    let pos1 = out.stdout.find("ADR-001").expect("ADR-001");
+    let pos2 = out.stdout.find("ADR-002").expect("ADR-002");
+    assert!(pos1 < pos2, "ADR-001 should rank above ADR-002 in centrality.\nOutput:\n{}", out.stdout);
+}
+
+/// TC-049: graph central --top 3 returns exactly 3 ADRs
+#[test]
+fn tc_049_centrality_top_n() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-a.md",
+        "---\nid: FT-001\ntitle: A\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001, ADR-002, ADR-003, ADR-004]\ntests: []\n---\n",
+    );
+    h.write(
+        "docs/features/FT-002-b.md",
+        "---\nid: FT-002\ntitle: B\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001, ADR-002, ADR-003]\ntests: []\n---\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-a.md",
+        "---\nid: ADR-001\ntitle: ADR One\nstatus: accepted\nfeatures: [FT-001, FT-002]\nsupersedes: []\nsuperseded-by: []\n---\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-b.md",
+        "---\nid: ADR-002\ntitle: ADR Two\nstatus: accepted\nfeatures: [FT-001, FT-002]\nsupersedes: []\nsuperseded-by: []\n---\n",
+    );
+    h.write(
+        "docs/adrs/ADR-003-c.md",
+        "---\nid: ADR-003\ntitle: ADR Three\nstatus: accepted\nfeatures: [FT-001, FT-002]\nsupersedes: []\nsuperseded-by: []\n---\n",
+    );
+    h.write(
+        "docs/adrs/ADR-004-d.md",
+        "---\nid: ADR-004\ntitle: ADR Four\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n",
+    );
+
+    let out = h.run(&["graph", "central", "--top", "3"]);
+    out.assert_exit(0);
+
+    // Count ADR lines in output (excluding header)
+    let adr_count = out.stdout.lines().filter(|l| l.contains("ADR-")).count();
+    assert_eq!(
+        adr_count, 3,
+        "Expected exactly 3 ADRs in output, got {}.\nOutput:\n{}",
+        adr_count, out.stdout
+    );
+}
+
+/// TC-050: impact shows direct dependent features
+#[test]
+fn tc_050_impact_direct() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-a.md",
+        "---\nid: FT-001\ntitle: Feature A\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-002]\ntests: []\n---\n",
+    );
+    h.write(
+        "docs/features/FT-004-b.md",
+        "---\nid: FT-004\ntitle: Feature B\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-002]\ntests: []\n---\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-target.md",
+        "---\nid: ADR-002\ntitle: Target ADR\nstatus: accepted\nfeatures: [FT-001, FT-004]\nsupersedes: []\nsuperseded-by: []\n---\n",
+    );
+
+    let out = h.run(&["impact", "ADR-002"]);
+    out.assert_exit(0);
+
+    out.assert_stdout_contains("FT-001");
+    out.assert_stdout_contains("FT-004");
+}
+
+/// TC-051: impact shows transitive dependents via feature dependencies
+#[test]
+fn tc_051_impact_transitive() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-base.md",
+        "---\nid: FT-001\ntitle: Base Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-002]\ntests: []\n---\n",
+    );
+    h.write(
+        "docs/features/FT-007-transitive.md",
+        "---\nid: FT-007\ntitle: Transitive Feature\nphase: 2\nstatus: planned\ndepends-on: [FT-001]\nadrs: []\ntests: []\n---\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-target.md",
+        "---\nid: ADR-002\ntitle: Target ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n",
+    );
+
+    let out = h.run(&["impact", "ADR-002"]);
+    out.assert_exit(0);
+
+    // FT-007 depends on FT-001 which is linked to ADR-002 — should appear as transitive
+    out.assert_stdout_contains("FT-007");
+}

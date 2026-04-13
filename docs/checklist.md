@@ -98,7 +98,7 @@
 - [x] TC-058: error_internal_tier4 (scenario) — passing
 - [x] TC-059: error_stdout_clean (scenario) — passing
 
-### FT-011 — Context Bundle Format [~]
+### FT-011 — Context Bundle Format [x]
 
 - [x] ADR-006: Context Bundle as the Primary LLM Interface (accepted)
 - [x] ADR-008: Embedded Oxigraph for SPARQL Queries (accepted)

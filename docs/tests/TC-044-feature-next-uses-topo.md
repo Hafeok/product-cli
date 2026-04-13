@@ -10,6 +10,8 @@ validates:
   adrs:
   - ADR-012
 phase: 1
+runner: cargo-test
+runner-args: "tc_044_feature_next_uses_topo"
 ---
 
 FT-001 complete, FT-002 depends-on FT-001 (in-progress), FT-003 no dependencies (planned). Assert `product feature next` returns FT-002, not FT-003.

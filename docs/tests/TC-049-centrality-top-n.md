@@ -10,6 +10,8 @@ validates:
   adrs:
   - ADR-012
 phase: 1
+runner: cargo-test
+runner-args: "tc_049_centrality_top_n"
 ---
 
 assert `product graph central --top 3` returns exactly 3 ADRs in descending centrality order.

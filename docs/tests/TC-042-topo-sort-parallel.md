@@ -10,6 +10,8 @@ validates:
   adrs:
   - ADR-012
 phase: 1
+runner: cargo-test
+runner-args: "tc_042_topo_sort_parallel"
 ---
 
 FT-002 and FT-003 both depend-on FT-001, no dependency between FT-002 and FT-003. Assert FT-001 appears before both; FT-002 and FT-003 order is unspecified.
