@@ -2,7 +2,7 @@
 id: FT-011
 title: Context Bundle Format
 phase: 1
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-006

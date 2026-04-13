@@ -73,22 +73,10 @@ fn bundle_feature_inner(
         phase_a.cmp(&phase_b).then(type_a.cmp(&type_b))
     });
 
-    // Handle ADR supersession: replace superseded ADRs with their successors
+    // Handle ADR supersession: include superseded ADRs with annotation (TC-019)
     let mut final_adr_ids = Vec::new();
     let mut seen = HashSet::new();
     for id in &adr_ids {
-        if let Some(adr) = graph.adrs.get(id.as_str()) {
-            if adr.front.status == AdrStatus::Superseded {
-                // Replace with successor if available
-                if let Some(successor_id) = adr.front.superseded_by.first() {
-                    if !seen.contains(successor_id) {
-                        seen.insert(successor_id.clone());
-                        final_adr_ids.push(successor_id.clone());
-                    }
-                }
-                continue;
-            }
-        }
         if !seen.contains(id) {
             seen.insert(id.clone());
             final_adr_ids.push(id.clone());
@@ -155,10 +143,22 @@ fn bundle_feature_inner(
     // ADR content
     for adr_id in &final_adr_ids {
         if let Some(adr) = graph.adrs.get(adr_id.as_str()) {
-            out.push_str(&format!(
-                "## {} — {}\n\n{}\n\n---\n\n",
-                adr.front.id, adr.front.title, adr.body
-            ));
+            if adr.front.status == AdrStatus::Superseded {
+                let by_label = if let Some(by) = adr.front.superseded_by.first() {
+                    format!(" by {}", by)
+                } else {
+                    String::new()
+                };
+                out.push_str(&format!(
+                    "## {} — {} [SUPERSEDED{}]\n\n**Status:** Superseded{}\n\n{}\n\n---\n\n",
+                    adr.front.id, adr.front.title, by_label, by_label, adr.body
+                ));
+            } else {
+                out.push_str(&format!(
+                    "## {} — {}\n\n**Status:** {:?}\n\n{}\n\n---\n\n",
+                    adr.front.id, adr.front.title, adr.front.status, adr.body
+                ));
+            }
         }
     }
 

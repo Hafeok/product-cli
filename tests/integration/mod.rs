@@ -1245,3 +1245,422 @@ fn tc_160_ft009_exit_criteria() {
         "graph check should handle bad evidence gracefully"
     );
 }
+
+// ---------------------------------------------------------------------------
+// FT-011 Context Bundle Format tests
+// ---------------------------------------------------------------------------
+
+/// TC-017: context bundle output contains no YAML front-matter blocks
+#[test]
+fn tc_017_context_bundle_no_frontmatter() {
+    let h = fixture_minimal();
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+
+    // The YAML front-matter delimiter "---" at the start of a section should be stripped.
+    // The bundle should not contain any "---\nid:" patterns (front-matter blocks).
+    let lines: Vec<&str> = out.stdout.lines().collect();
+    let mut in_frontmatter = false;
+    for (i, line) in lines.iter().enumerate() {
+        // Front-matter starts with "---" and contains "id:" on the next line(s)
+        if *line == "---" && i + 1 < lines.len() {
+            // Check if next lines look like YAML front-matter (key: value)
+            if let Some(next) = lines.get(i + 1) {
+                if next.starts_with("id:") || next.starts_with("title:") || next.starts_with("status:") {
+                    in_frontmatter = true;
+                    panic!(
+                        "Context bundle contains YAML front-matter at line {}: {}",
+                        i + 1,
+                        line
+                    );
+                }
+            }
+        }
+    }
+    assert!(!in_frontmatter, "Context bundle should not contain any YAML front-matter blocks");
+    // Also verify the output doesn't start with front-matter
+    assert!(!out.stdout.starts_with("---\n"), "Bundle should not start with front-matter delimiter");
+}
+
+/// TC-019: superseded ADR appears with [SUPERSEDED by ADR-XXX] annotation
+#[test]
+fn tc_019_context_bundle_superseded_adr() {
+    let h = Harness::new();
+    // Create a feature linked to both a superseded ADR and its successor
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001, ADR-002]\ntests: []\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-old.md",
+        "---\nid: ADR-001\ntitle: Old Decision\nstatus: superseded\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: [ADR-002]\n---\n\nOld decision body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-new.md",
+        "---\nid: ADR-002\ntitle: New Decision\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: [ADR-001]\nsuperseded-by: []\n---\n\nNew decision body.\n",
+    );
+
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+
+    // The superseded ADR should appear in the bundle with annotation
+    assert!(
+        out.stdout.contains("[SUPERSEDED by ADR-002]"),
+        "Superseded ADR should have [SUPERSEDED by ADR-XXX] annotation.\nOutput:\n{}",
+        out.stdout
+    );
+    // Both ADRs should be present
+    assert!(
+        out.stdout.contains("ADR-001"),
+        "Superseded ADR-001 should appear in bundle"
+    );
+    assert!(
+        out.stdout.contains("ADR-002"),
+        "Successor ADR-002 should appear in bundle"
+    );
+}
+
+/// TC-020: product context FT-001 produces a valid context bundle
+#[test]
+fn tc_020_product_context_ft_001() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Cluster Foundation\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001, ADR-002]\ntests: [TC-001]\n---\n\nCluster foundation feature.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-rust.md",
+        "---\nid: ADR-001\ntitle: Rust as Implementation Language\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nRust decision.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-openraft.md",
+        "---\nid: ADR-002\ntitle: openraft for Cluster Consensus\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nopenraft decision.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Binary compiles\ntype: exit-criteria\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nBinary compile test.\n",
+    );
+
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+
+    // Bundle header
+    out.assert_stdout_contains("Context Bundle: FT-001");
+    out.assert_stdout_contains("Bundle");
+    out.assert_stdout_contains("feature≜FT-001:Feature");
+
+    // Feature content
+    out.assert_stdout_contains("Cluster foundation feature.");
+
+    // ADR content
+    out.assert_stdout_contains("ADR-001");
+    out.assert_stdout_contains("Rust as Implementation Language");
+    out.assert_stdout_contains("ADR-002");
+    out.assert_stdout_contains("openraft for Cluster Consensus");
+
+    // Test criteria
+    out.assert_stdout_contains("TC-001");
+    out.assert_stdout_contains("Binary compiles");
+
+    // Correct order: feature first, then ADRs, then tests
+    let ft_pos = out.stdout.find("Cluster foundation feature.").expect("feature body");
+    let adr_pos = out.stdout.find("Rust decision.").expect("ADR body");
+    let tc_pos = out.stdout.find("Binary compile test.").expect("TC body");
+    assert!(
+        ft_pos < adr_pos,
+        "Feature should appear before ADRs"
+    );
+    assert!(
+        adr_pos < tc_pos,
+        "ADRs should appear before test criteria"
+    );
+}
+
+/// TC-025: SPARQL query for untested features
+#[test]
+fn tc_025_sparql_untested_features() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-tested.md",
+        "---\nid: FT-001\ntitle: Tested Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nTested.\n",
+    );
+    h.write(
+        "docs/features/FT-002-untested.md",
+        "---\nid: FT-002\ntitle: Untested Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nUntested.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\nTest body.\n",
+    );
+
+    // Query for features with no validatedBy triples
+    let query = r#"PREFIX pm: <https://product-meta/ontology#>
+PREFIX ft: <https://product-meta/feature/>
+SELECT ?feature WHERE {
+  ?feature a pm:Feature .
+  FILTER NOT EXISTS { ?feature pm:validatedBy ?tc }
+}"#;
+    let out = h.run(&["graph", "query", query]);
+    out.assert_exit(0);
+
+    // FT-002 should appear (no tests), FT-001 should not (has tests)
+    assert!(
+        out.stdout.contains("FT-002"),
+        "FT-002 (untested) should appear in results.\nOutput:\n{}",
+        out.stdout
+    );
+    assert!(
+        !out.stdout.contains("FT-001"),
+        "FT-001 (tested) should NOT appear in results.\nOutput:\n{}",
+        out.stdout
+    );
+}
+
+/// TC-026: SPARQL phase filter
+#[test]
+fn tc_026_sparql_phase_filter() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-phase1.md",
+        "---\nid: FT-001\ntitle: Phase 1 Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nPhase 1.\n",
+    );
+    h.write(
+        "docs/features/FT-002-phase2.md",
+        "---\nid: FT-002\ntitle: Phase 2 Feature\nphase: 2\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nPhase 2.\n",
+    );
+
+    let query = r#"PREFIX pm: <https://product-meta/ontology#>
+SELECT ?feature WHERE {
+  ?feature a pm:Feature ;
+           pm:phase 1 .
+}"#;
+    let out = h.run(&["graph", "query", query]);
+    out.assert_exit(0);
+
+    assert!(
+        out.stdout.contains("FT-001"),
+        "Phase-1 feature FT-001 should appear.\nOutput:\n{}",
+        out.stdout
+    );
+    assert!(
+        !out.stdout.contains("FT-002"),
+        "Phase-2 feature FT-002 should NOT appear.\nOutput:\n{}",
+        out.stdout
+    );
+}
+
+/// TC-047: ADRs ordered by centrality in default bundle output
+#[test]
+fn tc_047_context_bundle_adr_order_centrality() {
+    let h = Harness::new();
+    // ADR-001 is linked to many features (high centrality)
+    // ADR-007 is linked to only one feature (low centrality)
+    h.write(
+        "docs/features/FT-001-main.md",
+        "---\nid: FT-001\ntitle: Main Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001, ADR-007]\ntests: []\n---\n\nMain feature.\n",
+    );
+    h.write(
+        "docs/features/FT-002-extra.md",
+        "---\nid: FT-002\ntitle: Extra Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: []\n---\n\nExtra.\n",
+    );
+    h.write(
+        "docs/features/FT-003-extra2.md",
+        "---\nid: FT-003\ntitle: Extra Feature 2\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: []\n---\n\nExtra 2.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-foundational.md",
+        "---\nid: ADR-001\ntitle: Foundational ADR\nstatus: accepted\nfeatures: [FT-001, FT-002, FT-003]\nsupersedes: []\nsuperseded-by: []\n---\n\nFoundational decision.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-007-peripheral.md",
+        "---\nid: ADR-007\ntitle: Peripheral ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nPeripheral decision.\n",
+    );
+
+    // Default bundle output orders ADRs by centrality (high first)
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+
+    let adr001_pos = out.stdout.find("ADR-001").expect("ADR-001 should appear in bundle");
+    let adr007_pos = out.stdout.find("ADR-007").expect("ADR-007 should appear in bundle");
+    assert!(
+        adr001_pos < adr007_pos,
+        "ADR-001 (high centrality) should appear before ADR-007 (low centrality).\nBundle:\n{}",
+        out.stdout
+    );
+}
+
+/// TC-052: impact summary printed before status change when superseding
+#[test]
+fn tc_052_impact_on_supersede() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-002]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-old.md",
+        "---\nid: ADR-002\ntitle: Old Consensus\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nOld decision.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-013-new.md",
+        "---\nid: ADR-013\ntitle: New Consensus\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nNew decision.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Consensus Test\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-002]\nphase: 1\n---\n\nTest body.\n",
+    );
+
+    let out = h.run(&["adr", "status", "ADR-002", "superseded", "--by", "ADR-013"]);
+    out.assert_exit(0);
+
+    // Impact summary should be printed before status change
+    let impact_pos = out.stdout.find("Impact analysis").or_else(|| out.stdout.find("Direct dependents")).or_else(|| out.stdout.find("FT-001"));
+    let status_pos = out.stdout.find("status -> superseded").or_else(|| out.stdout.find("status ->"));
+    assert!(
+        impact_pos.is_some(),
+        "Impact summary should be printed.\nOutput:\n{}",
+        out.stdout
+    );
+    assert!(
+        status_pos.is_some(),
+        "Status change confirmation should be printed.\nOutput:\n{}",
+        out.stdout
+    );
+    // Impact before status change
+    if let (Some(ip), Some(sp)) = (impact_pos, status_pos) {
+        assert!(
+            ip < sp,
+            "Impact summary should appear before status change confirmation"
+        );
+    }
+}
+
+/// TC-053: product graph central command works
+#[test]
+fn tc_053_product_graph_central() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Feature 1\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001, ADR-002]\ntests: []\n---\n\nFeature 1.\n",
+    );
+    h.write(
+        "docs/features/FT-002-test.md",
+        "---\nid: FT-002\ntitle: Feature 2\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: []\n---\n\nFeature 2.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-high.md",
+        "---\nid: ADR-001\ntitle: High Centrality\nstatus: accepted\nfeatures: [FT-001, FT-002]\nsupersedes: []\nsuperseded-by: []\n---\n\nHigh centrality ADR.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-low.md",
+        "---\nid: ADR-002\ntitle: Low Centrality\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nLow centrality ADR.\n",
+    );
+
+    let out = h.run(&["graph", "central"]);
+    out.assert_exit(0);
+
+    // Should show ranked table with ADRs
+    out.assert_stdout_contains("RANK");
+    out.assert_stdout_contains("CENTRALITY");
+    out.assert_stdout_contains("ADR-001");
+    out.assert_stdout_contains("ADR-002");
+}
+
+/// TC-054: product impact ADR-001 shows dependents
+#[test]
+fn tc_054_product_impact_adr_001() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Core Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nCore feature.\n",
+    );
+    h.write(
+        "docs/features/FT-002-dep.md",
+        "---\nid: FT-002\ntitle: Dependent Feature\nphase: 2\nstatus: planned\ndepends-on: [FT-001]\nadrs: []\ntests: []\n---\n\nDependent.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Foundational Decision\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nFoundational.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Core Test\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nTest body.\n",
+    );
+
+    let out = h.run(&["impact", "ADR-001"]);
+    out.assert_exit(0);
+
+    // Should show impact analysis
+    out.assert_stdout_contains("Impact analysis");
+    out.assert_stdout_contains("ADR-001");
+    // FT-001 is a direct dependent
+    out.assert_stdout_contains("FT-001");
+}
+
+/// TC-158: FT-011 exit criteria — context bundle output is correct end-to-end
+#[test]
+fn tc_158_ft011_exit_criteria() {
+    let h = Harness::new();
+    // Set up a representative graph: feature with ADRs, tests, dependencies, supersession
+    h.write(
+        "docs/features/FT-001-main.md",
+        "---\nid: FT-001\ntitle: Main Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001, ADR-002, ADR-003]\ntests: [TC-001, TC-002]\n---\n\nMain feature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-rust.md",
+        "---\nid: ADR-001\ntitle: Rust Language\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nRust decision body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-old.md",
+        "---\nid: ADR-002\ntitle: Old Store\nstatus: superseded\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: [ADR-003]\n---\n\nOld store decision.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-003-new.md",
+        "---\nid: ADR-003\ntitle: New Store\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: [ADR-002]\nsuperseded-by: []\n---\n\nNew store decision.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-exit.md",
+        "---\nid: TC-001\ntitle: Exit Criterion\ntype: exit-criteria\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nExit criterion body.\n",
+    );
+    h.write(
+        "docs/tests/TC-002-scenario.md",
+        "---\nid: TC-002\ntitle: Scenario Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nScenario test body.\n",
+    );
+
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+
+    // 1. Bundle header with AISP formal block
+    out.assert_stdout_contains("# Context Bundle: FT-001 — Main Feature");
+    out.assert_stdout_contains("⟦Ω:Bundle⟧");
+    out.assert_stdout_contains("feature≜FT-001:Feature");
+    out.assert_stdout_contains("phase≜1:Phase");
+    out.assert_stdout_contains("InProgress:FeatureStatus");
+    out.assert_stdout_contains("implementedBy≜⟨");
+    out.assert_stdout_contains("validatedBy≜⟨");
+
+    // 2. No YAML front-matter in output
+    assert!(!out.stdout.contains("\n---\nid:"), "No YAML front-matter should appear");
+
+    // 3. Feature content present
+    out.assert_stdout_contains("Main feature body.");
+
+    // 4. Superseded ADR has annotation
+    out.assert_stdout_contains("[SUPERSEDED by ADR-003]");
+
+    // 5. Active ADRs present
+    out.assert_stdout_contains("Rust Language");
+    out.assert_stdout_contains("New Store");
+
+    // 6. Test criteria present and ordered (exit-criteria before scenario)
+    let exit_pos = out.stdout.find("Exit Criterion").expect("exit-criteria should appear");
+    let scenario_pos = out.stdout.find("Scenario Test").expect("scenario should appear");
+    assert!(exit_pos < scenario_pos, "exit-criteria should appear before scenario");
+
+    // 7. Order: feature → ADRs → tests
+    let feature_pos = out.stdout.find("Main feature body.").expect("feature body");
+    let adr_pos = out.stdout.find("Rust decision body.").expect("ADR body");
+    let tc_pos = out.stdout.find("Exit criterion body.").expect("TC body");
+    assert!(feature_pos < adr_pos, "Feature before ADRs");
+    assert!(adr_pos < tc_pos, "ADRs before tests");
+}

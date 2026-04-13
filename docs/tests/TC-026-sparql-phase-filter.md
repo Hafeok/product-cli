@@ -2,7 +2,7 @@
 id: TC-026
 title: sparql_phase_filter
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-011
@@ -10,6 +10,8 @@ validates:
   adrs:
   - ADR-008
 phase: 1
+runner: cargo-test
+runner-args: "tc_026_sparql_phase_filter"
 ---
 
 execute a query filtering features by `pm:phase 1`. Assert only phase-1 features appear in the result.

@@ -76,7 +76,7 @@
 - [x] TC-012: markdown_passthrough (scenario) — passing
 - [ ] TC-152: FT-007 all tests pass and feature is complete (exit-criteria) — unimplemented
 
-### FT-009 — Formal Specification [~]
+### FT-009 — Formal Specification [x]
 
 - [x] ADR-005: Numeric ID Scheme (FT-XXX, ADR-XXX, TC-XXX) (accepted)
 - [x] TC-013: id_auto_increment (scenario) — passing
@@ -104,28 +104,28 @@
 - [x] ADR-008: Embedded Oxigraph for SPARQL Queries (accepted)
 - [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
 - [x] TC-016: context_bundle_feature (scenario) — passing
-- [ ] TC-017: context_bundle_no_frontmatter (scenario) — unimplemented
+- [x] TC-017: context_bundle_no_frontmatter (scenario) — passing
 - [x] TC-018: context_bundle_header (scenario) — passing
-- [ ] TC-019: context_bundle_superseded_adr (scenario) — unimplemented
-- [ ] TC-020: product context FT-001 (scenario) — unimplemented
+- [x] TC-019: context_bundle_superseded_adr (scenario) — passing
+- [x] TC-020: product context FT-001 (scenario) — passing
 - [x] TC-024: sparql_select_feature_adrs (scenario) — passing
-- [ ] TC-025: sparql_untested_features (scenario) — unimplemented
-- [ ] TC-026: sparql_phase_filter (scenario) — unimplemented
+- [x] TC-025: sparql_untested_features (scenario) — passing
+- [x] TC-026: sparql_phase_filter (scenario) — passing
 - [x] TC-041: topo_sort_simple (scenario) — passing
 - [x] TC-042: topo_sort_parallel (scenario) — passing
 - [x] TC-043: topo_sort_cycle (scenario) — passing
 - [x] TC-044: feature_next_uses_topo (scenario) — passing
 - [x] TC-045: context_depth_2 (scenario) — passing
 - [x] TC-046: context_depth_dedup (scenario) — passing
-- [ ] TC-047: context_bundle_adr_order_centrality (scenario) — unimplemented
+- [x] TC-047: context_bundle_adr_order_centrality (scenario) — passing
 - [x] TC-048: centrality_computation (scenario) — passing
 - [x] TC-049: centrality_top_n (scenario) — passing
 - [x] TC-050: impact_direct (scenario) — passing
 - [x] TC-051: impact_transitive (scenario) — passing
-- [ ] TC-052: impact_on_supersede (scenario) — unimplemented
-- [ ] TC-053: product graph central (scenario) — unimplemented
-- [ ] TC-054: product impact ADR-001 (scenario) — unimplemented
-- [ ] TC-158: FT-011 context bundle output correct (exit-criteria) — unimplemented
+- [x] TC-052: impact_on_supersede (scenario) — passing
+- [x] TC-053: product graph central (scenario) — passing
+- [x] TC-054: product impact ADR-001 (scenario) — passing
+- [x] TC-158: FT-011 context bundle output correct (exit-criteria) — passing
 
 ### FT-012 — Feature: FT-001 — Cluster Foundation [~]
 
@@ -175,22 +175,22 @@
 - [x] TC-009: graph_rebuild_from_scratch (scenario) — passing
 - [ ] TC-010: graph_stale_ttl (scenario) — unimplemented
 - [x] TC-024: sparql_select_feature_adrs (scenario) — passing
-- [ ] TC-025: sparql_untested_features (scenario) — unimplemented
-- [ ] TC-026: sparql_phase_filter (scenario) — unimplemented
+- [x] TC-025: sparql_untested_features (scenario) — passing
+- [x] TC-026: sparql_phase_filter (scenario) — passing
 - [x] TC-041: topo_sort_simple (scenario) — passing
 - [x] TC-042: topo_sort_parallel (scenario) — passing
 - [x] TC-043: topo_sort_cycle (scenario) — passing
 - [x] TC-044: feature_next_uses_topo (scenario) — passing
 - [x] TC-045: context_depth_2 (scenario) — passing
 - [x] TC-046: context_depth_dedup (scenario) — passing
-- [ ] TC-047: context_bundle_adr_order_centrality (scenario) — unimplemented
+- [x] TC-047: context_bundle_adr_order_centrality (scenario) — passing
 - [x] TC-048: centrality_computation (scenario) — passing
 - [x] TC-049: centrality_top_n (scenario) — passing
 - [x] TC-050: impact_direct (scenario) — passing
 - [x] TC-051: impact_transitive (scenario) — passing
-- [ ] TC-052: impact_on_supersede (scenario) — unimplemented
-- [ ] TC-053: product graph central (scenario) — unimplemented
-- [ ] TC-054: product impact ADR-001 (scenario) — unimplemented
+- [x] TC-052: impact_on_supersede (scenario) — passing
+- [x] TC-053: product graph central (scenario) — passing
+- [x] TC-054: product impact ADR-001 (scenario) — passing
 - [ ] TC-157: FT-016 graph model queries pass (exit-criteria) — unimplemented
 
 ### FT-017 — Generated Checklist [~]
