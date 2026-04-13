@@ -7,6 +7,7 @@ validates:
   features:
   - FT-006
   - FT-016
+  - FT-024
   - FT-014
   adrs:
   - ADR-003

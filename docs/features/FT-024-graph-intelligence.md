@@ -2,13 +2,33 @@
 id: FT-024
 title: Graph Intelligence
 phase: 3
-status: planned
+status: complete
 depends-on:
 - FT-016
 adrs:
 - ADR-008
 - ADR-012
-tests: []
+tests:
+- TC-157
+- TC-024
+- TC-025
+- TC-026
+- TC-041
+- TC-042
+- TC-043
+- TC-044
+- TC-045
+- TC-046
+- TC-047
+- TC-048
+- TC-049
+- TC-050
+- TC-051
+- TC-052
+- TC-053
+- TC-054
+- TC-009
+- TC-010
 domains: []
 domains-acknowledged: {}
 ---
