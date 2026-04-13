@@ -1,0 +1,1 @@
+It looks like write permission to this file keeps getting blocked. Could you grant write access to `docs/guide/FT-027-context-bundle.md`? The file already exists (empty) as an untracked file — I'm trying to populate it with the Diataxis documentation for FT-027.
