@@ -2260,6 +2260,13 @@ fn handle_mcp(
     };
 
     if http {
+        let toml_path = repo_root.join("product.toml");
+        let cors_origins = if toml_path.exists() {
+            let cfg = ProductConfig::load(&toml_path)?;
+            cfg.mcp.map(|m| m.cors_origins).unwrap_or_default()
+        } else {
+            vec![]
+        };
         let rt = tokio::runtime::Runtime::new().map_err(|e| {
             ProductError::IoError(format!("Failed to create tokio runtime: {}", e))
         })?;
@@ -2269,7 +2276,7 @@ fn handle_mcp(
             port,
             bind,
             token,
-            vec![],
+            cors_origins,
         ))?;
     } else {
         mcp::run_stdio(repo_root, write_enabled)?;

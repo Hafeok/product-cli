@@ -225,6 +225,14 @@ impl ToolRegistry {
             return Err("Write tools are disabled. Set mcp.write = true in product.toml".to_string());
         }
 
+        // Acquire repo lock for write tools (ADR-015)
+        let _lock = if tool.requires_write {
+            Some(crate::fileops::RepoLock::acquire(&self.repo_root)
+                .map_err(|e| format!("{}", e))?)
+        } else {
+            None
+        };
+
         // Load graph for each call (graph is always derived from files)
         let config = ProductConfig::load(&self.repo_root.join("product.toml"))
             .map_err(|e| format!("{}", e))?;
@@ -609,7 +617,7 @@ pub async fn run_http(
             CorsLayer::new()
                 .allow_origin(AllowOrigin::list(origins))
                 .allow_methods([Method::POST, Method::OPTIONS])
-                .allow_headers([axum::http::header::AUTHORIZATION]),
+                .allow_headers([axum::http::header::AUTHORIZATION, axum::http::header::CONTENT_TYPE]),
         )
     } else {
         app
@@ -626,11 +634,45 @@ pub async fn run_http(
     let listener = tokio::net::TcpListener::bind(&addr).await.map_err(|e| {
         ProductError::IoError(format!("Failed to bind {}: {}", addr, e))
     })?;
-    axum::serve(listener, app).await.map_err(|e| {
-        ProductError::IoError(format!("Server error: {}", e))
-    })?;
+
+    // Graceful shutdown: listen for SIGTERM/SIGINT, complete in-flight requests
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+        .map_err(|e| {
+            ProductError::IoError(format!("Server error: {}", e))
+        })?;
 
     Ok(())
+}
+
+/// Wait for SIGTERM or SIGINT to trigger graceful shutdown
+async fn shutdown_signal() {
+    use tokio::signal;
+
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .ok();
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        if let Ok(mut sig) = signal::unix::signal(signal::unix::SignalKind::terminate()) {
+            sig.recv().await;
+        } else {
+            std::future::pending::<()>().await;
+        }
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        () = ctrl_c => {},
+        () = terminate => {},
+    }
+    eprintln!("Shutdown signal received, draining in-flight requests...");
 }
 
 // ---------------------------------------------------------------------------

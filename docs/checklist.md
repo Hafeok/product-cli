@@ -416,19 +416,19 @@
 - [x] TC-150: product preflight FT-001 (scenario) — passing
 - [x] TC-151: product graph coverage (scenario) — passing
 
-### FT-021 — MCP Server [~]
+### FT-021 — MCP Server [x]
 
 - [x] ADR-020: MCP Server — Dual Transport (stdio and HTTP) (accepted)
 - [x] TC-099: mcp_stdio_tool_call (scenario) — passing
-- [ ] TC-100: mcp_http_tool_call (scenario) — unimplemented
-- [ ] TC-101: mcp_http_no_token_401 (scenario) — unimplemented
-- [ ] TC-102: mcp_http_wrong_token_401 (scenario) — unimplemented
+- [x] TC-100: mcp_http_tool_call (scenario) — passing
+- [x] TC-101: mcp_http_no_token_401 (scenario) — passing
+- [x] TC-102: mcp_http_wrong_token_401 (scenario) — passing
 - [x] TC-103: mcp_http_write_disabled (scenario) — passing
-- [ ] TC-104: mcp_http_concurrent_writes (scenario) — unimplemented
-- [ ] TC-105: mcp_http_graceful_shutdown (scenario) — unimplemented
+- [x] TC-104: mcp_http_concurrent_writes (scenario) — passing
+- [x] TC-105: mcp_http_graceful_shutdown (scenario) — passing
 - [x] TC-106: mcp_tool_registry_shared (scenario) — passing
-- [ ] TC-107: mcp_cors_header (scenario) — unimplemented
-- [ ] TC-165: FT-021 MCP server stdio and HTTP pass (exit-criteria) — unimplemented
+- [x] TC-107: mcp_cors_header (scenario) — passing
+- [x] TC-165: FT-021 MCP server stdio and HTTP pass (exit-criteria) — passing
 
 ### FT-022 — Authoring Sessions [~]
 

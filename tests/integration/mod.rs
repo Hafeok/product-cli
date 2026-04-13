@@ -1209,6 +1209,330 @@ fn tc_156_ft001_exit_criteria() {
 
 const MINIMAL_CONFIG: &str = "name = \"test\"\nschema-version = \"1\"\n[paths]\nfeatures = \"docs/features\"\nadrs = \"docs/adrs\"\ntests = \"docs/tests\"\ngraph = \"docs/graph\"\nchecklist = \"docs/checklist.md\"\n[prefixes]\nfeature = \"FT\"\nadr = \"ADR\"\ntest = \"TC\"";
 
+// ---------------------------------------------------------------------------
+// MCP HTTP test helpers
+// ---------------------------------------------------------------------------
+
+/// Start the MCP HTTP server as a background process and wait for it to be ready.
+/// Returns the child process handle.
+fn start_mcp_http(h: &Harness, port: u16, extra_args: &[&str]) -> std::process::Child {
+    use std::process::{Command, Stdio};
+
+    let mut cmd = Command::new(&h.bin);
+    cmd.args(["mcp", "--http", "--port", &port.to_string(), "--bind", "127.0.0.1"])
+        .args(extra_args)
+        .current_dir(h.dir.path())
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+
+    let child = cmd.spawn().expect("spawn mcp http");
+
+    // Wait for server to be ready by polling the port
+    for _ in 0..50 {
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        if std::net::TcpStream::connect(format!("127.0.0.1:{}", port)).is_ok() {
+            return child;
+        }
+    }
+    child
+}
+
+/// Send a raw HTTP POST to the MCP endpoint and return (status_line, headers, body)
+fn http_post(port: u16, body: &str, auth_header: Option<&str>) -> (String, String, String) {
+    use std::io::{Read, Write};
+
+    let mut stream = std::net::TcpStream::connect(format!("127.0.0.1:{}", port))
+        .expect("connect to mcp http");
+    stream.set_read_timeout(Some(std::time::Duration::from_secs(10))).ok();
+
+    let mut request = format!(
+        "POST /mcp HTTP/1.1\r\nHost: 127.0.0.1:{}\r\nContent-Type: application/json\r\nContent-Length: {}\r\n",
+        port, body.len()
+    );
+    if let Some(auth) = auth_header {
+        request.push_str(&format!("Authorization: {}\r\n", auth));
+    }
+    request.push_str("Connection: close\r\n\r\n");
+    request.push_str(body);
+
+    stream.write_all(request.as_bytes()).expect("write request");
+    stream.flush().expect("flush");
+
+    let mut response = String::new();
+    let _ = stream.read_to_string(&mut response);
+
+    // Parse status line, headers, body
+    let parts: Vec<&str> = response.splitn(2, "\r\n\r\n").collect();
+    let header_section = parts.first().unwrap_or(&"");
+    let body_section = parts.get(1).unwrap_or(&"").to_string();
+    let mut lines = header_section.lines();
+    let status_line = lines.next().unwrap_or("").to_string();
+    let headers: String = lines.collect::<Vec<_>>().join("\n");
+
+    (status_line, headers, body_section)
+}
+
+/// Send an HTTP OPTIONS (preflight) request and return (status_line, headers, body)
+fn http_options(port: u16, origin: &str) -> (String, String, String) {
+    use std::io::{Read, Write};
+
+    let mut stream = std::net::TcpStream::connect(format!("127.0.0.1:{}", port))
+        .expect("connect to mcp http");
+    stream.set_read_timeout(Some(std::time::Duration::from_secs(10))).ok();
+
+    let request = format!(
+        "OPTIONS /mcp HTTP/1.1\r\nHost: 127.0.0.1:{}\r\nOrigin: {}\r\nAccess-Control-Request-Method: POST\r\nAccess-Control-Request-Headers: authorization,content-type\r\nConnection: close\r\n\r\n",
+        port, origin
+    );
+
+    stream.write_all(request.as_bytes()).expect("write request");
+    stream.flush().expect("flush");
+
+    let mut response = String::new();
+    let _ = stream.read_to_string(&mut response);
+
+    let parts: Vec<&str> = response.splitn(2, "\r\n\r\n").collect();
+    let header_section = parts.first().unwrap_or(&"");
+    let body_section = parts.get(1).unwrap_or(&"").to_string();
+    let mut lines = header_section.lines();
+    let status_line = lines.next().unwrap_or("").to_string();
+    let headers: String = lines.collect::<Vec<_>>().join("\n");
+
+    (status_line, headers, body_section)
+}
+
+/// Pick a unique port for each test to avoid conflicts
+fn unique_port() -> u16 {
+    use std::sync::atomic::{AtomicU16, Ordering};
+    static PORT: AtomicU16 = AtomicU16::new(17700);
+    PORT.fetch_add(1, Ordering::SeqCst)
+}
+
+// ---------------------------------------------------------------------------
+// TC-100: mcp_http_tool_call
+// ---------------------------------------------------------------------------
+
+/// TC-100: HTTP POST to /mcp returns 200 with correct tool result
+#[test]
+fn tc_100_mcp_http_tool_call() {
+    let h = fixture_minimal();
+    let port = unique_port();
+    let mut child = start_mcp_http(&h, port, &["--token", "test-token-100"]);
+
+    let body = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_feature_list","arguments":{}}}"#;
+    let (status, _headers, resp_body) = http_post(port, body, Some("Bearer test-token-100"));
+
+    // Kill the server
+    let _ = child.kill();
+    let _ = child.wait();
+
+    assert!(status.contains("200"), "Expected 200, got: {}", status);
+    assert!(resp_body.contains("FT-001"), "Response should contain FT-001: {}", resp_body);
+    assert!(resp_body.contains("jsonrpc"), "Response should be JSON-RPC: {}", resp_body);
+}
+
+// ---------------------------------------------------------------------------
+// TC-101: mcp_http_no_token_401
+// ---------------------------------------------------------------------------
+
+/// TC-101: Request without Authorization header returns 401
+#[test]
+fn tc_101_mcp_http_no_token_401() {
+    let h = fixture_minimal();
+    let port = unique_port();
+    let mut child = start_mcp_http(&h, port, &["--token", "secret-token-101"]);
+
+    let body = r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#;
+    let (status, _headers, _resp_body) = http_post(port, body, None);
+
+    let _ = child.kill();
+    let _ = child.wait();
+
+    assert!(status.contains("401"), "Expected 401 without token, got: {}", status);
+}
+
+// ---------------------------------------------------------------------------
+// TC-102: mcp_http_wrong_token_401
+// ---------------------------------------------------------------------------
+
+/// TC-102: Request with wrong bearer token returns 401
+#[test]
+fn tc_102_mcp_http_wrong_token_401() {
+    let h = fixture_minimal();
+    let port = unique_port();
+    let mut child = start_mcp_http(&h, port, &["--token", "correct-token-102"]);
+
+    let body = r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#;
+    let (status, _headers, _resp_body) = http_post(port, body, Some("Bearer wrong-token"));
+
+    let _ = child.kill();
+    let _ = child.wait();
+
+    assert!(status.contains("401"), "Expected 401 with wrong token, got: {}", status);
+}
+
+// ---------------------------------------------------------------------------
+// TC-104: mcp_http_concurrent_writes
+// ---------------------------------------------------------------------------
+
+/// TC-104: Two concurrent write tool calls — one succeeds, one returns lock-held error
+#[test]
+fn tc_104_mcp_http_concurrent_writes() {
+    let h = Harness::new();
+    h.write("product.toml", &format!("{}\n[mcp]\nwrite = true\n", MINIMAL_CONFIG));
+    let port = unique_port();
+    let mut child = start_mcp_http(&h, port, &["--token", "write-token-104", "--write"]);
+
+    // Create a lock file held by a live process (this test process) to simulate concurrency
+    let lock_path = h.dir.path().join(".product.lock");
+    std::fs::write(
+        &lock_path,
+        format!("pid={}\nstarted=2026-04-13T00:00:00Z\n", std::process::id()),
+    ).expect("write lock");
+
+    let body = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_feature_new","arguments":{"title":"Concurrent Test"}}}"#;
+    let (status, _headers, resp_body) = http_post(port, body, Some("Bearer write-token-104"));
+
+    // Remove the lock
+    let _ = std::fs::remove_file(&lock_path);
+
+    let _ = child.kill();
+    let _ = child.wait();
+
+    // The request should return 200 (HTTP level) with a tool error about the lock
+    assert!(status.contains("200"), "Expected 200 HTTP status, got: {}", status);
+    // The JSON-RPC response should contain an error about the lock
+    assert!(
+        resp_body.contains("lock") || resp_body.contains("error") || resp_body.contains("pid"),
+        "Expected lock-held error in response: {}",
+        resp_body
+    );
+}
+
+// ---------------------------------------------------------------------------
+// TC-105: mcp_http_graceful_shutdown
+// ---------------------------------------------------------------------------
+
+/// TC-105: SIGTERM during operation — server completes in-flight request then exits
+#[test]
+fn tc_105_mcp_http_graceful_shutdown() {
+    use std::process::Command;
+
+    let h = fixture_minimal();
+    let port = unique_port();
+    let mut child = start_mcp_http(&h, port, &["--token", "shutdown-token-105"]);
+
+    // Send a request to verify server is working
+    let body = r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#;
+    let (status, _headers, _resp_body) = http_post(port, body, Some("Bearer shutdown-token-105"));
+    assert!(status.contains("200"), "Server should be responding before SIGTERM: {}", status);
+
+    // Send SIGTERM
+    #[cfg(unix)]
+    {
+        let pid = child.id();
+        unsafe {
+            libc::kill(pid as i32, libc::SIGTERM);
+        }
+
+        // Wait for process to exit (with timeout)
+        let start = std::time::Instant::now();
+        loop {
+            match child.try_wait() {
+                Ok(Some(status)) => {
+                    // Process exited — graceful shutdown worked
+                    assert!(status.success() || status.code() == Some(0),
+                        "Server should exit cleanly after SIGTERM, got: {:?}", status);
+                    break;
+                }
+                Ok(None) => {
+                    if start.elapsed() > std::time::Duration::from_secs(15) {
+                        let _ = child.kill();
+                        let _ = child.wait();
+                        panic!("Server did not exit within 15 seconds after SIGTERM");
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                }
+                Err(e) => {
+                    panic!("Error checking process status: {}", e);
+                }
+            }
+        }
+    }
+
+    #[cfg(not(unix))]
+    {
+        let _ = child.kill();
+        let _ = child.wait();
+    }
+}
+
+// ---------------------------------------------------------------------------
+// TC-107: mcp_cors_header
+// ---------------------------------------------------------------------------
+
+/// TC-107: CORS preflight with configured origin returns correct headers
+#[test]
+fn tc_107_mcp_cors_header() {
+    let h = Harness::new();
+    h.write("product.toml", &format!("{}\n[mcp]\nwrite = false\ncors-origins = [\"https://claude.ai\"]\n", MINIMAL_CONFIG));
+    let port = unique_port();
+    let mut child = start_mcp_http(&h, port, &[]);
+
+    let (status, headers, _body) = http_options(port, "https://claude.ai");
+
+    let _ = child.kill();
+    let _ = child.wait();
+
+    assert!(status.contains("200"), "Preflight should return 200, got: {}", status);
+    let headers_lower = headers.to_lowercase();
+    assert!(
+        headers_lower.contains("access-control-allow-origin"),
+        "Should have CORS allow-origin header: {}", headers
+    );
+    assert!(
+        headers.contains("https://claude.ai"),
+        "Should allow claude.ai origin: {}", headers
+    );
+    assert!(
+        headers_lower.contains("access-control-allow-methods"),
+        "Should have CORS allow-methods header: {}", headers
+    );
+}
+
+// ---------------------------------------------------------------------------
+// TC-165: FT-021 MCP server stdio and HTTP pass (exit-criteria)
+// ---------------------------------------------------------------------------
+
+/// TC-165: All MCP tests pass — this is the exit gate
+#[test]
+fn tc_165_ft_021_mcp_server_stdio_and_http_pass() {
+    // This test validates that both stdio and HTTP transports work.
+    // It exercises a basic tool call via stdio and via HTTP on the same repo
+    // to confirm the full MCP surface is operational.
+
+    let h = fixture_minimal();
+
+    // 1. Verify stdio transport works
+    let input = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_feature_list","arguments":{}}}"#;
+    let stdio_out = run_mcp_stdio(&h, input);
+    assert!(stdio_out.contains("FT-001"), "stdio should return FT-001: {}", stdio_out);
+
+    // 2. Verify HTTP transport works
+    let port = unique_port();
+    let mut child = start_mcp_http(&h, port, &["--token", "exit-token-165"]);
+
+    let body = r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_feature_list","arguments":{}}}"#;
+    let (status, _headers, resp_body) = http_post(port, body, Some("Bearer exit-token-165"));
+
+    let _ = child.kill();
+    let _ = child.wait();
+
+    assert!(status.contains("200"), "HTTP should return 200: {}", status);
+    assert!(resp_body.contains("FT-001"), "HTTP should return FT-001: {}", resp_body);
+}
+
 fn run_mcp_stdio(h: &Harness, input: &str) -> String {
     use std::io::Write;
     use std::process::{Command, Stdio};

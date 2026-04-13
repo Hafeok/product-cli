@@ -112,6 +112,19 @@ pub struct McpConfig {
     /// Allow MCP write tools (default false)
     #[serde(default)]
     pub write: bool,
+    /// Bearer token for HTTP transport
+    #[serde(default)]
+    pub token: Option<String>,
+    /// Default HTTP port
+    #[serde(default = "default_mcp_port")]
+    pub port: u16,
+    /// Allowed CORS origins for HTTP transport
+    #[serde(rename = "cors-origins", default)]
+    pub cors_origins: Vec<String>,
+}
+
+fn default_mcp_port() -> u16 {
+    7777
 }
 
 fn default_feature_prefix() -> String {

@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-020
 phase: 1
+runner: cargo-test
+runner-args: "mcp_008_stdio_write_disabled"
 ---
 
 start server with `mcp.write = false`. Call a write tool. Assert tool error (not HTTP error), message "write tools disabled".
