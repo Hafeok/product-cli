@@ -2830,6 +2830,105 @@ fn tc_134_domain_top2_centrality() {
     );
 }
 
+// TC-135: acknowledgement_requires_reason
+// Feature has domains-acknowledged: { security: "" }. Assert E011.
+#[test]
+fn tc_135_acknowledgement_requires_reason() {
+    let h = harness_with_domains();
+
+    // Feature with empty acknowledgement reasoning
+    h.write("docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: [security]\ndomains-acknowledged:\n  security: \"\"\n---\n\nBody.\n");
+
+    let out = h.run(&["graph", "check"]);
+    out.assert_exit(1)
+        .assert_stderr_contains("E011");
+    assert!(
+        out.stderr.contains("security") || out.stderr.contains("domains-acknowledged"),
+        "E011 should mention the field, got stderr:\n{}",
+        out.stderr
+    );
+}
+
+// TC-136: w010_unacknowledged_cross_cutting
+// ADR-013 is cross-cutting. FT-009 neither links nor acknowledges it. Assert W010.
+#[test]
+fn tc_136_w010_unacknowledged_cross_cutting() {
+    let h = harness_with_domains();
+
+    // Cross-cutting ADR
+    h.write("docs/adrs/ADR-013-error-model.md",
+        "---\nid: ADR-013\ntitle: Error Model\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [error-handling]\nscope: cross-cutting\n---\n\nCross-cutting error model.\n");
+
+    // Feature that neither links nor acknowledges ADR-013
+    h.write("docs/features/FT-009-rate-limiting.md",
+        "---\nid: FT-009\ntitle: Rate Limiting\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: []\ndomains-acknowledged: {}\n---\n\nRate limiting.\n");
+
+    let out = h.run(&["graph", "check"]);
+    // Should be warning (exit 2) not error
+    assert!(
+        out.exit_code == 2 || out.stderr.contains("W010"),
+        "Expected W010 warning, got exit {} stderr:\n{}",
+        out.exit_code, out.stderr
+    );
+    assert!(
+        out.stderr.contains("W010"),
+        "Should contain W010 warning code, got stderr:\n{}",
+        out.stderr
+    );
+    assert!(
+        out.stderr.contains("FT-009") && out.stderr.contains("ADR-013"),
+        "W010 should name FT-009 and ADR-013, got stderr:\n{}",
+        out.stderr
+    );
+}
+
+// TC-137: w011_domain_gap
+// FT-009 declares domains: [security]. Security has ADRs. No link or ack. Assert W011.
+#[test]
+fn tc_137_w011_domain_gap() {
+    let h = harness_with_domains();
+
+    // Domain-scoped security ADR
+    h.write("docs/adrs/ADR-020-security-policy.md",
+        "---\nid: ADR-020\ntitle: Security Policy\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nSecurity policy.\n");
+
+    // Feature declares security domain but doesn't link or acknowledge
+    h.write("docs/features/FT-009-rate-limiting.md",
+        "---\nid: FT-009\ntitle: Rate Limiting\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: [security]\ndomains-acknowledged: {}\n---\n\nRate limiting.\n");
+
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        out.stderr.contains("W011"),
+        "Should contain W011 warning for domain gap, got stderr:\n{}",
+        out.stderr
+    );
+}
+
+// TC-138: acknowledgement_closes_gap
+// FT-009 acknowledges security with reasoning. Assert W011 does NOT fire.
+#[test]
+fn tc_138_acknowledgement_closes_gap() {
+    let h = harness_with_domains();
+
+    // Domain-scoped security ADR
+    h.write("docs/adrs/ADR-020-security-policy.md",
+        "---\nid: ADR-020\ntitle: Security Policy\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nSecurity policy.\n");
+
+    // Feature acknowledges security domain with reasoning
+    h.write("docs/features/FT-009-rate-limiting.md",
+        "---\nid: FT-009\ntitle: Rate Limiting\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: [security]\ndomains-acknowledged:\n  security: \"no trust boundaries introduced\"\n---\n\nRate limiting.\n");
+
+    let out = h.run(&["graph", "check"]);
+    // W011 should NOT appear for security domain on FT-009
+    let has_w011_ft009 = out.stderr.contains("W011") && out.stderr.contains("FT-009") && out.stderr.contains("security");
+    assert!(
+        !has_w011_ft009,
+        "W011 should not fire for FT-009 security when acknowledged, got stderr:\n{}",
+        out.stderr
+    );
+}
+
 // TC-139: domains_vocab_unknown
 // Feature declares domains: [unknown-domain]. Assert E012 (unknown domain).
 #[test]

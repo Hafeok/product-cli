@@ -10,6 +10,8 @@ validates:
   adrs:
   - ADR-025
 phase: 1
+runner: cargo-test
+runner-args: "tc_136_w010_unacknowledged_cross_cutting"
 ---
 
 ADR-013 is cross-cutting. FT-009 neither links nor acknowledges it. Run `product graph check`. Assert W010 naming FT-009 and ADR-013.
