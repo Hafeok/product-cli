@@ -59,7 +59,7 @@
 - [x] TC-079: parse_unknown_block_type (scenario) — passing
 - [x] TC-155: FT-003 front-matter schema fully validated (exit-criteria) — passing
 
-### FT-005 — Formal Specification [~]
+### FT-005 — Formal Specification [x]
 
 - [x] ADR-015: File Write Safety — Atomic Writes and Advisory Locking (accepted)
 - [x] TC-066: atomic_write_content (scenario) — passing
@@ -82,7 +82,7 @@
 - [x] TC-013: id_auto_increment (scenario) — passing
 - [x] TC-014: id_gap_fill (scenario) — passing
 - [x] TC-015: id_conflict (scenario) — passing
-- [ ] TC-160: FT-009 formal specification blocks parse (exit-criteria) — unimplemented
+- [x] TC-160: FT-009 formal specification blocks parse (exit-criteria) — passing
 
 ### FT-010 — CLI Commands [x]
 

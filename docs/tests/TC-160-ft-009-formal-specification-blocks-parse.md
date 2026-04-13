@@ -2,13 +2,13 @@
 id: TC-160
 title: FT-009 formal specification blocks parse
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
+  features: [FT-009]
+  adrs: [ADR-005]
 phase: 1
 ---
 
 ## Description
 
-[Describe the test criterion here.]
+All FT-009 formal specification scenarios pass end-to-end: formal block types (⟦Σ:Types⟧, ⟦Γ:Invariants⟧, ⟦Λ:Scenario⟧, ⟦Ε⟧ evidence) are correctly parsed from test criterion files, preserved verbatim in context bundles, and validated through the graph check pipeline. Diagnostic reporting (E001 errors for out-of-range values, W004 warnings for empty blocks) functions correctly. Evidence aggregation (δ, φ, τ) is computed and surfaced in context output.

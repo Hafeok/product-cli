@@ -2,7 +2,7 @@
 id: FT-009
 title: Formal Specification
 phase: 1
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-005
