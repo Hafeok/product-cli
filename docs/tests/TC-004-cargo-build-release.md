@@ -11,5 +11,6 @@ validates:
   adrs:
   - ADR-001
 phase: 1
+runner: cargo-test
+runner-args: "tc_004_cargo_build_release"
 ---
-

@@ -37,6 +37,8 @@ pub struct KnowledgeGraph {
     // Adjacency lists
     pub forward: HashMap<String, Vec<(String, EdgeType)>>,
     pub reverse: HashMap<String, Vec<(String, EdgeType)>>,
+    /// Duplicate IDs detected during build (id -> list of file paths)
+    pub duplicates: Vec<(String, Vec<std::path::PathBuf>)>,
 }
 
 impl KnowledgeGraph {
@@ -53,17 +55,32 @@ impl KnowledgeGraph {
             edges: Vec::new(),
             forward: HashMap::new(),
             reverse: HashMap::new(),
+            duplicates: Vec::new(),
         };
 
+        // Track all paths per ID to detect duplicates
+        let mut id_paths: HashMap<String, Vec<std::path::PathBuf>> = HashMap::new();
+
         for f in features {
+            id_paths.entry(f.front.id.clone()).or_default().push(f.path.clone());
             graph.features.insert(f.front.id.clone(), f);
         }
         for a in adrs {
+            id_paths.entry(a.front.id.clone()).or_default().push(a.path.clone());
             graph.adrs.insert(a.front.id.clone(), a);
         }
         for t in tests {
+            id_paths.entry(t.front.id.clone()).or_default().push(t.path.clone());
             graph.tests.insert(t.front.id.clone(), t);
         }
+
+        // Record any IDs that appear in more than one file
+        for (id, paths) in id_paths {
+            if paths.len() > 1 {
+                graph.duplicates.push((id, paths));
+            }
+        }
+        graph.duplicates.sort_by(|a, b| a.0.cmp(&b.0));
 
         // Collect edges first, then add them (avoids borrow conflicts)
         let mut pending_edges: Vec<(String, String, EdgeType)> = Vec::new();
@@ -422,6 +439,16 @@ impl KnowledgeGraph {
     pub fn check(&self) -> CheckResult {
         let mut result = CheckResult::new();
         let all_ids = self.all_ids();
+
+        // E011: Duplicate IDs
+        for (id, paths) in &self.duplicates {
+            let path_strs: Vec<String> = paths.iter().map(|p| p.display().to_string()).collect();
+            result.errors.push(
+                Diagnostic::error("E011", "duplicate artifact ID")
+                    .with_detail(&format!("{} is declared in multiple files: {}", id, path_strs.join(", ")))
+                    .with_hint("each artifact ID must be unique — rename or remove the duplicate"),
+            );
+        }
 
         // E002: Broken links
         for f in self.features.values() {

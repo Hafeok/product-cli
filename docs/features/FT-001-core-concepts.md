@@ -2,7 +2,7 @@
 id: FT-001
 title: Core Concepts
 phase: 1
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-001

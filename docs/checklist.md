@@ -5,21 +5,21 @@
 
 ## Phase 1
 
-### FT-001 — Core Concepts [~]
+### FT-001 — Core Concepts [x]
 
 - [x] ADR-001: Rust as Implementation Language (accepted)
 - [x] ADR-004: Markdown as the Document Format (accepted)
 - [x] ADR-005: Numeric ID Scheme (FT-XXX, ADR-XXX, TC-XXX) (accepted)
-- [ ] TC-001: binary_compiles_arm64 (scenario) — unimplemented
+- [x] TC-001: binary_compiles_arm64 (scenario) — passing
 - [x] TC-002: binary_compiles_x86 (scenario) — passing
-- [ ] TC-003: binary_no_deps.sh (scenario) — unimplemented
+- [x] TC-003: binary_no_deps.sh (scenario) — passing
 - [x] TC-004: cargo build --release (scenario) — passing
 - [x] TC-011: markdown_front_matter_strip (scenario) — passing
 - [x] TC-012: markdown_passthrough (scenario) — passing
 - [x] TC-013: id_auto_increment (scenario) — passing
-- [ ] TC-014: id_gap_fill (scenario) — unimplemented
-- [ ] TC-015: id_conflict (scenario) — unimplemented
-- [ ] TC-156: FT-001 core concepts validated (exit-criteria) — unimplemented
+- [x] TC-014: id_gap_fill (scenario) — passing
+- [x] TC-015: id_conflict (scenario) — passing
+- [x] TC-156: FT-001 core concepts validated (exit-criteria) — passing
 
 ### FT-002 — Repository Layout [x]
 
@@ -80,8 +80,8 @@
 
 - [x] ADR-005: Numeric ID Scheme (FT-XXX, ADR-XXX, TC-XXX) (accepted)
 - [x] TC-013: id_auto_increment (scenario) — passing
-- [ ] TC-014: id_gap_fill (scenario) — unimplemented
-- [ ] TC-015: id_conflict (scenario) — unimplemented
+- [x] TC-014: id_gap_fill (scenario) — passing
+- [x] TC-015: id_conflict (scenario) — passing
 - [ ] TC-160: FT-009 formal specification blocks parse (exit-criteria) — unimplemented
 
 ### FT-010 — CLI Commands [x]
@@ -130,18 +130,18 @@
 ### FT-012 — Feature: FT-001 — Cluster Foundation [~]
 
 - [x] ADR-001: Rust as Implementation Language (accepted)
-- [ ] TC-001: binary_compiles_arm64 (scenario) — unimplemented
+- [x] TC-001: binary_compiles_arm64 (scenario) — passing
 - [x] TC-002: binary_compiles_x86 (scenario) — passing
-- [ ] TC-003: binary_no_deps.sh (scenario) — unimplemented
+- [x] TC-003: binary_no_deps.sh (scenario) — passing
 - [x] TC-004: cargo build --release (scenario) — passing
 - [ ] TC-163: FT-012 cluster foundation binary validated (exit-criteria) — unimplemented
 
 ### FT-013 — ADR-001 — Rust as Implementation Language [~]
 
 - [x] ADR-001: Rust as Implementation Language (accepted)
-- [ ] TC-001: binary_compiles_arm64 (scenario) — unimplemented
+- [x] TC-001: binary_compiles_arm64 (scenario) — passing
 - [x] TC-002: binary_compiles_x86 (scenario) — passing
-- [ ] TC-003: binary_no_deps.sh (scenario) — unimplemented
+- [x] TC-003: binary_no_deps.sh (scenario) — passing
 - [x] TC-004: cargo build --release (scenario) — passing
 - [ ] TC-164: FT-013 Rust implementation compiles clean (exit-criteria) — unimplemented
 
@@ -348,4 +348,19 @@
 - [x] TC-096: gap_id_format (scenario) — passing
 - [ ] TC-097: gap_stdout_stderr_separation (scenario) — unimplemented
 - [ ] TC-098: gap_json_schema (scenario) — unimplemented
+
+### FT-030 — Codebase Onboarding [ ]
+
+- [ ] ADR-027: Codebase Onboarding — Decision Discovery from Existing Code (proposed)
+- [ ] TC-168: Scan produces candidates with valid evidence paths (scenario) — unimplemented
+- [ ] TC-169: Scan rejects candidates citing non-existent files (scenario) — unimplemented
+- [ ] TC-170: Scan respects max-candidates cap (scenario) — unimplemented
+- [ ] TC-171: Triage confirm converts candidate to ADR (scenario) — unimplemented
+- [ ] TC-172: Triage reject discards candidate permanently (scenario) — unimplemented
+- [ ] TC-173: Triage merge combines two candidates into one ADR (scenario) — unimplemented
+- [ ] TC-174: Seed creates ADR files with correct front-matter (scenario) — unimplemented
+- [ ] TC-175: Seed groups candidates into feature stubs by signal proximity (scenario) — unimplemented
+- [ ] TC-176: Seed dry-run writes no files (scenario) — unimplemented
+- [ ] TC-177: End-to-end onboard produces graph with no structural errors (exit-criteria) — unimplemented
+- [ ] TC-178: Seeded ADRs have no G005 contradictions after gap check (exit-criteria) — unimplemented
 

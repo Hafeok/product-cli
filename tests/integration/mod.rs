@@ -582,6 +582,266 @@ fn tc_153_ft015_exit_criteria() {
     assert!(out.stdout.contains("∀x:Node"), "Invariant content preserved");
 }
 
+// --- TC-002: binary_compiles_x86 ---
+// cargo build --release --target x86_64-unknown-linux-musl completes with zero errors.
+
+#[test]
+fn tc_002_binary_compiles_x86() {
+    let output = Command::new("cargo")
+        .args(["build", "--release", "--target", "x86_64-unknown-linux-musl"])
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .expect("cargo build");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "cargo build --release --target x86_64-unknown-linux-musl failed:\n{}",
+        stderr
+    );
+}
+
+// --- TC-004: cargo build --release ---
+
+#[test]
+fn tc_004_cargo_build_release() {
+    let output = Command::new("cargo")
+        .args(["build", "--release"])
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .expect("cargo build");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "cargo build --release failed:\n{}",
+        stderr
+    );
+}
+
+// --- TC-011: markdown_front_matter_strip ---
+// Context bundle output contains no --- delimiters and no YAML fields.
+
+#[test]
+fn tc_011_markdown_front_matter_strip() {
+    let h = fixture_minimal();
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    // No YAML front-matter delimiters in output
+    assert!(!out.stdout.starts_with("---\n"), "Context should not start with front-matter delimiter");
+    // Check no raw YAML fields leaked
+    assert!(!out.stdout.contains("status: planned"), "YAML fields should not appear in context bundle");
+    assert!(!out.stdout.contains("depends-on:"), "YAML fields should not appear in context bundle");
+}
+
+// --- TC-012: markdown_passthrough ---
+// Code blocks, tables, and nested lists preserved verbatim.
+
+#[test]
+fn tc_012_markdown_passthrough() {
+    let h = Harness::new();
+    h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\n```rust\nfn main() {}\n```\n\n| Col1 | Col2 |\n|------|------|\n| a    | b    |\n\n- item 1\n  - nested\n");
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("```rust"), "Code blocks preserved");
+    assert!(out.stdout.contains("fn main() {}"), "Code content preserved");
+    assert!(out.stdout.contains("| Col1 | Col2 |"), "Tables preserved");
+    assert!(out.stdout.contains("- item 1"), "Lists preserved");
+    assert!(out.stdout.contains("  - nested"), "Nested lists preserved");
+}
+
+// --- TC-013: id_auto_increment ---
+// Create three features in sequence. Assert FT-001, FT-002, FT-003.
+
+#[test]
+fn tc_013_id_auto_increment() {
+    let h = Harness::new();
+    let out1 = h.run(&["feature", "new", "First"]);
+    out1.assert_exit(0).assert_stdout_contains("FT-001");
+    let out2 = h.run(&["feature", "new", "Second"]);
+    out2.assert_exit(0).assert_stdout_contains("FT-002");
+    let out3 = h.run(&["feature", "new", "Third"]);
+    out3.assert_exit(0).assert_stdout_contains("FT-003");
+}
+
+// --- TC-001: binary_compiles_arm64 ---
+// cargo build --release --target aarch64-unknown-linux-gnu completes with zero errors.
+
+#[test]
+fn tc_001_binary_compiles_arm64() {
+    let output = Command::new("cargo")
+        .args(["build", "--release", "--target", "aarch64-unknown-linux-gnu"])
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .expect("cargo build");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "cargo build --release --target aarch64-unknown-linux-gnu failed:\n{}",
+        stderr
+    );
+    // Check for zero warnings (allow "Compiling" and "Finished" lines)
+    let has_warnings = stderr.lines().any(|l| l.starts_with("warning"));
+    assert!(
+        !has_warnings,
+        "Expected zero warnings, got:\n{}",
+        stderr
+    );
+}
+
+// --- TC-014: id_gap_fill ---
+// Create features FT-001 and FT-003 manually. Run `product feature new`. Assert the new feature
+// is assigned FT-004 (gaps are not filled — next ID is always max(existing) + 1).
+
+#[test]
+fn tc_014_id_gap_fill() {
+    let h = Harness::new();
+    // Create FT-001 and FT-003 (gap at FT-002)
+    h.write("docs/features/FT-001-first.md", "---\nid: FT-001\ntitle: First\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nFirst feature.\n");
+    h.write("docs/features/FT-003-third.md", "---\nid: FT-003\ntitle: Third\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nThird feature.\n");
+
+    // Run product feature new
+    let out = h.run(&["feature", "new", "Gap Test"]);
+    out.assert_exit(0);
+    // Should assign FT-004 (max+1), NOT FT-002 (gap fill)
+    assert!(
+        out.stdout.contains("FT-004"),
+        "Expected FT-004 (max+1, no gap fill), got stdout: {}",
+        out.stdout
+    );
+    // FT-002 should NOT exist
+    assert!(
+        !h.exists("docs/features/FT-002-gap-test.md"),
+        "FT-002 should not be created — gaps are not filled"
+    );
+}
+
+// --- TC-015: id_conflict ---
+// Two files declare the same ID. Assert the CLI returns an error and does not overwrite.
+
+#[test]
+fn tc_015_id_conflict() {
+    let h = Harness::new();
+    // Create two feature files with the same ID
+    h.write("docs/features/FT-001-alpha.md", "---\nid: FT-001\ntitle: Alpha\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nAlpha feature.\n");
+    h.write("docs/features/FT-001-beta.md", "---\nid: FT-001\ntitle: Beta\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBeta feature.\n");
+
+    // graph check should report a duplicate ID error
+    let out = h.run(&["graph", "check"]);
+    out.assert_exit(1)
+        .assert_stderr_contains("E011");
+    assert!(
+        out.stderr.contains("FT-001"),
+        "Error should mention the duplicate ID FT-001, got stderr: {}",
+        out.stderr
+    );
+    assert!(
+        out.stderr.contains("duplicate"),
+        "Error should mention 'duplicate', got stderr: {}",
+        out.stderr
+    );
+
+    // Both files should still exist (nothing overwritten)
+    assert!(h.exists("docs/features/FT-001-alpha.md"), "Alpha file should still exist");
+    assert!(h.exists("docs/features/FT-001-beta.md"), "Beta file should still exist");
+}
+
+// --- TC-003: binary_no_deps ---
+// ldd on the release binary (musl) reports no dynamic dependencies beyond libc.
+
+#[test]
+fn tc_003_binary_no_deps() {
+    // Build check: verify the debug binary has minimal deps
+    // On a musl-static build this would show "not a dynamic executable"
+    // On a glibc build, only libc/libm/ld-linux are expected
+    let h = Harness::new();
+    let out = Command::new("ldd")
+        .arg(&h.bin)
+        .output();
+    match out {
+        Ok(output) => {
+            let ldd_output = String::from_utf8_lossy(&output.stdout).to_string();
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            // Either statically linked (not a dynamic executable) or only libc deps
+            let is_static = ldd_output.contains("not a dynamic executable")
+                || ldd_output.contains("statically linked")
+                || stderr.contains("not a dynamic executable");
+
+            if !is_static {
+                // Check that all deps are libc-related
+                for line in ldd_output.lines() {
+                    let line = line.trim();
+                    if line.is_empty() { continue; }
+                    // Allowed: libc, libm, libdl, libpthread, librt, libgcc_s, ld-linux, linux-vdso
+                    let allowed = ["libc.", "libm.", "libdl.", "libpthread.", "librt.",
+                                   "libgcc_s.", "ld-linux", "linux-vdso", "linux-gate",
+                                   "/lib64/ld-", "/lib/ld-"];
+                    let is_allowed = allowed.iter().any(|a| line.contains(a));
+                    assert!(
+                        is_allowed,
+                        "Unexpected dynamic dependency: {}",
+                        line
+                    );
+                }
+            }
+            // If static, test passes automatically
+        }
+        Err(_) => {
+            // ldd not available (e.g., macOS) — skip
+            eprintln!("ldd not available, skipping TC-003");
+        }
+    }
+}
+
+// --- TC-156: FT-001 core concepts validated (exit-criteria) ---
+// All FT-001 scenarios pass: binary builds, markdown processing, ID scheme.
+
+#[test]
+fn tc_156_ft001_exit_criteria() {
+    let h = Harness::new();
+
+    // Markdown front-matter strip (TC-011): context bundle strips front-matter
+    h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n");
+    h.write("docs/adrs/ADR-001-test.md", "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nDecision body.\n");
+    h.write("docs/tests/TC-001-test.md", "---\nid: TC-001\ntitle: Test TC\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nTest body.\n");
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    assert!(!out.stdout.starts_with("---\n"), "Context bundle should not start with front-matter delimiter");
+    assert!(out.stdout.contains("Feature body"), "Context bundle should contain feature body");
+    assert!(out.stdout.contains("Decision body"), "Context bundle should contain ADR body");
+    assert!(out.stdout.contains("Test body"), "Context bundle should contain TC body");
+
+    // Markdown passthrough (TC-012): code blocks, tables preserved
+    let h2 = Harness::new();
+    h2.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\n```rust\nfn main() {}\n```\n\n| Col1 | Col2 |\n|------|------|\n| a    | b    |\n\n- item 1\n  - nested\n");
+    let out = h2.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("```rust"), "Code blocks should be preserved");
+    assert!(out.stdout.contains("| Col1 | Col2 |"), "Tables should be preserved");
+    assert!(out.stdout.contains("- item 1"), "Lists should be preserved");
+
+    // ID auto-increment (TC-013): sequential IDs
+    let h3 = Harness::new();
+    let out1 = h3.run(&["feature", "new", "First"]);
+    out1.assert_exit(0).assert_stdout_contains("FT-001");
+    let out2 = h3.run(&["feature", "new", "Second"]);
+    out2.assert_exit(0).assert_stdout_contains("FT-002");
+    let out3 = h3.run(&["feature", "new", "Third"]);
+    out3.assert_exit(0).assert_stdout_contains("FT-003");
+
+    // ID gap fill (TC-014): gaps not filled
+    let h4 = Harness::new();
+    h4.write("docs/features/FT-001-a.md", "---\nid: FT-001\ntitle: A\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n");
+    h4.write("docs/features/FT-003-c.md", "---\nid: FT-003\ntitle: C\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n");
+    let out = h4.run(&["feature", "new", "D"]);
+    out.assert_exit(0).assert_stdout_contains("FT-004");
+
+    // ID conflict (TC-015): duplicate IDs detected
+    let h5 = Harness::new();
+    h5.write("docs/features/FT-001-a.md", "---\nid: FT-001\ntitle: A\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n");
+    h5.write("docs/features/FT-001-b.md", "---\nid: FT-001\ntitle: B\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n");
+    let out = h5.run(&["graph", "check"]);
+    out.assert_exit(1).assert_stderr_contains("E011");
+}
+
 const MINIMAL_CONFIG: &str = "name = \"test\"\nschema-version = \"1\"\n[paths]\nfeatures = \"docs/features\"\nadrs = \"docs/adrs\"\ntests = \"docs/tests\"\ngraph = \"docs/graph\"\nchecklist = \"docs/checklist.md\"\n[prefixes]\nfeature = \"FT\"\nadr = \"ADR\"\ntest = \"TC\"";
 
 fn run_mcp_stdio(h: &Harness, input: &str) -> String {

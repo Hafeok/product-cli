@@ -11,6 +11,8 @@ validates:
   adrs:
   - ADR-001
 phase: 1
+runner: cargo-test
+runner-args: "tc_002_binary_compiles_x86"
 ---
 
 `cargo build --release --target x86_64-unknown-linux-musl` completes with zero errors and zero warnings.

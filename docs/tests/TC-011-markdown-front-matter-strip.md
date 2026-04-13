@@ -11,6 +11,8 @@ validates:
   adrs:
   - ADR-004
 phase: 1
+runner: cargo-test
+runner-args: "tc_011_markdown_front_matter_strip"
 ---
 
 read a markdown file with front-matter. Assert the context bundle output contains no `---` delimiters and no YAML fields.

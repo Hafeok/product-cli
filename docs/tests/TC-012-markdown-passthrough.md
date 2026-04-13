@@ -11,6 +11,8 @@ validates:
   adrs:
   - ADR-004
 phase: 1
+runner: cargo-test
+runner-args: "tc_012_markdown_passthrough"
 ---
 
 a markdown file with code blocks, tables, and nested lists. Assert the context bundle output preserves these structures verbatim.
