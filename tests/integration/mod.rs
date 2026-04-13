@@ -4708,3 +4708,302 @@ fn tc_151_product_graph_coverage() {
     assert!(json["features"].is_array(), "JSON should have features array");
     assert!(json["domains"].is_array(), "JSON should have domains array");
 }
+
+// ===========================================================================
+// FT-022 — Authoring Sessions
+// ===========================================================================
+
+/// Helper: initialise a git repo in the harness temp dir
+fn git_init(h: &Harness) {
+    std::process::Command::new("git")
+        .args(["init"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git init");
+    std::process::Command::new("git")
+        .args(["config", "user.email", "test@test.com"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git config email");
+    std::process::Command::new("git")
+        .args(["config", "user.name", "Test"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git config name");
+}
+
+/// TC-116: pre_commit_hook_installed
+/// Run `product install-hooks`. Assert `.git/hooks/pre-commit` exists and is executable.
+#[test]
+fn tc_116_pre_commit_hook_installed() {
+    let h = Harness::new();
+    git_init(&h);
+
+    let out = h.run(&["install-hooks"]);
+    out.assert_exit(0);
+
+    let hook_path = h.dir.path().join(".git/hooks/pre-commit");
+    assert!(hook_path.exists(), "pre-commit hook should exist");
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let perms = std::fs::metadata(&hook_path)
+            .expect("metadata")
+            .permissions();
+        assert!(
+            perms.mode() & 0o111 != 0,
+            "pre-commit hook should be executable, mode={:o}",
+            perms.mode()
+        );
+    }
+}
+
+/// TC-117: pre_commit_hook_runs_on_staged_adr
+/// Stage an ADR with a missing Rejected alternatives section.
+/// Run `product adr review --staged`. Assert the structural finding is printed.
+/// Assert exit code 0 (advisory).
+#[test]
+fn tc_117_pre_commit_hook_runs_on_staged_adr() {
+    let h = Harness::new();
+    git_init(&h);
+
+    // Write an ADR missing the "Rejected alternatives" section
+    h.write(
+        "docs/adrs/ADR-050-incomplete.md",
+        "---\nid: ADR-050\ntitle: Incomplete ADR\nstatus: proposed\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Context:** Some context.\n\n**Decision:** Some decision.\n\n**Rationale:** Some rationale.\n\n**Test coverage:** Some tests.\n",
+    );
+
+    // Stage the ADR
+    std::process::Command::new("git")
+        .args(["add", "docs/adrs/ADR-050-incomplete.md"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+
+    // Run adr review --staged
+    let out = h.run(&["adr", "review", "--staged"]);
+    out.assert_exit(0);
+
+    // The finding should mention the missing section and the file path
+    assert!(
+        out.stderr.contains("Rejected alternatives"),
+        "Should report missing 'Rejected alternatives' section.\nstderr: {}",
+        out.stderr
+    );
+    assert!(
+        out.stderr.contains("ADR-050") || out.stderr.contains("adrs/"),
+        "Should mention the file path.\nstderr: {}",
+        out.stderr
+    );
+}
+
+/// TC-118: pre_commit_hook_skips_non_adr
+/// Stage a feature file. Assert the hook does not run `adr review`.
+#[test]
+fn tc_118_pre_commit_hook_skips_non_adr() {
+    let h = Harness::new();
+    git_init(&h);
+
+    // Stage only a feature file (no ADR)
+    h.write(
+        "docs/features/FT-050-test.md",
+        "---\nid: FT-050\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n",
+    );
+    std::process::Command::new("git")
+        .args(["add", "docs/features/FT-050-test.md"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+
+    let out = h.run(&["adr", "review", "--staged"]);
+    out.assert_exit(0);
+
+    // Should report "No staged ADR files found" — no review warnings
+    assert!(
+        out.stderr.contains("No staged ADR files"),
+        "Should skip review when no ADR files staged.\nstderr: {}",
+        out.stderr
+    );
+    // Should NOT contain structural warnings
+    assert!(
+        !out.stderr.contains("missing required section"),
+        "Should not report structural findings for non-ADR files.\nstderr: {}",
+        out.stderr
+    );
+}
+
+/// TC-119: adr_review_structural_missing_section
+/// Review an ADR missing the Rejected alternatives section.
+/// Assert finding printed with file path and section name.
+#[test]
+fn tc_119_adr_review_structural_missing_section() {
+    let h = Harness::new();
+    git_init(&h);
+
+    // ADR missing "Rejected alternatives"
+    h.write(
+        "docs/adrs/ADR-051-missing-section.md",
+        "---\nid: ADR-051\ntitle: Missing Section ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Context:** ctx\n\n**Decision:** dec\n\n**Rationale:** rat\n\n**Test coverage:** tc\n",
+    );
+
+    std::process::Command::new("git")
+        .args(["add", "docs/adrs/ADR-051-missing-section.md"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+
+    let out = h.run(&["adr", "review", "--staged"]);
+    out.assert_exit(0);
+
+    // Finding must include file path and section name
+    assert!(
+        out.stderr.contains("Rejected alternatives"),
+        "Finding should mention 'Rejected alternatives'.\nstderr: {}",
+        out.stderr
+    );
+    assert!(
+        out.stderr.contains("adrs/ADR-051") || out.stderr.contains("ADR-051-missing-section"),
+        "Finding should include file path.\nstderr: {}",
+        out.stderr
+    );
+}
+
+/// TC-120: adr_review_structural_no_features
+/// Review an ADR with empty `features: []`. Assert W001-class finding.
+#[test]
+fn tc_120_adr_review_structural_no_features() {
+    let h = Harness::new();
+    git_init(&h);
+
+    // ADR with all sections but features: []
+    h.write(
+        "docs/adrs/ADR-052-no-features.md",
+        "---\nid: ADR-052\ntitle: No Features ADR\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\n**Context:** ctx\n\n**Decision:** dec\n\n**Rationale:** rat\n\n**Rejected alternatives:** none\n\n**Test coverage:** tc\n",
+    );
+
+    std::process::Command::new("git")
+        .args(["add", "docs/adrs/ADR-052-no-features.md"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+
+    let out = h.run(&["adr", "review", "--staged"]);
+    out.assert_exit(0);
+
+    // Should warn about no linked features
+    assert!(
+        out.stderr.contains("no linked features") || out.stderr.contains("features"),
+        "Should warn about empty features.\nstderr: {}",
+        out.stderr
+    );
+    assert!(
+        out.stderr.contains("ADR-052") || out.stderr.contains("adrs/"),
+        "Should reference the ADR path.\nstderr: {}",
+        out.stderr
+    );
+}
+
+/// TC-166: FT-022 authoring session flow complete (exit-criteria)
+/// Validates that all authoring session components are wired up:
+/// install-hooks creates the hook, adr review --staged works end-to-end,
+/// structural checks catch missing sections and empty features.
+#[test]
+fn tc_166_ft_022_authoring_session_flow_complete() {
+    let h = Harness::new();
+    git_init(&h);
+
+    // 1. Install hooks
+    let out = h.run(&["install-hooks"]);
+    out.assert_exit(0);
+    assert!(
+        h.dir.path().join(".git/hooks/pre-commit").exists(),
+        "pre-commit hook should be installed"
+    );
+
+    // 2. Stage a well-formed ADR — should have no structural warnings
+    h.write(
+        "docs/adrs/ADR-060-complete.md",
+        "---\nid: ADR-060\ntitle: Complete ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Context:** context\n\n**Decision:** decision\n\n**Rationale:** rationale\n\n**Rejected alternatives:** none considered\n\n**Test coverage:** covered by TC-001\n",
+    );
+    std::process::Command::new("git")
+        .args(["add", "docs/adrs/ADR-060-complete.md"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+
+    let out = h.run(&["adr", "review", "--staged"]);
+    out.assert_exit(0);
+    assert!(
+        out.stderr.contains("no structural issues"),
+        "Well-formed ADR should pass review.\nstderr: {}",
+        out.stderr
+    );
+
+    // 3. Stage a broken ADR — should report findings
+    std::process::Command::new("git")
+        .args(["reset", "HEAD"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git reset");
+    h.write(
+        "docs/adrs/ADR-061-broken.md",
+        "---\nid: ADR-061\ntitle: Broken ADR\nstatus: proposed\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\n**Context:** ctx\n\n**Decision:** dec\n",
+    );
+    std::process::Command::new("git")
+        .args(["add", "docs/adrs/ADR-061-broken.md"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+
+    let out = h.run(&["adr", "review", "--staged"]);
+    out.assert_exit(0); // advisory — always exits 0
+    // Should catch missing sections and empty features
+    assert!(
+        out.stderr.contains("missing required section") || out.stderr.contains("Rationale") || out.stderr.contains("Rejected alternatives"),
+        "Should detect missing sections.\nstderr: {}",
+        out.stderr
+    );
+    assert!(
+        out.stderr.contains("no linked features"),
+        "Should detect empty features.\nstderr: {}",
+        out.stderr
+    );
+
+    // 4. Non-ADR files should be skipped
+    // Commit staged changes first to clear the index, then stage only a feature file
+    std::process::Command::new("git")
+        .args(["commit", "-m", "commit ADRs", "--allow-empty"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git commit");
+    // Now add + commit everything to get a clean index
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add all");
+    std::process::Command::new("git")
+        .args(["commit", "-m", "clean slate", "--allow-empty"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git commit");
+
+    h.write(
+        "docs/features/FT-060-test.md",
+        "---\nid: FT-060\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n",
+    );
+    std::process::Command::new("git")
+        .args(["add", "docs/features/FT-060-test.md"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+
+    let out = h.run(&["adr", "review", "--staged"]);
+    out.assert_exit(0);
+    assert!(
+        out.stderr.contains("No staged ADR files"),
+        "Should skip non-ADR files.\nstderr: {}",
+        out.stderr
+    );
+}

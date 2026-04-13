@@ -430,15 +430,15 @@
 - [x] TC-107: mcp_cors_header (scenario) — passing
 - [x] TC-165: FT-021 MCP server stdio and HTTP pass (exit-criteria) — passing
 
-### FT-022 — Authoring Sessions [~]
+### FT-022 — Authoring Sessions [x]
 
 - [x] ADR-022: Authoring Sessions — Graph-Aware Specification Writing (accepted)
-- [ ] TC-116: pre_commit_hook_installed (scenario) — unimplemented
-- [ ] TC-117: pre_commit_hook_runs_on_staged_adr (scenario) — unimplemented
-- [ ] TC-118: pre_commit_hook_skips_non_adr (scenario) — unimplemented
-- [ ] TC-119: adr_review_structural_missing_section (scenario) — unimplemented
-- [ ] TC-120: adr_review_structural_no_features (scenario) — unimplemented
-- [ ] TC-166: FT-022 authoring session flow complete (exit-criteria) — unimplemented
+- [x] TC-116: pre_commit_hook_installed (scenario) — passing
+- [x] TC-117: pre_commit_hook_runs_on_staged_adr (scenario) — passing
+- [x] TC-118: pre_commit_hook_skips_non_adr (scenario) — passing
+- [x] TC-119: adr_review_structural_missing_section (scenario) — passing
+- [x] TC-120: adr_review_structural_no_features (scenario) — passing
+- [x] TC-166: FT-022 authoring session flow complete (exit-criteria) — passing
 
 ### FT-023 — Agent Orchestration [~]
 
