@@ -5,7 +5,7 @@
 
 use crate::error::{CheckResult, Diagnostic, ProductError, Result};
 use crate::types::*;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{BTreeSet, HashMap, HashSet, VecDeque};
 
 // ---------------------------------------------------------------------------
 // Graph model
@@ -166,28 +166,34 @@ impl KnowledgeGraph {
             }
         }
 
-        let mut queue: VecDeque<String> = in_degree
-            .iter()
-            .filter(|(_, &deg)| deg == 0)
-            .map(|(id, _)| id.clone())
-            .collect();
-
-        // Sort the initial queue for deterministic output
-        let mut sorted_queue: Vec<String> = queue.drain(..).collect();
-        sorted_queue.sort();
-        queue.extend(sorted_queue);
+        // Use a BTreeSet keyed by (phase, id) so lower-phase features come first,
+        // with alphabetical id as tiebreaker within the same phase.
+        let mut ready: BTreeSet<(u32, String)> = BTreeSet::new();
+        for (id, &deg) in &in_degree {
+            if deg == 0 {
+                let phase = self
+                    .features
+                    .get(id)
+                    .map(|f| f.front.phase)
+                    .unwrap_or(u32::MAX);
+                ready.insert((phase, id.clone()));
+            }
+        }
 
         let mut result = Vec::new();
-        while let Some(node) = queue.pop_front() {
+        while let Some((_, node)) = ready.pop_first() {
             result.push(node.clone());
             if let Some(neighbors) = adj.get(&node) {
-                let mut sorted_neighbors = neighbors.clone();
-                sorted_neighbors.sort();
-                for next in sorted_neighbors {
-                    if let Some(deg) = in_degree.get_mut(&next) {
+                for next in neighbors {
+                    if let Some(deg) = in_degree.get_mut(next) {
                         *deg -= 1;
                         if *deg == 0 {
-                            queue.push_back(next);
+                            let phase = self
+                                .features
+                                .get(next)
+                                .map(|f| f.front.phase)
+                                .unwrap_or(u32::MAX);
+                            ready.insert((phase, next.clone()));
                         }
                     }
                 }

@@ -1854,17 +1854,15 @@ fn tc_044_feature_next_uses_topo() {
     );
     h.write(
         "docs/features/FT-003-independent.md",
-        "---\nid: FT-003\ntitle: Independent Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n",
+        "---\nid: FT-003\ntitle: Independent Feature\nphase: 2\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n",
     );
 
     let out = h.run(&["feature", "next"]);
     out.assert_exit(0);
 
-    // Topo sort: FT-001 (complete, skipped), FT-003 (no deps, planned), FT-002 (deps on FT-001)
-    // FT-003 appears first in topo order (no deps, alphabetically before FT-002 in zero-indegree set after FT-001 processed)
-    // Actually FT-003 has in-degree 0, so it's in the initial queue with FT-001.
-    // After FT-001 complete is skipped, FT-003 (planned, no deps, deps complete) is next.
-    out.assert_stdout_contains("FT-003");
+    // Phase-aware topo sort: FT-001 (phase 1, complete, skipped), FT-002 (phase 1, deps satisfied),
+    // FT-003 (phase 2, no deps). FT-002 is picked because phase 1 < phase 2.
+    out.assert_stdout_contains("FT-002");
 }
 
 /// TC-045: context depth 2 includes transitive context
