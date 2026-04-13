@@ -1,0 +1,15 @@
+---
+id: TC-063
+title: schema_migrate_idempotent
+type: scenario
+status: passing
+validates:
+  features:
+  - FT-003
+  - FT-020
+  adrs:
+  - ADR-014
+phase: 1
+---
+
+run `product migrate schema` twice. Assert the second run reports zero files changed.

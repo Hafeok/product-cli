@@ -1,0 +1,12 @@
+name = "product-cli"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
