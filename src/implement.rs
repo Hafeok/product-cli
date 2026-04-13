@@ -60,7 +60,7 @@ pub fn run_implement(
     if !unsuppressed_high.is_empty() {
         println!("BLOCKED");
         eprintln!();
-        eprintln!("error: implementation blocked by specification gaps");
+        eprintln!("error[E009]: implementation blocked by specification gaps");
         eprintln!("  feature: {} — {}", feature.front.id, feature.front.title);
         for g in &unsuppressed_high {
             eprintln!("  gap[{}]: {}", g.code, g.description);
@@ -260,7 +260,7 @@ pub fn run_verify(
         }
         fileops::write_file_atomic(&checklist_path, &checklist_content)?;
     } else {
-        eprintln!("  Warning: no runnable TCs found for {}", feature_id);
+        eprintln!("warning[W001]: no runnable TCs found for {}", feature_id);
     }
 
     Ok(())
@@ -339,32 +339,60 @@ fn extract_yaml_field(content: &str, field: &str) -> String {
     String::new()
 }
 
-fn update_tc_status(path: &Path, status: &str, _timestamp: &str, _failure_msg: Option<&str>) -> Result<()> {
+fn update_tc_status(path: &Path, status: &str, timestamp: &str, failure_msg: Option<&str>) -> Result<()> {
     let content = std::fs::read_to_string(path)?;
-    // Replace status line in front-matter
+    // Replace/add status, last-run, and failure-message fields in front-matter
     let mut new_lines = Vec::new();
     let mut in_frontmatter = false;
     let mut status_written = false;
+    let mut last_run_written = false;
+    let mut failure_msg_written = false;
+    let mut frontmatter_close_pending = false;
 
     for line in content.lines() {
         if line.trim() == "---" {
-            in_frontmatter = !in_frontmatter;
-            new_lines.push(line.to_string());
-            // Add last-run after closing ---
-            if !in_frontmatter && status_written {
-                // These go before the closing ---? No, they go inside front-matter.
-                // Actually, let's just update the status field inline.
+            if !in_frontmatter {
+                in_frontmatter = true;
+                new_lines.push(line.to_string());
+                continue;
             }
+            // Closing --- of front-matter: inject missing fields before closing
+            frontmatter_close_pending = true;
+            if !last_run_written {
+                new_lines.push(format!("last-run: {}", timestamp));
+                last_run_written = true;
+            }
+            if !failure_msg_written {
+                if let Some(msg) = failure_msg {
+                    let escaped = msg.replace('"', "\\\"");
+                    new_lines.push(format!("failure-message: \"{}\"", escaped));
+                }
+                failure_msg_written = true;
+            }
+            in_frontmatter = false;
+            new_lines.push(line.to_string());
             continue;
         }
         if in_frontmatter && line.trim().starts_with("status:") {
             new_lines.push(format!("status: {}", status));
             status_written = true;
+        } else if in_frontmatter && line.trim().starts_with("last-run:") {
+            new_lines.push(format!("last-run: {}", timestamp));
+            last_run_written = true;
+        } else if in_frontmatter && line.trim().starts_with("failure-message:") {
+            // Replace or remove failure-message
+            if let Some(msg) = failure_msg {
+                let escaped = msg.replace('"', "\\\"");
+                new_lines.push(format!("failure-message: \"{}\"", escaped));
+            }
+            // If no failure_msg, omit line (test passed, remove old failure)
+            failure_msg_written = true;
         } else {
             new_lines.push(line.to_string());
         }
     }
 
+    let _ = (status_written, frontmatter_close_pending);
     let new_content = new_lines.join("\n");
     fileops::write_file_atomic(path, &new_content)
 }

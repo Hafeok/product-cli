@@ -5007,3 +5007,377 @@ fn tc_166_ft_022_authoring_session_flow_complete() {
         out.stderr
     );
 }
+
+// ---------------------------------------------------------------------------
+// FT-023: Agent Orchestration — implement + verify
+// ---------------------------------------------------------------------------
+
+/// Helper: fixture for implement/verify tests.
+/// Creates FT-001 with ADR-001, and optionally TCs with bash runners.
+fn fixture_implement_gap() -> Harness {
+    let h = Harness::new();
+    // Feature with ADR that has a testable claim but no linked TC → triggers G001
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: []\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Decision:** Use caching.\n\n## Test coverage\n\nPerformance under load must stay below 200ms.\n\n**Rejected alternatives:**\n- No caching\n",
+    );
+    h
+}
+
+/// Helper: fixture for verify tests with bash runner scripts.
+fn fixture_verify_passing() -> Harness {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001, TC-002]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test One\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: pass.sh\n---\n\nTest body.\n",
+    );
+    h.write(
+        "docs/tests/TC-002-test.md",
+        "---\nid: TC-002\ntitle: Test Two\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: pass2.sh\n---\n\nTest body.\n",
+    );
+    // Passing test scripts
+    h.write("pass.sh", "#!/bin/bash\nexit 0\n");
+    h.write("pass2.sh", "#!/bin/bash\nexit 0\n");
+    // Make scripts executable
+    std::process::Command::new("chmod")
+        .args(["+x", "pass.sh", "pass2.sh"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("chmod");
+    h
+}
+
+/// TC-108: implement_gap_gate_blocks
+/// Feature with G001 gap unsuppressed. Assert `product implement` exits 1 and prints E009.
+#[test]
+fn tc_108_implement_gap_gate_blocks() {
+    let h = fixture_implement_gap();
+    let out = h.run(&["implement", "FT-001", "--dry-run"]);
+    // Should exit 1 due to gap gate
+    out.assert_exit(1);
+    out.assert_stderr_contains("E009");
+    out.assert_stderr_contains("implementation blocked by specification gaps");
+    out.assert_stderr_contains("gap[G001]");
+}
+
+/// TC-109: implement_gap_gate_suppressed
+/// Same feature with the gap suppressed. Assert pipeline proceeds past gap gate.
+#[test]
+fn tc_109_implement_gap_gate_suppressed() {
+    let h = fixture_implement_gap();
+
+    // First, get the gap ID by running gap check
+    let out = h.run(&["gap", "check", "ADR-001"]);
+    let reports: serde_json::Value = serde_json::from_str(&out.stdout)
+        .unwrap_or_else(|e| panic!("gap check output not valid JSON: {}\nstdout: {}", e, out.stdout));
+    let findings = reports[0]["findings"].as_array().expect("findings array");
+    let g001_finding = findings.iter().find(|f| f["code"].as_str() == Some("G001"))
+        .expect("G001 finding should exist");
+    let gap_id = g001_finding["id"].as_str().expect("gap id").to_string();
+
+    // Suppress the gap
+    let suppress_out = h.run(&["gap", "suppress", &gap_id, "--reason", "testing suppression"]);
+    assert_eq!(suppress_out.exit_code, 0, "suppress should succeed: {}", suppress_out.stderr);
+
+    // Now implement --dry-run should get past the gap gate
+    let out2 = h.run(&["implement", "FT-001", "--dry-run"]);
+    // Should succeed (dry-run stops at step 3, not blocked by gaps)
+    out2.assert_exit(0);
+    out2.assert_stdout_contains("Gap gate");
+    out2.assert_stdout_contains("OK");
+    out2.assert_stdout_contains("dry-run");
+}
+
+/// TC-110: implement_dry_run
+/// Run `product implement FT-001 --dry-run`. Assert temp file created and path printed.
+#[test]
+fn tc_110_implement_dry_run() {
+    let h = fixture_gap_clean();
+    let out = h.run(&["implement", "FT-001", "--dry-run"]);
+    out.assert_exit(0);
+    // Should print context file path
+    out.assert_stdout_contains("Context file:");
+    out.assert_stdout_contains("product-impl-FT-001");
+    // Should indicate dry-run stopped
+    out.assert_stdout_contains("dry-run");
+    // The context file path should be a temp file
+    // Extract path from output and verify it exists
+    let path_line = out.stdout.lines()
+        .find(|l| l.contains("Context file:"))
+        .expect("should have context file line");
+    let path_str = path_line.split("Context file:").nth(1).expect("path after colon").trim();
+    assert!(
+        std::path::Path::new(path_str).exists(),
+        "Context temp file should exist at: {}",
+        path_str
+    );
+}
+
+/// TC-111: verify_all_pass_completes_feature
+/// All TCs configured with passing test runners. Assert all become passing, feature becomes complete.
+#[test]
+fn tc_111_verify_all_pass_completes_feature() {
+    let h = fixture_verify_passing();
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("PASS");
+
+    // Check feature status is now complete
+    let feature_content = h.read("docs/features/FT-001-test.md");
+    assert!(
+        feature_content.contains("status: complete"),
+        "Feature should be marked complete.\nContent: {}",
+        feature_content
+    );
+
+    // Check TC statuses are passing
+    let tc1 = h.read("docs/tests/TC-001-test.md");
+    assert!(tc1.contains("status: passing"), "TC-001 should be passing.\nContent: {}", tc1);
+    let tc2 = h.read("docs/tests/TC-002-test.md");
+    assert!(tc2.contains("status: passing"), "TC-002 should be passing.\nContent: {}", tc2);
+}
+
+/// TC-112: verify_one_fail_keeps_in_progress
+/// One TC fails. Assert feature stays in-progress.
+#[test]
+fn tc_112_verify_one_fail_keeps_in_progress() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001, TC-002]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Pass Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: pass.sh\n---\n\nTest body.\n",
+    );
+    h.write(
+        "docs/tests/TC-002-test.md",
+        "---\nid: TC-002\ntitle: Fail Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: fail.sh\n---\n\nTest body.\n",
+    );
+    h.write("pass.sh", "#!/bin/bash\nexit 0\n");
+    h.write("fail.sh", "#!/bin/bash\necho 'assertion failed' >&2\nexit 1\n");
+    std::process::Command::new("chmod")
+        .args(["+x", "pass.sh", "fail.sh"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("chmod");
+
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("PASS");
+    out.assert_stdout_contains("FAIL");
+
+    // Feature should stay in-progress
+    let feature_content = h.read("docs/features/FT-001-test.md");
+    assert!(
+        feature_content.contains("status: in-progress"),
+        "Feature should remain in-progress when a TC fails.\nContent: {}",
+        feature_content
+    );
+}
+
+/// TC-113: verify_unrunnable_no_block
+/// All TCs have no runner field. Assert feature status unchanged. Assert W-class warning.
+#[test]
+fn tc_113_verify_unrunnable_no_block() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test TC\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nTest body with no runner.\n",
+    );
+
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("UNRUNNABLE");
+
+    // Feature status should be unchanged (still planned)
+    let feature_content = h.read("docs/features/FT-001-test.md");
+    assert!(
+        feature_content.contains("status: planned"),
+        "Feature status should be unchanged when all TCs are unrunnable.\nContent: {}",
+        feature_content
+    );
+
+    // Should emit W-class warning
+    out.assert_stderr_contains("warning[W001]");
+}
+
+/// TC-114: verify_updates_frontmatter
+/// Run verify. Assert last-run timestamp and failure-message written to TC files.
+#[test]
+fn tc_114_verify_updates_frontmatter() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001, TC-002]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Pass Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: pass.sh\n---\n\nTest body.\n",
+    );
+    h.write(
+        "docs/tests/TC-002-test.md",
+        "---\nid: TC-002\ntitle: Fail Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: fail.sh\n---\n\nTest body.\n",
+    );
+    h.write("pass.sh", "#!/bin/bash\nexit 0\n");
+    h.write("fail.sh", "#!/bin/bash\necho 'assertion failed: expected 42' >&2\nexit 1\n");
+    std::process::Command::new("chmod")
+        .args(["+x", "pass.sh", "fail.sh"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("chmod");
+
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+
+    // TC-001 (passing) should have last-run
+    let tc1 = h.read("docs/tests/TC-001-test.md");
+    assert!(
+        tc1.contains("last-run:"),
+        "Passing TC should have last-run timestamp.\nContent: {}",
+        tc1
+    );
+
+    // TC-002 (failing) should have last-run and failure-message
+    let tc2 = h.read("docs/tests/TC-002-test.md");
+    assert!(
+        tc2.contains("last-run:"),
+        "Failing TC should have last-run timestamp.\nContent: {}",
+        tc2
+    );
+    assert!(
+        tc2.contains("failure-message:"),
+        "Failing TC should have failure-message.\nContent: {}",
+        tc2
+    );
+}
+
+/// TC-115: verify_regenerates_checklist
+/// Run verify. Assert checklist.md is updated to reflect new TC statuses.
+#[test]
+fn tc_115_verify_regenerates_checklist() {
+    let h = fixture_verify_passing();
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+
+    // Checklist should exist and contain the feature
+    assert!(h.exists("docs/checklist.md"), "checklist.md should be generated");
+    let checklist = h.read("docs/checklist.md");
+    assert!(
+        checklist.contains("FT-001"),
+        "Checklist should contain FT-001.\nContent: {}",
+        checklist
+    );
+    // Feature should be marked complete with [x]
+    assert!(
+        checklist.contains("[x]") && checklist.contains("FT-001"),
+        "Checklist should show FT-001 as complete.\nContent: {}",
+        checklist
+    );
+}
+
+/// TC-167: FT-023 implement and verify orchestrate (exit-criteria)
+/// End-to-end: gap gate blocks → suppress → dry-run succeeds → verify updates status
+#[test]
+fn tc_167_ft_023_implement_and_verify_orchestrate() {
+    // Part 1: Gap gate blocks implementation
+    let h = fixture_implement_gap();
+    let out = h.run(&["implement", "FT-001", "--dry-run"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E009");
+
+    // Part 2: Suppress and proceed
+    let gap_out = h.run(&["gap", "check", "ADR-001"]);
+    let reports: serde_json::Value = serde_json::from_str(&gap_out.stdout)
+        .unwrap_or_else(|e| panic!("gap check JSON: {}\nstdout: {}", e, gap_out.stdout));
+    let findings = reports[0]["findings"].as_array().expect("findings");
+    let g001 = findings.iter().find(|f| f["code"].as_str() == Some("G001")).expect("G001");
+    let gap_id = g001["id"].as_str().expect("id").to_string();
+    h.run(&["gap", "suppress", &gap_id, "--reason", "e2e test"]).assert_exit(0);
+
+    let out2 = h.run(&["implement", "FT-001", "--dry-run"]);
+    out2.assert_exit(0);
+    out2.assert_stdout_contains("dry-run");
+
+    // Part 3: Verify with passing tests updates status
+    let h2 = fixture_verify_passing();
+    let out3 = h2.run(&["verify", "FT-001"]);
+    out3.assert_exit(0);
+
+    let feature_content = h2.read("docs/features/FT-001-test.md");
+    assert!(feature_content.contains("status: complete"), "Feature should be complete after all TCs pass");
+
+    // Part 4: Verify with failing test keeps in-progress
+    let h3 = Harness::new();
+    h3.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nBody.\n",
+    );
+    h3.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h3.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Failing Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: fail.sh\n---\n\nTest body.\n",
+    );
+    h3.write("fail.sh", "#!/bin/bash\nexit 1\n");
+    std::process::Command::new("chmod")
+        .args(["+x", "fail.sh"])
+        .current_dir(h3.dir.path())
+        .output()
+        .expect("chmod");
+
+    let out4 = h3.run(&["verify", "FT-001"]);
+    out4.assert_exit(0);
+    let feat = h3.read("docs/features/FT-001-test.md");
+    assert!(feat.contains("status: in-progress"), "Feature should stay in-progress on failure");
+
+    // Part 5: Unrunnable TCs emit warning
+    let h4 = Harness::new();
+    h4.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nBody.\n",
+    );
+    h4.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h4.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: No Runner\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nNo runner.\n",
+    );
+    let out5 = h4.run(&["verify", "FT-001"]);
+    out5.assert_exit(0);
+    out5.assert_stderr_contains("warning[W001]");
+    let feat4 = h4.read("docs/features/FT-001-test.md");
+    assert!(feat4.contains("status: planned"), "Unrunnable should not change status");
+}

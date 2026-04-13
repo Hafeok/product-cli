@@ -440,18 +440,18 @@
 - [x] TC-120: adr_review_structural_no_features (scenario) — passing
 - [x] TC-166: FT-022 authoring session flow complete (exit-criteria) — passing
 
-### FT-023 — Agent Orchestration [~]
+### FT-023 — Agent Orchestration [x]
 
 - [x] ADR-021: Agent Orchestration — `product implement` and `product verify` (accepted)
-- [ ] TC-108: implement_gap_gate_blocks (scenario) — unimplemented
-- [ ] TC-109: implement_gap_gate_suppressed (scenario) — unimplemented
-- [ ] TC-110: implement_dry_run (scenario) — unimplemented
-- [ ] TC-111: verify_all_pass_completes_feature (scenario) — unimplemented
-- [ ] TC-112: verify_one_fail_keeps_in_progress (scenario) — unimplemented
-- [ ] TC-113: verify_unrunnable_no_block (scenario) — unimplemented
-- [ ] TC-114: verify_updates_frontmatter (scenario) — unimplemented
-- [ ] TC-115: verify_regenerates_checklist (scenario) — unimplemented
-- [ ] TC-167: FT-023 implement and verify orchestrate (exit-criteria) — unimplemented
+- [x] TC-108: implement_gap_gate_blocks (scenario) — passing
+- [x] TC-109: implement_gap_gate_suppressed (scenario) — passing
+- [x] TC-110: implement_dry_run (scenario) — passing
+- [x] TC-111: verify_all_pass_completes_feature (scenario) — passing
+- [x] TC-112: verify_one_fail_keeps_in_progress (scenario) — passing
+- [x] TC-113: verify_unrunnable_no_block (scenario) — passing
+- [x] TC-114: verify_updates_frontmatter (scenario) — passing
+- [x] TC-115: verify_regenerates_checklist (scenario) — passing
+- [x] TC-167: FT-023 implement and verify orchestrate (exit-criteria) — passing
 
 ### FT-027 — Context Bundle [~]
 
