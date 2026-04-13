@@ -5,6 +5,7 @@ type: exit-criteria
 status: passing
 validates:
   features:
+  - FT-006
   - FT-016
   adrs:
   - ADR-012

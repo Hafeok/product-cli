@@ -238,7 +238,7 @@
 
 ## Phase 2
 
-### FT-004 — Artifact Authoring [~]
+### FT-004 — Artifact Authoring [x]
 
 - [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
 - [x] ADR-005: Numeric ID Scheme (FT-XXX, ADR-XXX, TC-XXX) (accepted)
@@ -265,6 +265,26 @@
 ### FT-006 — Impact Analysis [ ]
 
 - [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
+- [x] TC-041: topo_sort_simple (scenario) — passing
+- [x] TC-042: topo_sort_parallel (scenario) — passing
+- [x] TC-043: topo_sort_cycle (scenario) — passing
+- [x] TC-044: feature_next_uses_topo (scenario) — passing
+- [x] TC-045: context_depth_2 (scenario) — passing
+- [x] TC-046: context_depth_dedup (scenario) — passing
+- [x] TC-047: context_bundle_adr_order_centrality (scenario) — passing
+- [x] TC-048: centrality_computation (scenario) — passing
+- [x] TC-049: centrality_top_n (scenario) — passing
+- [x] TC-050: impact_direct (scenario) — passing
+- [x] TC-051: impact_transitive (scenario) — passing
+- [x] TC-052: impact_on_supersede (scenario) — passing
+- [x] TC-053: product graph central (scenario) — passing
+- [x] TC-054: product impact ADR-001 (scenario) — passing
+- [x] TC-009: graph_rebuild_from_scratch (scenario) — passing
+- [x] TC-010: graph_stale_ttl (scenario) — passing
+- [x] TC-024: sparql_select_feature_adrs (scenario) — passing
+- [x] TC-025: sparql_untested_features (scenario) — passing
+- [x] TC-026: sparql_phase_filter (scenario) — passing
+- [x] TC-157: FT-016 graph model queries pass (exit-criteria) — passing
 
 ### FT-008 — Schema Migration [ ]
 

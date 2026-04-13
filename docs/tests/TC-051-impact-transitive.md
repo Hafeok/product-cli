@@ -5,6 +5,7 @@ type: scenario
 status: passing
 validates:
   features:
+  - FT-006
   - FT-011
   - FT-016
   adrs:
