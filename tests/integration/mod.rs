@@ -157,14 +157,14 @@ fn it_001_graph_check_broken_link() {
         .assert_stderr_contains("E002");
 }
 
-/// IT-002: graph check --format json on broken link → exit 1, valid JSON
+/// IT-002: graph check --format json on broken link → exit 1, valid JSON on stdout
 #[test]
 fn it_002_graph_check_json_broken_link() {
     let h = fixture_broken_link();
     let out = h.run(&["graph", "check", "--format", "json"]);
-    // JSON mode exits 0 (JSON goes to stderr)
-    let json: serde_json::Value = serde_json::from_str(&out.stderr)
-        .unwrap_or_else(|e| panic!("Invalid JSON: {}\nstderr: {}", e, out.stderr));
+    assert_eq!(out.exit_code, 1, "Expected exit code 1 for broken link");
+    let json: serde_json::Value = serde_json::from_str(&out.stdout)
+        .unwrap_or_else(|e| panic!("Invalid JSON on stdout: {}\nstdout: {}", e, out.stdout));
     assert!(json["errors"].as_array().map(|a| !a.is_empty()).unwrap_or(false));
 }
 
@@ -3767,4 +3767,38 @@ fn tc_180_ft_025_benchmarks_pass() {
         "Expected all 4 benchmarks to pass.\nstdout:\n{}",
         stdout
     );
+}
+
+// --- TC-181: CI Integration (FT-026) ---
+
+/// TC-181: graph check --format json and feature list --format json both produce valid JSON to stdout.
+/// Graph check CI gate fails on a PR with a broken link.
+#[test]
+fn tc_181_ft_026_ci_integration_pass() {
+    // Part 1: graph check --format json on a clean repo → valid JSON, exit 0
+    let h = fixture_minimal();
+    let out = h.run(&["graph", "check", "--format", "json"]);
+    assert_eq!(out.exit_code, 0, "Expected exit 0 on clean graph.\nstdout: {}\nstderr: {}", out.stdout, out.stderr);
+    let json: serde_json::Value = serde_json::from_str(&out.stdout)
+        .unwrap_or_else(|e| panic!("graph check JSON invalid on stdout: {}\nstdout: {}", e, out.stdout));
+    assert!(json["summary"]["errors"].as_u64() == Some(0), "Expected 0 errors in clean graph");
+
+    // Part 2: feature list --format json → valid JSON to stdout
+    let out2 = h.run(&["feature", "list", "--format", "json"]);
+    assert_eq!(out2.exit_code, 0, "feature list --format json should exit 0.\nstderr: {}", out2.stderr);
+    let features: serde_json::Value = serde_json::from_str(&out2.stdout)
+        .unwrap_or_else(|e| panic!("feature list JSON invalid on stdout: {}\nstdout: {}", e, out2.stdout));
+    assert!(features.as_array().is_some(), "feature list JSON should be an array");
+    let empty = vec![];
+    let arr = features.as_array().unwrap_or(&empty);
+    assert!(!arr.is_empty(), "feature list should contain at least one feature");
+
+    // Part 3: graph check CI gate fails on broken link (exit code 1)
+    let h2 = fixture_broken_link();
+    let out3 = h2.run(&["graph", "check", "--format", "json"]);
+    assert_eq!(out3.exit_code, 1, "Expected exit 1 for broken link CI gate.\nstdout: {}\nstderr: {}", out3.stdout, out3.stderr);
+    let json2: serde_json::Value = serde_json::from_str(&out3.stdout)
+        .unwrap_or_else(|e| panic!("graph check JSON invalid on broken link: {}\nstdout: {}", e, out3.stdout));
+    let errors = json2["errors"].as_array().expect("errors should be an array");
+    assert!(!errors.is_empty(), "CI gate should report errors on broken link");
 }

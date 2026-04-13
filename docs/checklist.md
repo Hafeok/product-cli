@@ -364,11 +364,11 @@
 - [x] ADR-018: Testing Strategy — Property-Based, Integration, and LLM Benchmark (accepted)
 - [x] TC-180: ft_025_benchmarks_pass (exit-criteria) — passing
 
-### FT-026 — CI Integration [ ]
+### FT-026 — CI Integration [x]
 
 - [x] ADR-009: CI Integration via Exit Codes (accepted)
 - [x] ADR-013: Error Model and User-Facing Error Format (accepted)
-- [ ] TC-181: ft_026_ci_integration_pass (exit-criteria) — unimplemented
+- [x] TC-181: ft_026_ci_integration_pass (exit-criteria) — passing
 
 ## Phase 4
 

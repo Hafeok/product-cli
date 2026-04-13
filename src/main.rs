@@ -1271,7 +1271,11 @@ fn handle_graph(cmd: GraphCommands, global_format: &str) -> BoxResult {
             let fmt = format.as_deref().unwrap_or(global_format);
 
             if fmt == "json" {
-                eprintln!("{}", serde_json::to_string_pretty(&result.to_json())?);
+                println!("{}", serde_json::to_string_pretty(&result.to_json())?);
+                let code = result.exit_code();
+                if code != 0 {
+                    process::exit(code);
+                }
             } else {
                 result.print_stderr();
                 let code = result.exit_code();

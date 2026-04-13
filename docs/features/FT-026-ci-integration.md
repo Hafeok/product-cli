@@ -2,7 +2,7 @@
 id: FT-026
 title: CI Integration
 phase: 3
-status: planned
+status: complete
 depends-on:
 - FT-018
 - FT-024
