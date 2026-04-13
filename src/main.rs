@@ -136,6 +136,9 @@ enum Commands {
         /// Skip auto-verify after agent completion
         #[arg(long)]
         no_verify: bool,
+        /// Run non-interactively via claude -p (no human in the loop)
+        #[arg(long)]
+        headless: bool,
     },
     /// Verify test criteria for a feature
     Verify {
@@ -534,7 +537,7 @@ fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
         Commands::Completions { shell } => handle_completions(&shell),
         Commands::Migrate { command } => handle_migrate(command),
         Commands::Gap { command } => handle_gap(command, fmt),
-        Commands::Implement { id, dry_run, no_verify } => handle_implement(&id, dry_run, no_verify),
+        Commands::Implement { id, dry_run, no_verify, headless } => handle_implement(&id, dry_run, no_verify, headless),
         Commands::Verify { id } => handle_verify(&id),
         Commands::Author { command } => handle_author(command),
         Commands::Mcp { http, port, bind, token, repo, write } => handle_mcp(http, port, &bind, token, repo, write),
@@ -2108,9 +2111,9 @@ fn handle_preflight(id: &str) -> BoxResult {
     Ok(())
 }
 
-fn handle_implement(id: &str, dry_run: bool, no_verify: bool) -> BoxResult {
+fn handle_implement(id: &str, dry_run: bool, no_verify: bool, headless: bool) -> BoxResult {
     let (config, root, graph) = load_graph()?;
-    implement::run_implement(id, &config, &root, &graph, dry_run, no_verify)?;
+    implement::run_implement(id, &config, &root, &graph, dry_run, no_verify, headless)?;
     Ok(())
 }
 

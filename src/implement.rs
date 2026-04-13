@@ -23,6 +23,7 @@ pub fn run_implement(
     graph: &KnowledgeGraph,
     dry_run: bool,
     no_verify: bool,
+    headless: bool,
 ) -> Result<()> {
     let feature = graph.features.get(feature_id).ok_or_else(|| {
         ProductError::NotFound(format!("feature {}", feature_id))
@@ -119,23 +120,51 @@ pub fn run_implement(
     }
 
     // Step 4 — Agent invocation
-    println!("  Step 4: Invoking agent...");
-    let agent_result = Command::new("claude")
-        .args(["--dangerously-skip-permissions", "--system-prompt-file", &tmp_path.display().to_string()])
-        .current_dir(root)
-        .status();
+    if headless {
+        println!("  Step 4: Invoking agent (headless)...");
+        let agent_result = Command::new("claude")
+            .args([
+                "-p",
+                "--dangerously-skip-permissions",
+                "--system-prompt-file",
+                &tmp_path.display().to_string(),
+                "Implement the feature described in the system prompt. Follow all constraints and run product verify when done.",
+            ])
+            .current_dir(root)
+            .status();
 
-    match agent_result {
-        Ok(status) => {
-            if status.success() {
-                println!("  Agent completed successfully.");
-            } else {
-                println!("  Agent exited with status: {}", status);
+        match agent_result {
+            Ok(status) => {
+                if status.success() {
+                    println!("  Agent completed successfully.");
+                } else {
+                    println!("  Agent exited with status: {}", status);
+                }
+            }
+            Err(e) => {
+                eprintln!("  Warning: could not invoke agent: {}", e);
+                eprintln!("  (Is 'claude' in PATH? Or configure a custom agent in product.toml)");
             }
         }
-        Err(e) => {
-            eprintln!("  Warning: could not invoke agent: {}", e);
-            eprintln!("  (Is 'claude' in PATH? Or configure a custom agent in product.toml)");
+    } else {
+        println!("  Step 4: Invoking agent (interactive)...");
+        let agent_result = Command::new("claude")
+            .args(["--dangerously-skip-permissions", "--system-prompt-file", &tmp_path.display().to_string()])
+            .current_dir(root)
+            .status();
+
+        match agent_result {
+            Ok(status) => {
+                if status.success() {
+                    println!("  Agent completed successfully.");
+                } else {
+                    println!("  Agent exited with status: {}", status);
+                }
+            }
+            Err(e) => {
+                eprintln!("  Warning: could not invoke agent: {}", e);
+                eprintln!("  (Is 'claude' in PATH? Or configure a custom agent in product.toml)");
+            }
         }
     }
 
