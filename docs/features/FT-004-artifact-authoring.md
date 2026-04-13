@@ -2,7 +2,7 @@
 id: FT-004
 title: Artifact Authoring
 phase: 2
-status: planned
+status: complete
 depends-on:
 - FT-003
 - FT-016
@@ -10,7 +10,25 @@ adrs:
 - ADR-002
 - ADR-005
 - ADR-015
-tests: []
+tests:
+- TC-005
+- TC-006
+- TC-007
+- TC-008
+- TC-013
+- TC-014
+- TC-015
+- TC-071
+- TC-072
+- TC-073
+- TC-074
+- TC-075
+- TC-076
+- TC-077
+- TC-078
+- TC-079
+- TC-155
+- TC-160
 domains: []
 domains-acknowledged: {}
 ---

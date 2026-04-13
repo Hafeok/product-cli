@@ -651,6 +651,25 @@ impl KnowledgeGraph {
             }
         }
 
+        // Formal block diagnostics: E001 errors and W004 warnings from formal block parsing
+        for t in self.tests.values() {
+            let diag = crate::formal::parse_formal_blocks_with_diagnostics(&t.body);
+            for err in &diag.errors {
+                result.errors.push(
+                    Diagnostic::error("E001", "formal block parse error")
+                        .with_file(t.path.clone())
+                        .with_detail(&format!("{}: {}", t.front.id, err)),
+                );
+            }
+            for warn in &diag.warnings {
+                result.warnings.push(
+                    Diagnostic::warning("W004", "formal block warning")
+                        .with_file(t.path.clone())
+                        .with_detail(&format!("{}: {}", t.front.id, warn)),
+                );
+            }
+        }
+
         result
     }
 

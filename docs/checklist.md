@@ -238,11 +238,29 @@
 
 ## Phase 2
 
-### FT-004 — Artifact Authoring [ ]
+### FT-004 — Artifact Authoring [~]
 
 - [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
 - [x] ADR-005: Numeric ID Scheme (FT-XXX, ADR-XXX, TC-XXX) (accepted)
 - [x] ADR-015: File Write Safety — Atomic Writes and Advisory Locking (accepted)
+- [x] TC-005: frontmatter_parse_feature (scenario) — passing
+- [x] TC-006: frontmatter_parse_adr (scenario) — passing
+- [x] TC-007: frontmatter_invalid_id (scenario) — passing
+- [x] TC-008: frontmatter_missing_required (scenario) — passing
+- [x] TC-013: id_auto_increment (scenario) — passing
+- [x] TC-014: id_gap_fill (scenario) — passing
+- [x] TC-015: id_conflict (scenario) — passing
+- [x] TC-071: parse_types_block (scenario) — passing
+- [x] TC-072: parse_invariants_block (invariant) — passing
+- [x] TC-073: parse_scenario_block (scenario) — passing
+- [x] TC-074: parse_evidence_block (scenario) — passing
+- [x] TC-075: parse_evidence_delta_out_of_range (scenario) — passing
+- [x] TC-076: parse_unclosed_delimiter (scenario) — passing
+- [x] TC-077: parse_empty_block_warning (scenario) — passing
+- [x] TC-078: parse_raw_roundtrip (scenario) — passing
+- [x] TC-079: parse_unknown_block_type (scenario) — passing
+- [x] TC-155: FT-003 front-matter schema fully validated (exit-criteria) — passing
+- [x] TC-160: FT-009 formal specification blocks parse (exit-criteria) — passing
 
 ### FT-006 — Impact Analysis [ ]
 

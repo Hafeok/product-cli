@@ -6,10 +6,13 @@ status: passing
 validates:
   features:
   - FT-003
+  - FT-004
   - FT-015
   adrs:
   - ADR-016
 phase: 1
+runner: cargo-test
+runner-args: "tc_076_parse_unclosed_delimiter"
 ---
 
 parse a file with `⟦Γ:Invariants⟧{ ... ` (no closing `}`). Assert E001 with line number. Assert subsequent blocks in the same file are still parsed.

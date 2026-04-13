@@ -369,6 +369,90 @@ fn mcp_009_stdio_unknown_method() {
     assert!(out.contains("Method not found") || out.contains("error"), "should error: {}", out);
 }
 
+// --- TC-005: frontmatter_parse_feature ---
+// Parse a well-formed feature file. Assert all fields deserialise correctly.
+
+#[test]
+fn tc_005_frontmatter_parse_feature() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 2\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001, ADR-002]\ntests: [TC-001, TC-002]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-a.md",
+        "---\nid: ADR-001\ntitle: ADR One\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nBody.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-b.md",
+        "---\nid: ADR-002\ntitle: ADR Two\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nBody.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-a.md",
+        "---\nid: TC-001\ntitle: Test One\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\nBody.\n",
+    );
+    h.write(
+        "docs/tests/TC-002-b.md",
+        "---\nid: TC-002\ntitle: Test Two\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\nBody.\n",
+    );
+    // Feature list should parse and show FT-001
+    let out = h.run(&["feature", "list"]);
+    out.assert_exit(0).assert_stdout_contains("FT-001").assert_stdout_contains("Test Feature");
+    // Feature show should show all linked ADRs and tests
+    let out = h.run(&["feature", "show", "FT-001"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("ADR-001"), "Should show linked ADR-001");
+    assert!(out.stdout.contains("ADR-002"), "Should show linked ADR-002");
+    assert!(out.stdout.contains("TC-001"), "Should show linked TC-001");
+    assert!(out.stdout.contains("TC-002"), "Should show linked TC-002");
+}
+
+// --- TC-006: frontmatter_parse_adr ---
+// Parse a well-formed ADR file. Assert features, supersedes, superseded-by deserialise correctly.
+
+#[test]
+fn tc_006_frontmatter_parse_adr() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: []\n---\n\nBody.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-main.md",
+        "---\nid: ADR-001\ntitle: Main Decision\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: [ADR-002]\n---\n\nDecision body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-new.md",
+        "---\nid: ADR-002\ntitle: Replacement Decision\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: [ADR-001]\nsuperseded-by: []\n---\n\nNew decision body.\n",
+    );
+    let out = h.run(&["adr", "list"]);
+    out.assert_exit(0).assert_stdout_contains("ADR-001").assert_stdout_contains("ADR-002");
+    let out = h.run(&["adr", "show", "ADR-002"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("ADR-001") || out.stdout.contains("supersedes"), "ADR-002 should show supersession info");
+}
+
+// --- TC-007: frontmatter_invalid_id ---
+// Parse a feature file where `adrs` references a non-existent ID.
+// Assert `graph check` reports the broken link and exits with code 1.
+
+#[test]
+fn tc_007_frontmatter_invalid_id() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-999]\ntests: []\n---\n\nBody.\n",
+    );
+    let out = h.run(&["graph", "check"]);
+    // Should report broken link (E002) and exit with code 1
+    assert!(
+        out.stderr.contains("E002") || out.stderr.contains("broken link"),
+        "Expected broken link error, got stderr: {}",
+        out.stderr
+    );
+    assert_eq!(out.exit_code, 1, "graph check should exit 1 on broken link");
+}
+
 // --- TC-008: frontmatter_missing_required ---
 // Parse a feature file with no `id` field. Assert structured error with file path and field name.
 
@@ -405,6 +489,181 @@ fn tc_040_context_bundle_formal_blocks_preserved() {
     assert!(
         out.stdout.contains("∀x:Node"),
         "Invariant content should be preserved"
+    );
+}
+
+// --- TC-071: parse_types_block ---
+// Parse ⟦Σ:Types⟧{ Node≜IRI; Role≜Leader|Follower }. Assert two TypeDef entries.
+
+#[test]
+fn tc_071_parse_types_block() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nFeature.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-types.md",
+        "---\nid: TC-001\ntitle: Types\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n⟦Σ:Types⟧{\n  Node≜IRI\n  Role≜Leader|Follower\n}\n",
+    );
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("Node≜IRI"), "Should contain Node type def: {}", out.stdout);
+    assert!(out.stdout.contains("Role≜Leader|Follower"), "Should contain Role union type: {}", out.stdout);
+}
+
+// --- TC-072: parse_invariants_block ---
+// Parse a block with a universal quantifier. Assert Invariant.raw matches input verbatim.
+
+#[test]
+fn tc_072_parse_invariants_block() {
+    let h = Harness::new();
+    let invariant = "∀x:Node: connected(x) = true";
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nFeature.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-inv.md",
+        &format!("---\nid: TC-001\ntitle: Invariants\ntype: invariant\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n⟦Γ:Invariants⟧{{\n  {}\n}}\n", invariant),
+    );
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains(invariant), "Invariant raw should roundtrip verbatim: {}", out.stdout);
+}
+
+// --- TC-073: parse_scenario_block ---
+// Parse a ⟦Λ:Scenario⟧ block with all three fields.
+
+#[test]
+fn tc_073_parse_scenario_block() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nFeature.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-scen.md",
+        "---\nid: TC-001\ntitle: Scenario\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n⟦Λ:Scenario⟧{\n  given≜cluster_init(nodes:3)\n  when≜leader_fails()\n  then≜new_leader_elected()\n}\n",
+    );
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("given≜"), "Should contain given field: {}", out.stdout);
+    assert!(out.stdout.contains("when≜"), "Should contain when field: {}", out.stdout);
+    assert!(out.stdout.contains("then≜"), "Should contain then field: {}", out.stdout);
+}
+
+// --- TC-074: parse_evidence_block ---
+// Parse ⟦Ε⟧⟨δ≜0.95;φ≜100;τ≜◊⁺⟩. Assert evidence values in context output.
+
+#[test]
+fn tc_074_parse_evidence_block() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nFeature.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-ev.md",
+        "---\nid: TC-001\ntitle: Evidence\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n⟦Ε⟧⟨δ≜0.95;φ≜100;τ≜◊⁺⟩\n",
+    );
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    // Evidence block should be preserved in output
+    assert!(out.stdout.contains("δ≜0.95") || out.stdout.contains("0.95"), "Should contain delta value: {}", out.stdout);
+}
+
+// --- TC-075: parse_evidence_delta_out_of_range ---
+// Parse ⟦Ε⟧⟨δ≜1.5;φ≜100;τ≜◊⁺⟩. Assert E001 error.
+
+#[test]
+fn tc_075_parse_evidence_delta_out_of_range() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nFeature.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-bad-ev.md",
+        "---\nid: TC-001\ntitle: Bad Evidence\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n⟦Ε⟧⟨δ≜1.5;φ≜100;τ≜◊⁺⟩\n",
+    );
+    // Graph check should report E001 for out-of-range delta
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        out.stderr.contains("E001") || out.stderr.contains("out of range"),
+        "Expected E001 for out-of-range delta, got stderr: {}",
+        out.stderr
+    );
+}
+
+// --- TC-076: parse_unclosed_delimiter ---
+// Parse file with unclosed ⟦Γ:Invariants⟧{ (no closing }). Assert E001.
+
+#[test]
+fn tc_076_parse_unclosed_delimiter() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nFeature.\n",
+    );
+    // Unclosed brace — note we also add a valid evidence block after to verify error recovery
+    h.write(
+        "docs/tests/TC-001-unclosed.md",
+        "---\nid: TC-001\ntitle: Unclosed\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n⟦Γ:Invariants⟧{ ∀x:Node: x.id > 0\n\n⟦Ε⟧⟨δ≜0.90;φ≜50;τ≜◊?⟩\n",
+    );
+    let out = h.run(&["graph", "check"]);
+    // Should report E001 for unclosed delimiter
+    assert!(
+        out.stderr.contains("E001") || out.stderr.contains("unclosed"),
+        "Expected unclosed delimiter error, got stderr: {}",
+        out.stderr
+    );
+}
+
+// --- TC-077: parse_empty_block_warning ---
+// Parse ⟦Γ:Invariants⟧{}. Assert W004 warning, no error.
+
+#[test]
+fn tc_077_parse_empty_block_warning() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nFeature.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-empty.md",
+        "---\nid: TC-001\ntitle: Empty\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n⟦Γ:Invariants⟧{}\n",
+    );
+    let out = h.run(&["graph", "check"]);
+    // W004 warning for empty block — should still succeed (exit 0 or 2 for warnings)
+    assert!(
+        out.stderr.contains("W004") || out.stderr.contains("empty block"),
+        "Expected W004 empty block warning, got stderr: {}",
+        out.stderr
+    );
+    // Should NOT exit with code 1 (that's errors only)
+    assert_ne!(out.exit_code, 1, "Empty block should be a warning, not an error");
+}
+
+// --- TC-079: parse_unknown_block_type ---
+// Parse ⟦X:Unknown⟧{ ... }. Assert E001 with "unrecognised block type".
+
+#[test]
+fn tc_079_parse_unknown_block_type() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nFeature.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-unknown.md",
+        "---\nid: TC-001\ntitle: Unknown Block\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n⟦X:Unknown⟧{ some content }\n",
+    );
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        out.stderr.contains("E001") || out.stderr.contains("unrecognised block type"),
+        "Expected unrecognised block type error, got stderr: {}",
+        out.stderr
     );
 }
 

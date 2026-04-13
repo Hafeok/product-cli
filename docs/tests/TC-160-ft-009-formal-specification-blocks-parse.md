@@ -4,9 +4,14 @@ title: FT-009 formal specification blocks parse
 type: exit-criteria
 status: passing
 validates:
-  features: [FT-009]
-  adrs: [ADR-005]
+  features:
+  - FT-004
+  - FT-009
+  adrs:
+  - ADR-005
 phase: 1
+runner: cargo-test
+runner-args: "tc_160_ft009_exit_criteria"
 ---
 
 ## Description
