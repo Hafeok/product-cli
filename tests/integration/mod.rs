@@ -2153,3 +2153,44 @@ fn tc_163_ft012_cluster_foundation_binary_validated() {
         }
     }
 }
+
+// --- TC-164: FT-013 Rust implementation compiles clean (exit-criteria) ---
+// Validates ADR-001: Rust as implementation language. The project compiles cleanly
+// with cargo build --release and passes clippy with zero warnings.
+
+#[test]
+fn tc_164_ft013_rust_implementation_compiles_clean() {
+    // Verify cargo build --release compiles with zero errors
+    let output = Command::new("cargo")
+        .args(["build", "--release"])
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .expect("cargo build --release");
+    assert!(
+        output.status.success(),
+        "cargo build --release failed:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // Verify clippy passes with no warnings (per project convention)
+    let output = Command::new("cargo")
+        .args(["clippy", "--", "-D", "warnings", "-D", "clippy::unwrap_used"])
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .expect("cargo clippy");
+    assert!(
+        output.status.success(),
+        "cargo clippy failed:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // Verify Cargo.toml declares edition 2021+ (confirming Rust toolchain)
+    let cargo_toml = std::fs::read_to_string(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml"),
+    )
+    .expect("read Cargo.toml");
+    assert!(
+        cargo_toml.contains("edition = \"2021\"") || cargo_toml.contains("edition = \"2024\""),
+        "Cargo.toml should declare a modern Rust edition (2021+)"
+    );
+}

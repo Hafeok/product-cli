@@ -127,7 +127,7 @@
 - [x] TC-054: product impact ADR-001 (scenario) — passing
 - [x] TC-158: FT-011 context bundle output correct (exit-criteria) — passing
 
-### FT-012 — Feature: FT-001 — Cluster Foundation [~]
+### FT-012 — Feature: FT-001 — Cluster Foundation [x]
 
 - [x] ADR-001: Rust as Implementation Language (accepted)
 - [x] TC-001: binary_compiles_arm64 (scenario) — passing
@@ -136,14 +136,14 @@
 - [x] TC-004: cargo build --release (scenario) — passing
 - [x] TC-163: FT-012 cluster foundation binary validated (exit-criteria) — passing
 
-### FT-013 — ADR-001 — Rust as Implementation Language [~]
+### FT-013 — ADR-001 — Rust as Implementation Language [x]
 
 - [x] ADR-001: Rust as Implementation Language (accepted)
 - [x] TC-001: binary_compiles_arm64 (scenario) — passing
 - [x] TC-002: binary_compiles_x86 (scenario) — passing
 - [x] TC-003: binary_no_deps.sh (scenario) — passing
 - [x] TC-004: cargo build --release (scenario) — passing
-- [ ] TC-164: FT-013 Rust implementation compiles clean (exit-criteria) — unimplemented
+- [x] TC-164: FT-013 Rust implementation compiles clean (exit-criteria) — passing
 
 ### FT-015 — Test Criteria [x]
 
