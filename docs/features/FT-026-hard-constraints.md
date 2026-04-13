@@ -2,7 +2,7 @@
 id: FT-026
 title: Hard constraints
 phase: 5
-status: planned
+status: abandoned
 depends-on: []
 adrs: []
 tests: []

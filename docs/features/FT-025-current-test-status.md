@@ -2,7 +2,7 @@
 id: FT-025
 title: Current test status
 phase: 5
-status: planned
+status: abandoned
 depends-on: []
 adrs: []
 tests: []

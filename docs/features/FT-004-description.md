@@ -2,7 +2,7 @@
 id: FT-004
 title: Description
 phase: 1
-status: planned
+status: abandoned
 depends-on: []
 adrs: []
 tests: []

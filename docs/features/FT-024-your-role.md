@@ -2,7 +2,7 @@
 id: FT-024
 title: Your role
 phase: 5
-status: planned
+status: abandoned
 depends-on: []
 adrs: []
 tests: []

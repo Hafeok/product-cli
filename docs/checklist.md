@@ -56,7 +56,7 @@
 - [ ] TC-078: parse_raw_roundtrip (scenario) — unimplemented
 - [x] TC-079: parse_unknown_block_type (scenario) — passing
 
-### FT-004 — Description [ ]
+### FT-004 — Description [-]
 
 
 ### FT-005 — Formal Specification [~]
@@ -68,7 +68,7 @@
 - [ ] TC-069: lock_stale_cleanup (scenario) — unimplemented
 - [x] TC-070: tmp_cleanup_on_startup (scenario) — passing
 
-### FT-006 — Description [ ]
+### FT-006 — Description [-]
 
 
 ### FT-007 — Formal Specification [x]
@@ -77,7 +77,7 @@
 - [x] TC-011: markdown_front_matter_strip (scenario) — passing
 - [x] TC-012: markdown_passthrough (scenario) — passing
 
-### FT-008 — Description [ ]
+### FT-008 — Description [-]
 
 
 ### FT-009 — Formal Specification [~]
@@ -145,7 +145,7 @@
 - [ ] TC-003: binary_no_deps.sh (scenario) — unimplemented
 - [x] TC-004: cargo build --release (scenario) — passing
 
-### FT-014 — ADR-002 — openraft for Cluster Consensus [ ]
+### FT-014 — ADR-002 — openraft for Cluster Consensus [-]
 
 
 ### FT-015 — Test Criteria [~]
@@ -296,13 +296,13 @@
 - [ ] TC-114: verify_updates_frontmatter (scenario) — unimplemented
 - [ ] TC-115: verify_regenerates_checklist (scenario) — unimplemented
 
-### FT-024 — Your role [ ]
+### FT-024 — Your role [-]
 
 
-### FT-025 — Current test status [ ]
+### FT-025 — Current test status [-]
 
 
-### FT-026 — Hard constraints [ ]
+### FT-026 — Hard constraints [-]
 
 
 ### FT-027 — Context Bundle [~]
