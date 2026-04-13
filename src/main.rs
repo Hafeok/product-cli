@@ -204,7 +204,11 @@ enum GapCommands {
 #[derive(Subcommand)]
 enum AuthorCommands {
     /// Start a feature authoring session
-    Feature,
+    Feature {
+        /// Feature ID (optional — enables preflight gate)
+        #[arg(long)]
+        feature: Option<String>,
+    },
     /// Start an ADR authoring session
     Adr,
     /// Start a spec review session
@@ -1513,8 +1517,7 @@ fn handle_graph(cmd: GraphCommands, global_format: &str) -> BoxResult {
                 let json = domains::coverage_matrix_to_json(&matrix);
                 println!("{}", serde_json::to_string_pretty(&json).unwrap_or_default());
             } else {
-                let _ = domain; // domain filter is available for future use
-                print!("{}", domains::render_coverage_matrix(&matrix, &graph));
+                    print!("{}", domains::render_coverage_matrix_filtered(&matrix, &graph, domain.as_deref()));
             }
         }
     }
@@ -2205,12 +2208,23 @@ fn handle_verify(id: &str) -> BoxResult {
 // ---------------------------------------------------------------------------
 
 fn handle_author(cmd: AuthorCommands) -> BoxResult {
-    let (config, root, _graph) = load_graph()?;
-    let session_type = match cmd {
-        AuthorCommands::Feature => author::SessionType::Feature,
+    let (config, root, graph) = load_graph()?;
+    let session_type = match &cmd {
+        AuthorCommands::Feature { .. } => author::SessionType::Feature,
         AuthorCommands::Adr => author::SessionType::Adr,
         AuthorCommands::Review => author::SessionType::Review,
     };
+
+    // ADR-026: if authoring a feature, run preflight first
+    if let AuthorCommands::Feature { feature: Some(ref fid) } = cmd {
+        let result = domains::preflight(&graph, fid, &config.domains)?;
+        if !result.is_clean {
+            eprintln!("{}", domains::render_preflight(&result));
+            eprintln!("  Resolve preflight gaps before starting author session.");
+            process::exit(1);
+        }
+    }
+
     author::start_session(session_type, &config, &root)?;
     Ok(())
 }

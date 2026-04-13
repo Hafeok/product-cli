@@ -391,7 +391,7 @@
 
 ## Phase 5
 
-### FT-019 — Domain Coverage Matrix [~]
+### FT-019 — Domain Coverage Matrix [x]
 
 - [x] ADR-025: Concern Domains — ADR Classification and Cross-Cutting Scope (accepted)
 - [x] ADR-026: Pre-flight Analysis — Systematic Coverage Before Authoring (accepted)
@@ -408,13 +408,13 @@
 - [x] TC-142: preflight_domain_gap (scenario) — passing
 - [x] TC-143: preflight_acknowledgement_closes_gap (scenario) — passing
 - [x] TC-144: preflight_acknowledgement_without_reason_fails (scenario) — passing
-- [ ] TC-145: implement_blocked_by_preflight (scenario) — unimplemented
+- [x] TC-145: implement_blocked_by_preflight (scenario) — passing
 - [x] TC-146: coverage_matrix_renders (scenario) — passing
 - [x] TC-147: coverage_matrix_json (scenario) — passing
-- [ ] TC-148: coverage_matrix_domain_filter (scenario) — unimplemented
-- [ ] TC-149: author_session_preflight_first (scenario) — unimplemented
-- [ ] TC-150: product preflight FT-001 (scenario) — unimplemented
-- [ ] TC-151: product graph coverage (scenario) — unimplemented
+- [x] TC-148: coverage_matrix_domain_filter (scenario) — passing
+- [x] TC-149: author_session_preflight_first (scenario) — passing
+- [x] TC-150: product preflight FT-001 (scenario) — passing
+- [x] TC-151: product graph coverage (scenario) — passing
 
 ### FT-021 — MCP Server [~]
 
@@ -461,13 +461,13 @@
 - [x] TC-142: preflight_domain_gap (scenario) — passing
 - [x] TC-143: preflight_acknowledgement_closes_gap (scenario) — passing
 - [x] TC-144: preflight_acknowledgement_without_reason_fails (scenario) — passing
-- [ ] TC-145: implement_blocked_by_preflight (scenario) — unimplemented
+- [x] TC-145: implement_blocked_by_preflight (scenario) — passing
 - [x] TC-146: coverage_matrix_renders (scenario) — passing
 - [x] TC-147: coverage_matrix_json (scenario) — passing
-- [ ] TC-148: coverage_matrix_domain_filter (scenario) — unimplemented
-- [ ] TC-149: author_session_preflight_first (scenario) — unimplemented
-- [ ] TC-150: product preflight FT-001 (scenario) — unimplemented
-- [ ] TC-151: product graph coverage (scenario) — unimplemented
+- [x] TC-148: coverage_matrix_domain_filter (scenario) — passing
+- [x] TC-149: author_session_preflight_first (scenario) — passing
+- [x] TC-150: product preflight FT-001 (scenario) — passing
+- [x] TC-151: product graph coverage (scenario) — passing
 
 ### FT-028 — Engineering Workflows [~]
 

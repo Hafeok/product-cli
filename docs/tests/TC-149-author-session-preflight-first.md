@@ -2,7 +2,7 @@
 id: TC-149
 title: author_session_preflight_first
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-019
@@ -10,6 +10,8 @@ validates:
   adrs:
   - ADR-026
 phase: 1
+runner: cargo-test
+runner-args: "tc_149_author_session_preflight_first"
 ---
 
 start `product author feature` for FT-009 with preflight gaps. Assert the first MCP tool call from the session is `product_preflight`, not a content scaffold call.

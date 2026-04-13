@@ -2,7 +2,7 @@
 id: FT-019
 title: Domain Coverage Matrix
 phase: 5
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-025

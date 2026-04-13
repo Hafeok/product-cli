@@ -229,11 +229,25 @@ fn has_cross_cutting_in_domain(graph: &KnowledgeGraph, domain: &str) -> bool {
 }
 
 pub fn render_coverage_matrix(matrix: &CoverageMatrix, graph: &KnowledgeGraph) -> String {
+    render_coverage_matrix_filtered(matrix, graph, None)
+}
+
+pub fn render_coverage_matrix_filtered(
+    matrix: &CoverageMatrix,
+    graph: &KnowledgeGraph,
+    domain_filter: Option<&str>,
+) -> String {
     let mut out = String::new();
+
+    let display_domains: Vec<&String> = if let Some(filter) = domain_filter {
+        matrix.domains.iter().filter(|d| d.as_str() == filter).collect()
+    } else {
+        matrix.domains.iter().collect()
+    };
 
     // Header
     out.push_str(&format!("{:<20}", ""));
-    for d in &matrix.domains {
+    for d in &display_domains {
         let short = if d.len() > 5 { &d[..5] } else { d };
         out.push_str(&format!(" {:<5}", short));
     }
@@ -244,8 +258,8 @@ pub fn render_coverage_matrix(matrix: &CoverageMatrix, graph: &KnowledgeGraph) -
         let title = graph.features.get(fid).map(|f| f.front.title.as_str()).unwrap_or("");
         let label = format!("{} {}", fid, &title[..title.len().min(12)]);
         out.push_str(&format!("{:<20}", label));
-        for d in &matrix.domains {
-            let cell = matrix.cells.get(&(fid.clone(), d.clone()))
+        for d in &display_domains {
+            let cell = matrix.cells.get(&(fid.clone(), (*d).clone()))
                 .cloned()
                 .unwrap_or(CoverageCell::NotApplicable);
             out.push_str(&format!("  {}  ", cell));

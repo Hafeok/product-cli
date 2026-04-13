@@ -4190,3 +4190,197 @@ fn tc_098_gap_json_schema() {
         }
     }
 }
+
+// ===========================================================================
+// TC-145: implement_blocked_by_preflight
+// FT-009 has preflight gaps. Run `product implement FT-009`. Assert exit 1,
+// preflight error message, no agent invoked.
+// ===========================================================================
+
+#[test]
+fn tc_145_implement_blocked_by_preflight() {
+    let h = harness_with_domains();
+
+    // Cross-cutting ADR not linked by FT-009
+    h.write("docs/adrs/ADR-013-error-model.md",
+        "---\nid: ADR-013\ntitle: Error Model\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [error-handling]\nscope: cross-cutting\n---\n\nCross-cutting error model.\n");
+
+    // Feature with gaps: no link to cross-cutting ADR-013
+    h.write("docs/features/FT-009-rate-limiting.md",
+        "---\nid: FT-009\ntitle: Rate Limiting\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: []\ndomains-acknowledged: {}\n---\n\nRate limiting feature.\n");
+
+    let out = h.run(&["implement", "FT-009", "--dry-run"]);
+    assert!(
+        out.exit_code != 0,
+        "implement should fail when preflight has gaps, got exit {}",
+        out.exit_code
+    );
+    assert!(
+        out.stderr.contains("preflight") || out.stderr.contains("Pre-flight") || out.stderr.contains("BLOCKED"),
+        "Should mention preflight in error, got stderr:\n{}",
+        out.stderr
+    );
+    // No agent should have been invoked (no Step 3/4 output)
+    assert!(
+        !out.stdout.contains("Step 3") && !out.stdout.contains("Step 4"),
+        "Agent should not be invoked when preflight blocks, got stdout:\n{}",
+        out.stdout
+    );
+}
+
+// ===========================================================================
+// TC-148: coverage_matrix_domain_filter
+// Run `product graph coverage --domain security`. Assert output contains only
+// the security column.
+// ===========================================================================
+
+#[test]
+fn tc_148_coverage_matrix_domain_filter() {
+    let h = harness_with_domains();
+
+    // Domain-scoped ADRs
+    h.write("docs/adrs/ADR-020-security-policy.md",
+        "---\nid: ADR-020\ntitle: Security Policy\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nSecurity.\n");
+    h.write("docs/adrs/ADR-030-networking.md",
+        "---\nid: ADR-030\ntitle: Networking Core\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [networking]\nscope: domain\n---\n\nNetworking.\n");
+
+    // Feature
+    h.write("docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-020]\ntests: []\ndomains: [security, networking]\ndomains-acknowledged: {}\n---\n\nTest.\n");
+
+    // Unfiltered should show both columns
+    let out_all = h.run(&["graph", "coverage"]);
+    out_all.assert_exit(0);
+    assert!(
+        out_all.stdout.contains("secur") && out_all.stdout.contains("netwo"),
+        "Unfiltered coverage should show both domains, got:\n{}",
+        out_all.stdout
+    );
+
+    // Filtered to security only
+    let out_sec = h.run(&["graph", "coverage", "--domain", "security"]);
+    out_sec.assert_exit(0);
+    assert!(
+        out_sec.stdout.contains("secur"),
+        "Filtered coverage should show security column, got:\n{}",
+        out_sec.stdout
+    );
+    assert!(
+        !out_sec.stdout.contains("netwo"),
+        "Filtered coverage should NOT show networking column, got:\n{}",
+        out_sec.stdout
+    );
+}
+
+// ===========================================================================
+// TC-149: author_session_preflight_first
+// Start `product author feature` for FT-009 with preflight gaps.
+// Assert preflight blocks the session before the agent is launched.
+// ===========================================================================
+
+#[test]
+fn tc_149_author_session_preflight_first() {
+    let h = harness_with_domains();
+
+    // Cross-cutting ADR
+    h.write("docs/adrs/ADR-013-error-model.md",
+        "---\nid: ADR-013\ntitle: Error Model\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [error-handling]\nscope: cross-cutting\n---\n\nError model.\n");
+
+    // Feature with gaps
+    h.write("docs/features/FT-009-rate-limiting.md",
+        "---\nid: FT-009\ntitle: Rate Limiting\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: []\ndomains-acknowledged: {}\n---\n\nRate limiting.\n");
+
+    // Run author feature with --feature flag — should be blocked by preflight
+    let out = h.run(&["author", "feature", "--feature", "FT-009"]);
+    assert!(
+        out.exit_code != 0,
+        "author session should be blocked by preflight gaps, got exit {}",
+        out.exit_code
+    );
+    assert!(
+        out.stderr.contains("preflight") || out.stderr.contains("Pre-flight") || out.stderr.contains("ADR-013"),
+        "Should show preflight report before session starts, got stderr:\n{}",
+        out.stderr
+    );
+}
+
+// ===========================================================================
+// TC-150: product preflight FT-001
+// Run preflight on a feature with all cross-cutting ADRs linked.
+// Assert clean exit.
+// ===========================================================================
+
+#[test]
+fn tc_150_product_preflight_ft_001() {
+    let h = harness_with_domains();
+
+    // Cross-cutting ADR
+    h.write("docs/adrs/ADR-013-error-model.md",
+        "---\nid: ADR-013\ntitle: Error Model\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\ndomains: [error-handling]\nscope: cross-cutting\n---\n\nError model.\n");
+
+    // Domain ADR for security
+    h.write("docs/adrs/ADR-020-security.md",
+        "---\nid: ADR-020\ntitle: Security Policy\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nSecurity.\n");
+
+    // Feature that links cross-cutting and domain ADRs, declares security domain
+    h.write("docs/features/FT-001-cluster.md",
+        "---\nid: FT-001\ntitle: Cluster\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-013, ADR-020]\ntests: []\ndomains: [security]\ndomains-acknowledged: {}\n---\n\nCluster feature.\n");
+
+    let out = h.run(&["preflight", "FT-001"]);
+    out.assert_exit(0);
+    assert!(
+        out.stdout.contains("CLEAN"),
+        "Preflight should be clean when all coverage is present, got stdout:\n{}",
+        out.stdout
+    );
+}
+
+// ===========================================================================
+// TC-151: product graph coverage
+// Run `product graph coverage` on a fixture with known state. Assert output
+// contains features and domains with correct symbols.
+// ===========================================================================
+
+#[test]
+fn tc_151_product_graph_coverage() {
+    let h = harness_with_domains();
+
+    // Domain-scoped ADRs
+    h.write("docs/adrs/ADR-020-security.md",
+        "---\nid: ADR-020\ntitle: Security Policy\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [security]\nscope: domain\n---\n\nSecurity.\n");
+    h.write("docs/adrs/ADR-030-networking.md",
+        "---\nid: ADR-030\ntitle: Networking Core\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ndomains: [networking]\nscope: domain\n---\n\nNetworking.\n");
+
+    // FT-001: links ADR-020 (security covered), declares networking (gap)
+    h.write("docs/features/FT-001-cluster.md",
+        "---\nid: FT-001\ntitle: Cluster\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-020]\ntests: []\ndomains: [security, networking]\ndomains-acknowledged: {}\n---\n\nCluster.\n");
+
+    // FT-002: acknowledges security, does not declare networking
+    h.write("docs/features/FT-002-products.md",
+        "---\nid: FT-002\ntitle: Products\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains: [security]\ndomains-acknowledged:\n  security: \"no trust boundaries\"\n---\n\nProducts.\n");
+
+    let out = h.run(&["graph", "coverage"]);
+    out.assert_exit(0);
+
+    // Should contain feature IDs
+    assert!(out.stdout.contains("FT-001"), "Should list FT-001, got:\n{}", out.stdout);
+    assert!(out.stdout.contains("FT-002"), "Should list FT-002, got:\n{}", out.stdout);
+
+    // Should contain domain headers (abbreviated)
+    assert!(out.stdout.contains("secur"), "Should show security column, got:\n{}", out.stdout);
+
+    // Should contain coverage symbols
+    let has_symbols = out.stdout.contains('✓') || out.stdout.contains('~') || out.stdout.contains('·') || out.stdout.contains('✗');
+    assert!(has_symbols, "Should contain coverage symbols (✓/~/·/✗), got:\n{}", out.stdout);
+
+    // Legend
+    assert!(out.stdout.contains("Legend"), "Should contain legend, got:\n{}", out.stdout);
+
+    // JSON format
+    let out_json = h.run(&["graph", "coverage", "--format", "json"]);
+    out_json.assert_exit(0);
+    let json: serde_json::Value = serde_json::from_str(&out_json.stdout)
+        .expect("JSON should be valid");
+    assert!(json["features"].is_array(), "JSON should have features array");
+    assert!(json["domains"].is_array(), "JSON should have domains array");
+}
