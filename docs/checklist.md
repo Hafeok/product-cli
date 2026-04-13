@@ -167,13 +167,13 @@
 - [x] TC-079: parse_unknown_block_type (scenario) — passing
 - [x] TC-153: FT-015 all test-criteria scenarios pass (exit-criteria) — passing
 
-### FT-016 — Graph Model [~]
+### FT-016 — Graph Model [x]
 
 - [x] ADR-003: Derived Graph — No Persistent Graph Store (accepted)
 - [x] ADR-008: Embedded Oxigraph for SPARQL Queries (accepted)
 - [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
 - [x] TC-009: graph_rebuild_from_scratch (scenario) — passing
-- [ ] TC-010: graph_stale_ttl (scenario) — unimplemented
+- [x] TC-010: graph_stale_ttl (scenario) — passing
 - [x] TC-024: sparql_select_feature_adrs (scenario) — passing
 - [x] TC-025: sparql_untested_features (scenario) — passing
 - [x] TC-026: sparql_phase_filter (scenario) — passing
@@ -191,7 +191,7 @@
 - [x] TC-052: impact_on_supersede (scenario) — passing
 - [x] TC-053: product graph central (scenario) — passing
 - [x] TC-054: product impact ADR-001 (scenario) — passing
-- [ ] TC-157: FT-016 graph model queries pass (exit-criteria) — unimplemented
+- [x] TC-157: FT-016 graph model queries pass (exit-criteria) — passing
 
 ### FT-017 — Generated Checklist [~]
 

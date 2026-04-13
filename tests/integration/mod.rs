@@ -2194,3 +2194,177 @@ fn tc_164_ft013_rust_implementation_compiles_clean() {
         "Cargo.toml should declare a modern Rust edition (2021+)"
     );
 }
+
+/// TC-009: graph_rebuild_from_scratch — graph is built from front-matter without prior rebuild
+#[test]
+fn tc_009_graph_rebuild_from_scratch() {
+    let h = Harness::new();
+
+    // Create 10 feature files
+    for i in 1..=10 {
+        h.write(
+            &format!("docs/features/FT-{i:03}-feat.md"),
+            &format!("---\nid: FT-{i:03}\ntitle: Feature {i}\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-{:03}]\ntests: [TC-{i:03}]\n---\n\nFeature {i}.\n", if i <= 8 { i } else { 1 }),
+        );
+    }
+
+    // Create 8 ADR files
+    for i in 1..=8 {
+        h.write(
+            &format!("docs/adrs/ADR-{i:03}-adr.md"),
+            &format!("---\nid: ADR-{i:03}\ntitle: Decision {i}\nstatus: accepted\nfeatures: [FT-{i:03}]\nsupersedes: []\nsuperseded-by: []\n---\n\nDecision {i}.\n"),
+        );
+    }
+
+    // Create 15 test files (first 10 linked to features, rest linked to ADRs)
+    for i in 1..=15 {
+        let feat = if i <= 10 { format!("FT-{i:03}") } else { format!("FT-{:03}", i - 10) };
+        h.write(
+            &format!("docs/tests/TC-{i:03}-test.md"),
+            &format!("---\nid: TC-{i:03}\ntitle: Test {i}\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [{feat}]\n  adrs: []\nphase: 1\n---\n\nTest {i}.\n"),
+        );
+    }
+
+    // No prior graph rebuild — just invoke graph stats which uses the in-memory graph
+    let out = h.run(&["graph", "stats"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("10"); // 10 features
+    out.assert_stdout_contains("8");  // 8 ADRs
+    out.assert_stdout_contains("15"); // 15 tests
+
+    // Also verify feature list works without any graph rebuild
+    let out = h.run(&["feature", "list"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("FT-001");
+    out.assert_stdout_contains("FT-010");
+}
+
+/// TC-010: graph_stale_ttl — graph is rebuilt from files, not from stale index.ttl
+#[test]
+fn tc_010_graph_stale_ttl() {
+    let h = Harness::new();
+
+    // Create initial feature
+    h.write(
+        "docs/features/FT-001-initial.md",
+        "---\nid: FT-001\ntitle: Initial Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nInitial feature.\n",
+    );
+
+    // Generate index.ttl via graph rebuild
+    let out = h.run(&["graph", "rebuild"]);
+    out.assert_exit(0);
+    assert!(h.exists("docs/graph/index.ttl"), "index.ttl should be created");
+
+    // Verify index.ttl contains FT-001 but NOT FT-002
+    let ttl = h.read("docs/graph/index.ttl");
+    assert!(ttl.contains("FT-001"), "index.ttl should contain FT-001");
+    assert!(!ttl.contains("FT-002"), "index.ttl should NOT contain FT-002 yet");
+
+    // Add a new feature file WITHOUT rebuilding the TTL
+    h.write(
+        "docs/features/FT-002-new.md",
+        "---\nid: FT-002\ntitle: New Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nNew feature added after TTL export.\n",
+    );
+
+    // feature list should show the new feature (graph rebuilt from files, not stale TTL)
+    let out = h.run(&["feature", "list"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("FT-002");
+    out.assert_stdout_contains("New Feature");
+}
+
+/// TC-157: FT-016 graph model queries pass (exit-criteria)
+#[test]
+fn tc_157_ft016_graph_model_queries_pass() {
+    let h = Harness::new();
+
+    // Set up a representative graph with all edge types
+    h.write(
+        "docs/features/FT-001-foundation.md",
+        "---\nid: FT-001\ntitle: Foundation\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: [ADR-001, ADR-002]\ntests: [TC-001]\n---\n\nFoundation feature.\n",
+    );
+    h.write(
+        "docs/features/FT-002-middle.md",
+        "---\nid: FT-002\ntitle: Middle Layer\nphase: 1\nstatus: in-progress\ndepends-on: [FT-001]\nadrs: [ADR-001, ADR-003]\ntests: [TC-002]\n---\n\nMiddle feature.\n",
+    );
+    h.write(
+        "docs/features/FT-003-top.md",
+        "---\nid: FT-003\ntitle: Top Layer\nphase: 2\nstatus: planned\ndepends-on: [FT-002]\nadrs: [ADR-003]\ntests: [TC-003]\n---\n\nTop feature.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-rust.md",
+        "---\nid: ADR-001\ntitle: Rust Language\nstatus: accepted\nfeatures: [FT-001, FT-002]\nsupersedes: []\nsuperseded-by: []\n---\n\nRust decision.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-old.md",
+        "---\nid: ADR-002\ntitle: Old Store\nstatus: superseded\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: [ADR-003]\n---\n\nOld store.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-003-new.md",
+        "---\nid: ADR-003\ntitle: New Store\nstatus: accepted\nfeatures: [FT-002, FT-003]\nsupersedes: [ADR-002]\nsuperseded-by: []\n---\n\nNew store.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Foundation Test\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nFoundation test.\n",
+    );
+    h.write(
+        "docs/tests/TC-002-test.md",
+        "---\nid: TC-002\ntitle: Middle Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-002]\n  adrs: [ADR-003]\nphase: 1\n---\n\nMiddle test.\n",
+    );
+    h.write(
+        "docs/tests/TC-003-test.md",
+        "---\nid: TC-003\ntitle: Top Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-003]\n  adrs: [ADR-003]\nphase: 2\n---\n\nTop test.\n",
+    );
+
+    // 1. Graph rebuild produces valid TTL
+    let out = h.run(&["graph", "rebuild"]);
+    out.assert_exit(0);
+    let ttl = h.read("docs/graph/index.ttl");
+    assert!(ttl.contains("pm:Feature"), "TTL should contain Feature type");
+    assert!(ttl.contains("pm:ArchitecturalDecision"), "TTL should contain ADR type");
+    assert!(ttl.contains("pm:implementedBy"), "TTL should contain implementedBy edges");
+    assert!(ttl.contains("pm:dependsOn"), "TTL should contain dependsOn edges");
+    assert!(ttl.contains("pm:betweennessCentrality"), "TTL should contain centrality scores");
+
+    // 2. SPARQL query works
+    let out = h.run(&["graph", "query", "SELECT ?f WHERE { ?f a <https://product-meta/ontology#Feature> }"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("FT-001");
+    out.assert_stdout_contains("FT-002");
+    out.assert_stdout_contains("FT-003");
+
+    // 3. Topological sort respects dependencies
+    let out = h.run(&["feature", "next"]);
+    out.assert_exit(0);
+    // FT-001 is complete, FT-002 depends on FT-001 (complete) and is in-progress → should be next
+    out.assert_stdout_contains("FT-002");
+
+    // 4. Graph central works
+    let out = h.run(&["graph", "central"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("ADR-001");
+
+    // 5. Impact analysis works
+    let out = h.run(&["impact", "ADR-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("FT-001");
+    out.assert_stdout_contains("FT-002");
+
+    // 6. Context with depth 2 includes transitive artifacts
+    let out = h.run(&["context", "FT-001", "--depth", "2"]);
+    out.assert_exit(0);
+    // Depth 2: FT-001 → ADR-001 → FT-002, so FT-002's artifacts should appear
+    assert!(
+        out.stdout.contains("FT-002") || out.stdout.contains("Middle Layer") || out.stdout.contains("Middle test"),
+        "Depth 2 should include transitive artifacts via ADR-001 → FT-002.\nOutput:\n{}",
+        out.stdout
+    );
+
+    // 7. Graph check passes (no broken links — warnings about missing exit-criteria are OK)
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        out.exit_code == 0 || out.exit_code == 2,
+        "Graph check should pass (0) or warn (2), got {}.\nstdout: {}\nstderr: {}",
+        out.exit_code, out.stdout, out.stderr
+    );
+}
