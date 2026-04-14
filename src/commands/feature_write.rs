@@ -1,6 +1,7 @@
 //! Feature write operations — creation, linking, status changes.
 
 use product_lib::{domains, error::ProductError, fileops, graph, parser, types};
+use std::io::{self, BufRead, IsTerminal, Write};
 
 use super::{acquire_write_lock, load_graph, BoxResult};
 
@@ -50,10 +51,75 @@ pub(crate) fn feature_link(
     let mut front = f.front.clone();
     let mut changed = false;
 
-    changed |= link_adr(&mut front, id, adr);
+    let adr_linked = link_adr(&mut front, id, adr.clone());
+    changed |= adr_linked;
     changed |= link_test(&mut front, id, test);
     if let Some(dep_id) = dep {
         changed |= link_dep(&mut front, id, &dep_id, f, &graph)?;
+    }
+
+    // Interactive TC inference when an ADR link was added (ADR-027)
+    if adr_linked {
+        if let Some(ref adr_id) = adr {
+            // Check if the ADR is cross-cutting — skip if so
+            let is_cross_cutting = graph
+                .adrs
+                .get(adr_id.as_str())
+                .map(|a| a.front.scope == types::AdrScope::CrossCutting)
+                .unwrap_or(false);
+
+            if !is_cross_cutting {
+                let inferred = compute_inferred_tc_links(&graph, id, adr_id);
+                if !inferred.is_empty() {
+                    println!();
+                    println!("  Transitive TC links inferred:");
+                    for (tc_id, tc_title) in &inferred {
+                        println!(
+                            "    {} {:<30} \u{2192} {}  (via {})",
+                            tc_id, tc_title, id, adr_id
+                        );
+                    }
+                    println!();
+
+                    if prompt_confirm("  Add these TC links automatically? [Y/n] ") {
+                        // Add TC IDs to the feature's tests list
+                        for (tc_id, _) in &inferred {
+                            if !front.tests.contains(tc_id) {
+                                front.tests.push(tc_id.clone());
+                            }
+                        }
+                        front.tests.sort();
+
+                        // Prepare batch writes: feature file + TC files
+                        let feature_content = parser::render_feature(&front, &f.body);
+                        let mut writes: Vec<(&std::path::Path, String)> = Vec::new();
+                        writes.push((&f.path, feature_content));
+
+                        for (tc_id, _) in &inferred {
+                            if let Some(tc) = graph.tests.get(tc_id.as_str()) {
+                                let mut tc_front = tc.front.clone();
+                                if !tc_front.validates.features.contains(&id.to_string()) {
+                                    tc_front.validates.features.push(id.to_string());
+                                }
+                                tc_front.validates.features.sort();
+                                let tc_content = parser::render_test(&tc_front, &tc.body);
+                                writes.push((&tc.path, tc_content));
+                            }
+                        }
+
+                        // Write atomically
+                        let write_refs: Vec<(&std::path::Path, &str)> = writes
+                            .iter()
+                            .map(|(p, c)| (*p, c.as_str()))
+                            .collect();
+                        fileops::write_batch_atomic(&write_refs)?;
+                        println!("  Applied {} TC links.", inferred.len());
+                        return Ok(());
+                    }
+                    // User declined — fall through to write only the feature file
+                }
+            }
+        }
     }
 
     if changed {
@@ -61,6 +127,45 @@ pub(crate) fn feature_link(
         fileops::write_file_atomic(&f.path, &content)?;
     }
     Ok(())
+}
+
+/// Compute TC links that would be inferred from linking a specific ADR to a feature
+fn compute_inferred_tc_links(
+    graph: &graph::KnowledgeGraph,
+    feature_id: &str,
+    adr_id: &str,
+) -> Vec<(String, String)> {
+    let mut inferred = Vec::new();
+    for tc in graph.tests.values() {
+        if tc.front.validates.adrs.contains(&adr_id.to_string())
+            && !tc.front.validates.features.contains(&feature_id.to_string())
+        {
+            inferred.push((tc.front.id.clone(), tc.front.title.clone()));
+        }
+    }
+    inferred.sort_by(|a, b| a.0.cmp(&b.0));
+    inferred
+}
+
+/// Prompt user for y/n confirmation, defaulting to yes
+fn prompt_confirm(prompt: &str) -> bool {
+    let stdin = io::stdin();
+    let is_tty = stdin.is_terminal();
+
+    print!("{}", prompt);
+    let _ = io::stdout().flush();
+
+    let mut line = String::new();
+    if stdin.lock().read_line(&mut line).is_ok() {
+        let trimmed = line.trim().to_lowercase();
+        // Empty (just enter) or "y"/"yes" = confirm; "n"/"no" = decline
+        trimmed.is_empty() || trimmed == "y" || trimmed == "yes"
+    } else if !is_tty {
+        // Non-interactive with no data: default to no
+        false
+    } else {
+        true
+    }
 }
 
 fn link_adr(front: &mut types::FeatureFrontMatter, id: &str, adr: Option<String>) -> bool {

@@ -646,7 +646,7 @@
 - [x] TC-130: metrics_trend_renders (scenario) — passing
 - [x] TC-131: metrics_jsonl_merge_conflict_safe (scenario) — passing
 
-### FT-030 — Codebase Onboarding [~]
+### FT-030 — Codebase Onboarding [x]
 
 - [x] ADR-027: Transitive TC Link Inference — `product migrate link-tests` and `product graph infer` (accepted)
 - [x] TC-168: Scan produces candidates with valid evidence paths (scenario) — passing

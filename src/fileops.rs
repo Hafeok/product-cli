@@ -78,6 +78,82 @@ pub fn write_file_atomic(path: &Path, content: &str) -> Result<()> {
     Ok(())
 }
 
+/// Write multiple files atomically as a batch: create all temp files first,
+/// fsync each, then rename all. If any step fails, clean up temps and return error.
+/// This minimises the window for partial state (ADR-015, TC-366).
+pub fn write_batch_atomic(writes: &[(&Path, &str)]) -> Result<usize> {
+    if writes.is_empty() {
+        return Ok(0);
+    }
+
+    // Phase 1: Create all temp files, write content, fsync each
+    let mut staged: Vec<(std::path::PathBuf, std::path::PathBuf)> = Vec::new(); // (tmp_path, final_path)
+
+    for (path, content) in writes {
+        // Ensure parent directory exists
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).map_err(|e| ProductError::WriteError {
+                path: path.to_path_buf(),
+                message: format!("failed to create directory: {}", e),
+            })?;
+        }
+
+        let file_name = path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unknown");
+        let tmp_name = format!(".{}.product-tmp.{}", file_name, std::process::id());
+        let tmp_path = path.with_file_name(&tmp_name);
+
+        match write_and_sync_tmp(&tmp_path, content) {
+            Ok(()) => staged.push((tmp_path, path.to_path_buf())),
+            Err(e) => {
+                // Clean up all temp files on failure
+                for (tmp, _) in &staged {
+                    let _ = fs::remove_file(tmp);
+                }
+                return Err(e);
+            }
+        }
+    }
+
+    // Phase 2: Rename all temp files to final destinations
+    let mut completed = 0;
+    for (tmp, final_path) in &staged {
+        if let Err(e) = fs::rename(tmp, final_path) {
+            // Clean up remaining temp files
+            for (remaining_tmp, _) in staged.iter().skip(completed) {
+                let _ = fs::remove_file(remaining_tmp);
+            }
+            return Err(ProductError::WriteError {
+                path: final_path.clone(),
+                message: format!("batch rename failed: {}", e),
+            });
+        }
+        completed += 1;
+    }
+
+    Ok(completed)
+}
+
+/// Write content to a temp file and fsync it (helper for batch writes)
+fn write_and_sync_tmp(tmp_path: &Path, content: &str) -> Result<()> {
+    let mut file = fs::File::create(tmp_path).map_err(|e| ProductError::WriteError {
+        path: tmp_path.to_path_buf(),
+        message: format!("failed to create temp file: {}", e),
+    })?;
+    file.write_all(content.as_bytes())
+        .map_err(|e| ProductError::WriteError {
+            path: tmp_path.to_path_buf(),
+            message: format!("failed to write: {}", e),
+        })?;
+    file.sync_all().map_err(|e| ProductError::WriteError {
+        path: tmp_path.to_path_buf(),
+        message: format!("failed to fsync: {}", e),
+    })?;
+    Ok(())
+}
+
 /// Clean up leftover .product-tmp.* files in a directory
 pub fn cleanup_tmp_files(dir: &Path) {
     if !dir.exists() {

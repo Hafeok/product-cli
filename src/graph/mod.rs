@@ -2,6 +2,7 @@
 
 mod algorithms;
 mod dep_validation;
+pub mod inference;
 mod model;
 mod ordering;
 mod stats;

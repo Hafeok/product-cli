@@ -1,7 +1,7 @@
 //! Migration from monolithic PRD or ADR documents.
 
 use clap::Subcommand;
-use product_lib::{config, migrate};
+use product_lib::{config, graph::inference, migrate};
 use std::path::PathBuf;
 
 use super::{acquire_write_lock, load_graph, BoxResult};
@@ -42,6 +42,18 @@ pub enum MigrateCommands {
         #[arg(long)]
         interactive: bool,
     },
+    /// Infer transitive TC→Feature links from shared ADRs (ADR-027)
+    LinkTests {
+        /// Only show what would be linked (don't write)
+        #[arg(long)]
+        dry_run: bool,
+        /// Scope to a specific ADR
+        #[arg(long)]
+        adr: Option<String>,
+        /// Scope to a specific feature
+        #[arg(long)]
+        feature: Option<String>,
+    },
     /// Upgrade front-matter schema to current version
     Schema {
         /// Show what would change without writing
@@ -68,6 +80,11 @@ pub(crate) fn handle_migrate(cmd: MigrateCommands) -> BoxResult {
             overwrite,
             interactive,
         } => migrate_from_adrs(&source, validate, execute, overwrite, interactive),
+        MigrateCommands::LinkTests {
+            dry_run,
+            adr,
+            feature,
+        } => migrate_link_tests(dry_run, adr, feature),
         MigrateCommands::Schema { dry_run } => migrate_schema(dry_run),
         MigrateCommands::Validate => migrate_validate(),
     }
@@ -149,6 +166,22 @@ fn migrate_schema(dry_run: bool) -> BoxResult {
         let (updated, unchanged) = config::migrate_schema(&root, &cfg, dry_run)?;
         println!("{} files updated, {} unchanged", updated, unchanged);
     }
+    Ok(())
+}
+
+fn migrate_link_tests(dry_run: bool, adr: Option<String>, feature: Option<String>) -> BoxResult {
+    let _lock = if !dry_run {
+        Some(acquire_write_lock()?)
+    } else {
+        None
+    };
+    let (_, _, graph) = load_graph()?;
+    let opts = inference::InferenceOptions {
+        skip_cross_cutting: true,
+        adr_filter: adr,
+        feature_filter: feature,
+    };
+    inference::run_inference(&graph, &opts, dry_run)?;
     Ok(())
 }
 

@@ -1,7 +1,7 @@
-//! Graph operations: check, rebuild, query, stats, centrality, autolink, coverage.
+//! Graph operations: check, rebuild, query, stats, centrality, autolink, coverage, infer.
 
 use clap::Subcommand;
-use product_lib::{domains, fileops, parser, rdf};
+use product_lib::{domains, fileops, graph::inference, parser, rdf};
 use std::process;
 
 use super::{acquire_write_lock, load_graph, BoxResult};
@@ -38,6 +38,18 @@ pub enum GraphCommands {
         #[arg(long)]
         dry_run: bool,
     },
+    /// Infer transitive TC→Feature links from shared ADRs (ADR-027)
+    Infer {
+        /// Only show what would be linked (don't write)
+        #[arg(long)]
+        dry_run: bool,
+        /// Scope to a specific ADR
+        #[arg(long)]
+        adr: Option<String>,
+        /// Scope to a specific feature
+        #[arg(long)]
+        feature: Option<String>,
+    },
     /// Show feature x domain coverage matrix
     Coverage {
         /// Filter to a specific domain
@@ -57,6 +69,7 @@ pub(crate) fn handle_graph(cmd: GraphCommands, global_format: &str) -> BoxResult
         GraphCommands::Stats => graph_stats(),
         GraphCommands::Central { top, all } => graph_central(top, all),
         GraphCommands::Autolink { dry_run } => graph_autolink(dry_run),
+        GraphCommands::Infer { dry_run, adr, feature } => graph_infer(dry_run, adr, feature),
         GraphCommands::Coverage { domain, format } => graph_coverage(domain, format, global_format),
     }
 }
@@ -355,6 +368,22 @@ fn write_autolink_files(
     }
 
     Ok((features_written, tcs_written))
+}
+
+fn graph_infer(dry_run: bool, adr: Option<String>, feature: Option<String>) -> BoxResult {
+    let _lock = if !dry_run {
+        Some(acquire_write_lock()?)
+    } else {
+        None
+    };
+    let (_, _, graph) = load_graph()?;
+    let opts = inference::InferenceOptions {
+        skip_cross_cutting: true,
+        adr_filter: adr,
+        feature_filter: feature,
+    };
+    inference::run_inference(&graph, &opts, dry_run)?;
+    Ok(())
 }
 
 fn graph_coverage(domain: Option<String>, format: Option<String>, global_format: &str) -> BoxResult {
