@@ -15,7 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_046_context_depth_dedup"
-last-run: 2026-04-14T14:53:21.175394484+00:00
+last-run: 2026-04-14T15:02:41.236412349+00:00
 ---
 
 two paths from FT-001 to ADR-002 (via direct link and via depends-on chain). Assert ADR-002 appears exactly once in the bundle.

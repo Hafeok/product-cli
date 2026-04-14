@@ -358,10 +358,13 @@
 - [x] TC-065: schema_version_mismatch_format (scenario) — passing
 - [x] TC-179: ft_008_schema_migration_exit_criteria (exit-criteria) — passing
 
-### FT-014 — Status and Filters [~]
+### FT-014 — Status and Filters [x]
 
+- [x] ADR-003: Derived Graph — No Persistent Graph Store (accepted)
 - [x] ADR-007: Checklist is Generated, Never Hand-Edited (accepted)
+- [x] ADR-008: Embedded Oxigraph for SPARQL Queries (accepted)
 - [x] ADR-009: CI Integration via Exit Codes (accepted)
+- [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
 - [x] TC-009: graph_rebuild_from_scratch (scenario) — passing
 - [x] TC-010: graph_stale_ttl (scenario) — passing
 - [x] TC-021: checklist_generate (scenario) — passing
@@ -390,8 +393,17 @@
 - [x] TC-054: product impact ADR-001 (scenario) — passing
 - [x] TC-157: FT-016 graph model queries pass (exit-criteria) — passing
 - [x] TC-159: FT-017 checklist generation idempotent (exit-criteria) — passing
+- [x] TC-181: ft_026_ci_integration_pass (exit-criteria) — passing
 - [x] TC-209: checklist_gitignore_default (scenario) — passing
 - [x] TC-210: checklist_gitignore_opt_out (scenario) — passing
+- [x] TC-232: feature_next_phase_gate_blocks (scenario) — passing
+- [x] TC-233: feature_next_phase_gate_satisfied (scenario) — passing
+- [x] TC-234: feature_next_phase_gate_no_exit_criteria (exit-criteria) — passing
+- [x] TC-235: feature_next_ignore_gate (scenario) — passing
+- [x] TC-236: feature_next_gate_partial (scenario) — passing
+- [x] TC-237: status_shows_phase_gate (scenario) — passing
+- [x] TC-238: status_phase_detail (scenario) — passing
+- [x] TC-249: product feature next (scenario) — passing
 
 ## Phase 3
 

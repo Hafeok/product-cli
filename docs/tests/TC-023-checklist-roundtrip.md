@@ -12,7 +12,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_023_checklist_roundtrip"
-last-run: 2026-04-14T14:18:28.985359737+00:00
+last-run: 2026-04-14T15:02:41.236412349+00:00
 ---
 
 generate checklist, change a feature status, regenerate. Assert the checklist reflects the updated status with no residue from the previous generation.

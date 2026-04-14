@@ -12,7 +12,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_021_checklist_generate"
-last-run: 2026-04-14T14:18:28.985359737+00:00
+last-run: 2026-04-14T15:02:41.236412349+00:00
 ---
 
 set three features to `in-progress`, `complete`, `planned`. Run `product checklist generate`. Assert the checklist contains the correct status markers and no YAML front-matter.

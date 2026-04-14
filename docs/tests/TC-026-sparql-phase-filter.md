@@ -15,7 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_026_sparql_phase_filter"
-last-run: 2026-04-14T14:53:21.175394484+00:00
+last-run: 2026-04-14T15:02:41.236412349+00:00
 ---
 
 execute a query filtering features by `pm:phase 1`. Assert only phase-1 features appear in the result.
