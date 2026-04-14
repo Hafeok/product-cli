@@ -21,7 +21,7 @@
 - [x] TC-015: id_conflict (scenario) — passing
 - [x] TC-156: FT-001 core concepts validated (exit-criteria) — passing
 
-### FT-002 — Repository Layout [x]
+### FT-002 — Repository Layout [~]
 
 - [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
 - [x] ADR-004: Markdown as the Document Format (accepted)
@@ -31,7 +31,7 @@
 - [x] TC-008: frontmatter_missing_required (scenario) — passing
 - [x] TC-011: markdown_front_matter_strip (scenario) — passing
 - [x] TC-012: markdown_passthrough (scenario) — passing
-- [x] TC-154: FT-002 repository layout validated (exit-criteria) — passing
+- [ ] TC-154: FT-002 repository layout validated (exit-criteria) — unimplemented
 
 ### FT-003 — Front-Matter Schema [x]
 
@@ -69,7 +69,7 @@
 - [x] TC-070: tmp_cleanup_on_startup (scenario) — passing
 - [x] TC-161: FT-005 atomic writes and locking safe (exit-criteria) — passing
 
-### FT-007 — Formal Specification [x]
+### FT-007 — Formal Specification [~]
 
 - [x] ADR-004: Markdown as the Document Format (accepted)
 - [x] TC-011: markdown_front_matter_strip (scenario) — passing
@@ -84,7 +84,7 @@
 - [x] TC-015: id_conflict (scenario) — passing
 - [x] TC-160: FT-009 formal specification blocks parse (exit-criteria) — passing
 
-### FT-010 — CLI Commands [x]
+### FT-010 — CLI Commands [~]
 
 - [x] ADR-009: CI Integration via Exit Codes (accepted)
 - [x] ADR-013: Error Model and User-Facing Error Format (accepted)
@@ -92,13 +92,13 @@
 - [x] TC-028: exit_code_broken_link (exit-criteria) — passing
 - [x] TC-029: exit_code_warnings_only (exit-criteria) — passing
 - [x] TC-030: exit_code_ci_pipeline.sh (exit-criteria) — passing
-- [x] TC-055: error_broken_link_format (scenario) — passing
-- [x] TC-056: error_json_format (scenario) — passing
-- [x] TC-057: error_no_panic_on_bad_yaml (scenario) — passing
+- [ ] TC-055: error_broken_link_format (scenario) — unimplemented
+- [ ] TC-056: error_json_format (scenario) — unimplemented
+- [ ] TC-057: error_no_panic_on_bad_yaml (scenario) — unimplemented
 - [x] TC-058: error_internal_tier4 (scenario) — passing
 - [x] TC-059: error_stdout_clean (scenario) — passing
 
-### FT-011 — Context Bundle Format [x]
+### FT-011 — Context Bundle Format [~]
 
 - [x] ADR-006: Context Bundle as the Primary LLM Interface (accepted)
 - [x] ADR-008: Embedded Oxigraph for SPARQL Queries (accepted)
@@ -157,16 +157,16 @@
 - [x] TC-004: cargo build --release (scenario) — passing
 - [x] TC-164: FT-013 Rust implementation compiles clean (exit-criteria) — passing
 
-### FT-015 — Test Criteria [x]
+### FT-015 — Test Criteria [~]
 
 - [x] ADR-011: AISP-Influenced Formal Notation for Test Criteria (accepted)
 - [x] ADR-016: Formal Block Grammar (accepted)
 - [x] ADR-018: Testing Strategy — Property-Based, Integration, and LLM Benchmark (accepted)
-- [x] TC-035: formal_block_parse_types (scenario) — passing
-- [x] TC-036: formal_block_parse_invariants (invariant) — passing
-- [x] TC-037: formal_block_parse_scenario (scenario) — passing
-- [x] TC-038: formal_block_evidence (scenario) — passing
-- [x] TC-039: formal_block_missing_invariant_warning (invariant) — passing
+- [ ] TC-035: formal_block_parse_types (scenario) — unimplemented
+- [ ] TC-036: formal_block_parse_invariants (invariant) — unimplemented
+- [ ] TC-037: formal_block_parse_scenario (scenario) — unimplemented
+- [ ] TC-038: formal_block_evidence (scenario) — unimplemented
+- [ ] TC-039: formal_block_missing_invariant_warning (invariant) — unimplemented
 - [x] TC-040: context_bundle_formal_blocks_preserved (scenario) — passing
 - [x] TC-071: parse_types_block (scenario) — passing
 - [x] TC-072: parse_invariants_block (invariant) — passing
@@ -177,9 +177,9 @@
 - [x] TC-077: parse_empty_block_warning (scenario) — passing
 - [x] TC-078: parse_raw_roundtrip (scenario) — passing
 - [x] TC-079: parse_unknown_block_type (scenario) — passing
-- [x] TC-153: FT-015 all test-criteria scenarios pass (exit-criteria) — passing
+- [ ] TC-153: FT-015 all test-criteria scenarios pass (exit-criteria) — unimplemented
 
-### FT-016 — Graph Model [x]
+### FT-016 — Graph Model [~]
 
 - [x] ADR-003: Derived Graph — No Persistent Graph Store (accepted)
 - [x] ADR-008: Embedded Oxigraph for SPARQL Queries (accepted)
@@ -213,7 +213,7 @@
 - [ ] TC-238: status_phase_detail (scenario) — unimplemented
 - [ ] TC-249: product feature next (scenario) — unimplemented
 
-### FT-017 — Generated Checklist [x]
+### FT-017 — Generated Checklist [~]
 
 - [x] ADR-007: Checklist is Generated, Never Hand-Edited (accepted)
 - [x] TC-021: checklist_generate (scenario) — passing
@@ -240,7 +240,7 @@
 - [x] TC-138: acknowledgement_closes_gap (scenario) — passing
 - [x] TC-139: domains_vocab_unknown (scenario) — passing
 
-### FT-020 — Migration Path [x]
+### FT-020 — Migration Path [~]
 
 - [x] ADR-017: Migration Command Specification (accepted)
 - [x] ADR-014: Schema Versioning and Migration Path (accepted)
@@ -258,6 +258,21 @@
 - [x] TC-085: validates.features (scenario) — passing
 - [x] TC-162: FT-020 migration extracts and confirms (exit-criteria) — passing
 - [ ] TC-275: ### Exit criteria (exit-criteria) — unimplemented
+
+### FT-034 — Content Hash Immutability [ ]
+
+- [ ] ADR-032: Content Hash Immutability Enforcement (proposed)
+- [ ] TC-420: Hash computed on ADR acceptance (scenario) — unimplemented
+- [ ] TC-421: E014 on accepted ADR body tamper (scenario) — unimplemented
+- [ ] TC-422: E015 on sealed TC body tamper (scenario) — unimplemented
+- [ ] TC-423: ADR amend records amendment and recomputes hash (scenario) — unimplemented
+- [ ] TC-424: W016 for accepted ADR without content-hash (scenario) — unimplemented
+- [ ] TC-425: MCP write tools cannot modify accepted ADR body (scenario) — unimplemented
+- [ ] TC-426: Hash seal computes and writes TC content-hash (scenario) — unimplemented
+- [ ] TC-427: Hash verify checks content-hashes independently (scenario) — unimplemented
+- [ ] TC-428: ADR rehash seals pre-existing accepted ADRs (scenario) — unimplemented
+- [ ] TC-429: Mutable front-matter does not affect content-hash (invariant) — unimplemented
+- [ ] TC-430: Content hash system passes on sealed repository (exit-criteria) — unimplemented
 
 ## Phase 2
 
@@ -285,7 +300,7 @@
 - [x] TC-155: FT-003 front-matter schema fully validated (exit-criteria) — passing
 - [x] TC-160: FT-009 formal specification blocks parse (exit-criteria) — passing
 
-### FT-006 — Impact Analysis [x]
+### FT-006 — Impact Analysis [~]
 
 - [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
 - [x] TC-009: graph_rebuild_from_scratch (scenario) — passing
@@ -317,7 +332,7 @@
 - [ ] TC-238: status_phase_detail (scenario) — unimplemented
 - [ ] TC-249: product feature next (scenario) — unimplemented
 
-### FT-008 — Schema Migration [x]
+### FT-008 — Schema Migration [~]
 
 - [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
 - [x] ADR-014: Schema Versioning and Migration Path (accepted)
@@ -330,7 +345,7 @@
 - [x] TC-065: schema_version_mismatch_format (scenario) — passing
 - [ ] TC-179: ft_008_schema_migration_exit_criteria (exit-criteria) — unimplemented
 
-### FT-014 — Status and Filters [x]
+### FT-014 — Status and Filters [~]
 
 - [x] ADR-007: Checklist is Generated, Never Hand-Edited (accepted)
 - [x] ADR-009: CI Integration via Exit Codes (accepted)
@@ -367,7 +382,7 @@
 
 ## Phase 3
 
-### FT-024 — Graph Intelligence [x]
+### FT-024 — Graph Intelligence [~]
 
 - [x] ADR-008: Embedded Oxigraph for SPARQL Queries (accepted)
 - [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
@@ -414,19 +429,19 @@
 ### FT-031 — Code Structure and Quality Standards [ ]
 
 - [x] ADR-029: Code Structure and Quality Standards (accepted)
-- [x] TC-369: file_length_passes (scenario) — passing
-- [x] TC-370: file_length_warn (scenario) — passing
-- [x] TC-371: file_length_fail (scenario) — passing
-- [x] TC-372: function_length_passes (scenario) — passing
-- [x] TC-373: function_length_warn (scenario) — passing
-- [x] TC-374: function_length_fail (scenario) — passing
-- [x] TC-375: module_structure_passes (scenario) — passing
-- [x] TC-376: module_structure_missing (scenario) — passing
-- [x] TC-377: module_structure_main_too_long (scenario) — passing
-- [x] TC-378: single_responsibility_passes (scenario) — passing
-- [x] TC-379: single_responsibility_missing (scenario) — passing
-- [x] TC-380: single_responsibility_and (scenario) — passing
-- [x] TC-402: All source files under 400 lines and all quality checks pass (exit-criteria) — passing
+- [ ] TC-369: file_length_passes (scenario) — unimplemented
+- [ ] TC-370: file_length_warn (scenario) — unimplemented
+- [ ] TC-371: file_length_fail (scenario) — unimplemented
+- [ ] TC-372: function_length_passes (scenario) — unimplemented
+- [ ] TC-373: function_length_warn (scenario) — unimplemented
+- [ ] TC-374: function_length_fail (scenario) — unimplemented
+- [ ] TC-375: module_structure_passes (scenario) — unimplemented
+- [ ] TC-376: module_structure_missing (scenario) — unimplemented
+- [ ] TC-377: module_structure_main_too_long (scenario) — unimplemented
+- [ ] TC-378: single_responsibility_passes (scenario) — unimplemented
+- [ ] TC-379: single_responsibility_missing (scenario) — unimplemented
+- [ ] TC-380: single_responsibility_and (scenario) — unimplemented
+- [ ] TC-402: All source files under 400 lines and all quality checks pass (exit-criteria) — unimplemented
 
 ### FT-032 — Dependency Artifact Type [ ]
 
@@ -454,22 +469,42 @@
 - [ ] TC-401: product impact DEP-001 (scenario) — unimplemented
 - [ ] TC-403: Dependency BOM and impact analysis produce correct output (exit-criteria) — unimplemented
 
+### FT-033 — Agent Context Generation [ ]
+
+- [ ] ADR-031: Agent Context Generation and Schema MCP Tool (proposed)
+- [ ] TC-404: product schema returns feature front-matter schema (scenario) — unimplemented
+- [ ] TC-405: product schema returns ADR front-matter schema (scenario) — unimplemented
+- [ ] TC-406: product schema returns dependency front-matter schema (scenario) — unimplemented
+- [ ] TC-407: product schema --all returns all schemas (scenario) — unimplemented
+- [ ] TC-408: product agent-init generates AGENT.md from repo state (scenario) — unimplemented
+- [ ] TC-409: AGENT.md contains current front-matter schemas (scenario) — unimplemented
+- [ ] TC-410: AGENT.md contains working protocol section (scenario) — unimplemented
+- [ ] TC-411: AGENT.md contains current repository state summary (scenario) — unimplemented
+- [ ] TC-412: AGENT.md contains domain vocabulary from product.toml (scenario) — unimplemented
+- [ ] TC-413: AGENT.md contains MCP tool usage guide (scenario) — unimplemented
+- [ ] TC-414: AGENT.md is regenerated not hand-edited (invariant) — unimplemented
+- [ ] TC-415: product agent-init --watch regenerates on graph change (scenario) — unimplemented
+- [ ] TC-416: product_schema MCP tool returns schema for artifact type (scenario) — unimplemented
+- [ ] TC-417: product_agent_context MCP tool returns AGENT.md content (scenario) — unimplemented
+- [ ] TC-418: agent-context config controls AGENT.md sections (scenario) — unimplemented
+- [ ] TC-419: Agent context generation exit criteria (exit-criteria) — unimplemented
+
 ## Phase 4
 
-### FT-029 — Gap Analysis [x]
+### FT-029 — Gap Analysis [~]
 
 - [x] ADR-019: Continuous Gap Analysis — LLM-Driven Specification Review in CI (accepted)
 - [x] TC-086: gap_check_single_adr (scenario) — passing
-- [x] TC-087: gap_check_no_gaps (scenario) — passing
-- [x] TC-088: gap_check_suppressed (scenario) — passing
+- [ ] TC-087: gap_check_no_gaps (scenario) — unimplemented
+- [ ] TC-088: gap_check_suppressed (scenario) — unimplemented
 - [x] TC-089: gap_check_resolved (scenario) — passing
 - [x] TC-090: gap_check_changed_scoping (scenario) — passing
 - [x] TC-091: gap_check_model_error_exits_2 (exit-criteria) — passing
 - [x] TC-092: gap_check_invalid_json_discarded (scenario) — passing
-- [x] TC-093: gap_id_deterministic (scenario) — passing
-- [x] TC-094: gap_suppress_mutates_baseline (scenario) — passing
+- [ ] TC-093: gap_id_deterministic (scenario) — unimplemented
+- [ ] TC-094: gap_suppress_mutates_baseline (scenario) — unimplemented
 - [x] TC-095: gap_changed_expansion (scenario) — passing
-- [x] TC-096: gap_id_format (scenario) — passing
+- [ ] TC-096: gap_id_format (scenario) — unimplemented
 - [x] TC-097: gap_stdout_stderr_separation (scenario) — passing
 - [x] TC-098: gap_json_schema (scenario) — passing
 
@@ -500,21 +535,21 @@
 - [x] TC-150: product preflight FT-001 (scenario) — passing
 - [x] TC-151: product graph coverage (scenario) — passing
 
-### FT-021 — MCP Server [x]
+### FT-021 — MCP Server [~]
 
 - [x] ADR-020: MCP Server — Dual Transport (stdio and HTTP) (accepted)
-- [x] TC-099: mcp_stdio_tool_call (scenario) — passing
+- [ ] TC-099: mcp_stdio_tool_call (scenario) — unimplemented
 - [x] TC-100: mcp_http_tool_call (scenario) — passing
 - [x] TC-101: mcp_http_no_token_401 (scenario) — passing
 - [x] TC-102: mcp_http_wrong_token_401 (scenario) — passing
-- [x] TC-103: mcp_http_write_disabled (scenario) — passing
+- [ ] TC-103: mcp_http_write_disabled (scenario) — unimplemented
 - [x] TC-104: mcp_http_concurrent_writes (scenario) — passing
 - [x] TC-105: mcp_http_graceful_shutdown (scenario) — passing
 - [x] TC-106: mcp_tool_registry_shared (scenario) — passing
 - [x] TC-107: mcp_cors_header (scenario) — passing
 - [x] TC-165: FT-021 MCP server stdio and HTTP pass (exit-criteria) — passing
 
-### FT-022 — Authoring Sessions [x]
+### FT-022 — Authoring Sessions [~]
 
 - [x] ADR-022: Authoring Resources — System Prompts and Pre-Commit Review (accepted)
 - [x] TC-116: pre_commit_hook_installed (scenario) — passing
@@ -523,15 +558,15 @@
 - [x] TC-119: adr_review_structural_missing_section (scenario) — passing
 - [x] TC-120: adr_review_structural_no_features (scenario) — passing
 - [x] TC-166: FT-022 authoring session flow complete (exit-criteria) — passing
-- [x] TC-315: prompts_init_creates_files (scenario) — passing
-- [x] TC-316: prompts_list_output (scenario) — passing
-- [x] TC-317: prompts_get_stdout (scenario) — passing
-- [x] TC-321: adr_review_missing_section (scenario) — passing
-- [x] TC-322: adr_review_no_features (scenario) — passing
-- [x] TC-323: mcp_prompts_list_tool (scenario) — passing
-- [x] TC-324: mcp_prompts_get_tool (scenario) — passing
+- [ ] TC-315: prompts_init_creates_files (scenario) — unimplemented
+- [ ] TC-316: prompts_list_output (scenario) — unimplemented
+- [ ] TC-317: prompts_get_stdout (scenario) — unimplemented
+- [ ] TC-321: adr_review_missing_section (scenario) — unimplemented
+- [ ] TC-322: adr_review_no_features (scenario) — unimplemented
+- [ ] TC-323: mcp_prompts_list_tool (scenario) — unimplemented
+- [ ] TC-324: mcp_prompts_get_tool (scenario) — unimplemented
 
-### FT-023 — Agent Orchestration [x]
+### FT-023 — Agent Orchestration [~]
 
 - [x] ADR-021: Implementation Pipeline — `product verify` and the Knowledge Boundary (accepted)
 - [x] TC-108: implement_gap_gate_blocks (scenario) — passing
@@ -539,12 +574,12 @@
 - [x] TC-110: implement_dry_run (scenario) — passing
 - [x] TC-111: verify_all_pass_completes_feature (scenario) — passing
 - [x] TC-112: verify_one_fail_keeps_in_progress (scenario) — passing
-- [x] TC-113: verify_unrunnable_no_block (scenario) — passing
+- [x] TC-113: verify_unimplemented_blocks (scenario) — passing
 - [x] TC-114: verify_updates_frontmatter (scenario) — passing
 - [x] TC-115: verify_regenerates_checklist (scenario) — passing
 - [x] TC-167: FT-023 implement and verify orchestrate (exit-criteria) — passing
 - [ ] TC-304: verify_one_fail_in_progress (scenario) — unimplemented
-- [ ] TC-305: verify_unrunnable_no_runner (scenario) — unimplemented
+- [ ] TC-305: verify_unimplemented_no_runner_blocks (scenario) — unimplemented
 - [ ] TC-306: verify_updates_tc_frontmatter (scenario) — unimplemented
 - [ ] TC-307: verify_failure_message_written (scenario) — unimplemented
 - [ ] TC-309: verify_platform_runs_cross_cutting (scenario) — unimplemented
@@ -586,7 +621,7 @@
 - [x] TC-130: metrics_trend_renders (scenario) — passing
 - [x] TC-131: metrics_jsonl_merge_conflict_safe (scenario) — passing
 
-### FT-030 — Codebase Onboarding [x]
+### FT-030 — Codebase Onboarding [~]
 
 - [x] ADR-027: Transitive TC Link Inference — `product migrate link-tests` and `product graph infer` (accepted)
 - [x] TC-168: Scan produces candidates with valid evidence paths (scenario) — passing
@@ -600,17 +635,17 @@
 - [x] TC-176: Seed dry-run writes no files (scenario) — passing
 - [x] TC-177: End-to-end onboard produces graph with no structural errors (exit-criteria) — passing
 - [x] TC-178: Seeded ADRs have no G005 contradictions after gap check (exit-criteria) — passing
-- [x] TC-356: link_tests_basic (scenario) — passing
-- [x] TC-357: link_tests_multi_feature (scenario) — passing
-- [x] TC-358: link_tests_cross_cutting_excluded (scenario) — passing
-- [x] TC-359: link_tests_idempotent (scenario) — passing
-- [x] TC-360: link_tests_dry_run_no_write (scenario) — passing
-- [x] TC-361: link_tests_adr_scope (scenario) — passing
-- [x] TC-362: graph_infer_general (scenario) — passing
-- [x] TC-363: feature_link_interactive_confirm (scenario) — passing
-- [x] TC-364: feature_link_interactive_decline (scenario) — passing
-- [x] TC-365: reverse_inference_updates_feature (scenario) — passing
-- [x] TC-366: atomic_batch_write (scenario) — passing
-- [x] TC-367: platform_verify_cross_cutting (scenario) — passing
-- [x] TC-368: product migrate link-tests (scenario) — passing
+- [ ] TC-356: link_tests_basic (scenario) — unimplemented
+- [ ] TC-357: link_tests_multi_feature (scenario) — unimplemented
+- [ ] TC-358: link_tests_cross_cutting_excluded (scenario) — unimplemented
+- [ ] TC-359: link_tests_idempotent (scenario) — unimplemented
+- [ ] TC-360: link_tests_dry_run_no_write (scenario) — unimplemented
+- [ ] TC-361: link_tests_adr_scope (scenario) — unimplemented
+- [ ] TC-362: graph_infer_general (scenario) — unimplemented
+- [ ] TC-363: feature_link_interactive_confirm (scenario) — unimplemented
+- [ ] TC-364: feature_link_interactive_decline (scenario) — unimplemented
+- [ ] TC-365: reverse_inference_updates_feature (scenario) — unimplemented
+- [ ] TC-366: atomic_batch_write (scenario) — unimplemented
+- [ ] TC-367: platform_verify_cross_cutting (scenario) — unimplemented
+- [ ] TC-368: product migrate link-tests (scenario) — unimplemented
 

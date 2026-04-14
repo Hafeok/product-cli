@@ -235,6 +235,11 @@ scope: domain               # cross-cutting | domain | feature-specific (default
 source-files:                # optional: source files that implement this decision
   - src/consensus/raft.rs    # used by `product drift check` for precise analysis
   - src/consensus/leader.rs  # if absent, Product uses pattern-based discovery
+content-hash: sha256:a3f9...  # optional: computed on acceptance (ADR-032)
+amendments:                   # optional: audit trail for post-acceptance edits
+  - date: 2026-04-14T09:00:00Z
+    reason: "Fix typo in rationale"
+    previous-hash: sha256:b4c5...
 ---
 ```
 
@@ -272,6 +277,7 @@ runner-timeout: 60s          # optional, default 30s
 requires: [binary-compiled]  # optional — declarative prerequisites
                              # names defined in [verify.prerequisites] in product.toml
                              # Product checks these before running — never satisfies them
+content-hash: sha256:a3f9...  # optional: computed by `product hash seal` (ADR-032)
 ---
 
 ## Description
@@ -596,9 +602,17 @@ product feature link FT-001 --adr ADR-002  # add edge (mutates front-matter)
 product feature link FT-001 --test TC-002
 product feature link FT-001 --dep DEP-001  # add uses edge
 
-product adr status ADR-002 accepted        # set ADR status
+product adr status ADR-002 accepted        # set ADR status (writes content-hash)
+product adr amend ADR-002 --reason "..."   # record amendment, recompute hash (ADR-032)
+product adr rehash ADR-002                 # seal accepted ADR that predates content-hash
+product adr rehash --all                   # seal all accepted ADRs without content-hash
 product test status TC-002 passing         # set test status
 product feature status FT-001 complete     # set feature status
+
+product hash seal TC-002                   # compute and write content-hash for a TC
+product hash seal --all-unsealed           # seal all TCs without a content-hash
+product hash verify                        # verify all content-hashes (fast integrity check)
+product hash verify ADR-002                # verify one artifact's content-hash
 ```
 
 ### Migration
@@ -933,6 +947,8 @@ Errors (exit code 1):
 | E011 | `domains-acknowledged` entry present with empty reasoning |
 | E012 | Domain declared in front-matter not present in `product.toml` vocabulary |
 | E013 | Dependency has no linked ADR — every dependency requires a governing decision |
+| E014 | ADR body or title changed after acceptance — content-hash mismatch (ADR-032) |
+| E015 | TC body or protected fields changed after sealing — content-hash mismatch (ADR-032) |
 
 Warnings (exit code 2 when no errors):
 
@@ -952,6 +968,7 @@ Warnings (exit code 2 when no errors):
 | W012 | Feature has no `bundle` measurement — run `product context FT-XXX --measure` |
 | W013 | Feature uses a deprecated or migrating dependency |
 | W015 | Dependency `availability-check` failed during preflight |
+| W016 | Accepted ADR has no content-hash — seal with `product adr rehash` (ADR-032) |
 
 Schema errors (exit code 1):
 
@@ -1313,6 +1330,8 @@ MCP tools are a curated subset of the CLI. All tools are read-safe by default. W
 | `product_feature_link` | `product feature link FT-XXX --adr ADR-XXX` |
 | `product_feature_acknowledge` | `product feature acknowledge FT-XXX --domain D --reason "..."` |
 | `product_adr_status` | `product adr status ADR-XXX accepted` |
+| `product_adr_amend` | `product adr amend ADR-XXX --reason "..."` |
+| `product_hash_seal` | `product hash seal TC-XXX` |
 | `product_test_status` | `product test status TC-XXX passing` |
 | `product_feature_status` | `product feature status FT-XXX complete` |
 

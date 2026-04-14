@@ -4145,3 +4145,104 @@ Exit criteria:
 - `product dep bom` on the migrated PiCloud repository produces a complete BOM with correct type groupings.
 - `product impact DEP-001` returns at least FT-001 and FT-002 after migration and feature→DEP link setup.
 - TC `requires: [DEP-005]` resolves to DEP-005's availability check without requiring a matching entry in `[verify.prerequisites]`.
+
+---
+
+## ADR-032: Content Hash Immutability Enforcement
+
+**Status:** Proposed
+
+**Context:** Product manages long-lived specification artifacts whose content forms the authoritative basis for agent-driven implementation. An implementing agent that silently modifies an accepted ADR's rationale while working on a feature can invalidate reasoning that other agents and humans depend on. Similarly, if a TC's formal specification blocks or ADR linkage change after the TC is established, the test no longer validates what it claims to validate. There is currently no mechanism to detect these mutations.
+
+Not all fields have the same mutability profile. ADR status, links, and domains change throughout the lifecycle. But the body text and title of an accepted ADR represent a frozen decision — the correct action for changing them is a superseding ADR, not an edit.
+
+**Decision:** Introduce a `content-hash` field in ADR and TC front-matter. The hash is computed over protected content (normalized body text + protected front-matter fields) at the moment of acceptance (ADRs) or explicit sealing (TCs). `product graph check` verifies the hash on every run and emits hard errors on mismatch. A `product adr amend` command provides the legitimate amendment path with a mandatory reason and audit trail.
+
+### Mutability Matrix
+
+**ADR — mutable always:** `status`, `superseded-by`, `features`, `domains`, `scope`, `source-files`
+**ADR — immutable once accepted:** body text, `title`
+
+**TC — mutable always:** `status`, `last-run`, `failure-message`, `last-run-duration`, `validates.features`, `runner`, `runner-args`, `runner-timeout`, `requires`
+**TC — immutable once sealed:** body text, `type`, `validates.adrs`
+
+**Feature:** `id` and `title` immutable by convention; all other fields mutable.
+**Dependency:** `id` and `title` immutable by convention; all other fields mutable.
+
+### Hash Computation
+
+Hash input: normalized body text (LF line endings, trimmed) + protected front-matter fields (`title` for ADRs; `title`, `type`, `validates.adrs` for TCs). Excluded from hash: `content-hash`, `amendments`, and all mutable fields. Algorithm: SHA-256, hex-encoded, prefixed `sha256:`.
+
+### When Hash is Written
+
+- **ADR:** `product adr status ADR-XXX accepted` computes and writes the hash.
+- **TC:** `product hash seal TC-XXX` computes and writes the hash.
+
+### When Hash is Checked
+
+`product graph check` verifies all content-hashes:
+
+| Condition | Code | Severity |
+|---|---|---|
+| Accepted ADR hash mismatch | E014 | Error (exit 1) |
+| Sealed TC hash mismatch | E015 | Error (exit 1) |
+| Accepted ADR without content-hash | W016 | Warning (exit 2) |
+
+### Amendment Path
+
+```bash
+product adr amend ADR-002 --reason "Fix typo: 'openraft' misspelled"
+```
+
+Records amendment in front-matter (`date`, `reason`, `previous-hash`), recomputes `content-hash`. `--reason` is mandatory.
+
+For TCs, there is no amend command. If a sealed TC's specification changes, create a new TC.
+
+### New CLI Commands
+
+```
+product adr amend ADR-XXX --reason "..."   # record amendment, recompute hash
+product adr rehash ADR-XXX                 # seal accepted ADR that predates this feature
+product adr rehash --all                   # seal all accepted ADRs without content-hash
+product hash seal TC-XXX                   # compute and write content-hash for a TC
+product hash seal --all-unsealed           # seal all TCs without a content-hash
+product hash verify [ARTIFACT-ID]          # verify one or all content-hashes
+```
+
+### MCP Tools
+
+Add `product_adr_amend` and `product_hash_seal` as write tools. No MCP tool may write to an accepted ADR's body. `product_adr_status` writes `content-hash` when the new status is `accepted`. Link tools (`product_feature_link`) only touch mutable front-matter fields and are unaffected.
+
+**Rationale:**
+- Content-hash is the standard pattern for detecting unauthorized modification. SHA-256 is already in the dependency tree (`sha2` crate for gap ID generation).
+- The amendment path with mandatory reason preserves the ability to fix genuine errors while creating accountability.
+- Separating E014 (ADRs) and E015 (TCs) allows different remediation paths: ADRs can be amended, TCs should be replaced.
+- W016 provides a migration path — existing repos can adopt incrementally.
+
+**Rejected alternatives:**
+- Git hooks only — bypassable, no audit trail, does not protect against programmatic agents.
+- Immutable files (chmod/chattr) — breaks editor workflows, not portable.
+- Hash over entire file including front-matter — false positives on every status/link change.
+- Amend command for TCs — creates version confusion about which specification a passing test validates.
+- Automatic hash on creation — prevents legitimate draft editing.
+
+**Test coverage:**
+
+Scenarios:
+- `tc_420_hash_computed_on_adr_acceptance.rs` — create ADR, accept it, verify `content-hash` field is written with correct SHA-256.
+- `tc_421_e014_on_accepted_adr_body_tamper.rs` — accept ADR, modify body, run `graph check`, assert E014 with expected/actual hashes.
+- `tc_422_e015_on_sealed_tc_body_tamper.rs` — seal TC, modify body, run `graph check`, assert E015.
+- `tc_423_adr_amend_records_amendment.rs` — accept ADR, modify body, run `adr amend --reason "..."`, assert amendments array and updated hash.
+- `tc_424_w016_accepted_adr_without_hash.rs` — accepted ADR without `content-hash`, run `graph check`, assert W016.
+- `tc_425_mcp_write_protection.rs` — MCP write tool cannot modify accepted ADR body.
+- `tc_426_hash_seal_tc.rs` — `product hash seal TC-XXX` writes correct content-hash.
+- `tc_427_hash_verify_independent.rs` — `product hash verify` checks hashes without full graph check.
+- `tc_428_adr_rehash.rs` — `product adr rehash` seals accepted ADRs without content-hash.
+
+Invariants:
+- Mutable front-matter fields (status, features, domains, etc.) do not affect content-hash for any ADR or TC.
+
+Exit criteria:
+- `product graph check` on the migrated repository with all accepted ADRs sealed produces zero E014/E015 errors.
+- `product adr amend` followed by `product graph check` passes cleanly.
+- `product hash verify` exit code 0 when all hashes are valid, exit code 1 on any mismatch.
