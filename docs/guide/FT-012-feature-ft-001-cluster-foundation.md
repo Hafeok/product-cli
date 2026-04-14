@@ -1,182 +1,218 @@
-The file write was denied. Here's the complete documentation for FT-012 — Cluster Foundation:
-
----
-
 ## Overview
 
-FT-012 (Cluster Foundation) validates that the Product CLI satisfies its fundamental deployment constraint: a single statically-linked Rust binary that compiles for ARM64 (Apple Silicon, Raspberry Pi), x86_64 (Linux CI), and has no dynamic dependencies beyond libc. This feature exists because Product is a companion tool for PiCloud, which runs on a heterogeneous cluster of ARM64 and x86_64 nodes — every target must produce a working binary from a single `cargo build --release`. The decision to use Rust for this purpose is recorded in ADR-001.
+Cluster Foundation establishes the deployment baseline for Product CLI: a single statically-linked Rust binary that compiles cleanly for both ARM64 and x86_64 targets with no runtime dependencies beyond libc. This foundation exists because Product must run on developer laptops, CI pipelines, and Raspberry Pi nodes without an installer or language runtime, as decided in ADR-001.
 
 ## Tutorial
 
-### Verifying the cluster foundation on your machine
+### Verify your build environment
 
-1. Confirm the project compiles cleanly with a release build:
+Before working with cross-compilation targets, confirm that the default release build succeeds on your machine.
+
+1. Build the release binary:
 
    ```bash
    cargo build --release
    ```
 
-   This must exit with zero errors and zero warnings.
-
-2. Run `product verify` against FT-012 to execute all linked test criteria:
+2. Confirm the binary exists:
 
    ```bash
-   product verify FT-012
+   ls -lh target/release/product
    ```
 
-   Product runs the four scenario tests (TC-001 through TC-004) and the exit-criteria test (TC-163). If all pass, the feature status remains `complete` and `CHECKLIST.md` is regenerated.
-
-3. Inspect the context bundle for the feature to see what ADRs and tests back it:
+3. Run the binary to verify it works:
 
    ```bash
-   product context FT-012
+   ./target/release/product --help
    ```
 
-   The output includes ADR-001 (Rust as Implementation Language) and all five test criteria. This bundle is what `product implement` would pass to a spawned agent if the feature were being implemented.
+### Cross-compile for ARM64
 
-### Cross-compiling for a specific target
+If you are deploying to a Raspberry Pi or another ARM64 target, build for `aarch64-unknown-linux-gnu`.
 
-4. Install the ARM64 cross-compilation target (one-time setup):
+1. Install the cross-compilation target (one-time setup):
 
    ```bash
    rustup target add aarch64-unknown-linux-gnu
    ```
 
-5. Build for ARM64:
+2. Build the release binary for ARM64:
 
    ```bash
    cargo build --release --target aarch64-unknown-linux-gnu
    ```
 
-   TC-001 asserts this completes with zero errors and zero warnings.
+3. Verify the build completes with zero errors and zero warnings.
 
-6. Build for x86_64 musl (static linking):
+### Cross-compile for x86_64 (musl)
+
+For fully static Linux binaries targeting x86_64, build against musl.
+
+1. Install the target:
+
+   ```bash
+   rustup target add x86_64-unknown-linux-musl
+   ```
+
+2. Build:
 
    ```bash
    cargo build --release --target x86_64-unknown-linux-musl
    ```
 
-   TC-002 asserts this completes with zero errors and zero warnings.
+3. Verify the build completes with zero errors and zero warnings.
+
+### Check dynamic dependencies
+
+After building a Linux binary, confirm it has no unexpected dynamic dependencies.
+
+1. Run `ldd` against the compiled binary:
+
+   ```bash
+   ldd target/release/product
+   ```
+
+2. The output should list only `libc` (and its loader). Any other dynamic library indicates a dependency that violates the single-binary constraint.
 
 ## How-to Guide
 
-### Run the full cluster foundation validation
+### How to validate the full cluster foundation
 
-```bash
-product verify FT-012
-```
+Run all checks in sequence to confirm the deployment baseline holds.
 
-This executes all five test criteria linked to FT-012 via their `runner: cargo-test` configuration. On success, each TC's `status` field in its front-matter is updated to `passing`.
+1. Build the release binary:
 
-### Check the binary for unexpected dynamic dependencies
+   ```bash
+   cargo build --release
+   ```
 
-On a Linux host, after building the release binary:
+2. Run clippy with the project's lint policy:
 
-```bash
-ldd target/release/product
-```
+   ```bash
+   cargo clippy -- -D warnings -D clippy::unwrap_used
+   ```
 
-The output must show no dynamic dependencies beyond `libc`. Any additional shared library is a failure condition (TC-003).
+3. Run the test suite:
 
-### View the cluster foundation's position in the knowledge graph
+   ```bash
+   cargo test
+   ```
 
-```bash
-product context FT-012 --depth 2
-```
+4. Verify the feature using Product's test runner:
 
-At depth 2, the bundle includes transitive artifacts — other features that share ADR-001 and their test criteria — giving visibility into how the single-binary constraint connects to the rest of the project.
+   ```bash
+   product verify FT-012
+   ```
 
-### Check for specification drift
+5. Confirm all linked test criteria (TC-001 through TC-004, TC-156, TC-163, TC-164) report as passing.
 
-```bash
-product drift check
-```
+### How to check that a new dependency does not break the single-binary constraint
 
-If ADR-001 has been modified or if the binary target list has changed without updating the test criteria, drift detection flags the inconsistency.
+When adding a crate to `Cargo.toml`, verify it does not pull in system libraries.
 
-### Regenerate the checklist after verification
+1. Add the dependency and rebuild:
 
-Verification automatically regenerates `CHECKLIST.md`. To regenerate it manually:
+   ```bash
+   cargo build --release
+   ```
 
-```bash
-product checklist generate
-```
+2. Check for new dynamic dependencies:
+
+   ```bash
+   ldd target/release/product
+   ```
+
+3. If `ldd` reports libraries beyond `libc`, investigate the new crate. Prefer crates that are pure Rust or that link statically.
+
+### How to verify the Rust edition and build cleanliness
+
+1. Check the edition field in `Cargo.toml`:
+
+   ```bash
+   grep '^edition' Cargo.toml
+   ```
+
+   It must be `2021` or later.
+
+2. Run a clean, warning-free build:
+
+   ```bash
+   cargo build --release 2>&1
+   ```
+
+   Zero errors and zero warnings are required.
+
+3. Run clippy to enforce the zero-unwrap policy:
+
+   ```bash
+   cargo clippy -- -D warnings -D clippy::unwrap_used
+   ```
 
 ## Reference
 
-### Feature metadata
+### Supported compilation targets
 
-| Field | Value |
-|-------|-------|
-| ID | FT-012 |
-| Title | Feature: FT-001 — Cluster Foundation |
-| Phase | 1 |
-| Status | Complete |
-| Depends on | (none) |
-| ADRs | ADR-001 |
-| Test criteria | TC-001, TC-002, TC-003, TC-004, TC-163 |
+| Target triple                    | Architecture | Use case                        |
+|----------------------------------|--------------|---------------------------------|
+| `aarch64-unknown-linux-gnu`      | ARM64        | Raspberry Pi, ARM64 Linux hosts |
+| `x86_64-unknown-linux-musl`      | x86_64       | CI pipelines, x86 Linux servers |
+| Default host target              | varies       | Developer laptops               |
 
-### Test criteria
+### Test criteria linked to FT-012
 
-| TC | Title | Type | What it validates |
-|----|-------|------|-------------------|
-| TC-001 | binary_compiles_arm64 | scenario | `cargo build --release --target aarch64-unknown-linux-gnu` exits cleanly |
-| TC-002 | binary_compiles_x86 | scenario | `cargo build --release --target x86_64-unknown-linux-musl` exits cleanly |
-| TC-003 | binary_no_deps.sh | scenario | `ldd` reports no dynamic deps beyond libc |
-| TC-004 | cargo build --release | scenario | Default release build succeeds |
-| TC-163 | FT-012 cluster foundation binary validated | exit-criteria | All four scenario TCs pass |
+| TC ID  | Title                                        | Type          | What it validates                                                        |
+|--------|----------------------------------------------|---------------|--------------------------------------------------------------------------|
+| TC-001 | binary_compiles_arm64                        | scenario      | `cargo build --release --target aarch64-unknown-linux-gnu` succeeds      |
+| TC-002 | binary_compiles_x86                          | scenario      | `cargo build --release --target x86_64-unknown-linux-musl` succeeds      |
+| TC-003 | binary_no_deps.sh                            | scenario      | `ldd` reports no dynamic dependencies beyond libc                        |
+| TC-004 | cargo build --release                        | scenario      | Default release build succeeds                                           |
+| TC-156 | FT-001 core concepts validated               | exit-criteria | Aggregates core concept scenarios (TC-011 through TC-015, TC-001–TC-004) |
+| TC-163 | FT-012 cluster foundation binary validated   | exit-criteria | All cluster foundation scenarios pass                                    |
+| TC-164 | FT-013 Rust implementation compiles clean    | exit-criteria | Clean build, zero clippy warnings, Rust edition 2021+                    |
 
-### TC runner configuration
+### Build commands
 
-Each TC uses the `cargo-test` runner. The `runner-args` field contains the integration test function name:
+```bash
+# Default release build
+cargo build --release
 
-```yaml
-runner: cargo-test
-runner-args: "tc_001_binary_compiles_arm64"
+# ARM64 cross-compilation
+cargo build --release --target aarch64-unknown-linux-gnu
+
+# x86_64 static (musl) build
+cargo build --release --target x86_64-unknown-linux-musl
+
+# Lint check (project policy)
+cargo clippy -- -D warnings -D clippy::unwrap_used
+
+# Dependency audit
+ldd target/release/product
 ```
 
-The function name follows the pattern `tc_XXX_snake_case_title` and must match a `#[test] fn` in `tests/integration.rs`.
+### Exit codes
 
-### Compilation targets
-
-| Target triple | Architecture | Use case |
-|---------------|-------------|----------|
-| `aarch64-unknown-linux-gnu` | ARM64 | Raspberry Pi cluster nodes, Apple Silicon (Linux) |
-| `x86_64-unknown-linux-musl` | x86_64 | CI pipelines, Linux developer machines (static) |
-| Default host target | Host | Local development (`cargo build --release`) |
-
-### Relevant commands
-
-| Command | Purpose |
-|---------|---------|
-| `product verify FT-012` | Run all TCs and update status |
-| `product context FT-012` | Assemble the context bundle |
-| `product gap check` | Detect specification gaps |
-| `product drift check` | Detect spec-vs-code drift |
-| `product checklist generate` | Regenerate CHECKLIST.md |
+Build and clippy commands use standard Cargo exit codes: `0` for success, non-zero for failure. Any non-zero exit from `cargo build` or `cargo clippy` means the cluster foundation constraint is not met.
 
 ## Explanation
 
-### Why a dedicated feature for binary validation
+### Why a single binary matters
 
-The single-binary deployment constraint is not a nice-to-have — it is the reason Rust was chosen over TypeScript, Go, and Python (ADR-001). If any target fails to compile, or if a dynamic dependency creeps in, the tool cannot be deployed to the PiCloud cluster. FT-012 codifies this constraint as a first-class feature with its own test criteria so that regressions are caught by `product verify`, not by a failed deployment.
+Product is designed to run across heterogeneous environments — developer laptops on macOS (Apple Silicon), Linux CI runners, and ARM64 Raspberry Pi nodes in PiCloud clusters. Requiring users to install a language runtime (Node.js, Python, Go runtime) or manage system-level dependencies would create friction at every deployment point. A single binary with no dependencies beyond libc eliminates this class of deployment problems entirely.
 
-### Relationship to FT-001 (Core Concepts)
+### Why Rust (ADR-001)
 
-FT-012 and FT-001 share test criteria TC-001 through TC-004. FT-001 defines the core artifact types and relationships; FT-012 focuses specifically on the binary compilation and dependency constraints that underpin deployment. The overlap in test criteria is intentional — both features require a working binary, but FT-012 makes the deployment constraint explicit and verifiable on its own.
+ADR-001 records the decision to implement Product in Rust. The key factors were:
 
-### Why exit-criteria wrap scenario tests
+- **Single-binary compilation** across ARM64, x86_64, and Apple Silicon with no runtime
+- **Toolchain alignment** with PiCloud, which is also written in Rust — one language, one formatter, one linter, and eventually shared libraries
+- **Ecosystem fit** — `clap` for CLI parsing, `oxigraph` for embedded SPARQL, and `serde` for YAML/JSON are all native Rust crates requiring no FFI
 
-TC-163 is an exit-criteria that aggregates TC-001 through TC-004. This two-level structure serves the verification pipeline: `product verify FT-012` can check a single exit-criteria to determine feature completeness, while the individual scenario tests provide granular diagnostics when something fails. The pattern — scenario tests for individual assertions, exit-criteria for rollup — is defined in ADR-011.
+TypeScript, Go, and Python were considered and rejected. TypeScript requires a bundled runtime; Go would fragment the toolchain from PiCloud; Python lacks a clean single-binary story. See ADR-001 for full rationale and rejected alternatives.
 
-### The single-binary constraint (ADR-001)
+### The role of musl for static linking
 
-ADR-001 mandates Rust specifically because it produces native binaries for ARM64 and x86_64 without a bundled runtime. The rejected alternatives (TypeScript/Node, Go, Python) each failed this constraint in different ways: Node requires a runtime, Go would fragment the toolchain from PiCloud, and Python has no clean single-binary story. The cluster foundation tests are the operational proof that this decision holds — they run on every verification cycle and would fail immediately if a runtime dependency were introduced.
+The `x86_64-unknown-linux-musl` target produces a fully statically-linked binary, meaning `ldd` reports "not a dynamic executable." This is the strongest form of the no-dependencies guarantee. The `aarch64-unknown-linux-gnu` target links against glibc dynamically, which is acceptable because libc is universally present on Linux systems.
 
-### Cross-compilation and CI
+### How cluster foundation relates to other features
 
-The two explicit target triples (`aarch64-unknown-linux-gnu` and `x86_64-unknown-linux-musl`) reflect the actual deployment targets. ARM64 covers the Raspberry Pi 5 nodes in the PiCloud cluster. x86_64 musl covers CI runners and Linux developer machines with full static linking. The default host target covers local development. All three must succeed for FT-012 to be complete.
-
----
-
-The document is ~170 lines, covering all five Diataxis sections. Would you like to grant write permission so I can save it to `docs/guide/FT-012-feature-ft-001-cluster-foundation.md`?
+Cluster Foundation is a Phase 1 prerequisite. Every other feature in the Product CLI depends on the binary existing and running correctly. The test criteria (TC-001 through TC-004) form the base layer of the validation pyramid — if these fail, nothing else can be verified. TC-163 aggregates these scenarios into a single exit-criteria gate for FT-012, ensuring the foundation is validated as a unit before dependent features proceed.
