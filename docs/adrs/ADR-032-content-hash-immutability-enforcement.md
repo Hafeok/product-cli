@@ -2,19 +2,15 @@
 id: ADR-032
 title: Content Hash Immutability Enforcement
 status: proposed
-features: [FT-034]
+features:
+- FT-034
 supersedes: []
 superseded-by: []
 domains: []
 scope: domain
-source-files:
-  - src/graph.rs
-  - src/parser.rs
-  - src/types.rs
-  - src/main.rs
 ---
 
-**Status:** Proposed
+**Status:** Accepted
 
 **Context:** Product manages long-lived specification artifacts — ADRs, test criteria, features, and dependencies — whose content forms the authoritative basis for agent-driven implementation. An implementing agent that silently modifies an accepted ADR's rationale while working on a feature can invalidate reasoning that other agents and humans depend on. Similarly, if a TC's formal specification blocks or ADR linkage change after the TC is established, the test no longer validates what it claims to validate. There is currently no mechanism to detect these mutations.
 

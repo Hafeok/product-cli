@@ -9,7 +9,7 @@ domains: []
 scope: domain
 ---
 
-**Status:** Proposed
+**Status:** Accepted
 
 **Context:** The MCP tool surface tells an agent what it can do — call `product_context`, call `product_gap_check`, etc. It does not tell it how to think about the domain — what a feature is, what an ADR is, when to check centrality before writing, why the graph matters, what the front-matter schemas look like.
 

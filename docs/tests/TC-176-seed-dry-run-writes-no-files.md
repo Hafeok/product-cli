@@ -11,7 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_176_seed_dry_run_writes_no_files"
-last-run: 2026-04-14T11:01:04.789091923+00:00
+last-run: 2026-04-14T18:28:17.026062993+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

@@ -660,17 +660,17 @@
 - [x] TC-176: Seed dry-run writes no files (scenario) — passing
 - [x] TC-177: End-to-end onboard produces graph with no structural errors (exit-criteria) — passing
 - [x] TC-178: Seeded ADRs have no G005 contradictions after gap check (exit-criteria) — passing
-- [ ] TC-356: link_tests_basic (scenario) — unimplemented
-- [ ] TC-357: link_tests_multi_feature (scenario) — unimplemented
-- [ ] TC-358: link_tests_cross_cutting_excluded (scenario) — unimplemented
-- [ ] TC-359: link_tests_idempotent (scenario) — unimplemented
-- [ ] TC-360: link_tests_dry_run_no_write (scenario) — unimplemented
-- [ ] TC-361: link_tests_adr_scope (scenario) — unimplemented
-- [ ] TC-362: graph_infer_general (scenario) — unimplemented
-- [ ] TC-363: feature_link_interactive_confirm (scenario) — unimplemented
-- [ ] TC-364: feature_link_interactive_decline (scenario) — unimplemented
-- [ ] TC-365: reverse_inference_updates_feature (scenario) — unimplemented
-- [ ] TC-366: atomic_batch_write (scenario) — unimplemented
-- [ ] TC-367: platform_verify_cross_cutting (scenario) — unimplemented
-- [ ] TC-368: product migrate link-tests (scenario) — unimplemented
+- [x] TC-356: link_tests_basic (scenario) — passing
+- [x] TC-357: link_tests_multi_feature (scenario) — passing
+- [x] TC-358: link_tests_cross_cutting_excluded (scenario) — passing
+- [x] TC-359: link_tests_idempotent (scenario) — passing
+- [x] TC-360: link_tests_dry_run_no_write (scenario) — passing
+- [x] TC-361: link_tests_adr_scope (scenario) — passing
+- [x] TC-362: graph_infer_general (scenario) — passing
+- [x] TC-363: feature_link_interactive_confirm (scenario) — passing
+- [x] TC-364: feature_link_interactive_decline (scenario) — passing
+- [x] TC-365: reverse_inference_updates_feature (scenario) — passing
+- [x] TC-366: atomic_batch_write (scenario) — passing
+- [x] TC-367: platform_verify_cross_cutting (scenario) — passing
+- [x] TC-368: product migrate link-tests (scenario) — passing
 
