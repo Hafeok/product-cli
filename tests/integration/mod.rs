@@ -10310,3 +10310,233 @@ include-schemas = false
     let content3 = h.read("AGENT.md");
     assert!(!content3.contains("## Front-Matter Schemas"), "Schemas should be absent when disabled");
 }
+
+// ===========================================================================
+// TC-315: prompts_init_creates_files
+// ===========================================================================
+
+/// Run `product prompts init` on a repo with no `benchmarks/prompts/`.
+/// Assert all default prompt files are created.
+#[test]
+fn tc_315_prompts_init_creates_files() {
+    let h = Harness::new();
+
+    // Ensure no benchmarks/prompts/ directory exists
+    assert!(
+        !h.exists("benchmarks/prompts"),
+        "benchmarks/prompts/ should not exist before init"
+    );
+
+    let out = h.run(&["prompts", "init"]);
+    out.assert_exit(0);
+
+    // Assert all four default prompt files exist
+    assert!(
+        h.exists("benchmarks/prompts/author-feature-v1.md"),
+        "author-feature-v1.md should be created"
+    );
+    assert!(
+        h.exists("benchmarks/prompts/author-adr-v1.md"),
+        "author-adr-v1.md should be created"
+    );
+    assert!(
+        h.exists("benchmarks/prompts/author-review-v1.md"),
+        "author-review-v1.md should be created"
+    );
+    assert!(
+        h.exists("benchmarks/prompts/implement-v1.md"),
+        "implement-v1.md should be created"
+    );
+
+    // Output should mention created files
+    out.assert_stdout_contains("created");
+}
+
+// ===========================================================================
+// TC-316: prompts_list_output
+// ===========================================================================
+
+/// Run `product prompts list`. Assert output lists all prompt files with version numbers.
+#[test]
+fn tc_316_prompts_list_output() {
+    let h = Harness::new();
+
+    let out = h.run(&["prompts", "list"]);
+    out.assert_exit(0);
+
+    // Should list all prompt names
+    out.assert_stdout_contains("author-feature");
+    out.assert_stdout_contains("author-adr");
+    out.assert_stdout_contains("author-review");
+    out.assert_stdout_contains("implement");
+
+    // Should include version numbers
+    out.assert_stdout_contains("v1");
+}
+
+// ===========================================================================
+// TC-317: prompts_get_stdout
+// ===========================================================================
+
+/// Run `product prompts get author-feature`. Assert stdout contains the prompt
+/// content. Assert stderr is empty.
+#[test]
+fn tc_317_prompts_get_stdout() {
+    let h = Harness::new();
+
+    let out = h.run(&["prompts", "get", "author-feature"]);
+    out.assert_exit(0);
+
+    // stdout should contain the prompt content
+    assert!(
+        out.stdout.contains("product_feature_list") || out.stdout.contains("feature"),
+        "stdout should contain prompt content.\nstdout: {}",
+        out.stdout
+    );
+
+    // stderr should be empty (no warnings/errors)
+    assert!(
+        out.stderr.is_empty(),
+        "stderr should be empty.\nstderr: {}",
+        out.stderr
+    );
+}
+
+// ===========================================================================
+// TC-321: adr_review_missing_section
+// ===========================================================================
+
+/// Review ADR missing Rejected alternatives.
+/// Assert finding with file path and section name.
+#[test]
+fn tc_321_adr_review_missing_section() {
+    let h = Harness::new();
+    git_init(&h);
+
+    // Write an ADR missing "Rejected alternatives" section
+    h.write(
+        "docs/adrs/ADR-070-missing-section.md",
+        "---\nid: ADR-070\ntitle: Missing Section\nstatus: proposed\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Context:** ctx\n\n**Decision:** dec\n\n**Rationale:** rat\n\n**Test coverage:** tc\n",
+    );
+
+    // Stage and review
+    std::process::Command::new("git")
+        .args(["add", "docs/adrs/ADR-070-missing-section.md"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+
+    let out = h.run(&["adr", "review", "--staged"]);
+    out.assert_exit(0);
+
+    // Finding should mention file path and section name
+    assert!(
+        out.stderr.contains("Rejected alternatives"),
+        "Should report missing 'Rejected alternatives' section.\nstderr: {}",
+        out.stderr
+    );
+    assert!(
+        out.stderr.contains("adrs/ADR-070") || out.stderr.contains("ADR-070-missing-section"),
+        "Should include file path.\nstderr: {}",
+        out.stderr
+    );
+}
+
+// ===========================================================================
+// TC-322: adr_review_no_features
+// ===========================================================================
+
+/// Review ADR with `features: []`. Assert W001-class finding.
+#[test]
+fn tc_322_adr_review_no_features() {
+    let h = Harness::new();
+    git_init(&h);
+
+    // Write an ADR with all sections but features: []
+    h.write(
+        "docs/adrs/ADR-071-no-features.md",
+        "---\nid: ADR-071\ntitle: No Features\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\n**Context:** ctx\n\n**Decision:** dec\n\n**Rationale:** rat\n\n**Rejected alternatives:** none\n\n**Test coverage:** tc\n",
+    );
+
+    std::process::Command::new("git")
+        .args(["add", "docs/adrs/ADR-071-no-features.md"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+
+    let out = h.run(&["adr", "review", "--staged"]);
+    out.assert_exit(0);
+
+    // Should warn about no linked features with W001
+    assert!(
+        out.stderr.contains("W001") || out.stderr.contains("no linked features"),
+        "Should report W001-class warning about empty features.\nstderr: {}",
+        out.stderr
+    );
+    assert!(
+        out.stderr.contains("ADR-071") || out.stderr.contains("adrs/"),
+        "Should reference the ADR path.\nstderr: {}",
+        out.stderr
+    );
+}
+
+// ===========================================================================
+// TC-323: mcp_prompts_list_tool
+// ===========================================================================
+
+/// Call `product_prompts_list` via MCP. Assert JSON response lists available prompts.
+#[test]
+fn tc_323_mcp_prompts_list_tool() {
+    let h = fixture_minimal();
+
+    let input = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_prompts_list","arguments":{}}}"#;
+    let out = run_mcp_stdio(&h, input);
+
+    // Response should contain prompt entries
+    assert!(
+        out.contains("author-feature"),
+        "MCP response should list author-feature prompt.\nGot: {}",
+        out
+    );
+    assert!(
+        out.contains("author-adr"),
+        "MCP response should list author-adr prompt.\nGot: {}",
+        out
+    );
+    assert!(
+        out.contains("author-review"),
+        "MCP response should list author-review prompt.\nGot: {}",
+        out
+    );
+    assert!(
+        out.contains("prompts"),
+        "Response should contain 'prompts' key.\nGot: {}",
+        out
+    );
+}
+
+// ===========================================================================
+// TC-324: mcp_prompts_get_tool
+// ===========================================================================
+
+/// Call `product_prompts_get` with `name: "author-feature"`.
+/// Assert response contains prompt content.
+#[test]
+fn tc_324_mcp_prompts_get_tool() {
+    let h = fixture_minimal();
+
+    let input = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_prompts_get","arguments":{"name":"author-feature"}}}"#;
+    let out = run_mcp_stdio(&h, input);
+
+    // Response should contain the prompt content
+    assert!(
+        out.contains("product_feature_list") || out.contains("feature"),
+        "MCP response should contain prompt content.\nGot: {}",
+        out
+    );
+    assert!(
+        out.contains("author-feature"),
+        "Response should contain prompt name.\nGot: {}",
+        out
+    );
+}

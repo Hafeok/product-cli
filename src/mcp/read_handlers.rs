@@ -171,6 +171,35 @@ pub(crate) fn handle_agent_context(
     }))
 }
 
+pub(crate) fn handle_prompts_list(repo_root: &Path) -> Result<Value, String> {
+    let prompts = crate::author::prompts_list(repo_root);
+    let items: Vec<Value> = prompts
+        .iter()
+        .map(|p| {
+            serde_json::json!({
+                "name": p.name,
+                "filename": p.filename,
+                "version": p.version,
+                "path": p.path,
+            })
+        })
+        .collect();
+    Ok(serde_json::json!({"prompts": items}))
+}
+
+pub(crate) fn handle_prompts_get(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let name = args
+        .get("name")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default();
+    let content = crate::author::prompts_get(repo_root, name).map_err(|e| format!("{}", e))?;
+    Ok(serde_json::json!({
+        "name": name,
+        "content": content,
+        "type": "text"
+    }))
+}
+
 pub(crate) fn handle_gap_check(
     args: &Value,
     graph: &KnowledgeGraph,

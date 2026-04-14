@@ -574,7 +574,7 @@
 - [x] TC-107: mcp_cors_header (scenario) — passing
 - [x] TC-165: FT-021 MCP server stdio and HTTP pass (exit-criteria) — passing
 
-### FT-022 — Authoring Sessions [~]
+### FT-022 — Authoring Sessions [x]
 
 - [x] ADR-022: Authoring Resources — System Prompts and Pre-Commit Review (accepted)
 - [x] TC-116: pre_commit_hook_installed (scenario) — passing
@@ -583,13 +583,13 @@
 - [x] TC-119: adr_review_structural_missing_section (scenario) — passing
 - [x] TC-120: adr_review_structural_no_features (scenario) — passing
 - [x] TC-166: FT-022 authoring session flow complete (exit-criteria) — passing
-- [ ] TC-315: prompts_init_creates_files (scenario) — unimplemented
-- [ ] TC-316: prompts_list_output (scenario) — unimplemented
-- [ ] TC-317: prompts_get_stdout (scenario) — unimplemented
-- [ ] TC-321: adr_review_missing_section (scenario) — unimplemented
-- [ ] TC-322: adr_review_no_features (scenario) — unimplemented
-- [ ] TC-323: mcp_prompts_list_tool (scenario) — unimplemented
-- [ ] TC-324: mcp_prompts_get_tool (scenario) — unimplemented
+- [x] TC-315: prompts_init_creates_files (scenario) — passing
+- [x] TC-316: prompts_list_output (scenario) — passing
+- [x] TC-317: prompts_get_stdout (scenario) — passing
+- [x] TC-321: adr_review_missing_section (scenario) — passing
+- [x] TC-322: adr_review_no_features (scenario) — passing
+- [x] TC-323: mcp_prompts_list_tool (scenario) — passing
+- [x] TC-324: mcp_prompts_get_tool (scenario) — passing
 
 ### FT-023 — Agent Orchestration [~]
 

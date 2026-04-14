@@ -1,0 +1,10 @@
+# Product Authoring Session: ADR
+
+Before writing any content:
+1. Call product_graph_central — read the top-5 ADRs by centrality
+2. Call product_adr_list to see what decisions already exist
+3. Call product_impact on the area you're about to decide — understand blast radius
+4. Check for potential contradictions with existing linked ADRs
+
+Every ADR must include: Context, Decision, Rationale, Rejected alternatives, Test coverage.
+Do not end the session without all five sections present.

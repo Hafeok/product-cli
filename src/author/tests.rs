@@ -5,9 +5,9 @@ use crate::types::*;
 
 #[test]
 fn default_prompts_not_empty() {
-    assert!(!default_prompt(&SessionType::Feature).is_empty());
-    assert!(!default_prompt(&SessionType::Adr).is_empty());
-    assert!(!default_prompt(&SessionType::Review).is_empty());
+    assert!(!prompts::default_content("author-feature").is_empty());
+    assert!(!prompts::default_content("author-adr").is_empty());
+    assert!(!prompts::default_content("author-review").is_empty());
 }
 
 fn assert_yaml_keys_in_doc(yaml: &str, doc: &str, label: &str) {
@@ -81,4 +81,59 @@ fn schema_prompt_covers_tc_fields() {
     };
     let yaml = serde_yaml::to_string(&tc).unwrap();
     assert_yaml_keys_in_doc(&yaml, &doc, "TC");
+}
+
+#[test]
+fn prompts_init_creates_files() {
+    let dir = tempfile::tempdir().unwrap();
+    let created = prompts::init(dir.path()).unwrap();
+    assert_eq!(created.len(), 4, "should create all 4 default prompts");
+    assert!(dir.path().join("benchmarks/prompts/author-feature-v1.md").exists());
+    assert!(dir.path().join("benchmarks/prompts/implement-v1.md").exists());
+}
+
+#[test]
+fn prompts_list_returns_all() {
+    let dir = tempfile::tempdir().unwrap();
+    let list = prompts::list(dir.path());
+    assert_eq!(list.len(), 4);
+    assert!(list.iter().any(|p| p.name == "author-feature"));
+    assert!(list.iter().any(|p| p.name == "implement"));
+}
+
+#[test]
+fn prompts_get_returns_content() {
+    let dir = tempfile::tempdir().unwrap();
+    let content = prompts::get(dir.path(), "author-feature").unwrap();
+    assert!(content.contains("product_feature_list"));
+}
+
+#[test]
+fn prompts_get_unknown_errors() {
+    let dir = tempfile::tempdir().unwrap();
+    assert!(prompts::get(dir.path(), "nonexistent").is_err());
+}
+
+#[test]
+fn review_adr_content_catches_missing_section() {
+    let mut findings = Vec::new();
+    let content = "---\nid: ADR-001\nstatus: proposed\nfeatures: [FT-001]\n---\n\n**Context:** c\n**Decision:** d\n**Rationale:** r\n**Test coverage:** t\n";
+    review_adr_content("test.md", content, &mut findings);
+    assert!(
+        findings.iter().any(|f| f.contains("Rejected alternatives")),
+        "Should catch missing Rejected alternatives: {:?}",
+        findings
+    );
+}
+
+#[test]
+fn review_adr_content_catches_empty_features() {
+    let mut findings = Vec::new();
+    let content = "---\nid: ADR-001\nstatus: proposed\nfeatures: []\n---\n\n**Context:** c\n**Decision:** d\n**Rationale:** r\n**Rejected alternatives:** n\n**Test coverage:** t\n";
+    review_adr_content("test.md", content, &mut findings);
+    assert!(
+        findings.iter().any(|f| f.contains("W001")),
+        "Should emit W001 for empty features: {:?}",
+        findings
+    );
 }

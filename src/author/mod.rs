@@ -3,10 +3,15 @@
 //! `product author feature/adr/review` starts Claude Code with a versioned
 //! system prompt and Product MCP active.
 
+pub mod prompts;
+
 use crate::config::ProductConfig;
 use crate::error::{ProductError, Result};
 use std::path::Path;
 use std::process::Command;
+
+// Re-export prompt types/functions at the author:: level for backward compat
+pub use prompts::{PromptInfo, get as prompts_get, init as prompts_init, list as prompts_list};
 
 /// Session types for authoring
 pub enum SessionType {
@@ -41,26 +46,36 @@ pub fn start_session(
     let base_prompt = if prompt_path.exists() {
         std::fs::read_to_string(&prompt_path).unwrap_or_default()
     } else {
-        default_prompt(&session_type)
+        prompts::default_content(&session_type.to_string().replace(' ', "-"))
     };
     let prompt = format!("{}\n\n{}", base_prompt, schema_prompt());
 
     // Write prompt to temp file for agent
     let tmp_dir = std::env::temp_dir();
-    let tmp_path = tmp_dir.join(format!("product-author-{}-{}.md", session_type, chrono::Utc::now().timestamp()));
+    let tmp_path = tmp_dir.join(format!(
+        "product-author-{}-{}.md",
+        session_type,
+        chrono::Utc::now().timestamp()
+    ));
     std::fs::write(&tmp_path, &prompt).map_err(|e| ProductError::WriteError {
         path: tmp_path.clone(),
         message: e.to_string(),
     })?;
 
     println!("Starting {} authoring session...", session_type);
-    println!("  System prompt: {}", if prompt_path.exists() { prompt_path.display().to_string() } else { "(default)".to_string() });
+    println!(
+        "  System prompt: {}",
+        if prompt_path.exists() {
+            prompt_path.display().to_string()
+        } else {
+            "(default)".to_string()
+        }
+    );
     println!("  Repo: {}", root.display());
     println!();
 
     // Build inline MCP config using the current executable
-    let exe = std::env::current_exe()
-        .unwrap_or_else(|_| "product".into());
+    let exe = std::env::current_exe().unwrap_or_else(|_| "product".into());
     let mcp_config = serde_json::json!({
         "mcpServers": {
             "product": {
@@ -72,19 +87,16 @@ pub fn start_session(
     });
     let mcp_json = serde_json::to_string(&mcp_config).unwrap_or_default();
 
-    // Invoke Claude Code with restricted tool access:
-    // - --system-prompt-file: custom system prompt for the authoring session
-    // - --tools "Read": only built-in Read tool (no Bash/Edit/Write)
-    // - --allowedTools: auto-approve Read + all product MCP tools
-    // - --strict-mcp-config + --mcp-config: only the product MCP server
-    // NOTE: We intentionally do NOT use --bare, because it disables
-    // OAuth/keychain auth (only ANTHROPIC_API_KEY works in bare mode).
     let status = Command::new("claude")
         .args([
-            "--system-prompt-file", &tmp_path.display().to_string(),
-            "--tools", "Read",
-            "--allowedTools", "Read,mcp__product__*",
-            "--mcp-config", &mcp_json,
+            "--system-prompt-file",
+            &tmp_path.display().to_string(),
+            "--tools",
+            "Read",
+            "--allowedTools",
+            "Read,mcp__product__*",
+            "--mcp-config",
+            &mcp_json,
             "--strict-mcp-config",
         ])
         .current_dir(root)
@@ -131,7 +143,12 @@ pub fn review_staged(root: &Path) -> Result<Vec<String>> {
 
     let mut findings = Vec::new();
     for adr_path in &staged_adrs {
-        review_single_adr(root, adr_path, &mut findings);
+        let full_path = root.join(adr_path);
+        if !full_path.exists() {
+            continue;
+        }
+        let content = std::fs::read_to_string(&full_path).unwrap_or_default();
+        review_adr_content(adr_path, &content, &mut findings);
     }
 
     if findings.is_empty() {
@@ -144,13 +161,20 @@ pub fn review_staged(root: &Path) -> Result<Vec<String>> {
     Ok(findings)
 }
 
-fn review_single_adr(root: &Path, adr_path: &str, findings: &mut Vec<String>) {
-    let full_path = root.join(adr_path);
-    if !full_path.exists() {
-        return;
+/// Review a single ADR file (not necessarily staged — works on any path)
+pub fn review_adr_file(path: &Path) -> Vec<String> {
+    let mut findings = Vec::new();
+    if !path.exists() {
+        findings.push(format!("warning: {} does not exist", path.display()));
+        return findings;
     }
-    let content = std::fs::read_to_string(&full_path).unwrap_or_default();
+    let content = std::fs::read_to_string(path).unwrap_or_default();
+    let display_path = path.display().to_string();
+    review_adr_content(&display_path, &content, &mut findings);
+    findings
+}
 
+fn review_adr_content(display_path: &str, content: &str, findings: &mut Vec<String>) {
     let required_sections = [
         ("Context", "**Context:**"),
         ("Decision", "**Decision:**"),
@@ -161,17 +185,41 @@ fn review_single_adr(root: &Path, adr_path: &str, findings: &mut Vec<String>) {
 
     for (name, marker) in &required_sections {
         if !content.contains(marker) && !content.to_lowercase().contains(&name.to_lowercase()) {
-            findings.push(format!("warning: {} missing required section: {}", adr_path, name));
+            findings.push(format!(
+                "warning: {} missing required section: {}",
+                display_path, name
+            ));
         }
     }
 
     if !content.contains("status:") {
-        findings.push(format!("warning: {} missing status field in front-matter", adr_path));
+        findings.push(format!(
+            "warning: {} missing status field in front-matter",
+            display_path
+        ));
     }
 
     if content.contains("features: []") || !content.contains("features:") {
-        findings.push(format!("warning: {} has no linked features", adr_path));
+        findings.push(format!(
+            "warning[W001]: {} has no linked features",
+            display_path
+        ));
     }
+}
+
+fn schema_prompt() -> String {
+    "# Artifact Schemas\n\n\
+     All artifacts use YAML front-matter between `---` delimiters, followed by a markdown body.\n\n\
+     ## Feature (FT-XXX)\n\n\
+     ```yaml\n---\nid: FT-001\ntitle: Feature Title\nphase: 1\nstatus: planned\n\
+     depends-on: []\nadrs: []\ntests: []\ndomains: []\ndomains-acknowledged: {}\n---\n```\n\n\
+     ## ADR (ADR-XXX)\n\n\
+     ```yaml\n---\nid: ADR-001\ntitle: Decision Title\nstatus: proposed\nfeatures: []\n\
+     supersedes: []\nsuperseded-by: []\ndomains: []\nscope: feature-specific\n---\n```\n\n\
+     ## Test Criterion (TC-XXX)\n\n\
+     ```yaml\n---\nid: TC-001\ntitle: test_name\ntype: scenario\nstatus: unimplemented\n\
+     validates:\n  features: []\n  adrs: []\nphase: 1\n---\n```\n"
+        .to_string()
 }
 
 /// Auto-commit changed docs after a successful authoring session
@@ -199,158 +247,71 @@ fn detect_doc_changes(root: &Path) -> Option<Vec<String>> {
     match status_output {
         Ok(out) => {
             let stdout = String::from_utf8_lossy(&out.stdout);
-            Some(stdout.lines().filter(|l| !l.is_empty()).map(|l| l.to_string()).collect())
+            Some(
+                stdout
+                    .lines()
+                    .filter(|l| !l.is_empty())
+                    .map(|l| l.to_string())
+                    .collect(),
+            )
         }
         Err(_) => None,
     }
 }
 
 fn build_commit_message(session_type: &SessionType, changed_files: &[String]) -> String {
-    let mut ids: Vec<String> = changed_files.iter()
+    let mut ids: Vec<String> = changed_files
+        .iter()
         .filter_map(|line| {
             let path = line.get(3..)?.trim();
             let fname = std::path::Path::new(path).file_stem()?.to_str()?;
             let parts: Vec<&str> = fname.splitn(3, '-').collect();
-            if parts.len() >= 2 { Some(format!("{}-{}", parts[0], parts[1])) } else { None }
+            if parts.len() >= 2 {
+                Some(format!("{}-{}", parts[0], parts[1]))
+            } else {
+                None
+            }
         })
         .collect();
     ids.sort();
     ids.dedup();
 
-    let id_summary = if ids.len() <= 5 { ids.join(", ") } else { format!("{} artifacts", ids.len()) };
-    format!("author({}): {}\n\nAuto-committed by product author session.", session_type, id_summary)
+    let id_summary = if ids.len() <= 5 {
+        ids.join(", ")
+    } else {
+        format!("{} artifacts", ids.len())
+    };
+    format!(
+        "author({}): {}\n\nAuto-committed by product author session.",
+        session_type, id_summary
+    )
 }
 
 fn run_git_commit(root: &Path, message: &str) {
-    let add = Command::new("git").args(["add", "docs/"]).current_dir(root).status();
+    let add = Command::new("git")
+        .args(["add", "docs/"])
+        .current_dir(root)
+        .status();
     if !matches!(add, Ok(s) if s.success()) {
         eprintln!("Failed to stage changes. Commit manually.");
         return;
     }
 
-    let commit = Command::new("git").args(["commit", "-m", message]).current_dir(root).status();
+    let commit = Command::new("git")
+        .args(["commit", "-m", message])
+        .current_dir(root)
+        .status();
     match commit {
         Ok(s) if s.success() => {
-            println!("Committed: {}", message.lines().next().unwrap_or(message));
+            println!(
+                "Committed: {}",
+                message.lines().next().unwrap_or(message)
+            );
         }
         _ => {
             eprintln!("Commit failed. Changes are staged — commit manually.");
         }
     }
-}
-
-fn default_prompt(session_type: &SessionType) -> String {
-    match session_type {
-        SessionType::Feature => r#"# Product Authoring Session: Feature
-
-Before writing any content:
-1. Call product_feature_list to understand what features exist
-2. Call product_graph_central to identify the top-5 foundational ADRs
-3. Call product_context on the most related existing feature (if any)
-4. Ask the user clarifying questions based on what you found
-
-Only after completing these steps should you scaffold any files.
-After scaffolding, run product_graph_check to verify structural health.
-"#.to_string(),
-        SessionType::Adr => r#"# Product Authoring Session: ADR
-
-Before writing any content:
-1. Call product_graph_central — read the top-5 ADRs by centrality
-2. Call product_adr_list to see what decisions already exist
-3. Call product_impact on the area you're about to decide — understand blast radius
-4. Check for potential contradictions with existing linked ADRs
-
-Every ADR must include: Context, Decision, Rationale, Rejected alternatives, Test coverage.
-Do not end the session without all five sections present.
-"#.to_string(),
-        SessionType::Review => r#"# Product Authoring Session: Review
-
-Your goal is to improve specification coverage without adding new features.
-Start by:
-1. Call product_graph_check — fix structural issues first
-2. Walk features by lowest test coverage — propose test criteria
-3. Find orphaned ADRs — propose feature links
-4. Find features with no exit-criteria TC — propose them
-
-Do not create new features or ADRs unless fixing a specific identified gap.
-"#.to_string(),
-    }
-}
-
-fn schema_prompt() -> String {
-    let mut out = String::from("# Artifact Schemas\n\nAll artifacts use YAML front-matter between `---` delimiters, followed by a markdown body.\n\n");
-    out.push_str(&schema_feature_section());
-    out.push_str(&schema_adr_section());
-    out.push_str(&schema_tc_section());
-    out
-}
-
-fn schema_feature_section() -> String {
-    r#"## Feature (FT-XXX)
-
-```yaml
----
-id: FT-001
-title: Feature Title
-phase: 1                    # u32, default 1
-status: planned             # planned | in-progress | complete | abandoned
-depends-on: []              # FT-NNN references
-adrs: []                    # ADR-NNN references
-tests: []                   # TC-NNN references
-domains: []                 # concern domain names
-domains-acknowledged: {}    # domain -> reason (for intentional gaps)
----
-```
-
-Body: free-form markdown. Typically starts with `## Description`.
-
-"#.to_string()
-}
-
-fn schema_adr_section() -> String {
-    r#"## ADR (ADR-XXX)
-
-```yaml
----
-id: ADR-001
-title: Decision Title
-status: proposed            # proposed | accepted | superseded | abandoned
-features: []                # FT-NNN references
-supersedes: []              # ADR-NNN references
-superseded-by: []           # ADR-NNN references
-domains: []                 # concern domain names
-scope: feature-specific     # cross-cutting | domain | feature-specific
----
-```
-
-Body **must** contain these five sections:
-- **Context:** — the problem or situation
-- **Decision:** — what was decided
-- **Rationale:** — why this decision
-- **Rejected alternatives:** — what was considered but not chosen
-- **Test coverage:** — how to verify the decision
-
-"#.to_string()
-}
-
-fn schema_tc_section() -> String {
-    r#"## Test Criterion (TC-XXX)
-
-```yaml
----
-id: TC-001
-title: test_name_snake_case
-type: scenario              # scenario | invariant | chaos | exit-criteria
-status: unimplemented       # unimplemented | implemented | passing | failing
-validates:
-  features: []              # FT-NNN references
-  adrs: []                  # ADR-NNN references
-phase: 1                    # u32, default 1
----
-```
-
-Body: prose description of what the test verifies.
-"#.to_string()
 }
 
 #[cfg(test)]

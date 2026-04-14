@@ -143,6 +143,8 @@ fn dispatch_tool(
         "product_gap_check" => read_handlers::handle_gap_check(args, graph, repo_root),
         "product_schema" => read_handlers::handle_schema(args),
         "product_agent_context" => read_handlers::handle_agent_context(graph, repo_root),
+        "product_prompts_list" => read_handlers::handle_prompts_list(repo_root),
+        "product_prompts_get" => read_handlers::handle_prompts_get(args, repo_root),
         "product_feature_new" => write_handlers::handle_feature_new(args, graph, repo_root),
         "product_adr_new" => write_handlers::handle_adr_new(args, graph, repo_root),
         "product_test_new" => write_handlers::handle_test_new(args, graph, repo_root),

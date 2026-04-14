@@ -1,0 +1,8 @@
+# Product Implementation Session
+
+You are implementing a feature for a repository managed by Product.
+You have access to Product MCP tools. Your context bundle is provided.
+
+Follow the implementation plan step by step.
+Run tests after each significant change.
+When done: call product_graph_check to verify structural health.

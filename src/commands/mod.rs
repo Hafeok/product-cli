@@ -21,6 +21,7 @@ mod metrics_cmd;
 mod migrate;
 mod onboard;
 mod preflight;
+mod prompts_cmd;
 mod schema;
 mod status;
 mod test_cmd;
@@ -41,6 +42,7 @@ pub use self::hash::HashCommands;
 pub use self::metrics_cmd::MetricsCommands;
 pub use self::migrate::MigrateCommands;
 pub use self::onboard::OnboardCommands;
+pub use self::prompts_cmd::PromptsCommands;
 
 #[derive(Subcommand)]
 pub enum Commands {
@@ -173,6 +175,11 @@ pub enum Commands {
     },
     /// Install git hooks and scaffolding
     InstallHooks,
+    /// Manage authoring session prompts (ADR-022)
+    Prompts {
+        #[command(subcommand)]
+        command: PromptsCommands,
+    },
     /// Drift detection — spec vs implementation
     Drift {
         #[command(subcommand)]
@@ -324,6 +331,7 @@ fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> Bo
         Commands::Author { command } => author::handle_author(command),
         Commands::Mcp { http, port, bind, token, repo, write } => mcp_cmd::handle_mcp(http, port, &bind, token, repo, write),
         Commands::InstallHooks => hooks::handle_install_hooks(),
+        Commands::Prompts { command } => prompts_cmd::handle_prompts(command),
         Commands::Drift { command } => drift::handle_drift(command, fmt),
         Commands::Metrics { command } => metrics_cmd::handle_metrics(command),
         Commands::Preflight { id } => preflight::handle_preflight(&id),

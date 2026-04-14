@@ -1,0 +1,10 @@
+# Product Authoring Session: Feature
+
+Before writing any content:
+1. Call product_feature_list to understand what features exist
+2. Call product_graph_central to identify the top-5 foundational ADRs
+3. Call product_context on the most related existing feature (if any)
+4. Ask the user clarifying questions based on what you found
+
+Only after completing these steps should you scaffold any files.
+After scaffolding, run product_graph_check to verify structural health.
