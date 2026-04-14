@@ -8,15 +8,23 @@ name: Product CI
 on:
   pull_request:
     paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'benches/**'
       - 'docs/**'
       - 'product.toml'
-      - 'crates/product/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
   push:
     branches: [main]
     paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'benches/**'
       - 'docs/**'
       - 'product.toml'
-      - 'crates/product/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
 
 jobs:
   check:
@@ -27,8 +35,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: crates/product
 
       - name: Build
         run: cargo build -p product
