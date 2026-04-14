@@ -1,12 +1,13 @@
 ---
 id: ADR-034
 title: Lifecycle Gate — ADR Acceptance Before Feature Completion
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: domain
+content-hash: sha256:b887a8ff6f3cbf3415d933f6c996a24cecb73b0c7af8767a0d4870d1d9ef29ee
 ---
 
 **Context:** On 2026-04-14, three ADRs (ADR-031, ADR-032, ADR-033) were accepted after their linked features (FT-033, FT-034, FT-035) were already marked `complete` with all TCs passing. The decisions were rubber-stamped — accepted as a formality after the code shipped, not as a gate before implementation began.

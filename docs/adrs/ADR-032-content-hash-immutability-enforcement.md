@@ -1,13 +1,14 @@
 ---
 id: ADR-032
 title: Content Hash Immutability Enforcement
-status: proposed
+status: accepted
 features:
 - FT-034
 supersedes: []
 superseded-by: []
 domains: []
 scope: domain
+content-hash: sha256:da65786c80ec401db4c53c43d3933e7b57c866256b54658fb78aa92583652bbf
 ---
 
 **Status:** Accepted

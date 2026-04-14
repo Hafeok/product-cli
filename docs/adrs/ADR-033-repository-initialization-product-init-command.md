@@ -1,12 +1,14 @@
 ---
 id: ADR-033
 title: Repository Initialization — `product init` Command
-status: proposed
-features: [FT-035]
+status: accepted
+features:
+- FT-035
 supersedes: []
 superseded-by: []
 domains: []
 scope: feature-specific
+content-hash: sha256:77ec5fd0946eb51999d1d43c7dcdcdf6d118aaee06a9e1d4dac6d1e05634744e
 ---
 
 **Context:** Every `product` command except `init` requires a `product.toml` discovered by walking up the directory tree (`ProductConfig::discover()`). A new user who installs the CLI and runs `product feature list` gets "No product.toml found in current directory or any parent" — a dead end with no guidance. There is no bootstrapping path: the user must hand-write a TOML file with the correct schema, keys, and directory structure before any other command works.

@@ -1,12 +1,13 @@
 ---
 id: ADR-031
 title: Agent Context Generation and Schema MCP Tool
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: domain
+content-hash: sha256:ac45f649fb6a845bffecdd17786909fc6845bcc06583b18f3d34a5c4fb21caf7
 ---
 
 **Status:** Accepted
