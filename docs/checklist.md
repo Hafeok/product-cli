@@ -516,20 +516,20 @@
 
 ## Phase 4
 
-### FT-029 — Gap Analysis [~]
+### FT-029 — Gap Analysis [x]
 
 - [x] ADR-019: Continuous Gap Analysis — LLM-Driven Specification Review in CI (accepted)
 - [x] TC-086: gap_check_single_adr (scenario) — passing
-- [ ] TC-087: gap_check_no_gaps (scenario) — unimplemented
-- [ ] TC-088: gap_check_suppressed (scenario) — unimplemented
+- [x] TC-087: gap_check_no_gaps (scenario) — passing
+- [x] TC-088: gap_check_suppressed (scenario) — passing
 - [x] TC-089: gap_check_resolved (scenario) — passing
 - [x] TC-090: gap_check_changed_scoping (scenario) — passing
 - [x] TC-091: gap_check_model_error_exits_2 (exit-criteria) — passing
 - [x] TC-092: gap_check_invalid_json_discarded (scenario) — passing
-- [ ] TC-093: gap_id_deterministic (scenario) — unimplemented
-- [ ] TC-094: gap_suppress_mutates_baseline (scenario) — unimplemented
+- [x] TC-093: gap_id_deterministic (scenario) — passing
+- [x] TC-094: gap_suppress_mutates_baseline (scenario) — passing
 - [x] TC-095: gap_changed_expansion (scenario) — passing
-- [ ] TC-096: gap_id_format (scenario) — unimplemented
+- [x] TC-096: gap_id_format (scenario) — passing
 - [x] TC-097: gap_stdout_stderr_separation (scenario) — passing
 - [x] TC-098: gap_json_schema (scenario) — passing
 

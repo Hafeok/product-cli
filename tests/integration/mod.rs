@@ -4968,6 +4968,182 @@ fn tc_098_gap_json_schema() {
     }
 }
 
+/// TC-087: gap_check_no_gaps — ADR with full TC coverage → exit 0 + empty findings
+#[test]
+fn tc_087_gap_check_no_gaps() {
+    let h = fixture_gap_clean();
+    let out = h.run(&["gap", "check", "ADR-001"]);
+    assert_eq!(
+        out.exit_code, 0,
+        "Expected exit 0 for ADR with full coverage.\nstdout: {}\nstderr: {}",
+        out.stdout, out.stderr
+    );
+
+    let reports: serde_json::Value = serde_json::from_str(&out.stdout)
+        .unwrap_or_else(|e| panic!("gap check output is not valid JSON: {}\nstdout: {}", e, out.stdout));
+    let findings = reports[0]["findings"].as_array().expect("findings should be array");
+    assert!(
+        findings.is_empty(),
+        "Expected empty findings array for clean ADR. Got: {}",
+        out.stdout
+    );
+}
+
+/// TC-088: gap_check_suppressed — suppressed gap → exit 0, finding with suppressed=true
+#[test]
+fn tc_088_gap_check_suppressed() {
+    let h = fixture_gap_g001();
+
+    // Step 1: Run gap check to get findings
+    let out = h.run(&["gap", "check", "ADR-001"]);
+    assert_eq!(out.exit_code, 1, "Expected exit 1 initially.\nstdout: {}\nstderr: {}", out.stdout, out.stderr);
+    let reports: serde_json::Value = serde_json::from_str(&out.stdout).expect("valid JSON");
+    let findings = reports[0]["findings"].as_array().expect("findings");
+    let g001_finding = findings.iter().find(|f| f["code"].as_str() == Some("G001")).expect("G001 finding");
+    let gap_id = g001_finding["id"].as_str().expect("gap id").to_string();
+
+    // Step 2: Suppress the gap
+    let out2 = h.run(&["gap", "suppress", &gap_id, "--reason", "deferred to phase 2"]);
+    assert_eq!(out2.exit_code, 0, "suppress should succeed: {}", out2.stderr);
+
+    // Step 3: Run gap check again — should exit 0 and finding should be suppressed
+    let out3 = h.run(&["gap", "check", "ADR-001"]);
+    assert_eq!(
+        out3.exit_code, 0,
+        "Expected exit 0 after suppression.\nstdout: {}\nstderr: {}",
+        out3.stdout, out3.stderr
+    );
+    let reports3: serde_json::Value = serde_json::from_str(&out3.stdout).expect("valid JSON");
+    let findings3 = reports3[0]["findings"].as_array().expect("findings");
+    let suppressed_finding = findings3.iter().find(|f| f["id"].as_str() == Some(gap_id.as_str()));
+    assert!(
+        suppressed_finding.is_some(),
+        "Suppressed finding should still appear in output. Got: {}",
+        out3.stdout
+    );
+    assert_eq!(
+        suppressed_finding.expect("finding")["suppressed"].as_bool(),
+        Some(true),
+        "Finding should have suppressed=true. Got: {}",
+        out3.stdout
+    );
+}
+
+/// TC-093: gap_id_deterministic — same repo state → identical IDs between runs
+#[test]
+fn tc_093_gap_id_deterministic() {
+    let h = fixture_gap_g001();
+
+    // Run gap analysis twice
+    let out1 = h.run(&["gap", "check", "ADR-001"]);
+    assert_eq!(out1.exit_code, 1);
+    let reports1: serde_json::Value = serde_json::from_str(&out1.stdout).expect("valid JSON run 1");
+    let findings1 = reports1[0]["findings"].as_array().expect("findings run 1");
+
+    let out2 = h.run(&["gap", "check", "ADR-001"]);
+    assert_eq!(out2.exit_code, 1);
+    let reports2: serde_json::Value = serde_json::from_str(&out2.stdout).expect("valid JSON run 2");
+    let findings2 = reports2[0]["findings"].as_array().expect("findings run 2");
+
+    // All high-severity findings should have identical IDs between runs
+    let high1: Vec<&str> = findings1
+        .iter()
+        .filter(|f| f["severity"].as_str() == Some("high"))
+        .filter_map(|f| f["id"].as_str())
+        .collect();
+    let high2: Vec<&str> = findings2
+        .iter()
+        .filter(|f| f["severity"].as_str() == Some("high"))
+        .filter_map(|f| f["id"].as_str())
+        .collect();
+
+    assert!(!high1.is_empty(), "Expected at least one high-severity finding");
+    assert_eq!(
+        high1, high2,
+        "High-severity finding IDs should be identical between runs.\nRun 1: {:?}\nRun 2: {:?}",
+        high1, high2
+    );
+}
+
+/// TC-094: gap_suppress_mutates_baseline — suppress command writes gaps.json correctly
+#[test]
+fn tc_094_gap_suppress_mutates_baseline() {
+    let h = fixture_gap_clean();
+    git_init(&h);
+
+    // Make an initial commit so git rev-parse works
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+    std::process::Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git commit");
+
+    let gap_id = "GAP-ADR002-G001-a3f9";
+    let out = h.run(&["gap", "suppress", gap_id, "--reason", "deferred"]);
+    assert_eq!(out.exit_code, 0, "suppress should succeed: {}", out.stderr);
+
+    // Read and verify gaps.json
+    let baseline_content = h.read("gaps.json");
+    assert!(!baseline_content.is_empty(), "gaps.json should exist after suppress");
+
+    let baseline: serde_json::Value = serde_json::from_str(&baseline_content)
+        .unwrap_or_else(|e| panic!("gaps.json not valid JSON: {}\ncontent: {}", e, baseline_content));
+
+    let suppressions = baseline["suppressions"].as_array().expect("suppressions array");
+    let entry = suppressions
+        .iter()
+        .find(|s| s["id"].as_str() == Some(gap_id))
+        .expect("suppression entry for gap ID should exist");
+
+    // Verify reason
+    assert_eq!(
+        entry["reason"].as_str(),
+        Some("deferred"),
+        "Reason should match. Got: {}",
+        entry
+    );
+
+    // Verify timestamp exists and is non-empty
+    let suppressed_at = entry["suppressed_at"].as_str().expect("suppressed_at field");
+    assert!(!suppressed_at.is_empty(), "suppressed_at should be non-empty");
+
+    // Verify commit hash exists and starts with "git:"
+    let suppressed_by = entry["suppressed_by"].as_str().expect("suppressed_by field");
+    assert!(
+        suppressed_by.starts_with("git:"),
+        "suppressed_by should start with 'git:'. Got: {}",
+        suppressed_by
+    );
+}
+
+/// TC-096: gap_id_format — all gap IDs match the expected pattern
+#[test]
+fn tc_096_gap_id_format() {
+    let h = fixture_gap_g001();
+    let out = h.run(&["gap", "check", "ADR-001"]);
+
+    let reports: serde_json::Value = serde_json::from_str(&out.stdout)
+        .unwrap_or_else(|e| panic!("stdout not valid JSON: {}\nstdout: {}", e, out.stdout));
+
+    let re = regex::Regex::new(r"^GAP-[A-Z]+-[0-9]+-[A-Z0-9]+-[a-f0-9]{4,8}$").expect("valid regex");
+
+    for report in reports.as_array().expect("reports array") {
+        for finding in report["findings"].as_array().expect("findings array") {
+            let id = finding["id"].as_str().expect("finding id should be string");
+            assert!(
+                re.is_match(id),
+                "Gap ID '{}' does not match expected format GAP-[A-Z]+-[A-Z0-9]+-[A-Z0-9]{{4,8}}",
+                id
+            );
+        }
+    }
+}
+
 // ===========================================================================
 // TC-145: implement_blocked_by_preflight
 // FT-009 has preflight gaps. Run `product implement FT-009`. Assert exit 1,

@@ -11,6 +11,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_095_gap_changed_expansion"
+last-run: 2026-04-14T17:25:14.338071018+00:00
 ---
 
 fixture: ADR-002 and ADR-005 share feature FT-001. Modify ADR-002. Run `--changed`. Assert ADR-005 is included in the analysis set.
