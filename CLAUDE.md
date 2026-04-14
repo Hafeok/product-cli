@@ -43,7 +43,11 @@ docs/
   product-prd.md     # Full PRD
   product-adrs.md    # All ADRs in one file
   adrs/              # Individual ADR files (26 ADRs)
+  features/          # Individual feature files (FT-XXX-*.md)
   tests/             # Individual TC files (100+)
+  guide/             # Generated Diátaxis docs per feature (FT-XXX-*.md)
+scripts/
+  generate-docs.sh   # Spawns claude -p per feature to generate docs/guide/ files
 product.toml         # Repo config (paths, prefixes, thresholds)
 CHECKLIST.md         # Auto-generated feature checklist (tracks [x]/[T]/[ ] status)
 ```
@@ -131,10 +135,30 @@ Rules:
 
 ## Documentation System
 
+### Specification docs (source of truth)
+
 - **PRD**: `docs/product-prd.md` — the source of truth for what to build
 - **ADRs**: `docs/adrs/ADR-XXX-*.md` — one file per decision, with YAML front-matter
+- **Features**: `docs/features/FT-XXX-*.md` — one file per feature, with YAML front-matter
 - **Test Criteria**: `docs/tests/TC-XXX-*.md` — one file per test criterion
 - **ADR index**: `docs/product-adrs.md` — all ADRs collected in one file for reference
+
+### User-facing docs — Diátaxis framework (https://diataxis.fr/)
+
+Generated per-feature guides live in `docs/guide/FT-XXX-*.md`. Each guide follows the Diátaxis framework, which organises documentation into four modes along two axes (action vs. knowledge, learning vs. working):
+
+| Mode | Serves | Section heading | What it contains |
+|------|--------|-----------------|------------------|
+| **Tutorial** | Learning + action | `## Tutorial` | Step-by-step lessons that take a newcomer through a concrete experience. Learning-oriented. |
+| **How-to guide** | Working + action | `## How-to Guide` | Task-oriented recipes that solve a specific problem. Goal-oriented. |
+| **Reference** | Working + knowledge | `## Reference` | Exact CLI syntax, flags, output formats, configuration. Information-oriented. |
+| **Explanation** | Learning + knowledge | `## Explanation` | Design decisions, trade-offs, architecture context. Understanding-oriented. |
+
+Each guide also starts with `## Overview` (one paragraph on what the feature is and why it exists).
+
+Guide files must **not** contain YAML front-matter (`---` blocks). The knowledge graph parser only scans `docs/features/`, `docs/adrs/`, and `docs/tests/` (configured in `product.toml`), but omitting front-matter from guides avoids accidental collisions if scan paths change.
+
+Regenerate guides with `scripts/generate-docs.sh`. The script assembles a context bundle per feature via the product CLI and spawns `claude -p` to write each file. Files with ≥20 lines are skipped on re-runs.
 
 ## Dependencies
 
