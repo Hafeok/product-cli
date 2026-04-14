@@ -407,7 +407,7 @@
 
 ## Phase 3
 
-### FT-024 — Graph Intelligence [~]
+### FT-024 — Graph Intelligence [x]
 
 - [x] ADR-008: Embedded Oxigraph for SPARQL Queries (accepted)
 - [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)

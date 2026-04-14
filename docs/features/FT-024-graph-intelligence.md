@@ -2,7 +2,7 @@
 id: FT-024
 title: Graph Intelligence
 phase: 3
-status: in-progress
+status: complete
 depends-on:
 - FT-016
 adrs:

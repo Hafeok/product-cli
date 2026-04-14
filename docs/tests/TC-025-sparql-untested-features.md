@@ -15,7 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_025_sparql_untested_features"
-last-run: 2026-04-14T15:02:41.236412349+00:00
+last-run: 2026-04-14T15:03:33.506444091+00:00
 ---
 
 load a graph where FT-002 has no `pm:validatedBy` triples. Execute a query for features with no test criteria. Assert FT-002 appears in the result and FT-001 (which has tests) does not.

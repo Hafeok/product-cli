@@ -15,7 +15,7 @@ validates:
   adrs:
   - ADR-012
 phase: 1
-last-run: 2026-04-14T15:02:16.595537282+00:00
+last-run: 2026-04-14T15:03:33.506444091+00:00
 ---
 
 run `product status --phase 1`. Assert output lists all exit-criteria TCs for phase 1 with their individual pass/fail status.

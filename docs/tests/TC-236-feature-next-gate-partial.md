@@ -15,7 +15,7 @@ validates:
   adrs:
   - ADR-012
 phase: 1
-last-run: 2026-04-14T15:02:16.595537282+00:00
+last-run: 2026-04-14T15:03:33.506444091+00:00
 ---
 
 phase 1 has 4 exit-criteria TCs: 3 passing, 1 failing. Assert phase gate is NOT satisfied (all must pass). Assert stderr names only the failing TC.

@@ -14,7 +14,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_009_graph_rebuild_from_scratch"
-last-run: 2026-04-14T15:02:41.236412349+00:00
+last-run: 2026-04-14T15:03:33.506444091+00:00
 ---
 
 start with a directory of 10 feature files, 8 ADR files, and 15 test files. Invoke any CLI command. Assert the graph contains the correct node and edge counts without any prior `graph rebuild` having been run.
