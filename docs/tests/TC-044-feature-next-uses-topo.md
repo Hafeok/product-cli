@@ -15,7 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_044_feature_next_uses_topo"
-last-run: 2026-04-14T14:04:19.495078770+00:00
+last-run: 2026-04-14T14:53:21.175394484+00:00
 ---
 
 FT-001 complete, FT-002 depends-on FT-001 (in-progress), FT-003 no dependencies (planned). Assert `product feature next` returns FT-002, not FT-003.

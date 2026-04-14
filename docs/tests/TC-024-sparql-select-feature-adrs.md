@@ -15,7 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_024_sparql_select_feature_adrs"
-last-run: 2026-04-14T14:04:19.495078770+00:00
+last-run: 2026-04-14T14:53:21.175394484+00:00
 ---
 
 load a graph with FT-001 linked to ADR-001 and ADR-002. Execute `SELECT ?adr WHERE { ft:FT-001 pm:implementedBy ?adr }`. Assert the result set contains exactly `adr:ADR-001` and `adr:ADR-002`.

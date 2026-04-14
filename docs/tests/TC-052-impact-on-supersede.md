@@ -15,7 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_052_impact_on_supersede"
-last-run: 2026-04-14T14:04:19.495078770+00:00
+last-run: 2026-04-14T14:53:21.175394484+00:00
 ---
 
 run `product adr status ADR-002 superseded --by ADR-013`. Assert impact summary is printed to stdout before the status change is committed.

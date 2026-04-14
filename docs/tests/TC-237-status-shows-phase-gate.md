@@ -14,7 +14,7 @@ validates:
   adrs:
   - ADR-012
 phase: 1
-last-run: 2026-04-14T14:04:19.495078770+00:00
+last-run: 2026-04-14T14:53:21.175394484+00:00
 ---
 
 run `product status`. Assert each phase shows its gate state: `[OPEN]`, `[LOCKED]`. Assert LOCKED phases name the failing exit-criteria TCs.

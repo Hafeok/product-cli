@@ -2,7 +2,7 @@
 id: FT-006
 title: Impact Analysis
 phase: 2
-status: in-progress
+status: complete
 depends-on:
 - FT-016
 adrs:

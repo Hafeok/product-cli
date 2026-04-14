@@ -14,7 +14,7 @@ validates:
   adrs:
   - ADR-012
 phase: 1
-last-run: 2026-04-14T14:04:19.495078770+00:00
+last-run: 2026-04-14T14:53:21.175394484+00:00
 ---
 
 phase 1 has no exit-criteria TCs. Assert phase gate is treated as satisfied and phase-2 features are returned normally.

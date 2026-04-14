@@ -313,7 +313,7 @@
 - [x] TC-155: FT-003 front-matter schema fully validated (exit-criteria) — passing
 - [x] TC-160: FT-009 formal specification blocks parse (exit-criteria) — passing
 
-### FT-006 — Impact Analysis [~]
+### FT-006 — Impact Analysis [x]
 
 - [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
 - [x] TC-009: graph_rebuild_from_scratch (scenario) — passing
