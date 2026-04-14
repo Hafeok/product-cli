@@ -10,6 +10,8 @@ tests:
 - TC-011
 - TC-012
 - TC-152
+- TC-192
+- TC-193
 domains: []
 domains-acknowledged: {}
 ---

@@ -17,7 +17,7 @@ An LLM is precisely the right tool for semantic review of structured documents. 
 
 The key design constraint is CI reliability. LLM output is non-deterministic. A gap analysis that produces different results on two identical repository states would make CI unstable and unusable. This ADR specifies the three mechanisms that make gap analysis deterministic enough for CI: structured output schema, temperature=0, and run-twice intersection for high-severity findings.
 
-**Decision:** Implement `product gap check` as a continuous LLM-driven specification review command. It analyses ADRs using depth-2 context bundles, checks for seven defined gap types (G001–G007), produces deterministic structured findings, and integrates with a `gaps.json` baseline for suppression and resolution tracking. The `--changed` flag scopes CI analysis to the affected ADR subgraph.
+**Decision:** Implement `product gap check` as a continuous LLM-driven specification review command. It analyses ADRs using depth-2 context bundles, checks for eight defined gap types (G001–G008), produces deterministic structured findings, and integrates with a `gaps.json` baseline for suppression and resolution tracking. The `--changed` flag scopes CI analysis to the affected ADR subgraph.
 
 ---
 

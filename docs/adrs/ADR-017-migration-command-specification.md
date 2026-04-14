@@ -121,12 +121,15 @@ After migration, the recommended workflow is:
 product migrate from-adrs picloud-adrs.md --execute
 product migrate from-prd picloud-prd.md --execute
 product graph check          # surfaces all broken links (features with no ADRs, etc.)
-# manually add depends-on edges and feature→ADR links based on graph check output
+# manually add feature→ADR links based on graph check output
+product feature link FT-001 --adr ADR-001 --adr ADR-002  # repeat per feature
 product graph check          # should now exit 0 or 2 (warnings only)
+product migrate link-tests   # infer TC→Feature links transitively through ADR links
+product graph check          # W002 warnings reduce significantly
 product checklist generate
 ```
 
-`product graph check` after migration will always produce warnings (W001 orphaned ADRs, W002 features with no tests, etc.) because the link edges are not inferred. This is expected and documented. The developer fills in edges using `product feature link` commands.
+`product graph check` after migration will always produce warnings (W001 orphaned ADRs, W002 features with no tests, etc.) because feature→ADR link edges require manual review. The developer fills these in using `product feature link`. Once feature→ADR links are confirmed, `product migrate link-tests` infers the transitive TC→Feature links automatically — see ADR-027.
 
 ---
 

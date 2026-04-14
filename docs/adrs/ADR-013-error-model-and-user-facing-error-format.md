@@ -104,6 +104,7 @@ Internal errors always print the source location, the Product version, and a lin
 | E010 | Concurrency | Repository locked — another Product process holds the write lock |
 | E011 | Domain | `domains-acknowledged` entry present with empty or missing reasoning |
 | E012 | Domain | Domain declared in front-matter not present in `product.toml` vocabulary |
+| E013 | Dependency | Dependency has no linked ADR — every dependency requires a governing decision |
 | W001 | Validation | Orphaned artifact — no incoming links |
 | W002 | Validation | Feature has no linked test criteria |
 | W003 | Validation | Feature has no exit-criteria type test |
@@ -115,6 +116,9 @@ Internal errors always print the source location, the Product version, and a lin
 | W009 | Migration | No test subsection found in ADR — no TC files extracted |
 | W010 | Domain | Cross-cutting ADR not linked or acknowledged by a feature |
 | W011 | Domain | Feature declares a domain with domain-scoped ADRs but no coverage |
+| W012 | Measurement | Feature has no `bundle` block — context bundle size has never been measured |
+| W013 | Dependency | Feature uses a deprecated or migrating dependency |
+| W015 | Dependency | Dependency `availability-check` failed during preflight |
 | I001 | Internal | Unexpected None in graph traversal |
 | I002 | Internal | Assertion failure in topological sort |
 

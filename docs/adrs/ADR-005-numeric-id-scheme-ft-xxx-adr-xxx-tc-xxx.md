@@ -13,7 +13,9 @@ scope: domain
 
 **Context:** Artifacts need stable, human-readable, machine-parseable identifiers. These IDs appear in front-matter links, CLI commands, filenames, and LLM context bundles. They must be: short enough to type, unambiguous, sortable, and stable after assignment.
 
-**Decision:** Use prefixed zero-padded numeric IDs: `FT-001`, `ADR-001`, `TC-001`. IDs are assigned sequentially by `product feature/adr/test new`. Once assigned, IDs are permanent — artifacts are never renumbered. Retired artifacts are marked `status: abandoned`, not deleted.
+**Decision:** Use prefixed zero-padded numeric IDs: `FT-001`, `ADR-001`, `TC-001`, `DEP-001`. IDs are assigned sequentially by `product feature/adr/test/dep new`. Once assigned, IDs are permanent — artifacts are never renumbered. Retired artifacts are marked `status: abandoned`, not deleted.
+
+**Sub-namespace extension:** Cross-cutting TCs that validate platform-wide properties rather than specific features use a sub-namespace suffix: `TC-CQ-001` (code quality), `TC-PLT-001` (platform invariants). The sub-namespace is a human-readable classifier only — it does not affect Product's parsing, storage, or graph logic. All TC IDs are treated identically by the system regardless of suffix. The sub-namespace prevents numeric collision when cross-cutting TCs are added without displacing feature-specific TC IDs.
 
 **Rationale:**
 - Sequential numeric IDs are common convention in engineering (JIRA, ADR numbering, RFC numbering) — contributors arrive with prior knowledge

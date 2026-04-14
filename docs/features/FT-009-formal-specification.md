@@ -11,6 +11,9 @@ tests:
 - TC-014
 - TC-015
 - TC-160
+- TC-194
+- TC-195
+- TC-196
 domains: []
 domains-acknowledged: {}
 ---

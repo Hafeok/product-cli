@@ -15,6 +15,12 @@ tests:
 - TC-011
 - TC-012
 - TC-154
+- TC-186
+- TC-187
+- TC-188
+- TC-189
+- TC-192
+- TC-193
 domains: []
 domains-acknowledged: {}
 ---

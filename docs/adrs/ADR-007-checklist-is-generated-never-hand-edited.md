@@ -11,18 +11,19 @@ scope: domain
 
 **Status:** Accepted
 
-**Context:** The existing workflow uses `checklist.md` as the source of truth for implementation status. Developers tick boxes in the checklist to mark work complete. This creates a problem: the checklist and the front-matter can diverge. If someone updates a feature's status in front-matter but forgets to tick the checklist (or vice versa), the two sources disagree.
+**Context:** The original workflow used `checklist.md` as the source of truth for implementation status — developers ticked boxes to mark work complete. This design had a divergence problem: front-matter and checklist could disagree. Since then, the Product toolchain has matured: `product verify` updates TC and feature status directly in front-matter, `product status` renders phase gate state and exit criteria progress in the terminal, `product feature next` uses topological sort to determine what to implement next, and agents call `product_feature_list` rather than reading a file. Implementation status now lives entirely in front-matter. Agents no longer need checklist.md.
 
-**Decision:** `checklist.md` is a generated document. Implementation status is owned by the `status` field in each artifact's front-matter. `product checklist generate` regenerates `checklist.md` from the current front-matter state. The checklist file includes a warning header directing contributors not to edit it directly.
+**Decision:** `checklist.md` is a generated human-readable view for stakeholders and GitHub rendering. It is not a data source, not an agent input, and not a source of truth. Implementation status is owned exclusively by feature and TC front-matter. `product checklist generate` produces `checklist.md` on demand. The file is listed in `.gitignore` by default — it is a local rendering, not a committed artifact, unless the project explicitly chooses to commit it for GitHub visibility.
 
 **Rationale:**
-- Single source of truth: status lives in one place (front-matter), not two (front-matter + checklist)
-- The checklist becomes a view, not a store. It can be regenerated at any time without loss of information
-- Git history on individual feature files shows who changed the status of that feature and when — a much finer-grained audit trail than a single checklist file with many concurrent edits
-- `product status FT-001 complete` updates front-matter and can regenerate the checklist in one command — the developer never needs to find and tick the right box
+- Front-matter is the single source of truth. Checklist.md is a projection of that truth, not a parallel record.
+- Agents use `product_feature_list`, `product status`, and `product feature next` — none of these require checklist.md to exist. Removing checklist.md from the committed repository eliminates a file that can silently go stale.
+- The legitimate remaining use case — "show a stakeholder what's been built without requiring Product to be installed" — is served by generating the file on demand and either sharing it or committing it deliberately. The default is not to commit it.
+- GitHub renders markdown checkboxes natively. For projects that want GitHub visibility of implementation status, committing checklist.md remains valid — the project sets `checklist-in-gitignore = false` in `product.toml`.
 
-**Migration note:** The existing `checklist.md` in PiCloud's repository should be treated as the initial status snapshot. During migration, `product migrate` reads checked boxes in the existing checklist and populates `status` fields in the scaffolded feature files accordingly.
+**Migration note:** The existing `checklist.md` in PiCloud's repository should be treated as the initial status snapshot. During migration, `product migrate` reads checked boxes in the existing checklist and populates `status` fields in the scaffolded feature files accordingly. After migration, checklist.md is redundant as a data source.
 
 **Rejected alternatives:**
-- **Checklist as source of truth, front-matter derived** — reverses the ownership. Markdown checkbox state is harder to parse programmatically than a YAML enum field. Also, checklist entries lack the structure to express the distinction between `planned`, `in-progress`, `complete`, and `abandoned`.
+- **Checklist as source of truth, front-matter derived** — reverses the ownership. Markdown checkbox state is harder to parse programmatically than a YAML enum field. Checklist entries cannot express the distinction between `planned`, `in-progress`, `complete`, and `abandoned`.
 - **Both are sources of truth (sync on conflict)** — any two-source-of-truth design requires a merge strategy. Merge strategies for status fields have no correct answer when they diverge. Reject this entire class of design.
+- **Remove checklist.md entirely** — loses the legitimate stakeholder and GitHub rendering use case. The file is genuinely useful as an occasional generated snapshot. Keeping it as an optional view rather than a required artifact is the right balance.

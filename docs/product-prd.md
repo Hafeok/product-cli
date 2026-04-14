@@ -23,14 +23,14 @@ Product runs as a CLI for local use, as a stdio MCP server for Claude Code on th
 1. **Structured artifact decomposition** — features, architectural decisions, and test criteria each live in their own files. No monolithic documents.
 2. **Machine-readable relationships** — YAML front-matter in every file declares its identity and its edges to other artifacts. The graph is derived from these declarations, not maintained separately.
 3. **Precise LLM context assembly** — the `context` command bundles a feature with all linked ADRs and test criteria into a single, clean markdown document ready for an LLM agent.
-4. **Implementation status tracking** — `checklist.md` is generated from feature front-matter. Status is declared in files, not maintained by hand in a separate document.
+4. **Implementation status tracking** — status is declared in feature and TC front-matter and updated by `product verify`. `product status` renders phase gate state and exit criteria progress. `checklist.md` is an optional generated view for stakeholder sharing, not a data source.
 5. **Queryable knowledge graph** — the CLI can answer relational queries: which ADRs apply to this feature, which tests validate this decision, which features are in phase 1 and have no tests.
 6. **RDF export** — the derived graph can be exported to `index.ttl` for SPARQL tooling, LLM injection, or external graph queries.
 7. **Rust, single binary** — Product ships as a single compiled binary with no runtime dependencies. It can run in CI, on a developer laptop, or inside an agentic pipeline.
 8. **Repository-native** — Product operates on a directory of markdown files. No server, no database, no configuration beyond a single `product.toml` at the repo root.
 9. **MCP server — stdio and HTTP** — Product exposes its full tool surface as an MCP server. stdio transport supports Claude Code on the local machine. HTTP transport supports remote access from any MCP-capable client, including claude.ai on mobile.
 10. **Graph-aware authoring** — `product author` sessions give Claude full read and scaffold access to the graph during spec writing. The authoring agent cannot implement an idea without first understanding what already exists.
-11. **Agent orchestration** — `product implement` assembles context, invokes the implementation agent, and hands back control to `product verify`. The full loop from feature to passing tests is a single command.
+11. **Knowledge pipeline** — Product provides every primitive an agent needs to work on a feature: preflight, gap check, drift check, context assembly, and post-implementation verification. The sequence of calls is the pipeline; Product does not invoke agents.
 12. **Continuous specification health** — drift detection, fitness functions, pre-commit review, and gap analysis run continuously to catch specification degradation before it reaches the implementation agent.
 
 ---
@@ -52,19 +52,25 @@ Product runs as a CLI for local use, as a stdio MCP server for Claude Code on th
 
 ### Artifact Types
 
-**Feature (`FT-XXX`)** — A unit of product capability. Corresponds to a section of a PRD. Declares its phase, status, linked ADRs, and linked test criteria. A feature is the primary navigation unit of the knowledge graph: everything else is reachable from it.
+**Feature (`FT-XXX`)** — A unit of product capability. Corresponds to a section of a PRD. Declares its phase, status, linked ADRs, linked test criteria, and linked dependencies. A feature is the primary navigation unit of the knowledge graph: everything else is reachable from it.
 
-**Architectural Decision Record (`ADR-XXX`)** — A single architectural decision. Declares context, decision, rationale, rejected alternatives, and the features it applies to. An ADR may apply to multiple features. An ADR may supersede or be superseded by another ADR.
+**Architectural Decision Record (`ADR-XXX`)** — A single architectural decision. Declares context, decision, rationale, rejected alternatives, and the features it applies to. An ADR may apply to multiple features. An ADR may supersede or be superseded by another ADR. An ADR may govern one or more dependencies.
 
-**Test Criterion (`TC-XXX`)** — A single verifiable assertion about system behaviour. A test criterion has a type (scenario, invariant, chaos, exit-criteria), is linked to one or more features and one or more ADRs, and belongs to a phase. Test criteria are extracted from ADRs during migration — they are not co-located with the decisions they verify.
+**Test Criterion (`TC-XXX`)** — A single verifiable assertion about system behaviour. A test criterion has a type (scenario, invariant, chaos, exit-criteria, benchmark), is linked to one or more features and one or more ADRs, and belongs to a phase. Test criteria are extracted from ADRs during migration — they are not co-located with the decisions they verify.
+
+**Dependency (`DEP-XXX`)** — A declared external system that one or more features require. Captures the runtime facts about an external dependency: type, version constraint, interface description, and an optional availability check command. Distinct from ADRs, which capture the decision to use the dependency. Six types: `library`, `service`, `api`, `tool`, `hardware`, `runtime`.
 
 ### Relationships
 
 ```
-Feature ──── implementedBy ────► ADR
-Feature ──── validatedBy ───────► TestCriterion
-ADR     ──── testedBy ──────────► TestCriterion
-ADR     ──── supersedes ────────► ADR
+Feature    ──── implementedBy ──────► ADR
+Feature    ──── validatedBy ─────────► TestCriterion
+Feature    ──── uses ────────────────► Dependency
+ADR        ──── testedBy ───────────► TestCriterion
+ADR        ──── supersedes ──────────► ADR
+ADR        ──── governs ────────────► Dependency
+Feature    ──── depends-on ──────────► Feature
+Dependency ──── supersedes ──────────► Dependency
 ```
 
 Edges are declared in the *source* artifact's front-matter. The derived graph is bidirectional — every edge is traversable in both directions by the CLI.
@@ -91,16 +97,59 @@ A context bundle is a single markdown document containing a feature, all its lin
   /adrs
     ADR-001-rust-language.md
     ADR-002-openraft-consensus.md
+    ADR-029-code-quality.md
+  /deps
+    DEP-001-openraft.md
+    DEP-002-oxigraph.md
+    DEP-010-raspberry-pi-nvme.md
   /tests
     TC-001-binary-compiles.md
     TC-002-raft-leader-election.md
     TC-003-raft-leader-failover.md
+    TC-CQ-001-file-length-hard.md   ← cross-cutting code quality checks
+    TC-CQ-002-file-length-warn.md
+    TC-CQ-003-function-length.md
+    TC-CQ-004-module-structure.md
+    TC-CQ-005-single-responsibility.md
   /graph
     index.ttl               ← generated, never hand-edited
-  checklist.md              ← generated, never hand-edited
+  checklist.md              ← generated view (gitignored by default)
+                            ← not a data source — front-matter owns status
+
+/scripts
+  /checks                   ← enforcement scripts (not part of Product binary)
+    file-length.sh
+    function-length.sh
+    module-structure.sh
+    single-responsibility.sh
+  /harness                  ← example harness scripts (not part of Product binary)
+    implement.sh
+    author.sh
+    loop.sh
+
+/benchmarks
+  /prompts                  ← versioned system prompts
+    author-feature-v1.md
+    author-adr-v1.md
+    author-review-v1.md
+    implement-v1.md
+  /tasks                    ← LLM benchmark tasks
+    task-001-raft-leader-election/
+
+/src                        ← Rust source, structured per ADR-029
+  main.rs
+  error.rs
+  config.rs
+  /graph
+  /parse
+  /context
+  /commands
+  /verify
+  /mcp
+  /io
 ```
 
-Subdirectory names and file prefixes are configurable in `product.toml`. The layout above is the default.
+Subdirectory names and file prefixes are configurable in `product.toml`. The `docs/` layout above is the default.
 
 ---
 
@@ -116,17 +165,60 @@ phase: 1
 status: in-progress          # planned | in-progress | complete | abandoned
 depends-on: []               # feature IDs that must be complete before this one
 domains: [consensus, networking, storage, iam, observability]
-                             # concern domains this feature touches
 adrs: [ADR-001, ADR-002, ADR-003, ADR-006]
 tests: [TC-001, TC-002, TC-003, TC-004]
-domains-acknowledged:        # explicit reasoning for domains with no linked ADR
+uses: [DEP-001, DEP-010]     # external dependencies this feature requires
+domains-acknowledged:
   scheduling: >
     No workload scheduling in phase 1. Cluster foundation does not
     place containers — that is phase 2. Intentionally out of scope.
+bundle:
+  measured-at: 2026-04-11T09:14:22Z
+  depth-1-adrs: 6
+  depth-2-adrs: 11
+  tcs: 8
+  domains: 5
+  tokens-approx: 7400
 ---
 ```
 
-The `depends-on` field declares implementation dependencies between features. Product validates that these edges form a DAG — cycles are a hard error. `product feature next` uses topological sort over this DAG to determine the correct implementation order, replacing the previous phase-label ordering.
+### Dependency
+
+```yaml
+---
+id: DEP-001
+title: openraft
+type: library            # library | service | api | tool | hardware | runtime
+source: crates.io
+version: ">=0.9,<1.0"
+status: active           # active | deprecated | evaluating | migrating
+features: [FT-001, FT-002, FT-005]
+adrs: [ADR-002]          # ADR that governs use of this dependency
+availability-check: ~    # null for libraries — no runtime check needed
+breaking-change-risk: medium   # low | medium | high
+---
+```
+
+```yaml
+---
+id: DEP-005
+title: PostgreSQL Event Store
+type: service
+version: ">=14"
+status: active
+features: [FT-007, FT-012]
+adrs: [ADR-015]
+interface:
+  protocol: tcp
+  port: 5432
+  auth: md5
+  connection-string-env: DATABASE_URL
+availability-check: "pg_isready -h ${PG_HOST:-localhost} -p ${PG_PORT:-5432}"
+breaking-change-risk: low
+---
+```
+
+The `interface` block is optional and type-specific. For `service` and `api` types it captures the runtime contract an agent needs to write correct integration code. The `availability-check` is a shell command — exit 0 means available. Product never satisfies this check; it only evaluates it. It records the last-measured context bundle dimensions for this feature. `product metrics threshold` reads this block to identify features that breach configured size thresholds. Features with no `bundle` block have not been measured and are reported as W012 by `product graph check`.
 
 ### ADR
 
@@ -168,7 +260,7 @@ The `benchmark` type is distinct from the others: it does not produce a binary p
 id: TC-002
 title: Raft Leader Election
 type: scenario
-status: unimplemented        # unimplemented | implemented | passing | failing
+status: unimplemented        # unimplemented | implemented | passing | failing | unrunnable
 validates:
   features: [FT-001]
   adrs: [ADR-002]
@@ -177,6 +269,9 @@ runner: cargo-test           # cargo-test | bash | pytest | custom
                              # omit if test infrastructure not yet available
 runner-args: ["--test", "raft_leader_election", "--", "--nocapture"]
 runner-timeout: 60s          # optional, default 30s
+requires: [binary-compiled]  # optional — declarative prerequisites
+                             # names defined in [verify.prerequisites] in product.toml
+                             # Product checks these before running — never satisfies them
 ---
 
 ## Description
@@ -289,8 +384,9 @@ schema-version = "1"
 features = "docs/features"
 adrs = "docs/adrs"
 tests = "docs/tests"
+deps = "docs/deps"
 graph = "docs/graph"
-checklist = "docs/checklist.md"
+checklist = "docs/checklist.md"    # generated view only — not a data source
 metrics = "metrics.jsonl"
 gaps = "gaps.json"
 drift = "drift.json"
@@ -306,6 +402,7 @@ prompts = "benchmarks/prompts"
 feature = "FT"
 adr = "ADR"
 test = "TC"
+dep = "DEP"
 
 # Concern domain vocabulary — controlled by the project, not by Product
 # Any domain declared in ADR or feature front-matter must appear here
@@ -320,6 +417,7 @@ iam             = "Identity, OIDC, tokens, RBAC, workload identity"
 scheduling      = "Workload placement, resource limits, eviction"
 api             = "CLI surface, MCP tools, event schema, resource language"
 data-model      = "RDF, SPARQL, ontology, event sourcing, projections"
+code-quality    = "File size, function length, module structure, naming"
 
 # MCP server settings (product mcp)
 [mcp]
@@ -328,28 +426,19 @@ port = 7777                     # HTTP transport port
 cors-origins = ["https://claude.ai"]
 # token = ""                    # override with PRODUCT_MCP_TOKEN env var
 
-# Agent invocation (product implement)
-[agent]
-default = "claude-code"         # claude-code | cursor | custom
-auto-verify = true
-gap-gate = "high"               # refuse to implement if gaps at this severity
+# Checklist — generated view for human consumption, not a data source
+# Front-matter owns status. Agents use `product status` and `product feature next`.
+[checklist]
+in-gitignore = true             # default: do not commit checklist.md
+                                # set false to commit for GitHub rendering
 
-[agent.claude-code]
-flags = []
-
-[agent.custom]
-command = "./scripts/agent.sh {context_file} {feature_id}"
-
-# Versioned system prompts for authoring sessions
+# Versioned system prompts for authoring (product prompts get/list/update)
+# Product does not invoke agents — these are prompt file version pins only
 [author]
 feature-prompt-version = "1"
 adr-prompt-version = "1"
 review-prompt-version = "1"
-agent = "claude-code"
-
-# Versioned implementation prompt
-[implementation-prompt]
-version = "1"
+implement-prompt-version = "1"
 
 # LLM gap analysis settings (product gap check)
 [gap-analysis]
@@ -364,6 +453,15 @@ source-roots = ["src/", "lib/"]
 ignore = ["tests/", "benches/", "target/"]
 max-files-per-adr = 20
 
+# TC prerequisite conditions (product verify)
+# Each entry is a name and a shell command — exit 0 = satisfied, non-zero = not satisfied.
+# Product checks these before running a TC that declares them in `requires:`.
+# Product never satisfies prerequisites — it only checks them.
+[verify.prerequisites]
+binary-compiled      = "test -f target/release/picloud"
+two-node-cluster     = "product graph query 'ASK { ?n a picloud:Node } HAVING COUNT(?n) >= 2'"
+raft-leader-elected  = "product graph query 'ASK { ?n picloud:hasRole picloud:Leader }'"
+
 # Architectural fitness thresholds (product metrics threshold)
 [metrics]
 record-on-merge = true          # automatically append to metrics.jsonl in CI
@@ -375,6 +473,12 @@ exit_criteria_coverage  = { min = 0.60, severity = "warning" }
 phi                     = { min = 0.70, severity = "warning" }
 gap_resolution_rate     = { min = 0.50, severity = "warning" }
 drift_density           = { max = 0.20, severity = "warning" }
+
+# Bundle size thresholds — signals features that may need splitting
+bundle_depth1_adr_max       = { max = 8,     severity = "warning" }
+bundle_tokens_max           = { max = 12000, severity = "warning" }
+bundle_domains_max          = { max = 6,     severity = "warning" }
+features_over_adr_threshold = { max = 3,     severity = "warning" }
 ```
 
 ---
@@ -389,7 +493,8 @@ product feature show FT-001
 product feature adrs FT-001          # all ADRs linked to this feature
 product feature tests FT-001         # all test criteria for this feature
 product feature deps FT-001          # full transitive dependency tree
-product feature next                 # next feature by topological order (not phase label)
+product feature next                 # next feature by topological order + phase gate
+product feature next --ignore-phase-gate  # skip phase gate (with warning)
 
 product adr list [--status STATUS]
 product adr show ADR-002
@@ -399,6 +504,14 @@ product adr tests ADR-002            # which tests validate this decision
 product test list [--phase N] [--type TYPE] [--status STATUS]
 product test show TC-002
 product test untested                # features with no linked tests
+
+product dep list [--type TYPE] [--status STATUS]
+product dep show DEP-001
+product dep features DEP-001         # which features use this dependency
+product dep check DEP-005            # run availability check manually
+product dep check --all              # run all availability checks
+product dep bom                      # full dependency bill of materials
+product dep bom --format json        # machine-readable for security audits
 ```
 
 ### Context Assembly
@@ -406,6 +519,8 @@ product test untested                # features with no linked tests
 ```
 product context FT-001               # feature + direct ADRs + direct tests (depth 1)
 product context FT-001 --depth 2     # transitive context: deps, shared ADRs, their tests
+product context FT-001 --measure     # assemble + record bundle dimensions to front-matter
+                                     # and metrics.jsonl
 product context --phase 1            # all features in phase 1, with full context
 product context --phase 1 --adrs-only  # phase 1 features + ADRs, no tests
 product context ADR-002              # ADR + all linked features + all linked tests
@@ -417,8 +532,9 @@ ADRs within a bundle are ordered by betweenness centrality descending by default
 ### Status and Checklist
 
 ```
-product status                       # summary: features by phase and status
-product status --phase 1             # phase 1 detail with test coverage
+product status                       # overview: phases with gate state [OPEN/LOCKED],
+                                     # features by status, exit criteria progress
+product status --phase 1             # phase detail: all exit-criteria TCs with pass/fail
 product status --untested            # features with no linked test criteria
 product status --failing             # features with one or more failing tests
 product checklist generate           # regenerate checklist.md from feature files
@@ -431,7 +547,9 @@ product graph check                  # validate all links, DAG cycles, phase/dep
 product graph rebuild                # regenerate index.ttl from all front-matter
 product graph query "SELECT ..."     # SPARQL over the generated graph
 product graph stats                  # artifact counts, link density, centrality summary,
-                                     # φ (formal block coverage) across test criteria
+                                     # φ (formal block coverage) across test criteria,
+                                     # bundle size summary and features over threshold
+product graph stats --feature FT-003 # single-feature detail with split suggestions
 product graph central                # top-10 ADRs by betweenness centrality
 product graph central --top N        # configurable N
 product graph central --all          # full ranked list
@@ -441,6 +559,7 @@ product graph coverage --format json       # machine-readable for CI
 product impact ADR-002               # full affected set if this decision changes
 product impact FT-001                # what depends on this feature completing
 product impact TC-003                # what depends on this test criterion
+product impact DEP-001               # features and ADRs affected by a dep change
 ```
 
 `product graph check` also validates:
@@ -448,6 +567,7 @@ product impact TC-003                # what depends on this test criterion
 - Phase label / dependency order disagreements (exit code 2)
 - Acknowledgements without reasoning — E011 (exit code 1)
 - Domains declared in front-matter not present in `product.toml` vocabulary — E012 (exit code 1)
+- Dependencies with no linked ADR — E013 (exit code 1)
 
 ### Pre-flight and Domain Coverage
 
@@ -461,7 +581,7 @@ product feature acknowledge FT-009 --adr ADR-040 \
   --reason "standard output conventions apply"
 ```
 
-Pre-flight must be clean before `product implement` proceeds (Step 0 in the pipeline). Pre-flight gaps are resolved by linking an ADR (`product feature link`) or acknowledging a domain/ADR with explicit reasoning. Acknowledgements without reasoning are E011 hard errors.
+Pre-flight must be clean before any agent begins implementation work. Pre-flight gaps are resolved by linking an ADR (`product feature link`) or acknowledging a domain/ADR with explicit reasoning. Acknowledgements without reasoning are E011 hard errors.
 
 ### Authoring
 
@@ -469,9 +589,12 @@ Pre-flight must be clean before `product implement` proceeds (Step 0 in the pipe
 product feature new "Cluster Foundation"   # scaffold FT-XXX file with next ID
 product adr new "Use openraft for consensus"
 product test new "Raft leader election" --type scenario
+product dep new "openraft" --type library        # scaffold DEP-XXX + ADR-XXX stub
+product dep new "PostgreSQL" --type service --adr ADR-015  # link to existing ADR
 
 product feature link FT-001 --adr ADR-002  # add edge (mutates front-matter)
 product feature link FT-001 --test TC-002
+product feature link FT-001 --dep DEP-001  # add uses edge
 
 product adr status ADR-002 accepted        # set ADR status
 product test status TC-002 passing         # set test status
@@ -484,7 +607,21 @@ product feature status FT-001 complete     # set feature status
 product migrate from-prd PRD.md           # parse monolithic PRD → feature files
 product migrate from-adrs ADRS.md         # parse monolithic ADR file → adr files + test files
 product migrate validate                  # report what would be created without writing
+product migrate link-tests                # infer TC→Feature links via ADR relationships
+product migrate link-tests --dry-run      # preview without writing
+product migrate link-tests --adr ADR-002  # scope to one ADR's TCs
 ```
+
+### Graph Inference
+
+```
+product graph infer                       # infer all missing transitive TC→Feature links
+product graph infer --dry-run             # preview without writing
+product graph infer --feature FT-009      # scope to one feature's new links
+product graph infer --adr ADR-021         # scope to one ADR's TCs
+```
+
+Both `migrate link-tests` and `graph infer` use the same algorithm: for each domain-scoped ADR, find features that link it and TCs that validate it, add missing TC→Feature links. Cross-cutting ADRs are excluded. Both commands also update the reverse direction — adding the TC to the feature's `tests` list.
 
 ### Gap Analysis
 
@@ -537,33 +674,42 @@ product mcp --http --token $SECRET        # bearer token auth (required for remo
 product mcp tools                         # list all available MCP tools
 ```
 
-### Authoring Sessions
+### Authoring Resources
 
 ```
-product author feature                    # graph-aware feature authoring session
-product author adr                        # graph-aware ADR authoring session
-product author review                     # spec gardening — find gaps and improve coverage
+product prompts init                  # scaffold default prompt files in benchmarks/prompts/
+product prompts list                  # list available prompts and versions
+product prompts get author-feature    # print prompt to stdout (pipe to any agent)
+product prompts get implement
+product prompts update author-feature # pull latest default version
 
-product install-hooks                     # install pre-commit hook in .git/hooks/
-product adr review --staged               # review staged ADR files (used by pre-commit hook)
-product adr review ADR-XXX                # review a specific ADR
+product adr review ADR-XXX            # review a specific ADR (structural + LLM)
+product adr review --staged           # review all staged ADR files (used by pre-commit hook)
+product install-hooks                 # install pre-commit hook in .git/hooks/
 ```
 
-### Agent Orchestration
+### Implementation Pipeline
 
 ```
-product implement FT-001                  # gap-check → assemble context → invoke agent
-product implement FT-001 --agent cursor   # override configured agent
-product implement FT-001 --dry-run        # show what would be sent to agent, don't invoke
-product verify FT-001                     # run linked TCs, update status, regenerate checklist
-product verify FT-001 --tc TC-002         # run a single TC only
+# Knowledge commands — call these before invoking an agent:
+product preflight FT-001
+product gap check FT-001 --severity high
+product drift check --phase 1
+product context FT-001 --depth 2 --measure
+
+# After agent completes:
+product verify FT-001                 # run TCs, update status, regenerate checklist
+product verify FT-001 --tc TC-002     # run a single TC only
+product verify --platform             # run all TCs linked to cross-cutting ADRs
 ```
+
+Product does not invoke agents. See `scripts/harness/` for example shell scripts that compose these commands into a complete flow.
 
 ---
 
 ## 8. Context Bundle Format
 
-The context command assembles a deterministic markdown bundle. Order is always: feature → ADRs (by ID ascending) → test criteria (by phase, then type: exit-criteria, scenario, invariant, chaos).
+The context command assembles a deterministic markdown bundle. Order is always: feature → ADRs (by betweenness centrality descending) → dependencies (libraries first, then services, then others) → test criteria (by phase, then type: exit-criteria, scenario, invariant, chaos).
 
 The bundle opens with an AISP-influenced formal header block (see ADR-011) that an agent can parse without reading the full document. It declares the bundle's identity, all linked artifact IDs, and aggregate evidence metrics derived from the test criteria evidence blocks.
 
@@ -576,6 +722,7 @@ The bundle opens with an AISP-influenced formal header block (see ADR-011) that 
   status≜InProgress:FeatureStatus
   generated≜2026-04-11T09:00:00Z
   implementedBy≜⟨ADR-001,ADR-002,ADR-003,ADR-006⟩:Decision+
+  uses≜⟨DEP-001,DEP-010⟩:Dependency+
   validatedBy≜⟨TC-001,TC-002,TC-003,TC-004⟩:TestCriterion+
 }
 ⟦Ε⟧⟨δ≜0.92;φ≜75;τ≜◊⁺⟩
@@ -597,6 +744,25 @@ The bundle opens with an AISP-influenced formal header block (see ADR-011) that 
 ## ADR-002 — openraft for Cluster Consensus
 
 [full content, front-matter stripped]
+
+---
+
+## Dependencies
+
+### DEP-001 — openraft [library, >=0.9,<1.0]
+
+[dependency body text, front-matter stripped]
+
+Interface: no runtime interface (build-time library)
+Availability: no check required
+
+### DEP-010 — Raspberry Pi 5 NVMe [hardware]
+
+[dependency body text, front-matter stripped]
+
+Interface:
+  arch: aarch64 / storage-min-gb: 500
+  availability-check: uname -m | grep -q aarch64 && ls /dev/nvme*
 
 ---
 
@@ -627,9 +793,7 @@ The bundle opens with an AISP-influenced formal header block (see ADR-011) that 
 ⟦Ε⟧⟨δ≜0.95;φ≜100;τ≜◊⁺⟩
 ```
 
-The bundle evidence block `⟦Ε⟧` at the top is computed as the mean of all linked test criterion `δ` values (confidence), and the percentage of criteria with formal blocks present (`φ`). An agent receiving this bundle can assess the specification quality before reading the full content.
-
-YAML front-matter is stripped from all sections. Formal blocks in test criteria are preserved verbatim — they are the specification, not metadata.
+The bundle evidence block `⟦Ε⟧` at the top is computed as the mean of all linked test criterion `δ` values. The `uses` field in `⟦Ω:Bundle⟧` lists all linked dependency IDs — an agent sees the full runtime dependency surface before reading any content.
 
 ---
 
@@ -643,9 +807,12 @@ Product builds an in-memory directed graph from front-matter on every invocation
 |---|---|---|---|
 | `implementedBy` | Feature | ADR | Feature is governed by this decision |
 | `validatedBy` | Feature | TestCriterion | Feature is verified by this test |
+| `uses` | Feature | Dependency | Feature requires this external system |
 | `testedBy` | ADR | TestCriterion | Decision is verified by this test |
 | `supersedes` | ADR | ADR | This decision replaces another |
+| `governs` | ADR | Dependency | Decision that chose this dependency |
 | `depends-on` | Feature | Feature | Implementation dependency — must complete before |
+| `supersedes` | Dependency | Dependency | Migration — this dependency replaces another |
 
 The reverse of every edge is implicit. Impact analysis (`product impact`) traverses the reverse graph to compute reachability.
 
@@ -653,7 +820,7 @@ The reverse of every edge is implicit. Impact analysis (`product impact`) traver
 
 | Algorithm | Applied to | Command | Purpose |
 |---|---|---|---|
-| Topological sort (Kahn's) | Feature `depends-on` DAG | `product feature next` | Correct implementation ordering |
+| Topological sort (Kahn's) | Feature `depends-on` DAG | `product feature next` | Correct implementation ordering with phase gate |
 | BFS to depth N | All edges | `product context --depth N` | Transitive context assembly |
 | Betweenness centrality (Brandes') | ADR nodes | `product graph central` | Structural importance ranking |
 | Reverse-graph BFS | All edges reversed | `product impact` | Change impact analysis |
@@ -667,6 +834,7 @@ Product exports the knowledge graph as RDF Turtle. The ontology prefix is `pm:` 
 @prefix ft: <https://product-meta/feature/> .
 @prefix adr: <https://product-meta/adr/> .
 @prefix tc: <https://product-meta/test/> .
+@prefix dep: <https://product-meta/dep/> .
 
 ft:FT-001 a pm:Feature ;
     pm:title "Cluster Foundation" ;
@@ -675,7 +843,9 @@ ft:FT-001 a pm:Feature ;
     pm:implementedBy adr:ADR-001 ;
     pm:implementedBy adr:ADR-002 ;
     pm:validatedBy tc:TC-001 ;
-    pm:validatedBy tc:TC-002 .
+    pm:validatedBy tc:TC-002 ;
+    pm:uses dep:DEP-001 ;
+    pm:uses dep:DEP-010 .
 
 ft:FT-003 a pm:Feature ;
     pm:dependsOn ft:FT-001 ;
@@ -686,7 +856,8 @@ adr:ADR-002 a pm:ArchitecturalDecision ;
     pm:status pm:Accepted ;
     pm:betweennessCentrality 0.731 ;
     pm:appliesTo ft:FT-001 ;
-    pm:testedBy tc:TC-002 .
+    pm:testedBy tc:TC-002 ;
+    pm:governs dep:DEP-001 .
 
 tc:TC-002 a pm:TestCriterion ;
     pm:title "Raft Leader Election" ;
@@ -694,32 +865,56 @@ tc:TC-002 a pm:TestCriterion ;
     pm:status pm:Unimplemented ;
     pm:validates ft:FT-001 ;
     pm:validates adr:ADR-002 .
+
+dep:DEP-001 a pm:Dependency ;
+    pm:title "openraft" ;
+    pm:depType pm:Library ;
+    pm:version ">=0.9,<1.0" ;
+    pm:status pm:Active ;
+    pm:breakingChangeRisk pm:Medium ;
+    pm:usedBy ft:FT-001 ;
+    pm:usedBy ft:FT-002 ;
+    pm:governedBy adr:ADR-002 .
 ```
 
-Betweenness centrality scores are written into the TTL export on `graph rebuild` so external SPARQL tools can query on them.
+Betweenness centrality scores and dependency triples are written into the TTL export on `graph rebuild` so external SPARQL tools can query on them.
 
 ---
 
-## 10. Generated Checklist
+## 10. Generated Checklist (Optional View)
 
-`checklist.md` is regenerated by `product checklist generate`. It is never hand-edited. Status is owned by feature front-matter.
+`checklist.md` is a generated human-readable view of implementation status. It is not a data source, not an agent input, and not a source of truth. Front-matter owns status. Agents use `product status`, `product feature next`, and `product_feature_list` — none of these require checklist.md to exist.
+
+`checklist.md` serves one legitimate purpose: giving stakeholders and code reviewers a readable snapshot of project state without requiring Product to be installed. GitHub renders markdown checkboxes natively, which makes it useful for repository visibility.
+
+**Default behaviour:** `checklist.md` is listed in `.gitignore` by default. It is generated locally when needed and not committed. Teams that want GitHub visibility can opt out of gitignore by setting `checklist-in-gitignore = false` in `product.toml`.
+
+```
+product checklist generate        # regenerate from current front-matter
+product checklist generate --open  # regenerate and open in browser
+```
+
+Generated format:
 
 ```markdown
 # Implementation Checklist
 
 > Generated by product v0.1 | Last updated: 2026-04-11
-> Do not edit directly — update status in feature/test front-matter and run `product checklist generate`
+> Source of truth: feature and TC front-matter (not this file)
+> Do not edit — regenerate with `product checklist generate`
+> Phase 1: OPEN (exit criteria 2/4 passing) | Phase 2: LOCKED
 
-## Phase 1 — Cluster Foundation
+## Phase 1 — Cluster Foundation [OPEN]
 
 ### FT-001 — Cluster Foundation [in-progress]
 
 - [x] ADR-001: Rust as implementation language (accepted)
-- [x] ADR-002: openraft for consensus (accepted)
+- [x] ADR-002: openraft for consensus (accepted)  ← DEP-001 openraft
 - [ ] TC-001: Binary compiles (exit-criteria) — unimplemented
 - [ ] TC-002: Raft leader election (scenario) — unimplemented
-- [ ] TC-003: Raft leader failover (chaos) — unimplemented
 ```
+
+The generated file includes the phase gate state in the header so a stakeholder reading it understands why Phase 2 features all show as planned.
 
 ---
 
@@ -737,6 +932,7 @@ Errors (exit code 1):
 | E001 | Malformed front-matter in any artifact file |
 | E011 | `domains-acknowledged` entry present with empty reasoning |
 | E012 | Domain declared in front-matter not present in `product.toml` vocabulary |
+| E013 | Dependency has no linked ADR — every dependency requires a governing decision |
 
 Warnings (exit code 2 when no errors):
 
@@ -753,6 +949,9 @@ Warnings (exit code 2 when no errors):
 | W009 | Migration: no test subsection found in ADR, no TC files extracted |
 | W010 | Cross-cutting ADR not linked or acknowledged by a feature |
 | W011 | Feature declares a domain with existing domain-scoped ADRs but no coverage |
+| W012 | Feature has no `bundle` measurement — run `product context FT-XXX --measure` |
+| W013 | Feature uses a deprecated or migrating dependency |
+| W015 | Dependency `availability-check` failed during preflight |
 
 Schema errors (exit code 1):
 
@@ -771,6 +970,7 @@ Gap analysis codes (stdout, separate from `graph check`):
 | G005 | high | Logical contradiction between this ADR and a linked ADR |
 | G006 | medium | Feature aspect not addressed by any linked ADR |
 | G007 | low | Rationale references decisions superseded by a newer ADR |
+| G008 | medium | Feature uses a dependency with no ADR governing its use |
 
 All errors use the rustc-style diagnostic format (file path, line number, offending content, remediation hint). `--format json` outputs structured JSON to stderr for CI consumption. See ADR-013 for the full error model.
 
@@ -818,7 +1018,50 @@ product preflight FT-009
   product feature acknowledge FT-009 --domain security --reason "..."
 ```
 
-Domain coverage is integrated into the `product implement` pipeline as Step 0 — pre-flight must be clean before context assembly or agent invocation. See ADR-026.
+Domain coverage is part of the pre-implementation knowledge check — pre-flight must be clean before an agent begins work on a feature. See ADR-026.
+
+### Bundle Size and Split Suggestions
+
+`product graph stats --feature FT-XXX` shows the feature's last-measured bundle dimensions and, when thresholds are exceeded, a domain-based split suggestion:
+
+```
+product graph stats --feature FT-003
+
+FT-003 — RDF Store  [in-progress, phase 3]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bundle dimensions (measured 2026-04-11T09:14:22Z):
+  depth-1-adrs:  9   ⚠ exceeds threshold (max 8)
+  depth-2-adrs:  14
+  tcs:           12
+  domains:       4
+  tokens-approx: 11,200
+
+Domain breakdown of linked ADRs:
+  data-model   4 ADRs  — RDF store, SPARQL, ontology, projections
+  networking   2 ADRs  — SPARQL endpoint, mTLS
+  iam          2 ADRs  — IAM-gated SPARQL, per-product scoping
+  storage      1 ADR   — Oxigraph persistence
+
+⚠ depth-1-adrs (9) exceeds threshold (8). Consider splitting.
+
+Suggested split along domain boundaries:
+  FT-003a  RDF Store Core    — data-model (4), storage (1)  → 5 ADRs, ~5,800 tokens
+  FT-003b  RDF Store Access  — networking (2), iam (2)      → 4 ADRs, ~4,200 tokens
+```
+
+The split suggestion is derived purely from the domain taxonomy — no LLM call, instant. It groups linked ADRs by domain and proposes the smallest number of sub-features that keeps each one under the ADR threshold. The token estimates are recomputed from existing `bundle_measure` entries in `metrics.jsonl`.
+
+`product graph stats` (no `--feature` flag) shows the repository-wide summary:
+
+```
+Bundle size summary (from last measurements):
+  features measured:  12 / 15
+  depth-1-adr p50:    5    p95: 8
+  tokens-approx p50:  6,200   p95: 10,800
+  features over adr threshold (>8):  2  — FT-003, FT-007
+  features over token threshold (>12000):  0
+  unmeasured features (W012):  3  — FT-013, FT-014, FT-015
+```
 
 ---
 
@@ -838,12 +1081,22 @@ product migrate from-prd picloud-prd.md --execute
 # Interactive — review each artifact before writing
 product migrate from-prd picloud-prd.md --interactive
 
-# Post-migration: fill in link gaps and generate checklist
-product graph check
+# Step 2: confirm feature→ADR links manually
+product graph check          # shows W001/W002 gaps to fill
+product feature link FT-001 --adr ADR-001 --adr ADR-002
+
+# Step 3: infer transitive TC→Feature links
+product migrate link-tests --dry-run    # preview what will be linked
+product migrate link-tests              # apply all inferred links
+
+# Step 4: final check and checklist
+product graph check          # W002 warnings should drop significantly
 product checklist generate
 ```
 
-The migration parser uses heading structure to detect artifact boundaries and extracts phase references, status markers, and test criteria from subsections. It does not infer `depends-on` edges or feature→ADR links — those require human review and are filled in via `product feature link` commands after migration.
+The migration parser uses heading structure to detect artifact boundaries and extracts phase references, status markers, and test criteria from subsections. It does not infer `depends-on` edges or feature→ADR links — those require human review.
+
+`product migrate link-tests` is the post-migration step that closes the loop: once feature→ADR links are confirmed, it infers all TC→Feature links transitively (through domain-scoped ADRs only — cross-cutting ADRs are excluded to avoid linking every TC to every feature). See ADR-027.
 
 The source document is never modified. Migration can be re-run safely.
 
@@ -857,7 +1110,9 @@ The source document is never modified. Migration can be re-run safely.
 
 - [ ] `product.toml` parsing and repository discovery including `schema-version`
 - [ ] Schema version validation on startup — E008 on forward incompatibility, W007 on upgrade available
-- [ ] Front-matter parser for feature, ADR, and test files including `depends-on`
+- [ ] Front-matter parser for feature, ADR, test, and dependency files including `depends-on` and `uses`
+- [ ] `product dep list/show/features/check/bom`
+- [ ] `product dep new` — scaffold DEP-XXX with next ID
 - [ ] Formal block parser (ADR-016) — `⟦Σ⟧`, `⟦Γ⟧`, `⟦Λ⟧`, `⟦Ε⟧` blocks with line-level error reporting
 - [ ] In-memory graph construction from front-matter (all five edge types)
 - [ ] DAG cycle detection on `depends-on` edges — E003 hard error
@@ -875,10 +1130,12 @@ The source document is never modified. Migration can be re-run safely.
 - [ ] Tmp file cleanup on startup
 - [ ] `product migrate from-prd --validate/--execute/--interactive`
 - [ ] `product migrate from-adrs --validate/--execute/--interactive`
+- [ ] `product migrate link-tests --dry-run / --execute` — transitive TC→Feature inference
+- [ ] `product graph infer` — general-purpose inference, post-link confirmation prompt
 - [ ] `#![deny(clippy::unwrap_used)]` — zero panics on user input
 - [ ] Single binary, ARM64 + x86_64 + Apple Silicon
 
-**Exit criteria:** Migrate the PiCloud PRD and ADRs. Run `product graph check --format json` — zero errors, JSON output is valid. Run `product feature next` — returns topologically correct next feature. Assemble `product context FT-001 --depth 2` — bundle opens with `⟦Ω:Bundle⟧` header. Feed 20 malformed YAML files — zero panics (TC-P001 passes). All IT-001–IT-11 integration tests pass. All TC-P001–TC-P004 property tests pass with 1000 cases each.
+**Exit criteria:** Migrate the PiCloud PRD and ADRs. Confirm feature→ADR links manually. Run `product migrate link-tests` — ≥ 20 new TC→Feature links inferred. Run `product graph check --format json` — zero errors, W002 count reduced by ≥ 50% vs pre-link-tests. Run `product feature next` with a phase-1 exit-criteria TC marked failing — assert it returns a phase-1 feature, not a phase-2 feature, and names the failing TC. Mark that TC passing and re-run — assert a phase-2 feature is now returned. Assemble `product context FT-001 --depth 2` — bundle opens with `⟦Ω:Bundle⟧` header. Feed 20 malformed YAML files — zero panics (TC-P001 passes). All IT-001–IT-011 integration tests pass. All TC-P001–TC-P004 property tests pass with 1000 cases each.
 
 ---
 
@@ -947,36 +1204,37 @@ The source document is never modified. Migration can be re-run safely.
 
 ### Phase 5 — Agent Orchestration and Full Loop
 
-**Goal:** The complete idea-to-implementation loop runs end-to-end. Authoring sessions are graph-aware. Implementation is a single command. Phone access works. Domain coverage is enforced at scale.
+**Goal:** The complete idea-to-implementation loop is supported end-to-end. Product provides every knowledge primitive needed. Agents are invoked by the developer's harness. Phone access works. Domain coverage is enforced at scale.
 
 - [ ] `product mcp` — stdio transport, full tool registry
 - [ ] `product mcp --http` — HTTP Streamable transport, bearer token auth
 - [ ] `.mcp.json` scaffolding via `product install-hooks`
 - [ ] CORS configuration for claude.ai access
-- [ ] `product author feature/adr/review` — versioned system prompts, Claude Code integration
+- [ ] `product prompts init/list/get/update` — versioned system prompt file management
 - [ ] `product adr review --staged` — pre-commit structural and LLM review
 - [ ] `product install-hooks` — pre-commit hook installation
 - [ ] `[domains]` vocabulary in `product.toml` — controlled concern domain registry
 - [ ] `domains` and `scope` fields on ADR front-matter
 - [ ] `domains` and `domains-acknowledged` fields on feature front-matter
-- [ ] `product preflight FT-XXX` — domain coverage check before authoring or implementing
-- [ ] `product feature acknowledge` — link or acknowledge domain gaps with reasoning
+- [ ] `product preflight FT-XXX` — domain coverage check
+- [ ] `product feature acknowledge` — acknowledge domain gaps with reasoning
 - [ ] `product graph coverage` — feature × domain coverage matrix
 - [ ] `product graph coverage --domain D` and `--format json`
-- [ ] `product implement FT-XXX` — preflight (Step 0), gap gate, drift check, context assembly, agent invocation
-- [ ] `product implement --dry-run` — inspect assembled context without invoking agent
 - [ ] `product verify FT-XXX` — TC runner protocol, status update, checklist regeneration
-- [ ] TC front-matter `runner` and `runner-args` fields
+- [ ] `product verify --platform` — cross-cutting TC execution
+- [ ] TC front-matter `runner`, `runner-args`, `runner-timeout`, `requires` fields
+- [ ] `[verify.prerequisites]` in `product.toml` — named prerequisite conditions
 - [ ] `product drift check` — spec-vs-implementation LLM analysis
 - [ ] `product drift scan` — reverse: code → governing ADRs
 - [ ] `drift.json` baseline, suppression lifecycle
 - [ ] `product metrics record` — snapshot to `metrics.jsonl`
 - [ ] `product metrics threshold` — CI gate on architectural fitness
 - [ ] `product metrics trend` — ASCII sparkline
-- [ ] Threshold configuration in `product.toml`
-- [ ] `benchmarks/prompts/` — versioned system prompts for all session types and implement
+- [ ] `scripts/harness/implement.sh` — example implementation harness (not part of Product)
+- [ ] `scripts/harness/author.sh` — example authoring harness (not part of Product)
+- [ ] `benchmarks/prompts/` — default versioned system prompts
 
-**Exit criteria:** From a phone via claude.ai with Product MCP HTTP running: add a new feature with `domains: [security, networking]`, link an ADR, link a TC — all via MCP tool calls. Confirm files appear on disk. Run `product preflight` on the new feature — security domain flagged. Acknowledge with reasoning. Re-run — clean. Run `product implement` — preflight passes, gap gate passes, context assembled, agent invoked. Run `product verify` — TC executes, status updated. Run `product graph coverage` — coverage matrix renders with correct ✓/~ symbols. Run `product metrics record` and `product metrics threshold` — thresholds pass.
+**Exit criteria:** From a phone via claude.ai with Product MCP HTTP running: add a new feature with `domains: [security, networking]`, link an ADR, link a TC — all via MCP tool calls. Files appear on disk. Run `product preflight` — security domain flagged. Acknowledge with reasoning. Run `product context FT-XXX --measure` — bundle assembled and measured. Run `scripts/harness/implement.sh FT-XXX` — preflight passes, gap check passes, context file written, agent prompt printed. Run `product verify` manually after agent work — TC executes, status updated, checklist regenerated. Run `product graph coverage` — coverage matrix renders with correct ✓/~ symbols. Run `product metrics record && product metrics threshold` — thresholds pass.
 
 ---
 
@@ -1031,10 +1289,18 @@ MCP tools are a curated subset of the CLI. All tools are read-safe by default. W
 | `product_test_show` | `product test show TC-XXX` |
 | `product_graph_check` | `product graph check` |
 | `product_graph_central` | `product graph central` |
+| `product_graph_coverage` | `product graph coverage` |
 | `product_impact` | `product impact ADR-XXX` |
+| `product_preflight` | `product preflight FT-XXX` |
 | `product_gap_check` | `product gap check ADR-XXX` |
 | `product_adr_review` | `product adr review ADR-XXX` |
+| `product_dep_list` | `product dep list` |
+| `product_dep_show` | `product dep show DEP-XXX` |
+| `product_dep_check` | `product dep check DEP-XXX` |
+| `product_dep_bom` | `product dep bom` |
 | `product_metrics_stats` | `product metrics stats` |
+| `product_prompts_list` | `product prompts list` |
+| `product_prompts_get` | `product prompts get PROMPT-NAME` |
 
 **Write tools (require `mcp.write = true` in product.toml):**
 
@@ -1043,7 +1309,9 @@ MCP tools are a curated subset of the CLI. All tools are read-safe by default. W
 | `product_feature_new` | `product feature new "title"` |
 | `product_adr_new` | `product adr new "title"` |
 | `product_test_new` | `product test new "title" --type TYPE` |
+| `product_dep_new` | `product dep new "title" --type TYPE` |
 | `product_feature_link` | `product feature link FT-XXX --adr ADR-XXX` |
+| `product_feature_acknowledge` | `product feature acknowledge FT-XXX --domain D --reason "..."` |
 | `product_adr_status` | `product adr status ADR-XXX accepted` |
 | `product_test_status` | `product test status TC-XXX passing` |
 | `product_feature_status` | `product feature status FT-XXX complete` |
@@ -1069,151 +1337,137 @@ TLS is not handled by Product. For HTTPS, terminate TLS upstream (nginx, Caddy, 
 
 ---
 
-## 16. Authoring Sessions
+## 16. Authoring Resources
 
-An authoring session is a `product author` command that starts Claude Code (or another configured agent) with a versioned system prompt pre-loaded and Product MCP active. Claude has full read access to the graph from the first message. It reads existing decisions before proposing new ones.
-
-### Session Types
-
-**`product author feature`** — for adding new product capability.
-
-Claude's approach in this session:
-1. Call `product_feature_list` — understand what exists
-2. Call `product_graph_central` — identify foundational ADRs to read first
-3. Call `product_context` on related features — understand the decision landscape
-4. Ask clarifying questions grounded in what the graph already says
-5. Scaffold the feature file, link dependencies, write ADRs and TCs
-6. Call `product_graph_check` and `product_gap_check` before ending the session
-
-**`product author adr`** — for adding a new architectural decision.
-
-Claude's approach:
-1. Call `product_graph_central` — read the top-5 ADRs before writing anything
-2. Call `product_impact` on affected areas — understand blast radius
-3. Draft the ADR with rejected alternatives and test criteria
-4. Call `product_adr_review` on the draft — address findings before finishing
-5. Link to affected features
-
-**`product author review`** — spec gardening. No implementation intent.
-
-Claude's approach:
-1. Call `product_graph_check` — fix any structural issues first
-2. Call `product_metrics_stats` — identify which metrics are weak
-3. Walk through features with low `phi` scores — propose formal blocks
-4. Find orphaned ADRs — propose feature links
-5. Find features with no exit-criteria TC — propose them
-6. End with a summary of what was improved and what remains
+Product does not start agent sessions. It provides the resources agents need to author specifications graph-awarly: versioned system prompt files and fast pre-commit feedback.
 
 ### System Prompts
 
-Each session type has a versioned system prompt stored at:
-```
-benchmarks/prompts/author-feature-v1.md
-benchmarks/prompts/author-adr-v1.md
-benchmarks/prompts/author-review-v1.md
-```
+Versioned prompt files in `benchmarks/prompts/`. These are plain markdown files — they work in any LLM interface. Product does not interpret them; it manages their versioning and exposes them via MCP and CLI.
 
-The prompt version is configured in `product.toml`:
-
-```toml
-[author]
-feature-prompt-version = "1"
-adr-prompt-version = "1"
-review-prompt-version = "1"
-agent = "claude-code"           # agent to invoke
+```
+benchmarks/prompts/
+  author-feature-v1.md     # new feature authoring
+  author-adr-v1.md         # new architectural decision authoring
+  author-review-v1.md      # spec gardening / coverage improvement
+  implement-v1.md          # implementation context template
 ```
 
-### Phone Workflow
+```
+product prompts init                  # scaffold default prompt files
+product prompts list                  # list available prompts and versions
+product prompts get author-feature    # print prompt content to stdout
+product prompts update author-feature # pull latest version
+```
 
-When `product mcp --http` is running on your desktop or server, authoring sessions are not limited to `product author` invocations from the command line. The same tool surface is available in any claude.ai conversation configured with the Product MCP server:
+### How Agents Use Prompts
 
-1. Open claude.ai on your phone
-2. Start a new conversation — Product tools are available as connectors
-3. "Add a rate limiting feature to PiCloud" — Claude calls `product_feature_list`, `product_graph_central`, reads context, asks questions, scaffolds files
-4. Files land in your repo (via the HTTP MCP server writing to the filesystem)
-5. Later, at your desktop: `git pull && product implement FT-009`
+**Claude Code (local, stdio MCP):**
+Product's `.mcp.json` is in the repo. Claude Code connects automatically. Developer loads the prompt as a system prompt or slash command.
 
-The phone conversation is the authoring session. The desktop is the implementation environment. The repo is the shared state between them.
+**claude.ai Project (remote, HTTP MCP):**
+Paste `author-feature-v1.md` contents into the Project's instruction field once. Every conversation in that Project is automatically graph-aware — `product_feature_list`, `product_graph_central`, `product_context` are available as tools. The phone workflow is: open claude.ai, start a conversation, describe what you want to build. Product MCP handles the graph access.
+
+**Any other agent:**
+```bash
+# Pipe prompt to any agent
+product prompts get implement | my-agent --stdin
+
+# Or write to a file for agents that accept file paths
+product prompts get author-feature > /tmp/system-prompt.md
+my-agent --system-prompt /tmp/system-prompt.md
+```
+
+### Pre-Commit Review
+
+`product install-hooks` installs a pre-commit hook that runs `product adr review --staged`. This is fast structural feedback, not an agent session.
+
+**Structural checks (local, instant, no LLM):** required sections, status field, feature links, TC links, evidence blocks.
+
+**LLM check (single call, ~3 seconds):** internal consistency, contradiction scan, missing test suggestion.
+
+Advisory — the commit always proceeds. The CI gap analysis gate is the hard enforcement point.
 
 ---
 
-## 17. Agent Orchestration
+## 17. Implementation Pipeline
 
-### `product implement FT-XXX`
+Product is a knowledge tool. The implementation pipeline is a sequence of Product knowledge commands. The harness — a shell script, a Makefile, a CI pipeline, an agent invoking tools — is the developer's choice.
 
-The implementation command runs a five-step pipeline:
+### The Knowledge Sequence
 
-**Step 1 — Gap gate.** Runs `product gap check FT-XXX`. If any high-severity gaps (G001, G002, G005) are found and unsuppressed, the command exits with an explanation. You cannot implement a specification with known high-severity gaps — the agent would be working from an incomplete contract.
+What any harness calls before and after agent work:
 
-**Step 2 — Drift check.** Runs `product drift check --phase N` for the feature's phase. If the codebase has already drifted from a related ADR, the agent needs to know before it writes more code.
+```bash
+# Before invoking an agent:
+product preflight FT-001                       # domain coverage clean?
+product gap check FT-001 --severity high       # no blocking spec gaps?
+product drift check --phase 1                  # codebase matches ADRs?
+product context FT-001 --depth 2 --measure    # assemble context bundle
 
-**Step 3 — Context assembly.** Runs `product context FT-XXX --depth 2`. Wraps it in the versioned implementation prompt from `benchmarks/prompts/implement-v1.md`.
-
-**Step 4 — Agent invocation.** Invokes the configured agent with the assembled context. For Claude Code: pipes the context bundle to `claude --print` or writes it to a temp file and passes the file path.
-
-**Step 5 — Auto-verify.** On agent completion, runs `product verify FT-XXX` automatically unless `--no-verify` is passed.
-
+# After the agent completes:
+product verify FT-001                          # run TCs, update status
+product graph check                            # graph still healthy?
 ```
-product implement FT-001
-  ✓ Gap check: no high-severity gaps
-  ✓ Drift check: no drift detected
-  → Assembling context bundle (FT-001, 4 ADRs, 6 TCs, depth 2)
-  → Invoking claude-code...
-  [agent output streams here]
-  → Running product verify FT-001...
-  TC-001 binary-compiles         PASS
-  TC-002 raft-leader-election    PASS
-  TC-003 raft-leader-failover    FAIL
-  ✗ 1 test failing. Feature status: in-progress
-```
+
+Product owns none of the steps between `product context` and `product verify`. That is the agent's domain.
 
 ### `product verify FT-XXX`
 
-Verify reads each linked TC file and derives how to run it from the TC metadata:
+Reads TC runners from front-matter, executes tests, writes results, regenerates checklist. The one pipeline command Product owns because it writes back to the graph.
 
-```yaml
----
-id: TC-002
-type: scenario
-runner: cargo-test
-runner-args: ["--test", "raft_leader_election", "--", "--nocapture"]
----
+```
+product verify FT-001
+  TC-001 binary-compiles         PASS  (4.1s)
+  TC-002 raft-leader-election    PASS  (12.3s)
+  TC-003 raft-leader-failover    FAIL  (2.1s)
+    "thread 'raft_leader_failover' panicked at..."
+  
+  1/3 passing. Feature status: in-progress.
+  checklist.md regenerated.
 ```
 
-The `runner` and `runner-args` fields in TC front-matter tell verify how to execute the criterion. Supported runners: `cargo-test`, `bash`, `pytest`, `custom`.
+`product verify --platform` runs all TCs linked to cross-cutting ADRs — the platform-wide invariant check, separate from any feature's verify step.
 
-On completion:
-- TC statuses updated (`passing`, `failing`)
-- Feature status updated if all TCs pass → `complete`
-- `checklist.md` regenerated
-- Results written to stdout in the error model format (ADR-013)
+### Example Harness Scripts
 
-### Implementation Prompt
+`scripts/harness/` contains reference shell scripts. These are **not part of Product** — they are examples a developer can copy and adapt. They demonstrate how the knowledge commands compose.
 
-The implementation prompt wraps the context bundle with explicit constraints:
+**`scripts/harness/implement.sh`:**
+```bash
+#!/usr/bin/env bash
+# Example implementation harness. NOT part of Product. Copy and modify.
+set -euo pipefail
+FEATURE=${1:?Usage: implement.sh FT-XXX}
 
-```markdown
-# Implementation Task: {FEATURE_ID} — {FEATURE_TITLE}
+product preflight "$FEATURE" || exit 1
+product gap check "$FEATURE" --severity high --format json \
+  | jq -e '.findings | length == 0' > /dev/null || exit 1
+product drift check --phase "$(product feature show "$FEATURE" --field phase)"
 
-## Your role
-Implement this feature according to the architectural decisions in the
-context bundle. The test criteria define done — your implementation is
-complete when all linked TCs pass.
+BUNDLE=$(mktemp /tmp/product-context-XXXX.md)
+product context "$FEATURE" --depth 2 --measure > "$BUNDLE"
 
-## Current test status
-{TC_STATUS_TABLE}
-
-## Hard constraints
-- Language: determined by ADR-001
-- No new dependencies without a linked ADR
-- Run the test suite before reporting complete
-- When done: `product verify {FEATURE_ID}`
-
-## Context Bundle
-{BUNDLE}
+# ↓ Replace with your agent of choice
+echo "Context ready: $BUNDLE"
+echo "Run your agent, then: product verify $FEATURE"
 ```
 
-The test status table is generated fresh at invocation time — the agent sees which TCs are currently passing and which are not.
+**`scripts/harness/author.sh`:**
+```bash
+#!/usr/bin/env bash
+# Example authoring harness. NOT part of Product. Copy and modify.
+set -euo pipefail
+SESSION=${1:?Usage: author.sh feature|adr|review}
+
+PROMPT=$(product prompts get "author-$SESSION")
+echo "Prompt loaded. Start your agent with Product MCP connected."
+echo "Paste this prompt as your first message or system instruction:"
+echo "---"
+echo "$PROMPT"
+```
+
+The scripts make the composition explicit. Developers who want a tighter loop write their own. Product's job is to make each command in the sequence reliable and composable.
 
 ---
 

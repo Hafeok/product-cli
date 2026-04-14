@@ -30,7 +30,7 @@ scope: domain
 
 ---
 
-### Capability 1: Topological Sort and Feature Dependencies
+### Capability 1: Topological Sort, Feature Dependencies, and Phase Gates
 
 **New edge type:** `depends-on` between Feature nodes. Declared in feature front-matter:
 
@@ -46,11 +46,75 @@ This edge means FT-003 cannot be correctly implemented until FT-001 and FT-002 a
 
 **Graph construction:** Feature nodes plus `depends-on` edges form a directed acyclic graph (DAG). Product validates this DAG on every invocation. A cycle (FT-001 depends-on FT-003 depends-on FT-001) is a hard error — exit code 1. Cycles represent contradictory dependency claims and cannot be resolved automatically.
 
-**Topological sort:** Kahn's algorithm over the feature DAG produces a partial order of valid implementation sequences. `product feature next` returns the first node in topological order whose `status` is not `complete` and whose predecessors are all `complete`. This replaces the current phase-label ordering.
+**Topological sort:** Kahn's algorithm over the feature DAG produces a partial order of valid implementation sequences. `product feature next` applies a two-level gate to select the next feature:
 
-**Topological order vs. phase labels:** Phase labels remain in the schema — they carry human intent about grouping and milestones. Topological order carries structural truth about dependency. When they disagree (a phase-1 feature depends-on a phase-2 feature), `product graph check` reports it as a warning. The operator decides whether to fix the dependency or the phase label.
+```
+for each feature F in topological order:
+    if F.status == complete:                              skip
+    if any depends_on predecessor is not complete:        skip
+    if F.phase > 1 AND NOT phase_gate_satisfied(F.phase - 1):  skip
+    return F   ← next feature to implement
+```
+
+**Phase gate (`phase_gate_satisfied(N)`):**
+
+A phase gate is satisfied when all test criteria of type `exit-criteria` linked to features in phase N have `status: passing`. Not all features in the phase need to be complete — only the exit criteria must pass. This reflects the spec's definition of phase completion: a phase is done when its measurable exit conditions are met, not when every feature in it is perfect.
+
+```rust
+fn phase_gate_satisfied(phase: u32, graph: &Graph) -> bool {
+    graph.features_in_phase(phase)
+        .flat_map(|f| graph.tests_for_feature(f))
+        .filter(|tc| tc.tc_type == TcType::ExitCriteria)
+        .all(|tc| tc.status == TcStatus::Passing)
+}
+```
+
+If no exit-criteria TCs exist for a phase, the gate is considered satisfied — a phase with no defined exit criteria is always open. This ensures backward compatibility during migration when TCs haven't been written yet.
+
+**What `product feature next` reports when a phase gate blocks:**
+
+```
+product feature next
+
+  Next candidate: FT-009 — Rate Limiting  [phase 2, planned]
+  ✗ Phase 2 locked — Phase 1 exit criteria not all passing:
+
+    TC-001  Binary compiles               [passing  ✓]
+    TC-004  Two-node cluster forms        [passing  ✓]
+    TC-007  Workload survives restart     [failing  ✗]
+    TC-012  Volume allocation end-to-end  [unimplemented]
+
+  Fix TC-007 and TC-012 to unlock Phase 2.
+  To skip the gate:  product feature next --ignore-phase-gate
+  To work on FT-009 directly:  product preflight FT-009
+```
+
+The `--ignore-phase-gate` flag bypasses the phase gate for the current invocation only. It does not suppress the warning. Explicit feature invocations (`product preflight FT-009`, `product context FT-009`) are always available regardless of phase gate state — the gate only applies to the automated `next` selection.
+
+**Topological order vs. phase labels:** Phase labels carry human intent about grouping and milestones. Topological order carries structural truth about explicit dependency. The phase gate adds a third signal: phase completion readiness. All three are used together in `product feature next`. When they disagree (a phase-1 feature depends-on a phase-2 feature), `product graph check` reports W005.
 
 **New command:** `product feature deps FT-003` — prints the full transitive dependency tree for a feature.
+
+**`product status` with phase gate display:**
+
+```
+product status
+
+Phase 1 — Cluster Foundation  [OPEN — exit criteria: 2/4 passing]
+  FT-001  Cluster Foundation     complete
+  FT-002  mTLS Node Comms        complete
+  FT-003  Raft Consensus         in-progress
+  FT-004  Block Storage          planned
+
+Phase 2 — Products and IAM  [LOCKED — Phase 1 exit criteria: TC-007, TC-012 not passing]
+  FT-005  Product Resource       planned
+  FT-006  OIDC Provider          planned
+
+Phase 3 — RDF and Event Store  [LOCKED — Phase 2 not yet open]
+  FT-007  RDF Store              planned
+```
+
+`product status --phase 1` shows the full exit criteria detail for a single phase including which TCs are passing, failing, and unimplemented.
 
 ---
 

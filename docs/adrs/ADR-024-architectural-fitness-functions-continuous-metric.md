@@ -32,20 +32,56 @@ Architectural fitness functions (from "Building Evolutionary Architectures") add
 | `drift_density` | unresolved drift findings / total ADRs | ↓ |
 | `centrality_stability` | variance in top-5 ADR centrality ranks, week-over-week | ↓ |
 | `implementation_velocity` | features moved to `complete` in last 7d | tracked |
+| `bundle_depth1_adr_p95` | 95th percentile of `depth-1-adrs` across all features | ↓ |
+| `bundle_tokens_p95` | 95th percentile of `tokens-approx` across all features | ↓ |
+| `bundle_domains_p95` | 95th percentile of `domains` count across all features | ↓ |
+| `features_over_adr_threshold` | count of features where `depth-1-adrs` exceeds threshold | ↓ |
 
-All metrics except `implementation_velocity` and `centrality_stability` are in [0.0, 1.0]. `centrality_stability` is a variance value. `implementation_velocity` is a raw count.
+All metrics except `implementation_velocity`, `centrality_stability`, and the `features_over_*` count metrics are in [0.0, 1.0] or are raw counts/values. Bundle size metrics use percentile aggregation — per-feature bundle sizes are recorded in `metrics.jsonl` on each `product context --measure` call; the p95 values are recomputed by `product metrics record` from all available feature measurements.
 
 ---
 
 ### `metrics.jsonl`
 
-One JSON object per line, appended on each `product metrics record` invocation:
+Two entry types are appended to `metrics.jsonl`:
 
+**Repository-wide snapshot** (written by `product metrics record`):
 ```json
-{"date":"2026-04-11T09:00:00Z","commit":"abc123","spec_coverage":0.87,"test_coverage":0.72,"exit_criteria_coverage":0.61,"phi":0.68,"gap_density":0.03,"gap_resolution_rate":0.75,"drift_density":0.10,"centrality_stability":0.02,"implementation_velocity":2}
+{
+  "type": "snapshot",
+  "date": "2026-04-11T09:00:00Z",
+  "commit": "abc123",
+  "spec_coverage": 0.87,
+  "test_coverage": 0.72,
+  "exit_criteria_coverage": 0.61,
+  "phi": 0.68,
+  "gap_density": 0.03,
+  "gap_resolution_rate": 0.75,
+  "drift_density": 0.10,
+  "centrality_stability": 0.02,
+  "implementation_velocity": 2,
+  "bundle_depth1_adr_p95": 6.0,
+  "bundle_tokens_p95": 7800,
+  "bundle_domains_p95": 4.0,
+  "features_over_adr_threshold": 2
+}
 ```
 
-`metrics.jsonl` is committed to the repo. The history is inspectable with `git log -p metrics.jsonl`. Merge conflicts on `metrics.jsonl` are resolved by keeping both lines — the file is append-only and line order does not matter for trend computation.
+**Per-feature bundle measurement** (written by `product context FT-XXX --measure`):
+```json
+{
+  "type": "bundle_measure",
+  "date": "2026-04-11T09:14:22Z",
+  "feature": "FT-003",
+  "depth-1-adrs": 9,
+  "depth-2-adrs": 14,
+  "tcs": 12,
+  "domains": 5,
+  "tokens-approx": 11200
+}
+```
+
+`metrics.jsonl` is committed to the repo. Merge conflicts are resolved by keeping both lines.
 
 ---
 
@@ -53,15 +89,21 @@ One JSON object per line, appended on each `product metrics record` invocation:
 
 ```toml
 [metrics.thresholds]
-spec_coverage = { min = 0.90, severity = "error" }
-test_coverage = { min = 0.80, severity = "error" }
-exit_criteria_coverage = { min = 0.60, severity = "warning" }
-phi = { min = 0.70, severity = "warning" }
-gap_resolution_rate = { min = 0.50, severity = "warning" }
-drift_density = { max = 0.20, severity = "warning" }
+spec_coverage           = { min = 0.90, severity = "error" }
+test_coverage           = { min = 0.80, severity = "error" }
+exit_criteria_coverage  = { min = 0.60, severity = "warning" }
+phi                     = { min = 0.70, severity = "warning" }
+gap_resolution_rate     = { min = 0.50, severity = "warning" }
+drift_density           = { max = 0.20, severity = "warning" }
+
+# Bundle size thresholds — signals features that may need splitting
+bundle_depth1_adr_max   = { max = 8,    severity = "warning" }  # per-feature
+bundle_tokens_max       = { max = 12000, severity = "warning" } # per-feature
+bundle_domains_max      = { max = 6,    severity = "warning" }  # per-feature
+features_over_adr_threshold = { max = 3, severity = "warning" } # repository-wide
 ```
 
-`product metrics threshold` exits 1 if any `error`-severity threshold is breached, exits 2 if any `warning`-severity threshold is breached. This integrates with the existing exit code model (ADR-009).
+Bundle size thresholds apply per-feature. When `product metrics threshold` runs, it checks every feature's last-measured `bundle` block against the per-feature thresholds and reports features that breach them. The `features_over_adr_threshold` metric is the repository-wide count of breaching features — this is what goes into CI as a gate.
 
 ---
 
