@@ -131,7 +131,7 @@ fn read_agent_context_tools() -> Vec<ToolDef> {
         },
         ToolDef {
             name: "product_agent_context".to_string(),
-            description: "Get the full AGENT.md content — working protocol, schemas, repo state, domains, and tool guide".to_string(),
+            description: "Get the full AGENTS.md content — working protocol, schemas, repo state, domains, and tool guide".to_string(),
             requires_write: false,
             input_schema: serde_json::json!({"type": "object", "properties": {}}),
         },

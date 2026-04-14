@@ -1,4 +1,4 @@
-//! Agent context generation — AGENT.md and schema output (ADR-031)
+//! Agent context generation — AGENTS.md and schema output (ADR-031)
 
 mod schema;
 
@@ -10,10 +10,10 @@ use crate::types::{FeatureStatus, TestStatus};
 use std::path::Path;
 
 // ---------------------------------------------------------------------------
-// AGENT.md generation
+// AGENTS.md generation
 // ---------------------------------------------------------------------------
 
-/// Generate the full AGENT.md content from current repo state.
+/// Generate the full AGENTS.md content from current repo state.
 pub fn generate_agent_md(
     config: &ProductConfig,
     graph: &KnowledgeGraph,
@@ -152,16 +152,16 @@ fn generate_tool_guide_section() -> String {
 | `product_gap_check` | Before implementing — check spec completeness |
 | `product_feature_next` | Find the next feature to implement |
 | `product_dep_bom` | Audit all external dependencies |
-| `product_agent_context` | Get full AGENT.md content via MCP |
+| `product_agent_context` | Get full AGENTS.md content via MCP |
 "#
     .to_string()
 }
 
 // ---------------------------------------------------------------------------
-// Watch mode — regenerate AGENT.md on file changes
+// Watch mode — regenerate AGENTS.md on file changes
 // ---------------------------------------------------------------------------
 
-/// Watch for changes in artifact directories and regenerate AGENT.md.
+/// Watch for changes in artifact directories and regenerate AGENTS.md.
 pub fn watch_and_regenerate(
     config: &ProductConfig,
     repo_root: &std::path::Path,
@@ -201,7 +201,7 @@ pub fn watch_and_regenerate(
                 while rx.try_recv().is_ok() {}
                 std::thread::sleep(Duration::from_millis(200));
                 match regenerate(repo_root) {
-                    Ok(()) => eprintln!("AGENT.md regenerated"),
+                    Ok(()) => eprintln!("AGENTS.md regenerated"),
                     Err(e) => eprintln!("Regeneration error: {}", e),
                 }
             }
@@ -212,7 +212,7 @@ pub fn watch_and_regenerate(
     Ok(())
 }
 
-/// Regenerate AGENT.md from current repo state.
+/// Regenerate AGENTS.md from current repo state.
 fn regenerate(repo_root: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let config = ProductConfig::load(&repo_root.join("product.toml"))?;
     let features_dir = config.resolve_path(repo_root, &config.paths.features);

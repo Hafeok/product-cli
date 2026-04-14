@@ -1,4 +1,4 @@
-//! `product agent-init` command — generate AGENT.md from repo state (ADR-031)
+//! `product agent-init` command — generate AGENTS.md from repo state (ADR-031)
 
 use product_lib::{agent_context, config::ProductConfig, fileops, graph::KnowledgeGraph, parser};
 
@@ -32,7 +32,7 @@ pub fn handle_agent_init(watch: bool) -> BoxResult {
         loaded.dependencies,
     );
 
-    // Generate AGENT.md content
+    // Generate AGENTS.md content
     let content = agent_context::generate_agent_md(&config, &graph, &root);
 
     // Write to configured output path

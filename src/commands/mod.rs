@@ -240,7 +240,7 @@ pub enum Commands {
         #[arg(long)]
         all: bool,
     },
-    /// Generate AGENT.md from current repository state (ADR-031)
+    /// Generate AGENTS.md from current repository state (ADR-031)
     AgentInit {
         /// Watch for changes and regenerate automatically
         #[arg(long)]

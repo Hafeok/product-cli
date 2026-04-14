@@ -44,7 +44,7 @@ pub struct VerifyConfig {
     #[serde(default)]
     pub prerequisites: HashMap<String, String>,
 }
-/// Configuration for AGENT.md generation (ADR-031)
+/// Configuration for AGENTS.md generation (ADR-031)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentContextConfig {
     #[serde(rename = "include-repo-state", default = "default_true")]
@@ -72,7 +72,7 @@ impl Default for AgentContextConfig {
 }
 
 fn default_agent_output() -> String {
-    "AGENT.md".to_string()
+    "AGENTS.md".to_string()
 }
 
 fn default_version() -> String {

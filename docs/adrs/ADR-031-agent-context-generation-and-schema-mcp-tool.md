@@ -5,9 +5,14 @@ status: accepted
 features: []
 supersedes: []
 superseded-by: []
-domains: [api]
+domains:
+- api
 scope: domain
-content-hash: sha256:ac45f649fb6a845bffecdd17786909fc6845bcc06583b18f3d34a5c4fb21caf7
+content-hash: sha256:9dbfb897d76a41708515206114fb68e3488242c23e755cb77feff5017823b227
+amendments:
+- date: 2026-04-14T19:18:00Z
+  reason: Rename output file from AGENT.md to AGENTS.md — Claude Code reads AGENTS.md at the repo root
+  previous-hash: sha256:ac45f649fb6a845bffecdd17786909fc6845bcc06583b18f3d34a5c4fb21caf7
 ---
 
 **Status:** Accepted
