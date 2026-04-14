@@ -15,7 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_041_topo_sort_simple"
-last-run: 2026-04-14T13:57:28.405167723+00:00
+last-run: 2026-04-14T14:04:19.495078770+00:00
 ---
 
 three features: FT-001, FT-002 depends-on FT-001, FT-003 depends-on FT-002. Assert topological order is [FT-001, FT-002, FT-003].

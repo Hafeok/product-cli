@@ -14,7 +14,7 @@ validates:
   adrs:
   - ADR-012
 phase: 1
-last-run: 2026-04-14T13:57:28.405167723+00:00
+last-run: 2026-04-14T14:04:19.495078770+00:00
 ---
 
 phase-1 exit criteria failing. Run `product feature next --ignore-phase-gate`. Assert a phase-2 feature is returned. Assert a warning is emitted to stderr.

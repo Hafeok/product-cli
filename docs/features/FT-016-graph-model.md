@@ -2,7 +2,7 @@
 id: FT-016
 title: Graph Model
 phase: 1
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-003

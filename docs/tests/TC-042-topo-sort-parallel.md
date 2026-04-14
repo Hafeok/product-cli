@@ -15,7 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_042_topo_sort_parallel"
-last-run: 2026-04-14T13:57:28.405167723+00:00
+last-run: 2026-04-14T14:04:19.495078770+00:00
 ---
 
 FT-002 and FT-003 both depend-on FT-001, no dependency between FT-002 and FT-003. Assert FT-001 appears before both; FT-002 and FT-003 order is unspecified.

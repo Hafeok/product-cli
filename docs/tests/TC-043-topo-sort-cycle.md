@@ -15,7 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_043_topo_sort_cycle"
-last-run: 2026-04-14T13:57:28.405167723+00:00
+last-run: 2026-04-14T14:04:19.495078770+00:00
 ---
 
 FT-001 depends-on FT-002, FT-002 depends-on FT-001. Assert `product graph check` exits with code 1 and names both features in the error message.

@@ -179,7 +179,7 @@
 - [x] TC-079: parse_unknown_block_type (scenario) — passing
 - [x] TC-153: FT-015 all test-criteria scenarios pass (exit-criteria) — passing
 
-### FT-016 — Graph Model [~]
+### FT-016 — Graph Model [x]
 
 - [x] ADR-003: Derived Graph — No Persistent Graph Store (accepted)
 - [x] ADR-008: Embedded Oxigraph for SPARQL Queries (accepted)
