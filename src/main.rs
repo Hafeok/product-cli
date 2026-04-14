@@ -11,6 +11,7 @@ use clap::{Parser, Subcommand};
 use config::ProductConfig;
 use error::ProductError;
 use graph::KnowledgeGraph;
+use std::io::Write;
 use std::path::PathBuf;
 use std::process;
 
@@ -1321,6 +1322,7 @@ fn handle_graph(cmd: GraphCommands, global_format: &str) -> BoxResult {
                 println!("{}", serde_json::to_string_pretty(&result.to_json())?);
                 let code = result.exit_code();
                 if code != 0 {
+                    let _ = std::io::stdout().flush();
                     process::exit(code);
                 }
             } else {
@@ -1332,6 +1334,7 @@ fn handle_graph(cmd: GraphCommands, global_format: &str) -> BoxResult {
                     2 => println!("Graph check: {} warning(s)", result.warnings.len()),
                     _ => {}
                 }
+                let _ = std::io::stdout().flush();
                 process::exit(code);
             }
         }
