@@ -1,300 +1,276 @@
-The write permission was denied twice. Here is the complete documentation for FT-003 — Front-Matter Schema. You can save it to `docs/guide/FT-003-front-matter-schema.md`:
-
----
-
 ## Overview
 
-Front-Matter Schema defines the YAML front-matter structure that every artifact file (feature, ADR, test criterion) must carry. This front-matter is the sole source of truth for the knowledge graph — Product rebuilds the graph from front-matter on every invocation rather than maintaining a persistent store (ADR-002). The schema is versioned through `product.toml`, validated on parse, and migrateable across versions (ADR-014). Artifact identifiers follow a prefixed numeric scheme (`FT-XXX`, `ADR-XXX`, `TC-XXX`) that is human-readable, sortable, and permanent (ADR-005).
+Front-matter schema defines the YAML metadata format that every artifact file in a Product repository must carry. Each feature, ADR, and test criterion file declares its identity, relationships, and status in a structured YAML block at the top of the file. This front-matter is the sole source of truth for the knowledge graph — Product rebuilds the graph from these declarations on every invocation, with no persistent graph store (ADR-002). The schema is versioned, validated on parse, and migrateable across versions (ADR-014).
 
 ## Tutorial
 
-### Writing your first feature file
+### Step 1: Create your first feature
 
-1. Create a feature file using the CLI:
+Run the following command to create a new feature file with valid front-matter:
 
-   ```bash
-   product feature new --title "My First Feature"
-   ```
+```bash
+product feature new --title "User Authentication"
+```
 
-   Product assigns the next sequential ID (e.g., `FT-001`) and writes the file to your configured features directory.
+Product assigns the next sequential ID automatically. Open the created file in `docs/features/`:
 
-2. Open the generated file. It contains front-matter like this:
+```yaml
+---
+id: FT-001
+title: User Authentication
+phase: 1
+status: planned
+depends-on: []
+domains: []
+adrs: []
+tests: []
+---
+```
 
-   ```yaml
-   ---
-   id: FT-001
-   title: My First Feature
-   phase: 1
-   status: planned
-   depends-on: []
-   adrs: []
-   tests: []
-   domains: []
-   domains-acknowledged: {}
-   ---
-   ```
+### Step 2: Link an ADR to the feature
 
-3. Link the feature to an ADR and a test criterion by editing the front-matter:
+Create an ADR and link it:
 
-   ```yaml
-   adrs: [ADR-001]
-   tests: [TC-001]
-   ```
+```bash
+product adr new --title "JWT for Session Tokens"
+```
 
-4. Validate that the front-matter is well-formed and all links resolve:
+Edit the feature file to add the ADR reference:
 
-   ```bash
-   product graph check
-   ```
+```yaml
+adrs: [ADR-001]
+```
 
-   If `ADR-001` or `TC-001` does not exist, the command reports the broken link and exits with code 1.
+Edit the ADR file to add the reverse link:
 
-### Writing your first ADR file
+```yaml
+features: [FT-001]
+```
 
-1. Create an ADR:
+### Step 3: Validate the graph
 
-   ```bash
-   product adr new --title "Use PostgreSQL for Storage"
-   ```
+Run the graph check to confirm your front-matter is well-formed and all links resolve:
 
-2. The generated front-matter looks like:
+```bash
+product graph check
+```
 
-   ```yaml
-   ---
-   id: ADR-001
-   title: Use PostgreSQL for Storage
-   status: proposed
-   features: [FT-001]
-   supersedes: []
-   superseded-by: []
-   domains: []
-   scope: feature-specific
-   ---
-   ```
+If you referenced a non-existent ID (e.g., `ADR-999`), the check reports the broken link and exits with code 1.
 
-3. Set the status to `accepted` once the decision is ratified, and add the concern domains it governs:
+### Step 4: Add a test criterion
 
-   ```yaml
-   status: accepted
-   domains: [storage]
-   scope: domain
-   ```
+Create a test criterion file:
 
-### Writing your first test criterion
+```bash
+product test new --title "JWT Token Validation" --type scenario
+```
 
-1. Create a test criterion:
+The generated front-matter includes the `validates` block for linking back to features and ADRs:
 
-   ```bash
-   product test new --title "Database Connection" --type scenario
-   ```
+```yaml
+---
+id: TC-001
+title: JWT Token Validation
+type: scenario
+status: unimplemented
+validates:
+  features: [FT-001]
+  adrs: [ADR-001]
+phase: 1
+runner: cargo-test
+runner-args: "tc_001_jwt_token_validation"
+---
+```
 
-2. The generated front-matter:
+### Step 5: Check schema version
 
-   ```yaml
-   ---
-   id: TC-001
-   title: Database Connection
-   type: scenario
-   status: unimplemented
-   validates:
-     features: [FT-001]
-     adrs: [ADR-001]
-   phase: 1
-   ---
-   ```
+Inspect `product.toml` to see your repository's schema version:
 
-3. Once you write the integration test, add runner configuration so `product verify` can execute it:
+```toml
+schema-version = "1"
+```
 
-   ```yaml
-   runner: cargo-test
-   runner-args: "tc_001_database_connection"
-   ```
-
-4. Run verification:
-
-   ```bash
-   product verify FT-001
-   ```
+Product validates this on every invocation. If your binary is newer than the schema, you will see a W007 warning suggesting an upgrade.
 
 ## How-to Guide
 
-### Link a feature to ADRs and tests
+### Add a dependency between features
 
-1. Open the feature file and add IDs to the `adrs` and `tests` arrays:
+Edit the `depends-on` field in the dependent feature's front-matter:
 
+1. Open the feature file (e.g., `docs/features/FT-002-api-layer.md`).
+2. Add the dependency: `depends-on: [FT-001]`.
+3. Run `product graph check` to confirm no cycles exist. Product enforces that `depends-on` edges form a DAG — cycles are a hard error.
+
+### Declare concern domains
+
+1. Add domains to the feature front-matter: `domains: [consensus, networking]`.
+2. For domains with no linked ADR, add explicit reasoning:
    ```yaml
-   adrs: [ADR-001, ADR-002]
-   tests: [TC-001, TC-002]
+   domains-acknowledged:
+     scheduling: >
+       Out of scope for this phase.
    ```
+3. Run `product graph check` to validate domain coverage.
 
-2. Run `product graph check` to validate all links resolve.
+### Mark an ADR as superseded
 
-### Declare feature dependencies
+1. Open the superseded ADR file.
+2. Set `status: superseded` and `superseded-by: [ADR-005]`.
+3. Open the new ADR file and set `supersedes: [ADR-003]`.
+4. Run `product graph check` to validate the supersession chain.
 
-1. Add the prerequisite feature IDs to `depends-on`:
+### Migrate to a new schema version
 
+1. Check what would change: `product migrate schema --dry-run`.
+2. Apply the migration: `product migrate schema`.
+3. Re-run to confirm idempotency: `product migrate schema` (reports zero files changed).
+
+Custom fields added to your front-matter are preserved through migration — Product never strips fields it does not understand.
+
+### Add formal blocks to a test criterion
+
+For `invariant` and `chaos` type TCs, formal blocks are mandatory. Add them after the front-matter and prose description:
+
+```markdown
+⟦Γ:Invariants⟧{
+  ∀n:Node: connected(n) ∧ reachable(n, leader)
+}
+```
+
+For `scenario` type TCs, formal blocks are optional:
+
+```markdown
+⟦Λ:Scenario⟧{
+  given≜ cluster(3, "healthy")
+  when≜  kill(leader)
+  then≜  elected(new_leader) ∧ new_leader ≠ old_leader
+}
+```
+
+Run `product graph check` to validate block syntax.
+
+### Add source-file tracking to an ADR
+
+1. Add the `source-files` field to the ADR front-matter:
    ```yaml
-   depends-on: [FT-001, FT-002]
+   source-files:
+     - src/consensus/raft.rs
+     - src/consensus/leader.rs
    ```
-
-2. Product validates that dependency edges form a DAG. Cycles produce a hard error on `product graph check`.
-
-3. Use `product feature next` to see the correct implementation order based on topological sort over the dependency graph.
-
-### Supersede an ADR
-
-1. In the new ADR's front-matter, reference the old decision:
-
-   ```yaml
-   supersedes: [ADR-001]
-   ```
-
-2. In the old ADR's front-matter, add the back-reference:
-
-   ```yaml
-   superseded-by: [ADR-002]
-   ```
-
-3. Set the old ADR's status to `superseded`.
-
-### Check and upgrade the schema version
-
-1. Check the current schema version in `product.toml`:
-
-   ```toml
-   schema-version = "1"
-   ```
-
-2. Preview what a migration would change:
-
-   ```bash
-   product migrate schema --dry-run
-   ```
-
-3. Run the migration:
-
-   ```bash
-   product migrate schema
-   ```
-
-4. Re-running the migration is safe — it is idempotent and reports zero files changed on the second run.
-
-### Add custom fields without breaking Product
-
-1. Add any field to an artifact's front-matter:
-
-   ```yaml
-   custom-tag: my-value
-   ```
-
-2. Product ignores fields it does not recognise and preserves them on write. Custom fields survive migrations and CLI-driven edits.
+2. This enables `product drift check` to perform precise spec-vs-code analysis for that ADR.
 
 ## Reference
 
 ### Feature front-matter fields
 
 | Field | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `id` | `string` | Yes | — | Unique identifier (`FT-NNN`) |
-| `title` | `string` | Yes | — | Human-readable name |
-| `phase` | `integer` | No | `1` | Implementation phase |
-| `status` | `string` | No | `planned` | One of: `planned`, `in-progress`, `complete`, `abandoned` |
-| `depends-on` | `string[]` | No | `[]` | Feature IDs that must be complete first |
-| `adrs` | `string[]` | No | `[]` | Linked ADR IDs |
-| `tests` | `string[]` | No | `[]` | Linked TC IDs |
-| `domains` | `string[]` | No | `[]` | Concern domains this feature touches |
-| `domains-acknowledged` | `map<string, string>` | No | `{}` | Domains with no linked ADR, with reasoning |
+|-------|------|----------|---------|-------------|
+| `id` | string | Yes | — | Unique identifier, format `FT-XXX` |
+| `title` | string | Yes | — | Human-readable name |
+| `phase` | integer | Yes | — | Implementation phase |
+| `status` | enum | Yes | — | `planned`, `in-progress`, `complete`, `abandoned` |
+| `depends-on` | list | No | `[]` | Feature IDs that must complete first (must form a DAG) |
+| `domains` | list | No | `[]` | Concern domains this feature touches |
+| `adrs` | list | No | `[]` | Linked ADR IDs |
+| `tests` | list | No | `[]` | Linked TC IDs |
+| `domains-acknowledged` | map | No | — | Explicit reasoning for domains with no linked ADR |
 
 ### ADR front-matter fields
 
 | Field | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `id` | `string` | Yes | — | Unique identifier (`ADR-NNN`) |
-| `title` | `string` | Yes | — | Human-readable name |
-| `status` | `string` | No | `proposed` | One of: `proposed`, `accepted`, `superseded`, `abandoned` |
-| `features` | `string[]` | No | `[]` | Features this ADR implements |
-| `supersedes` | `string[]` | No | `[]` | ADR IDs this decision replaces |
-| `superseded-by` | `string[]` | No | `[]` | ADR IDs that replace this decision |
-| `domains` | `string[]` | No | `[]` | Concern domains this ADR governs |
-| `scope` | `string` | No | `feature-specific` | One of: `cross-cutting`, `domain`, `feature-specific` |
+|-------|------|----------|---------|-------------|
+| `id` | string | Yes | — | Unique identifier, format `ADR-XXX` |
+| `title` | string | Yes | — | Human-readable name |
+| `status` | enum | Yes | — | `proposed`, `accepted`, `superseded`, `abandoned` |
+| `features` | list | No | `[]` | Linked feature IDs |
+| `supersedes` | list | No | `[]` | ADR IDs this decision replaces |
+| `superseded-by` | list | No | `[]` | ADR IDs that replace this decision |
+| `domains` | list | No | `[]` | Concern domains this ADR governs |
+| `scope` | enum | No | `feature-specific` | `cross-cutting`, `domain`, `feature-specific` |
+| `source-files` | list | No | — | Source files implementing this decision (for drift detection) |
 
 ### Test criterion front-matter fields
 
 | Field | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `id` | `string` | Yes | — | Unique identifier (`TC-NNN`) |
-| `title` | `string` | Yes | — | Human-readable name |
-| `type` | `string` | No | `scenario` | One of: `scenario`, `invariant`, `chaos`, `exit-criteria` |
-| `status` | `string` | No | `unimplemented` | One of: `unimplemented`, `implemented`, `passing`, `failing` |
-| `validates.features` | `string[]` | No | `[]` | Feature IDs this test validates |
-| `validates.adrs` | `string[]` | No | `[]` | ADR IDs this test validates |
-| `phase` | `integer` | No | `1` | Implementation phase |
-| `runner` | `string` | No | — | Test runner: `cargo-test`, `bash`, `pytest`, `custom` |
-| `runner-args` | `string` | No | — | Arguments passed to the runner |
-| `runner-timeout` | `string` | No | `30s` | Execution timeout (e.g., `60s`, `5min`) |
+|-------|------|----------|---------|-------------|
+| `id` | string | Yes | — | Unique identifier, format `TC-XXX` |
+| `title` | string | Yes | — | Human-readable name |
+| `type` | enum | Yes | — | `scenario`, `invariant`, `chaos`, `exit-criteria`, `benchmark` |
+| `status` | enum | Yes | — | `unimplemented`, `implemented`, `passing`, `failing` |
+| `validates.features` | list | No | `[]` | Feature IDs this TC validates |
+| `validates.adrs` | list | No | `[]` | ADR IDs this TC validates |
+| `phase` | integer | No | — | Implementation phase |
+| `runner` | string | No | — | Test runner: `cargo-test`, `bash`, `pytest`, `custom` |
+| `runner-args` | string | No | — | Arguments passed to the runner |
+| `runner-timeout` | duration | No | `30s` | Maximum execution time |
 
-### ID format
+### Formal block types
 
-IDs follow the pattern `PREFIX-NNN`:
-- Prefix is configurable in `product.toml` under `[prefixes]` (defaults: `FT`, `ADR`, `TC`)
-- Numeric part is zero-padded to at least 3 digits
-- IDs are assigned sequentially — `max(existing) + 1`; gaps are never filled
-- IDs are permanent; retired artifacts are marked `status: abandoned`, never renumbered
+| Block | Syntax | Required for | Description |
+|-------|--------|--------------|-------------|
+| Types | `⟦Σ:Types⟧{...}` | — | Type definitions using `≜` |
+| Invariants | `⟦Γ:Invariants⟧{...}` | `invariant`, `chaos` | Universal/existential properties |
+| Scenario | `⟦Λ:Scenario⟧{...}` | — | Given/when/then fields |
+| Exit Criteria | `⟦Λ:ExitCriteria⟧{...}` | — | Measurable thresholds |
+| Benchmark | `⟦Λ:Benchmark⟧{...}` | `benchmark` | Baseline, target, scorer config |
+| Evidence | `⟦Ε⟧⟨...⟩` | — | Confidence (δ), coverage (φ), stability (τ) |
+
+### Evidence block values
+
+| Field | Range | Meaning |
+|-------|-------|---------|
+| `δ` | 0.0–1.0 | Confidence level |
+| `φ` | 0–100 | Coverage percentage |
+| `τ` | `◊⁺` (stable), `◊⁻` (unstable), `◊?` (unknown) | Stability indicator |
+
+### ID assignment rules
+
+- IDs are assigned sequentially: `FT-001`, `FT-002`, `FT-003`.
+- Next ID is always `max(existing) + 1` — gaps are never filled.
+- IDs are permanent. Retired artifacts use `status: abandoned`, never deletion or renumbering.
+- The prefix (`FT`, `ADR`, `TC`) is configurable in `product.toml`.
 
 ### Schema version in `product.toml`
 
 ```toml
 schema-version = "1"
-schema-version-warning = true   # set to false to suppress W007
 ```
 
-- Integer, incremented only on breaking changes (field renames, removed fields, changed semantics)
-- Adding an optional field with a default is not a breaking change
+- Integer, incremented only on breaking changes.
+- Adding an optional field with a default does not increment the version.
 
-### Error codes
+### Relevant error and warning codes
 
-| Code | Condition |
-|---|---|
-| E001 | Parse error: malformed YAML, invalid field value, formal block syntax error |
-| E008 | Schema version mismatch: repository requires a newer schema than the binary supports |
-| E010 | Repository locked: another Product process holds the advisory lock |
-| W004 | Empty formal block body (syntactically valid, semantically meaningless) |
-| W007 | Schema upgrade available but not applied |
-
-### `product migrate schema` command
-
-```
-product migrate schema                # upgrade to current schema version
-product migrate schema --dry-run      # show what would change without writing
-product migrate schema --from 1       # explicit source version
-```
-
-Migrations are idempotent. Files are written atomically (ADR-015). `schema-version` in `product.toml` is updated last. If a write fails mid-migration, re-running the command completes the upgrade.
+| Code | Meaning |
+|------|---------|
+| E001 | Parse error — malformed front-matter or formal block, with line-level precision |
+| E008 | Schema version mismatch — binary too old for repository schema |
+| E009 | Atomic write failure — temp file could not be written or renamed |
+| E010 | Repository locked — another Product process holds `.product.lock` |
+| W004 | Empty formal block body — syntactically valid but semantically meaningless |
+| W007 | Schema upgrade available — repository on older version than binary supports |
 
 ## Explanation
 
-### Why YAML front-matter instead of a separate graph file
+### Why YAML front-matter instead of a separate graph file?
 
-Product uses YAML front-matter as the sole source of truth for graph relationships (ADR-002). Each file is self-describing — open any artifact and you immediately see its identity, status, and connections. This eliminates the synchronisation problem where a separate graph file drifts from the documents it describes. Git diffs on front-matter changes are clean one-line edits, making code review straightforward.
+Product uses YAML front-matter as the sole source of truth for the knowledge graph (ADR-002). Every artifact file is self-describing — open any file and you immediately see its ID, status, and all outgoing edges. The graph is recomputed from front-matter on every CLI invocation; there is no persistent graph store. This eliminates the synchronisation problem that plagues systems with separate graph files: contributors update the document but forget the graph file, and the two diverge silently.
 
-The trade-off is that the graph must be recomputed on every invocation. For the expected scale (hundreds of artifacts, not millions), this is negligible — the parser reads all `.md` files in the configured directories, deserialises the YAML, and builds the in-memory graph in milliseconds.
+### Why numeric IDs instead of slugs or UUIDs?
 
-### Why prefixed numeric IDs
+ADR-005 chose prefixed zero-padded numeric IDs (`FT-001`, `ADR-002`) over alternatives. Slugs like `cluster-foundation` break if the title changes. UUIDs are collision-free but unreadable — `FT-001` in a commit message carries meaning, a UUID does not. Sequential numbering follows established convention (JIRA, RFC numbering) and ensures correct alphabetical sort in file listings.
 
-The `FT-001` / `ADR-001` / `TC-001` scheme (ADR-005) is chosen for readability and stability. Sequential numbers are a convention engineers arrive with from JIRA, RFC numbering, and ADR numbering. The prefix makes artifact type visible in any context — commit messages, Slack threads, code comments. Zero-padding ensures correct alphabetical sort in file listings.
+### How schema migration works
 
-IDs are permanent. Once `FT-007` is assigned, that number is never reused, even if the feature is abandoned. This guarantees external references (code comments, commit messages) remain valid indefinitely. The `next_id` function always assigns `max(existing) + 1`, never filling gaps.
+Schema versioning (ADR-014) uses a single integer in `product.toml`. Breaking changes increment the version. `product migrate schema` applies migration steps sequentially (1 to 2, 2 to 3, etc.) using atomic writes (ADR-015) so that a crash mid-migration cannot corrupt files. Unknown front-matter fields are preserved through migration — Product never strips fields it does not understand, which allows external tooling to add custom fields without fear of data loss.
 
-### Schema versioning strategy
+Forward incompatibility (binary too old for schema) is a hard error because running old Product against a new schema could produce silently wrong graph output. Backward incompatibility (binary newer than schema) is a warning because the old schema is still fully readable.
 
-Schema evolution is managed through a single integer version in `product.toml` (ADR-014). The version increments only on breaking changes. Product enforces strict forward incompatibility — running an old binary against a newer schema is a hard error (E008), because silently misinterpreting fields would corrupt the graph. Backward incompatibility is a warning (W007), since the old schema remains readable.
+### How formal blocks are parsed
 
-Unknown front-matter fields are preserved on write. This is critical for extensibility: teams can add custom fields without Product stripping them on the next CLI invocation.
+ADR-016 specifies a hand-written recursive descent parser for the AISP-influenced formal block notation. The parser produces a typed AST for validation while storing the original text verbatim for context bundle output. This dual representation ensures that `product context` reproduces exactly what the author wrote, without round-trip formatting changes. The grammar is intentionally permissive on expressions — structural validation is Product's job, not full semantic verification.
 
 ### File write safety
 
-All front-matter writes use atomic temp-file-plus-rename (ADR-015). An advisory lock on `.product.lock` serialises concurrent Product invocations with a 3-second timeout. This prevents torn writes from interrupted processes and silent data loss from concurrent modifications. Read-only commands never acquire the lock.
-
-### Formal blocks in test criteria
-
-Test criterion files can include AISP-influenced formal blocks after the prose body (ADR-016). The parser produces a typed AST for validation while preserving the raw text byte-for-byte for context bundle output. This dual representation means Product can validate evidence block ranges and detect empty blocks (W004) without altering the author's original notation.
+All file mutations use atomic temp-file-plus-rename (ADR-015). An advisory lock on `.product.lock` serialises concurrent Product invocations with a 3-second timeout. Stale locks from crashed processes are detected and automatically acquired. This protects against torn writes (partial file content from interrupted commands) and concurrent write conflicts (two Product processes silently overwriting each other).
