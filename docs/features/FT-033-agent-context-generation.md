@@ -27,7 +27,7 @@ tests:
 - TC-417
 - TC-418
 - TC-419
-domains: []
+domains: [api]
 domains-acknowledged: {}
 ---
 

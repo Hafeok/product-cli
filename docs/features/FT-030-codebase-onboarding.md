@@ -31,7 +31,7 @@ tests:
 - TC-366
 - TC-367
 - TC-368
-domains: []
+domains: [api, data-model]
 domains-acknowledged: {}
 ---
 

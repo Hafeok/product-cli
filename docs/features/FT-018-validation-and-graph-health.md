@@ -20,7 +20,7 @@ tests:
 - TC-137
 - TC-138
 - TC-139
-domains: []
+domains: [data-model, error-handling]
 domains-acknowledged: {}
 ---
 

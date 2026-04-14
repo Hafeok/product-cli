@@ -29,7 +29,7 @@ tests:
 - TC-400
 - TC-401
 - TC-403
-domains: []
+domains: [data-model, api]
 domains-acknowledged: {}
 ---
 

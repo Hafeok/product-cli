@@ -19,7 +19,7 @@ tests:
 - TC-014
 - TC-015
 - TC-156
-domains: []
+domains: [data-model]
 domains-acknowledged: {}
 ---
 

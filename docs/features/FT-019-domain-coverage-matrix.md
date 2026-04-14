@@ -28,7 +28,7 @@ tests:
 - TC-149
 - TC-150
 - TC-151
-domains: []
+domains: [data-model, api]
 domains-acknowledged: {}
 ---
 

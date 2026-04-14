@@ -20,7 +20,7 @@ tests:
 - TC-129
 - TC-130
 - TC-131
-domains: []
+domains: [observability, api]
 domains-acknowledged: {}
 ---
 

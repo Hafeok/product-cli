@@ -36,7 +36,7 @@ tests:
 - TC-237
 - TC-238
 - TC-249
-domains: []
+domains: [data-model, api]
 domains-acknowledged: {}
 ---
 

@@ -11,7 +11,7 @@ adrs:
 - ADR-013
 tests:
 - TC-181
-domains: []
+domains: [api, error-handling]
 domains-acknowledged: {}
 ---
 

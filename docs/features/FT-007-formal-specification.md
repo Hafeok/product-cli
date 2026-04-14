@@ -10,7 +10,7 @@ tests:
 - TC-011
 - TC-012
 - TC-152
-domains: []
+domains: [data-model]
 domains-acknowledged: {}
 ---
 

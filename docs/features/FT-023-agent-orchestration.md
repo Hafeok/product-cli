@@ -27,7 +27,7 @@ tests:
 - TC-312
 - TC-313
 - TC-314
-domains: []
+domains: [api, observability]
 domains-acknowledged: {}
 ---
 

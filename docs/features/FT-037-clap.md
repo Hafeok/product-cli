@@ -6,7 +6,7 @@ status: planned
 depends-on: []
 adrs: []
 tests: []
-domains: []
+domains: [api]
 domains-acknowledged: {}
 ---
 

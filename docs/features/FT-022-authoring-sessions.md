@@ -20,7 +20,7 @@ tests:
 - TC-322
 - TC-323
 - TC-324
-domains: []
+domains: [api]
 domains-acknowledged: {}
 ---
 

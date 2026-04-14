@@ -17,7 +17,7 @@ tests:
 - TC-106
 - TC-107
 - TC-165
-domains: []
+domains: [api, networking, security]
 domains-acknowledged: {}
 ---
 

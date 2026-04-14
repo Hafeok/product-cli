@@ -25,7 +25,7 @@ tests:
 - TC-078
 - TC-079
 - TC-153
-domains: []
+domains: [data-model]
 domains-acknowledged: {}
 ---
 

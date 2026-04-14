@@ -5,7 +5,7 @@ status: accepted
 features: []
 supersedes: []
 superseded-by: []
-domains: []
+domains: [data-model, api]
 scope: domain
 content-hash: sha256:803822bd9775d66e640bb250bfb31e86bb430f72946fd646af65375e00dcf970
 ---

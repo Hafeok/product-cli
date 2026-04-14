@@ -20,7 +20,7 @@ tests:
 - TC-437
 - TC-438
 - TC-439
-domains: []
+domains: [api]
 domains-acknowledged: {}
 ---
 

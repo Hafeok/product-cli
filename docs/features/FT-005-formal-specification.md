@@ -13,7 +13,7 @@ tests:
 - TC-069
 - TC-070
 - TC-161
-domains: []
+domains: [data-model, storage]
 domains-acknowledged: {}
 ---
 

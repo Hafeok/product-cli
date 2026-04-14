@@ -21,7 +21,7 @@ tests:
 - TC-428
 - TC-429
 - TC-430
-domains: []
+domains: [security, data-model]
 domains-acknowledged: {}
 ---
 

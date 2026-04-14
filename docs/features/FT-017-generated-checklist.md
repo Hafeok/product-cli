@@ -13,7 +13,7 @@ tests:
 - TC-159
 - TC-209
 - TC-210
-domains: []
+domains: [api]
 domains-acknowledged: {}
 ---
 

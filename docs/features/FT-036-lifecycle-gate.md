@@ -19,7 +19,7 @@ tests:
 - TC-445
 - TC-446
 - TC-447
-domains: []
+domains: [data-model]
 domains-acknowledged: {}
 ---
 

@@ -6,7 +6,7 @@ features:
 - FT-035
 supersedes: []
 superseded-by: []
-domains: []
+domains: [api]
 scope: feature-specific
 content-hash: sha256:77ec5fd0946eb51999d1d43c7dcdcdf6d118aaee06a9e1d4dac6d1e05634744e
 ---

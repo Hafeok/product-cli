@@ -64,9 +64,14 @@ proptest! {
             args.push("--write-tools".to_string());
         }
 
+        // Deduplicate by domain key to avoid duplicate TOML keys
+        let mut seen_keys = std::collections::HashSet::new();
         for entry in &domain_entries {
-            args.push("--domain".to_string());
-            args.push(entry.clone());
+            let key = entry.split('=').next().unwrap_or("");
+            if seen_keys.insert(key.to_string()) {
+                args.push("--domain".to_string());
+                args.push(entry.clone());
+            }
         }
 
         let output = Command::new(&bin)

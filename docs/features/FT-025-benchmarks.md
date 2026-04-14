@@ -9,7 +9,7 @@ adrs:
 - ADR-018
 tests:
 - TC-180
-domains: []
+domains: [observability]
 domains-acknowledged: {}
 ---
 

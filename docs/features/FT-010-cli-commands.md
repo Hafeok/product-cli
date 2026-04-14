@@ -17,7 +17,7 @@ tests:
 - TC-057
 - TC-058
 - TC-059
-domains: []
+domains: [api, error-handling]
 domains-acknowledged: {}
 ---
 

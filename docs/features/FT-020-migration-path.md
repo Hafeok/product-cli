@@ -22,7 +22,7 @@ tests:
 - TC-085
 - TC-162
 - TC-275
-domains: []
+domains: [api, data-model]
 domains-acknowledged: {}
 ---
 

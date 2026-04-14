@@ -20,7 +20,7 @@ tests:
 - TC-096
 - TC-097
 - TC-098
-domains: []
+domains: [observability, api]
 domains-acknowledged: {}
 ---
 

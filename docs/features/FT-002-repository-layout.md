@@ -15,7 +15,7 @@ tests:
 - TC-011
 - TC-012
 - TC-154
-domains: []
+domains: [data-model]
 domains-acknowledged: {}
 ---
 
