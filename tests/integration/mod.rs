@@ -1712,6 +1712,35 @@ fn unique_port() -> u16 {
 }
 
 // ---------------------------------------------------------------------------
+// TC-099: mcp_stdio_tool_call
+// ---------------------------------------------------------------------------
+
+/// TC-099: Spawn `product mcp`, send JSON-RPC tool call over stdin, verify response
+#[test]
+fn tc_099_mcp_stdio_tool_call() {
+    let h = fixture_minimal();
+
+    // Send a valid JSON-RPC tools/call request over stdin
+    let input = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_feature_list","arguments":{}}}"#;
+    let output = run_mcp_stdio(&h, input);
+
+    // Response should be valid JSON-RPC
+    assert!(output.contains("jsonrpc"), "Response should be JSON-RPC format: {}", output);
+    assert!(output.contains("\"id\""), "Response should include request id: {}", output);
+
+    // Response should contain tool result with feature data
+    assert!(output.contains("FT-001"), "Response should contain FT-001 from fixture: {}", output);
+
+    // Should not contain an error
+    let parsed: serde_json::Value = output.lines()
+        .filter(|l| l.contains("jsonrpc"))
+        .next()
+        .and_then(|l| serde_json::from_str(l).ok())
+        .expect("Should parse JSON-RPC response");
+    assert!(parsed.get("result").is_some(), "Response should have result field, not error: {}", output);
+}
+
+// ---------------------------------------------------------------------------
 // TC-100: mcp_http_tool_call
 // ---------------------------------------------------------------------------
 
@@ -1772,6 +1801,45 @@ fn tc_102_mcp_http_wrong_token_401() {
     let _ = child.wait();
 
     assert!(status.contains("401"), "Expected 401 with wrong token, got: {}", status);
+}
+
+// ---------------------------------------------------------------------------
+// TC-103: mcp_http_write_disabled
+// ---------------------------------------------------------------------------
+
+/// TC-103: Write tool returns tool error (not HTTP error) when write is disabled
+#[test]
+fn tc_103_mcp_http_write_disabled() {
+    let h = Harness::new();
+    // Explicitly set write = false (the default, but be explicit)
+    h.write("product.toml", &format!("{}\n[mcp]\nwrite = false\n", MINIMAL_CONFIG));
+    h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test Feature\nstatus: draft\nphase: 1\n---\n");
+    let port = unique_port();
+    let mut child = start_mcp_http(&h, port, &["--token", "write-test-103"]);
+
+    // Call a write tool (product_feature_new) which requires write to be enabled
+    let body = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_feature_new","arguments":{"title":"Should Fail"}}}"#;
+    let (status, _headers, resp_body) = http_post(port, body, Some("Bearer write-test-103"));
+
+    let _ = child.kill();
+    let _ = child.wait();
+
+    // Should return HTTP 200 (not an HTTP error — the error is at the tool level)
+    assert!(status.contains("200"), "Expected HTTP 200 (tool error, not HTTP error), got: {}", status);
+
+    // The JSON-RPC response should contain an error about write tools being disabled
+    assert!(
+        resp_body.contains("Write tools are disabled") || resp_body.contains("write") && resp_body.contains("disabled"),
+        "Expected write-disabled error in response: {}",
+        resp_body
+    );
+
+    // The response should be a JSON-RPC error, not a result
+    assert!(
+        resp_body.contains("\"error\""),
+        "Response should contain JSON-RPC error field: {}",
+        resp_body
+    );
 }
 
 // ---------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 id: FT-021
 title: MCP Server
 phase: 5
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-020
