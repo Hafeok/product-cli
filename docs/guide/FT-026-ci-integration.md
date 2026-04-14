@@ -1,146 +1,155 @@
-It looks like the write permission is being blocked. Here's the complete documentation file for FT-026 — CI Integration (~240 lines). You can save it to `docs/guide/FT-026-ci-integration.md`:
-
----
-
 ## Overview
 
-CI Integration makes Product a first-class gate in CI/CD pipelines. It provides machine-readable JSON output on all list and check commands, a structured exit code scheme that encodes error severity, shell completions for developer ergonomics, and a ready-made GitHub Actions workflow pattern. Together these capabilities let teams enforce knowledge graph health, specification coverage, and architectural fitness as automated PR checks — without screen-scraping or custom parsing.
+CI Integration makes Product a first-class gate in continuous integration pipelines. It provides machine-readable JSON output on all list and navigation commands, a three-tier exit code scheme that distinguishes clean graphs from errors and warnings, and shell completions for interactive use. Together these capabilities let a CI pipeline run `product graph check`, interpret the result without parsing human-readable text, and fail or warn based on the severity of any issues found.
 
 ## Tutorial
 
-This walkthrough sets up Product as a CI gate that blocks PRs with broken links or specification gaps. You will run graph checks locally, interpret exit codes, parse JSON output, and create a GitHub Actions workflow.
+### Your first CI gate
 
-### Step 1: Run a graph health check
+This tutorial adds Product as a pull request gate that catches broken links in your knowledge graph.
+
+1. Confirm your repository has a valid `product.toml` and at least one feature file:
+
+   ```bash
+   product feature list
+   ```
+
+2. Run the graph health check and observe the exit code:
+
+   ```bash
+   product graph check
+   echo $?
+   ```
+
+   If the graph is clean, the exit code is `0`. If there are broken links or cycles, it is `1`. If there are only warnings (orphaned artifacts, missing exit criteria), it is `2`.
+
+3. Introduce a deliberate broken link by editing a feature file to reference a non-existent ADR (e.g., `adrs: [ADR-999]`), then run the check again:
+
+   ```bash
+   product graph check
+   echo $?
+   # Exit code: 1
+   ```
+
+   You see a rustc-style diagnostic on stderr pointing to the offending file, line, and reference. Stdout remains empty.
+
+4. Now request JSON output instead:
+
+   ```bash
+   product graph check --format json
+   ```
+
+   Stderr contains a JSON object with `errors`, `warnings`, and `summary` fields. A CI tool can parse this directly to annotate a pull request.
+
+5. Remove the broken link. Run the check once more and confirm exit code `0`.
+
+### Adding shell completions
+
+Install tab completions for your shell so you can discover commands interactively:
 
 ```bash
-product graph check
-```
-
-If the graph is clean, the command exits with code `0`. If there are errors (broken links, cycles), it exits with code `1`. If there are only warnings (orphaned artifacts, missing exit criteria), it exits with code `2`.
-
-### Step 2: Check the exit code
-
-```bash
-product graph check
-echo $?
-```
-
-A clean graph returns `0`. Try introducing a broken link by referencing a non-existent ADR in a feature's front-matter, then run the check again — you should see exit code `1` with a diagnostic on stderr.
-
-### Step 3: Get JSON output for CI parsing
-
-```bash
-product graph check --format json
-```
-
-JSON diagnostics go to stderr, keeping stdout clean. Errors and warnings are separated with file paths, line numbers, and remediation hints.
-
-### Step 4: Run gap analysis on changed files
-
-```bash
-product gap check --changed --format json
-```
-
-### Step 5: Verify fitness function thresholds
-
-```bash
-product metrics threshold
-```
-
-Exits `1` if any fitness function exceeds its threshold in `product.toml`.
-
-### Step 6: Generate shell completions
-
-```bash
+# Bash
 product completions bash > /etc/bash_completion.d/product
+
+# Zsh
+product completions zsh > ~/.zfunc/_product
+
+# Fish
+product completions fish > ~/.config/fish/completions/product.fish
 ```
+
+Restart your shell or source the completion file, then type `product g<TAB>` to verify.
 
 ## How-to Guide
 
-### Gate PRs on graph health
+### Gate a GitHub Actions workflow on graph health
 
-1. Add `product graph check` as a CI step.
-2. The step fails (exit `1`) on broken links, dependency cycles, or malformed front-matter.
-3. To allow warnings without failing:
-   ```bash
-   product graph check || [ $? -eq 2 ]
+1. Add a step that runs `product graph check --format json`:
+
+   ```yaml
+   - name: Knowledge graph check
+     run: product graph check --format json
    ```
 
-### Parse JSON diagnostics in CI
+   The step fails automatically on exit code `1` (errors). Warnings (exit code `2`) also fail by default in GitHub Actions.
 
-1. Redirect stderr:
-   ```bash
-   product graph check --format json 2> diagnostics.json
+2. To allow warnings but fail on errors, use a conditional:
+
+   ```yaml
+   - name: Knowledge graph check (errors only)
+     run: |
+       product graph check --format json || [ $? -eq 2 ]
    ```
-2. Use `file`, `line`, and `detail` fields to post inline PR annotations.
 
-### List features as JSON for tooling
+   This passes the step when the only issues are warnings (exit code `2`) but fails on hard errors (exit code `1`).
+
+3. Add fitness function thresholds and gap analysis as additional gates:
+
+   ```yaml
+   - name: Metrics threshold
+     run: product metrics threshold
+
+   - name: Gap analysis (changed files only)
+     run: product gap check --changed --format json
+   ```
+
+### Get JSON output from list commands
+
+Run any list or navigation command with `--format json` to get structured output on stdout:
 
 ```bash
 product feature list --format json
-product adr list --format json
-product test list --format json
+product gap check --format json
+product graph check --format json
 ```
 
-### Set up a GitHub Actions workflow
+Pipe to `jq` for ad-hoc filtering:
 
-Create `.github/workflows/product-check.yml`:
-
-```yaml
-name: Knowledge Graph Check
-on: [pull_request]
-
-jobs:
-  product-gate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Product
-        run: cargo install --path .
-      - name: Graph health
-        run: product graph check --format json
-      - name: Fitness thresholds
-        run: product metrics threshold
-      - name: Gap analysis (changed files)
-        run: product gap check --changed --format json
+```bash
+product feature list --format json | jq '.[] | select(.status == "planned")'
 ```
 
-### Install shell completions
+### Fail CI only on new specification gaps
 
-- **Bash:** `product completions bash > /etc/bash_completion.d/product`
-- **Zsh:** `product completions zsh > ~/.zfunc/_product`
-- **Fish:** `product completions fish > ~/.config/fish/completions/product.fish`
+1. Use the `--changed` flag to scope gap analysis to files modified in the current PR:
 
-### Distinguish errors from warnings in scripts
+   ```bash
+   product gap check --changed --format json
+   ```
+
+2. The command exits `1` if any new gaps are found in changed files, `0` otherwise.
+
+### Interpret exit codes in a shell script
 
 ```bash
 product graph check
-case $? in
-  0) echo "Clean" ;;
-  1) echo "Errors — build must fail" ;;
-  2) echo "Warnings only — policy decision" ;;
-  3) echo "Internal error — file a bug report" ;;
+rc=$?
+case $rc in
+  0) echo "Graph is clean" ;;
+  1) echo "Errors found — broken links, cycles, or parse failures" ;;
+  2) echo "Warnings only — orphans, missing exit criteria" ;;
+  3) echo "Internal error — this is a bug in Product" ;;
 esac
 ```
 
 ## Reference
 
+### Global flag
+
+| Flag | Type | Description |
+|---|---|---|
+| `--format json` | Global | Emit all output (results, errors, warnings) as structured JSON. Applies to every command. |
+
 ### Exit codes
 
 | Code | Meaning | When |
-|------|---------|------|
-| `0` | Clean | No errors or warnings |
-| `1` | Errors | Broken links, dependency cycles, malformed front-matter, invalid IDs |
-| `2` | Warnings only | Orphaned artifacts, missing exit criteria, untested features |
-| `3` | Internal error | Bug in Product itself — report it |
+|---|---|---|
+| `0` | Success / clean | No errors, no warnings |
+| `1` | Error | Broken links (E002), dependency cycles (E003), supersession cycles (E004), parse failures (E001, E005, E006, E007), schema errors (E008), or other hard errors |
+| `2` | Warnings only | Orphaned artifacts (W001), missing test criteria (W002), missing exit criteria (W003), missing formal blocks (W004), phase/dependency disagreements (W005), domain gaps (W010, W011), and other validation warnings |
+| `3` | Internal error | Bug in Product (I001, I002). Includes source location and version. |
 
-(ADR-009, ADR-013)
-
-### `--format json` (global flag)
-
-Available on all commands. Errors/warnings go to **stderr** as JSON. Command results go to **stdout** as JSON.
-
-### JSON diagnostic schema
+### JSON error schema (`--format json` on stderr)
 
 ```json
 {
@@ -156,48 +165,37 @@ Available on all commands. Errors/warnings go to **stderr** as JSON. Command res
       "hint": "create the file with `product adr new` or remove the reference"
     }
   ],
-  "warnings": [...],
+  "warnings": [],
   "summary": { "errors": 1, "warnings": 0 }
 }
 ```
 
-### Error and warning codes
-
-| Code | Tier | Description |
-|------|------|-------------|
-| E001 | Parse | Malformed YAML front-matter |
-| E002 | Graph | Broken link — referenced artifact does not exist |
-| E003 | Graph | Dependency cycle in `depends-on` DAG |
-| E004 | Graph | Supersession cycle in ADR `supersedes` chain |
-| E005 | Parse | Invalid artifact ID format |
-| E006 | Parse | Missing required front-matter field |
-| E007 | Parse | Unknown artifact type |
-| E008 | Schema | Schema version exceeds binary support |
-| E009 | Orchestration | `product implement` blocked by unsuppressed gaps |
-| E010 | Concurrency | Repository locked by another Product process |
-| E011 | Domain | `domains-acknowledged` entry with empty reasoning |
-| E012 | Domain | Unknown domain not in `product.toml` vocabulary |
-| W001 | Validation | Orphaned artifact — no incoming links |
-| W002 | Validation | Feature has no linked test criteria |
-| W003 | Validation | Feature has no exit-criteria type test |
-| W004 | Validation | Invariant/chaos test missing formal block |
-| W005 | Validation | Phase label disagrees with dependency order |
-| W010 | Validation | Cross-cutting ADR not acknowledged by feature |
-| W011 | Validation | Domain gap without acknowledgement |
-
-### `product completions`
+### Shell completions command
 
 ```
 product completions <SHELL>
 ```
 
-| Argument | Required | Values |
-|----------|----------|--------|
-| `SHELL` | yes | `bash`, `zsh`, `fish` |
+| Argument | Values |
+|---|---|
+| `SHELL` | `bash`, `zsh`, `fish` |
 
-### Interactive vs. structured error format
+Writes the completion script to stdout. Redirect to the appropriate file for your shell.
 
-**Interactive (default):**
+### CI-relevant commands
+
+| Command | Purpose | Typical CI usage |
+|---|---|---|
+| `product graph check` | Validate graph integrity | Gate: fail on broken links or cycles |
+| `product graph check --format json` | Same, with structured output | Parse errors/warnings for PR annotations |
+| `product metrics threshold` | Check fitness function thresholds | Gate: fail if metrics exceed bounds |
+| `product gap check --changed --format json` | Find specification gaps in changed files | Gate: fail if PR introduces new gaps |
+| `product feature list --format json` | List features as JSON | Reporting, dashboards |
+
+### Interactive error format (default)
+
+When `--format json` is not set, errors and warnings are written to stderr in rustc-style diagnostic format:
+
 ```
 error[E002]: broken link
   --> docs/features/FT-003-rdf-projection.md
@@ -208,26 +206,37 @@ error[E002]: broken link
    = hint: create the file with `product adr new` or remove the reference
 ```
 
-**Structured (`--format json`):** JSON on stderr (see schema above).
+Every diagnostic includes: error code, description, file path, line number (where applicable), offending content, and a remediation hint.
+
+### Output routing
+
+| Stream | Content |
+|---|---|
+| stdout | Command results: context bundles, lists, query results, JSON output |
+| stderr | Errors and warnings (both interactive and `--format json` modes) |
+
+This separation ensures that piping (`product context FT-001 > bundle.md`) produces clean files even when warnings are present.
 
 ## Explanation
 
-### Why exit codes instead of JSON-only output?
+### Why exit codes instead of structured output only
 
-Exit codes are the native CI signal. Every CI system understands non-zero exit as failure without configuration. JSON output via `--format json` is available for richer annotation, but the exit code alone is sufficient for a basic gate (ADR-009).
+Exit codes are the native signaling mechanism of Unix processes. A CI pipeline step fails or passes based on the exit code without any parsing logic. The three-tier scheme (0/1/2) lets teams express nuanced policies: "fail on broken links but tolerate missing exit criteria" is a one-liner (`|| [ $? -eq 2 ]`), while achieving the same with JSON-only output would require a `jq` filter or custom script in every pipeline.
 
-### Why separate errors (code 1) from warnings (code 2)?
+The exit code convention follows `grep` (0 = match, 1 = no match, 2 = error) and lint tools like `clippy`, so engineers arrive with existing intuition about what the codes mean. See ADR-009 for the full rationale.
 
-A broken link (E002) means the graph is structurally inconsistent. An orphaned artifact (W001) means something is disconnected but the graph is still valid. The two-code scheme lets teams set tolerance: strict teams fail on any non-zero exit; pragmatic teams use `|| [ $? -eq 2 ]` to allow warnings during active development (ADR-009).
+### Structured errors for machine and human consumption
 
-### Why stderr for errors and stdout for results?
+Product maintains two rendering paths for the same underlying error data. The interactive format (rustc-style diagnostics) is optimized for a developer reading a terminal. The JSON format is optimized for CI tools that annotate pull requests or feed dashboards. Both formats carry identical information: error code, tier, file path, line number, context, detail, and hint. The `--format json` flag is global — it applies to every command, not just `graph check` — so CI pipelines can use a single flag to get machine-readable output everywhere. See ADR-013 for the error taxonomy and format specification.
 
-Unix convention that makes piping reliable. `product context FT-001 > bundle.md` produces a clean file even when warnings are present. In CI, stdout and stderr are often handled by different log processors (ADR-013).
+### Stdout/stderr separation
 
-### Why rustc-style diagnostics?
+All errors and warnings go to stderr. Stdout is reserved for command output. This is a Unix convention that makes Product composable: `product context FT-001 > bundle.md` produces a clean Markdown file even if the graph has warnings. CI pipelines that capture stderr separately can surface diagnostics in PR comments without contaminating the primary output. ADR-013 discusses the rejected alternative of writing everything to stdout and why it was not adopted.
 
-The interactive format mirrors rustc and clang — file path, line number, offending content, and a remediation hint in one message. The `hint` field tells the developer exactly what command to run, reducing the feedback loop from "error → search docs → fix" to "error → fix" (ADR-013).
+### Graph check as the primary CI gate
 
-### How domain checks integrate with CI
+`product graph check` is the single command designed to answer "is this knowledge graph consistent?" It validates referential integrity (no broken links), structural soundness (no dependency or supersession cycles), and completeness (exit criteria, formal blocks, domain acknowledgements). The exit code directly encodes the answer. This makes it the natural choice for a CI gate — a single line in a workflow file that enforces graph health on every pull request.
 
-Domain validation (ADR-025) adds W010 (unacknowledged cross-cutting ADR) and W011 (domain gap) to `product graph check`. These surface as warnings (exit code 2), not errors, so they do not block CI by default. Teams that want to enforce domain coverage can fail on any non-zero exit.
+### Domain and cross-cutting validation in CI
+
+When ADRs declare `scope: cross-cutting` or `scope: domain` (ADR-025), `product graph check` enforces that features acknowledge them. In CI, this surfaces as W010 (unacknowledged cross-cutting ADR) or W011 (domain gap without acknowledgement). These are warnings (exit code 2), not errors — they prompt review without blocking merges during active development. Teams that want stricter enforcement can treat exit code 2 as a failure in their pipeline configuration.
