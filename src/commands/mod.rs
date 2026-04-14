@@ -165,8 +165,11 @@ pub enum Commands {
     },
     /// Verify test criteria for a feature
     Verify {
-        /// Feature ID
-        id: String,
+        /// Feature ID (required unless --platform is used)
+        id: Option<String>,
+        /// Run all TCs linked to cross-cutting ADRs, regardless of feature
+        #[arg(long)]
+        platform: bool,
     },
     /// Start a graph-aware authoring session
     Author {
@@ -327,7 +330,7 @@ fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> Bo
         Commands::Migrate { command } => migrate::handle_migrate(command),
         Commands::Gap { command } => gap::handle_gap(command, fmt),
         Commands::Implement { id, dry_run, no_verify, headless } => implement::handle_implement(&id, dry_run, no_verify, headless),
-        Commands::Verify { id } => implement::handle_verify(&id),
+        Commands::Verify { id, platform } => implement::handle_verify(id.as_deref(), platform),
         Commands::Author { command } => author::handle_author(command),
         Commands::Mcp { http, port, bind, token, repo, write } => mcp_cmd::handle_mcp(http, port, &bind, token, repo, write),
         Commands::InstallHooks => hooks::handle_install_hooks(),

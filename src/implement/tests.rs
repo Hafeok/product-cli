@@ -1,6 +1,6 @@
 //! Unit tests for agent orchestration (ADR-021)
 
-use super::verify::extract_yaml_field;
+use super::runner::extract_yaml_field;
 
 #[test]
 fn extract_runner_field() {

@@ -224,9 +224,9 @@ pub struct TestFrontMatter {
     /// Last failure message
     #[serde(rename = "failure-message", default, skip_serializing_if = "Option::is_none")]
     pub failure_message: Option<String>,
-    /// Last run duration in seconds
+    /// Last run duration (e.g. "4.2s")
     #[serde(rename = "last-run-duration", default, skip_serializing_if = "Option::is_none")]
-    pub last_run_duration: Option<f64>,
+    pub last_run_duration: Option<String>,
 }
 
 fn default_test_type() -> TestType {

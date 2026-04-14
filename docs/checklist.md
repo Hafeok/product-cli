@@ -591,7 +591,7 @@
 - [x] TC-323: mcp_prompts_list_tool (scenario) — passing
 - [x] TC-324: mcp_prompts_get_tool (scenario) — passing
 
-### FT-023 — Agent Orchestration [~]
+### FT-023 — Agent Orchestration [x]
 
 - [x] ADR-021: Implementation Pipeline — `product verify` and the Knowledge Boundary (accepted)
 - [x] TC-108: implement_gap_gate_blocks (scenario) — passing
@@ -603,16 +603,16 @@
 - [x] TC-114: verify_updates_frontmatter (scenario) — passing
 - [x] TC-115: verify_regenerates_checklist (scenario) — passing
 - [x] TC-167: FT-023 implement and verify orchestrate (exit-criteria) — passing
-- [ ] TC-304: verify_one_fail_in_progress (scenario) — unimplemented
-- [ ] TC-305: verify_unimplemented_no_runner_blocks (scenario) — unimplemented
-- [ ] TC-306: verify_updates_tc_frontmatter (scenario) — unimplemented
-- [ ] TC-307: verify_failure_message_written (scenario) — unimplemented
-- [ ] TC-309: verify_platform_runs_cross_cutting (scenario) — unimplemented
-- [ ] TC-310: verify_requires_satisfied (scenario) — unimplemented
-- [ ] TC-311: verify_requires_not_satisfied (scenario) — unimplemented
-- [ ] TC-312: verify_requires_missing_prereq_def (scenario) — unimplemented
-- [ ] TC-313: verify_wrapper_script (scenario) — unimplemented
-- [ ] TC-314: harness_scripts_present (scenario) — unimplemented
+- [x] TC-304: verify_one_fail_in_progress (scenario) — passing
+- [x] TC-305: verify_unimplemented_no_runner_blocks (scenario) — passing
+- [x] TC-306: verify_updates_tc_frontmatter (scenario) — passing
+- [x] TC-307: verify_failure_message_written (scenario) — passing
+- [x] TC-309: verify_platform_runs_cross_cutting (scenario) — passing
+- [x] TC-310: verify_requires_satisfied (scenario) — passing
+- [x] TC-311: verify_requires_not_satisfied (scenario) — passing
+- [x] TC-312: verify_requires_missing_prereq_def (scenario) — passing
+- [x] TC-313: verify_wrapper_script (scenario) — passing
+- [x] TC-314: harness_scripts_present (scenario) — passing
 
 ### FT-027 — Context Bundle [x]
 

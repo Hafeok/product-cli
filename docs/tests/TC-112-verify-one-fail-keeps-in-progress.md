@@ -11,7 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_112_verify_one_fail_keeps_in_progress
-last-run: 2026-04-13T14:07:16.920985096+00:00
+last-run: 2026-04-14T18:03:59.846825760+00:00
+last-run-duration: 0.2s
 ---
 
 one TC fails. Assert feature stays `in-progress`.

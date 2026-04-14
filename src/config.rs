@@ -33,8 +33,17 @@ pub struct ProductConfig {
     /// Agent context generation configuration (ADR-031)
     #[serde(rename = "agent-context", default)]
     pub agent_context: AgentContextConfig,
+    /// Verify prerequisites — declarative shell conditions (ADR-021)
+    #[serde(default)]
+    pub verify: VerifyConfig,
 }
 
+/// Verify prerequisites — named shell conditions (ADR-021)
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct VerifyConfig {
+    #[serde(default)]
+    pub prerequisites: HashMap<String, String>,
+}
 /// Configuration for AGENT.md generation (ADR-031)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentContextConfig {
@@ -105,24 +114,12 @@ impl Default for PathsConfig {
     }
 }
 
-fn default_features_path() -> String {
-    "docs/features".to_string()
-}
-fn default_adrs_path() -> String {
-    "docs/adrs".to_string()
-}
-fn default_tests_path() -> String {
-    "docs/tests".to_string()
-}
-fn default_graph_path() -> String {
-    "docs/graph".to_string()
-}
-fn default_checklist_path() -> String {
-    "docs/checklist.md".to_string()
-}
-fn default_dependencies_path() -> String {
-    "docs/dependencies".to_string()
-}
+fn default_features_path() -> String { "docs/features".to_string() }
+fn default_adrs_path() -> String { "docs/adrs".to_string() }
+fn default_tests_path() -> String { "docs/tests".to_string() }
+fn default_graph_path() -> String { "docs/graph".to_string() }
+fn default_checklist_path() -> String { "docs/checklist.md".to_string() }
+fn default_dependencies_path() -> String { "docs/dependencies".to_string() }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrefixConfig {
@@ -331,7 +328,6 @@ pub fn migrate_schema(
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[test]
     fn parse_minimal_config() {
         let config: ProductConfig = toml::from_str("name = \"test-project\"\n").unwrap();
@@ -340,7 +336,6 @@ mod tests {
         assert_eq!(config.prefixes.feature, "FT");
         assert_eq!(config.paths.features, "docs/features");
     }
-
     #[test]
     fn parse_full_config() {
         let toml_str = "name = \"picloud\"\nversion = \"0.1\"\nschema-version = \"1\"\n[paths]\nfeatures = \"docs/features\"\nadrs = \"docs/adrs\"\ntests = \"docs/tests\"\ngraph = \"docs/graph\"\nchecklist = \"docs/checklist.md\"\n[phases]\n1 = \"Cluster Foundation\"\n[prefixes]\nfeature = \"FT\"\nadr = \"ADR\"\ntest = \"TC\"\n";
@@ -349,52 +344,46 @@ mod tests {
         assert_eq!(config.phases.get("1").unwrap(), "Cluster Foundation");
         assert_eq!(config.prefixes.test, "TC");
     }
-
     #[test]
     fn schema_version_forward_error() {
-        let config: ProductConfig = toml::from_str("name = \"test\"\nschema-version = \"99\"\n").unwrap();
-        assert!(config.check_schema_version().is_err());
+        let cfg: ProductConfig = toml::from_str("name = \"test\"\nschema-version = \"99\"\n").unwrap();
+        assert!(cfg.check_schema_version().is_err());
     }
-
     fn migrate_fixture() -> (tempfile::TempDir, std::path::PathBuf) {
         let dir = tempfile::tempdir().unwrap();
-        let toml_path = dir.path().join("product.toml");
-        std::fs::write(&toml_path, "name = \"test\"\nschema-version = \"0\"\n\n[paths]\nfeatures = \"f\"\n").unwrap();
-        let features_dir = dir.path().join("f");
-        std::fs::create_dir_all(&features_dir).unwrap();
-        std::fs::write(features_dir.join("FT-001-test.md"),
+        let tp = dir.path().join("product.toml");
+        std::fs::write(&tp, "name = \"test\"\nschema-version = \"0\"\n\n[paths]\nfeatures = \"f\"\n").unwrap();
+        std::fs::create_dir_all(dir.path().join("f")).unwrap();
+        std::fs::write(dir.path().join("f/FT-001-test.md"),
             "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\nadrs: []\ntests: []\n---\n\nBody.\n").unwrap();
-        (dir, toml_path)
+        (dir, tp)
     }
-
     #[test]
     fn schema_migrate_v0_dry_run() {
-        let (dir, toml_path) = migrate_fixture();
-        let config = ProductConfig::load(&toml_path).unwrap();
-        let (updated, _) = migrate_schema(dir.path(), &config, true).unwrap();
+        let (dir, tp) = migrate_fixture();
+        let cfg = ProductConfig::load(&tp).unwrap();
+        let (updated, _) = migrate_schema(dir.path(), &cfg, true).unwrap();
         assert!(updated > 0, "dry-run should report files to update");
-        let content = std::fs::read_to_string(dir.path().join("f/FT-001-test.md")).unwrap();
-        assert!(!content.contains("depends-on"), "dry-run should not modify files");
+        let c = std::fs::read_to_string(dir.path().join("f/FT-001-test.md")).unwrap();
+        assert!(!c.contains("depends-on"), "dry-run should not modify files");
     }
-
     #[test]
     fn schema_migrate_v0_execute() {
-        let (dir, toml_path) = migrate_fixture();
-        let config = ProductConfig::load(&toml_path).unwrap();
-        let (updated, _) = migrate_schema(dir.path(), &config, false).unwrap();
+        let (dir, tp) = migrate_fixture();
+        let cfg = ProductConfig::load(&tp).unwrap();
+        let (updated, _) = migrate_schema(dir.path(), &cfg, false).unwrap();
         assert!(updated > 0);
-        let content = std::fs::read_to_string(dir.path().join("f/FT-001-test.md")).unwrap();
-        assert!(content.contains("depends-on"), "file should now have depends-on");
-        let toml_content = std::fs::read_to_string(&toml_path).unwrap();
-        assert!(toml_content.contains("schema-version = \"1\""), "product.toml should be bumped to v1");
+        let c = std::fs::read_to_string(dir.path().join("f/FT-001-test.md")).unwrap();
+        assert!(c.contains("depends-on"), "file should now have depends-on");
+        let t = std::fs::read_to_string(&tp).unwrap();
+        assert!(t.contains("schema-version = \"1\""), "product.toml should be bumped to v1");
     }
-
     #[test]
     fn schema_migrate_already_current() {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(dir.path().join("product.toml"), "name = \"test\"\nschema-version = \"1\"\n").unwrap();
-        let config = ProductConfig::load(&dir.path().join("product.toml")).unwrap();
-        let (updated, _) = migrate_schema(dir.path(), &config, false).unwrap();
+        let cfg = ProductConfig::load(&dir.path().join("product.toml")).unwrap();
+        let (updated, _) = migrate_schema(dir.path(), &cfg, false).unwrap();
         assert_eq!(updated, 0, "no migration needed for current version");
     }
 }

@@ -10,9 +10,14 @@ pub(crate) fn handle_implement(id: &str, dry_run: bool, no_verify: bool, headles
     Ok(())
 }
 
-pub(crate) fn handle_verify(id: &str) -> BoxResult {
+pub(crate) fn handle_verify(id: Option<&str>, platform: bool) -> BoxResult {
     let _lock = acquire_write_lock()?;
     let (config, root, graph) = load_graph()?;
-    implement::run_verify(id, &config, &root, &graph)?;
+    if platform {
+        implement::run_verify_platform(&config, &root, &graph)?;
+    } else {
+        let feature_id = id.ok_or("feature ID is required unless --platform is used")?;
+        implement::run_verify(feature_id, &config, &root, &graph)?;
+    }
     Ok(())
 }

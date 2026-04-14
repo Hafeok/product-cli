@@ -2,7 +2,7 @@
 id: FT-023
 title: Agent Orchestration
 phase: 5
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-021

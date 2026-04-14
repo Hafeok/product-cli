@@ -11,7 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_110_implement_dry_run
-last-run: 2026-04-13T14:07:16.920985096+00:00
+last-run: 2026-04-14T18:03:59.846825760+00:00
+last-run-duration: 0.2s
 ---
 
 run `product implement FT-001 --dry-run`. Assert temp file is created and its path printed. Assert no agent is invoked.

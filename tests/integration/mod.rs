@@ -10540,3 +10540,537 @@ fn tc_324_mcp_prompts_get_tool() {
         out
     );
 }
+
+// ===========================================================================
+// TC-304: verify_one_fail_in_progress
+// ===========================================================================
+
+/// TC-304: one TC fails. Assert feature stays in-progress.
+#[test]
+fn tc_304_verify_one_fail_in_progress() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001, TC-002]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Pass Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: pass.sh\n---\n\nTest body.\n",
+    );
+    h.write(
+        "docs/tests/TC-002-test.md",
+        "---\nid: TC-002\ntitle: Fail Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: fail.sh\n---\n\nTest body.\n",
+    );
+    h.write("pass.sh", "#!/bin/bash\nexit 0\n");
+    h.write("fail.sh", "#!/bin/bash\necho 'test assertion failed' >&2\nexit 1\n");
+    std::process::Command::new("chmod")
+        .args(["+x", "pass.sh", "fail.sh"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("chmod");
+
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("PASS");
+    out.assert_stdout_contains("FAIL");
+
+    // Feature should stay in-progress
+    let feature_content = h.read("docs/features/FT-001-test.md");
+    assert!(
+        feature_content.contains("status: in-progress"),
+        "Feature should remain in-progress when a TC fails.\nContent: {}",
+        feature_content
+    );
+}
+
+// ===========================================================================
+// TC-305: verify_unimplemented_no_runner_blocks
+// ===========================================================================
+
+/// TC-305: All TCs have no runner field. Assert feature goes to in-progress.
+#[test]
+fn tc_305_verify_unimplemented_no_runner_blocks() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test TC\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nTest body with no runner configured.\n",
+    );
+
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("UNIMPLEMENTED");
+
+    // Feature status should be in-progress (unimplemented TCs block completion)
+    let feature_content = h.read("docs/features/FT-001-test.md");
+    assert!(
+        feature_content.contains("status: in-progress"),
+        "Feature should be in-progress when TCs have no runner.\nContent: {}",
+        feature_content
+    );
+}
+
+// ===========================================================================
+// TC-306: verify_updates_tc_frontmatter
+// ===========================================================================
+
+/// TC-306: run verify. Assert last-run, last-run-duration written to TC files.
+#[test]
+fn tc_306_verify_updates_tc_frontmatter() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001, TC-002]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Pass Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: pass.sh\n---\n\nTest body.\n",
+    );
+    h.write(
+        "docs/tests/TC-002-test.md",
+        "---\nid: TC-002\ntitle: Fail Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: fail.sh\n---\n\nTest body.\n",
+    );
+    h.write("pass.sh", "#!/bin/bash\nexit 0\n");
+    h.write("fail.sh", "#!/bin/bash\necho 'expected 42 got 0' >&2\nexit 1\n");
+    std::process::Command::new("chmod")
+        .args(["+x", "pass.sh", "fail.sh"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("chmod");
+
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+
+    // TC-001 (passing) should have last-run and last-run-duration
+    let tc1 = h.read("docs/tests/TC-001-test.md");
+    assert!(
+        tc1.contains("last-run:"),
+        "Passing TC should have last-run timestamp.\nContent: {}",
+        tc1
+    );
+    assert!(
+        tc1.contains("last-run-duration:"),
+        "Passing TC should have last-run-duration.\nContent: {}",
+        tc1
+    );
+
+    // TC-002 (failing) should have last-run and last-run-duration
+    let tc2 = h.read("docs/tests/TC-002-test.md");
+    assert!(
+        tc2.contains("last-run:"),
+        "Failing TC should have last-run timestamp.\nContent: {}",
+        tc2
+    );
+    assert!(
+        tc2.contains("last-run-duration:"),
+        "Failing TC should have last-run-duration.\nContent: {}",
+        tc2
+    );
+}
+
+// ===========================================================================
+// TC-307: verify_failure_message_written
+// ===========================================================================
+
+/// TC-307: failing TC. Assert failure-message written with test output.
+#[test]
+fn tc_307_verify_failure_message_written() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Fail Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: fail.sh\n---\n\nTest body.\n",
+    );
+    h.write("fail.sh", "#!/bin/bash\necho 'thread panicked at assertion failed: expected 42' >&2\nexit 1\n");
+    std::process::Command::new("chmod")
+        .args(["+x", "fail.sh"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("chmod");
+
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("FAIL");
+
+    // TC should have failure-message with test output
+    let tc1 = h.read("docs/tests/TC-001-test.md");
+    assert!(
+        tc1.contains("failure-message:"),
+        "Failing TC should have failure-message.\nContent: {}",
+        tc1
+    );
+    assert!(
+        tc1.contains("assertion failed"),
+        "failure-message should contain test output.\nContent: {}",
+        tc1
+    );
+}
+
+// ===========================================================================
+// TC-309: verify_platform_runs_cross_cutting
+// ===========================================================================
+
+/// TC-309: product verify --platform runs TCs linked to cross-cutting ADRs.
+#[test]
+fn tc_309_verify_platform_runs_cross_cutting() {
+    let h = Harness::new();
+    // Feature-specific ADR with a TC — should NOT be run by --platform
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-feature.md",
+        "---\nid: ADR-001\ntitle: Feature ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\nscope: feature-specific\n---\n\nFeature-specific decision.\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Feature Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: pass.sh\n---\n\nFeature test — should NOT run under --platform.\n",
+    );
+
+    // Cross-cutting ADR with a TC — should be run by --platform
+    h.write(
+        "docs/adrs/ADR-002-cross.md",
+        "---\nid: ADR-002\ntitle: Error Model\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\nscope: cross-cutting\n---\n\nCross-cutting ADR.\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-002-test.md",
+        "---\nid: TC-002\ntitle: Cross-Cutting Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: []\n  adrs: [ADR-002]\nphase: 1\nrunner: bash\nrunner-args: cross_pass.sh\n---\n\nCross-cutting test — should run under --platform.\n",
+    );
+    h.write("pass.sh", "#!/bin/bash\nexit 0\n");
+    h.write("cross_pass.sh", "#!/bin/bash\nexit 0\n");
+    std::process::Command::new("chmod")
+        .args(["+x", "pass.sh", "cross_pass.sh"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("chmod");
+
+    let out = h.run(&["verify", "--platform"]);
+    out.assert_exit(0);
+
+    // Cross-cutting TC should have been run and marked passing
+    let tc2 = h.read("docs/tests/TC-002-test.md");
+    assert!(
+        tc2.contains("status: passing"),
+        "Cross-cutting TC should be marked passing.\nContent: {}",
+        tc2
+    );
+
+    // Feature-specific TC should NOT have been run (status unchanged)
+    let tc1 = h.read("docs/tests/TC-001-test.md");
+    assert!(
+        tc1.contains("status: unimplemented"),
+        "Feature-specific TC should NOT be run by --platform.\nContent: {}",
+        tc1
+    );
+}
+
+// ===========================================================================
+// TC-310: verify_requires_satisfied
+// ===========================================================================
+
+/// TC-310: TC with requires: [binary-compiled]. Prerequisite exits 0. TC runs normally.
+#[test]
+fn tc_310_verify_requires_satisfied() {
+    let h = Harness::new();
+    // Override product.toml with prerequisites
+    h.write(
+        "product.toml",
+        r#"name = "test"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+dependencies = "docs/dependencies"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+dependency = "DEP"
+[verify.prerequisites]
+binary-compiled = "true"
+"#,
+    );
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test With Prereq\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: pass.sh\nrequires: [binary-compiled]\n---\n\nTest with satisfied prerequisite.\n",
+    );
+    h.write("pass.sh", "#!/bin/bash\nexit 0\n");
+    std::process::Command::new("chmod")
+        .args(["+x", "pass.sh"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("chmod");
+
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("PASS");
+
+    // TC should be passing (prerequisite was satisfied, test ran)
+    let tc1 = h.read("docs/tests/TC-001-test.md");
+    assert!(
+        tc1.contains("status: passing"),
+        "TC with satisfied prereq should pass.\nContent: {}",
+        tc1
+    );
+}
+
+// ===========================================================================
+// TC-311: verify_requires_not_satisfied
+// ===========================================================================
+
+/// TC-311: TC requires: [two-node-cluster]. Prerequisite exits 1. TC becomes unrunnable.
+#[test]
+fn tc_311_verify_requires_not_satisfied() {
+    let h = Harness::new();
+    // Override product.toml with prerequisite that fails
+    h.write(
+        "product.toml",
+        r#"name = "test"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+dependencies = "docs/dependencies"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+dependency = "DEP"
+[verify.prerequisites]
+two-node-cluster = "false"
+"#,
+    );
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Cluster Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: pass.sh\nrequires: [two-node-cluster]\n---\n\nTest requiring cluster.\n",
+    );
+    h.write("pass.sh", "#!/bin/bash\nexit 0\n");
+    std::process::Command::new("chmod")
+        .args(["+x", "pass.sh"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("chmod");
+
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("UNRUNNABLE");
+
+    // TC should become unrunnable with failure-message containing the prereq name
+    let tc1 = h.read("docs/tests/TC-001-test.md");
+    assert!(
+        tc1.contains("status: unrunnable"),
+        "TC with unsatisfied prereq should be unrunnable.\nContent: {}",
+        tc1
+    );
+    assert!(
+        tc1.contains("two-node-cluster"),
+        "failure-message should contain prerequisite name.\nContent: {}",
+        tc1
+    );
+
+    // Feature status should remain unchanged (in-progress) — unrunnable doesn't change status
+    // Since no runnable TCs and no unimplemented TCs, the W001 warning fires and status is unchanged
+    let feature = h.read("docs/features/FT-001-test.md");
+    assert!(
+        feature.contains("status: in-progress"),
+        "Feature should remain in-progress when all TCs are unrunnable.\nContent: {}",
+        feature
+    );
+}
+
+// ===========================================================================
+// TC-312: verify_requires_missing_prereq_def
+// ===========================================================================
+
+/// TC-312: TC requires a prerequisite not defined in product.toml. Assert E-class error.
+#[test]
+fn tc_312_verify_requires_missing_prereq_def() {
+    let h = Harness::new();
+    // No [verify.prerequisites] section — prerequisite not defined
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Cluster Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: pass.sh\nrequires: [nonexistent-prereq]\n---\n\nTest requiring undefined prereq.\n",
+    );
+    h.write("pass.sh", "#!/bin/bash\nexit 0\n");
+    std::process::Command::new("chmod")
+        .args(["+x", "pass.sh"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("chmod");
+
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E011");
+    out.assert_stderr_contains("nonexistent-prereq");
+    out.assert_stderr_contains("[verify.prerequisites]");
+}
+
+// ===========================================================================
+// TC-313: verify_wrapper_script
+// ===========================================================================
+
+/// TC-313: TC configured with runner: bash. Script exit code determines TC status.
+#[test]
+fn tc_313_verify_wrapper_script() {
+    // Test 1: Script exits 0 → TC passing
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Wrapper Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: scripts/test-harness/raft.sh\n---\n\nWrapper script test.\n",
+    );
+    std::fs::create_dir_all(h.dir.path().join("scripts/test-harness")).expect("mkdir");
+    h.write("scripts/test-harness/raft.sh", "#!/usr/bin/env bash\nset -euo pipefail\n# Setup, test, teardown — entirely this script's responsibility.\nexit 0\n");
+    std::process::Command::new("chmod")
+        .args(["+x", "scripts/test-harness/raft.sh"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("chmod");
+
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("PASS");
+
+    let tc1 = h.read("docs/tests/TC-001-test.md");
+    assert!(
+        tc1.contains("status: passing"),
+        "Wrapper script exiting 0 should set TC to passing.\nContent: {}",
+        tc1
+    );
+
+    // Test 2: Script exits 1 → TC failing
+    let h2 = Harness::new();
+    h2.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h2.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h2.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Wrapper Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: scripts/test-harness/raft.sh\n---\n\nWrapper script test.\n",
+    );
+    std::fs::create_dir_all(h2.dir.path().join("scripts/test-harness")).expect("mkdir");
+    h2.write("scripts/test-harness/raft.sh", "#!/usr/bin/env bash\nset -euo pipefail\necho 'raft election timeout' >&2\nexit 1\n");
+    std::process::Command::new("chmod")
+        .args(["+x", "scripts/test-harness/raft.sh"])
+        .current_dir(h2.dir.path())
+        .output()
+        .expect("chmod");
+
+    let out2 = h2.run(&["verify", "FT-001"]);
+    out2.assert_exit(0);
+    out2.assert_stdout_contains("FAIL");
+
+    let tc1_fail = h2.read("docs/tests/TC-001-test.md");
+    assert!(
+        tc1_fail.contains("status: failing"),
+        "Wrapper script exiting 1 should set TC to failing.\nContent: {}",
+        tc1_fail
+    );
+}
+
+// ===========================================================================
+// TC-314: harness_scripts_present
+// ===========================================================================
+
+/// TC-314: assert scripts/harness/implement.sh and scripts/harness/author.sh exist and are executable.
+#[test]
+fn tc_314_harness_scripts_present() {
+    let repo_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let implement_sh = repo_root.join("scripts/harness/implement.sh");
+    let author_sh = repo_root.join("scripts/harness/author.sh");
+
+    assert!(
+        implement_sh.exists(),
+        "scripts/harness/implement.sh should exist at {}",
+        implement_sh.display()
+    );
+    assert!(
+        author_sh.exists(),
+        "scripts/harness/author.sh should exist at {}",
+        author_sh.display()
+    );
+
+    // Check executable permission (Unix only)
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let implement_perms = std::fs::metadata(&implement_sh)
+            .expect("metadata")
+            .permissions();
+        assert!(
+            implement_perms.mode() & 0o111 != 0,
+            "implement.sh should be executable"
+        );
+        let author_perms = std::fs::metadata(&author_sh)
+            .expect("metadata")
+            .permissions();
+        assert!(
+            author_perms.mode() & 0o111 != 0,
+            "author.sh should be executable"
+        );
+    }
+}
