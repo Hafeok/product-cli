@@ -4471,6 +4471,62 @@ YAML for front-matter.
     );
 }
 
+// ===========================================================================
+// TC-275: ### Exit criteria — bullets under ### Exit criteria heading produce
+//         type: exit-criteria test files, even without "exit" in bullet title
+// ===========================================================================
+
+#[test]
+fn tc_275_exit_criteria_heading_context() {
+    let h = Harness::new();
+
+    // ADR with a ### Exit criteria section whose bullets do NOT contain "exit"
+    // in their titles — the heading context should set type: exit-criteria.
+    let adr_source = r#"# ADRs
+
+## ADR-010: Deployment Pipeline
+
+**Status:** Accepted
+
+Pipeline deploys the system.
+
+### Exit criteria
+
+- `binary_compiles_arm64` — ARM64 binary compiles successfully
+- `all_tests_pass` — full test suite passes
+- `cluster_healthy` — cluster reports healthy after deploy
+"#;
+    h.write("source-adrs.md", adr_source);
+    let out = h.run(&["migrate", "from-adrs", "source-adrs.md", "--execute"]);
+    out.assert_exit(0);
+
+    // All three bullets should produce type: exit-criteria files
+    let entries: Vec<_> = std::fs::read_dir(h.dir.path().join("docs/tests"))
+        .expect("readdir")
+        .flatten()
+        .collect();
+    assert_eq!(entries.len(), 3, "should create 3 test criteria files");
+
+    for entry in &entries {
+        let content = std::fs::read_to_string(entry.path()).unwrap_or_default();
+        assert!(
+            content.contains("type: exit-criteria"),
+            "all bullets under ### Exit criteria should have type: exit-criteria, \
+             but {} has:\n{}",
+            entry.file_name().to_string_lossy(),
+            content
+        );
+    }
+
+    // Validate mode also shows exit-criteria type in plan output
+    // (re-create harness to avoid conflicts from existing files)
+    let h2 = Harness::new();
+    h2.write("source-adrs.md", adr_source);
+    let out = h2.run(&["migrate", "from-adrs", "source-adrs.md", "--validate"]);
+    out.assert_exit(0)
+        .assert_stdout_contains("exit-criteria");
+}
+
 // ---------------------------------------------------------------------------
 // TC-180: ft_025_benchmarks_pass — cargo bench completes successfully
 // ---------------------------------------------------------------------------

@@ -11,6 +11,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_085_validates_features"
+last-run: 2026-04-14T14:25:40.415822949+00:00
 ---
 
 Features extracted from PRD have empty adrs and tests lists. Migration does not infer feature-to-ADR or feature-to-test links (requires human review per ADR-017).

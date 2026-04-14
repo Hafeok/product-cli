@@ -551,6 +551,11 @@ fn extract_test_items(section: &str, _adr_id: &str) -> Vec<(String, TestType, St
     let lines: Vec<&str> = section.lines().collect();
     let mut i = 0;
 
+    // Detect if the section heading is "### Exit criteria" — all bullets under
+    // an exit-criteria heading default to type: exit-criteria (ADR-017).
+    let section_lower = section.to_lowercase();
+    let is_exit_criteria_section = section_lower.starts_with("### exit criteria");
+
     while i < lines.len() {
         let line = lines[i].trim();
 
@@ -578,13 +583,14 @@ fn extract_test_items(section: &str, _adr_id: &str) -> Vec<(String, TestType, St
                 continue;
             }
 
-            // Infer type from title keywords
+            // Infer type from title keywords, or from section heading context.
+            // Bullets under "### Exit criteria" default to exit-criteria (ADR-017).
             let lower_title = title.to_lowercase();
             let test_type = if lower_title.contains("chaos") {
                 TestType::Chaos
             } else if lower_title.contains("invariant") {
                 TestType::Invariant
-            } else if lower_title.contains("exit") {
+            } else if lower_title.contains("exit") || is_exit_criteria_section {
                 TestType::ExitCriteria
             } else {
                 TestType::Scenario

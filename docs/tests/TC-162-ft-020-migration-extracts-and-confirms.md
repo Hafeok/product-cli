@@ -11,6 +11,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_162_ft_020_migration_extracts_and_confirms"
+last-run: 2026-04-14T14:25:40.415822949+00:00
 ---
 
 ## Description

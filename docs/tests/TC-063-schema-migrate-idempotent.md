@@ -13,7 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_063_schema_migrate_idempotent"
-last-run: 2026-04-14T10:46:07.489682314+00:00
+last-run: 2026-04-14T14:25:40.415822949+00:00
 ---
 
 run `product migrate schema` twice. Assert the second run reports zero files changed.

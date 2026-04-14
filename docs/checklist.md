@@ -240,7 +240,7 @@
 - [x] TC-138: acknowledgement_closes_gap (scenario) — passing
 - [x] TC-139: domains_vocab_unknown (scenario) — passing
 
-### FT-020 — Migration Path [~]
+### FT-020 — Migration Path [x]
 
 - [x] ADR-017: Migration Command Specification (accepted)
 - [x] ADR-014: Schema Versioning and Migration Path (accepted)
@@ -257,7 +257,7 @@
 - [x] TC-084: validates.adrs (scenario) — passing
 - [x] TC-085: validates.features (scenario) — passing
 - [x] TC-162: FT-020 migration extracts and confirms (exit-criteria) — passing
-- [ ] TC-275: ### Exit criteria (exit-criteria) — unimplemented
+- [x] TC-275: ### Exit criteria (exit-criteria) — passing
 
 ### FT-034 — Content Hash Immutability [ ]
 
