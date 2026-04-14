@@ -4,6 +4,7 @@ pub mod author;
 pub mod checklist;
 pub mod config;
 pub mod context;
+pub mod dep_types;
 pub mod domains;
 pub mod drift;
 pub mod error;

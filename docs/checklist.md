@@ -468,31 +468,31 @@
 - [x] TC-380: single_responsibility_and (scenario) — passing
 - [x] TC-402: All source files under 400 lines and all quality checks pass (exit-criteria) — passing
 
-### FT-032 — Dependency Artifact Type [ ]
+### FT-032 — Dependency Artifact Type [x]
 
 - [x] ADR-030: Dependency Artifact Type — First-Class External System Declarations (accepted)
-- [ ] TC-381: dep_parse_library (scenario) — unimplemented
-- [ ] TC-382: dep_parse_service (scenario) — unimplemented
-- [ ] TC-383: dep_uses_edge (scenario) — unimplemented
-- [ ] TC-384: dep_governs_edge (scenario) — unimplemented
-- [ ] TC-385: dep_impact_direct (scenario) — unimplemented
-- [ ] TC-386: dep_impact_transitive (scenario) — unimplemented
-- [ ] TC-387: dep_preflight_check_passes (scenario) — unimplemented
-- [ ] TC-388: dep_preflight_check_fails (scenario) — unimplemented
-- [ ] TC-389: dep_tc_requires_dep_id (scenario) — unimplemented
-- [ ] TC-390: dep_context_bundle_section (scenario) — unimplemented
-- [ ] TC-391: dep_bom_output (scenario) — unimplemented
-- [ ] TC-392: dep_bom_json_schema (scenario) — unimplemented
-- [ ] TC-393: dep_w013_deprecated (scenario) — unimplemented
-- [ ] TC-394: dep_e013_no_adr (scenario) — unimplemented
-- [ ] TC-395: dep_gap_g008 (scenario) — unimplemented
-- [ ] TC-396: dep_list_filter (scenario) — unimplemented
-- [ ] TC-397: dep_check_manual (scenario) — unimplemented
-- [ ] TC-398: dep_supersedes_edge (scenario) — unimplemented
-- [ ] TC-399: product dep bom (scenario) — unimplemented
-- [ ] TC-400: product dep bom (scenario) — unimplemented
-- [ ] TC-401: product impact DEP-001 (scenario) — unimplemented
-- [ ] TC-403: Dependency BOM and impact analysis produce correct output (exit-criteria) — unimplemented
+- [x] TC-381: dep_parse_library (scenario) — passing
+- [x] TC-382: dep_parse_service (scenario) — passing
+- [x] TC-383: dep_uses_edge (scenario) — passing
+- [x] TC-384: dep_governs_edge (scenario) — passing
+- [x] TC-385: dep_impact_direct (scenario) — passing
+- [x] TC-386: dep_impact_transitive (scenario) — passing
+- [x] TC-387: dep_preflight_check_passes (scenario) — passing
+- [x] TC-388: dep_preflight_check_fails (scenario) — passing
+- [x] TC-389: dep_tc_requires_dep_id (scenario) — passing
+- [x] TC-390: dep_context_bundle_section (scenario) — passing
+- [x] TC-391: dep_bom_output (scenario) — passing
+- [x] TC-392: dep_bom_json_schema (scenario) — passing
+- [x] TC-393: dep_w013_deprecated (scenario) — passing
+- [x] TC-394: dep_e013_no_adr (scenario) — passing
+- [x] TC-395: dep_gap_g008 (scenario) — passing
+- [x] TC-396: dep_list_filter (scenario) — passing
+- [x] TC-397: dep_check_manual (scenario) — passing
+- [x] TC-398: dep_supersedes_edge (scenario) — passing
+- [x] TC-399: product dep bom (scenario) — passing
+- [x] TC-400: product dep bom (scenario) — passing
+- [x] TC-401: product impact DEP-001 (scenario) — passing
+- [x] TC-403: Dependency BOM and impact analysis produce correct output (exit-criteria) — passing
 
 ### FT-033 — Agent Context Generation [ ]
 

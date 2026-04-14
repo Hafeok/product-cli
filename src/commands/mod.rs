@@ -5,6 +5,7 @@ mod author;
 mod checklist;
 mod completions;
 mod context;
+mod dep;
 mod drift;
 mod feature;
 mod feature_write;
@@ -29,6 +30,7 @@ use std::path::PathBuf;
 pub use self::adr::AdrCommands;
 pub use self::author::AuthorCommands;
 pub use self::checklist::ChecklistCommands;
+pub use self::dep::DepCommands;
 pub use self::drift::DriftCommands;
 pub use self::feature::FeatureCommands;
 pub use self::gap::GapCommands;
@@ -54,6 +56,11 @@ pub enum Commands {
     Test {
         #[command(subcommand)]
         command: TestCommands,
+    },
+    /// Dependency management (ADR-030)
+    Dep {
+        #[command(subcommand)]
+        command: DepCommands,
     },
     /// Assemble context bundles for LLM agents
     Context {
@@ -237,15 +244,16 @@ fn load_graph() -> Result<(ProductConfig, PathBuf, KnowledgeGraph), Box<dyn std:
     let features_dir = config.resolve_path(&root, &config.paths.features);
     let adrs_dir = config.resolve_path(&root, &config.paths.adrs);
     let tests_dir = config.resolve_path(&root, &config.paths.tests);
+    let deps_dir = config.resolve_path(&root, &config.paths.dependencies);
 
-    let loaded = parser::load_all(&features_dir, &adrs_dir, &tests_dir)?;
+    let loaded = parser::load_all_with_deps(&features_dir, &adrs_dir, &tests_dir, Some(&deps_dir))?;
 
     // Print parse errors to stderr so they are visible for all commands (ADR-013)
     for e in &loaded.parse_errors {
         eprintln!("{}", e);
     }
 
-    let graph = KnowledgeGraph::build(loaded.features, loaded.adrs, loaded.tests)
+    let graph = KnowledgeGraph::build_with_deps(loaded.features, loaded.adrs, loaded.tests, loaded.dependencies)
         .with_parse_errors(loaded.parse_errors);
     Ok((config, root, graph))
 }
@@ -262,6 +270,7 @@ fn cleanup_stale_tmp_files() {
             config.resolve_path(&root, &config.paths.features),
             config.resolve_path(&root, &config.paths.adrs),
             config.resolve_path(&root, &config.paths.tests),
+            config.resolve_path(&root, &config.paths.dependencies),
         ];
         for dir in &dirs {
             fileops::cleanup_tmp_files(dir);
@@ -274,6 +283,7 @@ fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> Bo
         Commands::Feature { command } => feature::handle_feature(command, fmt),
         Commands::Adr { command } => adr::handle_adr(command, fmt),
         Commands::Test { command } => test_cmd::handle_test(command, fmt),
+        Commands::Dep { command } => dep::handle_dep(command, fmt),
         Commands::Context {
             id,
             depth,

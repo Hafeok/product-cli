@@ -2,7 +2,7 @@
 id: FT-032
 title: Dependency Artifact Type
 phase: 3
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-030

@@ -15,6 +15,8 @@ pub(crate) fn handle_impact(id: &str, fmt: &str) -> BoxResult {
             "seed": impact.seed,
             "direct_features": impact.direct_features,
             "direct_tests": impact.direct_tests,
+            "direct_adrs": impact.direct_adrs,
+            "direct_deps": impact.direct_deps,
             "transitive_features": impact.transitive_features,
             "transitive_tests": impact.transitive_tests,
         });

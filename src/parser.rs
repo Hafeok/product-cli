@@ -132,11 +132,43 @@ pub fn parse_test(path: &Path) -> Result<TestCriterion> {
     })
 }
 
-/// Result of loading all artifacts: features, ADRs, tests, and any parse errors.
+/// Parse a dependency file (ADR-030)
+pub fn parse_dependency(path: &Path) -> Result<Dependency> {
+    let content = std::fs::read_to_string(path).map_err(|e| ProductError::IoError(format!("{}: {}", path.display(), e)))?;
+    let (yaml, body) = split_front_matter(&content).ok_or_else(|| {
+        ProductError::ParseError {
+            file: path.to_path_buf(),
+            line: Some(1),
+            message: "no YAML front-matter found".to_string(),
+        }
+    })?;
+    let front: DependencyFrontMatter = serde_yaml::from_str(yaml).map_err(|e| {
+        ProductError::ParseError {
+            file: path.to_path_buf(),
+            line: e.location().map(|l| l.line()),
+            message: format!("YAML parse error: {}", e),
+        }
+    })?;
+    if front.id.is_empty() {
+        return Err(ProductError::MissingField {
+            file: path.to_path_buf(),
+            field: "id".to_string(),
+        });
+    }
+    validate_id(&front.id, path)?;
+    Ok(Dependency {
+        front,
+        body: body.to_string(),
+        path: path.to_path_buf(),
+    })
+}
+
+/// Result of loading all artifacts: features, ADRs, tests, dependencies, and any parse errors.
 pub struct LoadResult {
     pub features: Vec<Feature>,
     pub adrs: Vec<Adr>,
     pub tests: Vec<TestCriterion>,
+    pub dependencies: Vec<Dependency>,
     pub parse_errors: Vec<ProductError>,
 }
 
@@ -148,15 +180,32 @@ pub fn load_all(
     adrs_dir: &Path,
     tests_dir: &Path,
 ) -> Result<LoadResult> {
+    load_all_with_deps(features_dir, adrs_dir, tests_dir, None)
+}
+
+/// Load all artifacts including dependencies from an optional deps directory.
+pub fn load_all_with_deps(
+    features_dir: &Path,
+    adrs_dir: &Path,
+    tests_dir: &Path,
+    deps_dir: Option<&Path>,
+) -> Result<LoadResult> {
     let (features, mut errs_f) = load_dir(features_dir, parse_feature)?;
     let (adrs, mut errs_a) = load_dir(adrs_dir, parse_adr)?;
     let (tests, errs_t) = load_dir(tests_dir, parse_test)?;
+    let (dependencies, errs_d) = if let Some(d) = deps_dir {
+        load_dir(d, parse_dependency)?
+    } else {
+        (Vec::new(), Vec::new())
+    };
     errs_f.append(&mut errs_a);
     errs_f.extend(errs_t);
+    errs_f.extend(errs_d);
     Ok(LoadResult {
         features,
         adrs,
         tests,
+        dependencies,
         parse_errors: errs_f,
     })
 }
@@ -201,6 +250,11 @@ pub fn render_adr(front: &AdrFrontMatter, body: &str) -> String {
 }
 
 pub fn render_test(front: &TestFrontMatter, body: &str) -> String {
+    let yaml = serde_yaml::to_string(front).unwrap_or_default();
+    format!("---\n{}---\n\n{}", yaml, body)
+}
+
+pub fn render_dependency(front: &DependencyFrontMatter, body: &str) -> String {
     let yaml = serde_yaml::to_string(front).unwrap_or_default();
     format!("---\n{}---\n\n{}", yaml, body)
 }

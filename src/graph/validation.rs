@@ -27,6 +27,9 @@ impl KnowledgeGraph {
         self.check_evidence_delta(&mut result);
         self.check_formal_block_diagnostics(&mut result);
         self.check_content_hashes(&mut result);
+        self.check_dep_has_adr(&mut result);
+        self.check_dep_deprecated_usage(&mut result);
+        self.check_dep_broken_links(&mut result, &all_ids);
 
         result
     }
@@ -352,7 +355,7 @@ impl KnowledgeGraph {
 }
 
 /// Helper: push a broken-link E002 diagnostic with optional line info
-fn push_broken_link(
+pub(crate) fn push_broken_link(
     result: &mut CheckResult,
     path: &std::path::Path,
     from_id: &str,

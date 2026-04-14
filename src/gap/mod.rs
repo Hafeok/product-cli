@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 // Re-export public API
 pub use baseline::{GapBaseline, Resolved, Suppression};
-pub use check::{check_adr, check_all, check_changed, gap_id, gap_stats};
+pub use check::{check_adr, check_all, check_changed, check_feature_dep_gaps, gap_id, gap_stats};
 pub use model::{parse_model_findings, try_model_analysis, ModelError};
 
 // ---------------------------------------------------------------------------

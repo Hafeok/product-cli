@@ -43,6 +43,40 @@ pub fn check_adr(graph: &KnowledgeGraph, adr_id: &str, baseline: &GapBaseline) -
     findings
 }
 
+/// Run G008 gap analysis for a feature: check deps have governing ADRs (ADR-030)
+pub fn check_feature_dep_gaps(graph: &KnowledgeGraph, feature_id: &str, baseline: &GapBaseline) -> Vec<GapFinding> {
+    let mut findings = Vec::new();
+    if !graph.features.contains_key(feature_id) {
+        return findings;
+    }
+    // Find all deps linked to this feature
+    for dep in graph.dependencies.values() {
+        if !dep.front.features.contains(&feature_id.to_string()) {
+            continue;
+        }
+        // Check if any ADR has a governs edge to this dep
+        let has_governing_adr = dep.front.adrs.iter().any(|adr_id| graph.adrs.contains_key(adr_id));
+        if !has_governing_adr {
+            let desc = format!(
+                "Feature {} uses dependency {} with no ADR governing its use",
+                feature_id, dep.front.id
+            );
+            let id = gap_id(feature_id, "G008", &[feature_id, &dep.front.id], &desc);
+            let suppressed = baseline.is_suppressed(&id);
+            findings.push(GapFinding {
+                id,
+                code: "G008".to_string(),
+                severity: GapSeverity::Medium,
+                description: desc,
+                affected_artifacts: vec![feature_id.to_string(), dep.front.id.clone()],
+                suggested_action: format!("Add an ADR governing the use of {} and link it via the `adrs` field.", dep.front.id),
+                suppressed,
+            });
+        }
+    }
+    findings
+}
+
 fn check_g003_rejected_alternatives(adr: &crate::types::Adr, adr_id: &str, baseline: &GapBaseline, findings: &mut Vec<GapFinding>) {
     if !adr.body.contains("Rejected alternatives")
         && !adr.body.contains("rejected alternatives")

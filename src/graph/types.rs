@@ -50,6 +50,8 @@ pub struct ImpactResult {
     pub seed: String,
     pub direct_features: Vec<String>,
     pub direct_tests: Vec<String>,
+    pub direct_adrs: Vec<String>,
+    pub direct_deps: Vec<String>,
     pub transitive_features: Vec<String>,
     pub transitive_tests: Vec<String>,
 }
@@ -69,6 +71,8 @@ impl ImpactResult {
             a.front.title.clone()
         } else if let Some(t) = graph.tests.get(&self.seed) {
             t.front.title.clone()
+        } else if let Some(d) = graph.dependencies.get(&self.seed) {
+            d.front.title.clone()
         } else {
             String::new()
         };
@@ -77,13 +81,26 @@ impl ImpactResult {
     }
 
     fn print_direct_dependents(&self, graph: &KnowledgeGraph) {
-        if self.direct_features.is_empty() && self.direct_tests.is_empty() {
+        if self.direct_features.is_empty() && self.direct_tests.is_empty()
+            && self.direct_adrs.is_empty() && self.direct_deps.is_empty()
+        {
             return;
         }
         println!("Direct dependents:");
         if !self.direct_features.is_empty() {
             let details = format_feature_ids(&self.direct_features, graph);
             println!("  Features:  {}", details.join(", "));
+        }
+        if !self.direct_adrs.is_empty() {
+            println!("  ADRs:      {}", self.direct_adrs.iter()
+                .map(|id| {
+                    let label = graph.adrs.get(id).map(|_| " (governs)".to_string()).unwrap_or_default();
+                    format!("{}{}", id, label)
+                })
+                .collect::<Vec<_>>().join(", "));
+        }
+        if !self.direct_deps.is_empty() {
+            println!("  Dependencies: {}", self.direct_deps.join(", "));
         }
         if !self.direct_tests.is_empty() {
             let details = format_test_ids(&self.direct_tests, graph);
@@ -108,6 +125,7 @@ impl ImpactResult {
     fn print_summary(&self, graph: &KnowledgeGraph) {
         let total_features = self.direct_features.len() + self.transitive_features.len();
         let total_tests = self.direct_tests.len() + self.transitive_tests.len();
+        let total_adrs = self.direct_adrs.len();
         let passing_tests = self
             .direct_tests
             .iter()
@@ -123,8 +141,8 @@ impl ImpactResult {
 
         println!();
         print!(
-            "Summary: {} features, {} tests affected.",
-            total_features, total_tests
+            "Summary: {} features, {} ADR(s), {} tests affected.",
+            total_features, total_adrs, total_tests
         );
         if passing_tests > 0 {
             print!(" {} passing test(s) may be invalidated.", passing_tests);

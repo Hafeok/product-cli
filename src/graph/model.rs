@@ -28,8 +28,10 @@ pub enum EdgeType {
     ImplementedBy,   // Feature -> ADR
     ValidatedBy,     // Feature -> TestCriterion
     TestedBy,        // ADR -> TestCriterion
-    Supersedes,      // ADR -> ADR
+    Supersedes,      // ADR -> ADR (or DEP -> DEP)
     DependsOn,       // Feature -> Feature
+    Uses,            // Feature -> Dependency (ADR-030)
+    Governs,         // ADR -> Dependency (ADR-030)
 }
 
 #[derive(Debug, Clone)]
@@ -45,6 +47,7 @@ pub struct KnowledgeGraph {
     pub features: HashMap<String, Feature>,
     pub adrs: HashMap<String, Adr>,
     pub tests: HashMap<String, TestCriterion>,
+    pub dependencies: HashMap<String, crate::types::Dependency>,
     pub edges: Vec<Edge>,
     // Adjacency lists
     pub forward: HashMap<String, Vec<(String, EdgeType)>>,
@@ -62,10 +65,21 @@ impl KnowledgeGraph {
         adrs: Vec<Adr>,
         tests: Vec<TestCriterion>,
     ) -> Self {
+        Self::build_with_deps(features, adrs, tests, Vec::new())
+    }
+
+    /// Build graph from loaded artifacts including dependencies (ADR-030)
+    pub fn build_with_deps(
+        features: Vec<Feature>,
+        adrs: Vec<Adr>,
+        tests: Vec<TestCriterion>,
+        deps: Vec<crate::types::Dependency>,
+    ) -> Self {
         let mut graph = Self {
             features: HashMap::new(),
             adrs: HashMap::new(),
             tests: HashMap::new(),
+            dependencies: HashMap::new(),
             edges: Vec::new(),
             forward: HashMap::new(),
             reverse: HashMap::new(),
@@ -87,6 +101,10 @@ impl KnowledgeGraph {
         for t in tests {
             id_paths.entry(t.front.id.clone()).or_default().push(t.path.clone());
             graph.tests.insert(t.front.id.clone(), t);
+        }
+        for d in deps {
+            id_paths.entry(d.front.id.clone()).or_default().push(d.path.clone());
+            graph.dependencies.insert(d.front.id.clone(), d);
         }
 
         // Record any IDs that appear in more than one file
@@ -121,6 +139,22 @@ impl KnowledgeGraph {
         for t in graph.tests.values() {
             for adr_id in &t.front.validates.adrs {
                 pending_edges.push((adr_id.clone(), t.front.id.clone(), EdgeType::TestedBy));
+            }
+        }
+
+        // Dependency edges (ADR-030)
+        // features field on DEP → Uses edge (Feature -> Dependency)
+        for d in graph.dependencies.values() {
+            for feat_id in &d.front.features {
+                pending_edges.push((feat_id.clone(), d.front.id.clone(), EdgeType::Uses));
+            }
+            // adrs field on DEP → Governs edge (ADR -> Dependency)
+            for adr_id in &d.front.adrs {
+                pending_edges.push((adr_id.clone(), d.front.id.clone(), EdgeType::Governs));
+            }
+            // supersedes field on DEP → Supersedes edge (DEP -> DEP)
+            for sup_id in &d.front.supersedes {
+                pending_edges.push((d.front.id.clone(), sup_id.clone(), EdgeType::Supersedes));
             }
         }
 
@@ -160,6 +194,7 @@ impl KnowledgeGraph {
         ids.extend(self.features.keys().cloned());
         ids.extend(self.adrs.keys().cloned());
         ids.extend(self.tests.keys().cloned());
+        ids.extend(self.dependencies.keys().cloned());
         ids
     }
 }

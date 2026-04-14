@@ -82,14 +82,30 @@ impl KnowledgeGraph {
         let mut visited = HashSet::new();
         let mut direct_features = Vec::new();
         let mut direct_tests = Vec::new();
+        let mut direct_adrs = Vec::new();
+        let mut direct_deps = Vec::new();
         let mut queue = VecDeque::new();
 
         visited.insert(seed.to_string());
 
         // Direct dependents (depth 1 via reverse edges)
-        self.collect_reverse_neighbors(
-            seed, &mut visited, &mut direct_features, &mut direct_tests, &mut queue,
-        );
+        if let Some(neighbors) = self.reverse.get(seed) {
+            for (id, _) in neighbors {
+                if !visited.contains(id) {
+                    visited.insert(id.clone());
+                    if self.features.contains_key(id) {
+                        direct_features.push(id.clone());
+                    } else if self.tests.contains_key(id) {
+                        direct_tests.push(id.clone());
+                    } else if self.adrs.contains_key(id) {
+                        direct_adrs.push(id.clone());
+                    } else if self.dependencies.contains_key(id) {
+                        direct_deps.push(id.clone());
+                    }
+                    queue.push_back(id.clone());
+                }
+            }
+        }
 
         // Transitive dependents (depth 2+)
         let (transitive_features, transitive_tests) =
@@ -99,6 +115,8 @@ impl KnowledgeGraph {
             seed: seed.to_string(),
             direct_features,
             direct_tests,
+            direct_adrs,
+            direct_deps,
             transitive_features,
             transitive_tests,
         }
@@ -116,30 +134,6 @@ impl KnowledgeGraph {
                 .push(edge.from.clone());
         }
         adj
-    }
-
-    /// Collect direct reverse-edge neighbors of `seed`, classifying into features/tests
-    fn collect_reverse_neighbors(
-        &self,
-        seed: &str,
-        visited: &mut HashSet<String>,
-        direct_features: &mut Vec<String>,
-        direct_tests: &mut Vec<String>,
-        queue: &mut VecDeque<String>,
-    ) {
-        if let Some(neighbors) = self.reverse.get(seed) {
-            for (id, _) in neighbors {
-                if !visited.contains(id) {
-                    visited.insert(id.clone());
-                    if self.features.contains_key(id) {
-                        direct_features.push(id.clone());
-                    } else if self.tests.contains_key(id) {
-                        direct_tests.push(id.clone());
-                    }
-                    queue.push_back(id.clone());
-                }
-            }
-        }
     }
 
     /// BFS through remaining reverse edges to collect transitive dependents

@@ -202,6 +202,55 @@ fn bundle_feature_inner(
         }
     }
 
+    // Dependencies section (ADR-030)
+    let dep_ids: Vec<String> = reachable
+        .iter()
+        .filter(|id| graph.dependencies.contains_key(id.as_str()))
+        .cloned()
+        .collect();
+    if !dep_ids.is_empty() && !adrs_only {
+        out.push_str("## Dependencies\n\n");
+        for dep_id in &dep_ids {
+            if let Some(dep) = graph.dependencies.get(dep_id.as_str()) {
+                let version_str = dep.front.version.as_deref().unwrap_or("~");
+                out.push_str(&format!(
+                    "### {} — {} [{}, {}]\n\n",
+                    dep.front.id, dep.front.title, dep.front.dep_type, version_str
+                ));
+                if !dep.body.is_empty() {
+                    out.push_str(&format!("{}\n\n", dep.body.trim()));
+                }
+                // Interface block
+                if let Some(ref iface) = dep.front.interface {
+                    out.push_str("Interface:\n");
+                    if let Some(ref proto) = iface.protocol {
+                        let port_str = iface.port.map(|p| format!(" / port: {}", p)).unwrap_or_default();
+                        out.push_str(&format!("  protocol: {}{}\n", proto, port_str));
+                    }
+                    if let Some(ref auth) = iface.auth {
+                        let env_str = iface.connection_string_env.as_deref()
+                            .or(iface.auth_env.as_deref())
+                            .map(|e| format!(" / env: {}", e))
+                            .unwrap_or_default();
+                        out.push_str(&format!("  auth: {}{}\n", auth, env_str));
+                    }
+                    if let Some(ref base_url) = iface.base_url {
+                        out.push_str(&format!("  base-url: {}\n", base_url));
+                    }
+                } else {
+                    out.push_str("Interface: no runtime interface (build-time library)\n");
+                }
+                // Availability check
+                if let Some(ref check) = dep.front.availability_check {
+                    out.push_str(&format!("  availability-check: {}\n", check));
+                } else {
+                    out.push_str("Availability: no check required\n");
+                }
+                out.push('\n');
+            }
+        }
+    }
+
     // Test criteria
     if !test_ids.is_empty() {
         out.push_str("## Test Criteria\n\n");

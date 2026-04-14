@@ -8,9 +8,9 @@ use super::{load_graph, BoxResult};
 
 #[derive(Subcommand)]
 pub enum GapCommands {
-    /// Check for gaps (optionally for a single ADR, or only changed ADRs)
+    /// Check for gaps (optionally for a single ADR or feature, or only changed ADRs)
     Check {
-        /// ADR ID to check (omit for all)
+        /// ADR or Feature ID to check (omit for all)
         adr_id: Option<String>,
         /// Only check ADRs changed in the last commit
         #[arg(long)]
@@ -67,6 +67,29 @@ fn gap_check(
     baseline_path: &std::path::Path,
     root: &std::path::Path,
 ) -> BoxResult {
+    // If the ID is a feature, run feature-specific dep gap check (G008)
+    if let Some(ref id) = adr_id {
+        if id.starts_with("FT-") {
+            let findings = gap::check_feature_dep_gaps(graph, id, baseline);
+            if format == "json" {
+                println!("{}", serde_json::to_string_pretty(&findings).unwrap_or_default());
+            } else {
+                for finding in &findings {
+                    let suppressed_tag = if finding.suppressed { " [suppressed]" } else { "" };
+                    println!(
+                        "  [{:>6}] {} \u{2014} {}{}",
+                        finding.severity, finding.code, finding.description, suppressed_tag
+                    );
+                }
+            }
+            let has_findings = !findings.is_empty();
+            if has_findings {
+                process::exit(1);
+            }
+            return Ok(());
+        }
+    }
+
     let adr_ids_to_check: Vec<String> = if let Some(ref id) = adr_id {
         vec![id.clone()]
     } else if changed {

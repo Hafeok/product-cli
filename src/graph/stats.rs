@@ -17,7 +17,7 @@ impl KnowledgeGraph {
             .map(|id| (id.clone(), centrality.get(id).copied().unwrap_or(0.0)))
             .collect();
 
-        let total_nodes = self.features.len() + self.adrs.len() + self.tests.len();
+        let total_nodes = self.features.len() + self.adrs.len() + self.tests.len() + self.dependencies.len();
         let total_edges = self.edges.len();
 
         // Formal block coverage

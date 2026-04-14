@@ -54,6 +54,8 @@ pub struct PathsConfig {
     pub graph: String,
     #[serde(default = "default_checklist_path")]
     pub checklist: String,
+    #[serde(default = "default_dependencies_path")]
+    pub dependencies: String,
 }
 
 impl Default for PathsConfig {
@@ -64,6 +66,7 @@ impl Default for PathsConfig {
             tests: default_tests_path(),
             graph: default_graph_path(),
             checklist: default_checklist_path(),
+            dependencies: default_dependencies_path(),
         }
     }
 }
@@ -83,6 +86,9 @@ fn default_graph_path() -> String {
 fn default_checklist_path() -> String {
     "docs/checklist.md".to_string()
 }
+fn default_dependencies_path() -> String {
+    "docs/dependencies".to_string()
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrefixConfig {
@@ -92,6 +98,8 @@ pub struct PrefixConfig {
     pub adr: String,
     #[serde(default = "default_test_prefix")]
     pub test: String,
+    #[serde(default = "default_dep_prefix")]
+    pub dependency: String,
 }
 
 impl Default for PrefixConfig {
@@ -100,6 +108,7 @@ impl Default for PrefixConfig {
             feature: default_feature_prefix(),
             adr: default_adr_prefix(),
             test: default_test_prefix(),
+            dependency: default_dep_prefix(),
         }
     }
 }
@@ -138,6 +147,9 @@ fn default_adr_prefix() -> String {
 }
 fn default_test_prefix() -> String {
     "TC".to_string()
+}
+fn default_dep_prefix() -> String {
+    "DEP".to_string()
 }
 
 /// Current schema version supported by this binary
@@ -300,27 +312,7 @@ name = "test-project"
 
     #[test]
     fn parse_full_config() {
-        let toml_str = r#"
-name = "picloud"
-version = "0.1"
-schema-version = "1"
-
-[paths]
-features = "docs/features"
-adrs = "docs/adrs"
-tests = "docs/tests"
-graph = "docs/graph"
-checklist = "docs/checklist.md"
-
-[phases]
-1 = "Cluster Foundation"
-2 = "Products and IAM"
-
-[prefixes]
-feature = "FT"
-adr = "ADR"
-test = "TC"
-"#;
+        let toml_str = "name = \"picloud\"\nversion = \"0.1\"\nschema-version = \"1\"\n[paths]\nfeatures = \"docs/features\"\nadrs = \"docs/adrs\"\ntests = \"docs/tests\"\ngraph = \"docs/graph\"\nchecklist = \"docs/checklist.md\"\n[phases]\n1 = \"Cluster Foundation\"\n[prefixes]\nfeature = \"FT\"\nadr = \"ADR\"\ntest = \"TC\"\n";
         let config: ProductConfig = toml::from_str(toml_str).unwrap();
         assert_eq!(config.name, "picloud");
         assert_eq!(config.phases.get("1").unwrap(), "Cluster Foundation");
