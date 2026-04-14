@@ -7,6 +7,7 @@ depends-on: []
 adrs:
 - ADR-023
 - ADR-024
+- ADR-035
 tests:
 - TC-121
 - TC-122
