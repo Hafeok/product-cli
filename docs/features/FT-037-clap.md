@@ -6,10 +6,11 @@ status: planned
 depends-on: []
 adrs: []
 tests: []
-domains: [api]
+domains:
+- api
 domains-acknowledged: {}
 ---
 
 ## Description
 
-[Describe clap here.]
+Stub feature accidentally created. Abandoned — not a real feature.
