@@ -13,7 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_011_markdown_front_matter_strip"
-last-run: 2026-04-14T10:48:19.709127491+00:00
+last-run: 2026-04-14T13:16:43.783509783+00:00
 ---
 
 read a markdown file with front-matter. Assert the context bundle output contains no `---` delimiters and no YAML fields.

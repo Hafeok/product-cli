@@ -2,7 +2,7 @@
 id: FT-002
 title: Repository Layout
 phase: 1
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-002

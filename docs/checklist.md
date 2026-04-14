@@ -21,7 +21,7 @@
 - [x] TC-015: id_conflict (scenario) — passing
 - [x] TC-156: FT-001 core concepts validated (exit-criteria) — passing
 
-### FT-002 — Repository Layout [~]
+### FT-002 — Repository Layout [x]
 
 - [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
 - [x] ADR-004: Markdown as the Document Format (accepted)
@@ -31,7 +31,7 @@
 - [x] TC-008: frontmatter_missing_required (scenario) — passing
 - [x] TC-011: markdown_front_matter_strip (scenario) — passing
 - [x] TC-012: markdown_passthrough (scenario) — passing
-- [ ] TC-154: FT-002 repository layout validated (exit-criteria) — unimplemented
+- [x] TC-154: FT-002 repository layout validated (exit-criteria) — passing
 
 ### FT-003 — Front-Matter Schema [x]
 
@@ -273,6 +273,19 @@
 - [ ] TC-428: ADR rehash seals pre-existing accepted ADRs (scenario) — unimplemented
 - [ ] TC-429: Mutable front-matter does not affect content-hash (invariant) — unimplemented
 - [ ] TC-430: Content hash system passes on sealed repository (exit-criteria) — unimplemented
+
+### FT-035 — Repository Initialization [ ]
+
+- [ ] ADR-033: Repository Initialization — `product init` Command (proposed)
+- [ ] TC-431: init creates product.toml and directory skeleton (scenario) — unimplemented
+- [ ] TC-432: init interactive mode prompts for name and domains (scenario) — unimplemented
+- [ ] TC-433: init --yes uses defaults without prompts (scenario) — unimplemented
+- [ ] TC-434: init errors on existing product.toml without --force (scenario) — unimplemented
+- [ ] TC-435: init --force overwrites existing product.toml (scenario) — unimplemented
+- [ ] TC-436: init appends to existing .gitignore (scenario) — unimplemented
+- [ ] TC-437: init creates .gitignore when absent (scenario) — unimplemented
+- [ ] TC-438: init generated toml parses as valid ProductConfig (invariant) — unimplemented
+- [ ] TC-439: FT-035 repository initialization validated (exit-criteria) — unimplemented
 
 ## Phase 2
 

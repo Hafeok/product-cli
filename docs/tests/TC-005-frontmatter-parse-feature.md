@@ -13,7 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_005_frontmatter_parse_feature"
-last-run: 2026-04-14T10:46:07.489682314+00:00
+last-run: 2026-04-14T13:16:43.783509783+00:00
 ---
 
 parse a well-formed feature file. Assert all fields deserialise correctly into the `Feature` struct. Assert `adrs` and `tests` vectors contain the expected IDs.
