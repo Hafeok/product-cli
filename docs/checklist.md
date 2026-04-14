@@ -69,12 +69,12 @@
 - [x] TC-070: tmp_cleanup_on_startup (scenario) — passing
 - [x] TC-161: FT-005 atomic writes and locking safe (exit-criteria) — passing
 
-### FT-007 — Formal Specification [~]
+### FT-007 — Formal Specification [x]
 
 - [x] ADR-004: Markdown as the Document Format (accepted)
 - [x] TC-011: markdown_front_matter_strip (scenario) — passing
 - [x] TC-012: markdown_passthrough (scenario) — passing
-- [ ] TC-152: FT-007 all tests pass and feature is complete (exit-criteria) — unimplemented
+- [x] TC-152: FT-007 all tests pass and feature is complete (exit-criteria) — passing
 
 ### FT-009 — Formal Specification [x]
 

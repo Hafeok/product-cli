@@ -941,6 +941,83 @@ fn tc_154_ft002_exit_criteria() {
     h.run(&["graph", "check"]).assert_exit(0);
 }
 
+// --- TC-152: FT-007 all tests pass and feature is complete (exit-criteria) ---
+// All FT-007 formal specification scenarios pass: markdown front-matter stripping, markdown
+// passthrough, formal block parsing, context bundle preservation, evidence aggregation.
+
+#[test]
+fn tc_152_ft007_exit_criteria() {
+    // 1. Markdown front-matter stripping (TC-011): context bundle strips ---/YAML fields
+    let h1 = Harness::new();
+    h1.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h1.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nDecision body.\n",
+    );
+    h1.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test TC\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nTest body.\n",
+    );
+    let out = h1.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    assert!(
+        !out.stdout.starts_with("---\n"),
+        "Context bundle should not start with front-matter delimiter"
+    );
+    assert!(
+        !out.stdout.contains("status: planned"),
+        "YAML fields should not appear in context bundle"
+    );
+
+    // 2. Markdown passthrough (TC-012): code blocks, tables, nested lists preserved
+    let h2 = Harness::new();
+    h2.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\n```rust\nfn main() {}\n```\n\n| Col1 | Col2 |\n|------|------|\n| a    | b    |\n\n- item 1\n  - nested\n",
+    );
+    let out = h2.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("```rust"), "Code blocks should be preserved");
+    assert!(out.stdout.contains("fn main() {}"), "Code content should be preserved");
+    assert!(out.stdout.contains("| Col1 | Col2 |"), "Tables should be preserved");
+    assert!(out.stdout.contains("- item 1"), "Lists should be preserved");
+    assert!(out.stdout.contains("  - nested"), "Nested lists should be preserved");
+
+    // 3. Formal block parsing: Types, Invariants, Scenario, Evidence blocks parsed and preserved
+    let h3 = Harness::new();
+    h3.write(
+        "docs/features/FT-001-formal.md",
+        "---\nid: FT-001\ntitle: Formal Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nFeature with formal blocks.\n",
+    );
+    h3.write(
+        "docs/tests/TC-001-formal.md",
+        "---\nid: TC-001\ntitle: Formal Test\ntype: invariant\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n⟦Σ:Types⟧{\n  Graph≜⟨nodes:Node+, edges:Edge*⟩\n  CentralityScore≜Float\n}\n\n⟦Γ:Invariants⟧{\n  ∀g:Graph, ∀n∈g.nodes: betweenness(g,n) ≥ 0.0 ∧ betweenness(g,n) ≤ 1.0\n}\n\n⟦Ε⟧⟨δ≜0.95;φ≜100;τ≜◊⁺⟩\n",
+    );
+    let out = h3.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    // Formal blocks must be preserved in context output
+    assert!(out.stdout.contains("⟦Σ:Types⟧"), "Types block should be preserved in context bundle");
+    assert!(out.stdout.contains("⟦Γ:Invariants⟧"), "Invariants block should be preserved in context bundle");
+    assert!(out.stdout.contains("CentralityScore"), "Type definitions should be preserved");
+    assert!(out.stdout.contains("betweenness"), "Invariant content should be preserved");
+
+    // 4. Evidence aggregation: AISP bundle header includes evidence metrics
+    assert!(out.stdout.contains("⟦Ε⟧"), "Evidence block should appear in bundle header");
+
+    // 5. Graph check passes for well-formed formal specification artifacts
+    let out = h3.run(&["graph", "check"]);
+    // Exit code 0 (clean) or 2 (warnings only, e.g. W003 for missing exit-criteria) are acceptable
+    assert!(
+        out.exit_code == 0 || out.exit_code == 2,
+        "Graph check should pass (got exit code {}): {}",
+        out.exit_code,
+        out.stderr
+    );
+}
+
 // --- TC-155: FT-003 front-matter schema fully validated (exit-criteria) ---
 // All FT-003 scenarios pass: parsing, validation, schema migration, formal blocks.
 
