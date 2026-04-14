@@ -6,6 +6,9 @@ status: complete
 depends-on: []
 adrs:
 - ADR-032
+- ADR-002
+- ADR-013
+- ADR-015
 tests:
 - TC-420
 - TC-421
