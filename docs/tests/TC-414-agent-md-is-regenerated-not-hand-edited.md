@@ -2,13 +2,16 @@
 id: TC-414
 title: AGENT.md is regenerated not hand-edited
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-033
   adrs:
   - ADR-031
 phase: 3
+runner: cargo-test
+runner-args: "tc_414_agent_md_is_regenerated_not_hand_edited"
+last-run: 2026-04-14T17:21:07.545864789+00:00
 ---
 
 ## Description

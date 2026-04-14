@@ -494,25 +494,25 @@
 - [x] TC-401: product impact DEP-001 (scenario) — passing
 - [x] TC-403: Dependency BOM and impact analysis produce correct output (exit-criteria) — passing
 
-### FT-033 — Agent Context Generation [ ]
+### FT-033 — Agent Context Generation [x]
 
 - [ ] ADR-031: Agent Context Generation and Schema MCP Tool (proposed)
-- [ ] TC-404: product schema returns feature front-matter schema (scenario) — unimplemented
-- [ ] TC-405: product schema returns ADR front-matter schema (scenario) — unimplemented
-- [ ] TC-406: product schema returns dependency front-matter schema (scenario) — unimplemented
-- [ ] TC-407: product schema --all returns all schemas (scenario) — unimplemented
-- [ ] TC-408: product agent-init generates AGENT.md from repo state (scenario) — unimplemented
-- [ ] TC-409: AGENT.md contains current front-matter schemas (scenario) — unimplemented
-- [ ] TC-410: AGENT.md contains working protocol section (scenario) — unimplemented
-- [ ] TC-411: AGENT.md contains current repository state summary (scenario) — unimplemented
-- [ ] TC-412: AGENT.md contains domain vocabulary from product.toml (scenario) — unimplemented
-- [ ] TC-413: AGENT.md contains MCP tool usage guide (scenario) — unimplemented
-- [ ] TC-414: AGENT.md is regenerated not hand-edited (invariant) — unimplemented
-- [ ] TC-415: product agent-init --watch regenerates on graph change (scenario) — unimplemented
-- [ ] TC-416: product_schema MCP tool returns schema for artifact type (scenario) — unimplemented
-- [ ] TC-417: product_agent_context MCP tool returns AGENT.md content (scenario) — unimplemented
-- [ ] TC-418: agent-context config controls AGENT.md sections (scenario) — unimplemented
-- [ ] TC-419: Agent context generation exit criteria (exit-criteria) — unimplemented
+- [x] TC-404: product schema returns feature front-matter schema (scenario) — passing
+- [x] TC-405: product schema returns ADR front-matter schema (scenario) — passing
+- [x] TC-406: product schema returns dependency front-matter schema (scenario) — passing
+- [x] TC-407: product schema --all returns all schemas (scenario) — passing
+- [x] TC-408: product agent-init generates AGENT.md from repo state (scenario) — passing
+- [x] TC-409: AGENT.md contains current front-matter schemas (scenario) — passing
+- [x] TC-410: AGENT.md contains working protocol section (scenario) — passing
+- [x] TC-411: AGENT.md contains current repository state summary (scenario) — passing
+- [x] TC-412: AGENT.md contains domain vocabulary from product.toml (scenario) — passing
+- [x] TC-413: AGENT.md contains MCP tool usage guide (scenario) — passing
+- [x] TC-414: AGENT.md is regenerated not hand-edited (invariant) — passing
+- [x] TC-415: product agent-init --watch regenerates on graph change (scenario) — passing
+- [x] TC-416: product_schema MCP tool returns schema for artifact type (scenario) — passing
+- [x] TC-417: product_agent_context MCP tool returns AGENT.md content (scenario) — passing
+- [x] TC-418: agent-context config controls AGENT.md sections (scenario) — passing
+- [x] TC-419: Agent context generation exit criteria (exit-criteria) — passing
 
 ## Phase 4
 

@@ -30,6 +30,40 @@ pub struct ProductConfig {
     /// Whether checklist.md is added to .gitignore by `product init` (ADR-007)
     #[serde(rename = "checklist-in-gitignore", default = "default_true")]
     pub checklist_in_gitignore: bool,
+    /// Agent context generation configuration (ADR-031)
+    #[serde(rename = "agent-context", default)]
+    pub agent_context: AgentContextConfig,
+}
+
+/// Configuration for AGENT.md generation (ADR-031)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentContextConfig {
+    #[serde(rename = "include-repo-state", default = "default_true")]
+    pub include_repo_state: bool,
+    #[serde(rename = "include-schemas", default = "default_true")]
+    pub include_schemas: bool,
+    #[serde(rename = "include-domains", default = "default_true")]
+    pub include_domains: bool,
+    #[serde(rename = "include-tool-guide", default = "default_true")]
+    pub include_tool_guide: bool,
+    #[serde(rename = "output-file", default = "default_agent_output")]
+    pub output_file: String,
+}
+
+impl Default for AgentContextConfig {
+    fn default() -> Self {
+        Self {
+            include_repo_state: true,
+            include_schemas: true,
+            include_domains: true,
+            include_tool_guide: true,
+            output_file: default_agent_output(),
+        }
+    }
+}
+
+fn default_agent_output() -> String {
+    "AGENT.md".to_string()
 }
 
 fn default_version() -> String {
@@ -300,10 +334,7 @@ mod tests {
 
     #[test]
     fn parse_minimal_config() {
-        let toml_str = r#"
-name = "test-project"
-"#;
-        let config: ProductConfig = toml::from_str(toml_str).unwrap();
+        let config: ProductConfig = toml::from_str("name = \"test-project\"\n").unwrap();
         assert_eq!(config.name, "test-project");
         assert_eq!(config.schema_version, "1");
         assert_eq!(config.prefixes.feature, "FT");
@@ -321,57 +352,39 @@ name = "test-project"
 
     #[test]
     fn schema_version_forward_error() {
-        let toml_str = r#"
-name = "test"
-schema-version = "99"
-"#;
-        let config: ProductConfig = toml::from_str(toml_str).unwrap();
+        let config: ProductConfig = toml::from_str("name = \"test\"\nschema-version = \"99\"\n").unwrap();
         assert!(config.check_schema_version().is_err());
     }
 
-    #[test]
-    fn schema_migrate_v0_dry_run() {
+    fn migrate_fixture() -> (tempfile::TempDir, std::path::PathBuf) {
         let dir = tempfile::tempdir().unwrap();
         let toml_path = dir.path().join("product.toml");
         std::fs::write(&toml_path, "name = \"test\"\nschema-version = \"0\"\n\n[paths]\nfeatures = \"f\"\n").unwrap();
         let features_dir = dir.path().join("f");
         std::fs::create_dir_all(&features_dir).unwrap();
-        // Create a feature file missing depends-on
-        std::fs::write(
-            features_dir.join("FT-001-test.md"),
-            "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\nadrs: []\ntests: []\n---\n\nBody.\n",
-        ).unwrap();
+        std::fs::write(features_dir.join("FT-001-test.md"),
+            "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\nadrs: []\ntests: []\n---\n\nBody.\n").unwrap();
+        (dir, toml_path)
+    }
 
+    #[test]
+    fn schema_migrate_v0_dry_run() {
+        let (dir, toml_path) = migrate_fixture();
         let config = ProductConfig::load(&toml_path).unwrap();
         let (updated, _) = migrate_schema(dir.path(), &config, true).unwrap();
         assert!(updated > 0, "dry-run should report files to update");
-
-        // Verify nothing actually changed
-        let content = std::fs::read_to_string(features_dir.join("FT-001-test.md")).unwrap();
+        let content = std::fs::read_to_string(dir.path().join("f/FT-001-test.md")).unwrap();
         assert!(!content.contains("depends-on"), "dry-run should not modify files");
     }
 
     #[test]
     fn schema_migrate_v0_execute() {
-        let dir = tempfile::tempdir().unwrap();
-        let toml_path = dir.path().join("product.toml");
-        std::fs::write(&toml_path, "name = \"test\"\nschema-version = \"0\"\n\n[paths]\nfeatures = \"f\"\n").unwrap();
-        let features_dir = dir.path().join("f");
-        std::fs::create_dir_all(&features_dir).unwrap();
-        std::fs::write(
-            features_dir.join("FT-001-test.md"),
-            "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\nadrs: []\ntests: []\n---\n\nBody.\n",
-        ).unwrap();
-
+        let (dir, toml_path) = migrate_fixture();
         let config = ProductConfig::load(&toml_path).unwrap();
         let (updated, _) = migrate_schema(dir.path(), &config, false).unwrap();
         assert!(updated > 0);
-
-        // Verify the file was updated
-        let content = std::fs::read_to_string(features_dir.join("FT-001-test.md")).unwrap();
+        let content = std::fs::read_to_string(dir.path().join("f/FT-001-test.md")).unwrap();
         assert!(content.contains("depends-on"), "file should now have depends-on");
-
-        // Verify product.toml was updated
         let toml_content = std::fs::read_to_string(&toml_path).unwrap();
         assert!(toml_content.contains("schema-version = \"1\""), "product.toml should be bumped to v1");
     }
@@ -379,9 +392,8 @@ schema-version = "99"
     #[test]
     fn schema_migrate_already_current() {
         let dir = tempfile::tempdir().unwrap();
-        let toml_path = dir.path().join("product.toml");
-        std::fs::write(&toml_path, "name = \"test\"\nschema-version = \"1\"\n").unwrap();
-        let config = ProductConfig::load(&toml_path).unwrap();
+        std::fs::write(dir.path().join("product.toml"), "name = \"test\"\nschema-version = \"1\"\n").unwrap();
+        let config = ProductConfig::load(&dir.path().join("product.toml")).unwrap();
         let (updated, _) = migrate_schema(dir.path(), &config, false).unwrap();
         assert_eq!(updated, 0, "no migration needed for current version");
     }

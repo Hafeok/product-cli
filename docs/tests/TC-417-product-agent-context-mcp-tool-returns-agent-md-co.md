@@ -2,13 +2,16 @@
 id: TC-417
 title: product_agent_context MCP tool returns AGENT.md content
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-033
   adrs:
   - ADR-031
 phase: 3
+runner: cargo-test
+runner-args: "tc_417_product_agent_context_mcp_tool_returns_agent_md_content"
+last-run: 2026-04-14T17:21:07.545864789+00:00
 ---
 
 ## Description

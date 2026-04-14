@@ -1,6 +1,7 @@
 //! Command dispatch module — subcommand enums, run(), shared helpers.
 
 mod adr;
+mod agent_init;
 mod author;
 mod checklist;
 mod completions;
@@ -20,6 +21,7 @@ mod metrics_cmd;
 mod migrate;
 mod onboard;
 mod preflight;
+mod schema;
 mod status;
 mod test_cmd;
 
@@ -220,6 +222,20 @@ pub enum Commands {
         #[command(subcommand)]
         command: HashCommands,
     },
+    /// Display front-matter schemas for artifact types (ADR-031)
+    Schema {
+        /// Artifact type: feature, adr, test, dep
+        artifact_type: Option<String>,
+        /// Show all schemas in a single document
+        #[arg(long)]
+        all: bool,
+    },
+    /// Generate AGENT.md from current repository state (ADR-031)
+    AgentInit {
+        /// Watch for changes and regenerate automatically
+        #[arg(long)]
+        watch: bool,
+    },
 }
 
 pub use self::test_cmd::TestCommands;
@@ -314,5 +330,7 @@ fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> Bo
         Commands::Onboard { command } => onboard::handle_onboard(command),
         Commands::Init { yes, force, name, domains, port, write_tools, path } => init::handle_init(yes, force, name, domains, port, write_tools, path),
         Commands::Hash { command } => hash::handle_hash(command),
+        Commands::Schema { artifact_type, all } => schema::handle_schema(artifact_type, all),
+        Commands::AgentInit { watch } => agent_init::handle_agent_init(watch),
     }
 }

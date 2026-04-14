@@ -2,7 +2,7 @@
 id: FT-033
 title: Agent Context Generation
 phase: 3
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-031

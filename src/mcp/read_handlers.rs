@@ -140,6 +140,37 @@ pub(crate) fn handle_impact(args: &Value, graph: &KnowledgeGraph) -> Result<Valu
     }))
 }
 
+pub(crate) fn handle_schema(args: &Value) -> Result<Value, String> {
+    let artifact_type = args
+        .get("artifact_type")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    let content = if artifact_type.is_empty() {
+        crate::agent_context::generate_all_schemas()
+    } else {
+        crate::agent_context::generate_schema(artifact_type)?
+    };
+
+    Ok(serde_json::json!({
+        "content": content,
+        "type": "text"
+    }))
+}
+
+pub(crate) fn handle_agent_context(
+    graph: &KnowledgeGraph,
+    repo_root: &Path,
+) -> Result<Value, String> {
+    let config = crate::config::ProductConfig::load(&repo_root.join("product.toml"))
+        .map_err(|e| format!("{}", e))?;
+    let content = crate::agent_context::generate_agent_md(&config, graph, repo_root);
+    Ok(serde_json::json!({
+        "content": content,
+        "type": "text"
+    }))
+}
+
 pub(crate) fn handle_gap_check(
     args: &Value,
     graph: &KnowledgeGraph,

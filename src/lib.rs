@@ -1,5 +1,6 @@
 //! Product library — module re-exports for tests, benchmarks, integration.
 
+pub mod agent_context;
 pub mod author;
 pub mod checklist;
 pub mod config;

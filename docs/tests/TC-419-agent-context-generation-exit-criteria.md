@@ -2,13 +2,16 @@
 id: TC-419
 title: Agent context generation exit criteria
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-033
   adrs:
   - ADR-031
 phase: 3
+runner: cargo-test
+runner-args: "tc_419_agent_context_generation_exit_criteria"
+last-run: 2026-04-14T17:21:07.545864789+00:00
 ---
 
 ## Description

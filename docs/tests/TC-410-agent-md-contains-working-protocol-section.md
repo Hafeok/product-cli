@@ -2,13 +2,16 @@
 id: TC-410
 title: AGENT.md contains working protocol section
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-033
   adrs:
   - ADR-031
 phase: 3
+runner: cargo-test
+runner-args: "tc_410_agent_md_contains_working_protocol_section"
+last-run: 2026-04-14T17:21:07.545864789+00:00
 ---
 
 ## Description

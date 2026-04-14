@@ -141,6 +141,8 @@ fn dispatch_tool(
         "product_graph_central" => read_handlers::handle_graph_central(args, graph),
         "product_impact" => read_handlers::handle_impact(args, graph),
         "product_gap_check" => read_handlers::handle_gap_check(args, graph, repo_root),
+        "product_schema" => read_handlers::handle_schema(args),
+        "product_agent_context" => read_handlers::handle_agent_context(graph, repo_root),
         "product_feature_new" => write_handlers::handle_feature_new(args, graph, repo_root),
         "product_adr_new" => write_handlers::handle_adr_new(args, graph, repo_root),
         "product_test_new" => write_handlers::handle_test_new(args, graph, repo_root),

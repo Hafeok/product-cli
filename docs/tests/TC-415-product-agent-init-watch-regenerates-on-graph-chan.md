@@ -2,13 +2,16 @@
 id: TC-415
 title: product agent-init --watch regenerates on graph change
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-033
   adrs:
   - ADR-031
 phase: 3
+runner: cargo-test
+runner-args: "tc_415_product_agent_init_watch_regenerates_on_graph_change"
+last-run: 2026-04-14T17:21:07.545864789+00:00
 ---
 
 ## Description

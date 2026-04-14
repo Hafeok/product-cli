@@ -17,6 +17,7 @@ pub fn build_tool_list() -> Vec<ToolDef> {
     let mut tools = read_feature_tools();
     tools.extend(read_adr_and_test_tools());
     tools.extend(read_graph_tools());
+    tools.extend(read_agent_context_tools());
     tools.extend(write_create_tools());
     tools.extend(write_update_tools());
     tools
@@ -111,6 +112,27 @@ fn read_graph_tools() -> Vec<ToolDef> {
             description: "Run gap analysis on an ADR".to_string(),
             requires_write: false,
             input_schema: serde_json::json!({"type": "object", "properties": {"adr_id": {"type": "string"}}}),
+        },
+    ]
+}
+
+// ---------------------------------------------------------------------------
+// Read tools: agent context and schema (ADR-031)
+// ---------------------------------------------------------------------------
+
+fn read_agent_context_tools() -> Vec<ToolDef> {
+    vec![
+        ToolDef {
+            name: "product_schema".to_string(),
+            description: "Get the front-matter schema for an artifact type (feature, adr, test, dep) or all types".to_string(),
+            requires_write: false,
+            input_schema: serde_json::json!({"type": "object", "properties": {"artifact_type": {"type": "string", "description": "Artifact type: feature, adr, test, dep. Omit for all schemas."}}}),
+        },
+        ToolDef {
+            name: "product_agent_context".to_string(),
+            description: "Get the full AGENT.md content — working protocol, schemas, repo state, domains, and tool guide".to_string(),
+            requires_write: false,
+            input_schema: serde_json::json!({"type": "object", "properties": {}}),
         },
     ]
 }

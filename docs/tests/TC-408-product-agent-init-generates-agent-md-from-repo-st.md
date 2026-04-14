@@ -2,13 +2,16 @@
 id: TC-408
 title: product agent-init generates AGENT.md from repo state
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-033
   adrs:
   - ADR-031
 phase: 3
+runner: cargo-test
+runner-args: "tc_408_product_agent_init_generates_agent_md_from_repo_state"
+last-run: 2026-04-14T17:21:07.545864789+00:00
 ---
 
 ## Description

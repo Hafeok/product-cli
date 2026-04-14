@@ -9527,3 +9527,542 @@ fn tc_403_dependency_bom_and_impact_analysis_produce_correct_output() {
     let dep_json: serde_json::Value = serde_json::from_str(&dep_out.stdout).expect("valid JSON");
     assert!(dep_json["availability-check"].is_string(), "DEP-005 should have resolvable availability-check");
 }
+
+// ---------------------------------------------------------------------------
+// FT-033: Agent Context Generation (ADR-031)
+// ---------------------------------------------------------------------------
+
+/// Fixture for agent-context tests: minimal repo with features, ADRs, TCs, and domains
+fn fixture_agent_context() -> Harness {
+    let h = Harness::new();
+    // Add domains to product.toml
+    h.write("product.toml", r#"name = "test"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+dependencies = "docs/dependencies"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+dependency = "DEP"
+[domains]
+security = "Authentication and authorization"
+storage = "Data persistence"
+networking = "Network protocols"
+"#);
+    h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n");
+    h.write("docs/features/FT-002-complete.md", "---\nid: FT-002\ntitle: Complete Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: [TC-002]\n---\n\nComplete.\n");
+    h.write("docs/adrs/ADR-001-test.md", "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nDecision body.\n");
+    h.write("docs/adrs/ADR-002-proposed.md", "---\nid: ADR-002\ntitle: Proposed ADR\nstatus: proposed\nfeatures: []\n---\n\nProposed.\n");
+    h.write("docs/tests/TC-001-test.md", "---\nid: TC-001\ntitle: Test TC\ntype: exit-criteria\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nTest body.\n");
+    h.write("docs/tests/TC-002-failing.md", "---\nid: TC-002\ntitle: Failing TC\ntype: scenario\nstatus: failing\nvalidates:\n  features: [FT-002]\nphase: 1\n---\n\nFailing test.\n");
+    h.write("docs/tests/TC-003-unimpl.md", "---\nid: TC-003\ntitle: Unimplemented TC\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\nphase: 1\n---\n\nUnimplemented.\n");
+    h
+}
+
+/// TC-404: product schema returns feature front-matter schema
+#[test]
+fn tc_404_product_schema_returns_feature_front_matter_schema() {
+    let h = fixture_agent_context();
+    let out = h.run(&["schema", "feature"]);
+    out.assert_exit(0);
+    // Assert all feature front-matter fields are present
+    for field in &["id:", "title:", "phase:", "status:", "depends-on:", "adrs:", "tests:", "domains:", "domains-acknowledged:", "bundle:"] {
+        assert!(out.stdout.contains(field), "Feature schema should contain field '{}', got:\n{}", field, out.stdout);
+    }
+    // Assert type descriptions
+    assert!(out.stdout.contains("String"), "Should have type descriptions");
+    // Assert allowed values
+    assert!(out.stdout.contains("planned"), "Should document allowed status values");
+    assert!(out.stdout.contains("in-progress"), "Should document in-progress status");
+    assert!(out.stdout.contains("complete"), "Should document complete status");
+    assert!(out.stdout.contains("abandoned"), "Should document abandoned status");
+}
+
+/// TC-405: product schema returns ADR front-matter schema
+#[test]
+fn tc_405_product_schema_returns_adr_front_matter_schema() {
+    let h = fixture_agent_context();
+    let out = h.run(&["schema", "adr"]);
+    out.assert_exit(0);
+    // Assert all ADR front-matter fields are present
+    for field in &["id:", "title:", "status:", "features:", "supersedes:", "superseded-by:", "domains:", "scope:", "source-files:"] {
+        assert!(out.stdout.contains(field), "ADR schema should contain field '{}', got:\n{}", field, out.stdout);
+    }
+    // Assert status enum values are documented
+    assert!(out.stdout.contains("proposed"), "Should document proposed status");
+    assert!(out.stdout.contains("accepted"), "Should document accepted status");
+    assert!(out.stdout.contains("superseded"), "Should document superseded status");
+}
+
+/// TC-406: product schema returns dependency front-matter schema
+#[test]
+fn tc_406_product_schema_returns_dependency_front_matter_schema() {
+    let h = fixture_agent_context();
+    let out = h.run(&["schema", "dep"]);
+    out.assert_exit(0);
+    // Assert all six dependency types
+    for dep_type in &["library", "service", "api", "tool", "hardware", "runtime"] {
+        assert!(out.stdout.contains(dep_type), "Dep schema should contain type '{}', got:\n{}", dep_type, out.stdout);
+    }
+    // Assert interface block documented for service/api types
+    assert!(out.stdout.contains("interface:"), "Should document interface block");
+    assert!(out.stdout.contains("protocol:"), "Should document protocol in interface");
+    // Assert availability-check described
+    assert!(out.stdout.contains("availability-check:"), "Should document availability-check field");
+}
+
+/// TC-407: product schema --all returns all schemas
+#[test]
+fn tc_407_product_schema_all_returns_all_schemas() {
+    let h = fixture_agent_context();
+    let out = h.run(&["schema", "--all"]);
+    out.assert_exit(0);
+    // Assert all four artifact type schemas
+    assert!(out.stdout.contains("Feature"), "Should contain Feature schema");
+    assert!(out.stdout.contains("ADR"), "Should contain ADR schema");
+    assert!(out.stdout.contains("Test Criterion"), "Should contain Test Criterion schema");
+    assert!(out.stdout.contains("Dependency"), "Should contain Dependency schema");
+    // Assert valid standalone markdown (has heading)
+    assert!(out.stdout.contains("# Front-Matter Schemas"), "Should be valid markdown with heading");
+}
+
+/// TC-408: product agent-init generates AGENT.md from repo state
+#[test]
+fn tc_408_product_agent_init_generates_agent_md_from_repo_state() {
+    let h = fixture_agent_context();
+    let out = h.run(&["agent-init"]);
+    out.assert_exit(0);
+    // Assert AGENT.md is created
+    assert!(h.exists("AGENT.md"), "AGENT.md should be created at repo root");
+    let content = h.read("AGENT.md");
+    // Assert generation timestamp
+    assert!(content.contains("> Generated by product"), "Should contain generation timestamp");
+    // Assert product version
+    assert!(content.contains("v0.1.0"), "Should contain product version");
+}
+
+/// TC-409: AGENT.md contains current front-matter schemas
+#[test]
+fn tc_409_agent_md_contains_current_front_matter_schemas() {
+    let h = fixture_agent_context();
+    h.run(&["agent-init"]).assert_exit(0);
+    let content = h.read("AGENT.md");
+    // Assert schemas section exists
+    assert!(content.contains("## Front-Matter Schemas"), "Should have Front-Matter Schemas section");
+    // Assert subsections
+    assert!(content.contains("### Feature"), "Should have Feature schema subsection");
+    assert!(content.contains("### ADR"), "Should have ADR schema subsection");
+    assert!(content.contains("### Test Criterion"), "Should have Test Criterion schema subsection");
+    assert!(content.contains("### Dependency"), "Should have Dependency schema subsection");
+    // Schema content should match `product schema --all`
+    let schema_out = h.run(&["schema", "--all"]);
+    schema_out.assert_exit(0);
+    // Check key fields appear in both
+    assert!(content.contains("depends-on:"), "AGENT.md schema should contain depends-on field");
+    assert!(content.contains("supersedes:"), "AGENT.md schema should contain supersedes field");
+}
+
+/// TC-410: AGENT.md contains working protocol section
+#[test]
+fn tc_410_agent_md_contains_working_protocol_section() {
+    let h = fixture_agent_context();
+    h.run(&["agent-init"]).assert_exit(0);
+    let content = h.read("AGENT.md");
+    assert!(content.contains("## Working Protocol"), "Should have Working Protocol section");
+    assert!(content.contains("product_graph_check"), "Should mention product_graph_check");
+    assert!(content.contains("product_graph_central"), "Should mention product_graph_central");
+    assert!(content.contains("product_feature_list"), "Should mention product_feature_list");
+    assert!(content.contains("product_context"), "Should mention product_context");
+}
+
+/// TC-411: AGENT.md contains current repository state summary
+#[test]
+fn tc_411_agent_md_contains_current_repository_state_summary() {
+    let h = fixture_agent_context();
+    h.run(&["agent-init"]).assert_exit(0);
+    let content = h.read("AGENT.md");
+    assert!(content.contains("## Current Repository State"), "Should have Current Repository State section");
+    // Should show correct feature count (2)
+    assert!(content.contains("2 features"), "Should show 2 features, got:\n{}", content);
+    // Should show correct ADR count (2)
+    assert!(content.contains("2 ADRs"), "Should show 2 ADRs, got:\n{}", content);
+    // Should show TC counts
+    assert!(content.contains("3 test criteria"), "Should show 3 test criteria, got:\n{}", content);
+    assert!(content.contains("1 passing"), "Should show 1 passing, got:\n{}", content);
+    assert!(content.contains("1 failing"), "Should show 1 failing, got:\n{}", content);
+    assert!(content.contains("1 unimplemented"), "Should show 1 unimplemented, got:\n{}", content);
+    // Should include phase gate status
+    assert!(content.contains("Phase 1"), "Should include phase gate info, got:\n{}", content);
+}
+
+/// TC-412: AGENT.md contains domain vocabulary from product.toml
+#[test]
+fn tc_412_agent_md_contains_domain_vocabulary_from_product_toml() {
+    let h = fixture_agent_context();
+    h.run(&["agent-init"]).assert_exit(0);
+    let content = h.read("AGENT.md");
+    assert!(content.contains("## Domain Vocabulary"), "Should have Domain Vocabulary section");
+    assert!(content.contains("security"), "Should list security domain");
+    assert!(content.contains("storage"), "Should list storage domain");
+    assert!(content.contains("networking"), "Should list networking domain");
+
+    // Add a new domain and re-run
+    h.write("product.toml", r#"name = "test"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+dependencies = "docs/dependencies"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+dependency = "DEP"
+[domains]
+security = "Authentication and authorization"
+storage = "Data persistence"
+networking = "Network protocols"
+observability = "Monitoring and logging"
+"#);
+    h.run(&["agent-init"]).assert_exit(0);
+    let content2 = h.read("AGENT.md");
+    assert!(content2.contains("observability"), "Should list newly added observability domain");
+}
+
+/// TC-413: AGENT.md contains MCP tool usage guide
+#[test]
+fn tc_413_agent_md_contains_mcp_tool_usage_guide() {
+    let h = fixture_agent_context();
+    h.run(&["agent-init"]).assert_exit(0);
+    let content = h.read("AGENT.md");
+    assert!(content.contains("## Key MCP Tools"), "Should have Key MCP Tools section");
+    // Check required tools are listed
+    assert!(content.contains("product_context"), "Should list product_context");
+    assert!(content.contains("product_schema"), "Should list product_schema");
+    assert!(content.contains("product_graph_central"), "Should list product_graph_central");
+    assert!(content.contains("product_preflight"), "Should list product_preflight");
+    assert!(content.contains("product_gap_check"), "Should list product_gap_check");
+    assert!(content.contains("product_agent_context"), "Should list product_agent_context");
+}
+
+/// TC-414: AGENT.md is regenerated not hand-edited
+#[test]
+fn tc_414_agent_md_is_regenerated_not_hand_edited() {
+    let h = fixture_agent_context();
+    // First generation
+    h.run(&["agent-init"]).assert_exit(0);
+    let content1 = h.read("AGENT.md");
+    assert!(!content1.is_empty(), "First generation should produce content");
+
+    // Second generation overwrites cleanly
+    h.run(&["agent-init"]).assert_exit(0);
+    let content2 = h.read("AGENT.md");
+    // Both should contain the timestamp line (may differ by ms)
+    assert!(content2.contains("> Generated by product"), "Second gen should have timestamp");
+
+    // Hand-edit AGENT.md by inserting a marker line
+    let edited = format!("HAND-EDITED-MARKER\n{}", content2);
+    h.write("AGENT.md", &edited);
+    assert!(h.read("AGENT.md").contains("HAND-EDITED-MARKER"), "Marker should be present");
+
+    // Re-run — marker should be gone
+    h.run(&["agent-init"]).assert_exit(0);
+    let content3 = h.read("AGENT.md");
+    assert!(!content3.contains("HAND-EDITED-MARKER"), "Hand-edit marker should be gone after regeneration");
+    assert!(content3.contains("> Generated by product"), "Regenerated file should have timestamp");
+}
+
+/// TC-415: product agent-init --watch regenerates on graph change
+#[test]
+fn tc_415_product_agent_init_watch_regenerates_on_graph_change() {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+
+    let h = fixture_agent_context();
+
+    // Start watch in background
+    let mut child = Command::new(&h.bin)
+        .args(["agent-init", "--watch"])
+        .current_dir(h.dir.path())
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("spawn agent-init --watch");
+
+    // Wait for initial generation
+    std::thread::sleep(std::time::Duration::from_millis(1500));
+
+    // Verify initial AGENT.md was created
+    assert!(h.exists("AGENT.md"), "Initial AGENT.md should exist");
+    let initial_content = h.read("AGENT.md");
+    assert!(initial_content.contains("2 features"), "Should initially show 2 features");
+
+    // Modify a feature file's front-matter
+    h.write("docs/features/FT-003-new.md", "---\nid: FT-003\ntitle: New Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nNew feature.\n");
+
+    // Wait for regeneration
+    std::thread::sleep(std::time::Duration::from_millis(2000));
+
+    let updated_content = h.read("AGENT.md");
+    assert!(updated_content.contains("3 features"), "Should reflect 3 features after adding FT-003, got:\n{}", updated_content);
+
+    // Kill the watch process
+    let _ = child.kill();
+    let status = child.wait().expect("wait for child");
+    // On kill, the process may exit with a signal — that's fine
+    assert!(status.code().is_none() || status.code() == Some(0) || status.code() == Some(1),
+        "Watch process should exit cleanly on kill");
+}
+
+/// TC-416: product_schema MCP tool returns schema for artifact type
+#[test]
+fn tc_416_product_schema_mcp_tool_returns_schema_for_artifact_type() {
+    let h = fixture_agent_context();
+
+    // Test feature schema via MCP
+    let input = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_schema","arguments":{"artifact_type":"feature"}}}"#;
+    let out = run_mcp_stdio(&h, input);
+    assert!(out.contains("id:"), "MCP schema for feature should contain id field: {}", out);
+    assert!(out.contains("depends-on:"), "MCP schema for feature should contain depends-on: {}", out);
+
+    // Test ADR schema
+    let input = r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_schema","arguments":{"artifact_type":"adr"}}}"#;
+    let out = run_mcp_stdio(&h, input);
+    assert!(out.contains("supersedes:"), "MCP schema for adr should contain supersedes: {}", out);
+
+    // Test dep schema
+    let input = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"product_schema","arguments":{"artifact_type":"dep"}}}"#;
+    let out = run_mcp_stdio(&h, input);
+    assert!(out.contains("interface:"), "MCP schema for dep should contain interface: {}", out);
+
+    // Test all schemas (no artifact_type argument)
+    let input = r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"product_schema","arguments":{}}}"#;
+    let out = run_mcp_stdio(&h, input);
+    assert!(out.contains("Feature"), "MCP all schemas should contain Feature: {}", out);
+    assert!(out.contains("ADR"), "MCP all schemas should contain ADR: {}", out);
+    assert!(out.contains("Dependency"), "MCP all schemas should contain Dependency: {}", out);
+}
+
+/// TC-417: product_agent_context MCP tool returns AGENT.md content
+#[test]
+fn tc_417_product_agent_context_mcp_tool_returns_agent_md_content() {
+    let h = fixture_agent_context();
+
+    // Generate AGENT.md first
+    h.run(&["agent-init"]).assert_exit(0);
+    let file_content = h.read("AGENT.md");
+    assert!(!file_content.is_empty(), "AGENT.md should exist");
+
+    // Call MCP tool
+    let input = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_agent_context","arguments":{}}}"#;
+    let out = run_mcp_stdio(&h, input);
+    // MCP response should contain key sections from AGENT.md
+    assert!(out.contains("Working Protocol"), "MCP agent context should contain Working Protocol: {}", out);
+    assert!(out.contains("Front-Matter Schemas"), "MCP agent context should contain schemas: {}", out);
+    assert!(out.contains("Domain Vocabulary"), "MCP agent context should contain domains: {}", out);
+    assert!(out.contains("Key MCP Tools"), "MCP agent context should contain tool guide: {}", out);
+    assert!(out.contains("2 features"), "MCP agent context should contain repo state: {}", out);
+}
+
+/// TC-418: agent-context config controls AGENT.md sections
+#[test]
+fn tc_418_agent_context_config_controls_agent_md_sections() {
+    let h = fixture_agent_context();
+
+    // Disable schemas
+    h.write("product.toml", r#"name = "test"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+dependencies = "docs/dependencies"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+dependency = "DEP"
+[domains]
+security = "Auth"
+[agent-context]
+include-schemas = false
+"#);
+    h.run(&["agent-init"]).assert_exit(0);
+    let content = h.read("AGENT.md");
+    assert!(!content.contains("## Front-Matter Schemas"), "Schemas section should be absent when disabled");
+    assert!(content.contains("## Working Protocol"), "Protocol section should still be present");
+    assert!(content.contains("## Current Repository State"), "Repo state should still be present");
+
+    // Re-enable schemas
+    h.write("product.toml", r#"name = "test"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+dependencies = "docs/dependencies"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+dependency = "DEP"
+[domains]
+security = "Auth"
+[agent-context]
+include-schemas = true
+"#);
+    h.run(&["agent-init"]).assert_exit(0);
+    let content = h.read("AGENT.md");
+    assert!(content.contains("## Front-Matter Schemas"), "Schemas section should reappear when enabled");
+
+    // Disable repo-state
+    h.write("product.toml", r#"name = "test"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+dependencies = "docs/dependencies"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+dependency = "DEP"
+[domains]
+security = "Auth"
+[agent-context]
+include-repo-state = false
+"#);
+    h.run(&["agent-init"]).assert_exit(0);
+    let content = h.read("AGENT.md");
+    assert!(!content.contains("## Current Repository State"), "Repo state section should be absent when disabled");
+
+    // Disable domains
+    h.write("product.toml", r#"name = "test"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+dependencies = "docs/dependencies"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+dependency = "DEP"
+[domains]
+security = "Auth"
+[agent-context]
+include-domains = false
+"#);
+    h.run(&["agent-init"]).assert_exit(0);
+    let content = h.read("AGENT.md");
+    assert!(!content.contains("## Domain Vocabulary"), "Domain section should be absent when disabled");
+
+    // Disable tool guide
+    h.write("product.toml", r#"name = "test"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+dependencies = "docs/dependencies"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+dependency = "DEP"
+[domains]
+security = "Auth"
+[agent-context]
+include-tool-guide = false
+"#);
+    h.run(&["agent-init"]).assert_exit(0);
+    let content = h.read("AGENT.md");
+    assert!(!content.contains("## Key MCP Tools"), "Tool guide section should be absent when disabled");
+}
+
+/// TC-419: Agent context generation exit criteria
+#[test]
+fn tc_419_agent_context_generation_exit_criteria() {
+    let h = fixture_agent_context();
+
+    // 1. product schema --all contains all four schemas
+    let schema_out = h.run(&["schema", "--all"]);
+    schema_out.assert_exit(0);
+    assert!(schema_out.stdout.contains("Feature"), "All schemas should contain Feature");
+    assert!(schema_out.stdout.contains("ADR"), "All schemas should contain ADR");
+    assert!(schema_out.stdout.contains("Test Criterion"), "All schemas should contain Test Criterion");
+    assert!(schema_out.stdout.contains("Dependency"), "All schemas should contain Dependency");
+
+    // 2. product agent-init creates AGENT.md with all five sections
+    h.run(&["agent-init"]).assert_exit(0);
+    let content = h.read("AGENT.md");
+    assert!(content.contains("## Working Protocol"), "Should have protocol section");
+    assert!(content.contains("## Current Repository State"), "Should have repo state section");
+    assert!(content.contains("## Front-Matter Schemas"), "Should have schemas section");
+    assert!(content.contains("## Domain Vocabulary"), "Should have domains section");
+    assert!(content.contains("## Key MCP Tools"), "Should have tool guide section");
+
+    // 3. Modify a feature status, re-run — repo state changes
+    h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n");
+    h.run(&["agent-init"]).assert_exit(0);
+    let content2 = h.read("AGENT.md");
+    // FT-001 and FT-002 are both complete now
+    assert!(content2.contains("2/2 complete"), "Should reflect updated completion status, got:\n{}", content2);
+
+    // 4. MCP tools work
+    let input = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_schema","arguments":{"artifact_type":"feature"}}}"#;
+    let mcp_out = run_mcp_stdio(&h, input);
+    assert!(mcp_out.contains("id:"), "MCP schema should work");
+
+    let input = r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_agent_context","arguments":{}}}"#;
+    let mcp_out = run_mcp_stdio(&h, input);
+    assert!(mcp_out.contains("Working Protocol"), "MCP agent context should work");
+
+    // 5. Config toggle works
+    h.write("product.toml", r#"name = "test"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+dependencies = "docs/dependencies"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+dependency = "DEP"
+[domains]
+security = "Authentication and authorization"
+storage = "Data persistence"
+networking = "Network protocols"
+[agent-context]
+include-schemas = false
+"#);
+    h.run(&["agent-init"]).assert_exit(0);
+    let content3 = h.read("AGENT.md");
+    assert!(!content3.contains("## Front-Matter Schemas"), "Schemas should be absent when disabled");
+}
