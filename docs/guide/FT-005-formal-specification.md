@@ -1,225 +1,190 @@
-It looks like write permission to the `docs/guide/` directory keeps getting denied. Here is the complete documentation for FT-005 — Formal Specification. You can save it to `docs/guide/FT-005-formal-specification.md`:
-
----
-
 ## Overview
 
-Formal Specification gives test criteria a machine-parseable layer of mathematical precision on top of their Markdown bodies. Test criteria of type `invariant` or `chaos` can embed AISP-influenced formal blocks — type definitions, invariants, scenarios, exit criteria, and evidence annotations — directly in their Markdown. Product parses these blocks, validates their syntax and value ranges, includes them in context bundles, reports them in graph health checks, and computes a formal coverage metric across the knowledge graph.
+FT-005 ensures that every file write performed by Product is safe against corruption and data loss. All writes use atomic temp-file-plus-rename, and an advisory lock on `.product.lock` serialises concurrent write commands within the same repository. This protects long-lived project artifacts (feature files, ADR files, checklists) from torn writes, silent overwrites, and leftover temporary files. The implementation follows ADR-015.
 
 ## Tutorial
 
-### Writing your first formal block
+### Seeing atomic writes in action
 
-Assume you have an existing test criterion `docs/tests/TC-020-betweenness-centrality.md` of type `invariant`. Open it and add formal blocks after the YAML front-matter:
-
-```markdown
----
-id: TC-020
-title: Betweenness Centrality Always In Range
-type: invariant
-status: unimplemented
-validates:
-  features: [FT-001]
-  adrs: [ADR-012]
-phase: 3
-runner: cargo-test
-runner-args: "tc_020_betweenness_centrality_always_in_range"
----
-
-## Description
-
-Betweenness centrality must always be in [0, 1].
-
-⟦Σ:Types⟧{
-  Node≜IRI
-  Centrality≜f64
-}
-
-⟦Γ:Invariants⟧{
-  ∀n:Node: 0.0 ≤ betweenness(n) ≤ 1.0
-}
-
-⟦Ε⟧⟨δ≜0.95;φ≜100;τ≜◊⁺⟩
-```
-
-### Verifying your formal blocks parse correctly
-
-Run the graph health check to confirm the blocks are well-formed:
+Product handles atomic writes transparently. Every command that modifies a file uses the safe-write path automatically. Try it by updating a feature status:
 
 ```bash
-product graph check
+product feature status FT-001 in-progress
 ```
 
-If the blocks parse successfully, no errors appear for TC-020. If there is a syntax problem, you will see an `E001` error pointing to the file and describing the issue.
+Behind the scenes, Product:
 
-### Checking formal coverage
+1. Computed the new file content in memory
+2. Wrote it to a temporary file (`.FT-001-core-concepts.md.product-tmp.<pid>`)
+3. Called `fsync` on the temporary file
+4. Renamed the temporary file over the target (atomic on POSIX)
 
-Run graph stats to see the formal coverage metric:
+You never see the temporary file because it exists only for the duration of the write. If the process is killed mid-write, the original file remains untouched.
+
+### Observing the advisory lock
+
+Open two terminals in the same repository. In the first terminal, run a write command:
 
 ```bash
-product graph stats
+product checklist generate
 ```
 
-The output includes a line like:
+While that is running, immediately run another write command in the second terminal:
+
+```bash
+product feature status FT-002 in-progress
+```
+
+If the first command is still holding the lock, the second command waits up to 3 seconds. If the lock is not released in time, you see:
 
 ```
-  Formal coverage (invariant/chaos): 75%
+error[E010]: repository locked
+  another Product process is running on this repository
+  lock held by PID 48291 (started 2026-04-14T09:14:22Z)
+  wait for it to complete, or delete .product.lock if the process has died
 ```
 
-This reports the percentage of `invariant` and `chaos` test criteria that contain at least one formal block.
+This ensures two Product processes never write to the same files simultaneously.
+
+### Automatic cleanup of stale state
+
+If a previous Product invocation crashed, it may have left behind a `.product.lock` file or `.product-tmp.*` files. Product detects and cleans both automatically:
+
+```bash
+# Even a read-only command cleans leftover temp files
+product feature list
+```
+
+Stale lock files (where the holding PID is no longer running) are cleared automatically when any write command runs.
 
 ## How-to Guide
 
-### Add type definitions to a test criterion
+### Resolve a "repository locked" error
 
-1. Open the TC file.
-2. Add a `⟦Σ:Types⟧` block with one type per line, using `≜` as the definition operator:
+1. Check whether another Product process is actually running. The error message includes the PID:
+   ```
+   lock held by PID 48291 (started 2026-04-14T09:14:22Z)
+   ```
+2. If the process is still running, wait for it to finish and retry.
+3. If the process has died (e.g., was killed), Product normally detects this and clears the lock automatically. If it does not, delete the lock file manually:
+   ```bash
+   rm .product.lock
+   ```
+4. Re-run your command.
 
-```
-⟦Σ:Types⟧{
-  Node≜IRI
-  Role≜Leader|Follower|Learner
-  ClusterState≜⟨nodes:Node+, roles:Node→Role⟩
-}
-```
+### Clean up leftover temporary files
 
-3. Run `product graph check` to validate.
+Leftover `.product-tmp.*` files are cleaned automatically on any Product invocation, including read-only commands. To trigger cleanup explicitly:
 
-### Add invariants to a test criterion
-
-1. Open the TC file.
-2. Add a `⟦Γ:Invariants⟧` block. Each non-empty line (or group of lines separated by blank lines) becomes one invariant:
-
-```
-⟦Γ:Invariants⟧{
-  ∀s:ClusterState: |{n∈s.nodes | s.roles(n)=Leader}| = 1
-}
+```bash
+product feature list
 ```
 
-3. Run `product graph check` to validate.
+If you want to verify no temporary files remain:
 
-### Add a scenario specification
-
-1. Open the TC file.
-2. Add a `⟦Λ:Scenario⟧` block with `given≜`, `when≜`, and `then≜` fields:
-
-```
-⟦Λ:Scenario⟧{
-  given≜cluster_init(nodes:2)
-  when≜elapsed(10s)
-  then≜∃n∈nodes: roles(n)=Leader
-       ∧ graph_contains(n, picloud:hasRole, picloud:Leader)
-}
+```bash
+find docs/ -name '*.product-tmp.*'
 ```
 
-Multi-line values are supported: continuation lines are joined to the current field.
+### Run concurrent CI jobs safely
 
-3. Run `product graph check` to validate.
+Product's advisory lock serialises write commands within the same repository clone. In CI pipelines with parallel jobs:
 
-### Add an evidence annotation
+1. If jobs share the same checkout directory, the lock ensures only one write command runs at a time. The other job receives error E010 if it times out.
+2. If each job has its own checkout (recommended), no lock contention occurs.
 
-1. Open the TC file.
-2. Add an `⟦Ε⟧` evidence block with three semicolon-separated fields:
-
-```
-⟦Ε⟧⟨δ≜0.95;φ≜100;τ≜◊⁺⟩
-```
-
-- `δ` (delta) — confidence, a float in `[0.0, 1.0]`
-- `φ` (phi) — coverage, an integer in `[0, 100]`
-- `τ` (tau) — stability: `◊⁺` (stable), `◊⁻` (unstable), or `◊?` (unknown)
-
-3. Run `product graph check` to validate.
-
-### Fix formal block parse errors
-
-1. Run `product graph check`.
-2. Look for `E001` errors referencing formal blocks. Common causes:
-   - Unclosed block delimiter (`⟦` without matching `⟧`)
-   - Unclosed brace (`{` without matching `}`)
-   - Unrecognised block type (e.g., `⟦X:Unknown⟧`)
-   - Evidence `δ` outside `[0.0, 1.0]` or `φ` outside `[0, 100]`
-3. Fix the syntax in the TC file and re-run `product graph check`.
-
-### Suppress the W004 warning for a test criterion
-
-The `W004` warning fires when an `invariant` or `chaos` TC has no formal blocks. To resolve it, add at least one formal block (types, invariants, scenario, exit criteria, or evidence) to the TC body.
+For parallel CI, prefer separate checkouts to avoid lock contention entirely.
 
 ## Reference
 
-### Block types
+### Atomic write sequence
 
-| Block | Delimiter | Content format |
-|---|---|---|
-| Types | `⟦Σ:Types⟧{ ... }` | One `Name≜Expression` per line |
-| Invariants | `⟦Γ:Invariants⟧{ ... }` | One invariant per line/paragraph |
-| Scenario | `⟦Λ:Scenario⟧{ ... }` | `given≜`, `when≜`, `then≜` fields |
-| Exit Criteria | `⟦Λ:ExitCriteria⟧{ ... }` | One criterion per line |
-| Evidence | `⟦Ε⟧⟨δ≜N;φ≜N;τ≜S⟩` | Inline (no braces) |
+Every file write follows this sequence:
 
-### Evidence field ranges
+| Step | Action | Failure behavior |
+|------|--------|------------------|
+| 1 | Compute full file content in memory | Error surfaced before any disk I/O |
+| 2 | Write to `.<filename>.product-tmp.<pid>` in the same directory | Temp file deleted, error E009 |
+| 3 | `fsync` the temporary file | Temp file deleted, error E009 |
+| 4 | Rename temp file to target path (atomic on POSIX) | Temp file deleted, error E009 |
 
-| Field | Type | Range | Description |
-|---|---|---|---|
-| `δ` (delta) | `f64` | `[0.0, 1.0]` | Confidence level |
-| `φ` (phi) | `u8` | `[0, 100]` | Coverage percentage |
-| `τ` (tau) | symbol | `◊⁺`, `◊⁻`, `◊?` | Stability (stable, unstable, unknown) |
+The temporary file naming pattern is `.<original-filename>.product-tmp.<pid>`, where `<pid>` is the current process ID.
 
-### Diagnostics
+### Advisory lock
 
-| Code | Tier | Condition |
-|---|---|---|
-| `E001` | Error | Unclosed delimiter, unclosed brace, unrecognised block type, evidence field out of range |
-| `W004` | Warning | `invariant` or `chaos` TC has no formal blocks; or a formal block body is empty |
-| `W006` | Warning | Evidence `δ` is below `0.7` |
+| Property | Value |
+|----------|-------|
+| Lock file | `.product.lock` (same directory as `product.toml`) |
+| Timeout | 3 seconds |
+| Error on timeout | E010 |
+| Stale detection | Checks if holding PID is still running |
+| Implementation | `fd-lock` crate |
 
-### Context bundle integration
+**Commands that acquire the lock** (write commands):
 
-When `product context FT-XXX` assembles a bundle, it:
+- `product feature status`
+- `product feature link`
+- `product adr new`
+- `product checklist generate`
+- `product graph rebuild`
+- `product migrate schema`
+- `product verify`
 
-1. Collects all evidence blocks from linked test criteria.
-2. Computes aggregate `δ` (mean of all evidence deltas).
-3. Computes `φ` as the percentage of linked TCs that have at least one formal block.
-4. Includes these in the bundle header as `⟦Ε⟧⟨δ≜...;φ≜...;τ≜...⟩`.
+**Commands that do not acquire the lock** (read-only commands):
 
-Aggregate stability uses worst-case: if any evidence block is `◊⁻`, the aggregate is `◊⁻`; otherwise if any is `◊?`, the aggregate is `◊?`; otherwise `◊⁺`.
+- `product feature list`
+- `product context`
+- `product graph check`
+- `product gap check`
+- `product drift check`
 
-### Graph stats
+### Lock file contents
 
-`product graph stats` reports formal coverage as a percentage:
+The `.product.lock` file stores:
 
-```
-Formal coverage (invariant/chaos): 75%
-```
+- PID of the holding process
+- Start timestamp of the holding process
 
-This is computed as: (number of `invariant`/`chaos` TCs with at least one formal block) / (total `invariant`/`chaos` TCs) x 100.
+This information is used in the E010 error message and for stale lock detection.
 
-### Fitness function
+### Temporary file cleanup
 
-The `formal_coverage` metric in `product metrics` uses the same ratio. It contributes to overall architectural fitness scoring.
+On startup, Product scans repository directories for files matching `*.product-tmp.*` and deletes them. This runs on every invocation, including read-only commands.
+
+### Error codes
+
+| Code | Meaning |
+|------|---------|
+| E009 | Atomic write failed (temp file write, fsync, or rename error) |
+| E010 | Repository locked by another Product process |
+
+### Implementation module
+
+The atomic write and locking logic lives in `src/fileops.rs`, exposed as `fileops::atomic_write()`.
 
 ## Explanation
 
-### Why formal blocks?
+### Why atomic writes matter
 
-Test criteria written in natural language are ambiguous. Two readers may interpret "centrality is always in range" differently. Formal blocks add a precise, parseable mathematical layer that:
+Product manages long-lived project artifacts: feature specs, ADRs, test criteria, and checklists. A torn write (partial file content due to an interrupted process) can silently corrupt YAML front-matter, which breaks the knowledge graph on the next invocation. Atomic rename ensures that a file is either fully written or completely unchanged -- there is no intermediate state visible to other processes or subsequent invocations.
 
-- Provides unambiguous specification for LLM-driven implementation (the implementing agent can read `∀n:Node: 0.0 ≤ betweenness(n) ≤ 1.0` and generate a property test)
-- Enables automated validation of the specification itself (range checks, structural correctness)
-- Feeds aggregate confidence metrics into context bundles, so downstream agents know how well-specified a feature is
+This is the same pattern used by git, package managers, and text editors. ADR-015 adopted it as the standard write mechanism for all Product file operations.
 
-### AISP notation
+### Why advisory locking instead of alternatives
 
-The block syntax uses AISP (AI Specification Protocol) influenced notation with Unicode mathematical symbols. The delimiters `⟦` and `⟧` mark block boundaries, and `≜` serves as the definition operator. This notation was chosen to be visually distinct from Markdown and unambiguous to parse, while remaining human-readable. See ADR-016 for the design rationale behind diagnostic reporting for formal blocks.
+The advisory lock serialises concurrent Product invocations but does not prevent other tools (editors, git, scripts) from modifying files. This is intentional -- Product should coexist with the developer's normal workflow, not block it. The lock only prevents two Product processes from racing on the same files.
 
-### Evidence aggregation
+Alternatives considered and rejected (per ADR-015):
 
-Evidence blocks are not just metadata — they flow into the context bundle that `product context` and `product implement` assemble. When an implementing agent receives a bundle with `δ≜0.42`, it knows the specification is weak and should proceed cautiously. High `δ` values signal well-specified features where the agent can implement with confidence. The worst-case stability rule ensures that a single unstable specification drags the aggregate down, preventing false confidence.
+- **No locking (last-write-wins):** Silent data loss when two processes write the same file.
+- **Per-file exclusive locks:** Acquiring N locks for N files introduces partial failure and rollback complexity.
+- **SQLite as write store:** Would make artifact files non-human-editable binary blobs, contradicting the file-based design (ADR-002).
+- **Process mutex via socket:** Requires a listening socket and introduces cleanup problems on process death.
 
-### Relationship to graph health
+### The 3-second timeout trade-off
 
-`product graph check` validates formal blocks as part of its sweep. This means specification errors surface alongside broken links, dependency cycles, and other graph problems — there is no separate validation step. The W004 warning nudges authors toward adding formal blocks to `invariant` and `chaos` TCs, where precision matters most. The W006 warning flags low-confidence evidence, prompting authors to either improve the specification or acknowledge the uncertainty.
+The lock timeout is deliberately short. A developer who accidentally runs two write commands simultaneously gets an immediate error rather than a silent hang. Three seconds is long enough to tolerate brief system load spikes but short enough that waiting feels instantaneous in the failure case. If the holding process is legitimately long-running (e.g., a large `checklist generate`), the second process fails fast with an actionable error message.
 
-### File write safety (ADR-015)
+### Stale lock recovery
 
-All file mutations performed by Product — including updates to TC front-matter after `product verify` — use atomic writes (temp file + fsync + rename) and advisory locking on `.product.lock`. This ensures that formal block content is never corrupted by interrupted writes or concurrent Product invocations. Stale lock files from crashed processes are automatically detected and cleared. Leftover `.product-tmp.*` files are cleaned on startup.
+If a Product process is killed (SIGKILL, power loss, OOM), the `.product.lock` file persists on disk. On the next write command, Product checks whether the PID recorded in the lock file is still running. If not, it assumes the lock is stale, clears it, and proceeds. This means developers rarely need to manually delete `.product.lock` -- the common crash scenario is handled automatically.
