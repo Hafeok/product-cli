@@ -2,7 +2,9 @@
 id: TC-249
 title: product feature next
 type: scenario
-status: unimplemented
+status: passing
+runner: cargo-test
+runner-args: "tc_249_product_feature_next"
 validates:
   features: 
   - FT-006
@@ -12,5 +14,5 @@ validates:
   adrs:
   - ADR-012
 phase: 1
+last-run: 2026-04-14T13:57:28.405167723+00:00
 ---
-

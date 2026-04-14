@@ -27,6 +27,22 @@ pub struct FeatureFrontMatter {
     /// Acknowledged domain gaps with reasoning (ADR-025)
     #[serde(rename = "domains-acknowledged", default)]
     pub domains_acknowledged: std::collections::HashMap<String, String>,
+    /// Bundle measurement metrics (written by `product context --measure`)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bundle: Option<BundleMetrics>,
+}
+
+/// Metrics captured by `product context --measure`
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleMetrics {
+    #[serde(rename = "depth-1-adrs")]
+    pub depth_1_adrs: usize,
+    pub tcs: usize,
+    pub domains: Vec<String>,
+    #[serde(rename = "tokens-approx")]
+    pub tokens_approx: usize,
+    #[serde(rename = "measured-at")]
+    pub measured_at: String,
 }
 
 fn default_phase() -> u32 {

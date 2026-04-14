@@ -393,6 +393,7 @@ mod tests {
             tests: vec![],
             domains: vec![],
             domains_acknowledged: Default::default(),
+            bundle: None,
         };
         let yaml = serde_yaml::to_string(&feature).unwrap();
         for line in yaml.lines() {

@@ -15,6 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_051_impact_transitive"
+last-run: 2026-04-14T13:57:28.405167723+00:00
 ---
 
 FT-007 depends-on FT-001; FT-001 linked to ADR-002. Assert `product impact ADR-002` includes FT-007 in transitive dependents.

@@ -62,6 +62,9 @@ enum Commands {
         /// Order ADRs by ID instead of betweenness centrality
         #[arg(long, value_name = "ORDER")]
         order: Option<String>,
+        /// Measure bundle dimensions and write to feature front-matter + metrics.jsonl
+        #[arg(long)]
+        measure: bool,
     },
     /// Graph operations
     Graph {
@@ -238,7 +241,11 @@ enum FeatureCommands {
     /// Show the full dependency tree for a feature
     Deps { id: String },
     /// Show the next feature to implement (topological order)
-    Next,
+    Next {
+        /// Skip phase gate checks (allow phase-2+ features even if prior gates fail)
+        #[arg(long)]
+        ignore_phase_gate: bool,
+    },
     /// Create a new feature file
     New {
         /// Feature title
@@ -574,7 +581,8 @@ fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
             phase,
             adrs_only,
             order,
-        } => handle_context(&id, depth, phase, adrs_only, order),
+            measure,
+        } => handle_context(&id, depth, phase, adrs_only, order, measure),
         Commands::Graph { command } => handle_graph(command, fmt),
         Commands::Impact { id } => handle_impact(&id, fmt),
         Commands::Status {
@@ -744,14 +752,40 @@ fn handle_feature(cmd: FeatureCommands, fmt: &str) -> BoxResult {
             println!("Dependency tree for {}:", id);
             print_dep_tree(&graph, &id, 0, &mut std::collections::HashSet::new());
         }
-        FeatureCommands::Next => {
+        FeatureCommands::Next { ignore_phase_gate } => {
             let (_, _, graph) = load_graph()?;
-            match graph.feature_next()? {
-                Some(id) => {
+            match graph.feature_next_with_gate(ignore_phase_gate)? {
+                graph::FeatureNextResult::Ready(id) => {
+                    if ignore_phase_gate {
+                        eprintln!("warning: --ignore-phase-gate: phase gate checks skipped");
+                    }
                     let f = &graph.features[&id];
                     println!("{} — {} (phase {}, {})", f.front.id, f.front.title, f.front.phase, f.front.status);
                 }
-                None => println!("All features are complete or have incomplete dependencies."),
+                graph::FeatureNextResult::Blocked { candidate, blocked_phase, exit_criteria } => {
+                    let f = &graph.features[&candidate];
+                    println!(
+                        "  Next candidate: {} — {}  [phase {}, {}]",
+                        f.front.id, f.front.title, f.front.phase, f.front.status
+                    );
+                    let failing: Vec<&graph::PhaseGateTC> = exit_criteria.iter().filter(|tc| !tc.passing).collect();
+                    eprintln!(
+                        "  ✗ Phase {} locked — Phase {} exit criteria not all passing:",
+                        f.front.phase, blocked_phase
+                    );
+                    eprintln!();
+                    for tc in &exit_criteria {
+                        let mark = if tc.passing { "passing  ✓" } else { "failing  ✗" };
+                        eprintln!("    {}  {}  [{}]", tc.id, tc.title, mark);
+                    }
+                    eprintln!();
+                    let failing_ids: Vec<&str> = failing.iter().map(|tc| tc.id.as_str()).collect();
+                    eprintln!("  Fix {} to unlock Phase {}.", failing_ids.join(" and "), f.front.phase);
+                    eprintln!("  To skip the gate:  product feature next --ignore-phase-gate");
+                }
+                graph::FeatureNextResult::AllDone => {
+                    println!("All features are complete or have incomplete dependencies.");
+                }
             }
         }
         FeatureCommands::New { title, phase } => {
@@ -774,6 +808,7 @@ fn handle_feature(cmd: FeatureCommands, fmt: &str) -> BoxResult {
                 tests: vec![],
                 domains: vec![],
                 domains_acknowledged: std::collections::HashMap::new(),
+                bundle: None,
             };
             let body = format!("## Description\n\n[Describe {} here.]\n", title);
             let content = parser::render_feature(&front, &body);
@@ -1288,6 +1323,7 @@ fn handle_context(
     phase: Option<u32>,
     adrs_only: bool,
     order: Option<String>,
+    measure: bool,
 ) -> BoxResult {
     let (_, _, graph) = load_graph()?;
     let order_by_centrality = order.as_deref() != Some("id");
@@ -1297,7 +1333,58 @@ fn handle_context(
         print!("{}", bundle);
     } else if graph.features.contains_key(id) {
         match context::bundle_feature(&graph, id, depth, order_by_centrality) {
-            Some(bundle) => print!("{}", bundle),
+            Some(bundle) => {
+                if measure {
+                    // Compute bundle metrics
+                    let feature = graph.features.get(id).ok_or_else(|| {
+                        ProductError::NotFound(format!("feature {}", id))
+                    })?;
+
+                    // Count depth-1 ADRs (only direct ADRs)
+                    let depth_1_adrs = feature.front.adrs.len();
+                    let tcs = feature.front.tests.len();
+                    let domains = feature.front.domains.clone();
+                    // Approximate token count: ~4 chars per token is a reasonable estimate
+                    let tokens_approx = bundle.len() / 4;
+                    let measured_at = chrono::Utc::now().to_rfc3339();
+
+                    let bundle_metrics = types::BundleMetrics {
+                        depth_1_adrs,
+                        tcs,
+                        domains: domains.clone(),
+                        tokens_approx,
+                        measured_at: measured_at.clone(),
+                    };
+
+                    // Update feature front-matter with bundle metrics
+                    let mut front = feature.front.clone();
+                    front.bundle = Some(bundle_metrics.clone());
+                    let content = parser::render_feature(&front, &feature.body);
+                    fileops::write_file_atomic(&feature.path, &content)?;
+
+                    // Append to metrics.jsonl
+                    let (config, root, _) = load_graph()?;
+                    let metrics_path = root.join("metrics.jsonl");
+                    let entry = serde_json::json!({
+                        "feature": id,
+                        "depth-1-adrs": bundle_metrics.depth_1_adrs,
+                        "tcs": bundle_metrics.tcs,
+                        "domains": bundle_metrics.domains,
+                        "tokens-approx": bundle_metrics.tokens_approx,
+                        "measured-at": bundle_metrics.measured_at,
+                    });
+                    let mut line = serde_json::to_string(&entry).unwrap_or_default();
+                    line.push('\n');
+                    let mut file = std::fs::OpenOptions::new()
+                        .create(true)
+                        .append(true)
+                        .open(&metrics_path)?;
+                    std::io::Write::write_all(&mut file, line.as_bytes())?;
+
+                    let _ = config; // suppress unused warning
+                }
+                print!("{}", bundle);
+            }
             None => eprintln!("Feature {} not found", id),
         }
     } else if graph.adrs.contains_key(id) {
@@ -1715,6 +1802,8 @@ fn handle_status(phase: Option<u32>, untested: bool, failing: bool, fmt: &str) -
                 .filter(|f| f.front.status == types::FeatureStatus::Complete)
                 .count();
             let total = phase_features.len();
+            let gate = graph.phase_gate_satisfied(*p);
+            let gate_status = if gate.is_open() { "OPEN" } else { "LOCKED" };
             let features_json: Vec<serde_json::Value> = phase_features
                 .iter()
                 .map(|f| {
@@ -1745,6 +1834,7 @@ fn handle_status(phase: Option<u32>, untested: bool, failing: bool, fmt: &str) -
                 "name": name,
                 "complete": complete,
                 "total": total,
+                "gate": gate_status,
                 "features": features_json,
             }));
         }
@@ -1784,7 +1874,34 @@ fn handle_status(phase: Option<u32>, untested: bool, failing: bool, fmt: &str) -
                 .count();
             let total = phase_features.len();
 
-            println!("## {} — {} ({}/{} complete)", p, name, complete, total);
+            // Phase gate status
+            let gate = graph.phase_gate_satisfied(*p);
+            let gate_label = match &gate {
+                graph::PhaseGateStatus::Open { .. } => "[OPEN]".to_string(),
+                graph::PhaseGateStatus::Locked { failing, .. } => {
+                    format!("[LOCKED — exit criteria not passing: {}]", failing.join(", "))
+                }
+            };
+
+            println!("Phase {} — {} ({}/{} complete)  {}", p, name, complete, total, gate_label);
+
+            // If --phase N is set, show exit-criteria detail
+            if phase.is_some() {
+                let exit_criteria = match &gate {
+                    graph::PhaseGateStatus::Open { exit_criteria } => exit_criteria,
+                    graph::PhaseGateStatus::Locked { exit_criteria, .. } => exit_criteria,
+                };
+                if !exit_criteria.is_empty() {
+                    println!();
+                    println!("  Exit criteria:");
+                    for tc in exit_criteria {
+                        let mark = if tc.passing { "passing  ✓" } else { "failing  ✗" };
+                        println!("    {}  {}  [{}]", tc.id, tc.title, mark);
+                    }
+                    println!();
+                }
+            }
+
             for f in &phase_features {
                 let test_count = f.front.tests.len();
                 let passing = f

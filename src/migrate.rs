@@ -345,6 +345,7 @@ pub fn execute_plan(
             tests: vec![],
             domains: vec![],
             domains_acknowledged: std::collections::HashMap::new(),
+            bundle: None,
         };
         let content = crate::parser::render_feature(&front, &f.body);
         crate::fileops::write_file_atomic(&path, &content)?;

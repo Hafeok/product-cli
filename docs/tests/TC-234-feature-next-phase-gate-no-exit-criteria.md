@@ -2,7 +2,9 @@
 id: TC-234
 title: feature_next_phase_gate_no_exit_criteria
 type: exit-criteria
-status: unimplemented
+status: passing
+runner: cargo-test
+runner-args: "tc_234_feature_next_phase_gate_no_exit_criteria"
 validates:
   features: 
   - FT-006
@@ -12,6 +14,7 @@ validates:
   adrs:
   - ADR-012
 phase: 1
+last-run: 2026-04-14T13:57:28.405167723+00:00
 ---
 
 phase 1 has no exit-criteria TCs. Assert phase gate is treated as satisfied and phase-2 features are returned normally.

@@ -2,7 +2,9 @@
 id: TC-238
 title: status_phase_detail
 type: scenario
-status: unimplemented
+status: passing
+runner: cargo-test
+runner-args: "tc_238_status_phase_detail"
 validates:
   features: 
   - FT-006
@@ -12,6 +14,7 @@ validates:
   adrs:
   - ADR-012
 phase: 1
+last-run: 2026-04-14T13:57:28.405167723+00:00
 ---
 
 run `product status --phase 1`. Assert output lists all exit-criteria TCs for phase 1 with their individual pass/fail status.

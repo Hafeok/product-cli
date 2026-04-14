@@ -507,6 +507,7 @@ mod tests {
                 tests: vec![],
                 domains: domains.into_iter().map(String::from).collect(),
                 domains_acknowledged: HashMap::new(),
+                bundle: None,
             },
             body: String::new(),
             path: PathBuf::from(format!("{}.md", id)),

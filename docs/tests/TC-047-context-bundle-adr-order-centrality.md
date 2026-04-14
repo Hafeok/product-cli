@@ -15,6 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_047_context_bundle_adr_order_centrality"
+last-run: 2026-04-14T13:57:28.405167723+00:00
 ---
 
 feature linked to ADR-001 (high centrality) and ADR-007 (low centrality). Assert ADR-001 appears before ADR-007 in the default bundle output.

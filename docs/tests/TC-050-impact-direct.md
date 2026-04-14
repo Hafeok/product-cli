@@ -15,6 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_050_impact_direct"
+last-run: 2026-04-14T13:57:28.405167723+00:00
 ---
 
 ADR-002 linked to FT-001 and FT-004. Assert `product impact ADR-002` reports both features in direct dependents.

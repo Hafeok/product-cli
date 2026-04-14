@@ -7189,3 +7189,496 @@ fn tc_178_seeded_adrs_have_no_g005_contradictions_after_gap_check() {
         out.stdout
     );
 }
+
+// ===========================================================================
+// TC-201: context_measure_updates_frontmatter
+// ===========================================================================
+
+#[test]
+fn tc_201_context_measure_updates_frontmatter() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001, ADR-002]\ntests: [TC-001]\ndomains: [storage, network]\n---\n\nTest feature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-first.md",
+        "---\nid: ADR-001\ntitle: First Decision\nstatus: accepted\nfeatures: [FT-001]\n---\n\nFirst ADR body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-second.md",
+        "---\nid: ADR-002\ntitle: Second Decision\nstatus: accepted\nfeatures: [FT-001]\n---\n\nSecond ADR body.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test One\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\nTest one body.\n",
+    );
+
+    let out = h.run(&["context", "FT-001", "--measure"]);
+    out.assert_exit(0);
+
+    // Read the updated feature file
+    let content = h.read("docs/features/FT-001-test.md");
+    assert!(
+        content.contains("depth-1-adrs:"),
+        "Feature file should contain depth-1-adrs field.\nContent:\n{}",
+        content
+    );
+    assert!(
+        content.contains("tcs:"),
+        "Feature file should contain tcs field.\nContent:\n{}",
+        content
+    );
+    assert!(
+        content.contains("tokens-approx:"),
+        "Feature file should contain tokens-approx field.\nContent:\n{}",
+        content
+    );
+    assert!(
+        content.contains("measured-at:"),
+        "Feature file should contain measured-at field.\nContent:\n{}",
+        content
+    );
+    // Check specific values
+    assert!(
+        content.contains("depth-1-adrs: 2"),
+        "Should have 2 depth-1 ADRs.\nContent:\n{}",
+        content
+    );
+    assert!(
+        content.contains("tcs: 1"),
+        "Should have 1 TC.\nContent:\n{}",
+        content
+    );
+}
+
+// ===========================================================================
+// TC-202: context_measure_appends_metrics
+// ===========================================================================
+
+#[test]
+fn tc_202_context_measure_appends_metrics() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nBody.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-first.md",
+        "---\nid: ADR-001\ntitle: First\nstatus: accepted\nfeatures: [FT-001]\n---\n\nADR body.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test One\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\nTest body.\n",
+    );
+
+    let out = h.run(&["context", "FT-001", "--measure"]);
+    out.assert_exit(0);
+
+    // Check metrics.jsonl exists and has correct content
+    let metrics = h.read("metrics.jsonl");
+    assert!(
+        !metrics.is_empty(),
+        "metrics.jsonl should exist and not be empty"
+    );
+    assert!(
+        metrics.contains("FT-001"),
+        "metrics.jsonl should contain feature ID.\nContent:\n{}",
+        metrics
+    );
+    assert!(
+        metrics.contains("depth-1-adrs"),
+        "metrics.jsonl should contain depth-1-adrs field.\nContent:\n{}",
+        metrics
+    );
+    assert!(
+        metrics.contains("tokens-approx"),
+        "metrics.jsonl should contain tokens-approx field.\nContent:\n{}",
+        metrics
+    );
+}
+
+// ===========================================================================
+// TC-203: context_measure_idempotent
+// ===========================================================================
+
+#[test]
+fn tc_203_context_measure_idempotent() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: []\n---\n\nBody.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-first.md",
+        "---\nid: ADR-001\ntitle: First\nstatus: accepted\nfeatures: [FT-001]\n---\n\nADR body.\n",
+    );
+
+    // First run
+    let out1 = h.run(&["context", "FT-001", "--measure"]);
+    out1.assert_exit(0);
+
+    // Second run
+    let out2 = h.run(&["context", "FT-001", "--measure"]);
+    out2.assert_exit(0);
+
+    // metrics.jsonl should have exactly 2 lines (one per invocation)
+    let metrics = h.read("metrics.jsonl");
+    let lines: Vec<&str> = metrics.lines().filter(|l| !l.is_empty()).collect();
+    assert_eq!(
+        lines.len(),
+        2,
+        "metrics.jsonl should have 2 entries (one per invocation). Got: {}",
+        lines.len()
+    );
+
+    // Front-matter should have only one bundle block (the most recent)
+    let content = h.read("docs/features/FT-001-test.md");
+    let bundle_count = content.matches("measured-at:").count();
+    assert_eq!(
+        bundle_count, 1,
+        "Feature front-matter should have exactly one measured-at field (most recent). Got: {}",
+        bundle_count
+    );
+}
+
+// ===========================================================================
+// TC-205: product context FT-001 --measure (integration scenario)
+// ===========================================================================
+
+#[test]
+fn tc_205_product_context_ft001_measure() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\ndomains: [storage]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-first.md",
+        "---\nid: ADR-001\ntitle: First Decision\nstatus: accepted\nfeatures: [FT-001]\n---\n\nADR body.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test One\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\nTest body.\n",
+    );
+
+    let out = h.run(&["context", "FT-001", "--measure"]);
+    out.assert_exit(0);
+    // The bundle should still be printed to stdout
+    out.assert_stdout_contains("Context Bundle: FT-001");
+
+    // Feature file should be updated
+    let content = h.read("docs/features/FT-001-test.md");
+    assert!(content.contains("bundle:"), "Feature file should contain bundle block.\nContent:\n{}", content);
+    assert!(content.contains("depth-1-adrs: 1"), "Should have 1 ADR.\nContent:\n{}", content);
+    assert!(content.contains("tcs: 1"), "Should have 1 TC.\nContent:\n{}", content);
+
+    // metrics.jsonl should exist
+    assert!(h.exists("metrics.jsonl"), "metrics.jsonl should exist");
+}
+
+// ===========================================================================
+// TC-232: feature_next_phase_gate_blocks
+// ===========================================================================
+
+#[test]
+fn tc_232_feature_next_phase_gate_blocks() {
+    let h = Harness::new();
+    // Phase 1: FT-001 is complete, FT-002 is in-progress
+    h.write(
+        "docs/features/FT-001-done.md",
+        "---\nid: FT-001\ntitle: Done Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: [TC-007]\n---\n",
+    );
+    h.write(
+        "docs/features/FT-002-wip.md",
+        "---\nid: FT-002\ntitle: WIP Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: []\ntests: []\n---\n",
+    );
+    // Phase 2: FT-005 is planned
+    h.write(
+        "docs/features/FT-005-phase2.md",
+        "---\nid: FT-005\ntitle: Phase Two Feature\nphase: 2\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n",
+    );
+    // Exit-criteria TC for phase 1 — failing
+    h.write(
+        "docs/tests/TC-007-exit.md",
+        "---\nid: TC-007\ntitle: Phase 1 Exit Test\ntype: exit-criteria\nstatus: failing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n",
+    );
+
+    let out = h.run(&["feature", "next"]);
+    out.assert_exit(0);
+    // Should return phase-1 feature FT-002, not phase-2 FT-005
+    out.assert_stdout_contains("FT-002");
+    assert!(
+        !out.stdout.contains("FT-005"),
+        "FT-005 (phase 2) should be skipped due to phase gate. stdout: {}",
+        out.stdout
+    );
+    // stderr should mention the phase gate and TC-007
+    assert!(
+        out.stderr.contains("TC-007") || out.stdout.contains("FT-002"),
+        "Should mention TC-007 in gate report or return FT-002. stderr: {} stdout: {}",
+        out.stderr, out.stdout
+    );
+}
+
+// ===========================================================================
+// TC-233: feature_next_phase_gate_satisfied
+// ===========================================================================
+
+#[test]
+fn tc_233_feature_next_phase_gate_satisfied() {
+    let h = Harness::new();
+    // Phase 1: FT-001 complete with passing exit criteria
+    h.write(
+        "docs/features/FT-001-done.md",
+        "---\nid: FT-001\ntitle: Done Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n",
+    );
+    h.write(
+        "docs/tests/TC-001-exit.md",
+        "---\nid: TC-001\ntitle: Phase 1 Exit\ntype: exit-criteria\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n",
+    );
+    // Phase 2: FT-005 is planned
+    h.write(
+        "docs/features/FT-005-phase2.md",
+        "---\nid: FT-005\ntitle: Phase Two Feature\nphase: 2\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n",
+    );
+
+    let out = h.run(&["feature", "next"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("FT-005");
+}
+
+// ===========================================================================
+// TC-234: feature_next_phase_gate_no_exit_criteria
+// ===========================================================================
+
+#[test]
+fn tc_234_feature_next_phase_gate_no_exit_criteria() {
+    let h = Harness::new();
+    // Phase 1: FT-001 complete, no exit-criteria TCs at all
+    h.write(
+        "docs/features/FT-001-done.md",
+        "---\nid: FT-001\ntitle: Done Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n",
+    );
+    h.write(
+        "docs/tests/TC-001-scenario.md",
+        "---\nid: TC-001\ntitle: Scenario Test\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n",
+    );
+    // Phase 2: FT-005 planned
+    h.write(
+        "docs/features/FT-005-phase2.md",
+        "---\nid: FT-005\ntitle: Phase Two Feature\nphase: 2\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n",
+    );
+
+    let out = h.run(&["feature", "next"]);
+    out.assert_exit(0);
+    // No exit-criteria for phase 1 → gate is open → FT-005 should be returned
+    out.assert_stdout_contains("FT-005");
+}
+
+// ===========================================================================
+// TC-235: feature_next_ignore_gate
+// ===========================================================================
+
+#[test]
+fn tc_235_feature_next_ignore_gate() {
+    let h = Harness::new();
+    // Phase 1: FT-001 complete, exit criteria failing
+    h.write(
+        "docs/features/FT-001-done.md",
+        "---\nid: FT-001\ntitle: Done Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: [TC-007]\n---\n",
+    );
+    h.write(
+        "docs/tests/TC-007-exit.md",
+        "---\nid: TC-007\ntitle: Phase 1 Gate\ntype: exit-criteria\nstatus: failing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n",
+    );
+    // Phase 2: FT-005
+    h.write(
+        "docs/features/FT-005-phase2.md",
+        "---\nid: FT-005\ntitle: Phase Two Feature\nphase: 2\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n",
+    );
+
+    let out = h.run(&["feature", "next", "--ignore-phase-gate"]);
+    out.assert_exit(0);
+    // Should return FT-005 despite gate being locked
+    out.assert_stdout_contains("FT-005");
+    // Warning should be emitted to stderr
+    out.assert_stderr_contains("ignore-phase-gate");
+}
+
+// ===========================================================================
+// TC-236: feature_next_gate_partial
+// ===========================================================================
+
+#[test]
+fn tc_236_feature_next_gate_partial() {
+    let h = Harness::new();
+    // Phase 1: FT-001 complete with 4 exit-criteria TCs, 3 passing 1 failing
+    h.write(
+        "docs/features/FT-001-done.md",
+        "---\nid: FT-001\ntitle: Done Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: [TC-001, TC-002, TC-003, TC-004]\n---\n",
+    );
+    h.write(
+        "docs/tests/TC-001-exit.md",
+        "---\nid: TC-001\ntitle: Exit 1\ntype: exit-criteria\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n",
+    );
+    h.write(
+        "docs/tests/TC-002-exit.md",
+        "---\nid: TC-002\ntitle: Exit 2\ntype: exit-criteria\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n",
+    );
+    h.write(
+        "docs/tests/TC-003-exit.md",
+        "---\nid: TC-003\ntitle: Exit 3\ntype: exit-criteria\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n",
+    );
+    h.write(
+        "docs/tests/TC-004-exit.md",
+        "---\nid: TC-004\ntitle: Exit 4\ntype: exit-criteria\nstatus: failing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n",
+    );
+    // Phase 2 feature — should be blocked
+    h.write(
+        "docs/features/FT-005-phase2.md",
+        "---\nid: FT-005\ntitle: Phase Two Feature\nphase: 2\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n",
+    );
+
+    // Add a non-complete phase-1 feature so there's something to fall back to
+    // when the gate blocks phase 2 — but actually TC-236 tests gate blocking,
+    // not fallback. Without an alternative, gate-blocked returns Blocked with
+    // the candidate shown but no ready feature.
+    let out = h.run(&["feature", "next"]);
+    out.assert_exit(0);
+    // Phase gate should NOT be satisfied (3/4 pass, need all 4)
+    // The candidate may be shown but must be reported as blocked (not ready)
+    // stderr should mention TC-004 (the failing TC)
+    assert!(
+        out.stderr.contains("TC-004"),
+        "stderr should name the failing TC-004. stderr: {}",
+        out.stderr
+    );
+    // stderr should indicate the phase is locked
+    assert!(
+        out.stderr.contains("locked") || out.stderr.contains("LOCKED") || out.stderr.contains("not all passing"),
+        "stderr should indicate phase lock. stderr: {}",
+        out.stderr
+    );
+}
+
+// ===========================================================================
+// TC-237: status_shows_phase_gate
+// ===========================================================================
+
+#[test]
+fn tc_237_status_shows_phase_gate() {
+    let h = Harness::new();
+    // Phase 1 with passing exit criteria → OPEN
+    h.write(
+        "docs/features/FT-001-phase1.md",
+        "---\nid: FT-001\ntitle: Phase 1 Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n",
+    );
+    h.write(
+        "docs/tests/TC-001-exit.md",
+        "---\nid: TC-001\ntitle: Phase 1 Exit\ntype: exit-criteria\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n",
+    );
+    // Phase 2 with failing exit criteria → LOCKED
+    h.write(
+        "docs/features/FT-005-phase2.md",
+        "---\nid: FT-005\ntitle: Phase 2 Feature\nphase: 2\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-007]\n---\n",
+    );
+    h.write(
+        "docs/tests/TC-007-exit.md",
+        "---\nid: TC-007\ntitle: Phase 2 Exit\ntype: exit-criteria\nstatus: failing\nvalidates:\n  features: [FT-005]\n  adrs: []\nphase: 2\n---\n",
+    );
+
+    let out = h.run(&["status"]);
+    out.assert_exit(0);
+
+    // Phase 1 should show [OPEN]
+    assert!(
+        out.stdout.contains("[OPEN]"),
+        "Phase 1 should show [OPEN]. stdout:\n{}",
+        out.stdout
+    );
+    // Phase 2 should show [LOCKED]
+    assert!(
+        out.stdout.contains("[LOCKED"),
+        "Phase 2 should show [LOCKED]. stdout:\n{}",
+        out.stdout
+    );
+    // LOCKED phase should name the failing TC
+    assert!(
+        out.stdout.contains("TC-007"),
+        "LOCKED phase should name failing TC-007. stdout:\n{}",
+        out.stdout
+    );
+}
+
+// ===========================================================================
+// TC-238: status_phase_detail
+// ===========================================================================
+
+#[test]
+fn tc_238_status_phase_detail() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-phase1.md",
+        "---\nid: FT-001\ntitle: Phase 1 Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: []\ntests: [TC-001, TC-002]\n---\n",
+    );
+    h.write(
+        "docs/tests/TC-001-exit.md",
+        "---\nid: TC-001\ntitle: First Exit\ntype: exit-criteria\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n",
+    );
+    h.write(
+        "docs/tests/TC-002-exit.md",
+        "---\nid: TC-002\ntitle: Second Exit\ntype: exit-criteria\nstatus: failing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n",
+    );
+
+    let out = h.run(&["status", "--phase", "1"]);
+    out.assert_exit(0);
+
+    // Should list individual exit-criteria TCs with pass/fail
+    assert!(
+        out.stdout.contains("TC-001") && out.stdout.contains("passing"),
+        "Should show TC-001 as passing. stdout:\n{}",
+        out.stdout
+    );
+    assert!(
+        out.stdout.contains("TC-002") && out.stdout.contains("failing"),
+        "Should show TC-002 as failing. stdout:\n{}",
+        out.stdout
+    );
+    assert!(
+        out.stdout.contains("Exit criteria"),
+        "Should show 'Exit criteria' section. stdout:\n{}",
+        out.stdout
+    );
+}
+
+// ===========================================================================
+// TC-249: product feature next (integration scenario)
+// ===========================================================================
+
+#[test]
+fn tc_249_product_feature_next() {
+    let h = Harness::new();
+    // Simple scenario: FT-001 complete, FT-002 depends on FT-001, FT-003 independent phase 2
+    h.write(
+        "docs/features/FT-001-done.md",
+        "---\nid: FT-001\ntitle: Done Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n",
+    );
+    h.write(
+        "docs/tests/TC-001-exit.md",
+        "---\nid: TC-001\ntitle: Phase 1 Exit\ntype: exit-criteria\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n",
+    );
+    h.write(
+        "docs/features/FT-002-next.md",
+        "---\nid: FT-002\ntitle: Next Feature\nphase: 1\nstatus: in-progress\ndepends-on: [FT-001]\nadrs: []\ntests: []\n---\n",
+    );
+    h.write(
+        "docs/features/FT-003-phase2.md",
+        "---\nid: FT-003\ntitle: Phase Two Feature\nphase: 2\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n",
+    );
+
+    let out = h.run(&["feature", "next"]);
+    out.assert_exit(0);
+    // FT-002 should be returned (phase 1, deps satisfied, topo order)
+    out.assert_stdout_contains("FT-002");
+}

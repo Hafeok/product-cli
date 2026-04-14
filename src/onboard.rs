@@ -926,6 +926,7 @@ fn render_feature_stub(feature: &ProposedFeatureStub) -> String {
         tests: Vec::new(),
         domains: Vec::new(),
         domains_acknowledged: std::collections::HashMap::new(),
+        bundle: None,
     };
 
     let body = format!(

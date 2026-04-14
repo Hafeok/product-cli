@@ -18,6 +18,7 @@ fn make_feature(id: &str, deps: Vec<String>) -> Feature {
             tests: vec![],
             domains: vec![],
             domains_acknowledged: std::collections::HashMap::new(),
+            bundle: None,
         },
         body: String::new(),
         path: PathBuf::from(format!("{}.md", id)),

@@ -2,7 +2,9 @@
 id: TC-232
 title: feature_next_phase_gate_blocks
 type: scenario
-status: unimplemented
+status: passing
+runner: cargo-test
+runner-args: "tc_232_feature_next_phase_gate_blocks"
 validates:
   features: 
   - FT-006
@@ -12,6 +14,7 @@ validates:
   adrs:
   - ADR-012
 phase: 1
+last-run: 2026-04-14T13:57:28.405167723+00:00
 ---
 
 Phase 1 has TC-007 (exit-criteria, failing). FT-005 is phase 2. Assert `product feature next` skips FT-005 and reports the phase gate with TC-007 named. Assert it returns a remaining phase-1 feature instead.

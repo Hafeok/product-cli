@@ -2,7 +2,9 @@
 id: TC-237
 title: status_shows_phase_gate
 type: scenario
-status: unimplemented
+status: passing
+runner: cargo-test
+runner-args: "tc_237_status_shows_phase_gate"
 validates:
   features: 
   - FT-006
@@ -12,6 +14,7 @@ validates:
   adrs:
   - ADR-012
 phase: 1
+last-run: 2026-04-14T13:57:28.405167723+00:00
 ---
 
 run `product status`. Assert each phase shows its gate state: `[OPEN]`, `[LOCKED]`. Assert LOCKED phases name the failing exit-criteria TCs.

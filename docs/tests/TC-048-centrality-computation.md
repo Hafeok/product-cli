@@ -15,6 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_048_centrality_computation"
+last-run: 2026-04-14T13:57:28.405167723+00:00
 ---
 
 load a graph with known topology. Assert betweenness centrality values match hand-computed expected values within ±0.001.

@@ -242,7 +242,71 @@ impl KnowledgeGraph {
     /// Next feature to implement: first in topo order that is not complete
     /// and whose dependencies are all complete
     pub fn feature_next(&self) -> Result<Option<String>> {
+        match self.feature_next_with_gate(false)? {
+            FeatureNextResult::Ready(id) => Ok(Some(id)),
+            FeatureNextResult::Blocked { .. } => Ok(None),
+            FeatureNextResult::AllDone => Ok(None),
+        }
+    }
+
+    /// Check whether a phase gate is satisfied: all exit-criteria TCs for features
+    /// in the given phase must be passing. If no exit-criteria TCs exist, the gate
+    /// is considered satisfied (backward compat).
+    pub fn phase_gate_satisfied(&self, phase: u32) -> PhaseGateStatus {
+        let exit_criteria: Vec<&TestCriterion> = self.tests.values()
+            .filter(|t| {
+                t.front.test_type == TestType::ExitCriteria
+                    && t.front.validates.features.iter().any(|fid| {
+                        self.features.get(fid).map(|f| f.front.phase == phase).unwrap_or(false)
+                    })
+            })
+            .collect();
+
+        if exit_criteria.is_empty() {
+            return PhaseGateStatus::Open { exit_criteria: Vec::new() };
+        }
+
+        let mut failing_tcs = Vec::new();
+        let mut all_tcs = Vec::new();
+        for tc in &exit_criteria {
+            let passing = tc.front.status == TestStatus::Passing;
+            all_tcs.push(PhaseGateTC {
+                id: tc.front.id.clone(),
+                title: tc.front.title.clone(),
+                passing,
+            });
+            if !passing {
+                failing_tcs.push(tc.front.id.clone());
+            }
+        }
+
+        if failing_tcs.is_empty() {
+            PhaseGateStatus::Open { exit_criteria: all_tcs }
+        } else {
+            PhaseGateStatus::Locked { exit_criteria: all_tcs, failing: failing_tcs }
+        }
+    }
+
+    /// Next feature to implement with phase gate awareness.
+    /// Returns detailed result including gate blocking info.
+    pub fn feature_next_with_gate(&self, ignore_phase_gate: bool) -> Result<FeatureNextResult> {
         let order = self.topological_sort()?;
+
+        // Collect all phases present in the graph
+        let mut phases: Vec<u32> = self.features.values()
+            .map(|f| f.front.phase)
+            .collect::<std::collections::BTreeSet<_>>()
+            .into_iter()
+            .collect();
+        phases.sort();
+
+        // Pre-compute phase gate status for all phases
+        let gate_status: HashMap<u32, PhaseGateStatus> = phases.iter()
+            .map(|&p| (p, self.phase_gate_satisfied(p)))
+            .collect();
+
+        let mut first_gate_blocked: Option<(String, u32, Vec<PhaseGateTC>)> = None;
+
         for id in &order {
             if let Some(f) = self.features.get(id) {
                 if f.front.status == FeatureStatus::Complete
@@ -257,12 +321,45 @@ impl KnowledgeGraph {
                         .map(|d| d.front.status == FeatureStatus::Complete)
                         .unwrap_or(true)
                 });
-                if deps_complete {
-                    return Ok(Some(id.clone()));
+                if !deps_complete {
+                    continue;
                 }
+
+                // Phase gate check: if feature is in phase > 1, all prior phases must be open
+                if !ignore_phase_gate && f.front.phase > 1 {
+                    let mut gate_blocked = false;
+                    for prior_phase in 1..f.front.phase {
+                        if let Some(PhaseGateStatus::Locked { exit_criteria, .. }) = gate_status.get(&prior_phase) {
+                            if first_gate_blocked.is_none() {
+                                first_gate_blocked = Some((
+                                    id.clone(),
+                                    prior_phase,
+                                    exit_criteria.clone(),
+                                ));
+                            }
+                            gate_blocked = true;
+                            break;
+                        }
+                    }
+                    if gate_blocked {
+                        continue;
+                    }
+                }
+
+                return Ok(FeatureNextResult::Ready(id.clone()));
             }
         }
-        Ok(None)
+
+        // If we found a gate-blocked candidate but no ready feature, report the block
+        if let Some((candidate, blocked_phase, exit_criteria)) = first_gate_blocked {
+            return Ok(FeatureNextResult::Blocked {
+                candidate,
+                blocked_phase,
+                exit_criteria,
+            });
+        }
+
+        Ok(FeatureNextResult::AllDone)
     }
 
     // -----------------------------------------------------------------------
@@ -852,6 +949,48 @@ impl KnowledgeGraph {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Phase gate types (ADR-012)
+// ---------------------------------------------------------------------------
+
+/// Status of a single exit-criteria TC for phase gate display
+#[derive(Debug, Clone)]
+pub struct PhaseGateTC {
+    pub id: String,
+    pub title: String,
+    pub passing: bool,
+}
+
+/// Phase gate status
+#[derive(Debug, Clone)]
+pub enum PhaseGateStatus {
+    /// Gate is open — all exit criteria pass (or none exist)
+    Open { exit_criteria: Vec<PhaseGateTC> },
+    /// Gate is locked — some exit criteria are not passing
+    Locked { exit_criteria: Vec<PhaseGateTC>, failing: Vec<String> },
+}
+
+impl PhaseGateStatus {
+    pub fn is_open(&self) -> bool {
+        matches!(self, PhaseGateStatus::Open { .. })
+    }
+}
+
+/// Result of `feature_next_with_gate`
+#[derive(Debug)]
+pub enum FeatureNextResult {
+    /// A feature is ready to implement
+    Ready(String),
+    /// No ready feature found because a phase gate blocks the best candidate
+    Blocked {
+        candidate: String,
+        blocked_phase: u32,
+        exit_criteria: Vec<PhaseGateTC>,
+    },
+    /// All features are complete or have unsatisfied dependencies
+    AllDone,
+}
+
 #[derive(Debug)]
 pub struct ImpactResult {
     pub seed: String,
@@ -977,6 +1116,7 @@ mod tests {
                 tests: tests.into_iter().map(String::from).collect(),
                 domains: vec![],
                 domains_acknowledged: std::collections::HashMap::new(),
+                bundle: None,
             },
             body: String::new(),
             path: PathBuf::from(format!("{}.md", id)),

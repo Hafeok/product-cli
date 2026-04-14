@@ -191,6 +191,7 @@ mod tests {
                 tests: vec![],
                 domains: vec![],
                 domains_acknowledged: std::collections::HashMap::new(),
+                bundle: None,
             },
             body: String::new(),
             path: PathBuf::from("test.md"),

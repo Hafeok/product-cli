@@ -402,6 +402,7 @@ impl ToolRegistry {
                     status: crate::types::FeatureStatus::Planned,
                     depends_on: vec![], adrs: vec![], tests: vec![],
                     domains: vec![], domains_acknowledged: std::collections::HashMap::new(),
+                    bundle: None,
                 };
                 let body = format!("## Description\n\n[Describe {} here.]\n", title);
                 let content = crate::parser::render_feature(&front, &body);

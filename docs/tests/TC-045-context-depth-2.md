@@ -15,6 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_045_context_depth_2"
+last-run: 2026-04-14T13:57:28.405167723+00:00
 ---
 
 FT-001 linked to ADR-002; ADR-002 also linked to FT-004; FT-004 linked to TC-009. Assert `product context FT-001 --depth 2` includes TC-009 and FT-004. Assert `product context FT-001 --depth 1` does not.

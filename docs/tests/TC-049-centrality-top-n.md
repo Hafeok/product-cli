@@ -15,6 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_049_centrality_top_n"
+last-run: 2026-04-14T13:57:28.405167723+00:00
 ---
 
 assert `product graph central --top 3` returns exactly 3 ADRs in descending centrality order.

@@ -98,7 +98,7 @@
 - [x] TC-058: error_internal_tier4 (scenario) — passing
 - [x] TC-059: error_stdout_clean (scenario) — passing
 
-### FT-011 — Context Bundle Format [~]
+### FT-011 — Context Bundle Format [x]
 
 - [x] ADR-006: Context Bundle as the Primary LLM Interface (accepted)
 - [x] ADR-008: Embedded Oxigraph for SPARQL Queries (accepted)
@@ -126,18 +126,18 @@
 - [x] TC-053: product graph central (scenario) — passing
 - [x] TC-054: product impact ADR-001 (scenario) — passing
 - [x] TC-158: FT-011 context bundle output correct (exit-criteria) — passing
-- [ ] TC-201: context_measure_updates_frontmatter (scenario) — unimplemented
-- [ ] TC-202: context_measure_appends_metrics (scenario) — unimplemented
-- [ ] TC-203: context_measure_idempotent (scenario) — unimplemented
-- [ ] TC-205: product context FT-001 --measure (scenario) — unimplemented
-- [ ] TC-232: feature_next_phase_gate_blocks (scenario) — unimplemented
-- [ ] TC-233: feature_next_phase_gate_satisfied (scenario) — unimplemented
-- [ ] TC-234: feature_next_phase_gate_no_exit_criteria (exit-criteria) — unimplemented
-- [ ] TC-235: feature_next_ignore_gate (scenario) — unimplemented
-- [ ] TC-236: feature_next_gate_partial (scenario) — unimplemented
-- [ ] TC-237: status_shows_phase_gate (scenario) — unimplemented
-- [ ] TC-238: status_phase_detail (scenario) — unimplemented
-- [ ] TC-249: product feature next (scenario) — unimplemented
+- [x] TC-201: context_measure_updates_frontmatter (scenario) — passing
+- [x] TC-202: context_measure_appends_metrics (scenario) — passing
+- [x] TC-203: context_measure_idempotent (scenario) — passing
+- [x] TC-205: product context FT-001 --measure (scenario) — passing
+- [x] TC-232: feature_next_phase_gate_blocks (scenario) — passing
+- [x] TC-233: feature_next_phase_gate_satisfied (scenario) — passing
+- [x] TC-234: feature_next_phase_gate_no_exit_criteria (exit-criteria) — passing
+- [x] TC-235: feature_next_ignore_gate (scenario) — passing
+- [x] TC-236: feature_next_gate_partial (scenario) — passing
+- [x] TC-237: status_shows_phase_gate (scenario) — passing
+- [x] TC-238: status_phase_detail (scenario) — passing
+- [x] TC-249: product feature next (scenario) — passing
 
 ### FT-012 — Feature: FT-001 — Cluster Foundation [x]
 
@@ -204,14 +204,14 @@
 - [x] TC-053: product graph central (scenario) — passing
 - [x] TC-054: product impact ADR-001 (scenario) — passing
 - [x] TC-157: FT-016 graph model queries pass (exit-criteria) — passing
-- [ ] TC-232: feature_next_phase_gate_blocks (scenario) — unimplemented
-- [ ] TC-233: feature_next_phase_gate_satisfied (scenario) — unimplemented
-- [ ] TC-234: feature_next_phase_gate_no_exit_criteria (exit-criteria) — unimplemented
-- [ ] TC-235: feature_next_ignore_gate (scenario) — unimplemented
-- [ ] TC-236: feature_next_gate_partial (scenario) — unimplemented
-- [ ] TC-237: status_shows_phase_gate (scenario) — unimplemented
-- [ ] TC-238: status_phase_detail (scenario) — unimplemented
-- [ ] TC-249: product feature next (scenario) — unimplemented
+- [x] TC-232: feature_next_phase_gate_blocks (scenario) — passing
+- [x] TC-233: feature_next_phase_gate_satisfied (scenario) — passing
+- [x] TC-234: feature_next_phase_gate_no_exit_criteria (exit-criteria) — passing
+- [x] TC-235: feature_next_ignore_gate (scenario) — passing
+- [x] TC-236: feature_next_gate_partial (scenario) — passing
+- [x] TC-237: status_shows_phase_gate (scenario) — passing
+- [x] TC-238: status_phase_detail (scenario) — passing
+- [x] TC-249: product feature next (scenario) — passing
 
 ### FT-017 — Generated Checklist [~]
 
@@ -336,14 +336,14 @@
 - [x] TC-053: product graph central (scenario) — passing
 - [x] TC-054: product impact ADR-001 (scenario) — passing
 - [x] TC-157: FT-016 graph model queries pass (exit-criteria) — passing
-- [ ] TC-232: feature_next_phase_gate_blocks (scenario) — unimplemented
-- [ ] TC-233: feature_next_phase_gate_satisfied (scenario) — unimplemented
-- [ ] TC-234: feature_next_phase_gate_no_exit_criteria (exit-criteria) — unimplemented
-- [ ] TC-235: feature_next_ignore_gate (scenario) — unimplemented
-- [ ] TC-236: feature_next_gate_partial (scenario) — unimplemented
-- [ ] TC-237: status_shows_phase_gate (scenario) — unimplemented
-- [ ] TC-238: status_phase_detail (scenario) — unimplemented
-- [ ] TC-249: product feature next (scenario) — unimplemented
+- [x] TC-232: feature_next_phase_gate_blocks (scenario) — passing
+- [x] TC-233: feature_next_phase_gate_satisfied (scenario) — passing
+- [x] TC-234: feature_next_phase_gate_no_exit_criteria (exit-criteria) — passing
+- [x] TC-235: feature_next_ignore_gate (scenario) — passing
+- [x] TC-236: feature_next_gate_partial (scenario) — passing
+- [x] TC-237: status_shows_phase_gate (scenario) — passing
+- [x] TC-238: status_phase_detail (scenario) — passing
+- [x] TC-249: product feature next (scenario) — passing
 
 ### FT-008 — Schema Migration [~]
 
@@ -419,14 +419,14 @@
 - [x] TC-053: product graph central (scenario) — passing
 - [x] TC-054: product impact ADR-001 (scenario) — passing
 - [x] TC-157: FT-016 graph model queries pass (exit-criteria) — passing
-- [ ] TC-232: feature_next_phase_gate_blocks (scenario) — unimplemented
-- [ ] TC-233: feature_next_phase_gate_satisfied (scenario) — unimplemented
-- [ ] TC-234: feature_next_phase_gate_no_exit_criteria (exit-criteria) — unimplemented
-- [ ] TC-235: feature_next_ignore_gate (scenario) — unimplemented
-- [ ] TC-236: feature_next_gate_partial (scenario) — unimplemented
-- [ ] TC-237: status_shows_phase_gate (scenario) — unimplemented
-- [ ] TC-238: status_phase_detail (scenario) — unimplemented
-- [ ] TC-249: product feature next (scenario) — unimplemented
+- [x] TC-232: feature_next_phase_gate_blocks (scenario) — passing
+- [x] TC-233: feature_next_phase_gate_satisfied (scenario) — passing
+- [x] TC-234: feature_next_phase_gate_no_exit_criteria (exit-criteria) — passing
+- [x] TC-235: feature_next_ignore_gate (scenario) — passing
+- [x] TC-236: feature_next_gate_partial (scenario) — passing
+- [x] TC-237: status_shows_phase_gate (scenario) — passing
+- [x] TC-238: status_phase_detail (scenario) — passing
+- [x] TC-249: product feature next (scenario) — passing
 
 ### FT-025 — Benchmarks [x]
 
