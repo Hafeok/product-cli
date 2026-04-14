@@ -1,4 +1,4 @@
-//! File write safety — atomic writes and advisory locking (ADR-015)
+//! File write safety — atomic writes with advisory locking (ADR-015)
 
 use crate::error::{ProductError, Result};
 use std::fs;
@@ -106,65 +106,67 @@ impl RepoLock {
     /// If a stale lock is detected (holding PID no longer running), it is cleared.
     pub fn acquire(repo_root: &Path) -> Result<Self> {
         let lock_path = repo_root.join(".product.lock");
-
-        // Check for stale lock — if lock file exists, read PID and check if alive
-        if lock_path.exists() {
-            if let Ok(content) = fs::read_to_string(&lock_path) {
-                if let Some(pid) = parse_lock_pid(&content) {
-                    if !is_pid_alive(pid) {
-                        // Stale lock — clear it
-                        let _ = fs::remove_file(&lock_path);
-                    }
-                }
-            }
-        }
-
-        // Try to acquire with 3-second timeout (retry every 100ms, up to 30 attempts)
-        let max_attempts = 30;
-        for attempt in 0..max_attempts {
-            match fs::OpenOptions::new()
-                .create_new(true)
-                .write(true)
-                .open(&lock_path)
-            {
-                Ok(file) => {
-                    // Write our PID info
-                    let _ = std::io::Write::write_all(
-                        &mut &file,
-                        format!(
-                            "pid={}\nstarted={}\n",
-                            std::process::id(),
-                            chrono::Utc::now().to_rfc3339()
-                        )
-                        .as_bytes(),
-                    );
-                    return Ok(Self {
-                        _lock_file: file,
-                        lock_path,
-                    });
-                }
-                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
-                    if attempt < max_attempts - 1 {
-                        std::thread::sleep(std::time::Duration::from_millis(100));
-                    }
-                }
-                Err(e) => {
-                    return Err(ProductError::LockError {
-                        message: format!("failed to create lock file: {}", e),
-                    });
-                }
-            }
-        }
-
-        // Timeout — read the lock to report who holds it
-        let holder = fs::read_to_string(&lock_path).unwrap_or_default();
-        Err(ProductError::LockError {
-            message: format!(
-                "another Product process is running on this repository\n  {}\n  wait for it to complete, or delete .product.lock if the process has died",
-                holder.trim()
-            ),
-        })
+        clear_stale_lock(&lock_path);
+        try_acquire_lock(&lock_path)
     }
+}
+
+/// If the lock file exists and the holding PID is no longer running, remove it.
+fn clear_stale_lock(lock_path: &Path) {
+    if lock_path.exists() {
+        if let Ok(content) = fs::read_to_string(lock_path) {
+            if let Some(pid) = parse_lock_pid(&content) {
+                if !is_pid_alive(pid) {
+                    let _ = fs::remove_file(lock_path);
+                }
+            }
+        }
+    }
+}
+
+/// Retry creating the lock file up to 30 times (100ms apart, ~3s timeout).
+fn try_acquire_lock(lock_path: &std::path::PathBuf) -> Result<RepoLock> {
+    let max_attempts = 30;
+    for attempt in 0..max_attempts {
+        match fs::OpenOptions::new()
+            .create_new(true)
+            .write(true)
+            .open(lock_path)
+        {
+            Ok(file) => {
+                let _ = std::io::Write::write_all(
+                    &mut &file,
+                    format!(
+                        "pid={}\nstarted={}\n",
+                        std::process::id(),
+                        chrono::Utc::now().to_rfc3339()
+                    )
+                    .as_bytes(),
+                );
+                return Ok(RepoLock {
+                    _lock_file: file,
+                    lock_path: lock_path.clone(),
+                });
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+                if attempt < max_attempts - 1 {
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                }
+            }
+            Err(e) => {
+                return Err(ProductError::LockError {
+                    message: format!("failed to create lock file: {}", e),
+                });
+            }
+        }
+    }
+    let holder = fs::read_to_string(lock_path).unwrap_or_default();
+    Err(ProductError::LockError {
+        message: format!(
+            "another Product process is running on this repository\n  {}\n  wait for it to complete, or delete .product.lock if the process has died",
+            holder.trim()
+        ),
+    })
 }
 
 impl Drop for RepoLock {

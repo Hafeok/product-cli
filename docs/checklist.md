@@ -451,22 +451,22 @@
 - [x] ADR-013: Error Model and User-Facing Error Format (accepted)
 - [x] TC-181: ft_026_ci_integration_pass (exit-criteria) — passing
 
-### FT-031 — Code Structure and Quality Standards [ ]
+### FT-031 — Code Structure and Quality Standards [x]
 
 - [x] ADR-029: Code Structure and Quality Standards (accepted)
-- [ ] TC-369: file_length_passes (scenario) — unimplemented
-- [ ] TC-370: file_length_warn (scenario) — unimplemented
-- [ ] TC-371: file_length_fail (scenario) — unimplemented
-- [ ] TC-372: function_length_passes (scenario) — unimplemented
-- [ ] TC-373: function_length_warn (scenario) — unimplemented
-- [ ] TC-374: function_length_fail (scenario) — unimplemented
-- [ ] TC-375: module_structure_passes (scenario) — unimplemented
-- [ ] TC-376: module_structure_missing (scenario) — unimplemented
-- [ ] TC-377: module_structure_main_too_long (scenario) — unimplemented
-- [ ] TC-378: single_responsibility_passes (scenario) — unimplemented
-- [ ] TC-379: single_responsibility_missing (scenario) — unimplemented
-- [ ] TC-380: single_responsibility_and (scenario) — unimplemented
-- [ ] TC-402: All source files under 400 lines and all quality checks pass (exit-criteria) — unimplemented
+- [x] TC-369: file_length_passes (scenario) — passing
+- [x] TC-370: file_length_warn (scenario) — passing
+- [x] TC-371: file_length_fail (scenario) — passing
+- [x] TC-372: function_length_passes (scenario) — passing
+- [x] TC-373: function_length_warn (scenario) — passing
+- [x] TC-374: function_length_fail (scenario) — passing
+- [x] TC-375: module_structure_passes (scenario) — passing
+- [x] TC-376: module_structure_missing (scenario) — passing
+- [x] TC-377: module_structure_main_too_long (scenario) — passing
+- [x] TC-378: single_responsibility_passes (scenario) — passing
+- [x] TC-379: single_responsibility_missing (scenario) — passing
+- [x] TC-380: single_responsibility_and (scenario) — passing
+- [x] TC-402: All source files under 400 lines and all quality checks pass (exit-criteria) — passing
 
 ### FT-032 — Dependency Artifact Type [ ]
 

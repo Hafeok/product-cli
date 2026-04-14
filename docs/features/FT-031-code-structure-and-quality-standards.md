@@ -2,7 +2,7 @@
 id: FT-031
 title: Code Structure and Quality Standards
 phase: 3
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-029

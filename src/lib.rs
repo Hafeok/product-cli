@@ -1,4 +1,4 @@
-//! Product library — re-exports all modules for use by tests and benchmarks.
+//! Product library — module re-exports for tests, benchmarks, integration.
 
 pub mod author;
 pub mod checklist;
@@ -20,3 +20,8 @@ pub mod onboard;
 pub mod parser;
 pub mod rdf;
 pub mod types;
+
+// Wrapper modules for canonical module structure (ADR-029)
+pub mod io;
+pub mod parse;
+pub mod verify;

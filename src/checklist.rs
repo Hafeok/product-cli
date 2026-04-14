@@ -13,14 +13,40 @@ pub fn generate(graph: &KnowledgeGraph) -> String {
     ));
     out.push_str("> Do not edit directly — update status in feature/test front-matter and run `product checklist generate`\n\n");
 
-    // Group features by phase, sorted by topo order if possible
-    let order = graph.topological_sort().unwrap_or_else(|_| {
+    let order = sorted_feature_order(graph);
+    let phases = sorted_phases(graph);
+
+    for phase in &phases {
+        out.push_str(&format!("## Phase {}\n\n", phase));
+        let phase_features: Vec<&String> = order
+            .iter()
+            .filter(|id| {
+                graph.features.get(id.as_str())
+                    .map(|f| f.front.phase == *phase)
+                    .unwrap_or(false)
+            })
+            .collect();
+        for fid in phase_features {
+            if let Some(f) = graph.features.get(fid.as_str()) {
+                render_feature_entry(&mut out, f, graph);
+            }
+        }
+    }
+
+    out
+}
+
+/// Get feature IDs in topological order, falling back to alphabetical.
+fn sorted_feature_order(graph: &KnowledgeGraph) -> Vec<String> {
+    graph.topological_sort().unwrap_or_else(|_| {
         let mut ids: Vec<String> = graph.features.keys().cloned().collect();
         ids.sort();
         ids
-    });
+    })
+}
 
-    // Collect phases
+/// Collect and sort unique phase numbers from all features.
+fn sorted_phases(graph: &KnowledgeGraph) -> Vec<u32> {
     let mut phases: Vec<u32> = graph
         .features
         .values()
@@ -29,73 +55,53 @@ pub fn generate(graph: &KnowledgeGraph) -> String {
         .into_iter()
         .collect();
     phases.sort();
+    phases
+}
 
-    for phase in &phases {
-        out.push_str(&format!("## Phase {}\n\n", phase));
+/// Render a single feature's checklist entry (heading + ADRs + TCs).
+fn render_feature_entry(out: &mut String, f: &Feature, graph: &KnowledgeGraph) {
+    let status_marker = match f.front.status {
+        FeatureStatus::Complete => "[x]",
+        FeatureStatus::InProgress => "[~]",
+        FeatureStatus::Planned => "[ ]",
+        FeatureStatus::Abandoned => "[-]",
+    };
+    out.push_str(&format!("### {} — {} {}\n\n", f.front.id, f.front.title, status_marker));
+    render_adr_lines(out, f, graph);
+    render_tc_lines(out, f, graph);
+    out.push('\n');
+}
 
-        let phase_features: Vec<&String> = order
-            .iter()
-            .filter(|id| {
-                graph
-                    .features
-                    .get(id.as_str())
-                    .map(|f| f.front.phase == *phase)
-                    .unwrap_or(false)
-            })
-            .collect();
-
-        for fid in phase_features {
-            if let Some(f) = graph.features.get(fid.as_str()) {
-                let status_marker = match f.front.status {
-                    FeatureStatus::Complete => "[x]",
-                    FeatureStatus::InProgress => "[~]",
-                    FeatureStatus::Planned => "[ ]",
-                    FeatureStatus::Abandoned => "[-]",
-                };
-                out.push_str(&format!(
-                    "### {} — {} {}\n\n",
-                    f.front.id,
-                    f.front.title,
-                    status_marker
-                ));
-
-                // List ADRs
-                for adr_id in &f.front.adrs {
-                    if let Some(adr) = graph.adrs.get(adr_id.as_str()) {
-                        let marker = match adr.front.status {
-                            AdrStatus::Accepted => "[x]",
-                            AdrStatus::Proposed => "[ ]",
-                            AdrStatus::Superseded => "[-]",
-                            AdrStatus::Abandoned => "[-]",
-                        };
-                        out.push_str(&format!(
-                            "- {} {}: {} ({})\n",
-                            marker, adr.front.id, adr.front.title, adr.front.status
-                        ));
-                    }
-                }
-
-                // List tests
-                for test_id in &f.front.tests {
-                    if let Some(tc) = graph.tests.get(test_id.as_str()) {
-                        let marker = match tc.front.status {
-                            TestStatus::Passing => "[x]",
-                            TestStatus::Implemented => "[~]",
-                            TestStatus::Unimplemented => "[ ]",
-                            TestStatus::Failing => "[!]",
-                            TestStatus::Unrunnable => "[?]",
-                        };
-                        out.push_str(&format!(
-                            "- {} {}: {} ({}) — {}\n",
-                            marker, tc.front.id, tc.front.title, tc.front.test_type, tc.front.status
-                        ));
-                    }
-                }
-
-                out.push('\n');
-            }
+/// Render ADR lines for a feature entry.
+fn render_adr_lines(out: &mut String, f: &Feature, graph: &KnowledgeGraph) {
+    for adr_id in &f.front.adrs {
+        if let Some(adr) = graph.adrs.get(adr_id.as_str()) {
+            let marker = match adr.front.status {
+                AdrStatus::Accepted => "[x]",
+                AdrStatus::Proposed => "[ ]",
+                AdrStatus::Superseded => "[-]",
+                AdrStatus::Abandoned => "[-]",
+            };
+            out.push_str(&format!("- {} {}: {} ({})\n", marker, adr.front.id, adr.front.title, adr.front.status));
         }
     }
+}
 
-    out
+/// Render TC lines for a feature entry.
+fn render_tc_lines(out: &mut String, f: &Feature, graph: &KnowledgeGraph) {
+    for test_id in &f.front.tests {
+        if let Some(tc) = graph.tests.get(test_id.as_str()) {
+            let marker = match tc.front.status {
+                TestStatus::Passing => "[x]",
+                TestStatus::Implemented => "[~]",
+                TestStatus::Unimplemented => "[ ]",
+                TestStatus::Failing => "[!]",
+                TestStatus::Unrunnable => "[?]",
+            };
+            out.push_str(&format!(
+                "- {} {}: {} ({}) — {}\n",
+                marker, tc.front.id, tc.front.title, tc.front.test_type, tc.front.status
+            ));
+        }
+    }
 }

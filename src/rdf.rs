@@ -1,4 +1,4 @@
-//! RDF/Turtle export and SPARQL query (ADR-008)
+//! RDF/Turtle export with SPARQL query support (ADR-008)
 
 use crate::graph::KnowledgeGraph;
 use crate::error::Result;
@@ -7,30 +7,30 @@ use std::path::Path;
 /// Export the knowledge graph as RDF Turtle
 pub fn export_turtle(graph: &KnowledgeGraph) -> String {
     let mut out = String::new();
+    write_ttl_prefixes(&mut out);
+    let centrality = graph.betweenness_centrality();
+    write_ttl_features(&mut out, graph);
+    write_ttl_adrs(&mut out, graph, &centrality);
+    write_ttl_tests(&mut out, graph);
+    out
+}
 
+fn write_ttl_prefixes(out: &mut String) {
     out.push_str("@prefix pm: <https://product-meta/ontology#> .\n");
     out.push_str("@prefix ft: <https://product-meta/feature/> .\n");
     out.push_str("@prefix adr: <https://product-meta/adr/> .\n");
     out.push_str("@prefix tc: <https://product-meta/test/> .\n");
     out.push_str("@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n");
     out.push('\n');
+}
 
-    let centrality = graph.betweenness_centrality();
-
-    // Features
+fn write_ttl_features(out: &mut String, graph: &KnowledgeGraph) {
     for f in graph.features.values() {
         let iri = format!("ft:{}", f.front.id);
         out.push_str(&format!("{} a pm:Feature ;\n", iri));
-        out.push_str(&format!(
-            "    pm:title \"{}\" ;\n",
-            escape_turtle(&f.front.title)
-        ));
+        out.push_str(&format!("    pm:title \"{}\" ;\n", escape_turtle(&f.front.title)));
         out.push_str(&format!("    pm:phase {} ;\n", f.front.phase));
-        out.push_str(&format!(
-            "    pm:status pm:{:?} ",
-            f.front.status
-        ));
-
+        out.push_str(&format!("    pm:status pm:{:?} ", f.front.status));
         for adr_id in &f.front.adrs {
             out.push_str(&format!(";\n    pm:implementedBy adr:{} ", adr_id));
         }
@@ -42,24 +42,17 @@ pub fn export_turtle(graph: &KnowledgeGraph) -> String {
         }
         out.push_str(".\n\n");
     }
+}
 
-    // ADRs
+fn write_ttl_adrs(out: &mut String, graph: &KnowledgeGraph, centrality: &std::collections::HashMap<String, f64>) {
     for a in graph.adrs.values() {
         let iri = format!("adr:{}", a.front.id);
         out.push_str(&format!("{} a pm:ArchitecturalDecision ;\n", iri));
-        out.push_str(&format!(
-            "    pm:title \"{}\" ;\n",
-            escape_turtle(&a.front.title)
-        ));
-        out.push_str(&format!(
-            "    pm:status pm:{:?} ",
-            a.front.status
-        ));
-
+        out.push_str(&format!("    pm:title \"{}\" ;\n", escape_turtle(&a.front.title)));
+        out.push_str(&format!("    pm:status pm:{:?} ", a.front.status));
         if let Some(c) = centrality.get(&a.front.id) {
             out.push_str(&format!(";\n    pm:betweennessCentrality {:.3} ", c));
         }
-
         for f_id in &a.front.features {
             out.push_str(&format!(";\n    pm:appliesTo ft:{} ", f_id));
         }
@@ -68,24 +61,15 @@ pub fn export_turtle(graph: &KnowledgeGraph) -> String {
         }
         out.push_str(".\n\n");
     }
+}
 
-    // Tests
+fn write_ttl_tests(out: &mut String, graph: &KnowledgeGraph) {
     for t in graph.tests.values() {
         let iri = format!("tc:{}", t.front.id);
         out.push_str(&format!("{} a pm:TestCriterion ;\n", iri));
-        out.push_str(&format!(
-            "    pm:title \"{}\" ;\n",
-            escape_turtle(&t.front.title)
-        ));
-        out.push_str(&format!(
-            "    pm:type pm:{:?} ;\n",
-            t.front.test_type
-        ));
-        out.push_str(&format!(
-            "    pm:status pm:{:?} ",
-            t.front.status
-        ));
-
+        out.push_str(&format!("    pm:title \"{}\" ;\n", escape_turtle(&t.front.title)));
+        out.push_str(&format!("    pm:type pm:{:?} ;\n", t.front.test_type));
+        out.push_str(&format!("    pm:status pm:{:?} ", t.front.status));
         for f_id in &t.front.validates.features {
             out.push_str(&format!(";\n    pm:validates ft:{} ", f_id));
         }
@@ -94,8 +78,6 @@ pub fn export_turtle(graph: &KnowledgeGraph) -> String {
         }
         out.push_str(".\n\n");
     }
-
-    out
 }
 
 /// Write the TTL export to a file
@@ -114,7 +96,6 @@ pub fn sparql_query(graph: &KnowledgeGraph, query: &str) -> Result<String> {
         crate::error::ProductError::Internal(format!("failed to create Oxigraph store: {}", e))
     })?;
 
-    // Load the TTL into the store
     let ttl = export_turtle(graph);
     store
         .load_from_reader(RdfFormat::Turtle, ttl.as_bytes())
@@ -122,42 +103,38 @@ pub fn sparql_query(graph: &KnowledgeGraph, query: &str) -> Result<String> {
             crate::error::ProductError::Internal(format!("failed to load TTL into store: {}", e))
         })?;
 
-    // Execute query
     let results = store.query(query).map_err(|e| {
         crate::error::ProductError::Internal(format!("SPARQL query error: {}", e))
     })?;
 
     match results {
-        QueryResults::Solutions(solutions) => {
-            let mut out = String::new();
-            let vars: Vec<String> = solutions
-                .variables()
-                .iter()
-                .map(|v| v.as_str().to_string())
-                .collect();
-            out.push_str(&vars.join("\t"));
-            out.push('\n');
-            for solution in solutions {
-                let solution = solution.map_err(|e| {
-                    crate::error::ProductError::Internal(format!("SPARQL solution error: {}", e))
-                })?;
-                let row: Vec<String> = vars
-                    .iter()
-                    .map(|v| {
-                        solution
-                            .get(v.as_str())
-                            .map(|t| t.to_string())
-                            .unwrap_or_default()
-                    })
-                    .collect();
-                out.push_str(&row.join("\t"));
-                out.push('\n');
-            }
-            Ok(out)
-        }
+        QueryResults::Solutions(solutions) => format_solutions(solutions),
         QueryResults::Boolean(b) => Ok(format!("{}\n", b)),
         QueryResults::Graph(_) => Ok("(graph result)\n".to_string()),
     }
+}
+
+fn format_solutions(solutions: oxigraph::sparql::QuerySolutionIter) -> Result<String> {
+    let mut out = String::new();
+    let vars: Vec<String> = solutions
+        .variables()
+        .iter()
+        .map(|v| v.as_str().to_string())
+        .collect();
+    out.push_str(&vars.join("\t"));
+    out.push('\n');
+    for solution in solutions {
+        let solution = solution.map_err(|e| {
+            crate::error::ProductError::Internal(format!("SPARQL solution error: {}", e))
+        })?;
+        let row: Vec<String> = vars
+            .iter()
+            .map(|v| solution.get(v.as_str()).map(|t| t.to_string()).unwrap_or_default())
+            .collect();
+        out.push_str(&row.join("\t"));
+        out.push('\n');
+    }
+    Ok(out)
 }
 
 fn escape_turtle(s: &str) -> String {

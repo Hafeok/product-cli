@@ -1,4 +1,4 @@
-//! product.toml parsing and repository discovery (ADR-014)
+//! product.toml parsing, repository discovery (ADR-014)
 
 use crate::error::{ProductError, Result};
 use serde::{Deserialize, Serialize};
