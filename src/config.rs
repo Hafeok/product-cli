@@ -27,6 +27,9 @@ pub struct ProductConfig {
     /// Concern domain vocabulary (ADR-025)
     #[serde(default)]
     pub domains: HashMap<String, String>,
+    /// Whether checklist.md is added to .gitignore by `product init` (ADR-007)
+    #[serde(rename = "checklist-in-gitignore", default = "default_true")]
+    pub checklist_in_gitignore: bool,
 }
 
 fn default_version() -> String {

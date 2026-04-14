@@ -175,6 +175,18 @@ enum Commands {
         #[command(subcommand)]
         command: OnboardCommands,
     },
+    /// Initialize a new Product repository (ADR-033)
+    Init {
+        /// Accept all defaults without prompting
+        #[arg(short = 'y', long)]
+        yes: bool,
+        /// Overwrite existing product.toml
+        #[arg(long)]
+        force: bool,
+        /// Project name (default: directory name)
+        #[arg(long)]
+        name: Option<String>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -603,6 +615,7 @@ fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
         Commands::Metrics { command } => handle_metrics(command),
         Commands::Preflight { id } => handle_preflight(&id),
         Commands::Onboard { command } => handle_onboard(command),
+        Commands::Init { yes, force, name } => handle_init(yes, force, name),
     }
 }
 
@@ -2776,5 +2789,137 @@ fn handle_install_hooks() -> BoxResult {
     mcp::scaffold_mcp_json(&root)?;
     println!("Wrote .mcp.json: {}", root.join(".mcp.json").display());
 
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Init command (ADR-033)
+// ---------------------------------------------------------------------------
+
+fn handle_init(_yes: bool, force: bool, name: Option<String>) -> BoxResult {
+    let target_dir = std::env::current_dir().map_err(|e| {
+        ProductError::ConfigError(format!("Cannot determine working directory: {}", e))
+    })?;
+    let toml_path = target_dir.join("product.toml");
+
+    // Determine checklist-in-gitignore setting.
+    // If --force and product.toml exists, preserve the existing setting.
+    let checklist_in_gitignore = if toml_path.exists() {
+        if !force {
+            return Err(Box::new(ProductError::ConfigError(format!(
+                "product.toml already exists\n  --> {}\n  = hint: use `product init --force` to overwrite, or edit the file directly",
+                toml_path.display()
+            ))));
+        }
+        // --force: read existing config to preserve checklist-in-gitignore
+        ProductConfig::load(&toml_path)
+            .map(|c| c.checklist_in_gitignore)
+            .unwrap_or(true)
+    } else {
+        true
+    };
+
+    // Determine project name
+    let project_name = name.unwrap_or_else(|| {
+        target_dir
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("my-project")
+            .to_string()
+    });
+
+    // Generate product.toml
+    let toml_content = format!(
+        r#"name = "{project_name}"
+schema-version = "1"
+checklist-in-gitignore = {checklist_in_gitignore}
+
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+
+[phases]
+1 = "Phase 1"
+
+[domains]
+
+[mcp]
+write = false
+port = 7777
+"#
+    );
+    fileops::write_file_atomic(&toml_path, &toml_content)?;
+    println!("  product.toml");
+
+    // Create directory skeleton
+    let dirs = ["docs/features", "docs/adrs", "docs/tests", "docs/graph"];
+    for d in &dirs {
+        let path = target_dir.join(d);
+        std::fs::create_dir_all(&path).map_err(|e| {
+            ProductError::IoError(format!("failed to create {}: {}", path.display(), e))
+        })?;
+        println!("  {}/", d);
+    }
+
+    // Manage .gitignore
+    let gitignore_path = target_dir.join(".gitignore");
+    init_manage_gitignore(&gitignore_path, checklist_in_gitignore)?;
+
+    println!("\nRun `product feature new \"My First Feature\"` to get started.");
+    Ok(())
+}
+
+/// Manage .gitignore entries for generated files (ADR-033, ADR-007).
+/// Always adds `docs/graph/`. Adds `docs/checklist.md` only when checklist_in_gitignore is true.
+fn init_manage_gitignore(path: &std::path::Path, checklist_in_gitignore: bool) -> BoxResult {
+    let mut entries_to_add: Vec<&str> = vec!["docs/graph/"];
+    if checklist_in_gitignore {
+        entries_to_add.push("docs/checklist.md");
+    }
+
+    let existing = if path.exists() {
+        std::fs::read_to_string(path).map_err(|e| {
+            ProductError::IoError(format!("failed to read {}: {}", path.display(), e))
+        })?
+    } else {
+        String::new()
+    };
+
+    let mut lines: Vec<String> = if existing.is_empty() {
+        Vec::new()
+    } else {
+        existing.lines().map(String::from).collect()
+    };
+
+    let has_header = lines.iter().any(|l| l.contains("Product CLI"));
+    let mut added_any = false;
+
+    for entry in &entries_to_add {
+        if !lines.iter().any(|l| l.trim() == *entry) {
+            if !added_any && !has_header {
+                if !lines.is_empty() && lines.last().map(|l| !l.is_empty()).unwrap_or(false) {
+                    lines.push(String::new());
+                }
+                lines.push("# Product CLI — generated files".to_string());
+            }
+            lines.push(entry.to_string());
+            added_any = true;
+        }
+    }
+
+    let mut content = lines.join("\n");
+    if !content.ends_with('\n') {
+        content.push('\n');
+    }
+    fileops::write_file_atomic(path, &content)?;
+    println!("  .gitignore");
     Ok(())
 }

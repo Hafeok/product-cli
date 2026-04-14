@@ -7817,3 +7817,88 @@ fn tc_249_product_feature_next() {
     // FT-002 should be returned (phase 1, deps satisfied, topo order)
     out.assert_stdout_contains("FT-002");
 }
+
+// ===========================================================================
+// TC-209: checklist_gitignore_default (FT-017)
+// ===========================================================================
+
+#[test]
+fn tc_209_checklist_gitignore_default() {
+    let h = Harness::new();
+    // Remove existing product.toml to simulate a new repository
+    let _ = std::fs::remove_file(h.dir.path().join("product.toml"));
+
+    let out = h.run(&["init", "--yes"]);
+    out.assert_exit(0);
+
+    // product.toml should exist
+    assert!(
+        h.exists("product.toml"),
+        "product.toml should be created by init"
+    );
+
+    // .gitignore should exist and contain checklist.md
+    assert!(
+        h.exists(".gitignore"),
+        ".gitignore should be created by init"
+    );
+    let gitignore = h.read(".gitignore");
+    assert!(
+        gitignore.contains("checklist.md"),
+        "checklist.md should appear in .gitignore by default.\nGot:\n{}",
+        gitignore
+    );
+}
+
+// ===========================================================================
+// TC-210: checklist_gitignore_opt_out (FT-017)
+// ===========================================================================
+
+#[test]
+fn tc_210_checklist_gitignore_opt_out() {
+    let h = Harness::new();
+    // Pre-create product.toml with checklist-in-gitignore = false
+    h.write(
+        "product.toml",
+        r#"name = "test"
+schema-version = "1"
+checklist-in-gitignore = false
+
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+"#,
+    );
+
+    let out = h.run(&["init", "--force", "--yes"]);
+    out.assert_exit(0);
+
+    // .gitignore should exist (for docs/graph/ at least)
+    assert!(
+        h.exists(".gitignore"),
+        ".gitignore should be created by init"
+    );
+    let gitignore = h.read(".gitignore");
+
+    // checklist.md should NOT appear in .gitignore
+    assert!(
+        !gitignore.contains("checklist.md"),
+        "checklist.md should NOT appear in .gitignore when checklist-in-gitignore = false.\nGot:\n{}",
+        gitignore
+    );
+
+    // docs/graph/ should still be present (always gitignored)
+    assert!(
+        gitignore.contains("docs/graph/"),
+        "docs/graph/ should still appear in .gitignore.\nGot:\n{}",
+        gitignore
+    );
+}

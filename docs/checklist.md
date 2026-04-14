@@ -213,15 +213,15 @@
 - [x] TC-238: status_phase_detail (scenario) — passing
 - [x] TC-249: product feature next (scenario) — passing
 
-### FT-017 — Generated Checklist [~]
+### FT-017 — Generated Checklist [x]
 
 - [x] ADR-007: Checklist is Generated, Never Hand-Edited (accepted)
 - [x] TC-021: checklist_generate (scenario) — passing
 - [x] TC-022: checklist_no_manual_edit_warning (scenario) — passing
 - [x] TC-023: checklist_roundtrip (scenario) — passing
 - [x] TC-159: FT-017 checklist generation idempotent (exit-criteria) — passing
-- [ ] TC-209: checklist_gitignore_default (scenario) — unimplemented
-- [ ] TC-210: checklist_gitignore_opt_out (scenario) — unimplemented
+- [x] TC-209: checklist_gitignore_default (scenario) — passing
+- [x] TC-210: checklist_gitignore_opt_out (scenario) — passing
 
 ### FT-018 — Validation and Graph Health [x]
 
@@ -390,8 +390,8 @@
 - [x] TC-054: product impact ADR-001 (scenario) — passing
 - [x] TC-157: FT-016 graph model queries pass (exit-criteria) — passing
 - [x] TC-159: FT-017 checklist generation idempotent (exit-criteria) — passing
-- [ ] TC-209: checklist_gitignore_default (scenario) — unimplemented
-- [ ] TC-210: checklist_gitignore_opt_out (scenario) — unimplemented
+- [x] TC-209: checklist_gitignore_default (scenario) — passing
+- [x] TC-210: checklist_gitignore_opt_out (scenario) — passing
 
 ## Phase 3
 
