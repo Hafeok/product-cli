@@ -253,7 +253,8 @@ pub fn run_verify(
         let adrs_dir = config.resolve_path(root, &config.paths.adrs);
         let tests_dir = config.resolve_path(root, &config.paths.tests);
         // Reload to get latest statuses
-        let (features, adrs, tests) = parser::load_all(&features_dir, &adrs_dir, &tests_dir)?;
+        let loaded = parser::load_all(&features_dir, &adrs_dir, &tests_dir)?;
+        let (features, adrs, tests) = (loaded.features, loaded.adrs, loaded.tests);
         let new_graph = KnowledgeGraph::build(features, adrs, tests);
 
         if let Some(f) = new_graph.features.get(feature_id) {

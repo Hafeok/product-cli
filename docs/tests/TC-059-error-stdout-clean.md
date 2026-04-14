@@ -11,6 +11,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_059_error_stdout_clean"
+last-run: 2026-04-14T13:40:28.280537041+00:00
 ---
 
 run any command that produces warnings but no errors. Assert stdout contains only the command's normal output. Assert warnings are on stderr only.

@@ -132,23 +132,41 @@ pub fn parse_test(path: &Path) -> Result<TestCriterion> {
     })
 }
 
-/// Load all artifacts from the configured directories
+/// Result of loading all artifacts: features, ADRs, tests, and any parse errors.
+pub struct LoadResult {
+    pub features: Vec<Feature>,
+    pub adrs: Vec<Adr>,
+    pub tests: Vec<TestCriterion>,
+    pub parse_errors: Vec<ProductError>,
+}
+
+/// Load all artifacts from the configured directories.
+/// Returns a `LoadResult` — parse errors are collected rather than printed,
+/// so the caller can decide how to present them (ADR-013).
 pub fn load_all(
     features_dir: &Path,
     adrs_dir: &Path,
     tests_dir: &Path,
-) -> Result<(Vec<Feature>, Vec<Adr>, Vec<TestCriterion>)> {
-    let features = load_dir(features_dir, parse_feature)?;
-    let adrs = load_dir(adrs_dir, parse_adr)?;
-    let tests = load_dir(tests_dir, parse_test)?;
-    Ok((features, adrs, tests))
+) -> Result<LoadResult> {
+    let (features, mut errs_f) = load_dir(features_dir, parse_feature)?;
+    let (adrs, mut errs_a) = load_dir(adrs_dir, parse_adr)?;
+    let (tests, errs_t) = load_dir(tests_dir, parse_test)?;
+    errs_f.append(&mut errs_a);
+    errs_f.extend(errs_t);
+    Ok(LoadResult {
+        features,
+        adrs,
+        tests,
+        parse_errors: errs_f,
+    })
 }
 
-fn load_dir<T>(dir: &Path, parser: fn(&Path) -> Result<T>) -> Result<Vec<T>> {
+fn load_dir<T>(dir: &Path, parser: fn(&Path) -> Result<T>) -> Result<(Vec<T>, Vec<ProductError>)> {
     if !dir.exists() {
-        return Ok(Vec::new());
+        return Ok((Vec::new(), Vec::new()));
     }
     let mut items = Vec::new();
+    let mut errors = Vec::new();
     let mut entries: Vec<_> = std::fs::read_dir(dir)
         .map_err(|e| ProductError::IoError(format!("{}: {}", dir.display(), e)))?
         .filter_map(|e| e.ok())
@@ -164,11 +182,11 @@ fn load_dir<T>(dir: &Path, parser: fn(&Path) -> Result<T>) -> Result<Vec<T>> {
         match parser(&entry.path()) {
             Ok(item) => items.push(item),
             Err(e) => {
-                eprintln!("{}", e);
+                errors.push(e);
             }
         }
     }
-    Ok(items)
+    Ok((items, errors))
 }
 
 /// Serialize front-matter + body back to a markdown file string

@@ -619,8 +619,15 @@ fn load_graph() -> Result<(ProductConfig, PathBuf, KnowledgeGraph), Box<dyn std:
     let adrs_dir = config.resolve_path(&root, &config.paths.adrs);
     let tests_dir = config.resolve_path(&root, &config.paths.tests);
 
-    let (features, adrs, tests) = parser::load_all(&features_dir, &adrs_dir, &tests_dir)?;
-    let graph = KnowledgeGraph::build(features, adrs, tests);
+    let loaded = parser::load_all(&features_dir, &adrs_dir, &tests_dir)?;
+
+    // Print parse errors to stderr so they are visible for all commands (ADR-013)
+    for e in &loaded.parse_errors {
+        eprintln!("{}", e);
+    }
+
+    let graph = KnowledgeGraph::build(loaded.features, loaded.adrs, loaded.tests)
+        .with_parse_errors(loaded.parse_errors);
     Ok((config, root, graph))
 }
 
@@ -1327,9 +1334,9 @@ fn handle_graph(cmd: GraphCommands, global_format: &str) -> BoxResult {
                 result.print_stderr();
                 let code = result.exit_code();
                 match code {
-                    0 => println!("Graph check: clean (no errors, no warnings)"),
-                    1 => println!("Graph check: {} error(s)", result.errors.len()),
-                    2 => println!("Graph check: {} warning(s)", result.warnings.len()),
+                    0 => eprintln!("Graph check: clean (no errors, no warnings)"),
+                    1 => eprintln!("Graph check: {} error(s)", result.errors.len()),
+                    2 => eprintln!("Graph check: {} warning(s)", result.warnings.len()),
                     _ => {}
                 }
                 process::exit(code);
@@ -2389,8 +2396,9 @@ fn handle_onboard(cmd: OnboardCommands) -> BoxResult {
             let features_dir = config.resolve_path(&root, &config.paths.features);
             let tests_dir = config.resolve_path(&root, &config.paths.tests);
 
-            let (features_all, adrs_all, _tests_all) =
+            let loaded =
                 parser::load_all(&features_dir, &adrs_dir, &tests_dir)?;
+            let (features_all, adrs_all) = (loaded.features, loaded.adrs);
 
             let existing_adrs: Vec<String> = adrs_all
                 .iter()

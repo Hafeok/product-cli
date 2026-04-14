@@ -6,6 +6,20 @@
 use crate::error::{CheckResult, Diagnostic, ProductError, Result};
 use crate::types::*;
 use std::collections::{BTreeSet, HashMap, HashSet, VecDeque};
+use std::path::Path;
+
+/// Find the 1-based line number and trimmed content of the line where `needle`
+/// first appears in a file. Returns `None` if the file cannot be read or needle
+/// is not found.
+fn find_reference_line(path: &Path, needle: &str) -> Option<(usize, String)> {
+    let content = std::fs::read_to_string(path).ok()?;
+    for (i, line) in content.lines().enumerate() {
+        if line.contains(needle) {
+            return Some((i + 1, line.trim().to_string()));
+        }
+    }
+    None
+}
 
 // ---------------------------------------------------------------------------
 // Graph model
@@ -39,6 +53,8 @@ pub struct KnowledgeGraph {
     pub reverse: HashMap<String, Vec<(String, EdgeType)>>,
     /// Duplicate IDs detected during build (id -> list of file paths)
     pub duplicates: Vec<(String, Vec<std::path::PathBuf>)>,
+    /// Parse errors collected during artifact loading (ADR-013)
+    pub parse_errors: Vec<ProductError>,
 }
 
 impl KnowledgeGraph {
@@ -56,6 +72,7 @@ impl KnowledgeGraph {
             forward: HashMap::new(),
             reverse: HashMap::new(),
             duplicates: Vec::new(),
+            parse_errors: Vec::new(),
         };
 
         // Track all paths per ID to detect duplicates
@@ -114,6 +131,13 @@ impl KnowledgeGraph {
         }
 
         graph
+    }
+
+    /// Attach parse errors collected during artifact loading.
+    /// These will be included as E001 diagnostics by `check()`.
+    pub fn with_parse_errors(mut self, errors: Vec<ProductError>) -> Self {
+        self.parse_errors = errors;
+        self
     }
 
     fn add_edge(&mut self, from: &str, to: &str, edge_type: EdgeType) {
@@ -444,6 +468,41 @@ impl KnowledgeGraph {
 
     pub fn check(&self) -> CheckResult {
         let mut result = CheckResult::new();
+
+        // Include parse errors collected during loading (ADR-013 Tier 1)
+        for pe in &self.parse_errors {
+            match pe {
+                ProductError::ParseError { file, line, message } => {
+                    let mut diag = Diagnostic::error("E001", "malformed front-matter")
+                        .with_file(file.clone())
+                        .with_detail(message);
+                    if let Some(l) = line {
+                        diag = diag.with_line(*l);
+                    }
+                    result.errors.push(diag);
+                }
+                ProductError::InvalidId { file, id } => {
+                    result.errors.push(
+                        Diagnostic::error("E005", "invalid artifact ID")
+                            .with_file(file.clone())
+                            .with_detail(&format!("'{}' does not match PREFIX-NNN format", id)),
+                    );
+                }
+                ProductError::MissingField { file, field } => {
+                    result.errors.push(
+                        Diagnostic::error("E006", "missing required field")
+                            .with_file(file.clone())
+                            .with_detail(&format!("required field '{}' not found", field)),
+                    );
+                }
+                other => {
+                    result.errors.push(
+                        Diagnostic::error("E001", "parse error")
+                            .with_detail(&format!("{}", other)),
+                    );
+                }
+            }
+        }
         let all_ids = self.all_ids();
 
         // E011: Duplicate IDs
@@ -456,36 +515,42 @@ impl KnowledgeGraph {
             );
         }
 
-        // E002: Broken links
+        // E002: Broken links (with line numbers and context per ADR-013)
         for f in self.features.values() {
             for adr_id in &f.front.adrs {
                 if !all_ids.contains(adr_id) {
-                    result.errors.push(
-                        Diagnostic::error("E002", "broken link")
-                            .with_file(f.path.clone())
-                            .with_detail(&format!("{} references {} which does not exist", f.front.id, adr_id))
-                            .with_hint("create the file with `product adr new` or remove the reference"),
-                    );
+                    let mut diag = Diagnostic::error("E002", "broken link")
+                        .with_file(f.path.clone())
+                        .with_detail(&format!("{} references {} which does not exist", f.front.id, adr_id))
+                        .with_hint("create the file with `product adr new` or remove the reference");
+                    if let Some((line, content)) = find_reference_line(&f.path, adr_id) {
+                        diag = diag.with_line(line).with_context(&content);
+                    }
+                    result.errors.push(diag);
                 }
             }
             for test_id in &f.front.tests {
                 if !all_ids.contains(test_id) {
-                    result.errors.push(
-                        Diagnostic::error("E002", "broken link")
-                            .with_file(f.path.clone())
-                            .with_detail(&format!("{} references {} which does not exist", f.front.id, test_id))
-                            .with_hint("create the file with `product test new` or remove the reference"),
-                    );
+                    let mut diag = Diagnostic::error("E002", "broken link")
+                        .with_file(f.path.clone())
+                        .with_detail(&format!("{} references {} which does not exist", f.front.id, test_id))
+                        .with_hint("create the file with `product test new` or remove the reference");
+                    if let Some((line, content)) = find_reference_line(&f.path, test_id) {
+                        diag = diag.with_line(line).with_context(&content);
+                    }
+                    result.errors.push(diag);
                 }
             }
             for dep_id in &f.front.depends_on {
                 if !self.features.contains_key(dep_id) {
-                    result.errors.push(
-                        Diagnostic::error("E002", "broken link")
-                            .with_file(f.path.clone())
-                            .with_detail(&format!("{} depends-on {} which does not exist", f.front.id, dep_id))
-                            .with_hint("create the feature or remove the dependency"),
-                    );
+                    let mut diag = Diagnostic::error("E002", "broken link")
+                        .with_file(f.path.clone())
+                        .with_detail(&format!("{} depends-on {} which does not exist", f.front.id, dep_id))
+                        .with_hint("create the feature or remove the dependency");
+                    if let Some((line, content)) = find_reference_line(&f.path, dep_id) {
+                        diag = diag.with_line(line).with_context(&content);
+                    }
+                    result.errors.push(diag);
                 }
             }
         }
@@ -493,11 +558,13 @@ impl KnowledgeGraph {
         for a in self.adrs.values() {
             for sup_id in &a.front.supersedes {
                 if !all_ids.contains(sup_id) {
-                    result.errors.push(
-                        Diagnostic::error("E002", "broken link")
-                            .with_file(a.path.clone())
-                            .with_detail(&format!("{} supersedes {} which does not exist", a.front.id, sup_id)),
-                    );
+                    let mut diag = Diagnostic::error("E002", "broken link")
+                        .with_file(a.path.clone())
+                        .with_detail(&format!("{} supersedes {} which does not exist", a.front.id, sup_id));
+                    if let Some((line, content)) = find_reference_line(&a.path, sup_id) {
+                        diag = diag.with_line(line).with_context(&content);
+                    }
+                    result.errors.push(diag);
                 }
             }
         }
@@ -505,20 +572,24 @@ impl KnowledgeGraph {
         for t in self.tests.values() {
             for f_id in &t.front.validates.features {
                 if !all_ids.contains(f_id) {
-                    result.errors.push(
-                        Diagnostic::error("E002", "broken link")
-                            .with_file(t.path.clone())
-                            .with_detail(&format!("{} validates feature {} which does not exist", t.front.id, f_id)),
-                    );
+                    let mut diag = Diagnostic::error("E002", "broken link")
+                        .with_file(t.path.clone())
+                        .with_detail(&format!("{} validates feature {} which does not exist", t.front.id, f_id));
+                    if let Some((line, content)) = find_reference_line(&t.path, f_id) {
+                        diag = diag.with_line(line).with_context(&content);
+                    }
+                    result.errors.push(diag);
                 }
             }
             for a_id in &t.front.validates.adrs {
                 if !all_ids.contains(a_id) {
-                    result.errors.push(
-                        Diagnostic::error("E002", "broken link")
-                            .with_file(t.path.clone())
-                            .with_detail(&format!("{} validates ADR {} which does not exist", t.front.id, a_id)),
-                    );
+                    let mut diag = Diagnostic::error("E002", "broken link")
+                        .with_file(t.path.clone())
+                        .with_detail(&format!("{} validates ADR {} which does not exist", t.front.id, a_id));
+                    if let Some((line, content)) = find_reference_line(&t.path, a_id) {
+                        diag = diag.with_line(line).with_context(&content);
+                    }
+                    result.errors.push(diag);
                 }
             }
         }

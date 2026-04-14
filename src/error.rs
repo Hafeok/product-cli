@@ -81,13 +81,11 @@ impl Diagnostic {
         self
     }
 
-    #[allow(dead_code)]
     pub fn with_line(mut self, line: usize) -> Self {
         self.line = Some(line);
         self
     }
 
-    #[allow(dead_code)]
     pub fn with_context(mut self, ctx: &str) -> Self {
         self.context = Some(ctx.to_string());
         self

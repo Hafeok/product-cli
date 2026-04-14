@@ -12,6 +12,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_029_exit_code_warnings_only"
+last-run: 2026-04-14T13:40:28.280537041+00:00
 ---
 
 create an ADR with no feature links (orphan). Assert exit code 2.

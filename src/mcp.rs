@@ -239,8 +239,9 @@ impl ToolRegistry {
         let features_dir = config.resolve_path(&self.repo_root, &config.paths.features);
         let adrs_dir = config.resolve_path(&self.repo_root, &config.paths.adrs);
         let tests_dir = config.resolve_path(&self.repo_root, &config.paths.tests);
-        let (features, adrs, tests) = crate::parser::load_all(&features_dir, &adrs_dir, &tests_dir)
+        let loaded = crate::parser::load_all(&features_dir, &adrs_dir, &tests_dir)
             .map_err(|e| format!("{}", e))?;
+        let (features, adrs, tests) = (loaded.features, loaded.adrs, loaded.tests);
         let graph = KnowledgeGraph::build(features, adrs, tests);
 
         match name {

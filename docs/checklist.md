@@ -84,7 +84,7 @@
 - [x] TC-015: id_conflict (scenario) — passing
 - [x] TC-160: FT-009 formal specification blocks parse (exit-criteria) — passing
 
-### FT-010 — CLI Commands [~]
+### FT-010 — CLI Commands [x]
 
 - [x] ADR-009: CI Integration via Exit Codes (accepted)
 - [x] ADR-013: Error Model and User-Facing Error Format (accepted)
@@ -92,9 +92,9 @@
 - [x] TC-028: exit_code_broken_link (exit-criteria) — passing
 - [x] TC-029: exit_code_warnings_only (exit-criteria) — passing
 - [x] TC-030: exit_code_ci_pipeline.sh (exit-criteria) — passing
-- [ ] TC-055: error_broken_link_format (scenario) — unimplemented
-- [ ] TC-056: error_json_format (scenario) — unimplemented
-- [ ] TC-057: error_no_panic_on_bad_yaml (scenario) — unimplemented
+- [x] TC-055: error_broken_link_format (scenario) — passing
+- [x] TC-056: error_json_format (scenario) — passing
+- [x] TC-057: error_no_panic_on_bad_yaml (scenario) — passing
 - [x] TC-058: error_internal_tier4 (scenario) — passing
 - [x] TC-059: error_stdout_clean (scenario) — passing
 

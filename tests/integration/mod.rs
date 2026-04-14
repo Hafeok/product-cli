@@ -927,6 +927,137 @@ fn tc_059_error_stdout_clean() {
     );
 }
 
+// --- TC-055: error_broken_link_format ---
+// Parse a feature with a broken ADR reference. Assert stderr contains file path, line number,
+// offending content, and a hint. Assert stdout is empty. Assert exit code 1.
+
+#[test]
+fn tc_055_error_broken_link_format() {
+    let h = fixture_broken_link();
+    let out = h.run(&["graph", "check"]);
+    out.assert_exit(1);
+    // File path present on stderr
+    assert!(
+        out.stderr.contains("FT-001-test.md"),
+        "stderr should contain file path, got:\n{}",
+        out.stderr
+    );
+    // Line number present (adrs: [ADR-999] is on line 7 of the fixture)
+    assert!(
+        out.stderr.contains(":7"),
+        "stderr should contain line number, got:\n{}",
+        out.stderr
+    );
+    // Offending content present (the YAML line with the broken reference)
+    assert!(
+        out.stderr.contains("ADR-999"),
+        "stderr should contain offending reference, got:\n{}",
+        out.stderr
+    );
+    // Hint present
+    assert!(
+        out.stderr.contains("hint:"),
+        "stderr should contain a hint, got:\n{}",
+        out.stderr
+    );
+    // Stdout should be empty (all diagnostics on stderr per ADR-013)
+    assert!(
+        out.stdout.is_empty(),
+        "stdout should be empty, got:\n{}",
+        out.stdout
+    );
+}
+
+// --- TC-056: error_json_format ---
+// Run `product graph check --format json` on a repo with one error and one warning.
+// Assert the output is valid JSON with errors array length 1 and warnings length 1.
+
+fn fixture_error_and_warning() -> Harness {
+    let h = Harness::new();
+    // Feature references non-existent ADR-999 → 1 error (E002)
+    // Also links to existing TC-001 with exit-criteria type → no W002/W003
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-999]\ntests: [TC-001]\n---\n",
+    );
+    // Orphaned ADR (not linked from any feature) → 1 warning (W001)
+    h.write(
+        "docs/adrs/ADR-001-orphan.md",
+        "---\nid: ADR-001\ntitle: Orphan\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n",
+    );
+    // TC linked from FT-001 with exit-criteria type
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test\ntype: exit-criteria\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n",
+    );
+    h
+}
+
+#[test]
+fn tc_056_error_json_format() {
+    let h = fixture_error_and_warning();
+    let out = h.run(&["graph", "check", "--format", "json"]);
+    assert_eq!(out.exit_code, 1, "Expected exit code 1 for broken link");
+    // JSON output goes to stdout (command output per ADR-013)
+    let json: serde_json::Value = serde_json::from_str(&out.stdout).unwrap_or_else(|e| {
+        panic!(
+            "Invalid JSON on stdout: {}\nstdout: {}\nstderr: {}",
+            e, out.stdout, out.stderr
+        )
+    });
+    let errors = json["errors"]
+        .as_array()
+        .expect("errors should be an array");
+    let warnings = json["warnings"]
+        .as_array()
+        .expect("warnings should be an array");
+    assert_eq!(errors.len(), 1, "Expected 1 error, got: {:?}", errors);
+    assert_eq!(
+        warnings.len(),
+        1,
+        "Expected 1 warning, got: {:?}",
+        warnings
+    );
+    // Verify summary counts match
+    assert_eq!(json["summary"]["errors"], 1);
+    assert_eq!(json["summary"]["warnings"], 1);
+}
+
+// --- TC-057: error_no_panic_on_bad_yaml ---
+// Feed a file with completely invalid YAML as front-matter.
+// Assert exit code 1, structured error on stderr, no panic.
+
+#[test]
+fn tc_057_error_no_panic_on_bad_yaml() {
+    let h = Harness::new();
+    // File with completely invalid YAML front-matter
+    h.write(
+        "docs/features/bad.md",
+        "---\n{{{not: valid: yaml: [[[unterminated\n---\n\nBody.\n",
+    );
+    let out = h.run(&["graph", "check"]);
+    assert_eq!(
+        out.exit_code, 1,
+        "Expected exit 1 for bad YAML.\nstdout: {}\nstderr: {}",
+        out.stdout, out.stderr
+    );
+    // Structured error on stderr (E001 for malformed front-matter)
+    assert!(
+        out.stderr.contains("error[E001]") || out.stderr.contains("E001"),
+        "Expected structured E001 error on stderr, got:\n{}",
+        out.stderr
+    );
+    // No panic
+    assert!(
+        !out.stderr.contains("panicked"),
+        "Should not panic on bad YAML"
+    );
+    assert!(
+        !out.stderr.contains("thread 'main' panicked"),
+        "Should not panic on bad YAML"
+    );
+}
+
 // --- TC-154: FT-002 repository layout validated (exit-criteria) ---
 // All FT-002 scenarios pass: feature list/show work, frontmatter parses, markdown passes through.
 

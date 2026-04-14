@@ -2,7 +2,7 @@
 id: FT-010
 title: CLI Commands
 phase: 1
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-009
