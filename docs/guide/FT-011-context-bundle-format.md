@@ -1,271 +1,258 @@
-It looks like the write permission was denied twice. The file at `docs/guide/FT-011-context-bundle-format.md` already exists but is empty (1 line). Could you grant write permission so I can save the documentation, or would you prefer I output the content directly here for you to copy?
-
-Here's the complete documentation for FT-011 — Context Bundle Format:
-
----
-
 ## Overview
 
-The context bundle is Product's primary output format for delivering targeted knowledge-graph context to LLM agents and engineers. Rather than dumping an entire repository into a prompt, `product context` assembles a deterministic Markdown document containing exactly the feature, ADRs, and test criteria relevant to a task — typically 3,000–8,000 tokens. The bundle opens with a machine-parseable formal header block (AISP-influenced) so an agent can extract identity, status, and evidence metrics without reading the full document. This design is governed by ADR-006 (Context Bundle as the Primary LLM Interface).
+The context bundle is Product's primary output format for delivering targeted knowledge-graph context to LLM agents and engineers. Instead of dumping an entire repository into a prompt, `product context` assembles a deterministic Markdown document containing exactly one feature, its linked ADRs, and its linked test criteria — typically 3,000–8,000 tokens. The bundle includes a machine-parseable header block so agents can extract identity and evidence metadata without reading the full document.
 
 ## Tutorial
 
-### Generating your first context bundle
+### Assembling your first context bundle
 
-Run the context command with a feature ID:
+Start with a repository that has at least one feature linked to ADRs and test criteria.
 
-```bash
-product context FT-001
-```
+1. List available features to find one to work with:
 
-Product rebuilds the knowledge graph from front-matter, walks one hop from FT-001, and prints a Markdown bundle to stdout. The output contains:
+   ```bash
+   product feature list
+   ```
 
-1. A formal header block with the feature's ID, phase, status, and linked artifacts
-2. The feature body (YAML front-matter stripped)
-3. All linked ADRs, ordered by betweenness centrality (most structurally important first)
-4. All linked test criteria, ordered by phase then type
+2. Generate a context bundle for a feature:
 
-### Saving a bundle to a file
+   ```bash
+   product context FT-001
+   ```
 
-Redirect stdout to capture the bundle:
+3. Examine the output. The bundle begins with a formal header block:
 
-```bash
-product context FT-001 > bundle.md
-```
+   ```markdown
+   # Context Bundle: FT-001 — Cluster Foundation
 
-### Including transitive context
+   ⟦Ω:Bundle⟧{
+     feature≜FT-001:Feature
+     phase≜1:Phase
+     status≜InProgress:FeatureStatus
+     generated≜2026-04-11T09:00:00Z
+     implementedBy≜⟨ADR-001,ADR-002,ADR-003,ADR-006⟩:Decision+
+     validatedBy≜⟨TC-001,TC-002,TC-003,TC-004⟩:TestCriterion+
+   }
+   ⟦Ε⟧⟨δ≜0.92;φ≜75;τ≜◊⁺⟩
+   ```
 
-If the feature shares ADRs with adjacent features or has `depends-on` relationships, increase the traversal depth:
+   After the header, the bundle contains the full content of the feature, each linked ADR, and each linked test criterion — in that order.
 
-```bash
-product context FT-001 --depth 2
-```
+4. Notice the ordering: YAML front-matter is stripped from all sections, and ADRs are ordered by betweenness centrality (most structurally important first) by default.
 
-At depth 2, the bundle includes artifacts reachable through shared ADRs and dependency chains — giving an agent the full surrounding context for a complex implementation task.
+### Using depth for transitive context
 
-### Reading the formal header
+When a feature shares foundational ADRs with adjacent features, you can widen the context window:
 
-The top of every feature bundle contains a block like this:
+1. Generate a depth-2 bundle to include transitive context:
 
-```
-⟦Ω:Bundle⟧{
-  feature≜FT-001:Feature
-  phase≜1:Phase
-  status≜InProgress:FeatureStatus
-  generated≜2026-04-13T12:34:56.789Z
-  implementedBy≜⟨ADR-001,ADR-002⟩:Decision+
-  validatedBy≜⟨TC-001,TC-002⟩:TestCriterion+
-}
-```
+   ```bash
+   product context FT-001 --depth 2
+   ```
 
-An agent can parse this block to discover all linked artifact IDs before reading the body. If test criteria contain formal evidence blocks, an aggregate evidence line follows:
+2. Compare with the default depth-1 bundle. At depth 2, the bundle also includes:
+   - Other features that share ADRs with FT-001
+   - Features that FT-001 depends on, along with their ADRs and tests
+   - ADRs and tests of those transitive features
 
-```
-⟦Ε⟧⟨δ≜0.92;φ≜85;τ≜◊⁺⟩
-```
-
-Where `δ` is average confidence, `φ` is coverage percentage, and `τ` is stability.
+3. Each artifact appears only once in the bundle, even if reachable via multiple paths.
 
 ## How-to Guide
 
-### Bundle a single feature
+### Assemble context for agent-driven implementation
 
-```bash
-product context FT-003
-```
+1. Run the context command for the target feature:
 
-Returns the feature, its ADRs (ordered by centrality), and its test criteria.
+   ```bash
+   product context FT-003 --depth 2
+   ```
 
-### Bundle a single ADR
+2. Pipe the output into your agent's context window, or save it to a file:
 
-```bash
-product context ADR-002
-```
+   ```bash
+   product context FT-003 --depth 2 > bundle.md
+   ```
 
-Returns the ADR with all linked features and tests. No formal header block is included for ADR bundles.
+3. The agent can parse the `⟦Ω:Bundle⟧` header to extract artifact IDs without reading the full document.
 
-### Bundle all features in a phase
+**Note:** If you are using `product implement FT-003`, the pipeline assembles the context bundle automatically. Do not also run `product context` — that duplicates the context.
 
-```bash
-product context --phase 1
-```
+### Get ADR-ordered bundles by ID instead of centrality
 
-Assembles bundles for every feature with `phase: 1`, concatenated into a single output.
-
-### Bundle a phase with ADRs only (no tests)
-
-```bash
-product context --phase 1 --adrs-only
-```
-
-Useful when you need the decision context but not the test criteria.
-
-### Get transitive context for a complex feature
-
-```bash
-product context FT-003 --depth 2
-```
-
-Depth 2 follows edges two hops from the seed: through shared ADRs to sibling features, through `depends-on` edges to prerequisite features and their artifacts.
-
-### Order ADRs by ID instead of centrality
+By default, ADRs in a depth-1 bundle are ordered by betweenness centrality (most important first). To get ID-ascending order instead:
 
 ```bash
 product context FT-001 --order id
 ```
 
-By default, ADRs are ordered by betweenness centrality (most structurally important first). Use `--order id` for ascending ID order.
+### Check the impact of changing a decision before modifying a bundle's contents
 
-### Combine options
+1. Run impact analysis on the ADR you plan to change:
 
-```bash
-product context --phase 2 --depth 2 --order id --adrs-only
-```
+   ```bash
+   product impact ADR-002
+   ```
+
+2. Review the output for directly and transitively affected features and tests.
+
+3. Pay attention to passing tests that may be invalidated — these are the highest-urgency items.
+
+### Inspect which ADRs are most structurally important
+
+1. View the top ADRs by betweenness centrality:
+
+   ```bash
+   product graph central
+   ```
+
+2. Narrow the list:
+
+   ```bash
+   product graph central --top 5
+   ```
+
+3. Or see the full ranking:
+
+   ```bash
+   product graph central --all
+   ```
 
 ## Reference
 
-### Command syntax
+### `product context` command
 
 ```
-product context <ID> [OPTIONS]
-product context --phase <N> [OPTIONS]
+product context <FEATURE-ID> [OPTIONS]
 ```
 
-### Arguments
+Assembles a deterministic Markdown context bundle for the given feature.
 
-| Argument | Description |
-|----------|-------------|
-| `<ID>` | Feature ID (e.g., `FT-001`) or ADR ID (e.g., `ADR-002`) to bundle |
+| Flag / Option | Default | Description |
+|---|---|---|
+| `<FEATURE-ID>` | *(required)* | The feature to assemble context for (e.g., `FT-001`) |
+| `--depth <N>` | `1` | BFS traversal depth. `1` = direct links only. `2` = transitive context. |
+| `--order <MODE>` | `centrality` | ADR ordering in the bundle. `centrality` = betweenness centrality descending. `id` = ID ascending. |
 
-### Options
+**Output structure** (in order):
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--depth <N>` | `usize` | `1` | BFS traversal depth from the seed node |
-| `--phase <N>` | `u32` | — | Bundle all features in phase N (overrides positional ID) |
-| `--adrs-only` | flag | `false` | Exclude test criteria from output (only with `--phase`) |
-| `--order <ORDER>` | `string` | — | ADR ordering: `id` for ID-ascending; omit for centrality-descending |
+1. **Header block** — AISP formal block with bundle identity, linked artifact IDs, and evidence metrics
+2. **Feature content** — full feature description (front-matter stripped)
+3. **ADR sections** — linked ADRs, ordered by centrality (default) or ID
+4. **Test criteria sections** — ordered by phase, then by type: exit-criteria, scenario, invariant, chaos
 
-### Output format
+**Depth semantics:**
 
-The bundle is printed to stdout as GitHub-flavored Markdown:
+| Depth | Includes |
+|---|---|
+| 1 | Seed feature, its direct ADRs, its direct test criteria |
+| 2 | Depth-1 artifacts + features sharing those ADRs, depends-on features and their ADRs/tests |
+| 3+ | Recursive expansion. Warning emitted if bundle exceeds 50 nodes. |
 
-```
-# Context Bundle: FT-001 — Feature Title
+**Deduplication:** Artifacts reachable via multiple paths appear once, at first-encountered position.
 
-⟦Ω:Bundle⟧{
-  feature≜FT-001:Feature
-  phase≜1:Phase
-  status≜InProgress:FeatureStatus
-  generated≜<RFC 3339 timestamp>
-  implementedBy≜⟨ADR-001,ADR-002⟩:Decision+
-  validatedBy≜⟨TC-001,TC-002⟩:TestCriterion+
-}
-⟦Ε⟧⟨δ≜0.92;φ≜85;τ≜◊⁺⟩
-
----
-
-## Feature: FT-001 — Feature Title
-
-[Feature body, front-matter stripped]
-
----
-
-## ADR-001 — ADR Title
-
-**Status:** Accepted
-
-[ADR body, front-matter stripped]
-
----
-
-## Test Criteria
-
-### TC-001 — Test Title (scenario)
-
-[Test body, front-matter stripped]
-```
-
-### Formal header fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `feature` | Feature ID | The seed feature |
-| `phase` | Integer | Phase number from feature front-matter |
-| `status` | FeatureStatus | Current feature status |
-| `generated` | RFC 3339 | UTC timestamp of bundle generation |
-| `implementedBy` | Decision+ | Comma-separated ADR IDs included in the bundle |
-| `validatedBy` | TestCriterion+ | Comma-separated TC IDs included in the bundle |
-
-### Evidence block symbols
-
-| Symbol | Field | Meaning |
-|--------|-------|---------|
-| `δ` | delta | Average confidence across test evidence [0.00–1.00] |
-| `φ` | phi | Coverage percentage [0–100] |
-| `◊⁺` | tau | Stable |
-| `◊≃` | tau | Rebalancing |
-| `◊⁻` | tau | Drifting |
-| `◊?` | tau | Unknown |
-
-The evidence block is only emitted when at least one test criterion has a formal evidence block.
-
-### Section ordering
-
-1. Feature (always first)
-2. ADRs — three tiers: cross-cutting (by centrality), domain-scoped (top 2 per domain by centrality), then feature-linked (by centrality or ID)
-3. Test criteria — sorted by phase ascending, then by type: exit-criteria, scenario, invariant, chaos
-
-### Superseded ADRs
-
-Superseded ADRs are replaced by their successors in the bundle. A superseded ADR does not appear unless it has no successor linked. When it does appear, it carries a `[SUPERSEDED by ADR-XXX]` annotation and its status line reads `**Status:** Superseded by ADR-XXX`.
-
-### Depth behaviour
-
-| Depth | What is included |
-|-------|-----------------|
-| 1 (default) | Seed feature + direct ADRs + direct test criteria |
-| 2 | Depth 1 + features sharing those ADRs + `depends-on` features + their ADRs and tests |
-| 3+ | Continues BFS expansion; warning emitted to stderr if bundle exceeds 50 artifacts |
-
-BFS traverses both forward and reverse edges. Nodes reachable via multiple paths appear once (first-encountered position). The seed node is always first.
-
-### Depth warning
-
-At depth 3 or greater, if the bundle contains more than 50 artifacts, a warning is emitted to stderr:
+**Large bundle warning:** At depth 3+, if the bundle exceeds 50 artifacts, a warning is emitted to stderr:
 
 ```
-warning: bundle contains N artifacts at depth D. Consider narrowing scope.
+Bundle contains N artifacts at depth 3. Consider narrowing scope.
 ```
 
 The bundle is still produced — the warning does not block output.
 
+### Bundle header format
+
+```markdown
+⟦Ω:Bundle⟧{
+  feature≜FT-001:Feature
+  phase≜1:Phase
+  status≜InProgress:FeatureStatus
+  generated≜2026-04-11T09:00:00Z
+  implementedBy≜⟨ADR-001,ADR-002⟩:Decision+
+  validatedBy≜⟨TC-001,TC-002⟩:TestCriterion+
+}
+⟦Ε⟧⟨δ≜0.92;φ≜75;τ≜◊⁺⟩
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `feature` | Feature ID | The seed feature of this bundle |
+| `phase` | Integer | The feature's implementation phase |
+| `status` | FeatureStatus | Current status (e.g., `InProgress`, `Complete`) |
+| `generated` | ISO 8601 timestamp | When the bundle was assembled |
+| `implementedBy` | List of ADR IDs | All ADRs included in the bundle |
+| `validatedBy` | List of TC IDs | All test criteria included in the bundle |
+| `⟦Ε⟧` | Evidence block | Aggregate evidence metrics from test criteria |
+
+### Superseded ADR handling
+
+Superseded ADRs are replaced by their successors in the bundle. A superseded ADR does not appear in the output. The supersession chain is queryable via `product adr show` but does not propagate into context bundles.
+
+### `product graph central` command
+
+```
+product graph central [OPTIONS]
+```
+
+| Flag / Option | Default | Description |
+|---|---|---|
+| `--top <N>` | `10` | Number of top ADRs to display |
+| `--all` | *(off)* | Show full ranked list |
+
+**Output format:**
+
+```
+Rank  ID       Centrality  Title
+1     ADR-001  0.847       Rust as Implementation Language
+2     ADR-002  0.731       openraft for Cluster Consensus
+3     ADR-006  0.612       Oxigraph for RDF Projection
+```
+
+### `product impact` command
+
+```
+product impact <ARTIFACT-ID>
+```
+
+Accepts any artifact ID (ADR, feature, or test criterion). Performs reverse-graph BFS to compute the full set of affected artifacts.
+
+**Output sections:**
+
+- **Direct dependents** — features and tests one hop away in the reverse graph
+- **Transitive dependents** — features and tests reachable via dependency chains
+- **Summary** — count of affected artifacts, with passing tests flagged as potentially invalidated
+
+### Related configuration
+
+Bundle assembly reads graph structure from YAML front-matter in paths configured in `product.toml`:
+
+```toml
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+```
+
 ## Explanation
 
-### Why bundles instead of full-repo context
+### Why targeted bundles instead of full-repository context
 
-A project with 40 features, 30 ADRs, and 80 test criteria produces over 200,000 tokens — past the practical working window of most models and past the point where signal-to-noise is useful. A single feature bundle typically produces 3,000–8,000 tokens of precisely targeted context. Empirically, agents produce better output from 5K tokens of targeted context than from 200K tokens of mixed context (ADR-006).
+A project with 40 features, 30 ADRs, and 80 test criteria produces over 200,000 tokens if dumped in full. This exceeds the practical working window of most models and degrades output quality even when it fits. The context bundle solves this by assembling only the artifacts relevant to a single feature — typically 3,000–8,000 tokens. Nothing relevant is omitted (every linked ADR and test is included), and nothing irrelevant is included (ADR-006).
 
-### Why deterministic assembly
+### Deterministic assembly
 
-Two invocations of `product context FT-001` produce identical output (modulo the `generated` timestamp). This makes bundles cacheable, auditable, and reproducible. Determinism comes from fixed ordering rules — centrality-descending for ADRs, phase-then-type for tests — applied to the same graph structure.
+Two invocations of `product context FT-001` with the same graph state produce identical output. This makes bundles cacheable, auditable, and reproducible. The ordering rules (centrality for ADRs, phase-then-type for tests) are fixed and deterministic given the same graph topology.
 
-### Why centrality-based ADR ordering
+### Centrality-based ADR ordering
 
-Not all ADRs in a bundle are equally important. ADR-001 (Rust as implementation language) may be linked to every feature, making it a structural bridge in the knowledge graph. ADR-007 (checklist generation) may apply to a single feature. Betweenness centrality (Brandes' algorithm, ADR-012) quantifies this structural importance without human curation. An agent reading the bundle top-to-bottom encounters the most foundational decisions first. The `--order id` flag is available when stable ordering is preferred over importance ordering.
+Not all ADRs in a bundle are equally important. ADR-001 (Rust as implementation language) is linked to nearly every feature and acts as a structural bridge in the graph. ADR-007 (checklist generation) may apply to only one feature. Betweenness centrality — computed via Brandes' algorithm (ADR-012) — quantifies this structural importance without requiring human curation. The most foundational decisions appear first in the bundle so an agent reading top-to-bottom encounters them before peripheral decisions.
 
-### Why the formal header block
+### BFS depth as a scope control
 
-The `⟦Ω:Bundle⟧` header is designed so an agent can parse bundle metadata without reading the full document. It declares the feature identity, all linked artifact IDs, and aggregate evidence metrics in a compact, structured format inspired by AISP notation (ADR-011). This enables workflows where an agent inspects the header to decide whether to read the full bundle or request a different scope.
+Depth-1 (the default) preserves backward compatibility and keeps bundles small. Depth-2 is useful when an agent is implementing a feature that shares foundational decisions with adjacent features — the transitive context surfaces ADRs and tests that would otherwise require separate queries. Depth-3 and beyond risk pulling in most of the graph, which is why the 50-node warning exists (ADR-012).
 
-### Why BFS depth is opt-in
+### The header block as a machine-readable manifest
 
-Depth-1 bundles are compact and cover the common case: implementing a single feature with its direct decisions and tests. Depth-2 bundles are significantly larger because they pull in sibling features and transitive dependencies. Making depth-2 the default was rejected (ADR-012) because the transitive-context use case is less common and the larger bundle may exceed what an agent needs. Depth is opt-in so the caller controls the trade-off between completeness and size.
+The `⟦Ω:Bundle⟧` header uses AISP-influenced formal notation (ADR-012) so that an agent can extract the bundle's identity, all linked artifact IDs, and evidence metrics in a single parse pass — without scanning the full document. This is particularly valuable for agents that need to decide whether a bundle is relevant before committing to reading it.
 
-### Relationship to `product implement`
+### Relationship to the implementation pipeline
 
-The `product implement FT-XXX` pipeline calls `product context` internally to assemble the bundle before passing it to the spawned agent. When using `implement`, do not also run `product context` — that would duplicate the context. Use `product context` directly when you need the bundle for manual workflows: pasting into a prompt, attaching to a system message, or piping into another tool.
-
-### Graph traversal details
-
-The BFS implementation (ADR-012) traverses both forward edges (e.g., `implementedBy`, `depends-on`) and reverse edges (e.g., features that share an ADR). This bidirectional traversal is what makes depth-2 useful: starting from FT-001, it can reach FT-004 through a shared ADR-002 even if there is no direct `depends-on` edge between them. Deduplication ensures each artifact appears exactly once regardless of how many paths lead to it.
+When `product implement FT-XXX` is invoked, the pipeline assembles the context bundle internally and passes it to the spawned agent. Running `product context` separately in this workflow would duplicate the context. Use `product context` directly when you need the bundle for manual review, for piping into a different agent, or for auditing what context an implementation task would receive.
