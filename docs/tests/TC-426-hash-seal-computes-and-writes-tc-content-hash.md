@@ -2,13 +2,14 @@
 id: TC-426
 title: Hash seal computes and writes TC content-hash
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: [FT-034]
   adrs: [ADR-032]
 phase: 1
 runner: cargo-test
 runner-args: "tc_426_hash_seal_computes_and_writes_tc_content_hash"
+last-run: 2026-04-14T14:44:11.097422144+00:00
 ---
 
 ## Description

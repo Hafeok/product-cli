@@ -415,6 +415,9 @@ mod tests {
             superseded_by: vec![],
             domains: vec![],
             scope: AdrScope::FeatureSpecific,
+            content_hash: None,
+            amendments: vec![],
+            source_files: vec![],
         };
         let yaml = serde_yaml::to_string(&adr).unwrap();
         for line in yaml.lines() {
@@ -434,6 +437,14 @@ mod tests {
             status: TestStatus::Unimplemented,
             validates: ValidatesBlock { features: vec![], adrs: vec![] },
             phase: 1,
+            content_hash: None,
+            runner: None,
+            runner_args: None,
+            runner_timeout: None,
+            requires: vec![],
+            last_run: None,
+            failure_message: None,
+            last_run_duration: None,
         };
         let yaml = serde_yaml::to_string(&tc).unwrap();
         for line in yaml.lines() {

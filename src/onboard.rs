@@ -877,6 +877,9 @@ fn render_seeded_adr(adr: &ProposedAdr) -> String {
         superseded_by: Vec::new(),
         domains: Vec::new(),
         scope: AdrScope::FeatureSpecific,
+        content_hash: None,
+        amendments: vec![],
+        source_files: vec![],
     };
 
     let mut body = String::new();

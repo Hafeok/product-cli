@@ -201,9 +201,15 @@ impl ToolRegistry {
             },
             ToolDef {
                 name: "product_body_update".to_string(),
-                description: "Update the markdown body of a feature, ADR, or test criterion (preserves front-matter)".to_string(),
+                description: "Update the markdown body of a feature, ADR, or test criterion (preserves front-matter). Cannot modify accepted ADR bodies — use product_adr_amend instead.".to_string(),
                 requires_write: true,
                 input_schema: serde_json::json!({"type": "object", "properties": {"id": {"type": "string"}, "body": {"type": "string"}}, "required": ["id", "body"]}),
+            },
+            ToolDef {
+                name: "product_adr_amend".to_string(),
+                description: "Record a legitimate amendment to an accepted ADR with mandatory reason and audit trail (ADR-032)".to_string(),
+                requires_write: true,
+                input_schema: serde_json::json!({"type": "object", "properties": {"id": {"type": "string"}, "reason": {"type": "string"}}, "required": ["id", "reason"]}),
             },
         ];
 
@@ -424,6 +430,7 @@ impl ToolRegistry {
                     status: crate::types::AdrStatus::Proposed,
                     features: vec![], supersedes: vec![], superseded_by: vec![],
                     domains: vec![], scope: crate::types::AdrScope::Domain,
+                    content_hash: None, amendments: vec![], source_files: vec![],
                 };
                 let body = "**Status:** Proposed\n\n**Context:**\n\n**Decision:**\n\n**Rationale:**\n\n**Rejected alternatives:**\n".to_string();
                 let content = crate::parser::render_adr(&front, &body);
@@ -447,6 +454,8 @@ impl ToolRegistry {
                     status: crate::types::TestStatus::Unimplemented,
                     validates: crate::types::ValidatesBlock { features: vec![], adrs: vec![] },
                     phase: 1,
+                    content_hash: None, runner: None, runner_args: None, runner_timeout: None,
+                    requires: vec![], last_run: None, failure_message: None, last_run_duration: None,
                 };
                 let body = "## Description\n\n[Describe test here.]\n".to_string();
                 let content = crate::parser::render_test(&front, &body);
@@ -493,6 +502,13 @@ impl ToolRegistry {
                     crate::fileops::write_file_atomic(&f.path, &content).map_err(|e| format!("{}", e))?;
                 } else if id.starts_with(&config.prefixes.adr) {
                     let a = graph.adrs.get(id).ok_or_else(|| format!("ADR {} not found", id))?;
+                    // ADR-032: Protect accepted ADR body from modification via MCP
+                    if a.front.status == crate::types::AdrStatus::Accepted {
+                        return Err(format!(
+                            "Cannot modify body of accepted ADR {}. Use `product adr amend {} --reason \"...\"` instead.",
+                            id, id
+                        ));
+                    }
                     let content = crate::parser::render_adr(&a.front, body);
                     crate::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))?;
                 } else if id.starts_with(&config.prefixes.test) {
@@ -503,6 +519,20 @@ impl ToolRegistry {
                     return Err(format!("Unknown artifact ID prefix: {}", id));
                 }
                 Ok(serde_json::json!({"id": id, "updated": true}))
+            }
+            "product_adr_amend" => {
+                let id = args.get("id").and_then(|v| v.as_str()).unwrap_or_default();
+                let reason = args.get("reason").and_then(|v| v.as_str())
+                    .ok_or_else(|| "reason is required for amendments".to_string())?;
+                let a = graph.adrs.get(id).ok_or_else(|| format!("ADR {} not found", id))?;
+                let (new_hash, amendment) = crate::hash::amend_adr(a, reason)
+                    .map_err(|e| format!("{}", e))?;
+                let mut front = a.front.clone();
+                front.content_hash = Some(new_hash.clone());
+                front.amendments.push(amendment);
+                let content = crate::parser::render_adr(&front, &a.body);
+                crate::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))?;
+                Ok(serde_json::json!({"id": id, "content_hash": new_hash, "amended": true}))
             }
             _ => Err(format!("Tool handler not implemented: {}", name)),
         }

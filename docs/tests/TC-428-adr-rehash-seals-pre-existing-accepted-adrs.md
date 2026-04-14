@@ -2,13 +2,14 @@
 id: TC-428
 title: ADR rehash seals pre-existing accepted ADRs
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: [FT-034]
   adrs: [ADR-032]
 phase: 1
 runner: cargo-test
 runner-args: "tc_428_adr_rehash_seals_pre_existing_accepted_adrs"
+last-run: 2026-04-14T14:44:11.097422144+00:00
 ---
 
 ## Description

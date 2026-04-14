@@ -2,7 +2,7 @@
 id: FT-034
 title: Content Hash Immutability
 phase: 1
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-032

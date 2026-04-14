@@ -159,7 +159,7 @@ impl Output {
 fn fixture_minimal() -> Harness {
     let h = Harness::new();
     h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n");
-    h.write("docs/adrs/ADR-001-test.md", "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nDecision body.\n");
+    h.write("docs/adrs/ADR-001-test.md", "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\ncontent-hash: sha256:041d699c4fbf6ed027d18d01345d5dbc758c222150d9ae85257d83e98ccf3ede\n---\n\nDecision body.\n");
     h.write("docs/tests/TC-001-test.md", "---\nid: TC-001\ntitle: Test TC\ntype: exit-criteria\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nTest body.\n");
     h
 }
@@ -1118,7 +1118,7 @@ fn fixture_error_and_warning() -> Harness {
     // Orphaned ADR (not linked from any feature) → 1 warning (W001)
     h.write(
         "docs/adrs/ADR-001-orphan.md",
-        "---\nid: ADR-001\ntitle: Orphan\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n",
+        "---\nid: ADR-001\ntitle: Orphan\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\ncontent-hash: sha256:86de87e1ad0426749f8302ae1e203fe3f8c3453a8619a4187faf78583f23c433\n---\n",
     );
     // TC linked from FT-001 with exit-criteria type
     h.write(
@@ -7956,5 +7956,803 @@ test = "TC"
         gitignore.contains("docs/graph/"),
         "docs/graph/ should still appear in .gitignore.\nGot:\n{}",
         gitignore
+    );
+}
+
+// ===========================================================================
+// FT-034: Content Hash Immutability (ADR-032)
+// ===========================================================================
+
+/// Helper: compute sha256 hash the same way the CLI does.
+/// Hash input: title + "\n" + normalized_body
+fn compute_adr_content_hash(title: &str, body: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let normalized = body.replace("\r\n", "\n").trim().to_string();
+    let mut hasher = Sha256::new();
+    hasher.update(title.as_bytes());
+    hasher.update(b"\n");
+    hasher.update(normalized.as_bytes());
+    let result = hasher.finalize();
+    format!("sha256:{:x}", result)
+}
+
+/// Helper: compute sha256 hash for a TC.
+/// Hash input: title + "\n" + type + "\n" + sorted_adrs + "\n" + normalized_body
+fn compute_tc_content_hash(title: &str, test_type: &str, adrs: &[&str], body: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let normalized = body.replace("\r\n", "\n").trim().to_string();
+    let mut sorted_adrs: Vec<&str> = adrs.to_vec();
+    sorted_adrs.sort();
+    let mut hasher = Sha256::new();
+    hasher.update(title.as_bytes());
+    hasher.update(b"\n");
+    hasher.update(test_type.as_bytes());
+    hasher.update(b"\n");
+    hasher.update(sorted_adrs.join(",").as_bytes());
+    hasher.update(b"\n");
+    hasher.update(normalized.as_bytes());
+    let result = hasher.finalize();
+    format!("sha256:{:x}", result)
+}
+
+// ===========================================================================
+// TC-420: Hash computed on ADR acceptance
+// ===========================================================================
+
+#[test]
+fn tc_420_hash_computed_on_adr_acceptance() {
+    let h = Harness::new();
+    // Create a feature so ADR is not orphaned
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n",
+    );
+
+    // Create a new ADR
+    let out = h.run(&["adr", "new", "Test Content Hash"]);
+    out.assert_exit(0);
+
+    // Find the created ADR file
+    let adr_dir = h.dir.path().join("docs/adrs");
+    let entries: Vec<_> = std::fs::read_dir(&adr_dir)
+        .expect("read adr dir")
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().map(|ext| ext == "md").unwrap_or(false))
+        .collect();
+    assert_eq!(entries.len(), 1, "should have one ADR file");
+    let adr_path = entries[0].path();
+    let adr_content = std::fs::read_to_string(&adr_path).expect("read adr");
+
+    // Verify no content-hash in proposed ADR
+    assert!(
+        !adr_content.contains("content-hash"),
+        "Proposed ADR should not have content-hash"
+    );
+
+    // Extract the ADR ID from the filename
+    let filename = adr_path.file_name().expect("filename").to_str().expect("utf8");
+    let adr_id = &filename[..7]; // e.g. "ADR-001"
+
+    // Accept the ADR
+    let out = h.run(&["adr", "status", adr_id, "accepted"]);
+    out.assert_exit(0);
+
+    // Read back and verify content-hash exists
+    let adr_content = std::fs::read_to_string(&adr_path).expect("read adr");
+    assert!(
+        adr_content.contains("content-hash: sha256:"),
+        "Accepted ADR should have content-hash.\nGot:\n{}",
+        adr_content
+    );
+
+    // Verify the hash matches manual computation
+    // Extract title and body from the file
+    let hash_line = adr_content
+        .lines()
+        .find(|l| l.starts_with("content-hash: "))
+        .expect("content-hash line");
+    let stored_hash = hash_line.strip_prefix("content-hash: ").expect("strip prefix");
+    assert!(stored_hash.starts_with("sha256:"), "hash should start with sha256:");
+    assert_eq!(stored_hash.len(), 7 + 64, "hash should be sha256: + 64 hex chars");
+
+    // Manual computation: extract body from file
+    let parts: Vec<&str> = adr_content.splitn(3, "---").collect();
+    assert!(parts.len() >= 3, "should have front-matter delimiters");
+    let body = parts[2].trim_start_matches('\n');
+    let expected_hash = compute_adr_content_hash("Test Content Hash", body);
+    assert_eq!(
+        stored_hash, expected_hash,
+        "Stored hash should match manual computation"
+    );
+}
+
+// ===========================================================================
+// TC-421: E014 on accepted ADR body tamper
+// ===========================================================================
+
+#[test]
+fn tc_421_e014_on_accepted_adr_body_tamper() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n",
+    );
+
+    // Create and accept an ADR
+    h.run(&["adr", "new", "Immutable ADR"]).assert_exit(0);
+
+    let adr_dir = h.dir.path().join("docs/adrs");
+    let entries: Vec<_> = std::fs::read_dir(&adr_dir)
+        .expect("read")
+        .filter_map(|e| e.ok())
+        .collect();
+    let adr_path = entries[0].path();
+    let filename = adr_path.file_name().expect("fname").to_str().expect("utf8");
+    let adr_id = &filename[..7];
+
+    h.run(&["adr", "status", adr_id, "accepted"]).assert_exit(0);
+
+    // Tamper with the body
+    let content = std::fs::read_to_string(&adr_path).expect("read");
+    let tampered = format!("{}\nThis is an unauthorized addition.\n", content.trim_end());
+    std::fs::write(&adr_path, tampered).expect("write tampered");
+
+    // graph check should emit E014
+    let out = h.run(&["graph", "check"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E014");
+
+    // Now test title tamper
+    let content = std::fs::read_to_string(&adr_path).expect("read");
+    let title_tampered = content.replace("title: Immutable ADR", "title: Changed Title");
+    std::fs::write(&adr_path, title_tampered).expect("write title tampered");
+
+    let out = h.run(&["graph", "check"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E014");
+}
+
+// ===========================================================================
+// TC-422: E015 on sealed TC body tamper
+// ===========================================================================
+
+#[test]
+fn tc_422_e015_on_sealed_tc_body_tamper() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nBody.\n",
+    );
+
+    // Create a TC manually with body content
+    let tc_body = "---\nid: TC-001\ntitle: Sealed Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n## Description\n\nThis is a detailed test specification.\n";
+    h.write("docs/tests/TC-001-sealed-test.md", tc_body);
+
+    // Seal the TC
+    let out = h.run(&["hash", "seal", "TC-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("sealed");
+
+    // Verify content-hash was written
+    let tc_content = h.read("docs/tests/TC-001-sealed-test.md");
+    assert!(
+        tc_content.contains("content-hash: sha256:"),
+        "Sealed TC should have content-hash.\nGot:\n{}",
+        tc_content
+    );
+
+    // Tamper with the body
+    let tampered = tc_content.replace(
+        "This is a detailed test specification.",
+        "This specification has been tampered with.",
+    );
+    std::fs::write(
+        h.dir.path().join("docs/tests/TC-001-sealed-test.md"),
+        tampered,
+    )
+    .expect("write tampered");
+
+    let out = h.run(&["graph", "check"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E015");
+
+    // Test protected field tamper (type)
+    let tc_content = h.read("docs/tests/TC-001-sealed-test.md");
+    let type_tampered = tc_content.replace("type: scenario", "type: invariant");
+    std::fs::write(
+        h.dir.path().join("docs/tests/TC-001-sealed-test.md"),
+        type_tampered,
+    )
+    .expect("write type tampered");
+
+    let out = h.run(&["graph", "check"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E015");
+
+    // Test protected field tamper (validates.adrs)
+    let tc_content = h.read("docs/tests/TC-001-sealed-test.md");
+    let adrs_tampered = tc_content.replace("adrs: []", "adrs: [ADR-999]");
+    std::fs::write(
+        h.dir.path().join("docs/tests/TC-001-sealed-test.md"),
+        adrs_tampered,
+    )
+    .expect("write adrs tampered");
+
+    let out = h.run(&["graph", "check"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E015");
+}
+
+// ===========================================================================
+// TC-423: ADR amend records amendment and recomputes hash
+// ===========================================================================
+
+#[test]
+fn tc_423_adr_amend_records_amendment_and_recomputes_hash() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n",
+    );
+
+    // Create and accept an ADR
+    h.run(&["adr", "new", "Amendable ADR"]).assert_exit(0);
+
+    let adr_dir = h.dir.path().join("docs/adrs");
+    let entries: Vec<_> = std::fs::read_dir(&adr_dir)
+        .expect("read")
+        .filter_map(|e| e.ok())
+        .collect();
+    let adr_path = entries[0].path();
+    let filename = adr_path.file_name().expect("fname").to_str().expect("utf8");
+    let adr_id = &filename[..7];
+
+    h.run(&["adr", "status", adr_id, "accepted"]).assert_exit(0);
+
+    // Get the original hash
+    let content = std::fs::read_to_string(&adr_path).expect("read");
+    let original_hash = content
+        .lines()
+        .find(|l| l.starts_with("content-hash: "))
+        .expect("hash line")
+        .strip_prefix("content-hash: ")
+        .expect("strip")
+        .to_string();
+
+    // Modify the body (fix a "typo")
+    let modified = content.replace("Describe the decision", "Describe the architectural decision");
+    std::fs::write(&adr_path, &modified).expect("write modified");
+
+    // Amend the ADR
+    let out = h.run(&["adr", "amend", adr_id, "--reason", "Fix typo in decision section"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("amended");
+
+    // Verify amendments array exists with correct structure
+    let content = std::fs::read_to_string(&adr_path).expect("read");
+    assert!(content.contains("amendments:"), "Should have amendments array");
+    assert!(
+        content.contains("reason: Fix typo in decision section"),
+        "Should contain amendment reason"
+    );
+    assert!(
+        content.contains("previous-hash:"),
+        "Should contain previous-hash"
+    );
+    assert!(
+        content.contains(&format!("previous-hash: {}", original_hash)),
+        "previous-hash should match original"
+    );
+
+    // Verify content-hash is updated
+    let new_hash = content
+        .lines()
+        .find(|l| l.starts_with("content-hash: "))
+        .expect("hash line")
+        .strip_prefix("content-hash: ")
+        .expect("strip");
+    assert_ne!(new_hash, original_hash, "Hash should have changed");
+
+    // Verify graph check passes
+    let out = h.run(&["graph", "check"]);
+    // Should not have E014 errors (may have other warnings like W001)
+    assert!(
+        !out.stderr.contains("E014"),
+        "Should not have E014 after amend.\nstderr: {}",
+        out.stderr
+    );
+
+    // Verify amend without --reason is rejected
+    let out = h.run(&["adr", "amend", adr_id]);
+    assert_ne!(
+        out.exit_code, 0,
+        "amend without --reason should fail"
+    );
+}
+
+// ===========================================================================
+// TC-424: W016 for accepted ADR without content-hash
+// ===========================================================================
+
+#[test]
+fn tc_424_w016_for_accepted_adr_without_content_hash() {
+    let h = Harness::new();
+    // Create an ADR file manually with status: accepted but no content-hash
+    // (simulating a pre-existing ADR that predates this feature)
+    h.write(
+        "docs/adrs/ADR-001-legacy.md",
+        "---\nid: ADR-001\ntitle: Legacy ADR\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nLegacy decision body.\n",
+    );
+
+    let out = h.run(&["graph", "check"]);
+    out.assert_stderr_contains("W016");
+
+    // When no other errors, exit code should be 2 (warning only)
+    // Note: W001 (orphaned) will also fire, but that's also just a warning
+    assert_eq!(
+        out.exit_code, 2,
+        "W016 without errors should give exit code 2.\nstdout: {}\nstderr: {}",
+        out.stdout, out.stderr
+    );
+}
+
+// ===========================================================================
+// TC-425: MCP write tools cannot modify accepted ADR body
+// ===========================================================================
+
+#[test]
+fn tc_425_mcp_write_tools_cannot_modify_accepted_adr_body() {
+    let h = Harness::new();
+    // Write product.toml with MCP write enabled
+    h.write(
+        "product.toml",
+        r#"name = "test"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+[mcp]
+write = true
+"#,
+    );
+
+    // Create an accepted ADR with a valid content-hash
+    let adr_body = "This is the decision body.\n";
+    let hash = compute_adr_content_hash("Accepted ADR", adr_body.trim());
+    h.write(
+        "docs/adrs/ADR-001-accepted.md",
+        &format!(
+            "---\nid: ADR-001\ntitle: Accepted ADR\nstatus: accepted\ncontent-hash: {}\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\n{}", hash, adr_body
+        ),
+    );
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: []\n---\n\nBody.\n",
+    );
+
+    // Try to modify the accepted ADR body via MCP product_body_update — should fail
+    let input = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_body_update","arguments":{"id":"ADR-001","body":"Modified body"}}}"#;
+    let out = run_mcp_stdio_write(&h, input);
+    assert!(
+        out.contains("Cannot modify body of accepted ADR"),
+        "MCP should reject body update of accepted ADR.\nGot: {}",
+        out
+    );
+
+    // Verify product_adr_status (front-matter only) still works via MCP
+    // Note: MCP status tool returns a note to use CLI, but doesn't error
+    let input = r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_adr_status","arguments":{"id":"ADR-001","status":"accepted"}}}"#;
+    let out = run_mcp_stdio_write(&h, input);
+    assert!(
+        !out.contains("error"),
+        "product_adr_status should work on accepted ADR.\nGot: {}",
+        out
+    );
+
+    // Verify product_feature_link (modifies feature front-matter, excluded from hash) still works
+    let input = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"product_feature_link","arguments":{"id":"FT-001","adr":"ADR-001"}}}"#;
+    let out = run_mcp_stdio_write(&h, input);
+    assert!(
+        !out.contains("Cannot modify"),
+        "product_feature_link should work.\nGot: {}",
+        out
+    );
+}
+
+/// Run MCP stdio with write enabled
+fn run_mcp_stdio_write(h: &Harness, input: &str) -> String {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+
+    let mut child = Command::new(&h.bin)
+        .args(["mcp", "--write"])
+        .current_dir(h.dir.path())
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("spawn mcp");
+
+    if let Some(ref mut stdin) = child.stdin {
+        let _ = writeln!(stdin, "{}", input);
+    }
+    drop(child.stdin.take());
+
+    let output = child.wait_with_output().expect("wait");
+    String::from_utf8_lossy(&output.stdout).to_string()
+}
+
+// ===========================================================================
+// TC-426: Hash seal computes and writes TC content-hash
+// ===========================================================================
+
+#[test]
+fn tc_426_hash_seal_computes_and_writes_tc_content_hash() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001, TC-002, TC-003]\n---\n\nBody.\n",
+    );
+
+    // Create three TCs
+    let tc1 = "---\nid: TC-001\ntitle: First Test\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\n## Description\n\nFirst test body.\n";
+    let tc2 = "---\nid: TC-002\ntitle: Second Test\ntype: invariant\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n## Description\n\nSecond test body.\n";
+    let tc3 = "---\nid: TC-003\ntitle: Already Sealed\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\ncontent-hash: sha256:0000000000000000000000000000000000000000000000000000000000000000\n---\n\n## Description\n\nThird test body.\n";
+
+    h.write("docs/tests/TC-001-first.md", tc1);
+    h.write("docs/tests/TC-002-second.md", tc2);
+    h.write("docs/tests/TC-003-sealed.md", tc3);
+
+    // Verify TC-001 has no content-hash
+    let content = h.read("docs/tests/TC-001-first.md");
+    assert!(!content.contains("content-hash"), "TC-001 should not have content-hash yet");
+
+    // Seal TC-001 individually
+    let out = h.run(&["hash", "seal", "TC-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("sealed");
+
+    let content = h.read("docs/tests/TC-001-first.md");
+    assert!(
+        content.contains("content-hash: sha256:"),
+        "TC-001 should now have content-hash.\nGot:\n{}",
+        content
+    );
+
+    // Verify hash matches manual computation
+    let stored_hash = content
+        .lines()
+        .find(|l| l.starts_with("content-hash: "))
+        .expect("hash line")
+        .strip_prefix("content-hash: ")
+        .expect("strip");
+    let expected = compute_tc_content_hash(
+        "First Test",
+        "scenario",
+        &["ADR-001"],
+        "## Description\n\nFirst test body.\n",
+    );
+    assert_eq!(stored_hash, expected, "Hash should match manual computation");
+
+    // Seal all unsealed TCs
+    let out = h.run(&["hash", "seal", "--all-unsealed"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("TC-002"); // TC-002 should get sealed
+
+    // TC-002 should now have hash
+    let content = h.read("docs/tests/TC-002-second.md");
+    assert!(content.contains("content-hash: sha256:"), "TC-002 should now have hash");
+
+    // TC-003 should NOT have been modified (already sealed)
+    let content = h.read("docs/tests/TC-003-sealed.md");
+    assert!(
+        content.contains("content-hash: sha256:0000000000000000000000000000000000000000000000000000000000000000"),
+        "TC-003 should retain its original hash"
+    );
+}
+
+// ===========================================================================
+// TC-427: Hash verify checks content-hashes independently
+// ===========================================================================
+
+#[test]
+fn tc_427_hash_verify_checks_content_hashes_independently() {
+    let h = Harness::new();
+
+    // Create a valid accepted ADR
+    let valid_body = "Valid decision body.\n";
+    let valid_hash = compute_adr_content_hash("Valid ADR", valid_body.trim());
+    h.write(
+        "docs/adrs/ADR-001-valid.md",
+        &format!(
+            "---\nid: ADR-001\ntitle: Valid ADR\nstatus: accepted\ncontent-hash: {}\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\n{}",
+            valid_hash, valid_body
+        ),
+    );
+
+    // Create a tampered accepted ADR
+    let tampered_hash = compute_adr_content_hash("Tampered ADR", "Original body.");
+    h.write(
+        "docs/adrs/ADR-002-tampered.md",
+        &format!(
+            "---\nid: ADR-002\ntitle: Tampered ADR\nstatus: accepted\ncontent-hash: {}\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nModified body that doesn't match hash.\n",
+            tampered_hash
+        ),
+    );
+
+    // hash verify should report E014 for the tampered one
+    let out = h.run(&["hash", "verify"]);
+    assert_eq!(out.exit_code, 1, "Should fail with exit 1 for tampered hash.\nstderr: {}", out.stderr);
+    out.assert_stderr_contains("E014");
+
+    // Verify specific ADR — valid one should pass
+    let out = h.run(&["hash", "verify", "ADR-001"]);
+    assert_eq!(out.exit_code, 0, "Valid ADR should pass.\nstderr: {}", out.stderr);
+
+    // Verify specific tampered ADR should fail
+    let out = h.run(&["hash", "verify", "ADR-002"]);
+    assert_eq!(out.exit_code, 1, "Tampered ADR should fail.\nstderr: {}", out.stderr);
+    out.assert_stderr_contains("E014");
+
+    // hash verify should NOT run full graph checks (no orphan warnings etc.)
+    let all_out = h.run(&["hash", "verify"]);
+    assert!(
+        !all_out.stderr.contains("W001"),
+        "hash verify should not run orphan checks.\nstderr: {}",
+        all_out.stderr
+    );
+}
+
+// ===========================================================================
+// TC-428: ADR rehash seals pre-existing accepted ADRs
+// ===========================================================================
+
+#[test]
+fn tc_428_adr_rehash_seals_pre_existing_accepted_adrs() {
+    let h = Harness::new();
+
+    // Create multiple ADR files manually with status: accepted but no content-hash
+    h.write(
+        "docs/adrs/ADR-001-legacy-a.md",
+        "---\nid: ADR-001\ntitle: Legacy A\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nLegacy decision A.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-legacy-b.md",
+        "---\nid: ADR-002\ntitle: Legacy B\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nLegacy decision B.\n",
+    );
+    // Proposed ADR — should not be touched
+    h.write(
+        "docs/adrs/ADR-003-proposed.md",
+        "---\nid: ADR-003\ntitle: Proposed ADR\nstatus: proposed\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nDraft.\n",
+    );
+
+    // Rehash a single ADR
+    let out = h.run(&["adr", "rehash", "ADR-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("sealed");
+
+    // ADR-001 should now have content-hash but no amendments
+    let content = h.read("docs/adrs/ADR-001-legacy-a.md");
+    assert!(content.contains("content-hash: sha256:"), "ADR-001 should be sealed");
+    assert!(!content.contains("amendments:"), "Initial sealing should not add amendments");
+
+    // ADR-002 should still have no hash
+    let content = h.read("docs/adrs/ADR-002-legacy-b.md");
+    assert!(!content.contains("content-hash"), "ADR-002 should not be sealed yet");
+
+    // Rehash all
+    let out = h.run(&["adr", "rehash", "--all"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("ADR-002"); // ADR-002 should get sealed
+
+    // ADR-002 should now have hash
+    let content = h.read("docs/adrs/ADR-002-legacy-b.md");
+    assert!(content.contains("content-hash: sha256:"), "ADR-002 should be sealed after --all");
+
+    // ADR-003 (proposed) should NOT have hash
+    let content = h.read("docs/adrs/ADR-003-proposed.md");
+    assert!(!content.contains("content-hash"), "Proposed ADR should not be touched");
+
+    // ADR-001 (already sealed) should not be modified by --all
+    let content_before = h.read("docs/adrs/ADR-001-legacy-a.md");
+    h.run(&["adr", "rehash", "--all"]).assert_exit(0);
+    let content_after = h.read("docs/adrs/ADR-001-legacy-a.md");
+    assert_eq!(content_before, content_after, "Already-sealed ADR should not be modified");
+}
+
+// ===========================================================================
+// TC-429: Mutable front-matter does not affect content-hash
+// ===========================================================================
+
+#[test]
+fn tc_429_mutable_front_matter_does_not_affect_content_hash() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nBody.\n",
+    );
+
+    // Create and accept an ADR
+    let adr_body = "Decision body text.\n";
+    let hash = compute_adr_content_hash("Stable ADR", adr_body.trim());
+    h.write(
+        "docs/adrs/ADR-001-stable.md",
+        &format!(
+            "---\nid: ADR-001\ntitle: Stable ADR\nstatus: accepted\ncontent-hash: {}\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n{}",
+            hash, adr_body
+        ),
+    );
+
+    // graph check should pass initially
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        !out.stderr.contains("E014"),
+        "Should not have E014 initially.\nstderr: {}",
+        out.stderr
+    );
+
+    // Modify mutable field: status (superseded-by is also mutable)
+    let content = h.read("docs/adrs/ADR-001-stable.md");
+    let modified = content.replace("superseded-by: []", "superseded-by: [ADR-999]");
+    std::fs::write(
+        h.dir.path().join("docs/adrs/ADR-001-stable.md"),
+        &modified,
+    )
+    .expect("write modified");
+
+    // graph check should NOT produce E014 (mutable field change)
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        !out.stderr.contains("E014"),
+        "Mutable field change should not trigger E014.\nstderr: {}",
+        out.stderr
+    );
+
+    // Modify another mutable field: features
+    let modified = modified.replace("features:\n- FT-001", "features:\n- FT-001\n- FT-002");
+    std::fs::write(
+        h.dir.path().join("docs/adrs/ADR-001-stable.md"),
+        &modified,
+    )
+    .expect("write modified");
+
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        !out.stderr.contains("E014"),
+        "features change should not trigger E014.\nstderr: {}",
+        out.stderr
+    );
+
+    // Also test TC mutable fields
+    let tc_body = "## Description\n\nTest description.\n";
+    let tc_hash = compute_tc_content_hash("Stable TC", "scenario", &[], tc_body.trim());
+    h.write(
+        "docs/tests/TC-001-stable.md",
+        &format!(
+            "---\nid: TC-001\ntitle: Stable TC\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\ncontent-hash: {}\n---\n\n{}",
+            tc_hash, tc_body
+        ),
+    );
+
+    // Modify mutable TC field: status
+    let content = h.read("docs/tests/TC-001-stable.md");
+    let modified = content.replace("status: unimplemented", "status: passing");
+    std::fs::write(
+        h.dir.path().join("docs/tests/TC-001-stable.md"),
+        &modified,
+    )
+    .expect("write modified");
+
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        !out.stderr.contains("E015"),
+        "TC status change should not trigger E015.\nstderr: {}",
+        out.stderr
+    );
+
+    // Modify mutable TC field: validates.features
+    let modified = modified.replace("features:\n  - FT-001", "features:\n  - FT-001\n  - FT-002");
+    std::fs::write(
+        h.dir.path().join("docs/tests/TC-001-stable.md"),
+        &modified,
+    )
+    .expect("write modified");
+
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        !out.stderr.contains("E015"),
+        "TC validates.features change should not trigger E015.\nstderr: {}",
+        out.stderr
+    );
+}
+
+// ===========================================================================
+// TC-430: Content hash system passes on sealed repository (exit-criteria)
+// ===========================================================================
+
+#[test]
+fn tc_430_content_hash_system_passes_on_sealed_repository() {
+    let h = Harness::new();
+
+    // Set up a repo with accepted ADRs and finalized TCs
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-decision.md",
+        "---\nid: ADR-001\ntitle: Test Decision\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\nDecision body.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test Criterion\ntype: exit-criteria\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\n## Description\n\nTest body.\n",
+    );
+
+    // Before sealing, graph check should emit W016
+    let out = h.run(&["graph", "check"]);
+    out.assert_stderr_contains("W016");
+
+    // Seal everything
+    h.run(&["adr", "rehash", "--all"]).assert_exit(0);
+    h.run(&["hash", "seal", "--all-unsealed"]).assert_exit(0);
+
+    // 1. graph check should produce zero E014, E015, or W016
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        !out.stderr.contains("E014"),
+        "Should not have E014 after sealing.\nstderr: {}",
+        out.stderr
+    );
+    assert!(
+        !out.stderr.contains("E015"),
+        "Should not have E015 after sealing.\nstderr: {}",
+        out.stderr
+    );
+    assert!(
+        !out.stderr.contains("W016"),
+        "Should not have W016 after sealing.\nstderr: {}",
+        out.stderr
+    );
+
+    // 2. hash verify exits with code 0
+    let out = h.run(&["hash", "verify"]);
+    assert_eq!(
+        out.exit_code, 0,
+        "hash verify should pass on sealed repo.\nstderr: {}",
+        out.stderr
+    );
+
+    // 3. adr amend succeeds and subsequent graph check still passes
+    // First, modify the ADR body slightly
+    let adr_content = h.read("docs/adrs/ADR-001-decision.md");
+    let modified = adr_content.replace("Decision body.", "Decision body with correction.");
+    std::fs::write(
+        h.dir.path().join("docs/adrs/ADR-001-decision.md"),
+        &modified,
+    )
+    .expect("write modified");
+
+    let out = h.run(&["adr", "amend", "ADR-001", "--reason", "test amendment"]);
+    out.assert_exit(0);
+
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        !out.stderr.contains("E014"),
+        "graph check should still pass after amend.\nstderr: {}",
+        out.stderr
+    );
+
+    let out = h.run(&["hash", "verify"]);
+    assert_eq!(
+        out.exit_code, 0,
+        "hash verify should pass after amend.\nstderr: {}",
+        out.stderr
     );
 }

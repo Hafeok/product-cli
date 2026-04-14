@@ -107,6 +107,24 @@ pub struct AdrFrontMatter {
     /// Scope: cross-cutting, domain, or feature-specific (ADR-025)
     #[serde(default = "default_scope")]
     pub scope: AdrScope,
+    /// Content hash for immutability enforcement (ADR-032)
+    #[serde(rename = "content-hash", default, skip_serializing_if = "Option::is_none")]
+    pub content_hash: Option<String>,
+    /// Amendment audit trail (ADR-032)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub amendments: Vec<Amendment>,
+    /// Source files governed by this ADR
+    #[serde(rename = "source-files", default, skip_serializing_if = "Vec::is_empty")]
+    pub source_files: Vec<String>,
+}
+
+/// Amendment record for accepted ADR edits (ADR-032)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Amendment {
+    pub date: String,
+    pub reason: String,
+    #[serde(rename = "previous-hash")]
+    pub previous_hash: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -185,6 +203,30 @@ pub struct TestFrontMatter {
     pub validates: ValidatesBlock,
     #[serde(default = "default_phase")]
     pub phase: u32,
+    /// Content hash for immutability enforcement (ADR-032)
+    #[serde(rename = "content-hash", default, skip_serializing_if = "Option::is_none")]
+    pub content_hash: Option<String>,
+    /// TC runner name (e.g. cargo-test)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub runner: Option<String>,
+    /// TC runner arguments (e.g. test function name)
+    #[serde(rename = "runner-args", default, skip_serializing_if = "Option::is_none")]
+    pub runner_args: Option<String>,
+    /// TC runner timeout in seconds
+    #[serde(rename = "runner-timeout", default, skip_serializing_if = "Option::is_none")]
+    pub runner_timeout: Option<u64>,
+    /// TC prerequisites
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub requires: Vec<String>,
+    /// Last run timestamp
+    #[serde(rename = "last-run", default, skip_serializing_if = "Option::is_none")]
+    pub last_run: Option<String>,
+    /// Last failure message
+    #[serde(rename = "failure-message", default, skip_serializing_if = "Option::is_none")]
+    pub failure_message: Option<String>,
+    /// Last run duration in seconds
+    #[serde(rename = "last-run-duration", default, skip_serializing_if = "Option::is_none")]
+    pub last_run_duration: Option<f64>,
 }
 
 fn default_test_type() -> TestType {

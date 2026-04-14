@@ -11,6 +11,7 @@ pub mod fileops;
 pub mod formal;
 pub mod gap;
 pub mod graph;
+pub mod hash;
 pub mod implement;
 pub mod mcp;
 pub mod metrics;

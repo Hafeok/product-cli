@@ -5,7 +5,7 @@
 
 #![deny(clippy::unwrap_used)]
 
-use product_lib::{author, checklist, config, context, domains, drift, error, fileops, gap, graph, implement, mcp, metrics, migrate, onboard, parser, rdf, types};
+use product_lib::{author, checklist, config, context, domains, drift, error, fileops, gap, graph, hash, implement, mcp, metrics, migrate, onboard, parser, rdf, types};
 
 use clap::{Parser, Subcommand};
 use config::ProductConfig;
@@ -187,6 +187,11 @@ enum Commands {
         #[arg(long)]
         name: Option<String>,
     },
+    /// Content hash operations (ADR-032)
+    Hash {
+        #[command(subcommand)]
+        command: HashCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -337,6 +342,22 @@ enum AdrCommands {
         #[arg(long)]
         staged: bool,
     },
+    /// Record a legitimate amendment to an accepted ADR (ADR-032)
+    Amend {
+        /// ADR ID
+        id: String,
+        /// Reason for the amendment (mandatory)
+        #[arg(long)]
+        reason: Option<String>,
+    },
+    /// Seal an accepted ADR that predates content-hash (ADR-032)
+    Rehash {
+        /// ADR ID (omit with --all to seal all)
+        id: Option<String>,
+        /// Seal all accepted ADRs without content-hash
+        #[arg(long)]
+        all: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -414,6 +435,23 @@ enum GraphCommands {
         /// Output as JSON
         #[arg(long)]
         format: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+enum HashCommands {
+    /// Compute and write content-hash for a TC (ADR-032)
+    Seal {
+        /// TC ID (omit with --all-unsealed to seal all)
+        id: Option<String>,
+        /// Seal all TCs without a content-hash
+        #[arg(long)]
+        all_unsealed: bool,
+    },
+    /// Verify content-hashes independently of full graph check (ADR-032)
+    Verify {
+        /// Artifact ID (ADR or TC, omit for all)
+        id: Option<String>,
     },
 }
 
@@ -616,6 +654,7 @@ fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
         Commands::Preflight { id } => handle_preflight(&id),
         Commands::Onboard { command } => handle_onboard(command),
         Commands::Init { yes, force, name } => handle_init(yes, force, name),
+        Commands::Hash { command } => handle_hash(command),
     }
 }
 
@@ -1089,6 +1128,9 @@ fn handle_adr(cmd: AdrCommands, fmt: &str) -> BoxResult {
                 superseded_by: vec![],
                 domains: vec![],
                 scope: types::AdrScope::Domain,
+                content_hash: None,
+                amendments: vec![],
+                source_files: vec![],
             };
             let body = "**Status:** Proposed\n\n**Context:**\n\n[Describe the context here.]\n\n**Decision:**\n\n[Describe the decision.]\n\n**Rationale:**\n\n[Explain why.]\n\n**Rejected alternatives:**\n\n- [Alternative 1]\n".to_string();
             let content = parser::render_adr(&front, &body);
@@ -1120,6 +1162,13 @@ fn handle_adr(cmd: AdrCommands, fmt: &str) -> BoxResult {
 
             let mut front = a.front.clone();
             front.status = status;
+
+            // Compute content-hash on acceptance (ADR-032)
+            if status == types::AdrStatus::Accepted {
+                let h = hash::compute_adr_hash(&front.title, &a.body);
+                front.content_hash = Some(h);
+            }
+
             if let Some(by_id) = by {
                 if !front.superseded_by.contains(&by_id) {
                     front.superseded_by.push(by_id.clone());
@@ -1151,6 +1200,75 @@ fn handle_adr(cmd: AdrCommands, fmt: &str) -> BoxResult {
                 }
             } else {
                 eprintln!("Use --staged to review staged ADR files.");
+            }
+        }
+        AdrCommands::Amend { id, reason } => {
+            let reason = reason.ok_or_else(|| {
+                ProductError::ConfigError("--reason is required for amendments".to_string())
+            })?;
+            let _lock = acquire_write_lock()?;
+            let (_, _, graph) = load_graph()?;
+            let a = graph
+                .adrs
+                .get(&id)
+                .ok_or_else(|| ProductError::NotFound(format!("ADR {}", id)))?;
+
+            let (new_hash, amendment) = hash::amend_adr(a, &reason)?;
+
+            let mut front = a.front.clone();
+            front.content_hash = Some(new_hash.clone());
+            front.amendments.push(amendment);
+
+            let content = parser::render_adr(&front, &a.body);
+            fileops::write_file_atomic(&a.path, &content)?;
+            println!("{} amended: content-hash updated to {}", id, new_hash);
+        }
+        AdrCommands::Rehash { id, all } => {
+            let _lock = acquire_write_lock()?;
+            let (_, _, graph) = load_graph()?;
+
+            if all {
+                let mut sealed = 0;
+                let mut skipped = 0;
+                let mut adrs: Vec<&types::Adr> = graph.adrs.values().collect();
+                adrs.sort_by_key(|a| &a.front.id);
+                for a in adrs {
+                    if a.front.status != types::AdrStatus::Accepted {
+                        continue;
+                    }
+                    if a.front.content_hash.is_some() {
+                        skipped += 1;
+                        continue;
+                    }
+                    let h = hash::seal_adr(a)?;
+                    let mut front = a.front.clone();
+                    front.content_hash = Some(h.clone());
+                    let content = parser::render_adr(&front, &a.body);
+                    fileops::write_file_atomic(&a.path, &content)?;
+                    println!("  sealed {} -> {}", a.front.id, h);
+                    sealed += 1;
+                }
+                println!("{} ADR(s) sealed, {} already sealed", sealed, skipped);
+            } else {
+                let adr_id = id.ok_or_else(|| {
+                    ProductError::ConfigError(
+                        "specify an ADR ID or use --all".to_string(),
+                    )
+                })?;
+                let a = graph
+                    .adrs
+                    .get(&adr_id)
+                    .ok_or_else(|| ProductError::NotFound(format!("ADR {}", adr_id)))?;
+                if a.front.content_hash.is_some() {
+                    println!("{} is already sealed", adr_id);
+                    return Ok(());
+                }
+                let h = hash::seal_adr(a)?;
+                let mut front = a.front.clone();
+                front.content_hash = Some(h.clone());
+                let content = parser::render_adr(&front, &a.body);
+                fileops::write_file_atomic(&a.path, &content)?;
+                println!("{} sealed: content-hash = {}", adr_id, h);
             }
         }
     }
@@ -1297,6 +1415,14 @@ fn handle_test(cmd: TestCommands, fmt: &str) -> BoxResult {
                     adrs: vec![],
                 },
                 phase: 1,
+                content_hash: None,
+                runner: None,
+                runner_args: None,
+                runner_timeout: None,
+                requires: vec![],
+                last_run: None,
+                failure_message: None,
+                last_run_duration: None,
             };
 
             let body = "## Description\n\n[Describe the test criterion here.]\n".to_string();
@@ -2789,6 +2915,94 @@ fn handle_install_hooks() -> BoxResult {
     mcp::scaffold_mcp_json(&root)?;
     println!("Wrote .mcp.json: {}", root.join(".mcp.json").display());
 
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Hash commands (ADR-032, FT-034)
+// ---------------------------------------------------------------------------
+
+fn handle_hash(cmd: HashCommands) -> BoxResult {
+    match cmd {
+        HashCommands::Seal { id, all_unsealed } => {
+            let _lock = acquire_write_lock()?;
+            let (_, _, graph) = load_graph()?;
+
+            if all_unsealed {
+                let mut sealed = 0;
+                let mut skipped = 0;
+                let mut tests: Vec<&types::TestCriterion> = graph.tests.values().collect();
+                tests.sort_by_key(|t| &t.front.id);
+                for t in tests {
+                    if t.front.content_hash.is_some() {
+                        skipped += 1;
+                        continue;
+                    }
+                    // Only seal TCs that have body content
+                    if t.body.trim().is_empty() {
+                        continue;
+                    }
+                    let h = hash::seal_tc(t);
+                    let mut front = t.front.clone();
+                    front.content_hash = Some(h.clone());
+                    let content = parser::render_test(&front, &t.body);
+                    fileops::write_file_atomic(&t.path, &content)?;
+                    println!("  sealed {} -> {}", t.front.id, h);
+                    sealed += 1;
+                }
+                println!("{} TC(s) sealed, {} already sealed", sealed, skipped);
+            } else {
+                let tc_id = id.ok_or_else(|| {
+                    ProductError::ConfigError(
+                        "specify a TC ID or use --all-unsealed".to_string(),
+                    )
+                })?;
+                let t = graph
+                    .tests
+                    .get(&tc_id)
+                    .ok_or_else(|| ProductError::NotFound(format!("TC {}", tc_id)))?;
+                if t.front.content_hash.is_some() {
+                    println!("{} is already sealed", tc_id);
+                    return Ok(());
+                }
+                let h = hash::seal_tc(t);
+                let mut front = t.front.clone();
+                front.content_hash = Some(h.clone());
+                let content = parser::render_test(&front, &t.body);
+                fileops::write_file_atomic(&t.path, &content)?;
+                println!("{} sealed: content-hash = {}", tc_id, h);
+            }
+        }
+        HashCommands::Verify { id } => {
+            let (_, _, graph) = load_graph()?;
+
+            let (adrs, tests): (Vec<&types::Adr>, Vec<&types::TestCriterion>) = if let Some(ref artifact_id) = id {
+                if let Some(a) = graph.adrs.get(artifact_id.as_str()) {
+                    (vec![a], vec![])
+                } else if let Some(t) = graph.tests.get(artifact_id.as_str()) {
+                    (vec![], vec![t])
+                } else {
+                    return Err(Box::new(ProductError::NotFound(format!(
+                        "artifact {}",
+                        artifact_id
+                    ))));
+                }
+            } else {
+                let adrs: Vec<&types::Adr> = graph.adrs.values().collect();
+                let tests: Vec<&types::TestCriterion> = graph.tests.values().collect();
+                (adrs, tests)
+            };
+
+            let result = hash::verify_all(&adrs, &tests);
+            result.print_stderr();
+
+            let exit_code = result.exit_code();
+            if exit_code == 0 {
+                println!("All content-hashes verified.");
+            }
+            std::process::exit(exit_code);
+        }
+    }
     Ok(())
 }
 

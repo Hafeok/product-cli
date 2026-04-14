@@ -881,6 +881,14 @@ impl KnowledgeGraph {
             }
         }
 
+        // E014/W016: Content hash checks for accepted ADRs (ADR-032)
+        // E015: Content hash checks for sealed TCs (ADR-032)
+        let adrs_vec: Vec<&crate::types::Adr> = self.adrs.values().collect();
+        let tests_vec: Vec<&crate::types::TestCriterion> = self.tests.values().collect();
+        let hash_result = crate::hash::verify_all(&adrs_vec, &tests_vec);
+        result.errors.extend(hash_result.errors);
+        result.warnings.extend(hash_result.warnings);
+
         result
     }
 
@@ -1124,18 +1132,24 @@ mod tests {
     }
 
     fn make_adr(id: &str) -> Adr {
+        let title = format!("ADR {}", id);
+        let body = String::new();
+        let hash = crate::hash::compute_adr_hash(&title, &body);
         Adr {
             front: AdrFrontMatter {
                 id: id.to_string(),
-                title: format!("ADR {}", id),
+                title,
                 status: AdrStatus::Accepted,
                 features: vec![],
                 supersedes: vec![],
                 superseded_by: vec![],
                 domains: vec![],
                 scope: AdrScope::FeatureSpecific,
+                content_hash: Some(hash),
+                amendments: vec![],
+                source_files: vec![],
             },
-            body: String::new(),
+            body,
             path: PathBuf::from(format!("{}.md", id)),
         }
     }
@@ -1152,6 +1166,14 @@ mod tests {
                     adrs: adrs.into_iter().map(String::from).collect(),
                 },
                 phase: 1,
+                content_hash: None,
+                runner: None,
+                runner_args: None,
+                runner_timeout: None,
+                requires: vec![],
+                last_run: None,
+                failure_message: None,
+                last_run_duration: None,
             },
             body: String::new(),
             path: PathBuf::from(format!("{}.md", id)),

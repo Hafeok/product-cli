@@ -2,13 +2,14 @@
 id: TC-422
 title: E015 on sealed TC body tamper
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: [FT-034]
   adrs: [ADR-032]
 phase: 1
 runner: cargo-test
 runner-args: "tc_422_e015_on_sealed_tc_body_tamper"
+last-run: 2026-04-14T14:44:11.097422144+00:00
 ---
 
 ## Description

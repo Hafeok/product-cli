@@ -379,6 +379,9 @@ pub fn execute_plan(
             superseded_by: vec![],
             domains: vec![],
             scope: crate::types::AdrScope::Domain,
+            content_hash: None,
+            amendments: vec![],
+            source_files: vec![],
         };
         let content = crate::parser::render_adr(&front, &a.body);
         crate::fileops::write_file_atomic(&path, &content)?;
@@ -413,6 +416,14 @@ pub fn execute_plan(
                 adrs: vec![t.adr_id.clone()],
             },
             phase: 1,
+            content_hash: None,
+            runner: None,
+            runner_args: None,
+            runner_timeout: None,
+            requires: vec![],
+            last_run: None,
+            failure_message: None,
+            last_run_duration: None,
         };
         let content = crate::parser::render_test(&front, &t.body);
         crate::fileops::write_file_atomic(&path, &content)?;

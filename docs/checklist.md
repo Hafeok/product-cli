@@ -259,20 +259,20 @@
 - [x] TC-162: FT-020 migration extracts and confirms (exit-criteria) — passing
 - [x] TC-275: ### Exit criteria (exit-criteria) — passing
 
-### FT-034 — Content Hash Immutability [ ]
+### FT-034 — Content Hash Immutability [x]
 
 - [ ] ADR-032: Content Hash Immutability Enforcement (proposed)
-- [ ] TC-420: Hash computed on ADR acceptance (scenario) — unimplemented
-- [ ] TC-421: E014 on accepted ADR body tamper (scenario) — unimplemented
-- [ ] TC-422: E015 on sealed TC body tamper (scenario) — unimplemented
-- [ ] TC-423: ADR amend records amendment and recomputes hash (scenario) — unimplemented
-- [ ] TC-424: W016 for accepted ADR without content-hash (scenario) — unimplemented
-- [ ] TC-425: MCP write tools cannot modify accepted ADR body (scenario) — unimplemented
-- [ ] TC-426: Hash seal computes and writes TC content-hash (scenario) — unimplemented
-- [ ] TC-427: Hash verify checks content-hashes independently (scenario) — unimplemented
-- [ ] TC-428: ADR rehash seals pre-existing accepted ADRs (scenario) — unimplemented
-- [ ] TC-429: Mutable front-matter does not affect content-hash (invariant) — unimplemented
-- [ ] TC-430: Content hash system passes on sealed repository (exit-criteria) — unimplemented
+- [x] TC-420: Hash computed on ADR acceptance (scenario) — passing
+- [x] TC-421: E014 on accepted ADR body tamper (scenario) — passing
+- [x] TC-422: E015 on sealed TC body tamper (scenario) — passing
+- [x] TC-423: ADR amend records amendment and recomputes hash (scenario) — passing
+- [x] TC-424: W016 for accepted ADR without content-hash (scenario) — passing
+- [x] TC-425: MCP write tools cannot modify accepted ADR body (scenario) — passing
+- [x] TC-426: Hash seal computes and writes TC content-hash (scenario) — passing
+- [x] TC-427: Hash verify checks content-hashes independently (scenario) — passing
+- [x] TC-428: ADR rehash seals pre-existing accepted ADRs (scenario) — passing
+- [x] TC-429: Mutable front-matter does not affect content-hash (invariant) — passing
+- [x] TC-430: Content hash system passes on sealed repository (exit-criteria) — passing
 
 ### FT-035 — Repository Initialization [ ]
 
