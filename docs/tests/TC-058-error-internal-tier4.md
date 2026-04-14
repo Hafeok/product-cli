@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-013
 phase: 1
+runner: cargo-test
+runner-args: "tc_058_error_internal_tier4"
 ---
 
 trigger a Tier 4 path via an injected fault. Assert exit code 3 and the internal error message format.

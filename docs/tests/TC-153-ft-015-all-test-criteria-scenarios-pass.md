@@ -2,7 +2,7 @@
 id: TC-153
 title: FT-015 all test-criteria scenarios pass
 type: exit-criteria
-status: passing
+status: unimplemented
 validates:
   features: []
   adrs: []

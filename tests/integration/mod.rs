@@ -5492,10 +5492,10 @@ fn tc_112_verify_one_fail_keeps_in_progress() {
     );
 }
 
-/// TC-113: verify_unrunnable_no_block
-/// All TCs have no runner field. Assert feature status unchanged. Assert W-class warning.
+/// TC-113: verify_unimplemented_blocks
+/// All TCs have no runner field. Assert feature goes to in-progress (unimplemented blocks completion).
 #[test]
-fn tc_113_verify_unrunnable_no_block() {
+fn tc_113_verify_unimplemented_blocks() {
     let h = Harness::new();
     h.write(
         "docs/features/FT-001-test.md",
@@ -5512,18 +5512,41 @@ fn tc_113_verify_unrunnable_no_block() {
 
     let out = h.run(&["verify", "FT-001"]);
     out.assert_exit(0);
-    out.assert_stdout_contains("UNRUNNABLE");
+    out.assert_stdout_contains("UNIMPLEMENTED");
 
-    // Feature status should be unchanged (still planned)
+    // Feature status should be in-progress (unimplemented TCs block completion)
     let feature_content = h.read("docs/features/FT-001-test.md");
     assert!(
-        feature_content.contains("status: planned"),
-        "Feature status should be unchanged when all TCs are unrunnable.\nContent: {}",
+        feature_content.contains("status: in-progress"),
+        "Feature should be in-progress when TCs are unimplemented.\nContent: {}",
         feature_content
     );
+}
 
-    // Should emit W-class warning
-    out.assert_stderr_contains("warning[W001]");
+/// TC-113b: verify_unrunnable_acknowledged_does_not_block
+/// TC explicitly set to unrunnable status. Assert feature can still complete.
+#[test]
+fn tc_113b_verify_unrunnable_no_block() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test TC\ntype: scenario\nstatus: unrunnable\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nTest body acknowledged as unrunnable.\n",
+    );
+
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("UNRUNNABLE");
+
+    // Should emit W016 warning for unrunnable TCs
+    out.assert_stderr_contains("warning[W016]");
 }
 
 /// TC-114: verify_updates_frontmatter
@@ -5661,7 +5684,7 @@ fn tc_167_ft_023_implement_and_verify_orchestrate() {
     let feat = h3.read("docs/features/FT-001-test.md");
     assert!(feat.contains("status: in-progress"), "Feature should stay in-progress on failure");
 
-    // Part 5: Unrunnable TCs emit warning
+    // Part 5: Unimplemented TCs block completion (feature goes to in-progress)
     let h4 = Harness::new();
     h4.write(
         "docs/features/FT-001-test.md",
@@ -5677,9 +5700,9 @@ fn tc_167_ft_023_implement_and_verify_orchestrate() {
     );
     let out5 = h4.run(&["verify", "FT-001"]);
     out5.assert_exit(0);
-    out5.assert_stderr_contains("warning[W001]");
+    out5.assert_stdout_contains("UNIMPLEMENTED");
     let feat4 = h4.read("docs/features/FT-001-test.md");
-    assert!(feat4.contains("status: planned"), "Unrunnable should not change status");
+    assert!(feat4.contains("status: in-progress"), "Unimplemented TCs should block completion");
 }
 
 // ===========================================================================

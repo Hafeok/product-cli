@@ -2,7 +2,7 @@
 id: FT-022
 title: Authoring Sessions
 phase: 5
-status: complete
+status: in-progress
 depends-on: []
 adrs:
 - ADR-022
@@ -16,9 +16,6 @@ tests:
 - TC-315
 - TC-316
 - TC-317
-- TC-318
-- TC-319
-- TC-320
 - TC-321
 - TC-322
 - TC-323

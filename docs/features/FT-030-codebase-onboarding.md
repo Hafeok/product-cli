@@ -2,7 +2,7 @@
 id: FT-030
 title: Codebase Onboarding
 phase: 5
-status: complete
+status: in-progress
 depends-on: []
 adrs:
 - ADR-027

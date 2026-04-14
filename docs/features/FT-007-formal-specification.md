@@ -2,7 +2,7 @@
 id: FT-007
 title: Formal Specification
 phase: 1
-status: complete
+status: in-progress
 depends-on: []
 adrs:
 - ADR-004
@@ -10,8 +10,6 @@ tests:
 - TC-011
 - TC-012
 - TC-152
-- TC-192
-- TC-193
 domains: []
 domains-acknowledged: {}
 ---

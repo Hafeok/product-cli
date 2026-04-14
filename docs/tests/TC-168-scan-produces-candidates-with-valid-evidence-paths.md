@@ -11,7 +11,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_168_scan_produces_candidates_with_valid_evidence_paths"
-last-run: 2026-04-13T14:45:04.298783396+00:00
+last-run: 2026-04-14T11:01:04.789091923+00:00
 ---
 
 ## Description

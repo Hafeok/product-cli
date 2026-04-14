@@ -2,7 +2,7 @@
 id: TC-057
 title: error_no_panic_on_bad_yaml
 type: scenario
-status: passing
+status: unimplemented
 validates:
   features:
   - FT-010

@@ -11,7 +11,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_175_seed_groups_candidates_into_feature_stubs_by_signal_proximity"
-last-run: 2026-04-13T14:45:04.298783396+00:00
+last-run: 2026-04-14T11:01:04.789091923+00:00
 ---
 
 ## Description

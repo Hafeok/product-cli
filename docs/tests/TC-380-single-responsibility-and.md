@@ -4,7 +4,8 @@ title: single_responsibility_and
 type: scenario
 status: unimplemented
 validates:
-  features: []
+  features:
+  - FT-031
   adrs:
   - ADR-029
 phase: 1

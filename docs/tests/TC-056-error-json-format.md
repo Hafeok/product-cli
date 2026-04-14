@@ -2,7 +2,7 @@
 id: TC-056
 title: error_json_format
 type: scenario
-status: passing
+status: unimplemented
 validates:
   features:
   - FT-010

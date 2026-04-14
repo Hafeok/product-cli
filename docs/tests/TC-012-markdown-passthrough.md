@@ -13,6 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_012_markdown_passthrough"
+last-run: 2026-04-14T10:48:19.709127491+00:00
 ---
 
 a markdown file with code blocks, tables, and nested lists. Assert the context bundle output preserves these structures verbatim.

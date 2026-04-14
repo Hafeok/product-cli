@@ -13,6 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_074_parse_evidence_block"
+last-run: 2026-04-14T10:46:07.489682314+00:00
 ---
 
 parse `⟦Ε⟧⟨δ≜0.95;φ≜100;τ≜◊⁺⟩`. Assert `delta=0.95`, `phi=100`, `tau=Stable`.

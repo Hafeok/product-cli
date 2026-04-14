@@ -83,6 +83,7 @@ pub fn generate(graph: &KnowledgeGraph) -> String {
                             TestStatus::Implemented => "[~]",
                             TestStatus::Unimplemented => "[ ]",
                             TestStatus::Failing => "[!]",
+                            TestStatus::Unrunnable => "[?]",
                         };
                         out.push_str(&format!(
                             "- {} {}: {} ({}) — {}\n",

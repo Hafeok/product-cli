@@ -2,7 +2,7 @@
 id: FT-023
 title: Agent Orchestration
 phase: 5
-status: complete
+status: in-progress
 depends-on: []
 adrs:
 - ADR-021
@@ -16,12 +16,10 @@ tests:
 - TC-114
 - TC-115
 - TC-167
-- TC-303
 - TC-304
 - TC-305
 - TC-306
 - TC-307
-- TC-308
 - TC-309
 - TC-310
 - TC-311

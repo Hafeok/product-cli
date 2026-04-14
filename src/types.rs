@@ -218,6 +218,7 @@ pub enum TestStatus {
     Implemented,
     Passing,
     Failing,
+    Unrunnable,
 }
 
 impl std::fmt::Display for TestStatus {
@@ -227,6 +228,7 @@ impl std::fmt::Display for TestStatus {
             Self::Implemented => write!(f, "implemented"),
             Self::Passing => write!(f, "passing"),
             Self::Failing => write!(f, "failing"),
+            Self::Unrunnable => write!(f, "unrunnable"),
         }
     }
 }
@@ -237,6 +239,7 @@ impl std::str::FromStr for TestStatus {
         match s {
             "unimplemented" => Ok(Self::Unimplemented),
             "implemented" => Ok(Self::Implemented),
+            "unrunnable" => Ok(Self::Unrunnable),
             "passing" => Ok(Self::Passing),
             "failing" => Ok(Self::Failing),
             _ => Err(format!("unknown test status: {}", s)),

@@ -2,7 +2,7 @@
 id: FT-017
 title: Generated Checklist
 phase: 1
-status: complete
+status: in-progress
 depends-on: []
 adrs:
 - ADR-007
@@ -11,9 +11,6 @@ tests:
 - TC-022
 - TC-023
 - TC-159
-- TC-206
-- TC-207
-- TC-208
 - TC-209
 - TC-210
 domains: []

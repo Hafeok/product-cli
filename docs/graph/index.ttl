@@ -7,7 +7,7 @@
 ft:FT-015 a pm:Feature ;
     pm:title "Test Criteria" ;
     pm:phase 1 ;
-    pm:status pm:InProgress ;
+    pm:status pm:Complete ;
     pm:implementedBy adr:ADR-011 ;
     pm:implementedBy adr:ADR-016 ;
     pm:implementedBy adr:ADR-018 ;
@@ -25,39 +25,48 @@ ft:FT-015 a pm:Feature ;
     pm:validatedBy tc:TC-076 ;
     pm:validatedBy tc:TC-077 ;
     pm:validatedBy tc:TC-078 ;
-    pm:validatedBy tc:TC-079 .
+    pm:validatedBy tc:TC-079 ;
+    pm:validatedBy tc:TC-153 .
 
-ft:FT-022 a pm:Feature ;
-    pm:title "Authoring Sessions" ;
-    pm:phase 5 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-022 ;
-    pm:validatedBy tc:TC-116 ;
-    pm:validatedBy tc:TC-117 ;
-    pm:validatedBy tc:TC-118 ;
-    pm:validatedBy tc:TC-119 ;
-    pm:validatedBy tc:TC-120 .
-
-ft:FT-007 a pm:Feature ;
-    pm:title "Formal Specification" ;
+ft:FT-020 a pm:Feature ;
+    pm:title "Migration Path" ;
     pm:phase 1 ;
     pm:status pm:Complete ;
-    pm:implementedBy adr:ADR-004 ;
-    pm:validatedBy tc:TC-011 ;
-    pm:validatedBy tc:TC-012 .
+    pm:implementedBy adr:ADR-017 ;
+    pm:implementedBy adr:ADR-014 ;
+    pm:validatedBy tc:TC-060 ;
+    pm:validatedBy tc:TC-061 ;
+    pm:validatedBy tc:TC-062 ;
+    pm:validatedBy tc:TC-063 ;
+    pm:validatedBy tc:TC-064 ;
+    pm:validatedBy tc:TC-065 ;
+    pm:validatedBy tc:TC-080 ;
+    pm:validatedBy tc:TC-081 ;
+    pm:validatedBy tc:TC-082 ;
+    pm:validatedBy tc:TC-083 ;
+    pm:validatedBy tc:TC-084 ;
+    pm:validatedBy tc:TC-085 ;
+    pm:validatedBy tc:TC-162 ;
+    pm:validatedBy tc:TC-275 .
 
-ft:FT-016 a pm:Feature ;
-    pm:title "Graph Model" ;
-    pm:phase 1 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-003 ;
-    pm:implementedBy adr:ADR-008 ;
-    pm:implementedBy adr:ADR-012 ;
+ft:FT-014 a pm:Feature ;
+    pm:title "Status and Filters" ;
+    pm:phase 2 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-007 ;
+    pm:implementedBy adr:ADR-009 ;
     pm:validatedBy tc:TC-009 ;
     pm:validatedBy tc:TC-010 ;
+    pm:validatedBy tc:TC-021 ;
+    pm:validatedBy tc:TC-022 ;
+    pm:validatedBy tc:TC-023 ;
     pm:validatedBy tc:TC-024 ;
     pm:validatedBy tc:TC-025 ;
     pm:validatedBy tc:TC-026 ;
+    pm:validatedBy tc:TC-027 ;
+    pm:validatedBy tc:TC-028 ;
+    pm:validatedBy tc:TC-029 ;
+    pm:validatedBy tc:TC-030 ;
     pm:validatedBy tc:TC-041 ;
     pm:validatedBy tc:TC-042 ;
     pm:validatedBy tc:TC-043 ;
@@ -71,148 +80,18 @@ ft:FT-016 a pm:Feature ;
     pm:validatedBy tc:TC-051 ;
     pm:validatedBy tc:TC-052 ;
     pm:validatedBy tc:TC-053 ;
-    pm:validatedBy tc:TC-054 .
-
-ft:FT-026 a pm:Feature ;
-    pm:title "Hard constraints" ;
-    pm:phase 5 ;
-    pm:status pm:Planned .
-
-ft:FT-023 a pm:Feature ;
-    pm:title "Agent Orchestration" ;
-    pm:phase 5 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-021 ;
-    pm:validatedBy tc:TC-108 ;
-    pm:validatedBy tc:TC-109 ;
-    pm:validatedBy tc:TC-110 ;
-    pm:validatedBy tc:TC-111 ;
-    pm:validatedBy tc:TC-112 ;
-    pm:validatedBy tc:TC-113 ;
-    pm:validatedBy tc:TC-114 ;
-    pm:validatedBy tc:TC-115 .
-
-ft:FT-003 a pm:Feature ;
-    pm:title "Front-Matter Schema" ;
-    pm:phase 1 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-002 ;
-    pm:implementedBy adr:ADR-014 ;
-    pm:implementedBy adr:ADR-016 ;
-    pm:validatedBy tc:TC-005 ;
-    pm:validatedBy tc:TC-006 ;
-    pm:validatedBy tc:TC-007 ;
-    pm:validatedBy tc:TC-008 ;
-    pm:validatedBy tc:TC-060 ;
-    pm:validatedBy tc:TC-061 ;
-    pm:validatedBy tc:TC-062 ;
-    pm:validatedBy tc:TC-063 ;
-    pm:validatedBy tc:TC-064 ;
-    pm:validatedBy tc:TC-065 ;
-    pm:validatedBy tc:TC-071 ;
-    pm:validatedBy tc:TC-072 ;
-    pm:validatedBy tc:TC-073 ;
-    pm:validatedBy tc:TC-074 ;
-    pm:validatedBy tc:TC-075 ;
-    pm:validatedBy tc:TC-076 ;
-    pm:validatedBy tc:TC-077 ;
-    pm:validatedBy tc:TC-078 ;
-    pm:validatedBy tc:TC-079 .
-
-ft:FT-028 a pm:Feature ;
-    pm:title "Engineering Workflows" ;
-    pm:phase 5 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-023 ;
-    pm:implementedBy adr:ADR-024 ;
-    pm:validatedBy tc:TC-121 ;
-    pm:validatedBy tc:TC-122 ;
-    pm:validatedBy tc:TC-123 ;
-    pm:validatedBy tc:TC-124 ;
-    pm:validatedBy tc:TC-125 ;
-    pm:validatedBy tc:TC-126 ;
-    pm:validatedBy tc:TC-127 ;
-    pm:validatedBy tc:TC-128 ;
-    pm:validatedBy tc:TC-129 ;
-    pm:validatedBy tc:TC-130 ;
-    pm:validatedBy tc:TC-131 .
-
-ft:FT-025 a pm:Feature ;
-    pm:title "Current test status" ;
-    pm:phase 5 ;
-    pm:status pm:Planned .
-
-ft:FT-001 a pm:Feature ;
-    pm:title "Core Concepts" ;
-    pm:phase 1 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-001 ;
-    pm:implementedBy adr:ADR-004 ;
-    pm:implementedBy adr:ADR-005 ;
-    pm:validatedBy tc:TC-001 ;
-    pm:validatedBy tc:TC-002 ;
-    pm:validatedBy tc:TC-003 ;
-    pm:validatedBy tc:TC-004 ;
-    pm:validatedBy tc:TC-011 ;
-    pm:validatedBy tc:TC-012 ;
-    pm:validatedBy tc:TC-013 ;
-    pm:validatedBy tc:TC-014 ;
-    pm:validatedBy tc:TC-015 .
-
-ft:FT-010 a pm:Feature ;
-    pm:title "CLI Commands" ;
-    pm:phase 1 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-009 ;
-    pm:implementedBy adr:ADR-013 ;
-    pm:validatedBy tc:TC-027 ;
-    pm:validatedBy tc:TC-028 ;
-    pm:validatedBy tc:TC-029 ;
-    pm:validatedBy tc:TC-030 ;
-    pm:validatedBy tc:TC-055 ;
-    pm:validatedBy tc:TC-056 ;
-    pm:validatedBy tc:TC-057 ;
-    pm:validatedBy tc:TC-058 ;
-    pm:validatedBy tc:TC-059 .
-
-ft:FT-012 a pm:Feature ;
-    pm:title "Feature: FT-001 — Cluster Foundation" ;
-    pm:phase 1 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-001 ;
-    pm:validatedBy tc:TC-001 ;
-    pm:validatedBy tc:TC-002 ;
-    pm:validatedBy tc:TC-003 ;
-    pm:validatedBy tc:TC-004 .
-
-ft:FT-018 a pm:Feature ;
-    pm:title "Validation and Graph Health" ;
-    pm:phase 1 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-010 ;
-    pm:implementedBy adr:ADR-025 ;
-    pm:validatedBy tc:TC-031 ;
-    pm:validatedBy tc:TC-032 ;
-    pm:validatedBy tc:TC-033 ;
-    pm:validatedBy tc:TC-034 ;
-    pm:validatedBy tc:TC-132 ;
-    pm:validatedBy tc:TC-133 ;
-    pm:validatedBy tc:TC-134 ;
-    pm:validatedBy tc:TC-135 ;
-    pm:validatedBy tc:TC-136 ;
-    pm:validatedBy tc:TC-137 ;
-    pm:validatedBy tc:TC-138 ;
-    pm:validatedBy tc:TC-139 .
-
-ft:FT-004 a pm:Feature ;
-    pm:title "Description" ;
-    pm:phase 1 ;
-    pm:status pm:Planned .
+    pm:validatedBy tc:TC-054 ;
+    pm:validatedBy tc:TC-157 ;
+    pm:validatedBy tc:TC-159 ;
+    pm:validatedBy tc:TC-209 ;
+    pm:validatedBy tc:TC-210 ;
+    pm:dependsOn ft:FT-017 ;
+    pm:dependsOn ft:FT-016 .
 
 ft:FT-011 a pm:Feature ;
     pm:title "Context Bundle Format" ;
     pm:phase 1 ;
-    pm:status pm:InProgress ;
+    pm:status pm:Complete ;
     pm:implementedBy adr:ADR-006 ;
     pm:implementedBy adr:ADR-008 ;
     pm:implementedBy adr:ADR-012 ;
@@ -237,51 +116,61 @@ ft:FT-011 a pm:Feature ;
     pm:validatedBy tc:TC-051 ;
     pm:validatedBy tc:TC-052 ;
     pm:validatedBy tc:TC-053 ;
-    pm:validatedBy tc:TC-054 .
+    pm:validatedBy tc:TC-054 ;
+    pm:validatedBy tc:TC-158 ;
+    pm:validatedBy tc:TC-201 ;
+    pm:validatedBy tc:TC-202 ;
+    pm:validatedBy tc:TC-203 ;
+    pm:validatedBy tc:TC-205 ;
+    pm:validatedBy tc:TC-232 ;
+    pm:validatedBy tc:TC-233 ;
+    pm:validatedBy tc:TC-234 ;
+    pm:validatedBy tc:TC-235 ;
+    pm:validatedBy tc:TC-236 ;
+    pm:validatedBy tc:TC-237 ;
+    pm:validatedBy tc:TC-238 ;
+    pm:validatedBy tc:TC-249 .
 
-ft:FT-013 a pm:Feature ;
-    pm:title "ADR-001 — Rust as Implementation Language" ;
-    pm:phase 1 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-001 ;
-    pm:validatedBy tc:TC-001 ;
-    pm:validatedBy tc:TC-002 ;
-    pm:validatedBy tc:TC-003 ;
-    pm:validatedBy tc:TC-004 .
-
-ft:FT-006 a pm:Feature ;
-    pm:title "Description" ;
-    pm:phase 1 ;
-    pm:status pm:Planned .
-
-ft:FT-017 a pm:Feature ;
-    pm:title "Generated Checklist" ;
-    pm:phase 1 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-007 ;
-    pm:validatedBy tc:TC-021 ;
-    pm:validatedBy tc:TC-022 ;
-    pm:validatedBy tc:TC-023 .
-
-ft:FT-021 a pm:Feature ;
-    pm:title "MCP Server" ;
-    pm:phase 5 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-020 ;
-    pm:validatedBy tc:TC-099 ;
-    pm:validatedBy tc:TC-100 ;
-    pm:validatedBy tc:TC-101 ;
-    pm:validatedBy tc:TC-102 ;
-    pm:validatedBy tc:TC-103 ;
-    pm:validatedBy tc:TC-104 ;
-    pm:validatedBy tc:TC-105 ;
-    pm:validatedBy tc:TC-106 ;
-    pm:validatedBy tc:TC-107 .
+ft:FT-024 a pm:Feature ;
+    pm:title "Graph Intelligence" ;
+    pm:phase 3 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-008 ;
+    pm:implementedBy adr:ADR-012 ;
+    pm:validatedBy tc:TC-009 ;
+    pm:validatedBy tc:TC-010 ;
+    pm:validatedBy tc:TC-024 ;
+    pm:validatedBy tc:TC-025 ;
+    pm:validatedBy tc:TC-026 ;
+    pm:validatedBy tc:TC-041 ;
+    pm:validatedBy tc:TC-042 ;
+    pm:validatedBy tc:TC-043 ;
+    pm:validatedBy tc:TC-044 ;
+    pm:validatedBy tc:TC-045 ;
+    pm:validatedBy tc:TC-046 ;
+    pm:validatedBy tc:TC-047 ;
+    pm:validatedBy tc:TC-048 ;
+    pm:validatedBy tc:TC-049 ;
+    pm:validatedBy tc:TC-050 ;
+    pm:validatedBy tc:TC-051 ;
+    pm:validatedBy tc:TC-052 ;
+    pm:validatedBy tc:TC-053 ;
+    pm:validatedBy tc:TC-054 ;
+    pm:validatedBy tc:TC-157 ;
+    pm:validatedBy tc:TC-232 ;
+    pm:validatedBy tc:TC-233 ;
+    pm:validatedBy tc:TC-234 ;
+    pm:validatedBy tc:TC-235 ;
+    pm:validatedBy tc:TC-236 ;
+    pm:validatedBy tc:TC-237 ;
+    pm:validatedBy tc:TC-238 ;
+    pm:validatedBy tc:TC-249 ;
+    pm:dependsOn ft:FT-016 .
 
 ft:FT-029 a pm:Feature ;
     pm:title "Gap Analysis" ;
-    pm:phase 5 ;
-    pm:status pm:InProgress ;
+    pm:phase 4 ;
+    pm:status pm:Complete ;
     pm:implementedBy adr:ADR-019 ;
     pm:validatedBy tc:TC-086 ;
     pm:validatedBy tc:TC-087 ;
@@ -297,28 +186,10 @@ ft:FT-029 a pm:Feature ;
     pm:validatedBy tc:TC-097 ;
     pm:validatedBy tc:TC-098 .
 
-ft:FT-027 a pm:Feature ;
-    pm:title "Context Bundle" ;
-    pm:phase 5 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-026 ;
-    pm:validatedBy tc:TC-140 ;
-    pm:validatedBy tc:TC-141 ;
-    pm:validatedBy tc:TC-142 ;
-    pm:validatedBy tc:TC-143 ;
-    pm:validatedBy tc:TC-144 ;
-    pm:validatedBy tc:TC-145 ;
-    pm:validatedBy tc:TC-146 ;
-    pm:validatedBy tc:TC-147 ;
-    pm:validatedBy tc:TC-148 ;
-    pm:validatedBy tc:TC-149 ;
-    pm:validatedBy tc:TC-150 ;
-    pm:validatedBy tc:TC-151 .
-
 ft:FT-019 a pm:Feature ;
     pm:title "Domain Coverage Matrix" ;
-    pm:phase 1 ;
-    pm:status pm:InProgress ;
+    pm:phase 5 ;
+    pm:status pm:Complete ;
     pm:implementedBy adr:ADR-025 ;
     pm:implementedBy adr:ADR-026 ;
     pm:validatedBy tc:TC-132 ;
@@ -342,10 +213,89 @@ ft:FT-019 a pm:Feature ;
     pm:validatedBy tc:TC-150 ;
     pm:validatedBy tc:TC-151 .
 
+ft:FT-009 a pm:Feature ;
+    pm:title "Formal Specification" ;
+    pm:phase 1 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-005 ;
+    pm:validatedBy tc:TC-013 ;
+    pm:validatedBy tc:TC-014 ;
+    pm:validatedBy tc:TC-015 ;
+    pm:validatedBy tc:TC-160 .
+
+ft:FT-021 a pm:Feature ;
+    pm:title "MCP Server" ;
+    pm:phase 5 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-020 ;
+    pm:validatedBy tc:TC-099 ;
+    pm:validatedBy tc:TC-100 ;
+    pm:validatedBy tc:TC-101 ;
+    pm:validatedBy tc:TC-102 ;
+    pm:validatedBy tc:TC-103 ;
+    pm:validatedBy tc:TC-104 ;
+    pm:validatedBy tc:TC-105 ;
+    pm:validatedBy tc:TC-106 ;
+    pm:validatedBy tc:TC-107 ;
+    pm:validatedBy tc:TC-165 .
+
+ft:FT-027 a pm:Feature ;
+    pm:title "Context Bundle" ;
+    pm:phase 5 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-026 ;
+    pm:validatedBy tc:TC-140 ;
+    pm:validatedBy tc:TC-141 ;
+    pm:validatedBy tc:TC-142 ;
+    pm:validatedBy tc:TC-143 ;
+    pm:validatedBy tc:TC-144 ;
+    pm:validatedBy tc:TC-145 ;
+    pm:validatedBy tc:TC-146 ;
+    pm:validatedBy tc:TC-147 ;
+    pm:validatedBy tc:TC-148 ;
+    pm:validatedBy tc:TC-149 ;
+    pm:validatedBy tc:TC-150 ;
+    pm:validatedBy tc:TC-151 .
+
+ft:FT-006 a pm:Feature ;
+    pm:title "Impact Analysis" ;
+    pm:phase 2 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-012 ;
+    pm:validatedBy tc:TC-009 ;
+    pm:validatedBy tc:TC-010 ;
+    pm:validatedBy tc:TC-024 ;
+    pm:validatedBy tc:TC-025 ;
+    pm:validatedBy tc:TC-026 ;
+    pm:validatedBy tc:TC-041 ;
+    pm:validatedBy tc:TC-042 ;
+    pm:validatedBy tc:TC-043 ;
+    pm:validatedBy tc:TC-044 ;
+    pm:validatedBy tc:TC-045 ;
+    pm:validatedBy tc:TC-046 ;
+    pm:validatedBy tc:TC-047 ;
+    pm:validatedBy tc:TC-048 ;
+    pm:validatedBy tc:TC-049 ;
+    pm:validatedBy tc:TC-050 ;
+    pm:validatedBy tc:TC-051 ;
+    pm:validatedBy tc:TC-052 ;
+    pm:validatedBy tc:TC-053 ;
+    pm:validatedBy tc:TC-054 ;
+    pm:validatedBy tc:TC-157 ;
+    pm:validatedBy tc:TC-232 ;
+    pm:validatedBy tc:TC-233 ;
+    pm:validatedBy tc:TC-234 ;
+    pm:validatedBy tc:TC-235 ;
+    pm:validatedBy tc:TC-236 ;
+    pm:validatedBy tc:TC-237 ;
+    pm:validatedBy tc:TC-238 ;
+    pm:validatedBy tc:TC-249 ;
+    pm:dependsOn ft:FT-016 .
+
 ft:FT-002 a pm:Feature ;
     pm:title "Repository Layout" ;
     pm:phase 1 ;
-    pm:status pm:InProgress ;
+    pm:status pm:Complete ;
     pm:implementedBy adr:ADR-002 ;
     pm:implementedBy adr:ADR-004 ;
     pm:validatedBy tc:TC-005 ;
@@ -353,84 +303,382 @@ ft:FT-002 a pm:Feature ;
     pm:validatedBy tc:TC-007 ;
     pm:validatedBy tc:TC-008 ;
     pm:validatedBy tc:TC-011 ;
-    pm:validatedBy tc:TC-012 .
+    pm:validatedBy tc:TC-012 ;
+    pm:validatedBy tc:TC-154 .
 
-ft:FT-009 a pm:Feature ;
+ft:FT-016 a pm:Feature ;
+    pm:title "Graph Model" ;
+    pm:phase 1 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-003 ;
+    pm:implementedBy adr:ADR-008 ;
+    pm:implementedBy adr:ADR-012 ;
+    pm:validatedBy tc:TC-009 ;
+    pm:validatedBy tc:TC-010 ;
+    pm:validatedBy tc:TC-024 ;
+    pm:validatedBy tc:TC-025 ;
+    pm:validatedBy tc:TC-026 ;
+    pm:validatedBy tc:TC-041 ;
+    pm:validatedBy tc:TC-042 ;
+    pm:validatedBy tc:TC-043 ;
+    pm:validatedBy tc:TC-044 ;
+    pm:validatedBy tc:TC-045 ;
+    pm:validatedBy tc:TC-046 ;
+    pm:validatedBy tc:TC-047 ;
+    pm:validatedBy tc:TC-048 ;
+    pm:validatedBy tc:TC-049 ;
+    pm:validatedBy tc:TC-050 ;
+    pm:validatedBy tc:TC-051 ;
+    pm:validatedBy tc:TC-052 ;
+    pm:validatedBy tc:TC-053 ;
+    pm:validatedBy tc:TC-054 ;
+    pm:validatedBy tc:TC-157 ;
+    pm:validatedBy tc:TC-232 ;
+    pm:validatedBy tc:TC-233 ;
+    pm:validatedBy tc:TC-234 ;
+    pm:validatedBy tc:TC-235 ;
+    pm:validatedBy tc:TC-236 ;
+    pm:validatedBy tc:TC-237 ;
+    pm:validatedBy tc:TC-238 ;
+    pm:validatedBy tc:TC-249 .
+
+ft:FT-025 a pm:Feature ;
+    pm:title "Benchmarks" ;
+    pm:phase 3 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-018 ;
+    pm:validatedBy tc:TC-180 ;
+    pm:dependsOn ft:FT-024 .
+
+ft:FT-005 a pm:Feature ;
     pm:title "Formal Specification" ;
     pm:phase 1 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-005 ;
-    pm:validatedBy tc:TC-013 ;
-    pm:validatedBy tc:TC-014 ;
-    pm:validatedBy tc:TC-015 .
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-015 ;
+    pm:validatedBy tc:TC-066 ;
+    pm:validatedBy tc:TC-067 ;
+    pm:validatedBy tc:TC-068 ;
+    pm:validatedBy tc:TC-069 ;
+    pm:validatedBy tc:TC-070 ;
+    pm:validatedBy tc:TC-161 .
 
-ft:FT-014 a pm:Feature ;
-    pm:title "ADR-002 — openraft for Cluster Consensus" ;
-    pm:phase 1 ;
-    pm:status pm:Planned .
-
-ft:FT-020 a pm:Feature ;
-    pm:title "Migration Path" ;
-    pm:phase 1 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-017 ;
+ft:FT-008 a pm:Feature ;
+    pm:title "Schema Migration" ;
+    pm:phase 2 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-002 ;
     pm:implementedBy adr:ADR-014 ;
+    pm:implementedBy adr:ADR-016 ;
     pm:validatedBy tc:TC-060 ;
     pm:validatedBy tc:TC-061 ;
     pm:validatedBy tc:TC-062 ;
     pm:validatedBy tc:TC-063 ;
     pm:validatedBy tc:TC-064 ;
     pm:validatedBy tc:TC-065 ;
-    pm:validatedBy tc:TC-080 ;
-    pm:validatedBy tc:TC-081 ;
-    pm:validatedBy tc:TC-082 ;
-    pm:validatedBy tc:TC-083 ;
-    pm:validatedBy tc:TC-084 ;
-    pm:validatedBy tc:TC-085 .
+    pm:validatedBy tc:TC-179 ;
+    pm:dependsOn ft:FT-003 .
 
-ft:FT-005 a pm:Feature ;
+ft:FT-012 a pm:Feature ;
+    pm:title "Feature: FT-001 — Cluster Foundation" ;
+    pm:phase 1 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-001 ;
+    pm:validatedBy tc:TC-001 ;
+    pm:validatedBy tc:TC-002 ;
+    pm:validatedBy tc:TC-003 ;
+    pm:validatedBy tc:TC-004 ;
+    pm:validatedBy tc:TC-163 .
+
+ft:FT-026 a pm:Feature ;
+    pm:title "CI Integration" ;
+    pm:phase 3 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-009 ;
+    pm:implementedBy adr:ADR-013 ;
+    pm:validatedBy tc:TC-181 ;
+    pm:dependsOn ft:FT-018 ;
+    pm:dependsOn ft:FT-024 .
+
+ft:FT-003 a pm:Feature ;
+    pm:title "Front-Matter Schema" ;
+    pm:phase 1 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-002 ;
+    pm:implementedBy adr:ADR-014 ;
+    pm:implementedBy adr:ADR-016 ;
+    pm:validatedBy tc:TC-005 ;
+    pm:validatedBy tc:TC-006 ;
+    pm:validatedBy tc:TC-007 ;
+    pm:validatedBy tc:TC-008 ;
+    pm:validatedBy tc:TC-060 ;
+    pm:validatedBy tc:TC-061 ;
+    pm:validatedBy tc:TC-062 ;
+    pm:validatedBy tc:TC-063 ;
+    pm:validatedBy tc:TC-064 ;
+    pm:validatedBy tc:TC-065 ;
+    pm:validatedBy tc:TC-071 ;
+    pm:validatedBy tc:TC-072 ;
+    pm:validatedBy tc:TC-073 ;
+    pm:validatedBy tc:TC-074 ;
+    pm:validatedBy tc:TC-075 ;
+    pm:validatedBy tc:TC-076 ;
+    pm:validatedBy tc:TC-077 ;
+    pm:validatedBy tc:TC-078 ;
+    pm:validatedBy tc:TC-079 ;
+    pm:validatedBy tc:TC-155 .
+
+ft:FT-017 a pm:Feature ;
+    pm:title "Generated Checklist" ;
+    pm:phase 1 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-007 ;
+    pm:validatedBy tc:TC-021 ;
+    pm:validatedBy tc:TC-022 ;
+    pm:validatedBy tc:TC-023 ;
+    pm:validatedBy tc:TC-159 ;
+    pm:validatedBy tc:TC-209 ;
+    pm:validatedBy tc:TC-210 .
+
+ft:FT-028 a pm:Feature ;
+    pm:title "Engineering Workflows" ;
+    pm:phase 5 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-023 ;
+    pm:implementedBy adr:ADR-024 ;
+    pm:validatedBy tc:TC-121 ;
+    pm:validatedBy tc:TC-122 ;
+    pm:validatedBy tc:TC-123 ;
+    pm:validatedBy tc:TC-124 ;
+    pm:validatedBy tc:TC-125 ;
+    pm:validatedBy tc:TC-126 ;
+    pm:validatedBy tc:TC-127 ;
+    pm:validatedBy tc:TC-128 ;
+    pm:validatedBy tc:TC-129 ;
+    pm:validatedBy tc:TC-130 ;
+    pm:validatedBy tc:TC-131 .
+
+ft:FT-018 a pm:Feature ;
+    pm:title "Validation and Graph Health" ;
+    pm:phase 1 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-010 ;
+    pm:implementedBy adr:ADR-025 ;
+    pm:validatedBy tc:TC-031 ;
+    pm:validatedBy tc:TC-032 ;
+    pm:validatedBy tc:TC-033 ;
+    pm:validatedBy tc:TC-034 ;
+    pm:validatedBy tc:TC-132 ;
+    pm:validatedBy tc:TC-133 ;
+    pm:validatedBy tc:TC-134 ;
+    pm:validatedBy tc:TC-135 ;
+    pm:validatedBy tc:TC-136 ;
+    pm:validatedBy tc:TC-137 ;
+    pm:validatedBy tc:TC-138 ;
+    pm:validatedBy tc:TC-139 .
+
+ft:FT-023 a pm:Feature ;
+    pm:title "Agent Orchestration" ;
+    pm:phase 5 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-021 ;
+    pm:validatedBy tc:TC-108 ;
+    pm:validatedBy tc:TC-109 ;
+    pm:validatedBy tc:TC-110 ;
+    pm:validatedBy tc:TC-111 ;
+    pm:validatedBy tc:TC-112 ;
+    pm:validatedBy tc:TC-113 ;
+    pm:validatedBy tc:TC-114 ;
+    pm:validatedBy tc:TC-115 ;
+    pm:validatedBy tc:TC-167 ;
+    pm:validatedBy tc:TC-304 ;
+    pm:validatedBy tc:TC-305 ;
+    pm:validatedBy tc:TC-306 ;
+    pm:validatedBy tc:TC-307 ;
+    pm:validatedBy tc:TC-309 ;
+    pm:validatedBy tc:TC-310 ;
+    pm:validatedBy tc:TC-311 ;
+    pm:validatedBy tc:TC-312 ;
+    pm:validatedBy tc:TC-313 ;
+    pm:validatedBy tc:TC-314 .
+
+ft:FT-013 a pm:Feature ;
+    pm:title "ADR-001 — Rust as Implementation Language" ;
+    pm:phase 1 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-001 ;
+    pm:validatedBy tc:TC-001 ;
+    pm:validatedBy tc:TC-002 ;
+    pm:validatedBy tc:TC-003 ;
+    pm:validatedBy tc:TC-004 ;
+    pm:validatedBy tc:TC-164 .
+
+ft:FT-010 a pm:Feature ;
+    pm:title "CLI Commands" ;
+    pm:phase 1 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-009 ;
+    pm:implementedBy adr:ADR-013 ;
+    pm:validatedBy tc:TC-027 ;
+    pm:validatedBy tc:TC-028 ;
+    pm:validatedBy tc:TC-029 ;
+    pm:validatedBy tc:TC-030 ;
+    pm:validatedBy tc:TC-055 ;
+    pm:validatedBy tc:TC-056 ;
+    pm:validatedBy tc:TC-057 ;
+    pm:validatedBy tc:TC-058 ;
+    pm:validatedBy tc:TC-059 .
+
+ft:FT-007 a pm:Feature ;
     pm:title "Formal Specification" ;
     pm:phase 1 ;
-    pm:status pm:InProgress ;
-    pm:implementedBy adr:ADR-015 ;
-    pm:validatedBy tc:TC-066 ;
-    pm:validatedBy tc:TC-067 ;
-    pm:validatedBy tc:TC-068 ;
-    pm:validatedBy tc:TC-069 ;
-    pm:validatedBy tc:TC-070 .
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-004 ;
+    pm:validatedBy tc:TC-011 ;
+    pm:validatedBy tc:TC-012 ;
+    pm:validatedBy tc:TC-152 .
 
-ft:FT-008 a pm:Feature ;
-    pm:title "Description" ;
-    pm:phase 1 ;
-    pm:status pm:Planned .
-
-ft:FT-024 a pm:Feature ;
-    pm:title "Your role" ;
+ft:FT-022 a pm:Feature ;
+    pm:title "Authoring Sessions" ;
     pm:phase 5 ;
-    pm:status pm:Planned .
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-022 ;
+    pm:validatedBy tc:TC-116 ;
+    pm:validatedBy tc:TC-117 ;
+    pm:validatedBy tc:TC-118 ;
+    pm:validatedBy tc:TC-119 ;
+    pm:validatedBy tc:TC-120 ;
+    pm:validatedBy tc:TC-166 ;
+    pm:validatedBy tc:TC-315 ;
+    pm:validatedBy tc:TC-316 ;
+    pm:validatedBy tc:TC-317 ;
+    pm:validatedBy tc:TC-321 ;
+    pm:validatedBy tc:TC-322 ;
+    pm:validatedBy tc:TC-323 ;
+    pm:validatedBy tc:TC-324 .
 
-adr:ADR-018 a pm:ArchitecturalDecision ;
-    pm:title "Testing Strategy — Property-Based, Integration, and LLM Benchmark" ;
+ft:FT-001 a pm:Feature ;
+    pm:title "Core Concepts" ;
+    pm:phase 1 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-001 ;
+    pm:implementedBy adr:ADR-004 ;
+    pm:implementedBy adr:ADR-005 ;
+    pm:validatedBy tc:TC-001 ;
+    pm:validatedBy tc:TC-002 ;
+    pm:validatedBy tc:TC-003 ;
+    pm:validatedBy tc:TC-004 ;
+    pm:validatedBy tc:TC-011 ;
+    pm:validatedBy tc:TC-012 ;
+    pm:validatedBy tc:TC-013 ;
+    pm:validatedBy tc:TC-014 ;
+    pm:validatedBy tc:TC-015 ;
+    pm:validatedBy tc:TC-156 .
+
+ft:FT-004 a pm:Feature ;
+    pm:title "Artifact Authoring" ;
+    pm:phase 2 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-002 ;
+    pm:implementedBy adr:ADR-005 ;
+    pm:implementedBy adr:ADR-015 ;
+    pm:validatedBy tc:TC-005 ;
+    pm:validatedBy tc:TC-006 ;
+    pm:validatedBy tc:TC-007 ;
+    pm:validatedBy tc:TC-008 ;
+    pm:validatedBy tc:TC-013 ;
+    pm:validatedBy tc:TC-014 ;
+    pm:validatedBy tc:TC-015 ;
+    pm:validatedBy tc:TC-071 ;
+    pm:validatedBy tc:TC-072 ;
+    pm:validatedBy tc:TC-073 ;
+    pm:validatedBy tc:TC-074 ;
+    pm:validatedBy tc:TC-075 ;
+    pm:validatedBy tc:TC-076 ;
+    pm:validatedBy tc:TC-077 ;
+    pm:validatedBy tc:TC-078 ;
+    pm:validatedBy tc:TC-079 ;
+    pm:validatedBy tc:TC-155 ;
+    pm:validatedBy tc:TC-160 ;
+    pm:dependsOn ft:FT-003 ;
+    pm:dependsOn ft:FT-016 .
+
+ft:FT-030 a pm:Feature ;
+    pm:title "Codebase Onboarding" ;
+    pm:phase 5 ;
+    pm:status pm:Complete ;
+    pm:implementedBy adr:ADR-027 ;
+    pm:validatedBy tc:TC-168 ;
+    pm:validatedBy tc:TC-169 ;
+    pm:validatedBy tc:TC-170 ;
+    pm:validatedBy tc:TC-171 ;
+    pm:validatedBy tc:TC-172 ;
+    pm:validatedBy tc:TC-173 ;
+    pm:validatedBy tc:TC-174 ;
+    pm:validatedBy tc:TC-175 ;
+    pm:validatedBy tc:TC-176 ;
+    pm:validatedBy tc:TC-177 ;
+    pm:validatedBy tc:TC-178 ;
+    pm:validatedBy tc:TC-356 ;
+    pm:validatedBy tc:TC-357 ;
+    pm:validatedBy tc:TC-358 ;
+    pm:validatedBy tc:TC-359 ;
+    pm:validatedBy tc:TC-360 ;
+    pm:validatedBy tc:TC-361 ;
+    pm:validatedBy tc:TC-362 ;
+    pm:validatedBy tc:TC-363 ;
+    pm:validatedBy tc:TC-364 ;
+    pm:validatedBy tc:TC-365 ;
+    pm:validatedBy tc:TC-366 ;
+    pm:validatedBy tc:TC-367 ;
+    pm:validatedBy tc:TC-368 .
+
+adr:ADR-007 a pm:ArchitecturalDecision ;
+    pm:title "Checklist is Generated, Never Hand-Edited" ;
     pm:status pm:Accepted ;
     pm:betweennessCentrality 0.000 .
 
-adr:ADR-020 a pm:ArchitecturalDecision ;
-    pm:title "MCP Server — Dual Transport (stdio and HTTP)" ;
+adr:ADR-023 a pm:ArchitecturalDecision ;
+    pm:title "Drift Detection — Spec vs. Implementation Verification" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.000 .
+
+adr:ADR-009 a pm:ArchitecturalDecision ;
+    pm:title "CI Integration via Exit Codes" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.012 .
+
+adr:ADR-008 a pm:ArchitecturalDecision ;
+    pm:title "Embedded Oxigraph for SPARQL Queries" ;
     pm:status pm:Accepted ;
     pm:betweennessCentrality 0.001 .
+
+adr:ADR-027 a pm:ArchitecturalDecision ;
+    pm:title "Transitive TC Link Inference — `product migrate link-tests` and `product graph infer`" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.003 .
 
 adr:ADR-010 a pm:ArchitecturalDecision ;
     pm:title "Auto-Orphan Test Criteria on Feature Abandonment" ;
     pm:status pm:Accepted ;
     pm:betweennessCentrality 0.000 .
 
-adr:ADR-016 a pm:ArchitecturalDecision ;
-    pm:title "Formal Block Grammar" ;
+adr:ADR-005 a pm:ArchitecturalDecision ;
+    pm:title "Numeric ID Scheme (FT-XXX, ADR-XXX, TC-XXX)" ;
     pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.002 .
+    pm:betweennessCentrality 0.015 .
 
-adr:ADR-024 a pm:ArchitecturalDecision ;
-    pm:title "Architectural Fitness Functions — Continuous Metric Tracking" ;
+adr:ADR-019 a pm:ArchitecturalDecision ;
+    pm:title "Continuous Gap Analysis — LLM-Driven Specification Review in CI" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.001 .
+
+adr:ADR-004 a pm:ArchitecturalDecision ;
+    pm:title "Markdown as the Document Format" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.003 .
+
+adr:ADR-011 a pm:ArchitecturalDecision ;
+    pm:title "AISP-Influenced Formal Notation for Test Criteria" ;
     pm:status pm:Accepted ;
     pm:betweennessCentrality 0.000 .
 
@@ -439,88 +687,8 @@ adr:ADR-026 a pm:ArchitecturalDecision ;
     pm:status pm:Accepted ;
     pm:betweennessCentrality 0.001 .
 
-adr:ADR-014 a pm:ArchitecturalDecision ;
-    pm:title "Schema Versioning and Migration Path" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.003 .
-
-adr:ADR-019 a pm:ArchitecturalDecision ;
-    pm:title "Continuous Gap Analysis — LLM-Driven Specification Review in CI" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.002 .
-
-adr:ADR-003 a pm:ArchitecturalDecision ;
-    pm:title "Derived Graph — No Persistent Graph Store" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.000 .
-
-adr:ADR-011 a pm:ArchitecturalDecision ;
-    pm:title "AISP-Influenced Formal Notation for Test Criteria" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.000 .
-
-adr:ADR-001 a pm:ArchitecturalDecision ;
-    pm:title "Rust as Implementation Language" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.001 .
-
-adr:ADR-023 a pm:ArchitecturalDecision ;
-    pm:title "Drift Detection — Spec vs. Implementation Verification" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.000 .
-
-adr:ADR-004 a pm:ArchitecturalDecision ;
-    pm:title "Markdown as the Document Format" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.009 .
-
-adr:ADR-009 a pm:ArchitecturalDecision ;
-    pm:title "CI Integration via Exit Codes" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.000 .
-
-adr:ADR-022 a pm:ArchitecturalDecision ;
-    pm:title "Authoring Sessions — Graph-Aware Specification Writing" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.000 .
-
-adr:ADR-021 a pm:ArchitecturalDecision ;
-    pm:title "Agent Orchestration — `product implement` and `product verify`" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.001 .
-
-adr:ADR-006 a pm:ArchitecturalDecision ;
-    pm:title "Context Bundle as the Primary LLM Interface" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.000 .
-
-adr:ADR-025 a pm:ArchitecturalDecision ;
-    pm:title "Concern Domains — ADR Classification and Cross-Cutting Scope" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.001 .
-
-adr:ADR-008 a pm:ArchitecturalDecision ;
-    pm:title "Embedded Oxigraph for SPARQL Queries" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.000 .
-
-adr:ADR-017 a pm:ArchitecturalDecision ;
-    pm:title "Migration Command Specification" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.000 .
-
-adr:ADR-005 a pm:ArchitecturalDecision ;
-    pm:title "Numeric ID Scheme (FT-XXX, ADR-XXX, TC-XXX)" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.001 .
-
-adr:ADR-007 a pm:ArchitecturalDecision ;
-    pm:title "Checklist is Generated, Never Hand-Edited" ;
-    pm:status pm:Accepted ;
-    pm:betweennessCentrality 0.000 .
-
-adr:ADR-013 a pm:ArchitecturalDecision ;
-    pm:title "Error Model and User-Facing Error Format" ;
+adr:ADR-024 a pm:ArchitecturalDecision ;
+    pm:title "Architectural Fitness Functions — Continuous Metric Tracking" ;
     pm:status pm:Accepted ;
     pm:betweennessCentrality 0.000 .
 
@@ -529,686 +697,232 @@ adr:ADR-002 a pm:ArchitecturalDecision ;
     pm:status pm:Accepted ;
     pm:betweennessCentrality 0.006 .
 
+adr:ADR-015 a pm:ArchitecturalDecision ;
+    pm:title "File Write Safety — Atomic Writes and Advisory Locking" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.024 .
+
 adr:ADR-012 a pm:ArchitecturalDecision ;
     pm:title "Graph Theory Foundations for Navigation, Context, and Impact Analysis" ;
     pm:status pm:Accepted ;
     pm:betweennessCentrality 0.002 .
 
-adr:ADR-015 a pm:ArchitecturalDecision ;
-    pm:title "File Write Safety — Atomic Writes and Advisory Locking" ;
+adr:ADR-025 a pm:ArchitecturalDecision ;
+    pm:title "Concern Domains — ADR Classification and Cross-Cutting Scope" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.005 .
+
+adr:ADR-013 a pm:ArchitecturalDecision ;
+    pm:title "Error Model and User-Facing Error Format" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.008 .
+
+adr:ADR-006 a pm:ArchitecturalDecision ;
+    pm:title "Context Bundle as the Primary LLM Interface" ;
     pm:status pm:Accepted ;
     pm:betweennessCentrality 0.000 .
 
-tc:TC-048 a pm:TestCriterion ;
-    pm:title "centrality_computation" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-011 ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-012 .
+adr:ADR-003 a pm:ArchitecturalDecision ;
+    pm:title "Derived Graph — No Persistent Graph Store" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.000 .
 
-tc:TC-002 a pm:TestCriterion ;
-    pm:title "binary_compiles_x86" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-001 ;
-    pm:validates ft:FT-012 ;
-    pm:validates ft:FT-013 ;
-    pm:validates adr:ADR-001 .
+adr:ADR-030 a pm:ArchitecturalDecision ;
+    pm:title "Dependency Artifact Type — First-Class External System Declarations" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.004 .
 
-tc:TC-030 a pm:TestCriterion ;
-    pm:title "exit_code_ci_pipeline.sh" ;
-    pm:type pm:ExitCriteria ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-010 ;
-    pm:validates adr:ADR-009 .
+adr:ADR-016 a pm:ArchitecturalDecision ;
+    pm:title "Formal Block Grammar" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.002 .
 
-tc:TC-126 a pm:TestCriterion ;
-    pm:title "metrics_record_appends" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-028 ;
-    pm:validates adr:ADR-024 .
+adr:ADR-021 a pm:ArchitecturalDecision ;
+    pm:title "Implementation Pipeline — `product verify` and the Knowledge Boundary" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.002 .
 
-tc:TC-129 a pm:TestCriterion ;
-    pm:title "metrics_threshold_clean_exits_0" ;
-    pm:type pm:ExitCriteria ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-028 ;
-    pm:validates adr:ADR-024 .
+adr:ADR-001 a pm:ArchitecturalDecision ;
+    pm:title "Rust as Implementation Language" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.009 .
 
-tc:TC-108 a pm:TestCriterion ;
-    pm:title "implement_gap_gate_blocks" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-023 ;
-    pm:validates adr:ADR-021 .
+adr:ADR-020 a pm:ArchitecturalDecision ;
+    pm:title "MCP Server — Dual Transport (stdio and HTTP)" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.000 .
 
-tc:TC-147 a pm:TestCriterion ;
-    pm:title "coverage_matrix_json" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-019 ;
-    pm:validates ft:FT-027 ;
-    pm:validates adr:ADR-026 .
+adr:ADR-017 a pm:ArchitecturalDecision ;
+    pm:title "Migration Command Specification" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.000 .
 
-tc:TC-090 a pm:TestCriterion ;
-    pm:title "gap_check_changed_scoping" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-029 ;
-    pm:validates adr:ADR-019 .
+adr:ADR-014 a pm:ArchitecturalDecision ;
+    pm:title "Schema Versioning and Migration Path" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.006 .
 
-tc:TC-054 a pm:TestCriterion ;
-    pm:title "product impact ADR-001" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-011 ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-012 .
+adr:ADR-018 a pm:ArchitecturalDecision ;
+    pm:title "Testing Strategy — Property-Based, Integration, and LLM Benchmark" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.010 .
 
-tc:TC-059 a pm:TestCriterion ;
-    pm:title "error_stdout_clean" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-010 ;
-    pm:validates adr:ADR-013 .
+adr:ADR-022 a pm:ArchitecturalDecision ;
+    pm:title "Authoring Resources — System Prompts and Pre-Commit Review" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.001 .
 
-tc:TC-123 a pm:TestCriterion ;
-    pm:title "drift_scan_returns_adrs" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-028 ;
-    pm:validates adr:ADR-023 .
-
-tc:TC-135 a pm:TestCriterion ;
-    pm:title "acknowledgement_requires_reason" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-018 ;
-    pm:validates ft:FT-019 ;
-    pm:validates adr:ADR-025 .
-
-tc:TC-051 a pm:TestCriterion ;
-    pm:title "impact_transitive" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-011 ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-012 .
-
-tc:TC-132 a pm:TestCriterion ;
-    pm:title "cross_cutting_always_in_bundle" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-018 ;
-    pm:validates ft:FT-019 ;
-    pm:validates adr:ADR-025 .
-
-tc:TC-149 a pm:TestCriterion ;
-    pm:title "author_session_preflight_first" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-019 ;
-    pm:validates ft:FT-027 ;
-    pm:validates adr:ADR-026 .
-
-tc:TC-143 a pm:TestCriterion ;
-    pm:title "preflight_acknowledgement_closes_gap" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-019 ;
-    pm:validates ft:FT-027 ;
-    pm:validates adr:ADR-026 .
-
-tc:TC-034 a pm:TestCriterion ;
-    pm:title "abandon_feature_tests_preserved" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-018 ;
-    pm:validates adr:ADR-010 .
-
-tc:TC-130 a pm:TestCriterion ;
-    pm:title "metrics_trend_renders" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-028 ;
-    pm:validates adr:ADR-024 .
-
-tc:TC-039 a pm:TestCriterion ;
-    pm:title "formal_block_missing_invariant_warning" ;
-    pm:type pm:Invariant ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-015 ;
-    pm:validates adr:ADR-011 .
-
-tc:TC-076 a pm:TestCriterion ;
-    pm:title "parse_unclosed_delimiter" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-003 ;
-    pm:validates ft:FT-015 ;
-    pm:validates adr:ADR-016 .
-
-tc:TC-141 a pm:TestCriterion ;
-    pm:title "preflight_cross_cutting_gap" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-019 ;
-    pm:validates ft:FT-027 ;
-    pm:validates adr:ADR-026 .
-
-tc:TC-094 a pm:TestCriterion ;
-    pm:title "gap_suppress_mutates_baseline" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-029 ;
-    pm:validates adr:ADR-019 .
-
-tc:TC-095 a pm:TestCriterion ;
-    pm:title "gap_changed_expansion" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-029 ;
-    pm:validates adr:ADR-019 .
-
-tc:TC-145 a pm:TestCriterion ;
-    pm:title "implement_blocked_by_preflight" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-019 ;
-    pm:validates ft:FT-027 ;
-    pm:validates adr:ADR-026 .
-
-tc:TC-104 a pm:TestCriterion ;
-    pm:title "mcp_http_concurrent_writes" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-021 ;
-    pm:validates adr:ADR-020 .
-
-tc:TC-118 a pm:TestCriterion ;
-    pm:title "pre_commit_hook_skips_non_adr" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-022 ;
-    pm:validates adr:ADR-022 .
-
-tc:TC-128 a pm:TestCriterion ;
-    pm:title "metrics_threshold_warning_exits_2" ;
-    pm:type pm:ExitCriteria ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-028 ;
-    pm:validates adr:ADR-024 .
-
-tc:TC-103 a pm:TestCriterion ;
-    pm:title "mcp_http_write_disabled" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-021 ;
-    pm:validates adr:ADR-020 .
-
-tc:TC-150 a pm:TestCriterion ;
-    pm:title "product preflight FT-001" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-019 ;
-    pm:validates ft:FT-027 ;
-    pm:validates adr:ADR-026 .
-
-tc:TC-017 a pm:TestCriterion ;
-    pm:title "context_bundle_no_frontmatter" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-011 ;
-    pm:validates adr:ADR-006 .
-
-tc:TC-032 a pm:TestCriterion ;
-    pm:title "abandon_feature_exit_code" ;
-    pm:type pm:ExitCriteria ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-018 ;
-    pm:validates adr:ADR-010 .
-
-tc:TC-045 a pm:TestCriterion ;
-    pm:title "context_depth_2" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-011 ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-012 .
-
-tc:TC-016 a pm:TestCriterion ;
-    pm:title "context_bundle_feature" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-011 ;
-    pm:validates adr:ADR-006 .
-
-tc:TC-022 a pm:TestCriterion ;
-    pm:title "checklist_no_manual_edit_warning" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-017 ;
-    pm:validates adr:ADR-007 .
-
-tc:TC-101 a pm:TestCriterion ;
-    pm:title "mcp_http_no_token_401" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-021 ;
-    pm:validates adr:ADR-020 .
-
-tc:TC-031 a pm:TestCriterion ;
-    pm:title "abandon_feature_orphans_tests" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-018 ;
-    pm:validates adr:ADR-010 .
-
-tc:TC-085 a pm:TestCriterion ;
-    pm:title "validates.features" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-020 ;
-    pm:validates adr:ADR-017 .
-
-tc:TC-001 a pm:TestCriterion ;
-    pm:title "binary_compiles_arm64" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-001 ;
-    pm:validates ft:FT-012 ;
-    pm:validates ft:FT-013 ;
-    pm:validates adr:ADR-001 .
-
-tc:TC-107 a pm:TestCriterion ;
-    pm:title "mcp_cors_header" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-021 ;
-    pm:validates adr:ADR-020 .
-
-tc:TC-125 a pm:TestCriterion ;
-    pm:title "drift_source_files_frontmatter" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-028 ;
-    pm:validates adr:ADR-023 .
-
-tc:TC-127 a pm:TestCriterion ;
-    pm:title "metrics_threshold_error_exits_1" ;
-    pm:type pm:ExitCriteria ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-028 ;
-    pm:validates adr:ADR-024 .
-
-tc:TC-142 a pm:TestCriterion ;
-    pm:title "preflight_domain_gap" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-019 ;
-    pm:validates ft:FT-027 ;
-    pm:validates adr:ADR-026 .
-
-tc:TC-151 a pm:TestCriterion ;
-    pm:title "product graph coverage" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-019 ;
-    pm:validates ft:FT-027 ;
-    pm:validates adr:ADR-026 .
-
-tc:TC-004 a pm:TestCriterion ;
-    pm:title "cargo build --release" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-001 ;
-    pm:validates ft:FT-012 ;
-    pm:validates ft:FT-013 ;
-    pm:validates adr:ADR-001 .
-
-tc:TC-028 a pm:TestCriterion ;
-    pm:title "exit_code_broken_link" ;
-    pm:type pm:ExitCriteria ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-010 ;
-    pm:validates adr:ADR-009 .
-
-tc:TC-006 a pm:TestCriterion ;
-    pm:title "frontmatter_parse_adr" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-002 ;
-    pm:validates ft:FT-003 ;
-    pm:validates adr:ADR-002 .
-
-tc:TC-052 a pm:TestCriterion ;
-    pm:title "impact_on_supersede" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-011 ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-012 .
-
-tc:TC-063 a pm:TestCriterion ;
-    pm:title "schema_migrate_idempotent" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-003 ;
-    pm:validates ft:FT-020 ;
-    pm:validates adr:ADR-014 .
-
-tc:TC-081 a pm:TestCriterion ;
-    pm:title "title" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-020 ;
-    pm:validates adr:ADR-017 .
-
-tc:TC-005 a pm:TestCriterion ;
-    pm:title "frontmatter_parse_feature" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-002 ;
-    pm:validates ft:FT-003 ;
-    pm:validates adr:ADR-002 .
-
-tc:TC-027 a pm:TestCriterion ;
-    pm:title "exit_code_clean" ;
-    pm:type pm:ExitCriteria ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-010 ;
-    pm:validates adr:ADR-009 .
-
-tc:TC-056 a pm:TestCriterion ;
-    pm:title "error_json_format" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-010 ;
-    pm:validates adr:ADR-013 .
-
-tc:TC-057 a pm:TestCriterion ;
-    pm:title "error_no_panic_on_bad_yaml" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-010 ;
-    pm:validates adr:ADR-013 .
-
-tc:TC-087 a pm:TestCriterion ;
-    pm:title "gap_check_no_gaps" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-029 ;
-    pm:validates adr:ADR-019 .
-
-tc:TC-112 a pm:TestCriterion ;
-    pm:title "verify_one_fail_keeps_in_progress" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-023 ;
-    pm:validates adr:ADR-021 .
-
-tc:TC-035 a pm:TestCriterion ;
-    pm:title "formal_block_parse_types" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-015 ;
-    pm:validates adr:ADR-011 .
-
-tc:TC-024 a pm:TestCriterion ;
-    pm:title "sparql_select_feature_adrs" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-011 ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-008 .
-
-tc:TC-067 a pm:TestCriterion ;
-    pm:title "atomic_write_interrupted" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-005 ;
-    pm:validates adr:ADR-015 .
-
-tc:TC-026 a pm:TestCriterion ;
-    pm:title "sparql_phase_filter" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-011 ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-008 .
+adr:ADR-029 a pm:ArchitecturalDecision ;
+    pm:title "Code Structure and Quality Standards" ;
+    pm:status pm:Accepted ;
+    pm:betweennessCentrality 0.001 .
 
 tc:TC-084 a pm:TestCriterion ;
     pm:title "validates.adrs" ;
     pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
+    pm:status pm:Passing ;
     pm:validates ft:FT-020 ;
     pm:validates adr:ADR-017 .
 
-tc:TC-086 a pm:TestCriterion ;
-    pm:title "gap_check_single_adr" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-029 ;
-    pm:validates adr:ADR-019 .
-
-tc:TC-037 a pm:TestCriterion ;
-    pm:title "formal_block_parse_scenario" ;
+tc:TC-034 a pm:TestCriterion ;
+    pm:title "abandon_feature_tests_preserved" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
-    pm:validates ft:FT-015 ;
-    pm:validates adr:ADR-011 .
+    pm:validates ft:FT-018 ;
+    pm:validates adr:ADR-010 .
 
-tc:TC-069 a pm:TestCriterion ;
-    pm:title "lock_stale_cleanup" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-005 ;
-    pm:validates adr:ADR-015 .
-
-tc:TC-089 a pm:TestCriterion ;
-    pm:title "gap_check_resolved" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-029 ;
-    pm:validates adr:ADR-019 .
-
-tc:TC-040 a pm:TestCriterion ;
-    pm:title "context_bundle_formal_blocks_preserved" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-015 ;
-    pm:validates adr:ADR-011 .
-
-tc:TC-038 a pm:TestCriterion ;
-    pm:title "formal_block_evidence" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-015 ;
-    pm:validates adr:ADR-011 .
-
-tc:TC-100 a pm:TestCriterion ;
-    pm:title "mcp_http_tool_call" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-021 ;
-    pm:validates adr:ADR-020 .
-
-tc:TC-009 a pm:TestCriterion ;
-    pm:title "graph_rebuild_from_scratch" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-003 .
-
-tc:TC-099 a pm:TestCriterion ;
-    pm:title "mcp_stdio_tool_call" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-021 ;
-    pm:validates adr:ADR-020 .
-
-tc:TC-013 a pm:TestCriterion ;
-    pm:title "id_auto_increment" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-001 ;
-    pm:validates ft:FT-009 ;
-    pm:validates adr:ADR-005 .
-
-tc:TC-021 a pm:TestCriterion ;
-    pm:title "checklist_generate" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-017 ;
-    pm:validates adr:ADR-007 .
-
-tc:TC-012 a pm:TestCriterion ;
-    pm:title "markdown_passthrough" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-001 ;
-    pm:validates ft:FT-002 ;
-    pm:validates ft:FT-007 ;
-    pm:validates adr:ADR-004 .
-
-tc:TC-008 a pm:TestCriterion ;
-    pm:title "frontmatter_missing_required" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-002 ;
-    pm:validates ft:FT-003 ;
-    pm:validates adr:ADR-002 .
-
-tc:TC-120 a pm:TestCriterion ;
-    pm:title "adr_review_structural_no_features" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-022 ;
-    pm:validates adr:ADR-022 .
-
-tc:TC-018 a pm:TestCriterion ;
-    pm:title "context_bundle_header" ;
+tc:TC-020 a pm:TestCriterion ;
+    pm:title "product context FT-001" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
     pm:validates ft:FT-011 ;
     pm:validates adr:ADR-006 .
 
-tc:TC-109 a pm:TestCriterion ;
-    pm:title "implement_gap_gate_suppressed" ;
+tc:TC-171 a pm:TestCriterion ;
+    pm:title "Triage confirm converts candidate to ADR" ;
     pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-023 ;
-    pm:validates adr:ADR-021 .
+    pm:status pm:Passing ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
 
-tc:TC-116 a pm:TestCriterion ;
-    pm:title "pre_commit_hook_installed" ;
+tc:TC-030 a pm:TestCriterion ;
+    pm:title "exit_code_ci_pipeline.sh" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-010 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-009 .
+
+tc:TC-121 a pm:TestCriterion ;
+    pm:title "drift_check_d002_detected" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-028 ;
+    pm:validates adr:ADR-023 .
+
+tc:TC-104 a pm:TestCriterion ;
+    pm:title "mcp_http_concurrent_writes" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-021 ;
+    pm:validates adr:ADR-020 .
+
+tc:TC-317 a pm:TestCriterion ;
+    pm:title "prompts_get_stdout" ;
     pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
     pm:validates ft:FT-022 ;
     pm:validates adr:ADR-022 .
 
-tc:TC-033 a pm:TestCriterion ;
-    pm:title "abandon_feature_stdout" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-018 ;
-    pm:validates adr:ADR-010 .
-
-tc:TC-111 a pm:TestCriterion ;
-    pm:title "verify_all_pass_completes_feature" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-023 ;
-    pm:validates adr:ADR-021 .
-
-tc:TC-110 a pm:TestCriterion ;
-    pm:title "implement_dry_run" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-023 ;
-    pm:validates adr:ADR-021 .
-
-tc:TC-050 a pm:TestCriterion ;
-    pm:title "impact_direct" ;
+tc:TC-124 a pm:TestCriterion ;
+    pm:title "drift_suppressed_passes" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
-    pm:validates ft:FT-011 ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-012 .
+    pm:validates ft:FT-028 ;
+    pm:validates adr:ADR-023 .
 
-tc:TC-097 a pm:TestCriterion ;
-    pm:title "gap_stdout_stderr_separation" ;
+tc:TC-366 a pm:TestCriterion ;
+    pm:title "atomic_batch_write" ;
     pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
-    pm:validates ft:FT-029 ;
-    pm:validates adr:ADR-019 .
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
 
-tc:TC-136 a pm:TestCriterion ;
-    pm:title "w010_unacknowledged_cross_cutting" ;
+tc:TC-144 a pm:TestCriterion ;
+    pm:title "preflight_acknowledgement_without_reason_fails" ;
     pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-018 ;
-    pm:validates ft:FT-019 ;
-    pm:validates adr:ADR-025 .
-
-tc:TC-092 a pm:TestCriterion ;
-    pm:title "gap_check_invalid_json_discarded" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-029 ;
-    pm:validates adr:ADR-019 .
-
-tc:TC-036 a pm:TestCriterion ;
-    pm:title "formal_block_parse_invariants" ;
-    pm:type pm:Invariant ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-015 ;
-    pm:validates adr:ADR-011 .
-
-tc:TC-140 a pm:TestCriterion ;
-    pm:title "preflight_clean_exits_0" ;
-    pm:type pm:ExitCriteria ;
     pm:status pm:Passing ;
     pm:validates ft:FT-019 ;
     pm:validates ft:FT-027 ;
     pm:validates adr:ADR-026 .
 
-tc:TC-062 a pm:TestCriterion ;
-    pm:title "schema_migrate_dry_run" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-003 ;
-    pm:validates ft:FT-020 ;
-    pm:validates adr:ADR-014 .
-
-tc:TC-072 a pm:TestCriterion ;
-    pm:title "parse_invariants_block" ;
-    pm:type pm:Invariant ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-003 ;
-    pm:validates ft:FT-015 ;
-    pm:validates adr:ADR-016 .
-
-tc:TC-105 a pm:TestCriterion ;
-    pm:title "mcp_http_graceful_shutdown" ;
+tc:TC-387 a pm:TestCriterion ;
+    pm:title "dep_preflight_check_passes" ;
     pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
-    pm:validates ft:FT-021 ;
-    pm:validates adr:ADR-020 .
+    pm:validates adr:ADR-030 .
 
-tc:TC-114 a pm:TestCriterion ;
-    pm:title "verify_updates_frontmatter" ;
+tc:TC-357 a pm:TestCriterion ;
+    pm:title "link_tests_multi_feature" ;
     pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-111 a pm:TestCriterion ;
+    pm:title "verify_all_pass_completes_feature" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
     pm:validates ft:FT-023 ;
     pm:validates adr:ADR-021 .
 
 tc:TC-023 a pm:TestCriterion ;
     pm:title "checklist_roundtrip" ;
     pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-017 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-007 .
+
+tc:TC-168 a pm:TestCriterion ;
+    pm:title "Scan produces candidates with valid evidence paths" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-375 a pm:TestCriterion ;
+    pm:title "module_structure_passes" ;
+    pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-029 .
+
+tc:TC-068 a pm:TestCriterion ;
+    pm:title "lock_concurrent_writes" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-005 ;
+    pm:validates adr:ADR-015 .
+
+tc:TC-114 a pm:TestCriterion ;
+    pm:title "verify_updates_frontmatter" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-163 a pm:TestCriterion ;
+    pm:title "FT-012 cluster foundation binary validated" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-012 ;
+    pm:validates adr:ADR-001 .
+
+tc:TC-210 a pm:TestCriterion ;
+    pm:title "checklist_gitignore_opt_out" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-014 ;
     pm:validates ft:FT-017 ;
     pm:validates adr:ADR-007 .
 
@@ -1217,6 +931,398 @@ tc:TC-029 a pm:TestCriterion ;
     pm:type pm:ExitCriteria ;
     pm:status pm:Passing ;
     pm:validates ft:FT-010 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-009 .
+
+tc:TC-381 a pm:TestCriterion ;
+    pm:title "dep_parse_library" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-374 a pm:TestCriterion ;
+    pm:title "function_length_fail" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-029 .
+
+tc:TC-061 a pm:TestCriterion ;
+    pm:title "schema_version_backward_warning" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-008 ;
+    pm:validates ft:FT-020 ;
+    pm:validates adr:ADR-014 .
+
+tc:TC-181 a pm:TestCriterion ;
+    pm:title "ft_026_ci_integration_pass" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-026 ;
+    pm:validates adr:ADR-009 ;
+    pm:validates adr:ADR-013 .
+
+tc:TC-386 a pm:TestCriterion ;
+    pm:title "dep_impact_transitive" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-059 a pm:TestCriterion ;
+    pm:title "error_stdout_clean" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-010 ;
+    pm:validates adr:ADR-013 .
+
+tc:TC-397 a pm:TestCriterion ;
+    pm:title "dep_check_manual" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-021 a pm:TestCriterion ;
+    pm:title "checklist_generate" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-017 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-007 .
+
+tc:TC-238 a pm:TestCriterion ;
+    pm:title "status_phase_detail" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-233 a pm:TestCriterion ;
+    pm:title "feature_next_phase_gate_satisfied" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-316 a pm:TestCriterion ;
+    pm:title "prompts_list_output" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-022 ;
+    pm:validates adr:ADR-022 .
+
+tc:TC-131 a pm:TestCriterion ;
+    pm:title "metrics_jsonl_merge_conflict_safe" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-028 ;
+    pm:validates adr:ADR-024 .
+
+tc:TC-070 a pm:TestCriterion ;
+    pm:title "tmp_cleanup_on_startup" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-005 ;
+    pm:validates adr:ADR-015 .
+
+tc:TC-237 a pm:TestCriterion ;
+    pm:title "status_shows_phase_gate" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-368 a pm:TestCriterion ;
+    pm:title "product migrate link-tests" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-033 a pm:TestCriterion ;
+    pm:title "abandon_feature_stdout" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-018 ;
+    pm:validates adr:ADR-010 .
+
+tc:TC-105 a pm:TestCriterion ;
+    pm:title "mcp_http_graceful_shutdown" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-021 ;
+    pm:validates adr:ADR-020 .
+
+tc:TC-365 a pm:TestCriterion ;
+    pm:title "reverse_inference_updates_feature" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-322 a pm:TestCriterion ;
+    pm:title "adr_review_no_features" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-022 ;
+    pm:validates adr:ADR-022 .
+
+tc:TC-120 a pm:TestCriterion ;
+    pm:title "adr_review_structural_no_features" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-022 ;
+    pm:validates adr:ADR-022 .
+
+tc:TC-026 a pm:TestCriterion ;
+    pm:title "sparql_phase_filter" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-008 .
+
+tc:TC-161 a pm:TestCriterion ;
+    pm:title "FT-005 atomic writes and locking safe" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-005 ;
+    pm:validates adr:ADR-015 .
+
+tc:TC-234 a pm:TestCriterion ;
+    pm:title "feature_next_phase_gate_no_exit_criteria" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-307 a pm:TestCriterion ;
+    pm:title "verify_failure_message_written" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-361 a pm:TestCriterion ;
+    pm:title "link_tests_adr_scope" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-036 a pm:TestCriterion ;
+    pm:title "formal_block_parse_invariants" ;
+    pm:type pm:Invariant ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-015 ;
+    pm:validates adr:ADR-011 .
+
+tc:TC-027 a pm:TestCriterion ;
+    pm:title "exit_code_clean" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-010 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-009 .
+
+tc:TC-101 a pm:TestCriterion ;
+    pm:title "mcp_http_no_token_401" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-021 ;
+    pm:validates adr:ADR-020 .
+
+tc:TC-391 a pm:TestCriterion ;
+    pm:title "dep_bom_output" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-378 a pm:TestCriterion ;
+    pm:title "single_responsibility_passes" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-029 .
+
+tc:TC-157 a pm:TestCriterion ;
+    pm:title "FT-016 graph model queries pass" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-012 ;
+    pm:validates adr:ADR-008 ;
+    pm:validates adr:ADR-003 .
+
+tc:TC-249 a pm:TestCriterion ;
+    pm:title "product feature next" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-393 a pm:TestCriterion ;
+    pm:title "dep_w013_deprecated" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-388 a pm:TestCriterion ;
+    pm:title "dep_preflight_check_fails" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-360 a pm:TestCriterion ;
+    pm:title "link_tests_dry_run_no_write" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-024 a pm:TestCriterion ;
+    pm:title "sparql_select_feature_adrs" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-008 .
+
+tc:TC-078 a pm:TestCriterion ;
+    pm:title "parse_raw_roundtrip" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-004 ;
+    pm:validates ft:FT-015 ;
+    pm:validates adr:ADR-016 .
+
+tc:TC-156 a pm:TestCriterion ;
+    pm:title "FT-001 core concepts validated" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-001 ;
+    pm:validates adr:ADR-001 ;
+    pm:validates adr:ADR-004 ;
+    pm:validates adr:ADR-005 .
+
+tc:TC-394 a pm:TestCriterion ;
+    pm:title "dep_e013_no_adr" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-371 a pm:TestCriterion ;
+    pm:title "file_length_fail" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-029 .
+
+tc:TC-022 a pm:TestCriterion ;
+    pm:title "checklist_no_manual_edit_warning" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-017 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-007 .
+
+tc:TC-031 a pm:TestCriterion ;
+    pm:title "abandon_feature_orphans_tests" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-018 ;
+    pm:validates adr:ADR-010 .
+
+tc:TC-205 a pm:TestCriterion ;
+    pm:title "product context FT-001 --measure" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-011 ;
+    pm:validates adr:ADR-006 .
+
+tc:TC-006 a pm:TestCriterion ;
+    pm:title "frontmatter_parse_adr" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-002 ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-004 ;
+    pm:validates adr:ADR-002 .
+
+tc:TC-050 a pm:TestCriterion ;
+    pm:title "impact_direct" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-090 a pm:TestCriterion ;
+    pm:title "gap_check_changed_scoping" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-029 ;
+    pm:validates adr:ADR-019 .
+
+tc:TC-359 a pm:TestCriterion ;
+    pm:title "link_tests_idempotent" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-400 a pm:TestCriterion ;
+    pm:title "product dep bom" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-201 a pm:TestCriterion ;
+    pm:title "context_measure_updates_frontmatter" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-011 ;
+    pm:validates adr:ADR-006 .
+
+tc:TC-177 a pm:TestCriterion ;
+    pm:title "End-to-end onboard produces graph with no structural errors" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-028 a pm:TestCriterion ;
+    pm:title "exit_code_broken_link" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-010 ;
+    pm:validates ft:FT-014 ;
     pm:validates adr:ADR-009 .
 
 tc:TC-011 a pm:TestCriterion ;
@@ -1228,34 +1334,13 @@ tc:TC-011 a pm:TestCriterion ;
     pm:validates ft:FT-007 ;
     pm:validates adr:ADR-004 .
 
-tc:TC-042 a pm:TestCriterion ;
-    pm:title "topo_sort_parallel" ;
+tc:TC-132 a pm:TestCriterion ;
+    pm:title "cross_cutting_always_in_bundle" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
-    pm:validates ft:FT-011 ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-012 .
-
-tc:TC-080 a pm:TestCriterion ;
-    pm:title "### Exit criteria" ;
-    pm:type pm:ExitCriteria ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-020 ;
-    pm:validates adr:ADR-017 .
-
-tc:TC-082 a pm:TestCriterion ;
-    pm:title "type" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-020 ;
-    pm:validates adr:ADR-017 .
-
-tc:TC-106 a pm:TestCriterion ;
-    pm:title "mcp_tool_registry_shared" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-021 ;
-    pm:validates adr:ADR-020 .
+    pm:validates ft:FT-018 ;
+    pm:validates ft:FT-019 ;
+    pm:validates adr:ADR-025 .
 
 tc:TC-137 a pm:TestCriterion ;
     pm:title "w011_domain_gap" ;
@@ -1265,13 +1350,253 @@ tc:TC-137 a pm:TestCriterion ;
     pm:validates ft:FT-019 ;
     pm:validates adr:ADR-025 .
 
-tc:TC-138 a pm:TestCriterion ;
-    pm:title "acknowledgement_closes_gap" ;
+tc:TC-079 a pm:TestCriterion ;
+    pm:title "parse_unknown_block_type" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
-    pm:validates ft:FT-018 ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-004 ;
+    pm:validates ft:FT-015 ;
+    pm:validates adr:ADR-016 .
+
+tc:TC-147 a pm:TestCriterion ;
+    pm:title "coverage_matrix_json" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
     pm:validates ft:FT-019 ;
-    pm:validates adr:ADR-025 .
+    pm:validates ft:FT-027 ;
+    pm:validates adr:ADR-026 .
+
+tc:TC-155 a pm:TestCriterion ;
+    pm:title "FT-003 front-matter schema fully validated" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-004 .
+
+tc:TC-275 a pm:TestCriterion ;
+    pm:title "### Exit criteria" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-020 ;
+    pm:validates adr:ADR-017 .
+
+tc:TC-312 a pm:TestCriterion ;
+    pm:title "verify_requires_missing_prereq_def" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-150 a pm:TestCriterion ;
+    pm:title "product preflight FT-001" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-019 ;
+    pm:validates ft:FT-027 ;
+    pm:validates adr:ADR-026 .
+
+tc:TC-048 a pm:TestCriterion ;
+    pm:title "centrality_computation" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-075 a pm:TestCriterion ;
+    pm:title "parse_evidence_delta_out_of_range" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-004 ;
+    pm:validates ft:FT-015 ;
+    pm:validates adr:ADR-016 .
+
+tc:TC-356 a pm:TestCriterion ;
+    pm:title "link_tests_basic" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-040 a pm:TestCriterion ;
+    pm:title "context_bundle_formal_blocks_preserved" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-015 ;
+    pm:validates adr:ADR-011 .
+
+tc:TC-306 a pm:TestCriterion ;
+    pm:title "verify_updates_tc_frontmatter" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-314 a pm:TestCriterion ;
+    pm:title "harness_scripts_present" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-025 a pm:TestCriterion ;
+    pm:title "sparql_untested_features" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-008 .
+
+tc:TC-209 a pm:TestCriterion ;
+    pm:title "checklist_gitignore_default" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-014 ;
+    pm:validates ft:FT-017 ;
+    pm:validates adr:ADR-007 .
+
+tc:TC-042 a pm:TestCriterion ;
+    pm:title "topo_sort_parallel" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-038 a pm:TestCriterion ;
+    pm:title "formal_block_evidence" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-015 ;
+    pm:validates adr:ADR-011 .
+
+tc:TC-304 a pm:TestCriterion ;
+    pm:title "verify_one_fail_in_progress" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-130 a pm:TestCriterion ;
+    pm:title "metrics_trend_renders" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-028 ;
+    pm:validates adr:ADR-024 .
+
+tc:TC-082 a pm:TestCriterion ;
+    pm:title "type" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-020 ;
+    pm:validates adr:ADR-017 .
+
+tc:TC-166 a pm:TestCriterion ;
+    pm:title "FT-022 authoring session flow complete" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-022 ;
+    pm:validates adr:ADR-022 .
+
+tc:TC-369 a pm:TestCriterion ;
+    pm:title "file_length_passes" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-029 .
+
+tc:TC-072 a pm:TestCriterion ;
+    pm:title "parse_invariants_block" ;
+    pm:type pm:Invariant ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-004 ;
+    pm:validates ft:FT-015 ;
+    pm:validates adr:ADR-016 .
+
+tc:TC-167 a pm:TestCriterion ;
+    pm:title "FT-023 implement and verify orchestrate" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-176 a pm:TestCriterion ;
+    pm:title "Seed dry-run writes no files" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-170 a pm:TestCriterion ;
+    pm:title "Scan respects max-candidates cap" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-088 a pm:TestCriterion ;
+    pm:title "gap_check_suppressed" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-029 ;
+    pm:validates adr:ADR-019 .
+
+tc:TC-383 a pm:TestCriterion ;
+    pm:title "dep_uses_edge" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-014 a pm:TestCriterion ;
+    pm:title "id_gap_fill" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-001 ;
+    pm:validates ft:FT-004 ;
+    pm:validates ft:FT-009 ;
+    pm:validates adr:ADR-005 .
+
+tc:TC-173 a pm:TestCriterion ;
+    pm:title "Triage merge combines two candidates into one ADR" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-158 a pm:TestCriterion ;
+    pm:title "FT-011 context bundle output correct" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing .
+
+tc:TC-385 a pm:TestCriterion ;
+    pm:title "dep_impact_direct" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-180 a pm:TestCriterion ;
+    pm:title "ft_025_benchmarks_pass" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-025 ;
+    pm:validates adr:ADR-018 .
+
+tc:TC-377 a pm:TestCriterion ;
+    pm:title "module_structure_main_too_long" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-029 .
 
 tc:TC-146 a pm:TestCriterion ;
     pm:title "coverage_matrix_renders" ;
@@ -1281,112 +1606,200 @@ tc:TC-146 a pm:TestCriterion ;
     pm:validates ft:FT-027 ;
     pm:validates adr:ADR-026 .
 
-tc:TC-015 a pm:TestCriterion ;
-    pm:title "id_conflict" ;
+tc:TC-134 a pm:TestCriterion ;
+    pm:title "domain_top2_centrality" ;
     pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-001 ;
-    pm:validates ft:FT-009 ;
-    pm:validates adr:ADR-005 .
+    pm:status pm:Passing ;
+    pm:validates ft:FT-018 ;
+    pm:validates ft:FT-019 ;
+    pm:validates adr:ADR-025 .
 
-tc:TC-124 a pm:TestCriterion ;
-    pm:title "drift_suppressed_passes" ;
+tc:TC-305 a pm:TestCriterion ;
+    pm:title "verify_unrunnable_no_runner" ;
     pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-008 a pm:TestCriterion ;
+    pm:title "frontmatter_missing_required" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-002 ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-004 ;
+    pm:validates adr:ADR-002 .
+
+tc:TC-009 a pm:TestCriterion ;
+    pm:title "graph_rebuild_from_scratch" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-003 .
+
+tc:TC-080 a pm:TestCriterion ;
+    pm:title "exit_criteria" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-020 ;
+    pm:validates adr:ADR-017 .
+
+tc:TC-380 a pm:TestCriterion ;
+    pm:title "single_responsibility_and" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-029 .
+
+tc:TC-047 a pm:TestCriterion ;
+    pm:title "context_bundle_adr_order_centrality" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-005 a pm:TestCriterion ;
+    pm:title "frontmatter_parse_feature" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-002 ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-004 ;
+    pm:validates adr:ADR-002 .
+
+tc:TC-313 a pm:TestCriterion ;
+    pm:title "verify_wrapper_script" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-125 a pm:TestCriterion ;
+    pm:title "drift_source_files_frontmatter" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
     pm:validates ft:FT-028 ;
     pm:validates adr:ADR-023 .
+
+tc:TC-058 a pm:TestCriterion ;
+    pm:title "error_internal_tier4" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-010 ;
+    pm:validates adr:ADR-013 .
+
+tc:TC-119 a pm:TestCriterion ;
+    pm:title "adr_review_structural_missing_section" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-022 ;
+    pm:validates adr:ADR-022 .
+
+tc:TC-136 a pm:TestCriterion ;
+    pm:title "w010_unacknowledged_cross_cutting" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-018 ;
+    pm:validates ft:FT-019 ;
+    pm:validates adr:ADR-025 .
+
+tc:TC-004 a pm:TestCriterion ;
+    pm:title "cargo build --release" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-001 ;
+    pm:validates ft:FT-012 ;
+    pm:validates ft:FT-013 ;
+    pm:validates adr:ADR-001 .
+
+tc:TC-135 a pm:TestCriterion ;
+    pm:title "acknowledgement_requires_reason" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-018 ;
+    pm:validates ft:FT-019 ;
+    pm:validates adr:ADR-025 .
 
 tc:TC-102 a pm:TestCriterion ;
     pm:title "mcp_http_wrong_token_401" ;
     pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
+    pm:status pm:Passing ;
     pm:validates ft:FT-021 ;
     pm:validates adr:ADR-020 .
 
-tc:TC-148 a pm:TestCriterion ;
-    pm:title "coverage_matrix_domain_filter" ;
+tc:TC-001 a pm:TestCriterion ;
+    pm:title "binary_compiles_arm64" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-001 ;
+    pm:validates ft:FT-012 ;
+    pm:validates ft:FT-013 ;
+    pm:validates adr:ADR-001 .
+
+tc:TC-401 a pm:TestCriterion ;
+    pm:title "product impact DEP-001" ;
     pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-103 a pm:TestCriterion ;
+    pm:title "mcp_http_write_disabled" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-021 ;
+    pm:validates adr:ADR-020 .
+
+tc:TC-310 a pm:TestCriterion ;
+    pm:title "verify_requires_satisfied" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-053 a pm:TestCriterion ;
+    pm:title "product graph central" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-149 a pm:TestCriterion ;
+    pm:title "author_session_preflight_first" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
     pm:validates ft:FT-019 ;
     pm:validates ft:FT-027 ;
     pm:validates adr:ADR-026 .
 
-tc:TC-065 a pm:TestCriterion ;
-    pm:title "schema_version_mismatch_format" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-003 ;
-    pm:validates ft:FT-020 ;
-    pm:validates adr:ADR-014 .
-
-tc:TC-121 a pm:TestCriterion ;
-    pm:title "drift_check_d002_detected" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-028 ;
-    pm:validates adr:ADR-023 .
-
-tc:TC-046 a pm:TestCriterion ;
-    pm:title "context_depth_dedup" ;
-    pm:type pm:Scenario ;
+tc:TC-165 a pm:TestCriterion ;
+    pm:title "FT-021 MCP server stdio and HTTP pass" ;
+    pm:type pm:ExitCriteria ;
     pm:status pm:Passing ;
-    pm:validates ft:FT-011 ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-012 .
+    pm:validates ft:FT-021 ;
+    pm:validates adr:ADR-020 .
 
-tc:TC-014 a pm:TestCriterion ;
-    pm:title "id_gap_fill" ;
+tc:TC-362 a pm:TestCriterion ;
+    pm:title "graph_infer_general" ;
     pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
-    pm:validates ft:FT-001 ;
-    pm:validates ft:FT-009 ;
-    pm:validates adr:ADR-005 .
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
 
-tc:TC-025 a pm:TestCriterion ;
-    pm:title "sparql_untested_features" ;
+tc:TC-392 a pm:TestCriterion ;
+    pm:title "dep_bom_json_schema" ;
     pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
-    pm:validates ft:FT-011 ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-008 .
-
-tc:TC-019 a pm:TestCriterion ;
-    pm:title "context_bundle_superseded_adr" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-011 ;
-    pm:validates adr:ADR-006 .
-
-tc:TC-131 a pm:TestCriterion ;
-    pm:title "metrics_jsonl_merge_conflict_safe" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-028 ;
-    pm:validates adr:ADR-024 .
-
-tc:TC-044 a pm:TestCriterion ;
-    pm:title "feature_next_uses_topo" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-011 ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-012 .
-
-tc:TC-078 a pm:TestCriterion ;
-    pm:title "parse_raw_roundtrip" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-003 ;
-    pm:validates ft:FT-015 ;
-    pm:validates adr:ADR-016 .
-
-tc:TC-073 a pm:TestCriterion ;
-    pm:title "parse_scenario_block" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-003 ;
-    pm:validates ft:FT-015 ;
-    pm:validates adr:ADR-016 .
+    pm:validates adr:ADR-030 .
 
 tc:TC-055 a pm:TestCriterion ;
     pm:title "error_broken_link_format" ;
@@ -1395,120 +1808,83 @@ tc:TC-055 a pm:TestCriterion ;
     pm:validates ft:FT-010 ;
     pm:validates adr:ADR-013 .
 
-tc:TC-064 a pm:TestCriterion ;
-    pm:title "schema_migrate_preserves_unknown_fields" ;
+tc:TC-060 a pm:TestCriterion ;
+    pm:title "schema_version_forward_error" ;
     pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
+    pm:status pm:Passing ;
     pm:validates ft:FT-003 ;
+    pm:validates ft:FT-008 ;
     pm:validates ft:FT-020 ;
     pm:validates adr:ADR-014 .
 
-tc:TC-071 a pm:TestCriterion ;
-    pm:title "parse_types_block" ;
+tc:TC-064 a pm:TestCriterion ;
+    pm:title "schema_migrate_preserves_unknown_fields" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
     pm:validates ft:FT-003 ;
-    pm:validates ft:FT-015 ;
-    pm:validates adr:ADR-016 .
+    pm:validates ft:FT-008 ;
+    pm:validates ft:FT-020 ;
+    pm:validates adr:ADR-014 .
 
-tc:TC-098 a pm:TestCriterion ;
-    pm:title "gap_json_schema" ;
+tc:TC-169 a pm:TestCriterion ;
+    pm:title "Scan rejects candidates citing non-existent files" ;
     pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-029 ;
-    pm:validates adr:ADR-019 .
+    pm:status pm:Passing ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
 
-tc:TC-079 a pm:TestCriterion ;
-    pm:title "parse_unknown_block_type" ;
+tc:TC-037 a pm:TestCriterion ;
+    pm:title "formal_block_parse_scenario" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-015 ;
+    pm:validates adr:ADR-011 .
+
+tc:TC-153 a pm:TestCriterion ;
+    pm:title "FT-015 all test-criteria scenarios pass" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing .
+
+tc:TC-074 a pm:TestCriterion ;
+    pm:title "parse_evidence_block" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
     pm:validates ft:FT-003 ;
+    pm:validates ft:FT-004 ;
     pm:validates ft:FT-015 ;
     pm:validates adr:ADR-016 .
 
-tc:TC-075 a pm:TestCriterion ;
-    pm:title "parse_evidence_delta_out_of_range" ;
+tc:TC-123 a pm:TestCriterion ;
+    pm:title "drift_scan_returns_adrs" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
-    pm:validates ft:FT-003 ;
-    pm:validates ft:FT-015 ;
-    pm:validates adr:ADR-016 .
+    pm:validates ft:FT-028 ;
+    pm:validates adr:ADR-023 .
 
-tc:TC-113 a pm:TestCriterion ;
-    pm:title "verify_unrunnable_no_block" ;
+tc:TC-044 a pm:TestCriterion ;
+    pm:title "feature_next_uses_topo" ;
     pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-023 ;
-    pm:validates adr:ADR-021 .
-
-tc:TC-139 a pm:TestCriterion ;
-    pm:title "domains_vocab_unknown" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-018 ;
-    pm:validates ft:FT-019 ;
-    pm:validates adr:ADR-025 .
-
-tc:TC-053 a pm:TestCriterion ;
-    pm:title "product graph central" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
     pm:validates ft:FT-011 ;
     pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
     pm:validates adr:ADR-012 .
 
-tc:TC-003 a pm:TestCriterion ;
-    pm:title "binary_no_deps.sh" ;
+tc:TC-367 a pm:TestCriterion ;
+    pm:title "platform_verify_cross_cutting" ;
     pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
-    pm:validates ft:FT-001 ;
-    pm:validates ft:FT-012 ;
-    pm:validates ft:FT-013 ;
-    pm:validates adr:ADR-001 .
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
 
-tc:TC-117 a pm:TestCriterion ;
-    pm:title "pre_commit_hook_runs_on_staged_adr" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-022 ;
-    pm:validates adr:ADR-022 .
-
-tc:TC-058 a pm:TestCriterion ;
-    pm:title "error_internal_tier4" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-010 ;
-    pm:validates adr:ADR-013 .
-
-tc:TC-096 a pm:TestCriterion ;
-    pm:title "gap_id_format" ;
+tc:TC-172 a pm:TestCriterion ;
+    pm:title "Triage reject discards candidate permanently" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
-    pm:validates ft:FT-029 ;
-    pm:validates adr:ADR-019 .
-
-tc:TC-144 a pm:TestCriterion ;
-    pm:title "preflight_acknowledgement_without_reason_fails" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-019 ;
-    pm:validates ft:FT-027 ;
-    pm:validates adr:ADR-026 .
-
-tc:TC-007 a pm:TestCriterion ;
-    pm:title "frontmatter_invalid_id" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-002 ;
-    pm:validates ft:FT-003 ;
-    pm:validates adr:ADR-002 .
-
-tc:TC-115 a pm:TestCriterion ;
-    pm:title "verify_regenerates_checklist" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-023 ;
-    pm:validates adr:ADR-021 .
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
 
 tc:TC-066 a pm:TestCriterion ;
     pm:title "atomic_write_content" ;
@@ -1517,6 +1893,216 @@ tc:TC-066 a pm:TestCriterion ;
     pm:validates ft:FT-005 ;
     pm:validates adr:ADR-015 .
 
+tc:TC-379 a pm:TestCriterion ;
+    pm:title "single_responsibility_missing" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-029 .
+
+tc:TC-141 a pm:TestCriterion ;
+    pm:title "preflight_cross_cutting_gap" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-019 ;
+    pm:validates ft:FT-027 ;
+    pm:validates adr:ADR-026 .
+
+tc:TC-363 a pm:TestCriterion ;
+    pm:title "feature_link_interactive_confirm" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-086 a pm:TestCriterion ;
+    pm:title "gap_check_single_adr" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-029 ;
+    pm:validates adr:ADR-019 .
+
+tc:TC-085 a pm:TestCriterion ;
+    pm:title "validates.features" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-020 ;
+    pm:validates adr:ADR-017 .
+
+tc:TC-384 a pm:TestCriterion ;
+    pm:title "dep_governs_edge" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-142 a pm:TestCriterion ;
+    pm:title "preflight_domain_gap" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-019 ;
+    pm:validates ft:FT-027 ;
+    pm:validates adr:ADR-026 .
+
+tc:TC-202 a pm:TestCriterion ;
+    pm:title "context_measure_appends_metrics" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-011 ;
+    pm:validates adr:ADR-006 .
+
+tc:TC-175 a pm:TestCriterion ;
+    pm:title "Seed groups candidates into feature stubs by signal proximity" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-052 a pm:TestCriterion ;
+    pm:title "impact_on_supersede" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-399 a pm:TestCriterion ;
+    pm:title "product dep bom" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-324 a pm:TestCriterion ;
+    pm:title "mcp_prompts_get_tool" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-022 ;
+    pm:validates adr:ADR-022 .
+
+tc:TC-178 a pm:TestCriterion ;
+    pm:title "Seeded ADRs have no G005 contradictions after gap check" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-069 a pm:TestCriterion ;
+    pm:title "lock_stale_cleanup" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-005 ;
+    pm:validates adr:ADR-015 .
+
+tc:TC-091 a pm:TestCriterion ;
+    pm:title "gap_check_model_error_exits_2" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-029 ;
+    pm:validates adr:ADR-019 .
+
+tc:TC-092 a pm:TestCriterion ;
+    pm:title "gap_check_invalid_json_discarded" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-029 ;
+    pm:validates adr:ADR-019 .
+
+tc:TC-160 a pm:TestCriterion ;
+    pm:title "FT-009 formal specification blocks parse" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-004 ;
+    pm:validates ft:FT-009 ;
+    pm:validates adr:ADR-005 .
+
+tc:TC-138 a pm:TestCriterion ;
+    pm:title "acknowledgement_closes_gap" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-018 ;
+    pm:validates ft:FT-019 ;
+    pm:validates adr:ADR-025 .
+
+tc:TC-012 a pm:TestCriterion ;
+    pm:title "markdown_passthrough" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-001 ;
+    pm:validates ft:FT-002 ;
+    pm:validates ft:FT-007 ;
+    pm:validates adr:ADR-004 .
+
+tc:TC-013 a pm:TestCriterion ;
+    pm:title "id_auto_increment" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-001 ;
+    pm:validates ft:FT-004 ;
+    pm:validates ft:FT-009 ;
+    pm:validates adr:ADR-005 .
+
+tc:TC-083 a pm:TestCriterion ;
+    pm:title "status" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-020 ;
+    pm:validates adr:ADR-017 .
+
+tc:TC-077 a pm:TestCriterion ;
+    pm:title "parse_empty_block_warning" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-004 ;
+    pm:validates ft:FT-015 ;
+    pm:validates adr:ADR-016 .
+
+tc:TC-154 a pm:TestCriterion ;
+    pm:title "FT-002 repository layout validated" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing .
+
+tc:TC-049 a pm:TestCriterion ;
+    pm:title "centrality_top_n" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-099 a pm:TestCriterion ;
+    pm:title "mcp_stdio_tool_call" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-021 ;
+    pm:validates adr:ADR-020 .
+
+tc:TC-019 a pm:TestCriterion ;
+    pm:title "context_bundle_superseded_adr" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-011 ;
+    pm:validates adr:ADR-006 .
+
+tc:TC-151 a pm:TestCriterion ;
+    pm:title "product graph coverage" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-019 ;
+    pm:validates ft:FT-027 ;
+    pm:validates adr:ADR-026 .
+
+tc:TC-035 a pm:TestCriterion ;
+    pm:title "formal_block_parse_types" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-015 ;
+    pm:validates adr:ADR-011 .
+
 tc:TC-093 a pm:TestCriterion ;
     pm:title "gap_id_deterministic" ;
     pm:type pm:Scenario ;
@@ -1524,108 +2110,443 @@ tc:TC-093 a pm:TestCriterion ;
     pm:validates ft:FT-029 ;
     pm:validates adr:ADR-019 .
 
-tc:TC-060 a pm:TestCriterion ;
-    pm:title "schema_version_forward_error" ;
+tc:TC-179 a pm:TestCriterion ;
+    pm:title "ft_008_schema_migration_exit_criteria" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-008 ;
+    pm:validates adr:ADR-014 .
+
+tc:TC-373 a pm:TestCriterion ;
+    pm:title "function_length_warn" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-029 .
+
+tc:TC-089 a pm:TestCriterion ;
+    pm:title "gap_check_resolved" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
-    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-029 ;
+    pm:validates adr:ADR-019 .
+
+tc:TC-232 a pm:TestCriterion ;
+    pm:title "feature_next_phase_gate_blocks" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-129 a pm:TestCriterion ;
+    pm:title "metrics_threshold_clean_exits_0" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-028 ;
+    pm:validates adr:ADR-024 .
+
+tc:TC-143 a pm:TestCriterion ;
+    pm:title "preflight_acknowledgement_closes_gap" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-019 ;
+    pm:validates ft:FT-027 ;
+    pm:validates adr:ADR-026 .
+
+tc:TC-081 a pm:TestCriterion ;
+    pm:title "title" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
     pm:validates ft:FT-020 ;
-    pm:validates adr:ADR-014 .
+    pm:validates adr:ADR-017 .
+
+tc:TC-152 a pm:TestCriterion ;
+    pm:title "FT-007 all tests pass and feature is complete" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Unimplemented .
+
+tc:TC-398 a pm:TestCriterion ;
+    pm:title "dep_supersedes_edge" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-097 a pm:TestCriterion ;
+    pm:title "gap_stdout_stderr_separation" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-029 ;
+    pm:validates adr:ADR-019 .
+
+tc:TC-109 a pm:TestCriterion ;
+    pm:title "implement_gap_gate_suppressed" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-039 a pm:TestCriterion ;
+    pm:title "formal_block_missing_invariant_warning" ;
+    pm:type pm:Invariant ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-015 ;
+    pm:validates adr:ADR-011 .
+
+tc:TC-164 a pm:TestCriterion ;
+    pm:title "FT-013 Rust implementation compiles clean" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-013 ;
+    pm:validates adr:ADR-001 .
+
+tc:TC-364 a pm:TestCriterion ;
+    pm:title "feature_link_interactive_decline" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-016 a pm:TestCriterion ;
+    pm:title "context_bundle_feature" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-011 ;
+    pm:validates adr:ADR-006 .
+
+tc:TC-056 a pm:TestCriterion ;
+    pm:title "error_json_format" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-010 ;
+    pm:validates adr:ADR-013 .
+
+tc:TC-100 a pm:TestCriterion ;
+    pm:title "mcp_http_tool_call" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-021 ;
+    pm:validates adr:ADR-020 .
+
+tc:TC-106 a pm:TestCriterion ;
+    pm:title "mcp_tool_registry_shared" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-021 ;
+    pm:validates adr:ADR-020 .
+
+tc:TC-382 a pm:TestCriterion ;
+    pm:title "dep_parse_service" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-395 a pm:TestCriterion ;
+    pm:title "dep_gap_g008" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
 
 tc:TC-043 a pm:TestCriterion ;
     pm:title "topo_sort_cycle" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
     pm:validates ft:FT-011 ;
     pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
     pm:validates adr:ADR-012 .
 
-tc:TC-068 a pm:TestCriterion ;
-    pm:title "lock_concurrent_writes" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-005 ;
-    pm:validates adr:ADR-015 .
-
-tc:TC-047 a pm:TestCriterion ;
-    pm:title "context_bundle_adr_order_centrality" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
-    pm:validates ft:FT-011 ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-012 .
-
-tc:TC-020 a pm:TestCriterion ;
-    pm:title "product context FT-001" ;
+tc:TC-203 a pm:TestCriterion ;
+    pm:title "context_measure_idempotent" ;
     pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
     pm:validates ft:FT-011 ;
     pm:validates adr:ADR-006 .
 
-tc:TC-049 a pm:TestCriterion ;
-    pm:title "centrality_top_n" ;
+tc:TC-076 a pm:TestCriterion ;
+    pm:title "parse_unclosed_delimiter" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-004 ;
+    pm:validates ft:FT-015 ;
+    pm:validates adr:ADR-016 .
+
+tc:TC-018 a pm:TestCriterion ;
+    pm:title "context_bundle_header" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
     pm:validates ft:FT-011 ;
-    pm:validates ft:FT-016 ;
-    pm:validates adr:ADR-012 .
+    pm:validates adr:ADR-006 .
 
-tc:TC-074 a pm:TestCriterion ;
-    pm:title "parse_evidence_block" ;
+tc:TC-159 a pm:TestCriterion ;
+    pm:title "FT-017 checklist generation idempotent" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-017 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-007 .
+
+tc:TC-115 a pm:TestCriterion ;
+    pm:title "verify_regenerates_checklist" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
-    pm:validates ft:FT-003 ;
-    pm:validates ft:FT-015 ;
-    pm:validates adr:ADR-016 .
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
 
-tc:TC-077 a pm:TestCriterion ;
-    pm:title "parse_empty_block_warning" ;
-    pm:type pm:Scenario ;
-    pm:status pm:Passing ;
-    pm:validates ft:FT-003 ;
-    pm:validates ft:FT-015 ;
-    pm:validates adr:ADR-016 .
-
-tc:TC-134 a pm:TestCriterion ;
-    pm:title "domain_top2_centrality" ;
+tc:TC-370 a pm:TestCriterion ;
+    pm:title "file_length_warn" ;
     pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-029 .
+
+tc:TC-116 a pm:TestCriterion ;
+    pm:title "pre_commit_hook_installed" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-022 ;
+    pm:validates adr:ADR-022 .
+
+tc:TC-118 a pm:TestCriterion ;
+    pm:title "pre_commit_hook_skips_non_adr" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-022 ;
+    pm:validates adr:ADR-022 .
+
+tc:TC-094 a pm:TestCriterion ;
+    pm:title "gap_suppress_mutates_baseline" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-029 ;
+    pm:validates adr:ADR-019 .
+
+tc:TC-139 a pm:TestCriterion ;
+    pm:title "domains_vocab_unknown" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
     pm:validates ft:FT-018 ;
     pm:validates ft:FT-019 ;
     pm:validates adr:ADR-025 .
 
-tc:TC-122 a pm:TestCriterion ;
-    pm:title "drift_check_d001_detected" ;
+tc:TC-396 a pm:TestCriterion ;
+    pm:title "dep_list_filter" ;
     pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
-    pm:validates ft:FT-028 ;
-    pm:validates adr:ADR-023 .
+    pm:validates adr:ADR-030 .
+
+tc:TC-098 a pm:TestCriterion ;
+    pm:title "gap_json_schema" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-029 ;
+    pm:validates adr:ADR-019 .
+
+tc:TC-110 a pm:TestCriterion ;
+    pm:title "implement_dry_run" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-311 a pm:TestCriterion ;
+    pm:title "verify_requires_not_satisfied" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-315 a pm:TestCriterion ;
+    pm:title "prompts_init_creates_files" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-022 ;
+    pm:validates adr:ADR-022 .
+
+tc:TC-117 a pm:TestCriterion ;
+    pm:title "pre_commit_hook_runs_on_staged_adr" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-022 ;
+    pm:validates adr:ADR-022 .
+
+tc:TC-113 a pm:TestCriterion ;
+    pm:title "verify_unrunnable_no_block" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-112 a pm:TestCriterion ;
+    pm:title "verify_one_fail_keeps_in_progress" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-309 a pm:TestCriterion ;
+    pm:title "verify_platform_runs_cross_cutting" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-358 a pm:TestCriterion ;
+    pm:title "link_tests_cross_cutting_excluded" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-323 a pm:TestCriterion ;
+    pm:title "mcp_prompts_list_tool" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-022 ;
+    pm:validates adr:ADR-022 .
+
+tc:TC-063 a pm:TestCriterion ;
+    pm:title "schema_migrate_idempotent" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-008 ;
+    pm:validates ft:FT-020 ;
+    pm:validates adr:ADR-014 .
+
+tc:TC-065 a pm:TestCriterion ;
+    pm:title "schema_version_mismatch_format" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-008 ;
+    pm:validates ft:FT-020 ;
+    pm:validates adr:ADR-014 .
 
 tc:TC-010 a pm:TestCriterion ;
     pm:title "graph_stale_ttl" ;
     pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
     pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
     pm:validates adr:ADR-003 .
 
-tc:TC-083 a pm:TestCriterion ;
-    pm:title "status" ;
+tc:TC-145 a pm:TestCriterion ;
+    pm:title "implement_blocked_by_preflight" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-019 ;
+    pm:validates ft:FT-027 ;
+    pm:validates adr:ADR-026 .
+
+tc:TC-126 a pm:TestCriterion ;
+    pm:title "metrics_record_appends" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-028 ;
+    pm:validates adr:ADR-024 .
+
+tc:TC-015 a pm:TestCriterion ;
+    pm:title "id_conflict" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-001 ;
+    pm:validates ft:FT-004 ;
+    pm:validates ft:FT-009 ;
+    pm:validates adr:ADR-005 .
+
+tc:TC-376 a pm:TestCriterion ;
+    pm:title "module_structure_missing" ;
     pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-029 .
+
+tc:TC-096 a pm:TestCriterion ;
+    pm:title "gap_id_format" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-029 ;
+    pm:validates adr:ADR-019 .
+
+tc:TC-162 a pm:TestCriterion ;
+    pm:title "FT-020 migration extracts and confirms" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
     pm:validates ft:FT-020 ;
     pm:validates adr:ADR-017 .
 
-tc:TC-070 a pm:TestCriterion ;
-    pm:title "tmp_cleanup_on_startup" ;
+tc:TC-067 a pm:TestCriterion ;
+    pm:title "atomic_write_interrupted" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
     pm:validates ft:FT-005 ;
     pm:validates adr:ADR-015 .
 
+tc:TC-046 a pm:TestCriterion ;
+    pm:title "context_depth_dedup" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-002 a pm:TestCriterion ;
+    pm:title "binary_compiles_x86" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-001 ;
+    pm:validates ft:FT-012 ;
+    pm:validates ft:FT-013 ;
+    pm:validates adr:ADR-001 .
+
+tc:TC-017 a pm:TestCriterion ;
+    pm:title "context_bundle_no_frontmatter" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-011 ;
+    pm:validates adr:ADR-006 .
+
+tc:TC-174 a pm:TestCriterion ;
+    pm:title "Seed creates ADR files with correct front-matter" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-030 ;
+    pm:validates adr:ADR-027 .
+
+tc:TC-071 a pm:TestCriterion ;
+    pm:title "parse_types_block" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-004 ;
+    pm:validates ft:FT-015 ;
+    pm:validates adr:ADR-016 .
+
+tc:TC-057 a pm:TestCriterion ;
+    pm:title "error_no_panic_on_bad_yaml" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-010 ;
+    pm:validates adr:ADR-013 .
+
+tc:TC-372 a pm:TestCriterion ;
+    pm:title "function_length_passes" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-029 .
+
 tc:TC-133 a pm:TestCriterion ;
     pm:title "cross_cutting_bundle_position" ;
     pm:type pm:Scenario ;
-    pm:status pm:Unimplemented ;
+    pm:status pm:Passing ;
     pm:validates ft:FT-018 ;
     pm:validates ft:FT-019 ;
     pm:validates adr:ADR-025 .
@@ -1634,36 +2555,190 @@ tc:TC-041 a pm:TestCriterion ;
     pm:title "topo_sort_simple" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
     pm:validates ft:FT-011 ;
     pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
     pm:validates adr:ADR-012 .
 
-tc:TC-088 a pm:TestCriterion ;
-    pm:title "gap_check_suppressed" ;
+tc:TC-128 a pm:TestCriterion ;
+    pm:title "metrics_threshold_warning_exits_2" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-028 ;
+    pm:validates adr:ADR-024 .
+
+tc:TC-051 a pm:TestCriterion ;
+    pm:title "impact_transitive" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
-    pm:validates ft:FT-029 ;
-    pm:validates adr:ADR-019 .
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-012 .
 
-tc:TC-061 a pm:TestCriterion ;
-    pm:title "schema_version_backward_warning" ;
+tc:TC-007 a pm:TestCriterion ;
+    pm:title "frontmatter_invalid_id" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-002 ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-004 ;
+    pm:validates adr:ADR-002 .
+
+tc:TC-054 a pm:TestCriterion ;
+    pm:title "product impact ADR-001" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-073 a pm:TestCriterion ;
+    pm:title "parse_scenario_block" ;
     pm:type pm:Scenario ;
     pm:status pm:Passing ;
     pm:validates ft:FT-003 ;
-    pm:validates ft:FT-020 ;
-    pm:validates adr:ADR-014 .
+    pm:validates ft:FT-004 ;
+    pm:validates ft:FT-015 ;
+    pm:validates adr:ADR-016 .
 
-tc:TC-091 a pm:TestCriterion ;
-    pm:title "gap_check_model_error_exits_2" ;
-    pm:type pm:ExitCriteria ;
+tc:TC-148 a pm:TestCriterion ;
+    pm:title "coverage_matrix_domain_filter" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-019 ;
+    pm:validates ft:FT-027 ;
+    pm:validates adr:ADR-026 .
+
+tc:TC-236 a pm:TestCriterion ;
+    pm:title "feature_next_gate_partial" ;
+    pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
-    pm:validates ft:FT-029 ;
-    pm:validates adr:ADR-019 .
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates adr:ADR-012 .
 
-tc:TC-119 a pm:TestCriterion ;
-    pm:title "adr_review_structural_missing_section" ;
+tc:TC-321 a pm:TestCriterion ;
+    pm:title "adr_review_missing_section" ;
     pm:type pm:Scenario ;
     pm:status pm:Unimplemented ;
     pm:validates ft:FT-022 ;
     pm:validates adr:ADR-022 .
+
+tc:TC-108 a pm:TestCriterion ;
+    pm:title "implement_gap_gate_blocks" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-023 ;
+    pm:validates adr:ADR-021 .
+
+tc:TC-062 a pm:TestCriterion ;
+    pm:title "schema_migrate_dry_run" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-003 ;
+    pm:validates ft:FT-008 ;
+    pm:validates ft:FT-020 ;
+    pm:validates adr:ADR-014 .
+
+tc:TC-389 a pm:TestCriterion ;
+    pm:title "dep_tc_requires_dep_id" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-045 a pm:TestCriterion ;
+    pm:title "context_depth_2" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates ft:FT-014 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-095 a pm:TestCriterion ;
+    pm:title "gap_changed_expansion" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-029 ;
+    pm:validates adr:ADR-019 .
+
+tc:TC-087 a pm:TestCriterion ;
+    pm:title "gap_check_no_gaps" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-029 ;
+    pm:validates adr:ADR-019 .
+
+tc:TC-140 a pm:TestCriterion ;
+    pm:title "preflight_clean_exits_0" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-019 ;
+    pm:validates ft:FT-027 ;
+    pm:validates adr:ADR-026 .
+
+tc:TC-032 a pm:TestCriterion ;
+    pm:title "abandon_feature_exit_code" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-018 ;
+    pm:validates adr:ADR-010 .
+
+tc:TC-003 a pm:TestCriterion ;
+    pm:title "binary_no_deps.sh" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-001 ;
+    pm:validates ft:FT-012 ;
+    pm:validates ft:FT-013 ;
+    pm:validates adr:ADR-001 .
+
+tc:TC-235 a pm:TestCriterion ;
+    pm:title "feature_next_ignore_gate" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates ft:FT-006 ;
+    pm:validates ft:FT-011 ;
+    pm:validates ft:FT-016 ;
+    pm:validates ft:FT-024 ;
+    pm:validates adr:ADR-012 .
+
+tc:TC-127 a pm:TestCriterion ;
+    pm:title "metrics_threshold_error_exits_1" ;
+    pm:type pm:ExitCriteria ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-028 ;
+    pm:validates adr:ADR-024 .
+
+tc:TC-390 a pm:TestCriterion ;
+    pm:title "dep_context_bundle_section" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Unimplemented ;
+    pm:validates adr:ADR-030 .
+
+tc:TC-122 a pm:TestCriterion ;
+    pm:title "drift_check_d001_detected" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-028 ;
+    pm:validates adr:ADR-023 .
+
+tc:TC-107 a pm:TestCriterion ;
+    pm:title "mcp_cors_header" ;
+    pm:type pm:Scenario ;
+    pm:status pm:Passing ;
+    pm:validates ft:FT-021 ;
+    pm:validates adr:ADR-020 .
 

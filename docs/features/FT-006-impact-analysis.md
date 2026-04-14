@@ -2,7 +2,7 @@
 id: FT-006
 title: Impact Analysis
 phase: 2
-status: complete
+status: in-progress
 depends-on:
 - FT-016
 adrs:
@@ -28,10 +28,6 @@ tests:
 - TC-053
 - TC-054
 - TC-157
-- TC-228
-- TC-229
-- TC-230
-- TC-231
 - TC-232
 - TC-233
 - TC-234
@@ -39,16 +35,6 @@ tests:
 - TC-236
 - TC-237
 - TC-238
-- TC-239
-- TC-240
-- TC-241
-- TC-242
-- TC-243
-- TC-244
-- TC-245
-- TC-246
-- TC-247
-- TC-248
 - TC-249
 domains: []
 domains-acknowledged: {}

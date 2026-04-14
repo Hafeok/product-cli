@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-011
 phase: 1
+runner: cargo-test
+runner-args: "tc_040_context_bundle_formal_blocks_preserved"
 ---
 
 assert that formal blocks in test criteria are preserved verbatim in the context bundle output, not stripped like front-matter.

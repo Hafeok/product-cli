@@ -599,6 +599,49 @@ impl KnowledgeGraph {
             }
         }
 
+        // W016: Feature marked complete but has unimplemented or failing TCs
+        for f in self.features.values() {
+            if f.front.status != FeatureStatus::Complete {
+                continue;
+            }
+            let blocking_tcs: Vec<&str> = f
+                .front
+                .tests
+                .iter()
+                .filter_map(|t_id| {
+                    self.tests.get(t_id.as_str()).and_then(|t| {
+                        if t.front.status == TestStatus::Unimplemented
+                            || t.front.status == TestStatus::Failing
+                        {
+                            Some(t.front.id.as_str())
+                        } else {
+                            None
+                        }
+                    })
+                })
+                .collect();
+            if !blocking_tcs.is_empty() {
+                let preview: Vec<&str> = blocking_tcs.iter().take(5).copied().collect();
+                let suffix = if blocking_tcs.len() > 5 {
+                    format!(", ... ({} total)", blocking_tcs.len())
+                } else {
+                    String::new()
+                };
+                result.warnings.push(
+                    Diagnostic::warning("W016", "complete feature has unimplemented tests")
+                        .with_file(f.path.clone())
+                        .with_detail(&format!(
+                            "{} is complete but has {} unimplemented/failing TC(s): {}{}",
+                            f.front.id,
+                            blocking_tcs.len(),
+                            preview.join(", "),
+                            suffix,
+                        ))
+                        .with_hint("run `product verify` to re-evaluate, or set blocking TCs to `unrunnable`"),
+                );
+            }
+        }
+
         // W004: Invariant/chaos tests missing formal blocks
         for t in self.tests.values() {
             if (t.front.test_type == TestType::Invariant || t.front.test_type == TestType::Chaos)
@@ -1051,6 +1094,35 @@ mod tests {
         let graph = KnowledgeGraph::build(features, adrs, tests);
         let result = graph.check();
         assert!(result.warnings.iter().any(|w| w.code == "W003"), "should report W003");
+    }
+
+    #[test]
+    fn graph_check_w016_complete_with_unimplemented() {
+        let features = vec![
+            make_feature("FT-001", vec![], vec!["ADR-001"], vec!["TC-001"], FeatureStatus::Complete),
+        ];
+        let adrs = vec![make_adr("ADR-001")];
+        let mut tc = make_test("TC-001", vec!["ADR-001"]);
+        tc.front.validates.features = vec!["FT-001".to_string()];
+        // TC defaults to Unimplemented status
+        let graph = KnowledgeGraph::build(features, adrs, vec![tc]);
+        let result = graph.check();
+        assert!(result.warnings.iter().any(|w| w.code == "W016"), "should report W016 for complete feature with unimplemented TC");
+    }
+
+    #[test]
+    fn graph_check_w016_not_fired_when_passing() {
+        let features = vec![
+            make_feature("FT-001", vec![], vec!["ADR-001"], vec!["TC-001"], FeatureStatus::Complete),
+        ];
+        let adrs = vec![make_adr("ADR-001")];
+        let mut tc = make_test("TC-001", vec!["ADR-001"]);
+        tc.front.validates.features = vec!["FT-001".to_string()];
+        tc.front.test_type = TestType::ExitCriteria;
+        tc.front.status = TestStatus::Passing;
+        let graph = KnowledgeGraph::build(features, adrs, vec![tc]);
+        let result = graph.check();
+        assert!(!result.warnings.iter().any(|w| w.code == "W016"), "should not fire W016 when all TCs passing");
     }
 
     #[test]

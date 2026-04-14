@@ -4,7 +4,8 @@ title: dep_check_manual
 type: scenario
 status: unimplemented
 validates:
-  features: []
+  features:
+  - FT-032
   adrs:
   - ADR-030
 phase: 1

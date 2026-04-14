@@ -13,6 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_078_parse_raw_roundtrip"
+last-run: 2026-04-14T10:46:07.489682314+00:00
 ---
 
 parse an invariant block and assert that `Invariant.raw` is byte-for-byte identical to the original input (including whitespace).

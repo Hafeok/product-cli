@@ -285,6 +285,21 @@ impl ToolRegistry {
                     None => Err(format!("Feature {} not found", id)),
                 }
             }
+            "product_feature_deps" => {
+                let id = args.get("id").and_then(|v| v.as_str()).unwrap_or_default();
+                let feat = graph.features.get(id)
+                    .ok_or_else(|| format!("Feature {} not found", id))?;
+                let depends_on: Vec<Value> = feat.front.depends_on.iter()
+                    .filter_map(|dep_id| graph.features.get(dep_id.as_str()).map(|df| {
+                        serde_json::json!({"id": dep_id, "title": df.front.title, "status": format!("{}", df.front.status)})
+                    }))
+                    .collect();
+                let depended_by: Vec<Value> = graph.features.values()
+                    .filter(|f| f.front.depends_on.iter().any(|d| d == id))
+                    .map(|f| serde_json::json!({"id": f.front.id, "title": f.front.title, "status": format!("{}", f.front.status)}))
+                    .collect();
+                Ok(serde_json::json!({"id": id, "depends_on": depends_on, "depended_by": depended_by}))
+            }
             "product_adr_list" => {
                 let mut items: Vec<Value> = graph.adrs.values()
                     .map(|a| serde_json::json!({
@@ -306,6 +321,24 @@ impl ToolRegistry {
                         "body": a.body,
                     })),
                     None => Err(format!("ADR {} not found", id)),
+                }
+            }
+            "product_test_show" => {
+                let id = args.get("id").and_then(|v| v.as_str()).unwrap_or_default();
+                match graph.tests.get(id) {
+                    Some(t) => Ok(serde_json::json!({
+                        "id": t.front.id,
+                        "title": t.front.title,
+                        "type": format!("{}", t.front.test_type),
+                        "status": format!("{}", t.front.status),
+                        "validates": {
+                            "features": t.front.validates.features,
+                            "adrs": t.front.validates.adrs,
+                        },
+                        "phase": t.front.phase,
+                        "body": t.body,
+                    })),
+                    None => Err(format!("Test criterion {} not found", id)),
                 }
             }
             "product_graph_check" => {
@@ -473,9 +506,14 @@ impl ToolRegistry {
         }
     }
 
-    /// Handle a JSON-RPC request
-    pub fn handle_jsonrpc(&self, request: &JsonRpcRequest) -> JsonRpcResponse {
-        match request.method.as_str() {
+    /// Handle a JSON-RPC request. Returns `None` for notifications (no response required).
+    pub fn handle_jsonrpc(&self, request: &JsonRpcRequest) -> Option<JsonRpcResponse> {
+        // MCP notifications MUST NOT receive a response (spec requirement)
+        if request.method.starts_with("notifications/") {
+            return None;
+        }
+
+        Some(match request.method.as_str() {
             "initialize" => {
                 JsonRpcResponse::success(request.id.clone(), serde_json::json!({
                     "protocolVersion": "2024-11-05",
@@ -509,7 +547,7 @@ impl ToolRegistry {
                 }
             }
             _ => JsonRpcResponse::error(request.id.clone(), -32601, &format!("Method not found: {}", request.method)),
-        }
+        })
     }
 }
 
@@ -543,11 +581,13 @@ pub fn run_stdio(repo_root: PathBuf, write_enabled: bool) -> Result<()> {
             }
         };
 
-        let response = registry.handle_jsonrpc(&request);
-        let json = serde_json::to_string(&response).unwrap_or_default();
-        let mut out = stdout.lock();
-        let _ = writeln!(out, "{}", json);
-        let _ = out.flush();
+        // Notifications return None — no response written (MCP spec)
+        if let Some(response) = registry.handle_jsonrpc(&request) {
+            let json = serde_json::to_string(&response).unwrap_or_default();
+            let mut out = stdout.lock();
+            let _ = writeln!(out, "{}", json);
+            let _ = out.flush();
+        }
     }
 
     Ok(())
@@ -600,8 +640,11 @@ pub async fn run_http(
                         }
                     }
 
-                    let response = state.registry.handle_jsonrpc(&request);
-                    (StatusCode::OK, Json(response))
+                    // Notifications return None — respond with 202 Accepted (no body needed but type requires one)
+                    match state.registry.handle_jsonrpc(&request) {
+                        Some(response) => (StatusCode::OK, Json(response)),
+                        None => (StatusCode::ACCEPTED, Json(JsonRpcResponse::success(None, serde_json::json!(null)))),
+                    }
                 }
             }
         }));
@@ -733,7 +776,7 @@ mod tests {
             method: "initialize".to_string(),
             params: serde_json::json!({}),
         };
-        let response = registry.handle_jsonrpc(&request);
+        let response = registry.handle_jsonrpc(&request).expect("initialize should return a response");
         assert!(response.result.is_some());
         assert!(response.error.is_none());
     }
@@ -749,11 +792,25 @@ mod tests {
             method: "tools/list".to_string(),
             params: serde_json::json!({}),
         };
-        let response = registry.handle_jsonrpc(&request);
+        let response = registry.handle_jsonrpc(&request).expect("tools/list should return a response");
         let tools = response.result.as_ref()
             .and_then(|r| r.get("tools"))
             .and_then(|t| t.as_array());
         assert!(tools.is_some());
         assert!(tools.map(|t| t.len()).unwrap_or(0) > 10);
+    }
+
+    #[test]
+    fn jsonrpc_notification_returns_none() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        std::fs::write(dir.path().join("product.toml"), "name = \"test\"\n").expect("write");
+        let registry = ToolRegistry::new(dir.path().to_path_buf(), false);
+        let request = JsonRpcRequest {
+            jsonrpc: "2.0".to_string(),
+            id: None,
+            method: "notifications/initialized".to_string(),
+            params: serde_json::json!({}),
+        };
+        assert!(registry.handle_jsonrpc(&request).is_none(), "notifications must not receive a response");
     }
 }

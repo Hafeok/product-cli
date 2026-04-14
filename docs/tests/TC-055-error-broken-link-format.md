@@ -2,7 +2,7 @@
 id: TC-055
 title: error_broken_link_format
 type: scenario
-status: passing
+status: unimplemented
 validates:
   features:
   - FT-010

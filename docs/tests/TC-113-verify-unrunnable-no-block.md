@@ -1,6 +1,6 @@
 ---
 id: TC-113
-title: verify_unrunnable_no_block
+title: verify_unimplemented_blocks
 type: scenario
 status: passing
 validates:
@@ -10,8 +10,7 @@ validates:
   - ADR-021
 phase: 1
 runner: cargo-test
-runner-args: tc_113_verify_unrunnable_no_block
-last-run: 2026-04-13T14:07:16.920985096+00:00
+runner-args: tc_113_verify_unimplemented_blocks
 ---
 
-all TCs have no `runner` field. Assert feature status unchanged. Assert W-class warning emitted.
+All TCs have no `runner` field. Assert feature goes to in-progress (unimplemented blocks completion). Distinct from `unrunnable` which is an explicit acknowledgement that does not block.

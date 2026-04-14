@@ -194,6 +194,8 @@ pub fn run_verify(
 
     let mut all_pass = true;
     let mut any_runnable = false;
+    let mut has_unimplemented = false;
+    let mut unrunnable_count: usize = 0;
     let now = chrono::Utc::now().to_rfc3339();
 
     for tc_id in &feature.front.tests {
@@ -205,8 +207,17 @@ pub fn run_verify(
             let runner = extract_yaml_field(&content, "runner");
             let runner_args = extract_yaml_field(&content, "runner-args");
 
+            // Explicitly acknowledged as unrunnable — warn but don't block
+            if tc.front.status == TestStatus::Unrunnable {
+                println!("  {} {:<30} UNRUNNABLE (acknowledged)", tc.front.id, tc.front.title);
+                unrunnable_count += 1;
+                continue;
+            }
+
             if runner.is_empty() {
-                println!("  {} {:<30} UNRUNNABLE (no runner configured)", tc.front.id, tc.front.title);
+                // No runner configured — this is unimplemented, blocks completion
+                println!("  {} {:<30} UNIMPLEMENTED (no runner configured)", tc.front.id, tc.front.title);
+                has_unimplemented = true;
                 continue;
             }
 
@@ -227,8 +238,17 @@ pub fn run_verify(
         }
     }
 
+    if unrunnable_count > 0 {
+        eprintln!(
+            "warning[W016]: {} TC(s) acknowledged as unrunnable for {}",
+            unrunnable_count, feature_id
+        );
+    }
+
     // Update feature status
-    if any_runnable {
+    // Complete requires: all runnable TCs pass AND no unimplemented TCs
+    // Unrunnable TCs are excluded from completion evaluation
+    if any_runnable || has_unimplemented {
         let features_dir = config.resolve_path(root, &config.paths.features);
         let adrs_dir = config.resolve_path(root, &config.paths.adrs);
         let tests_dir = config.resolve_path(root, &config.paths.tests);
@@ -237,7 +257,7 @@ pub fn run_verify(
         let new_graph = KnowledgeGraph::build(features, adrs, tests);
 
         if let Some(f) = new_graph.features.get(feature_id) {
-            let new_status = if all_pass {
+            let new_status = if all_pass && !has_unimplemented {
                 FeatureStatus::Complete
             } else {
                 FeatureStatus::InProgress
@@ -316,7 +336,27 @@ fn run_tc(runner: &str, args: &str, root: &Path) -> TcResult {
     let duration = start.elapsed().as_secs_f64();
 
     match result {
-        Ok(output) if output.status.success() => TcResult::Pass(duration),
+        Ok(output) if output.status.success() => {
+            // For cargo-test: detect "0 tests ran" — the filter matched nothing,
+            // which means the test function doesn't exist yet
+            if runner == "cargo-test" {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                if stdout.contains("0 passed") || stdout.contains("running 0 tests") {
+                    // Check if ALL test binaries ran 0 tests (no matches at all)
+                    let ran_any = stdout.lines().any(|line| {
+                        line.contains("test result: ok.")
+                            && !line.contains("0 passed")
+                    });
+                    if !ran_any {
+                        return TcResult::Fail(
+                            duration,
+                            "No matching test function found (0 tests ran)".to_string(),
+                        );
+                    }
+                }
+            }
+            TcResult::Pass(duration)
+        }
         Ok(output) => {
             let stderr = String::from_utf8_lossy(&output.stderr);
             let msg = if stderr.len() > 500 { &stderr[..500] } else { &stderr };

@@ -4,7 +4,8 @@ title: file_length_fail
 type: scenario
 status: unimplemented
 validates:
-  features: []
+  features:
+  - FT-031
   adrs:
   - ADR-029
 phase: 1

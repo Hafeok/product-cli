@@ -10,4 +10,3 @@ validates:
   - ADR-027
 phase: 1
 ---
-

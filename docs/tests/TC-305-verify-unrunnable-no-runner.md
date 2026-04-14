@@ -1,6 +1,6 @@
 ---
 id: TC-305
-title: verify_unrunnable_no_runner
+title: verify_unimplemented_no_runner_blocks
 type: scenario
 status: unimplemented
 validates:
@@ -11,4 +11,4 @@ validates:
 phase: 1
 ---
 
-all TCs have no `runner`. Assert feature status unchanged, W-class warning.
+All TCs have no `runner` field. Assert feature goes to in-progress (unimplemented blocks completion). Distinct from `status: unrunnable` which is an explicit acknowledgement that does not block.

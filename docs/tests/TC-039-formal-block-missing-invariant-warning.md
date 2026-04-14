@@ -2,7 +2,7 @@
 id: TC-039
 title: formal_block_missing_invariant_warning
 type: invariant
-status: passing
+status: unimplemented
 validates:
   features:
   - FT-015

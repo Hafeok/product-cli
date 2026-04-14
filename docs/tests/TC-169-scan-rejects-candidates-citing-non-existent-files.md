@@ -11,7 +11,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_169_scan_rejects_candidates_citing_non_existent_files"
-last-run: 2026-04-13T14:45:04.298783396+00:00
+last-run: 2026-04-14T11:01:04.789091923+00:00
 ---
 
 ## Description

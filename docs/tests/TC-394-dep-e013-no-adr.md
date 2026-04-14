@@ -4,7 +4,8 @@ title: dep_e013_no_adr
 type: scenario
 status: unimplemented
 validates:
-  features: []
+  features:
+  - FT-032
   adrs:
   - ADR-030
 phase: 1

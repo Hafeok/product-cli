@@ -126,6 +126,18 @@
 - [x] TC-053: product graph central (scenario) — passing
 - [x] TC-054: product impact ADR-001 (scenario) — passing
 - [x] TC-158: FT-011 context bundle output correct (exit-criteria) — passing
+- [ ] TC-201: context_measure_updates_frontmatter (scenario) — unimplemented
+- [ ] TC-202: context_measure_appends_metrics (scenario) — unimplemented
+- [ ] TC-203: context_measure_idempotent (scenario) — unimplemented
+- [ ] TC-205: product context FT-001 --measure (scenario) — unimplemented
+- [ ] TC-232: feature_next_phase_gate_blocks (scenario) — unimplemented
+- [ ] TC-233: feature_next_phase_gate_satisfied (scenario) — unimplemented
+- [ ] TC-234: feature_next_phase_gate_no_exit_criteria (exit-criteria) — unimplemented
+- [ ] TC-235: feature_next_ignore_gate (scenario) — unimplemented
+- [ ] TC-236: feature_next_gate_partial (scenario) — unimplemented
+- [ ] TC-237: status_shows_phase_gate (scenario) — unimplemented
+- [ ] TC-238: status_phase_detail (scenario) — unimplemented
+- [ ] TC-249: product feature next (scenario) — unimplemented
 
 ### FT-012 — Feature: FT-001 — Cluster Foundation [x]
 
@@ -192,6 +204,14 @@
 - [x] TC-053: product graph central (scenario) — passing
 - [x] TC-054: product impact ADR-001 (scenario) — passing
 - [x] TC-157: FT-016 graph model queries pass (exit-criteria) — passing
+- [ ] TC-232: feature_next_phase_gate_blocks (scenario) — unimplemented
+- [ ] TC-233: feature_next_phase_gate_satisfied (scenario) — unimplemented
+- [ ] TC-234: feature_next_phase_gate_no_exit_criteria (exit-criteria) — unimplemented
+- [ ] TC-235: feature_next_ignore_gate (scenario) — unimplemented
+- [ ] TC-236: feature_next_gate_partial (scenario) — unimplemented
+- [ ] TC-237: status_shows_phase_gate (scenario) — unimplemented
+- [ ] TC-238: status_phase_detail (scenario) — unimplemented
+- [ ] TC-249: product feature next (scenario) — unimplemented
 
 ### FT-017 — Generated Checklist [x]
 
@@ -200,6 +220,8 @@
 - [x] TC-022: checklist_no_manual_edit_warning (scenario) — passing
 - [x] TC-023: checklist_roundtrip (scenario) — passing
 - [x] TC-159: FT-017 checklist generation idempotent (exit-criteria) — passing
+- [ ] TC-209: checklist_gitignore_default (scenario) — unimplemented
+- [ ] TC-210: checklist_gitignore_opt_out (scenario) — unimplemented
 
 ### FT-018 — Validation and Graph Health [x]
 
@@ -235,6 +257,7 @@
 - [x] TC-084: validates.adrs (scenario) — passing
 - [x] TC-085: validates.features (scenario) — passing
 - [x] TC-162: FT-020 migration extracts and confirms (exit-criteria) — passing
+- [ ] TC-275: ### Exit criteria (exit-criteria) — unimplemented
 
 ## Phase 2
 
@@ -265,6 +288,11 @@
 ### FT-006 — Impact Analysis [x]
 
 - [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
+- [x] TC-009: graph_rebuild_from_scratch (scenario) — passing
+- [x] TC-010: graph_stale_ttl (scenario) — passing
+- [x] TC-024: sparql_select_feature_adrs (scenario) — passing
+- [x] TC-025: sparql_untested_features (scenario) — passing
+- [x] TC-026: sparql_phase_filter (scenario) — passing
 - [x] TC-041: topo_sort_simple (scenario) — passing
 - [x] TC-042: topo_sort_parallel (scenario) — passing
 - [x] TC-043: topo_sort_cycle (scenario) — passing
@@ -279,12 +307,15 @@
 - [x] TC-052: impact_on_supersede (scenario) — passing
 - [x] TC-053: product graph central (scenario) — passing
 - [x] TC-054: product impact ADR-001 (scenario) — passing
-- [x] TC-009: graph_rebuild_from_scratch (scenario) — passing
-- [x] TC-010: graph_stale_ttl (scenario) — passing
-- [x] TC-024: sparql_select_feature_adrs (scenario) — passing
-- [x] TC-025: sparql_untested_features (scenario) — passing
-- [x] TC-026: sparql_phase_filter (scenario) — passing
 - [x] TC-157: FT-016 graph model queries pass (exit-criteria) — passing
+- [ ] TC-232: feature_next_phase_gate_blocks (scenario) — unimplemented
+- [ ] TC-233: feature_next_phase_gate_satisfied (scenario) — unimplemented
+- [ ] TC-234: feature_next_phase_gate_no_exit_criteria (exit-criteria) — unimplemented
+- [ ] TC-235: feature_next_ignore_gate (scenario) — unimplemented
+- [ ] TC-236: feature_next_gate_partial (scenario) — unimplemented
+- [ ] TC-237: status_shows_phase_gate (scenario) — unimplemented
+- [ ] TC-238: status_phase_detail (scenario) — unimplemented
+- [ ] TC-249: product feature next (scenario) — unimplemented
 
 ### FT-008 — Schema Migration [x]
 
@@ -331,6 +362,8 @@
 - [x] TC-054: product impact ADR-001 (scenario) — passing
 - [x] TC-157: FT-016 graph model queries pass (exit-criteria) — passing
 - [x] TC-159: FT-017 checklist generation idempotent (exit-criteria) — passing
+- [ ] TC-209: checklist_gitignore_default (scenario) — unimplemented
+- [ ] TC-210: checklist_gitignore_opt_out (scenario) — unimplemented
 
 ## Phase 3
 
@@ -338,7 +371,8 @@
 
 - [x] ADR-008: Embedded Oxigraph for SPARQL Queries (accepted)
 - [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
-- [x] TC-157: FT-016 graph model queries pass (exit-criteria) — passing
+- [x] TC-009: graph_rebuild_from_scratch (scenario) — passing
+- [x] TC-010: graph_stale_ttl (scenario) — passing
 - [x] TC-024: sparql_select_feature_adrs (scenario) — passing
 - [x] TC-025: sparql_untested_features (scenario) — passing
 - [x] TC-026: sparql_phase_filter (scenario) — passing
@@ -356,8 +390,15 @@
 - [x] TC-052: impact_on_supersede (scenario) — passing
 - [x] TC-053: product graph central (scenario) — passing
 - [x] TC-054: product impact ADR-001 (scenario) — passing
-- [x] TC-009: graph_rebuild_from_scratch (scenario) — passing
-- [x] TC-010: graph_stale_ttl (scenario) — passing
+- [x] TC-157: FT-016 graph model queries pass (exit-criteria) — passing
+- [ ] TC-232: feature_next_phase_gate_blocks (scenario) — unimplemented
+- [ ] TC-233: feature_next_phase_gate_satisfied (scenario) — unimplemented
+- [ ] TC-234: feature_next_phase_gate_no_exit_criteria (exit-criteria) — unimplemented
+- [ ] TC-235: feature_next_ignore_gate (scenario) — unimplemented
+- [ ] TC-236: feature_next_gate_partial (scenario) — unimplemented
+- [ ] TC-237: status_shows_phase_gate (scenario) — unimplemented
+- [ ] TC-238: status_phase_detail (scenario) — unimplemented
+- [ ] TC-249: product feature next (scenario) — unimplemented
 
 ### FT-025 — Benchmarks [x]
 
@@ -369,6 +410,49 @@
 - [x] ADR-009: CI Integration via Exit Codes (accepted)
 - [x] ADR-013: Error Model and User-Facing Error Format (accepted)
 - [x] TC-181: ft_026_ci_integration_pass (exit-criteria) — passing
+
+### FT-031 — Code Structure and Quality Standards [ ]
+
+- [x] ADR-029: Code Structure and Quality Standards (accepted)
+- [x] TC-369: file_length_passes (scenario) — passing
+- [x] TC-370: file_length_warn (scenario) — passing
+- [x] TC-371: file_length_fail (scenario) — passing
+- [x] TC-372: function_length_passes (scenario) — passing
+- [x] TC-373: function_length_warn (scenario) — passing
+- [x] TC-374: function_length_fail (scenario) — passing
+- [x] TC-375: module_structure_passes (scenario) — passing
+- [x] TC-376: module_structure_missing (scenario) — passing
+- [x] TC-377: module_structure_main_too_long (scenario) — passing
+- [x] TC-378: single_responsibility_passes (scenario) — passing
+- [x] TC-379: single_responsibility_missing (scenario) — passing
+- [x] TC-380: single_responsibility_and (scenario) — passing
+- [x] TC-402: All source files under 400 lines and all quality checks pass (exit-criteria) — passing
+
+### FT-032 — Dependency Artifact Type [ ]
+
+- [x] ADR-030: Dependency Artifact Type — First-Class External System Declarations (accepted)
+- [ ] TC-381: dep_parse_library (scenario) — unimplemented
+- [ ] TC-382: dep_parse_service (scenario) — unimplemented
+- [ ] TC-383: dep_uses_edge (scenario) — unimplemented
+- [ ] TC-384: dep_governs_edge (scenario) — unimplemented
+- [ ] TC-385: dep_impact_direct (scenario) — unimplemented
+- [ ] TC-386: dep_impact_transitive (scenario) — unimplemented
+- [ ] TC-387: dep_preflight_check_passes (scenario) — unimplemented
+- [ ] TC-388: dep_preflight_check_fails (scenario) — unimplemented
+- [ ] TC-389: dep_tc_requires_dep_id (scenario) — unimplemented
+- [ ] TC-390: dep_context_bundle_section (scenario) — unimplemented
+- [ ] TC-391: dep_bom_output (scenario) — unimplemented
+- [ ] TC-392: dep_bom_json_schema (scenario) — unimplemented
+- [ ] TC-393: dep_w013_deprecated (scenario) — unimplemented
+- [ ] TC-394: dep_e013_no_adr (scenario) — unimplemented
+- [ ] TC-395: dep_gap_g008 (scenario) — unimplemented
+- [ ] TC-396: dep_list_filter (scenario) — unimplemented
+- [ ] TC-397: dep_check_manual (scenario) — unimplemented
+- [ ] TC-398: dep_supersedes_edge (scenario) — unimplemented
+- [ ] TC-399: product dep bom (scenario) — unimplemented
+- [ ] TC-400: product dep bom (scenario) — unimplemented
+- [ ] TC-401: product impact DEP-001 (scenario) — unimplemented
+- [ ] TC-403: Dependency BOM and impact analysis produce correct output (exit-criteria) — unimplemented
 
 ## Phase 4
 
@@ -439,6 +523,13 @@
 - [x] TC-119: adr_review_structural_missing_section (scenario) — passing
 - [x] TC-120: adr_review_structural_no_features (scenario) — passing
 - [x] TC-166: FT-022 authoring session flow complete (exit-criteria) — passing
+- [x] TC-315: prompts_init_creates_files (scenario) — passing
+- [x] TC-316: prompts_list_output (scenario) — passing
+- [x] TC-317: prompts_get_stdout (scenario) — passing
+- [x] TC-321: adr_review_missing_section (scenario) — passing
+- [x] TC-322: adr_review_no_features (scenario) — passing
+- [x] TC-323: mcp_prompts_list_tool (scenario) — passing
+- [x] TC-324: mcp_prompts_get_tool (scenario) — passing
 
 ### FT-023 — Agent Orchestration [x]
 
@@ -452,6 +543,16 @@
 - [x] TC-114: verify_updates_frontmatter (scenario) — passing
 - [x] TC-115: verify_regenerates_checklist (scenario) — passing
 - [x] TC-167: FT-023 implement and verify orchestrate (exit-criteria) — passing
+- [ ] TC-304: verify_one_fail_in_progress (scenario) — unimplemented
+- [ ] TC-305: verify_unrunnable_no_runner (scenario) — unimplemented
+- [ ] TC-306: verify_updates_tc_frontmatter (scenario) — unimplemented
+- [ ] TC-307: verify_failure_message_written (scenario) — unimplemented
+- [ ] TC-309: verify_platform_runs_cross_cutting (scenario) — unimplemented
+- [ ] TC-310: verify_requires_satisfied (scenario) — unimplemented
+- [ ] TC-311: verify_requires_not_satisfied (scenario) — unimplemented
+- [ ] TC-312: verify_requires_missing_prereq_def (scenario) — unimplemented
+- [ ] TC-313: verify_wrapper_script (scenario) — unimplemented
+- [ ] TC-314: harness_scripts_present (scenario) — unimplemented
 
 ### FT-027 — Context Bundle [x]
 
@@ -499,4 +600,17 @@
 - [x] TC-176: Seed dry-run writes no files (scenario) — passing
 - [x] TC-177: End-to-end onboard produces graph with no structural errors (exit-criteria) — passing
 - [x] TC-178: Seeded ADRs have no G005 contradictions after gap check (exit-criteria) — passing
+- [x] TC-356: link_tests_basic (scenario) — passing
+- [x] TC-357: link_tests_multi_feature (scenario) — passing
+- [x] TC-358: link_tests_cross_cutting_excluded (scenario) — passing
+- [x] TC-359: link_tests_idempotent (scenario) — passing
+- [x] TC-360: link_tests_dry_run_no_write (scenario) — passing
+- [x] TC-361: link_tests_adr_scope (scenario) — passing
+- [x] TC-362: graph_infer_general (scenario) — passing
+- [x] TC-363: feature_link_interactive_confirm (scenario) — passing
+- [x] TC-364: feature_link_interactive_decline (scenario) — passing
+- [x] TC-365: reverse_inference_updates_feature (scenario) — passing
+- [x] TC-366: atomic_batch_write (scenario) — passing
+- [x] TC-367: platform_verify_cross_cutting (scenario) — passing
+- [x] TC-368: product migrate link-tests (scenario) — passing
 

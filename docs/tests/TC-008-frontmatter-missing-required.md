@@ -13,6 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_008_frontmatter_missing_required"
+last-run: 2026-04-14T10:46:07.489682314+00:00
 ---
 
 parse a feature file with no `id` field. Assert the parser returns a structured error with the file path and field name.

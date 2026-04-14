@@ -2,7 +2,7 @@
 id: TC-154
 title: FT-002 repository layout validated
 type: exit-criteria
-status: passing
+status: unimplemented
 validates:
   features: []
   adrs: []

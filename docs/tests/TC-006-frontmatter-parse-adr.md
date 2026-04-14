@@ -13,6 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_006_frontmatter_parse_adr"
+last-run: 2026-04-14T10:46:07.489682314+00:00
 ---
 
 parse a well-formed ADR file. Assert `features`, `supersedes`, `superseded-by` deserialise correctly.

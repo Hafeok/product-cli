@@ -2,7 +2,7 @@
 id: FT-008
 title: Schema Migration
 phase: 2
-status: complete
+status: in-progress
 depends-on:
 - FT-003
 adrs:
@@ -17,25 +17,6 @@ tests:
 - TC-064
 - TC-065
 - TC-179
-- TC-186
-- TC-187
-- TC-188
-- TC-189
-- TC-255
-- TC-256
-- TC-257
-- TC-258
-- TC-259
-- TC-260
-- TC-266
-- TC-267
-- TC-268
-- TC-269
-- TC-270
-- TC-271
-- TC-272
-- TC-273
-- TC-274
 domains: []
 domains-acknowledged: {}
 ---

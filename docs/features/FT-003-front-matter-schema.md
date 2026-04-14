@@ -29,25 +29,6 @@ tests:
 - TC-078
 - TC-079
 - TC-155
-- TC-186
-- TC-187
-- TC-188
-- TC-189
-- TC-255
-- TC-256
-- TC-257
-- TC-258
-- TC-259
-- TC-260
-- TC-266
-- TC-267
-- TC-268
-- TC-269
-- TC-270
-- TC-271
-- TC-272
-- TC-273
-- TC-274
 domains: []
 domains-acknowledged: {}
 ---

@@ -13,6 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_060_schema_version_forward_error"
+last-run: 2026-04-14T10:46:07.489682314+00:00
 ---
 
 write `schema-version = "99"` to `product.toml`. Run any command. Assert exit code 1 and error E008 with the upgrade hint.

@@ -2,7 +2,7 @@
 id: TC-038
 title: formal_block_evidence
 type: scenario
-status: passing
+status: unimplemented
 validates:
   features:
   - FT-015

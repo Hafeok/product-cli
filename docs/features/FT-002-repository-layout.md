@@ -2,7 +2,7 @@
 id: FT-002
 title: Repository Layout
 phase: 1
-status: complete
+status: in-progress
 depends-on: []
 adrs:
 - ADR-002
@@ -15,12 +15,6 @@ tests:
 - TC-011
 - TC-012
 - TC-154
-- TC-186
-- TC-187
-- TC-188
-- TC-189
-- TC-192
-- TC-193
 domains: []
 domains-acknowledged: {}
 ---
