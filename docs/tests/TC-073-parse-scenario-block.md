@@ -13,7 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_073_parse_scenario_block"
-last-run: 2026-04-14T10:46:07.489682314+00:00
+last-run: 2026-04-14T14:03:36.445391644+00:00
 ---
 
 parse a `⟦Λ:Scenario⟧` block with all three fields. Assert `given`, `when`, `then` are all populated.

@@ -2,7 +2,7 @@
 id: FT-015
 title: Test Criteria
 phase: 1
-status: in-progress
+status: complete
 depends-on: []
 adrs:
 - ADR-011

@@ -13,7 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_076_parse_unclosed_delimiter"
-last-run: 2026-04-14T10:46:07.489682314+00:00
+last-run: 2026-04-14T14:03:36.445391644+00:00
 ---
 
 parse a file with `⟦Γ:Invariants⟧{ ... ` (no closing `}`). Assert E001 with line number. Assert subsequent blocks in the same file are still parsed.

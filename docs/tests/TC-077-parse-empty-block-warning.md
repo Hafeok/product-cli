@@ -13,7 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_077_parse_empty_block_warning"
-last-run: 2026-04-14T10:46:07.489682314+00:00
+last-run: 2026-04-14T14:03:36.445391644+00:00
 ---
 
 Parse an invariants block with an empty body. Assert W004. Assert no error.

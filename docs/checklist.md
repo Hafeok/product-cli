@@ -157,16 +157,16 @@
 - [x] TC-004: cargo build --release (scenario) — passing
 - [x] TC-164: FT-013 Rust implementation compiles clean (exit-criteria) — passing
 
-### FT-015 — Test Criteria [~]
+### FT-015 — Test Criteria [x]
 
 - [x] ADR-011: AISP-Influenced Formal Notation for Test Criteria (accepted)
 - [x] ADR-016: Formal Block Grammar (accepted)
 - [x] ADR-018: Testing Strategy — Property-Based, Integration, and LLM Benchmark (accepted)
-- [ ] TC-035: formal_block_parse_types (scenario) — unimplemented
-- [ ] TC-036: formal_block_parse_invariants (invariant) — unimplemented
-- [ ] TC-037: formal_block_parse_scenario (scenario) — unimplemented
-- [ ] TC-038: formal_block_evidence (scenario) — unimplemented
-- [ ] TC-039: formal_block_missing_invariant_warning (invariant) — unimplemented
+- [x] TC-035: formal_block_parse_types (scenario) — passing
+- [x] TC-036: formal_block_parse_invariants (invariant) — passing
+- [x] TC-037: formal_block_parse_scenario (scenario) — passing
+- [x] TC-038: formal_block_evidence (scenario) — passing
+- [x] TC-039: formal_block_missing_invariant_warning (invariant) — passing
 - [x] TC-040: context_bundle_formal_blocks_preserved (scenario) — passing
 - [x] TC-071: parse_types_block (scenario) — passing
 - [x] TC-072: parse_invariants_block (invariant) — passing
@@ -177,7 +177,7 @@
 - [x] TC-077: parse_empty_block_warning (scenario) — passing
 - [x] TC-078: parse_raw_roundtrip (scenario) — passing
 - [x] TC-079: parse_unknown_block_type (scenario) — passing
-- [ ] TC-153: FT-015 all test-criteria scenarios pass (exit-criteria) — unimplemented
+- [x] TC-153: FT-015 all test-criteria scenarios pass (exit-criteria) — passing
 
 ### FT-016 — Graph Model [~]
 

@@ -13,7 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_071_parse_types_block"
-last-run: 2026-04-14T10:46:07.489682314+00:00
+last-run: 2026-04-14T14:03:36.445391644+00:00
 ---
 
 parse `⟦Σ:Types⟧{ Node≜IRI; Role≜Leader|Follower }`. Assert two `TypeDef` entries with correct names and union type structure.

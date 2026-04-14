@@ -729,6 +729,141 @@ fn tc_078_parse_raw_roundtrip() {
     );
 }
 
+// --- TC-035: formal_block_parse_types ---
+// Parse a test criterion file with a ⟦Σ:Types⟧ block. Assert all type definitions
+// deserialise into the TypeDef struct with correct names and variants.
+
+#[test]
+fn tc_035_formal_block_parse_types() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nFeature.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-types.md",
+        "---\nid: TC-001\ntitle: Types Block\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n⟦Σ:Types⟧{\n  Node≜IRI\n  Role≜Leader|Follower|Learner\n  ClusterState≜⟨nodes:Node+, roles:Node→Role⟩\n}\n",
+    );
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    // All three type definitions should be present with correct names and variants
+    assert!(out.stdout.contains("Node≜IRI"), "Should contain Node type def: {}", out.stdout);
+    assert!(
+        out.stdout.contains("Role≜Leader|Follower|Learner"),
+        "Should contain Role union type with all variants: {}",
+        out.stdout
+    );
+    assert!(
+        out.stdout.contains("ClusterState≜⟨nodes:Node+, roles:Node→Role⟩"),
+        "Should contain ClusterState tuple type: {}",
+        out.stdout
+    );
+}
+
+// --- TC-036: formal_block_parse_invariants ---
+// Parse a ⟦Γ:Invariants⟧ block with a universal quantifier. Assert the parsed
+// expression tree matches the expected structure.
+
+#[test]
+fn tc_036_formal_block_parse_invariants() {
+    let h = Harness::new();
+    let invariant = "∀s:ClusterState: |{n∈s.nodes | s.roles(n)=Leader}| = 1";
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nFeature.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-inv.md",
+        &format!(
+            "---\nid: TC-001\ntitle: Invariants\ntype: invariant\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n⟦Γ:Invariants⟧{{\n  {}\n}}\n",
+            invariant
+        ),
+    );
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    // Invariant with universal quantifier should be preserved verbatim
+    assert!(out.stdout.contains("∀"), "Should contain universal quantifier: {}", out.stdout);
+    assert!(
+        out.stdout.contains(invariant),
+        "Invariant expression should roundtrip verbatim: {}",
+        out.stdout
+    );
+    // Verify the block delimiter is present
+    assert!(out.stdout.contains("⟦Γ:Invariants⟧"), "Should contain invariants block delimiter: {}", out.stdout);
+}
+
+// --- TC-037: formal_block_parse_scenario ---
+// Parse a ⟦Λ:Scenario⟧ block with given/when/then fields. Assert all three fields
+// are present and non-empty.
+
+#[test]
+fn tc_037_formal_block_parse_scenario() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nFeature.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-scenario.md",
+        "---\nid: TC-001\ntitle: Scenario Block\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n⟦Λ:Scenario⟧{\n  given≜cluster_init(nodes:2)\n  when≜elapsed(10s)\n  then≜∃n∈nodes: roles(n)=Leader ∧ graph_contains(n, picloud:hasRole, picloud:Leader)\n}\n",
+    );
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    // All three scenario fields must be present and non-empty
+    assert!(out.stdout.contains("given≜cluster_init(nodes:2)"), "given field should be present and non-empty: {}", out.stdout);
+    assert!(out.stdout.contains("when≜elapsed(10s)"), "when field should be present and non-empty: {}", out.stdout);
+    assert!(out.stdout.contains("then≜∃n∈nodes"), "then field should be present and non-empty: {}", out.stdout);
+}
+
+// --- TC-038: formal_block_evidence ---
+// Parse ⟦Ε⟧⟨δ≜0.95;φ≜100;τ≜◊⁺⟩. Assert delta=0.95, phi=100, tau=Stable.
+
+#[test]
+fn tc_038_formal_block_evidence() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nFeature.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-evidence.md",
+        "---\nid: TC-001\ntitle: Evidence\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n⟦Ε⟧⟨δ≜0.95;φ≜100;τ≜◊⁺⟩\n",
+    );
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    // Evidence block should be preserved with all three fields
+    assert!(out.stdout.contains("δ≜0.95"), "Should contain delta=0.95: {}", out.stdout);
+    assert!(out.stdout.contains("φ≜100"), "Should contain phi=100: {}", out.stdout);
+    assert!(out.stdout.contains("τ≜◊⁺"), "Should contain tau=Stable (◊⁺): {}", out.stdout);
+}
+
+// --- TC-039: formal_block_missing_invariant_warning ---
+// Create an invariant-type test criterion with no formal invariants block.
+// Run graph check. Assert exit code 2 (warning, not error).
+
+#[test]
+fn tc_039_formal_block_missing_invariant_warning() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nFeature.\n",
+    );
+    // An invariant-type TC with NO formal blocks — only prose
+    h.write(
+        "docs/tests/TC-001-no-formal.md",
+        "---\nid: TC-001\ntitle: Missing Formal\ntype: invariant\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\nThis invariant-type test criterion has no formal blocks.\nIt only has prose description.\n",
+    );
+    let out = h.run(&["graph", "check"]);
+    // Should produce W004 warning for missing formal blocks on invariant type
+    assert!(
+        out.stderr.contains("W004") || out.stderr.contains("missing formal"),
+        "Expected W004 for invariant TC missing formal blocks, got stderr: {}",
+        out.stderr
+    );
+    // Exit code should be 2 (warnings), not 1 (errors)
+    assert_eq!(out.exit_code, 2, "Missing formal blocks should be warning (exit 2), not error (exit 1), got exit code: {}", out.exit_code);
+}
+
 // --- TC-060: schema_version_forward_error ---
 // Write schema-version = "99". Run any command. Assert exit code 1 and error E008.
 

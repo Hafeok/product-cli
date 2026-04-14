@@ -13,7 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_072_parse_invariants_block"
-last-run: 2026-04-14T10:46:07.489682314+00:00
+last-run: 2026-04-14T14:03:36.445391644+00:00
 ---
 
 parse a block with a universal quantifier. Assert `Invariant.raw` matches the input verbatim.
