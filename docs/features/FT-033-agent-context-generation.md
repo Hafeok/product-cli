@@ -27,10 +27,11 @@ tests:
 - TC-417
 - TC-418
 - TC-419
-domains: [api]
+domains:
+- api
 domains-acknowledged: {}
 ---
 
 ## Description
 
-Generated `AGENT.md` and `product schema` command (ADR-031). `product agent-init` generates a repo-root file from actual repo state containing: working protocol, current front-matter schemas, domain vocabulary, repository state summary, and MCP tool usage guide. `product schema` returns the complete front-matter schema for any artifact type. Both are exposed as MCP read tools (`product_schema`, `product_agent_context`). Configurable via `[agent-context]` in `product.toml`.
+Generated `AGENTS.md` and `product schema` command (ADR-031). `product agent-init` generates a repo-root file from actual repo state containing: working protocol, current front-matter schemas, domain vocabulary, repository state summary, and MCP tool usage guide. `product schema` returns the complete front-matter schema for any artifact type. Both are exposed as MCP read tools (`product_schema`, `product_agent_context`). Configurable via `[agent-context]` in `product.toml`.

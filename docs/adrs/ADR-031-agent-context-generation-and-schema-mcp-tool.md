@@ -41,14 +41,14 @@ The schema is derived from the same type definitions used by the parser — it i
 
 ### 2. `product agent-init` CLI command
 
-Generates (or regenerates) `AGENT.md` at the repo root from the actual state of the repository:
+Generates (or regenerates) `AGENTS.md` at the repo root from the actual state of the repository:
 
 ```
-product agent-init          # generate/update AGENT.md from current repo state
+product agent-init          # generate/update AGENTS.md from current repo state
 product agent-init --watch  # regenerate on any front-matter file change
 ```
 
-`AGENT.md` is always generated, never hand-edited. It contains:
+`AGENTS.md` is always generated, never hand-edited. It contains:
 
 - **Working protocol** — the sequence of MCP calls an agent should make before writing anything (graph check, centrality, feature list, context)
 - **Current front-matter schemas** — the same output as `product schema --all`, embedded
@@ -108,12 +108,12 @@ iam, scheduling, api, data-model, code-quality
 | product_gap_check | Before implementing — check spec completeness |
 | product_feature_next | Find the next feature to implement |
 | product_dep_bom | Audit all external dependencies |
-| product_agent_context | Get full AGENT.md content via MCP |
+| product_agent_context | Get full AGENTS.md content via MCP |
 ```
 
 ### 3. `product_agent_context` MCP read tool
 
-Returns the content of the generated `AGENT.md` via MCP so any agent (not just Claude Code) can access it programmatically. Equivalent to reading the file, but available over both stdio and HTTP transports.
+Returns the content of the generated `AGENTS.md` via MCP so any agent (not just Claude Code) can access it programmatically. Equivalent to reading the file, but available over both stdio and HTTP transports.
 
 ### 4. `[agent-context]` configuration in `product.toml`
 
@@ -123,7 +123,7 @@ include-repo-state = true     # live feature/phase counts
 include-schemas = true        # front-matter schema reference
 include-domains = true        # domain vocabulary
 include-tool-guide = true     # MCP tool usage guide
-output-file = "AGENT.md"      # Claude Code reads this automatically
+output-file = "AGENTS.md"      # Claude Code reads this automatically
 ```
 
 Each section can be independently toggled. The `output-file` path is configurable for projects that use a different convention (e.g. `.cursorrules`, `.github/copilot-instructions.md`).
@@ -132,14 +132,14 @@ Each section can be independently toggled. The `output-file` path is configurabl
 
 **Rationale:**
 - **Schema from type definitions, not documentation** — the PRD documents schemas as examples. Product's parser defines them as Rust structs. `product schema` derives the schema from the parser types, so the schema a human reads and the schema Product enforces are guaranteed identical. Documentation drift is eliminated.
-- **Generated file, not hand-written** — a hand-written `AGENT.md` drifts from repo state within days. A generated file is always current. The `--watch` flag keeps it current during active development sessions.
-- **AGENT.md naming convention** — Claude Code reads `CLAUDE.md` and `AGENT.md` at the repo root automatically. Other agent frameworks read similar files. Using this convention means zero configuration for the most common case.
+- **Generated file, not hand-written** — a hand-written `AGENTS.md` drifts from repo state within days. A generated file is always current. The `--watch` flag keeps it current during active development sessions.
+- **AGENTS.md naming convention** — Claude Code reads `CLAUDE.md` and `AGENTS.md` at the repo root automatically. Other agent frameworks read similar files. Using this convention means zero configuration for the most common case.
 - **MCP tool for non-file agents** — not all agents read files from the repo root. `product_agent_context` makes the same information available via MCP for remote agents, CI agents, or agents that access Product over HTTP.
 - **Configurable sections** — not every project needs every section. A mature project with stable schemas may disable `include-schemas` to keep the file short. A project that doesn't use MCP may disable `include-tool-guide`.
 
 **Rejected alternatives:**
 - **Embed schemas in system prompts** — requires manual updating when schemas change. Every agent framework has its own prompt format. Product cannot maintain prompts for every framework. A generated file at a well-known path works everywhere.
-- **Extend CLAUDE.md instead of generating AGENT.md** — `CLAUDE.md` contains hand-written project conventions and instructions that are not derivable from repo state. Mixing generated content into a hand-edited file creates merge conflicts and ownership ambiguity. Two files with clear ownership (hand-written vs. generated) is cleaner.
+- **Extend CLAUDE.md instead of generating AGENTS.md** — `CLAUDE.md` contains hand-written project conventions and instructions that are not derivable from repo state. Mixing generated content into a hand-edited file creates merge conflicts and ownership ambiguity. Two files with clear ownership (hand-written vs. generated) is cleaner.
 - **Schema endpoint that returns JSON Schema** — considered as the only output format. JSON Schema is machine-perfect but human-hostile. The default output is human-readable markdown with field descriptions. `--format json` provides JSON Schema for tooling that wants it. Both formats are useful.
 - **Regenerate on every CLI invocation** — too expensive. `agent-init` is explicit. `--watch` uses filesystem events (e.g. `notify` crate) for continuous regeneration during active work.
 
@@ -150,18 +150,18 @@ Scenario tests:
 - `schema_adr.rs` — run `product schema adr`. Assert output contains: `id`, `title`, `status`, `features`, `supersedes`, `superseded-by`, `domains`, `scope`, `source-files`.
 - `schema_dep.rs` — run `product schema dep`. Assert output lists all six dependency types. Assert `interface` block documented for service/api types.
 - `schema_all.rs` — run `product schema --all`. Assert output contains all four artifact type schemas in a single document.
-- `agent_init_generates.rs` — run `product agent-init` in a repo with features, ADRs, and TCs. Assert `AGENT.md` is created at repo root. Assert it contains generation timestamp and product version.
-- `agent_init_schemas.rs` — run `product agent-init`. Assert `AGENT.md` contains a "Front-Matter Schemas" section with feature, ADR, test, and dependency schemas.
-- `agent_init_protocol.rs` — assert `AGENT.md` contains a "Working Protocol" section with the expected sequence of MCP calls.
-- `agent_init_repo_state.rs` — assert `AGENT.md` "Current Repository State" section shows correct feature count, ADR count, and TC counts matching `product status` output.
-- `agent_init_domains.rs` — assert `AGENT.md` "Domain Vocabulary" section matches `[domains]` keys from `product.toml`.
-- `agent_init_tool_guide.rs` — assert `AGENT.md` contains a "Key MCP Tools" section with at least `product_context`, `product_schema`, `product_graph_central`.
-- `agent_init_invariant.rs` — run `product agent-init` twice. Assert second run overwrites cleanly. Add a hand-edit to `AGENT.md`, re-run — assert hand-edit is gone (generated file is authoritative).
-- `agent_init_watch.rs` — start `product agent-init --watch` in background. Modify a feature file's front-matter. Assert `AGENT.md` is regenerated within 2 seconds with updated repo state.
+- `agent_init_generates.rs` — run `product agent-init` in a repo with features, ADRs, and TCs. Assert `AGENTS.md` is created at repo root. Assert it contains generation timestamp and product version.
+- `agent_init_schemas.rs` — run `product agent-init`. Assert `AGENTS.md` contains a "Front-Matter Schemas" section with feature, ADR, test, and dependency schemas.
+- `agent_init_protocol.rs` — assert `AGENTS.md` contains a "Working Protocol" section with the expected sequence of MCP calls.
+- `agent_init_repo_state.rs` — assert `AGENTS.md` "Current Repository State" section shows correct feature count, ADR count, and TC counts matching `product status` output.
+- `agent_init_domains.rs` — assert `AGENTS.md` "Domain Vocabulary" section matches `[domains]` keys from `product.toml`.
+- `agent_init_tool_guide.rs` — assert `AGENTS.md` contains a "Key MCP Tools" section with at least `product_context`, `product_schema`, `product_graph_central`.
+- `agent_init_invariant.rs` — run `product agent-init` twice. Assert second run overwrites cleanly. Add a hand-edit to `AGENTS.md`, re-run — assert hand-edit is gone (generated file is authoritative).
+- `agent_init_watch.rs` — start `product agent-init --watch` in background. Modify a feature file's front-matter. Assert `AGENTS.md` is regenerated within 2 seconds with updated repo state.
 - `mcp_product_schema.rs` — call `product_schema` MCP tool with argument `feature`. Assert response matches `product schema feature` CLI output.
-- `mcp_product_agent_context.rs` — call `product_agent_context` MCP tool. Assert response matches content of generated `AGENT.md`.
-- `agent_context_config.rs` — set `include-schemas = false` in `[agent-context]`. Run `product agent-init`. Assert `AGENT.md` does not contain a "Front-Matter Schemas" section. Re-enable, re-run, assert it reappears.
+- `mcp_product_agent_context.rs` — call `product_agent_context` MCP tool. Assert response matches content of generated `AGENTS.md`.
+- `agent_context_config.rs` — set `include-schemas = false` in `[agent-context]`. Run `product agent-init`. Assert `AGENTS.md` does not contain a "Front-Matter Schemas" section. Re-enable, re-run, assert it reappears.
 
 Invariants:
-- `AGENT.md` must always contain the generation timestamp line. If the file exists and does not contain the timestamp pattern `> Generated by product`, it was hand-edited and `product agent-init` must overwrite it without error.
+- `AGENTS.md` must always contain the generation timestamp line. If the file exists and does not contain the timestamp pattern `> Generated by product`, it was hand-edited and `product agent-init` must overwrite it without error.
 - `product schema TYPE` output for any supported type must include every field that the parser accepts for that type. If the parser adds a new field, `product schema` must reflect it without code changes to the schema command.
