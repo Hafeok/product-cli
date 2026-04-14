@@ -72,14 +72,15 @@ pub fn start_session(
     });
     let mcp_json = serde_json::to_string(&mcp_config).unwrap_or_default();
 
-    // Invoke Claude Code in bare mode with restricted tool access:
-    // - --bare: skip LSP, hooks, auto-memory, CLAUDE.md discovery
+    // Invoke Claude Code with restricted tool access:
+    // - --system-prompt-file: custom system prompt for the authoring session
     // - --tools "Read": only built-in Read tool (no Bash/Edit/Write)
     // - --allowedTools: auto-approve Read + all product MCP tools
     // - --strict-mcp-config + --mcp-config: only the product MCP server
+    // NOTE: We intentionally do NOT use --bare, because it disables
+    // OAuth/keychain auth (only ANTHROPIC_API_KEY works in bare mode).
     let status = Command::new("claude")
         .args([
-            "--bare",
             "--system-prompt-file", &tmp_path.display().to_string(),
             "--tools", "Read",
             "--allowedTools", "Read,mcp__product__*",
