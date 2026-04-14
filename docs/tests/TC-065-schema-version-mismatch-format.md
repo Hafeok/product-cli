@@ -13,7 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_065_schema_version_mismatch_format"
-last-run: 2026-04-14T14:25:40.415822949+00:00
+last-run: 2026-04-14T14:58:04.017431406+00:00
 ---
 
 assert error E008 includes the file path, the declared version, the supported version, and the upgrade hint.

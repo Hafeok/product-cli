@@ -345,7 +345,7 @@
 - [x] TC-238: status_phase_detail (scenario) — passing
 - [x] TC-249: product feature next (scenario) — passing
 
-### FT-008 — Schema Migration [~]
+### FT-008 — Schema Migration [x]
 
 - [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
 - [x] ADR-014: Schema Versioning and Migration Path (accepted)
@@ -356,7 +356,7 @@
 - [x] TC-063: schema_migrate_idempotent (scenario) — passing
 - [x] TC-064: schema_migrate_preserves_unknown_fields (scenario) — passing
 - [x] TC-065: schema_version_mismatch_format (scenario) — passing
-- [ ] TC-179: ft_008_schema_migration_exit_criteria (exit-criteria) — unimplemented
+- [x] TC-179: ft_008_schema_migration_exit_criteria (exit-criteria) — passing
 
 ### FT-014 — Status and Filters [~]
 

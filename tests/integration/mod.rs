@@ -9101,3 +9101,117 @@ fn tc_439_ft_035_repository_initialization_validated() {
     let count = gitignore.matches("docs/graph/").count();
     assert_eq!(count, 1, "docs/graph/ should appear exactly once");
 }
+
+// --- TC-179: ft_008_schema_migration_exit_criteria ---
+// Run `product migrate schema` on a v0 repository. All files updated, schema-version bumped.
+// Run two concurrent commands — one succeeds, one exits E010. No data corruption.
+
+#[test]
+fn tc_179_ft_008_schema_migration_exit_criteria() {
+    // ── Part 1: v0 → v1 migration — all files updated, schema-version bumped ──
+    let h = Harness::new();
+    h.write(
+        "product.toml",
+        "name = \"test\"\nschema-version = \"0\"\n\
+         [paths]\nfeatures = \"docs/features\"\nadrs = \"docs/adrs\"\n\
+         tests = \"docs/tests\"\ngraph = \"docs/graph\"\nchecklist = \"docs/checklist.md\"\n\
+         [prefixes]\nfeature = \"FT\"\nadr = \"ADR\"\ntest = \"TC\"\n",
+    );
+    h.write(
+        "docs/features/FT-001-alpha.md",
+        "---\nid: FT-001\ntitle: Alpha Feature\nphase: 1\nstatus: planned\nadrs: []\ntests: []\n---\nAlpha body.\n",
+    );
+    h.write(
+        "docs/features/FT-002-beta.md",
+        "---\nid: FT-002\ntitle: Beta Feature\nphase: 2\nstatus: planned\nadrs: []\ntests: []\n---\nBeta body.\n",
+    );
+
+    let out = h.run(&["migrate", "schema"]);
+    out.assert_exit(0);
+
+    // All feature files should now have depends-on
+    let ft1 = h.read("docs/features/FT-001-alpha.md");
+    let ft2 = h.read("docs/features/FT-002-beta.md");
+    assert!(
+        ft1.contains("depends-on:"),
+        "FT-001 should have depends-on after migration, got:\n{}",
+        ft1
+    );
+    assert!(
+        ft2.contains("depends-on:"),
+        "FT-002 should have depends-on after migration, got:\n{}",
+        ft2
+    );
+
+    // schema-version should be bumped to 1
+    let config = h.read("product.toml");
+    assert!(
+        config.contains("schema-version = \"1\""),
+        "schema-version should be bumped to 1, got:\n{}",
+        config
+    );
+
+    // No data corruption — original fields preserved
+    assert!(ft1.contains("id: FT-001"), "FT-001 id preserved");
+    assert!(ft1.contains("title: Alpha Feature"), "FT-001 title preserved");
+    assert!(ft1.contains("Alpha body."), "FT-001 body preserved");
+    assert!(ft2.contains("id: FT-002"), "FT-002 id preserved");
+    assert!(ft2.contains("title: Beta Feature"), "FT-002 title preserved");
+    assert!(ft2.contains("Beta body."), "FT-002 body preserved");
+
+    // ── Part 2: Concurrent commands — one succeeds, one exits E010 ──
+    let h2 = Harness::new();
+    h2.write(
+        "product.toml",
+        "name = \"test\"\nschema-version = \"0\"\n\
+         [paths]\nfeatures = \"docs/features\"\nadrs = \"docs/adrs\"\n\
+         tests = \"docs/tests\"\ngraph = \"docs/graph\"\nchecklist = \"docs/checklist.md\"\n\
+         [prefixes]\nfeature = \"FT\"\nadr = \"ADR\"\ntest = \"TC\"\n",
+    );
+    h2.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: planned\nadrs: []\ntests: []\n---\nBody content.\n",
+    );
+
+    // Simulate a concurrent process holding the lock by creating .product.lock
+    // with the current test process PID (which is alive — stale detection won't clear it)
+    let lock_content = format!(
+        "pid={}\nstarted=2026-01-01T00:00:00Z\n",
+        std::process::id()
+    );
+    h2.write(".product.lock", &lock_content);
+
+    // This command should fail with E010 because the lock is held
+    let out_locked = h2.run(&["migrate", "schema"]);
+    out_locked
+        .assert_exit(1)
+        .assert_stderr_contains("E010");
+
+    // Remove the lock — simulating the first process finishing
+    std::fs::remove_file(h2.dir.path().join(".product.lock"))
+        .expect("remove lock file");
+
+    // Now the migration should succeed
+    let out_unlocked = h2.run(&["migrate", "schema"]);
+    out_unlocked.assert_exit(0);
+
+    // Verify no data corruption after the lock contention scenario
+    let content = h2.read("docs/features/FT-001-test.md");
+    assert!(
+        content.contains("id: FT-001"),
+        "FT-001 data should not be corrupted after lock contention"
+    );
+    assert!(
+        content.contains("depends-on:"),
+        "Migration should have applied after lock released"
+    );
+    assert!(
+        content.contains("Body content."),
+        "Body content should be preserved"
+    );
+    let config2 = h2.read("product.toml");
+    assert!(
+        config2.contains("schema-version = \"1\""),
+        "schema-version should be bumped after successful migration"
+    );
+}

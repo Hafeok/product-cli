@@ -2,7 +2,7 @@
 id: FT-008
 title: Schema Migration
 phase: 2
-status: in-progress
+status: complete
 depends-on:
 - FT-003
 adrs:

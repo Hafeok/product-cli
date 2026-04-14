@@ -13,7 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_064_schema_migrate_preserves_unknown_fields"
-last-run: 2026-04-14T14:25:40.415822949+00:00
+last-run: 2026-04-14T14:58:04.017431406+00:00
 ---
 
 add a custom field `custom-tag: foo` to a feature file. Run `product migrate schema`. Assert `custom-tag: foo` is still present in the file after migration.
