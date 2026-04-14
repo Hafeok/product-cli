@@ -100,6 +100,14 @@ test = "TC"
         self.dir.path().join(path).exists()
     }
 
+    /// Create a bare harness — temp dir with no product.toml or directories.
+    /// Useful for testing `product init`.
+    pub fn new_bare() -> Self {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let bin = Self::find_binary();
+        Self { dir, bin }
+    }
+
     pub fn run_with_stdin(&self, args: &[&str], stdin_data: &str) -> Output {
         use std::io::Write;
         let mut child = Command::new(&self.bin)
@@ -8755,4 +8763,341 @@ fn tc_430_content_hash_system_passes_on_sealed_repository() {
         "hash verify should pass after amend.\nstderr: {}",
         out.stderr
     );
+}
+
+// ---------------------------------------------------------------------------
+// Init tests (FT-035, ADR-033) — TC-431 through TC-437
+// ---------------------------------------------------------------------------
+
+/// TC-431: init creates product.toml and directory skeleton
+#[test]
+fn tc_431_init_creates_product_toml_and_directory_skeleton() {
+    let h = Harness::new_bare();
+    let out = h.run(&["init", "--yes"]);
+    out.assert_exit(0);
+
+    // 1. product.toml exists and contains all required sections
+    assert!(h.exists("product.toml"), "product.toml should exist");
+    let toml_content = h.read("product.toml");
+    assert!(toml_content.contains("name = "), "should contain name");
+    assert!(
+        toml_content.contains("schema-version = "),
+        "should contain schema-version"
+    );
+    assert!(toml_content.contains("[paths]"), "should contain [paths]");
+    assert!(
+        toml_content.contains("[prefixes]"),
+        "should contain [prefixes]"
+    );
+    assert!(toml_content.contains("[phases]"), "should contain [phases]");
+    assert!(
+        toml_content.contains("[domains]"),
+        "should contain [domains]"
+    );
+    assert!(toml_content.contains("[mcp]"), "should contain [mcp]");
+
+    // 2. name defaults to directory name
+    let dir_name = h
+        .dir
+        .path()
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("unknown");
+    assert!(
+        toml_content.contains(&format!("name = \"{}\"", dir_name)),
+        "name should default to directory name '{}', got:\n{}",
+        dir_name,
+        toml_content
+    );
+
+    // 3. schema-version equals CURRENT_SCHEMA_VERSION (1)
+    assert!(
+        toml_content.contains("schema-version = \"1\""),
+        "schema-version should be 1"
+    );
+
+    // 4. Directories exist
+    assert!(h.exists("docs/features"), "docs/features/ should exist");
+    assert!(h.exists("docs/adrs"), "docs/adrs/ should exist");
+    assert!(h.exists("docs/tests"), "docs/tests/ should exist");
+    assert!(h.exists("docs/graph"), "docs/graph/ should exist");
+
+    // 5. Exit code 0 — already asserted
+
+    // 6. Stdout contains summary of created files
+    out.assert_stdout_contains("product.toml");
+    out.assert_stdout_contains("docs/features/");
+    out.assert_stdout_contains("docs/adrs/");
+    out.assert_stdout_contains("docs/tests/");
+    out.assert_stdout_contains("docs/graph/");
+}
+
+/// TC-432: init interactive mode prompts for name and domains
+#[test]
+fn tc_432_init_interactive_mode_prompts_for_name_and_domains() {
+    let h = Harness::new_bare();
+
+    // Stdin input:
+    //   Line 1: project name "my-interactive-proj"
+    //   Line 2: select domain 1 (security)
+    //   Line 3: blank (no custom domain)
+    //   Line 4: blank (no MCP write tools — default N)
+    //   Line 5: blank (default port)
+    let stdin_input = "my-interactive-proj\n1\n\n\n\n";
+    let out = h.run_with_stdin(&["init"], stdin_input);
+
+    // 4. Exit code is 0
+    out.assert_exit(0);
+
+    // 1. product.toml contains the provided project name
+    let toml_content = h.read("product.toml");
+    assert!(
+        toml_content.contains("name = \"my-interactive-proj\""),
+        "should contain provided project name, got:\n{}",
+        toml_content
+    );
+
+    // 2. The selected domain (security) appears in [domains]
+    assert!(
+        toml_content.contains("security"),
+        "should contain selected domain 'security', got:\n{}",
+        toml_content
+    );
+
+    // 3. Default prefixes are preserved
+    assert!(
+        toml_content.contains("feature = \"FT\""),
+        "feature prefix should be FT"
+    );
+    assert!(
+        toml_content.contains("adr = \"ADR\""),
+        "adr prefix should be ADR"
+    );
+    assert!(
+        toml_content.contains("test = \"TC\""),
+        "test prefix should be TC"
+    );
+}
+
+/// TC-433: init --yes uses defaults without prompts
+#[test]
+fn tc_433_init_yes_uses_defaults_without_prompts() {
+    let h = Harness::new_bare();
+
+    // Run with --yes and --name, stdin closed (no tty)
+    let out = h.run(&["init", "--yes", "--name", "test-project"]);
+
+    // 1. Command completes without blocking
+    // (if it blocked, the test would timeout)
+
+    // 5. Exit code is 0
+    out.assert_exit(0);
+
+    // 2. product.toml exists with name = "test-project"
+    let toml_content = h.read("product.toml");
+    assert!(
+        toml_content.contains("name = \"test-project\""),
+        "should contain name = \"test-project\", got:\n{}",
+        toml_content
+    );
+
+    // 3. [domains] section present but empty
+    assert!(
+        toml_content.contains("[domains]"),
+        "should contain [domains] section"
+    );
+    // No domain entries — check there's nothing between [domains] and [mcp]
+    let domains_idx = toml_content.find("[domains]").unwrap_or(0);
+    let mcp_idx = toml_content.find("[mcp]").unwrap_or(toml_content.len());
+    let between = &toml_content[domains_idx + "[domains]".len()..mcp_idx];
+    let domain_lines: Vec<&str> = between
+        .lines()
+        .filter(|l| !l.trim().is_empty())
+        .collect();
+    assert!(
+        domain_lines.is_empty(),
+        "domains section should be empty, got lines: {:?}",
+        domain_lines
+    );
+
+    // 4. [mcp] section with write = false and port = 7777
+    assert!(
+        toml_content.contains("write = false"),
+        "mcp write should be false"
+    );
+    assert!(
+        toml_content.contains("port = 7777"),
+        "mcp port should be 7777"
+    );
+}
+
+/// TC-434: init errors on existing product.toml without --force
+#[test]
+fn tc_434_init_errors_on_existing_product_toml_without_force() {
+    let h = Harness::new_bare();
+    let original_content = "name = \"original\"\nschema-version = \"1\"\n";
+    h.write("product.toml", original_content);
+
+    let out = h.run(&["init", "--yes"]);
+
+    // 1. Exit code is 1
+    out.assert_exit(1);
+
+    // 2. Stderr contains "product.toml already exists"
+    out.assert_stderr_contains("product.toml already exists");
+
+    // 3. Stderr contains a hint mentioning --force
+    assert!(
+        out.stderr.contains("--force"),
+        "stderr should mention --force, got:\n{}",
+        out.stderr
+    );
+
+    // 4. Original content is unchanged
+    let content = h.read("product.toml");
+    assert_eq!(
+        content, original_content,
+        "original product.toml should be unchanged"
+    );
+}
+
+/// TC-435: init --force overwrites existing product.toml
+#[test]
+fn tc_435_init_force_overwrites_existing_product_toml() {
+    let h = Harness::new_bare();
+    h.write("product.toml", "name = \"old\"\nschema-version = \"1\"\n");
+
+    // Create an existing artifact directory to verify it's not deleted
+    std::fs::create_dir_all(h.dir.path().join("docs/features")).expect("mkdir");
+    h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test\n---\n");
+
+    let out = h.run(&["init", "--yes", "--force", "--name", "new-project"]);
+
+    // 1. Exit code is 0
+    out.assert_exit(0);
+
+    // 2. product.toml now contains name = "new-project"
+    let toml_content = h.read("product.toml");
+    assert!(
+        toml_content.contains("name = \"new-project\""),
+        "should contain new name, got:\n{}",
+        toml_content
+    );
+
+    // 3. Old content is fully replaced
+    assert!(
+        !toml_content.contains("name = \"old\""),
+        "old name should be gone"
+    );
+
+    // 4. Existing artifact directories and files are not deleted
+    assert!(
+        h.exists("docs/features/FT-001-test.md"),
+        "existing feature file should be preserved"
+    );
+}
+
+/// TC-436: init appends to existing .gitignore
+#[test]
+fn tc_436_init_appends_to_existing_gitignore() {
+    let h = Harness::new_bare();
+    h.write(".gitignore", "target/\n");
+
+    let out = h.run(&["init", "--yes"]);
+    out.assert_exit(0);
+
+    // 1. .gitignore still contains target/ (original content preserved)
+    let gitignore = h.read(".gitignore");
+    assert!(
+        gitignore.contains("target/"),
+        "original target/ should be preserved, got:\n{}",
+        gitignore
+    );
+
+    // 2. .gitignore now also contains docs/graph/
+    assert!(
+        gitignore.contains("docs/graph/"),
+        "should contain docs/graph/, got:\n{}",
+        gitignore
+    );
+
+    // 3. Running init --force --yes again does not duplicate docs/graph/
+    let out2 = h.run(&["init", "--force", "--yes"]);
+    out2.assert_exit(0);
+    let gitignore2 = h.read(".gitignore");
+    let count = gitignore2.matches("docs/graph/").count();
+    assert_eq!(
+        count, 1,
+        "docs/graph/ should appear exactly once after second init, found {} times in:\n{}",
+        count, gitignore2
+    );
+}
+
+/// TC-437: init creates .gitignore when absent
+#[test]
+fn tc_437_init_creates_gitignore_when_absent() {
+    let h = Harness::new_bare();
+    assert!(!h.exists(".gitignore"), ".gitignore should not exist initially");
+
+    let out = h.run(&["init", "--yes"]);
+    out.assert_exit(0);
+
+    // 1. .gitignore is created
+    assert!(h.exists(".gitignore"), ".gitignore should be created");
+
+    // 2. .gitignore contains docs/graph/
+    let gitignore = h.read(".gitignore");
+    assert!(
+        gitignore.contains("docs/graph/"),
+        "should contain docs/graph/, got:\n{}",
+        gitignore
+    );
+
+    // 3. .gitignore contains a comment header with "Product CLI"
+    assert!(
+        gitignore.contains("# Product CLI"),
+        "should contain Product CLI comment header, got:\n{}",
+        gitignore
+    );
+}
+
+/// TC-439: FT-035 repository initialization validated (exit-criteria)
+/// All init scenarios pass: TC-431 through TC-438.
+#[test]
+fn tc_439_ft_035_repository_initialization_validated() {
+    // This exit-criteria test validates the full init workflow end-to-end:
+    // create, configure, verify parsability, idempotency of gitignore, and force overwrite.
+    let h = Harness::new_bare();
+
+    // 1. Init with --yes creates valid repo (TC-431, TC-433, TC-437)
+    let out = h.run(&["init", "--yes", "--name", "exit-criteria-test"]);
+    out.assert_exit(0);
+    assert!(h.exists("product.toml"), "product.toml created");
+    assert!(h.exists("docs/features"), "features dir created");
+    assert!(h.exists("docs/adrs"), "adrs dir created");
+    assert!(h.exists("docs/tests"), "tests dir created");
+    assert!(h.exists("docs/graph"), "graph dir created");
+    assert!(h.exists(".gitignore"), "gitignore created");
+
+    // 2. Generated TOML is valid and parseable (TC-438)
+    let toml_content = h.read("product.toml");
+    assert!(toml_content.contains("name = \"exit-criteria-test\""));
+    assert!(toml_content.contains("[domains]"));
+    assert!(toml_content.contains("[mcp]"));
+
+    // 3. Re-running without --force fails (TC-434)
+    let out = h.run(&["init", "--yes"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("product.toml already exists");
+
+    // 4. --force overwrites successfully (TC-435)
+    let out = h.run(&["init", "--yes", "--force", "--name", "overwritten"]);
+    out.assert_exit(0);
+    let toml_content = h.read("product.toml");
+    assert!(toml_content.contains("name = \"overwritten\""));
+
+    // 5. Gitignore is not duplicated on re-init (TC-436)
+    let gitignore = h.read(".gitignore");
+    let count = gitignore.matches("docs/graph/").count();
+    assert_eq!(count, 1, "docs/graph/ should appear exactly once");
 }

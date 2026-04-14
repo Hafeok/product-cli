@@ -2,13 +2,14 @@
 id: TC-433
 title: init --yes uses defaults without prompts
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: [FT-035]
   adrs: [ADR-033]
 phase: 1
 runner: cargo-test
 runner-args: "tc_433_init_yes_uses_defaults_without_prompts"
+last-run: 2026-04-14T14:52:43.866547207+00:00
 ---
 
 ## Description

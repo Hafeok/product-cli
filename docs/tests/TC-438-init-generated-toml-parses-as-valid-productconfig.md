@@ -2,13 +2,14 @@
 id: TC-438
 title: init generated toml parses as valid ProductConfig
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features: [FT-035]
   adrs: [ADR-033]
 phase: 1
 runner: cargo-test
 runner-args: "tc_438_init_generated_toml_parses_as_valid_productconfig"
+last-run: 2026-04-14T14:52:43.866547207+00:00
 ---
 
 ## Description

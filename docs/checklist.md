@@ -274,18 +274,18 @@
 - [x] TC-429: Mutable front-matter does not affect content-hash (invariant) — passing
 - [x] TC-430: Content hash system passes on sealed repository (exit-criteria) — passing
 
-### FT-035 — Repository Initialization [ ]
+### FT-035 — Repository Initialization [x]
 
 - [ ] ADR-033: Repository Initialization — `product init` Command (proposed)
-- [ ] TC-431: init creates product.toml and directory skeleton (scenario) — unimplemented
-- [ ] TC-432: init interactive mode prompts for name and domains (scenario) — unimplemented
-- [ ] TC-433: init --yes uses defaults without prompts (scenario) — unimplemented
-- [ ] TC-434: init errors on existing product.toml without --force (scenario) — unimplemented
-- [ ] TC-435: init --force overwrites existing product.toml (scenario) — unimplemented
-- [ ] TC-436: init appends to existing .gitignore (scenario) — unimplemented
-- [ ] TC-437: init creates .gitignore when absent (scenario) — unimplemented
-- [ ] TC-438: init generated toml parses as valid ProductConfig (invariant) — unimplemented
-- [ ] TC-439: FT-035 repository initialization validated (exit-criteria) — unimplemented
+- [x] TC-431: init creates product.toml and directory skeleton (scenario) — passing
+- [x] TC-432: init interactive mode prompts for name and domains (scenario) — passing
+- [x] TC-433: init --yes uses defaults without prompts (scenario) — passing
+- [x] TC-434: init errors on existing product.toml without --force (scenario) — passing
+- [x] TC-435: init --force overwrites existing product.toml (scenario) — passing
+- [x] TC-436: init appends to existing .gitignore (scenario) — passing
+- [x] TC-437: init creates .gitignore when absent (scenario) — passing
+- [x] TC-438: init generated toml parses as valid ProductConfig (invariant) — passing
+- [x] TC-439: FT-035 repository initialization validated (exit-criteria) — passing
 
 ## Phase 2
 

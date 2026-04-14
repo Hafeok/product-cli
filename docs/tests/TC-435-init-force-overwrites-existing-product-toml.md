@@ -2,13 +2,14 @@
 id: TC-435
 title: init --force overwrites existing product.toml
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: [FT-035]
   adrs: [ADR-033]
 phase: 1
 runner: cargo-test
 runner-args: "tc_435_init_force_overwrites_existing_product_toml"
+last-run: 2026-04-14T14:52:43.866547207+00:00
 ---
 
 ## Description

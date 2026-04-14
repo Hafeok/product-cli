@@ -2,10 +2,20 @@
 id: FT-035
 title: Repository Initialization
 phase: 1
-status: planned
+status: complete
 depends-on: []
-adrs: [ADR-033]
-tests: [TC-431, TC-432, TC-433, TC-434, TC-435, TC-436, TC-437, TC-438, TC-439]
+adrs:
+- ADR-033
+tests:
+- TC-431
+- TC-432
+- TC-433
+- TC-434
+- TC-435
+- TC-436
+- TC-437
+- TC-438
+- TC-439
 domains: []
 domains-acknowledged: {}
 ---

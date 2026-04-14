@@ -186,6 +186,18 @@ enum Commands {
         /// Project name (default: directory name)
         #[arg(long)]
         name: Option<String>,
+        /// Add a domain (repeatable): --domain security="Auth, secrets"
+        #[arg(long = "domain", value_name = "K=V")]
+        domains: Vec<String>,
+        /// MCP HTTP port (default: 7777)
+        #[arg(long, default_value = "7777")]
+        port: u16,
+        /// Enable MCP write tools by default
+        #[arg(long)]
+        write_tools: bool,
+        /// Target directory (default: current directory)
+        #[arg(long, value_name = "DIR")]
+        path: Option<PathBuf>,
     },
     /// Content hash operations (ADR-032)
     Hash {
@@ -653,7 +665,7 @@ fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
         Commands::Metrics { command } => handle_metrics(command),
         Commands::Preflight { id } => handle_preflight(&id),
         Commands::Onboard { command } => handle_onboard(command),
-        Commands::Init { yes, force, name } => handle_init(yes, force, name),
+        Commands::Init { yes, force, name, domains, port, write_tools, path } => handle_init(yes, force, name, domains, port, write_tools, path),
         Commands::Hash { command } => handle_hash(command),
     }
 }
@@ -3010,10 +3022,27 @@ fn handle_hash(cmd: HashCommands) -> BoxResult {
 // Init command (ADR-033)
 // ---------------------------------------------------------------------------
 
-fn handle_init(_yes: bool, force: bool, name: Option<String>) -> BoxResult {
-    let target_dir = std::env::current_dir().map_err(|e| {
-        ProductError::ConfigError(format!("Cannot determine working directory: {}", e))
-    })?;
+fn handle_init(
+    yes: bool,
+    force: bool,
+    name: Option<String>,
+    cli_domains: Vec<String>,
+    port: u16,
+    write_tools: bool,
+    path: Option<PathBuf>,
+) -> BoxResult {
+    let target_dir = if let Some(ref p) = path {
+        std::fs::create_dir_all(p).map_err(|e| {
+            ProductError::IoError(format!("failed to create {}: {}", p.display(), e))
+        })?;
+        p.canonicalize().map_err(|e| {
+            ProductError::ConfigError(format!("Cannot resolve path {}: {}", p.display(), e))
+        })?
+    } else {
+        std::env::current_dir().map_err(|e| {
+            ProductError::ConfigError(format!("Cannot determine working directory: {}", e))
+        })?
+    };
     let toml_path = target_dir.join("product.toml");
 
     // Determine checklist-in-gitignore setting.
@@ -3033,14 +3062,143 @@ fn handle_init(_yes: bool, force: bool, name: Option<String>) -> BoxResult {
         true
     };
 
-    // Determine project name
-    let project_name = name.unwrap_or_else(|| {
-        target_dir
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("my-project")
-            .to_string()
-    });
+    // Default project name from directory name
+    let default_name = target_dir
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("my-project")
+        .to_string();
+
+    // Parse CLI domain flags: --domain key=value
+    let mut domains: Vec<(String, String)> = Vec::new();
+    for d in &cli_domains {
+        if let Some((k, v)) = d.split_once('=') {
+            domains.push((k.trim().to_string(), v.trim().to_string()));
+        } else {
+            domains.push((d.trim().to_string(), String::new()));
+        }
+    }
+
+    let project_name;
+    let mcp_write;
+    let mcp_port;
+
+    if yes {
+        // Non-interactive mode: use defaults and CLI overrides
+        project_name = name.unwrap_or(default_name);
+        mcp_write = write_tools;
+        mcp_port = port;
+    } else {
+        // Interactive mode: prompt user via stdin/stdout
+        use std::io::{BufRead, Write};
+        let stdin = std::io::stdin();
+        let stdout = std::io::stdout();
+        let mut reader = stdin.lock();
+        let mut out = stdout.lock();
+
+        // Project name
+        let name_default = name.unwrap_or(default_name);
+        write!(out, "Project name [{}]: ", name_default)?;
+        out.flush()?;
+        let mut line = String::new();
+        reader.read_line(&mut line)?;
+        let trimmed = line.trim();
+        project_name = if trimmed.is_empty() {
+            name_default
+        } else {
+            trimmed.to_string()
+        };
+
+        // Domains — prompt for common domains
+        let common_domains = [
+            ("security", "Authentication, authorisation, secrets, trust boundaries"),
+            ("error-handling", "Error model, diagnostics, exit codes, recovery"),
+            ("storage", "Persistence, durability, backup"),
+            ("networking", "DNS, mTLS, service discovery, port allocation"),
+            ("api", "CLI surface, MCP tools, event schema"),
+            ("observability", "Metrics, tracing, logging, telemetry"),
+            ("data-model", "RDF, SPARQL, ontology, event sourcing"),
+        ];
+
+        writeln!(out, "\nCommon concern domains (enter numbers separated by spaces, or blank to skip):")?;
+        for (i, (name, desc)) in common_domains.iter().enumerate() {
+            writeln!(out, "  [{}] {} — {}", i + 1, name, desc)?;
+        }
+        write!(out, "Select domains: ")?;
+        out.flush()?;
+        let mut line = String::new();
+        reader.read_line(&mut line)?;
+        let trimmed = line.trim();
+        if !trimmed.is_empty() {
+            for token in trimmed.split_whitespace() {
+                if let Ok(idx) = token.parse::<usize>() {
+                    if idx >= 1 && idx <= common_domains.len() {
+                        let (k, v) = common_domains[idx - 1];
+                        // Avoid duplicates from CLI flags
+                        if !domains.iter().any(|(dk, _)| dk == k) {
+                            domains.push((k.to_string(), v.to_string()));
+                        }
+                    }
+                }
+            }
+        }
+
+        // Custom domains
+        loop {
+            write!(out, "Add custom domain? (name=description, or enter to skip): ")?;
+            out.flush()?;
+            let mut line = String::new();
+            reader.read_line(&mut line)?;
+            let trimmed = line.trim();
+            if trimmed.is_empty() {
+                break;
+            }
+            if let Some((k, v)) = trimmed.split_once('=') {
+                domains.push((k.trim().to_string(), v.trim().to_string()));
+            } else {
+                domains.push((trimmed.to_string(), String::new()));
+            }
+        }
+
+        // MCP settings
+        write!(out, "\nEnable MCP write tools by default? [y/N]: ")?;
+        out.flush()?;
+        let mut line = String::new();
+        reader.read_line(&mut line)?;
+        mcp_write = matches!(line.trim().to_lowercase().as_str(), "y" | "yes");
+
+        write!(out, "MCP HTTP port [{}]: ", port)?;
+        out.flush()?;
+        let mut line = String::new();
+        reader.read_line(&mut line)?;
+        let trimmed = line.trim();
+        mcp_port = if trimmed.is_empty() {
+            port
+        } else {
+            trimmed.parse::<u16>().unwrap_or(port)
+        };
+    }
+
+    // Build domains TOML section
+    let domains_section = if domains.is_empty() {
+        String::new()
+    } else {
+        domains
+            .iter()
+            .map(|(k, v)| {
+                // Escape any quotes in key or value for TOML safety
+                let safe_key = k.replace('\"', "");
+                let safe_val = v.replace('\"', "\\\"");
+                if safe_val.is_empty() {
+                    format!("\"{}\" = \"\"", safe_key)
+                } else {
+                    format!("\"{}\" = \"{}\"", safe_key, safe_val)
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+            + "\n"
+    };
 
     // Generate product.toml
     let toml_content = format!(
@@ -3064,21 +3222,22 @@ test = "TC"
 1 = "Phase 1"
 
 [domains]
-
+{domains_section}
 [mcp]
-write = false
-port = 7777
+write = {mcp_write}
+port = {mcp_port}
 "#
     );
     fileops::write_file_atomic(&toml_path, &toml_content)?;
+    println!("Created:");
     println!("  product.toml");
 
     // Create directory skeleton
     let dirs = ["docs/features", "docs/adrs", "docs/tests", "docs/graph"];
     for d in &dirs {
-        let path = target_dir.join(d);
-        std::fs::create_dir_all(&path).map_err(|e| {
-            ProductError::IoError(format!("failed to create {}: {}", path.display(), e))
+        let dir_path = target_dir.join(d);
+        std::fs::create_dir_all(&dir_path).map_err(|e| {
+            ProductError::IoError(format!("failed to create {}: {}", dir_path.display(), e))
         })?;
         println!("  {}/", d);
     }

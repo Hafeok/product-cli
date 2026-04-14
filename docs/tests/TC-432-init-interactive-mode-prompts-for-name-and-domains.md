@@ -2,13 +2,14 @@
 id: TC-432
 title: init interactive mode prompts for name and domains
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: [FT-035]
   adrs: [ADR-033]
 phase: 1
 runner: cargo-test
 runner-args: "tc_432_init_interactive_mode_prompts_for_name_and_domains"
+last-run: 2026-04-14T14:52:43.866547207+00:00
 ---
 
 ## Description

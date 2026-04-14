@@ -2,13 +2,14 @@
 id: TC-431
 title: init creates product.toml and directory skeleton
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: [FT-035]
   adrs: [ADR-033]
 phase: 1
 runner: cargo-test
 runner-args: "tc_431_init_creates_product_toml_and_directory_skeleton"
+last-run: 2026-04-14T14:52:43.866547207+00:00
 ---
 
 ## Description

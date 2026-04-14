@@ -2,11 +2,14 @@
 id: TC-439
 title: FT-035 repository initialization validated
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: [FT-035]
   adrs: [ADR-033]
 phase: 1
+runner: cargo-test
+runner-args: "tc_439_ft_035_repository_initialization_validated"
+last-run: 2026-04-14T14:52:43.866547207+00:00
 ---
 
 ## Description

@@ -2,13 +2,14 @@
 id: TC-434
 title: init errors on existing product.toml without --force
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: [FT-035]
   adrs: [ADR-033]
 phase: 1
 runner: cargo-test
 runner-args: "tc_434_init_errors_on_existing_product_toml_without_force"
+last-run: 2026-04-14T14:52:43.866547207+00:00
 ---
 
 ## Description
