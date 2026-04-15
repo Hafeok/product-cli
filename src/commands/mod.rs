@@ -24,6 +24,7 @@ mod preflight;
 mod prompts_cmd;
 mod schema;
 mod status;
+mod tags;
 mod test_cmd;
 
 use clap::Subcommand;
@@ -191,6 +192,11 @@ pub enum Commands {
         #[command(subcommand)]
         command: DriftCommands,
     },
+    /// Tag lifecycle — browse product/* git tags (ADR-036)
+    Tags {
+        #[command(subcommand)]
+        command: tags::TagsCommands,
+    },
     /// Architectural fitness functions
     Metrics {
         #[command(subcommand)]
@@ -339,6 +345,7 @@ fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> Bo
         Commands::InstallHooks => hooks::handle_install_hooks(),
         Commands::Prompts { command } => prompts_cmd::handle_prompts(command),
         Commands::Drift { command } => drift::handle_drift(command, fmt),
+        Commands::Tags { command } => tags::handle_tags(command, fmt),
         Commands::Metrics { command } => metrics_cmd::handle_metrics(command),
         Commands::Preflight { id } => preflight::handle_preflight(&id),
         Commands::Onboard { command } => onboard::handle_onboard(command),

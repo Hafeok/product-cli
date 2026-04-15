@@ -36,6 +36,9 @@ pub struct ProductConfig {
     /// Verify prerequisites — declarative shell conditions (ADR-021)
     #[serde(default)]
     pub verify: VerifyConfig,
+    /// Tag-based implementation tracking configuration (ADR-036)
+    #[serde(default)]
+    pub tags: TagsConfig,
 }
 
 /// Verify prerequisites — named shell conditions (ADR-021)
@@ -44,6 +47,20 @@ pub struct VerifyConfig {
     #[serde(default)]
     pub prerequisites: HashMap<String, String>,
 }
+/// Tag-based implementation tracking configuration (ADR-036)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TagsConfig {
+    #[serde(rename = "auto-push-tags", default)]
+    pub auto_push_tags: bool,
+    #[serde(rename = "implementation-depth", default = "default_implementation_depth")]
+    pub implementation_depth: usize,
+}
+
+impl Default for TagsConfig {
+    fn default() -> Self { Self { auto_push_tags: false, implementation_depth: 20 } }
+}
+fn default_implementation_depth() -> usize { 20 }
+
 /// Configuration for AGENTS.md generation (ADR-031)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentContextConfig {
@@ -71,19 +88,10 @@ impl Default for AgentContextConfig {
     }
 }
 
-fn default_agent_output() -> String {
-    "AGENTS.md".to_string()
-}
-
-fn default_version() -> String {
-    "0.1".to_string()
-}
-fn default_schema_version() -> String {
-    "1".to_string()
-}
-fn default_true() -> bool {
-    true
-}
+fn default_agent_output() -> String { "AGENTS.md".into() }
+fn default_version() -> String { "0.1".to_string() }
+fn default_schema_version() -> String { "1".to_string() }
+fn default_true() -> bool { true }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PathsConfig {
@@ -114,12 +122,12 @@ impl Default for PathsConfig {
     }
 }
 
-fn default_features_path() -> String { "docs/features".to_string() }
-fn default_adrs_path() -> String { "docs/adrs".to_string() }
-fn default_tests_path() -> String { "docs/tests".to_string() }
-fn default_graph_path() -> String { "docs/graph".to_string() }
-fn default_checklist_path() -> String { "docs/checklist.md".to_string() }
-fn default_dependencies_path() -> String { "docs/dependencies".to_string() }
+fn default_features_path() -> String { "docs/features".into() }
+fn default_adrs_path() -> String { "docs/adrs".into() }
+fn default_tests_path() -> String { "docs/tests".into() }
+fn default_graph_path() -> String { "docs/graph".into() }
+fn default_checklist_path() -> String { "docs/checklist.md".into() }
+fn default_dependencies_path() -> String { "docs/dependencies".into() }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrefixConfig {
@@ -166,22 +174,12 @@ pub struct McpConfig {
     pub cors_origins: Vec<String>,
 }
 
-fn default_mcp_port() -> u16 {
-    7777
-}
+fn default_mcp_port() -> u16 { 7777 }
 
-fn default_feature_prefix() -> String {
-    "FT".to_string()
-}
-fn default_adr_prefix() -> String {
-    "ADR".to_string()
-}
-fn default_test_prefix() -> String {
-    "TC".to_string()
-}
-fn default_dep_prefix() -> String {
-    "DEP".to_string()
-}
+fn default_feature_prefix() -> String { "FT".into() }
+fn default_adr_prefix() -> String { "ADR".into() }
+fn default_test_prefix() -> String { "TC".into() }
+fn default_dep_prefix() -> String { "DEP".into() }
 
 /// Current schema version supported by this binary
 pub const CURRENT_SCHEMA_VERSION: u32 = 1;
@@ -335,6 +333,16 @@ mod tests {
         assert_eq!(config.schema_version, "1");
         assert_eq!(config.prefixes.feature, "FT");
         assert_eq!(config.paths.features, "docs/features");
+        // TC-458: tags config defaults
+        assert!(!config.tags.auto_push_tags);
+        assert_eq!(config.tags.implementation_depth, 20);
+    }
+    #[test]
+    fn parse_tags_config_explicit() {
+        let toml_str = "name = \"test\"\n[tags]\nauto-push-tags = false\nimplementation-depth = 30\n";
+        let config: ProductConfig = toml::from_str(toml_str).unwrap();
+        assert!(!config.tags.auto_push_tags);
+        assert_eq!(config.tags.implementation_depth, 30);
     }
     #[test]
     fn parse_full_config() {

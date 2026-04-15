@@ -4,6 +4,7 @@ use crate::config::ProductConfig;
 use crate::error::{ProductError, Result};
 use crate::graph::KnowledgeGraph;
 use crate::parser;
+use crate::tags;
 use crate::types::*;
 use crate::fileops;
 use std::path::Path;
@@ -70,7 +71,7 @@ pub fn run_verify(
     }
 
     if any_runnable || has_unimplemented {
-        update_feature_and_checklist(feature_id, config, root, all_pass, has_unimplemented)?;
+        update_feature_and_checklist(feature_id, config, root, all_pass, has_unimplemented, &tc_ids)?;
     } else {
         eprintln!("warning[W001]: no runnable TCs found for {}", feature_id);
     }
@@ -202,10 +203,10 @@ fn check_prerequisites(requires: &[String], config: &ProductConfig, root: &Path)
     PrereqResult::AllSatisfied
 }
 
-/// Reload the graph, update feature status, and regenerate the checklist.
+/// Reload the graph, update feature status, create completion tag, and regenerate the checklist.
 fn update_feature_and_checklist(
     feature_id: &str, config: &ProductConfig, root: &Path,
-    all_pass: bool, has_unimplemented: bool,
+    all_pass: bool, has_unimplemented: bool, tc_ids: &[String],
 ) -> Result<()> {
     let features_dir = config.resolve_path(root, &config.paths.features);
     let adrs_dir = config.resolve_path(root, &config.paths.adrs);
@@ -226,6 +227,26 @@ fn update_feature_and_checklist(
             fileops::write_file_atomic(&f.path, &content)?;
             println!();
             println!("  Feature {} status -> {}", feature_id, new_status);
+        }
+
+        // ADR-036: Create completion tag when transitioning to complete
+        if new_status == FeatureStatus::Complete {
+            if tags::is_git_repo(root) {
+                match tags::create_completion_tag(root, feature_id, tc_ids, config) {
+                    Ok(tag_name) => {
+                        println!("  \u{2713} Tagged: {}", tag_name);
+                        println!("    Run `git push --tags` to share.");
+                    }
+                    Err(e) => {
+                        eprintln!(
+                            "warning[W018]: failed to create completion tag: {}",
+                            e
+                        );
+                    }
+                }
+            } else {
+                eprintln!("warning[W018]: not a git repository \u{2014} skipping tag creation");
+            }
         }
     }
 

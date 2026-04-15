@@ -2,7 +2,7 @@
 id: FT-037
 title: Tag-Based Drift Detection
 phase: 1
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-036
@@ -24,7 +24,9 @@ tests:
 - TC-458
 - TC-459
 - TC-460
-domains: [observability, data-model]
+domains:
+- observability
+- data-model
 domains-acknowledged: {}
 ---
 

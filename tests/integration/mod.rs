@@ -12292,3 +12292,470 @@ fn tc_447_lifecycle_gate_exit_criteria() {
         feature_content
     );
 }
+
+// --- FT-037: Tag-Based Drift Detection (TC-448 to TC-460) ---
+
+/// Helper: initialize a git repo AND create an initial commit (needed for tags).
+fn git_init_with_commit(h: &Harness) {
+    git_init(h);
+    let dir = h.dir.path();
+    std::process::Command::new("git").args(["add", "-A"]).current_dir(dir)
+        .stdout(Stdio::null()).stderr(Stdio::null()).output().expect("git add");
+    std::process::Command::new("git").args(["commit", "-m", "initial commit"])
+        .current_dir(dir).stdout(Stdio::null()).stderr(Stdio::null()).output().expect("git commit");
+}
+
+/// Helper: create a git commit for all current changes.
+fn git_add_commit(h: &Harness, msg: &str) {
+    let dir = h.dir.path();
+    std::process::Command::new("git").args(["add", "-A"]).current_dir(dir)
+        .stdout(Stdio::null()).stderr(Stdio::null()).output().expect("git add");
+    std::process::Command::new("git").args(["commit", "-m", msg, "--allow-empty"])
+        .current_dir(dir).stdout(Stdio::null()).stderr(Stdio::null()).output().expect("git commit");
+}
+
+/// Helper: create a fixture for tag-based verify tests with git init.
+fn fixture_verify_with_git() -> Harness {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001, TC-002]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test One\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: pass.sh\n---\n\nTest body.\n",
+    );
+    h.write(
+        "docs/tests/TC-002-test.md",
+        "---\nid: TC-002\ntitle: Test Two\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: pass2.sh\n---\n\nTest body.\n",
+    );
+    h.write("pass.sh", "#!/bin/bash\nexit 0\n");
+    h.write("pass2.sh", "#!/bin/bash\nexit 0\n");
+    std::process::Command::new("chmod")
+        .args(["+x", "pass.sh", "pass2.sh"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("chmod");
+    git_init_with_commit(&h);
+    h
+}
+
+/// TC-448: verify_creates_completion_tag
+/// When `product verify FT-001` transitions to complete, an annotated git tag is created.
+#[test]
+fn tc_448_verify_creates_completion_tag() {
+    let h = fixture_verify_with_git();
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("PASS");
+
+    // Feature should be complete
+    let feature_content = h.read("docs/features/FT-001-test.md");
+    assert!(feature_content.contains("status: complete"), "Feature should be complete.\nContent: {}", feature_content);
+
+    // Tag should exist
+    let tag_out = std::process::Command::new("git")
+        .args(["tag", "-l", "product/FT-001/complete"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git tag -l");
+    let tag_stdout = String::from_utf8_lossy(&tag_out.stdout);
+    assert!(tag_stdout.contains("product/FT-001/complete"), "Tag should exist.\nTag output: {}", tag_stdout);
+
+    // Tag should be annotated (has a message)
+    let msg_out = std::process::Command::new("git")
+        .args(["tag", "-l", "product/FT-001/complete", "--format=%(contents)"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git tag message");
+    let msg = String::from_utf8_lossy(&msg_out.stdout);
+    assert!(msg.contains("FT-001 complete"), "Tag message should contain 'FT-001 complete'.\nMessage: {}", msg);
+    assert!(msg.contains("TC-001"), "Tag message should list TC IDs.\nMessage: {}", msg);
+    assert!(msg.contains("TC-002"), "Tag message should list TC IDs.\nMessage: {}", msg);
+
+    // Stdout should mention the tag
+    out.assert_stdout_contains("Tagged: product/FT-001/complete");
+    out.assert_stdout_contains("git push --tags");
+}
+
+/// TC-449: verify_tag_version_increments
+/// Re-verification creates complete-v2, complete-v3, etc.
+#[test]
+fn tc_449_verify_tag_version_increments() {
+    let h = fixture_verify_with_git();
+
+    // First verify → complete tag
+    let out1 = h.run(&["verify", "FT-001"]);
+    out1.assert_exit(0);
+    out1.assert_stdout_contains("Tagged: product/FT-001/complete");
+
+    // Reset feature to in-progress for re-verification
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001, TC-002]\n---\n\nFeature body.\n",
+    );
+    git_add_commit(&h, "reset feature status");
+
+    // Second verify → complete-v2
+    let out2 = h.run(&["verify", "FT-001"]);
+    out2.assert_exit(0);
+    out2.assert_stdout_contains("Tagged: product/FT-001/complete-v2");
+
+    // Both tags should exist
+    let tag_out = std::process::Command::new("git")
+        .args(["tag", "-l", "product/FT-001/*"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git tag -l");
+    let tags = String::from_utf8_lossy(&tag_out.stdout);
+    assert!(tags.contains("product/FT-001/complete"), "Original tag should exist");
+    assert!(tags.contains("product/FT-001/complete-v2"), "v2 tag should exist");
+}
+
+/// TC-450: verify_skips_tag_outside_git
+/// Verify works without git — no crash, W018 warning.
+#[test]
+fn tc_450_verify_skips_tag_outside_git() {
+    // Use standard fixture (no git init)
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test One\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\nrunner: bash\nrunner-args: pass.sh\n---\n\nTest body.\n",
+    );
+    h.write("pass.sh", "#!/bin/bash\nexit 0\n");
+    std::process::Command::new("chmod")
+        .args(["+x", "pass.sh"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("chmod");
+
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+
+    // Feature completes normally
+    let feature_content = h.read("docs/features/FT-001-test.md");
+    assert!(feature_content.contains("status: complete"), "Feature should be complete");
+
+    // W018 warning about not being a git repo
+    out.assert_stderr_contains("W018");
+    out.assert_stderr_contains("not a git repository");
+}
+
+/// TC-451: tags_list_all
+/// `product tags list` shows all product/* tags.
+#[test]
+fn tc_451_tags_list_all() {
+    let h = Harness::new();
+    git_init_with_commit(&h);
+
+    // Create two annotated tags
+    std::process::Command::new("git")
+        .args(["tag", "-a", "product/FT-001/complete", "-m", "FT-001 complete"])
+        .current_dir(h.dir.path()).output().expect("tag 1");
+    std::process::Command::new("git")
+        .args(["tag", "-a", "product/FT-002/complete", "-m", "FT-002 complete"])
+        .current_dir(h.dir.path()).output().expect("tag 2");
+
+    let out = h.run(&["tags", "list"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("FT-001");
+    out.assert_stdout_contains("complete");
+    out.assert_stdout_contains("FT-002");
+
+    // JSON variant
+    let json_out = h.run(&["tags", "list", "--format", "json"]);
+    json_out.assert_exit(0);
+    let parsed: serde_json::Value = serde_json::from_str(&json_out.stdout)
+        .unwrap_or_else(|e| panic!("Invalid JSON: {} stdout: {}", e, json_out.stdout));
+    assert!(parsed.as_array().map(|a| a.len() >= 2).unwrap_or(false), "Should have >=2 tags");
+}
+
+/// TC-452: tags_list_filter_feature
+/// `product tags list --feature FT-001` filters to one feature.
+#[test]
+fn tc_452_tags_list_filter_feature() {
+    let h = Harness::new();
+    git_init_with_commit(&h);
+
+    std::process::Command::new("git")
+        .args(["tag", "-a", "product/FT-001/complete", "-m", "FT-001 complete"])
+        .current_dir(h.dir.path()).output().expect("tag 1");
+    std::process::Command::new("git")
+        .args(["tag", "-a", "product/FT-001/complete-v2", "-m", "FT-001 v2"])
+        .current_dir(h.dir.path()).output().expect("tag 2");
+    std::process::Command::new("git")
+        .args(["tag", "-a", "product/FT-002/complete", "-m", "FT-002 complete"])
+        .current_dir(h.dir.path()).output().expect("tag 3");
+
+    let out = h.run(&["tags", "list", "--feature", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("FT-001/complete");
+    assert!(!out.stdout.contains("FT-002"), "Should not contain FT-002.\nStdout: {}", out.stdout);
+}
+
+/// TC-453: tags_list_filter_type
+/// `product tags list --type complete` filters by event type.
+#[test]
+fn tc_453_tags_list_filter_type() {
+    let h = Harness::new();
+    git_init_with_commit(&h);
+
+    std::process::Command::new("git")
+        .args(["tag", "-a", "product/FT-001/complete", "-m", "FT-001 complete"])
+        .current_dir(h.dir.path()).output().expect("tag 1");
+    std::process::Command::new("git")
+        .args(["tag", "-a", "product/ADR-002/accepted", "-m", "ADR-002 accepted"])
+        .current_dir(h.dir.path()).output().expect("tag 2");
+
+    let out = h.run(&["tags", "list", "--type", "complete"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("FT-001");
+    out.assert_stdout_contains("complete");
+    assert!(!out.stdout.contains("ADR-002"), "Should not contain ADR-002.\nStdout: {}", out.stdout);
+    assert!(!out.stdout.contains("accepted"), "Should not contain 'accepted'.\nStdout: {}", out.stdout);
+}
+
+/// TC-454: tags_show_feature
+/// `product tags show FT-001` shows full detail.
+#[test]
+fn tc_454_tags_show_feature() {
+    let h = Harness::new();
+    git_init_with_commit(&h);
+
+    std::process::Command::new("git")
+        .args(["tag", "-a", "product/FT-001/complete", "-m", "FT-001 complete: 2/2 TCs passing (TC-001, TC-002)"])
+        .current_dir(h.dir.path()).output().expect("tag");
+
+    let out = h.run(&["tags", "show", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("product/FT-001/complete");
+    // Tag message should appear
+    assert!(
+        out.stdout.contains("TC-001") || out.stdout.contains("FT-001 complete"),
+        "Should show tag message.\nStdout: {}", out.stdout
+    );
+
+    // Not-found case
+    let out2 = h.run(&["tags", "show", "FT-999"]);
+    assert!(out2.exit_code != 0 || out2.stderr.contains("No tags found"),
+        "Should indicate no tags found for FT-999");
+}
+
+/// TC-455: drift_check_feature_tag_based
+/// `product drift check FT-XXX` uses completion tags for file resolution.
+#[test]
+fn tc_455_drift_check_feature_tag_based() {
+    let h = Harness::new();
+    h.write("src/foo.rs", "// initial content\nfn main() {}\n");
+    git_init_with_commit(&h);
+
+    // Create a completion tag at this commit
+    std::process::Command::new("git")
+        .args(["tag", "-a", "product/FT-001/complete", "-m", "FT-001 complete: 1/1 TCs passing (TC-001)"])
+        .current_dir(h.dir.path()).output().expect("tag");
+
+    // Feature must exist
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test One\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nTest body.\n",
+    );
+
+    // Modify a file after the tag — creating drift
+    h.write("src/foo.rs", "// modified content\nfn main() { println!(\"changed\"); }\n");
+    git_add_commit(&h, "modify foo.rs after completion");
+
+    let out = h.run(&["drift", "check", "FT-001"]);
+    out.assert_exit(0); // D003 is medium, not high
+    // Should detect that src/foo.rs changed
+    assert!(
+        out.stdout.contains("src/foo.rs") || out.stdout.contains("changed since"),
+        "Should report drift on changed files.\nStdout: {}", out.stdout
+    );
+
+    // No-drift case: check a feature whose files haven't changed
+    h.write(
+        "docs/features/FT-002-test.md",
+        "---\nid: FT-002\ntitle: Other Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: []\n---\n\nFeature body.\n",
+    );
+    std::process::Command::new("git")
+        .args(["tag", "-a", "product/FT-002/complete", "-m", "FT-002 complete"])
+        .current_dir(h.dir.path()).output().expect("tag FT-002");
+    git_add_commit(&h, "add FT-002");
+
+    let out2 = h.run(&["drift", "check", "FT-002"]);
+    out2.assert_exit(0);
+    assert!(
+        out2.stdout.contains("No drift") || out2.stdout.contains("[]"),
+        "Should report no drift.\nStdout: {}", out2.stdout
+    );
+}
+
+/// TC-456: drift_check_fallback_no_tag
+/// When no completion tag exists, drift check falls back to pattern-based discovery.
+#[test]
+fn tc_456_drift_check_fallback_no_tag() {
+    let h = Harness::new();
+    git_init_with_commit(&h);
+
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nFeature body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-test.md",
+        "---\nid: ADR-001\ntitle: Test ADR\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\nsource-files:\n  - src/main.rs\n---\n\n**Decision:** Use `openraft` for consensus.\n\n**Rejected alternatives:**\n- None\n",
+    );
+    h.write(
+        "docs/tests/TC-001-test.md",
+        "---\nid: TC-001\ntitle: Test One\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nTest body.\n",
+    );
+    h.write("src/main.rs", "fn main() {}\n");
+    git_add_commit(&h, "add source");
+
+    // No completion tag exists — should fallback
+    let out = h.run(&["drift", "check", "FT-001"]);
+    // Should warn about no completion tag (W019)
+    out.assert_stderr_contains("W019");
+    // Should still work (no crash)
+    assert!(out.exit_code == 0 || out.exit_code == 1,
+        "Should exit 0 or 1, not crash. Exit: {}", out.exit_code);
+}
+
+/// TC-457: drift_check_all_complete
+/// `product drift check --all-complete` checks all complete features with tags.
+#[test]
+fn tc_457_drift_check_all_complete() {
+    let h = Harness::new();
+    h.write("src/a.rs", "fn a() {}\n");
+    h.write("src/b.rs", "fn b() {}\n");
+    git_init_with_commit(&h);
+
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Feature One\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n",
+    );
+    h.write(
+        "docs/features/FT-002-test.md",
+        "---\nid: FT-002\ntitle: Feature Two\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n",
+    );
+    h.write(
+        "docs/features/FT-003-test.md",
+        "---\nid: FT-003\ntitle: Feature Three\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n",
+    );
+    git_add_commit(&h, "add features");
+
+    // Create completion tags for FT-001 and FT-002 only
+    std::process::Command::new("git")
+        .args(["tag", "-a", "product/FT-001/complete", "-m", "FT-001 complete"])
+        .current_dir(h.dir.path()).output().expect("tag FT-001");
+    std::process::Command::new("git")
+        .args(["tag", "-a", "product/FT-002/complete", "-m", "FT-002 complete"])
+        .current_dir(h.dir.path()).output().expect("tag FT-002");
+
+    let out = h.run(&["drift", "check", "--all-complete"]);
+    out.assert_exit(0);
+
+    // Should mention checking complete features
+    // FT-003 (in-progress) should be skipped
+    assert!(
+        !out.stdout.contains("FT-003"),
+        "FT-003 (in-progress) should not be checked.\nStdout: {}", out.stdout
+    );
+}
+
+/// TC-458: tags_config_defaults
+/// The [tags] config section is optional with sensible defaults.
+#[test]
+fn tc_458_tags_config_defaults() {
+    // No [tags] section — should use defaults
+    let h = Harness::new();
+    git_init_with_commit(&h);
+
+    // Tags list should work without [tags] section in product.toml
+    let out = h.run(&["tags", "list"]);
+    out.assert_exit(0);
+
+    // Verify with explicit config
+    h.write(
+        "product.toml",
+        "name = \"test\"\nschema-version = \"1\"\n[paths]\nfeatures = \"docs/features\"\nadrs = \"docs/adrs\"\ntests = \"docs/tests\"\ngraph = \"docs/graph\"\nchecklist = \"docs/checklist.md\"\ndependencies = \"docs/dependencies\"\n[prefixes]\nfeature = \"FT\"\nadr = \"ADR\"\ntest = \"TC\"\ndependency = \"DEP\"\n[tags]\nauto-push-tags = false\nimplementation-depth = 30\n",
+    );
+    git_add_commit(&h, "add tags config");
+
+    let out2 = h.run(&["tags", "list"]);
+    out2.assert_exit(0); // Parses correctly, no crash
+}
+
+/// TC-459: tag_namespace_format (invariant)
+/// All tags follow the `product/{artifact-id}/{event}` format.
+/// This is covered by unit tests in src/tags.rs — the integration test validates
+/// that tags created by verify follow the format.
+#[test]
+fn tc_459_tag_namespace_format() {
+    let h = fixture_verify_with_git();
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+
+    // Get the tag and verify format
+    let tag_out = std::process::Command::new("git")
+        .args(["tag", "-l", "product/*"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git tag -l");
+    let tags = String::from_utf8_lossy(&tag_out.stdout);
+    let re = regex::Regex::new(r"^product/[A-Z]+-\d{3,}/[a-z][a-z0-9-]*$").expect("regex");
+    for line in tags.lines() {
+        let line = line.trim();
+        if line.is_empty() { continue; }
+        assert!(re.is_match(line), "Tag '{}' should match product/{{ID}}/{{EVENT}} format", line);
+    }
+}
+
+/// TC-460: tag_based_drift_detection_exit (exit criteria)
+/// Validates that the full FT-037 implementation is working end-to-end.
+#[test]
+fn tc_460_tag_based_drift_detection_exit() {
+    // 1. Verify creates a completion tag
+    let h = fixture_verify_with_git();
+    let out = h.run(&["verify", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("Tagged: product/FT-001/complete");
+
+    // 2. Tags list works
+    let list_out = h.run(&["tags", "list"]);
+    list_out.assert_exit(0);
+    list_out.assert_stdout_contains("FT-001");
+
+    // 3. Tags show works
+    let show_out = h.run(&["tags", "show", "FT-001"]);
+    show_out.assert_exit(0);
+    show_out.assert_stdout_contains("product/FT-001/complete");
+
+    // 4. Drift check with tag works
+    let drift_out = h.run(&["drift", "check", "FT-001"]);
+    drift_out.assert_exit(0);
+
+    // 5. All-complete flag works
+    let all_out = h.run(&["drift", "check", "--all-complete"]);
+    all_out.assert_exit(0);
+}

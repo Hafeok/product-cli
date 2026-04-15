@@ -314,26 +314,26 @@
 - [x] TC-446: E016 names all proposed ADRs not just the first (scenario) — passing
 - [x] TC-447: lifecycle gate exit criteria (exit-criteria) — passing
 
-### FT-037 — Tag-Based Drift Detection [ ]
+### FT-037 — Tag-Based Drift Detection [x]
 
 - [ ] ADR-036: Tag-Based Implementation Tracking (proposed)
 - [x] ADR-023: Drift Detection — Spec vs. Implementation Verification (accepted)
 - [x] ADR-021: Implementation Pipeline — `product verify` and the Knowledge Boundary (accepted)
 - [x] ADR-013: Error Model and User-Facing Error Format (accepted)
 - [x] ADR-009: CI Integration via Exit Codes (accepted)
-- [ ] TC-448: verify_creates_completion_tag (scenario) — unimplemented
-- [ ] TC-449: verify_tag_version_increments (scenario) — unimplemented
-- [ ] TC-450: verify_skips_tag_outside_git (scenario) — unimplemented
-- [ ] TC-451: tags_list_all (scenario) — unimplemented
-- [ ] TC-452: tags_list_filter_feature (scenario) — unimplemented
-- [ ] TC-453: tags_list_filter_type (scenario) — unimplemented
-- [ ] TC-454: tags_show_feature (scenario) — unimplemented
-- [ ] TC-455: drift_check_feature_tag_based (scenario) — unimplemented
-- [ ] TC-456: drift_check_fallback_no_tag (scenario) — unimplemented
-- [ ] TC-457: drift_check_all_complete (scenario) — unimplemented
-- [ ] TC-458: tags_config_defaults (scenario) — unimplemented
-- [ ] TC-459: tag_namespace_format (invariant) — unimplemented
-- [ ] TC-460: tag_based_drift_detection_exit (exit-criteria) — unimplemented
+- [x] TC-448: verify_creates_completion_tag (scenario) — passing
+- [x] TC-449: verify_tag_version_increments (scenario) — passing
+- [x] TC-450: verify_skips_tag_outside_git (scenario) — passing
+- [x] TC-451: tags_list_all (scenario) — passing
+- [x] TC-452: tags_list_filter_feature (scenario) — passing
+- [x] TC-453: tags_list_filter_type (scenario) — passing
+- [x] TC-454: tags_show_feature (scenario) — passing
+- [x] TC-455: drift_check_feature_tag_based (scenario) — passing
+- [x] TC-456: drift_check_fallback_no_tag (scenario) — passing
+- [x] TC-457: drift_check_all_complete (scenario) — passing
+- [x] TC-458: tags_config_defaults (scenario) — passing
+- [x] TC-459: tag_namespace_format (invariant) — passing
+- [x] TC-460: tag_based_drift_detection_exit (exit-criteria) — passing
 
 ### FT-039 — Product Responsibility Statement [ ]
 

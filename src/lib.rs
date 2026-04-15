@@ -21,6 +21,7 @@ pub mod migrate;
 pub mod onboard;
 pub mod parser;
 pub mod rdf;
+pub mod tags;
 pub mod types;
 
 // Wrapper modules for canonical module structure (ADR-029)
