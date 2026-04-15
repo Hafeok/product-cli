@@ -166,7 +166,7 @@ pub fn run_implement(
     // Step 5 — Auto-verify
     if !no_verify {
         println!("  Step 5: Running verify...");
-        run_verify(feature_id, config, root, graph)?;
+        run_verify(feature_id, config, root, graph, false)?;
     }
 
     Ok(())

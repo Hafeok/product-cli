@@ -165,6 +165,11 @@ pub enum ProductError {
     LockError {
         message: String,
     },
+    /// E016: Lifecycle gate — verify blocked by proposed ADR(s)
+    LifecycleGate {
+        feature_id: String,
+        proposed_adrs: Vec<String>,
+    },
     /// Configuration error
     ConfigError(String),
     /// Generic IO error
@@ -179,50 +184,31 @@ impl fmt::Display for ProductError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::ParseError { file, line, message } => {
-                write!(f, "error[E001]: malformed front-matter\n  --> {}", file.display())?;
-                if let Some(l) = line {
-                    write!(f, ":{}", l)?;
-                }
-                write!(f, "\n   = {}", message)
+                let loc = line.map_or(String::new(), |l| format!(":{}", l));
+                write!(f, "error[E001]: malformed front-matter\n  --> {}{}\n   = {}", file.display(), loc, message)
             }
-            Self::BrokenLink { file, source_id, target_id, .. } => {
-                write!(
-                    f,
-                    "error[E002]: broken link\n  --> {}\n   | {} references {} which does not exist\n   = hint: create the file or remove the reference",
-                    file.display(), source_id, target_id
-                )
-            }
-            Self::DependencyCycle { cycle } => {
-                write!(f, "error[E003]: dependency cycle detected\n   = cycle: {}", cycle.join(" -> "))
-            }
-            Self::SupersessionCycle { cycle } => {
-                write!(f, "error[E004]: supersession cycle detected\n   = cycle: {}", cycle.join(" -> "))
-            }
-            Self::InvalidId { file, id } => {
-                write!(f, "error[E005]: invalid artifact ID '{}'\n  --> {}", id, file.display())
-            }
-            Self::MissingField { file, field } => {
-                write!(f, "error[E006]: missing required field '{}'\n  --> {}", field, file.display())
-            }
-            Self::SchemaVersionMismatch { declared, supported } => {
-                write!(
-                    f,
-                    "error[E008]: schema version mismatch\n   | this repository requires schema version {}\n   | this binary supports up to schema version {}\n   = hint: upgrade product with `cargo install product --force`",
-                    declared, supported
-                )
-            }
-            Self::WriteError { path, message } => {
-                write!(f, "error[E009]: write failed\n  --> {}\n   = {}", path.display(), message)
-            }
-            Self::LockError { message } => {
-                write!(f, "error[E010]: repository locked\n   = {}", message)
-            }
+            Self::BrokenLink { file, source_id, target_id, .. } => write!(
+                f, "error[E002]: broken link\n  --> {}\n   | {} references {} which does not exist\n   = hint: create the file or remove the reference",
+                file.display(), source_id, target_id
+            ),
+            Self::DependencyCycle { cycle } => write!(f, "error[E003]: dependency cycle detected\n   = cycle: {}", cycle.join(" -> ")),
+            Self::SupersessionCycle { cycle } => write!(f, "error[E004]: supersession cycle detected\n   = cycle: {}", cycle.join(" -> ")),
+            Self::InvalidId { file, id } => write!(f, "error[E005]: invalid artifact ID '{}'\n  --> {}", id, file.display()),
+            Self::MissingField { file, field } => write!(f, "error[E006]: missing required field '{}'\n  --> {}", field, file.display()),
+            Self::SchemaVersionMismatch { declared, supported } => write!(
+                f, "error[E008]: schema version mismatch\n   | this repository requires schema version {}\n   | this binary supports up to schema version {}\n   = hint: upgrade product with `cargo install product --force`",
+                declared, supported
+            ),
+            Self::WriteError { path, message } => write!(f, "error[E009]: write failed\n  --> {}\n   = {}", path.display(), message),
+            Self::LockError { message } => write!(f, "error[E010]: repository locked\n   = {}", message),
+            Self::LifecycleGate { feature_id, proposed_adrs } => write!(
+                f, "error[E016]: cannot verify {} — governing ADR(s) not yet accepted: {}",
+                feature_id, proposed_adrs.join(", ")
+            ),
             Self::ConfigError(msg) => write!(f, "error: {}", msg),
             Self::IoError(msg) => write!(f, "error: {}", msg),
             Self::NotFound(msg) => write!(f, "error: not found — {}", msg),
-            Self::Internal(msg) => {
-                write!(f, "internal error: {}\n  This is a bug in Product. Please report it.", msg)
-            }
+            Self::Internal(msg) => write!(f, "internal error: {}\n  This is a bug in Product. Please report it.", msg),
         }
     }
 }

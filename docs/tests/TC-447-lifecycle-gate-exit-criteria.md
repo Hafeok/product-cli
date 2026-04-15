@@ -2,11 +2,15 @@
 id: TC-447
 title: lifecycle gate exit criteria
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features: [FT-036]
   adrs: [ADR-034]
 phase: 1
+runner: cargo-test
+runner-args: "tc_447_lifecycle_gate_exit_criteria"
+last-run: 2026-04-15T10:35:59.328815871+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

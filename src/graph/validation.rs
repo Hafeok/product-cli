@@ -27,6 +27,7 @@ impl KnowledgeGraph {
         self.check_evidence_delta(&mut result);
         self.check_formal_block_diagnostics(&mut result);
         self.check_content_hashes(&mut result);
+        self.check_proposed_adr_lifecycle(&mut result);
         self.check_dep_has_adr(&mut result);
         self.check_dep_deprecated_usage(&mut result);
         self.check_dep_broken_links(&mut result, &all_ids);

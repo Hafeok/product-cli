@@ -2,7 +2,7 @@
 id: FT-036
 title: Lifecycle Gate
 phase: 1
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-034
@@ -19,7 +19,8 @@ tests:
 - TC-445
 - TC-446
 - TC-447
-domains: [data-model]
+domains:
+- data-model
 domains-acknowledged: {}
 ---
 

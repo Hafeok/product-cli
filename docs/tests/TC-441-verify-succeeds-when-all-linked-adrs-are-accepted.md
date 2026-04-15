@@ -2,11 +2,15 @@
 id: TC-441
 title: verify succeeds when all linked ADRs are accepted
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features: [FT-036]
   adrs: [ADR-034]
 phase: 1
+runner: cargo-test
+runner-args: "tc_441_verify_succeeds_when_all_linked_adrs_are_accepted"
+last-run: 2026-04-15T10:35:59.328815871+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

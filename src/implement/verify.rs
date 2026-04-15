@@ -17,10 +17,45 @@ pub fn run_verify(
     config: &ProductConfig,
     root: &Path,
     graph: &KnowledgeGraph,
+    skip_adr_check: bool,
 ) -> Result<()> {
     let feature = graph.features.get(feature_id).ok_or_else(|| {
         ProductError::NotFound(format!("feature {}", feature_id))
     })?;
+
+    // E016: Lifecycle gate — check that no linked ADR is still 'proposed' (ADR-034)
+    if !skip_adr_check {
+        let proposed_adrs: Vec<(&str, &str)> = feature
+            .front
+            .adrs
+            .iter()
+            .filter_map(|adr_id| {
+                graph.adrs.get(adr_id.as_str()).and_then(|adr| {
+                    if adr.front.status == AdrStatus::Proposed {
+                        Some((adr.front.id.as_str(), adr.front.title.as_str()))
+                    } else {
+                        None
+                    }
+                })
+            })
+            .collect();
+
+        if !proposed_adrs.is_empty() {
+            let detail_lines: Vec<String> = proposed_adrs
+                .iter()
+                .map(|(id, title)| format!("{} ({}) has status 'proposed'", id, title))
+                .collect();
+            eprintln!(
+                "error[E016]: cannot verify — governing ADR not yet accepted\n  --> {}\n   = {}\n   = hint: accept the ADR first with `product adr status ADR-XXX accepted`\n           or remove the link if the ADR no longer governs this feature",
+                feature.path.display(),
+                detail_lines.join("\n   = "),
+            );
+            return Err(ProductError::LifecycleGate {
+                feature_id: feature_id.to_string(),
+                proposed_adrs: proposed_adrs.iter().map(|(id, _)| id.to_string()).collect(),
+            });
+        }
+    }
 
     let now = chrono::Utc::now().to_rfc3339();
     let tc_ids: Vec<String> = feature.front.tests.clone();
