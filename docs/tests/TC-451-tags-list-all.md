@@ -1,0 +1,29 @@
+---
+id: TC-451
+title: tags_list_all
+type: scenario
+status: unimplemented
+validates:
+  features: []
+  adrs: []
+phase: 1
+---
+
+## Scenario
+
+`product tags list` displays all product/* tags with artifact ID, event, and date.
+
+### Given
+- A git-initialized temp directory with product.toml
+- Two annotated tags exist: `product/FT-001/complete` and `product/FT-002/complete`
+
+### When
+- `product tags list` is run
+
+### Then
+- stdout contains "FT-001" and "complete"
+- stdout contains "FT-002" and "complete"
+- Exit code is 0
+
+### JSON variant
+- `product tags list --format json` returns a JSON array with tag objects containing `name`, `artifact_id`, `event`, `timestamp`
