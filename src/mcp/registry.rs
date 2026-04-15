@@ -9,6 +9,7 @@ use super::tools::{self, ToolDef};
 use super::{JsonRpcRequest, JsonRpcResponse};
 use super::read_handlers;
 use super::write_handlers;
+use super::field_handlers;
 
 // ---------------------------------------------------------------------------
 // Tool registry
@@ -166,6 +167,14 @@ fn dispatch_tool(
         }
         "product_body_update" => write_handlers::handle_body_update(args, graph, repo_root),
         "product_adr_amend" => write_handlers::handle_adr_amend(args, graph),
+        // Field management tools (FT-038)
+        "product_feature_domain" => field_handlers::handle_feature_domain(args, graph, repo_root),
+        "product_feature_acknowledge" => field_handlers::handle_feature_acknowledge(args, graph),
+        "product_adr_domain" => field_handlers::handle_adr_domain(args, graph, repo_root),
+        "product_adr_scope" => field_handlers::handle_adr_scope(args, graph),
+        "product_adr_supersede" => field_handlers::handle_adr_supersede(args, graph),
+        "product_adr_source_files" => field_handlers::handle_adr_source_files(args, graph, repo_root),
+        "product_test_runner" => field_handlers::handle_test_runner(args, graph, repo_root),
         _ => Err(format!("Tool handler not implemented: {}", name)),
     }
 }

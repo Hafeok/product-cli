@@ -12965,3 +12965,403 @@ fn tc_479_product_responsibility_feature_complete() {
     // 6. Context omits responsibility when unconfigured (TC-477) — covered by h2
     // 7. All TCs passing — verified by this test passing
 }
+
+// ---------------------------------------------------------------------------
+// FT-038: Front-Matter Field Management Tests
+// ---------------------------------------------------------------------------
+
+/// Helper: create a harness with domain vocabulary in product.toml
+fn fixture_with_domains() -> Harness {
+    let h = Harness::new();
+    h.write("product.toml", r#"name = "test"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+dependencies = "docs/dependencies"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+dependency = "DEP"
+[domains]
+api = "CLI surface, MCP tools"
+security = "Authentication, authorisation, secrets"
+networking = "mDNS, mTLS, DNS"
+error-handling = "Error model, diagnostics"
+storage = "Persistence, durability"
+[mcp]
+write = true
+[verify.prerequisites]
+build = "cargo build --quiet"
+lint = "cargo clippy --quiet"
+"#);
+    h
+}
+
+/// TC-461: feature domain add validates vocabulary
+#[test]
+fn tc_461_feature_domain_add_validates_vocabulary() {
+    let h = fixture_with_domains();
+    h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n");
+
+    // Invalid domain → exit 1 with E012
+    let out = h.run(&["feature", "domain", "FT-001", "--add", "invalid-domain"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E012");
+    out.assert_stderr_contains("invalid-domain");
+
+    // Valid domain → exit 0, appears in front-matter
+    let out2 = h.run(&["feature", "domain", "FT-001", "--add", "api"]);
+    out2.assert_exit(0);
+    let content = h.read("docs/features/FT-001-test.md");
+    assert!(content.contains("api"), "domain 'api' should appear in front-matter");
+}
+
+/// TC-462: feature domain add and remove idempotent
+#[test]
+fn tc_462_feature_domain_add_and_remove_idempotent() {
+    let h = fixture_with_domains();
+    h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n");
+
+    // Add api twice
+    h.run(&["feature", "domain", "FT-001", "--add", "api"]).assert_exit(0);
+    h.run(&["feature", "domain", "FT-001", "--add", "api"]).assert_exit(0);
+
+    // Verify api appears exactly once
+    let content = h.read("docs/features/FT-001-test.md");
+    let count = content.matches("api").count();
+    // In YAML list, "api" appears in domains list — should be exactly once as a list item
+    // The domains line should look like: domains:\n- api
+    assert!(content.contains("- api"), "should contain api");
+    // Check no duplicate by verifying the parsed file has only one occurrence in the domains list section
+    let domain_section: Vec<&str> = content.lines()
+        .skip_while(|l| !l.starts_with("domains:"))
+        .take_while(|l| l.starts_with("domains:") || l.starts_with("- "))
+        .filter(|l| l.contains("api"))
+        .collect();
+    assert_eq!(domain_section.len(), 1, "api should appear exactly once in domains list, found: {:?}", domain_section);
+
+    // Remove storage (not in list) → no-op, exit 0
+    let before = h.read("docs/features/FT-001-test.md");
+    h.run(&["feature", "domain", "FT-001", "--remove", "storage"]).assert_exit(0);
+    let after = h.read("docs/features/FT-001-test.md");
+    // File should be effectively unchanged in terms of domains content
+    assert!(after.contains("- api"), "api still present after no-op remove");
+}
+
+/// TC-463: feature acknowledge requires non-empty reason
+#[test]
+fn tc_463_feature_acknowledge_requires_nonempty_reason() {
+    let h = fixture_with_domains();
+    h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains:\n- security\n---\n\nBody.\n");
+
+    // Without --reason → exit 1 with E011
+    let out = h.run(&["feature", "acknowledge", "FT-001", "--domain", "security"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E011");
+
+    // With whitespace-only --reason → exit 1 with E011
+    let out2 = h.run(&["feature", "acknowledge", "FT-001", "--domain", "security", "--reason", "  "]);
+    out2.assert_exit(1);
+    out2.assert_stderr_contains("E011");
+
+    // With valid reason → exit 0
+    let out3 = h.run(&["feature", "acknowledge", "FT-001", "--domain", "security", "--reason", "No trust boundaries introduced"]);
+    out3.assert_exit(0);
+    let content = h.read("docs/features/FT-001-test.md");
+    assert!(content.contains("security"), "domains-acknowledged should contain security");
+    assert!(content.contains("No trust boundaries introduced"), "acknowledgement should contain the reason");
+}
+
+/// TC-464: adr scope validates enum values
+#[test]
+fn tc_464_adr_scope_validates_enum_values() {
+    let h = fixture_with_domains();
+    h.write("docs/adrs/ADR-001-test.md", "---\nid: ADR-001\ntitle: Test ADR\nstatus: proposed\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nBody.\n");
+
+    // Invalid scope → exit 1 with E001
+    let out = h.run(&["adr", "scope", "ADR-001", "invalid-scope"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E001");
+
+    // Valid values → exit 0
+    for scope in &["cross-cutting", "domain", "feature-specific"] {
+        let out = h.run(&["adr", "scope", "ADR-001", scope]);
+        out.assert_exit(0);
+        let content = h.read("docs/adrs/ADR-001-test.md");
+        assert!(content.contains(&format!("scope: {}", scope)),
+            "scope should be set to {} in front-matter, got:\n{}", scope, content);
+    }
+}
+
+/// TC-465: adr supersede bidirectional write
+#[test]
+fn tc_465_adr_supersede_bidirectional_write() {
+    let h = fixture_with_domains();
+    h.write("docs/adrs/ADR-001-old.md", "---\nid: ADR-001\ntitle: Old Decision\nstatus: accepted\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nOld body.\n");
+    h.write("docs/adrs/ADR-002-new.md", "---\nid: ADR-002\ntitle: New Decision\nstatus: proposed\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nNew body.\n");
+
+    // Supersede: ADR-002 supersedes ADR-001
+    let out = h.run(&["adr", "supersede", "ADR-002", "--supersedes", "ADR-001"]);
+    out.assert_exit(0);
+
+    // Check ADR-002 has supersedes: [ADR-001]
+    let content_new = h.read("docs/adrs/ADR-002-new.md");
+    assert!(content_new.contains("ADR-001"), "ADR-002 should list ADR-001 in supersedes");
+
+    // Check ADR-001 has superseded-by: [ADR-002]
+    let content_old = h.read("docs/adrs/ADR-001-old.md");
+    assert!(content_old.contains("ADR-002"), "ADR-001 should list ADR-002 in superseded-by");
+    // ADR-001 was accepted, should be superseded now
+    assert!(content_old.contains("superseded"), "ADR-001 status should be superseded");
+
+    // Remove the supersession link
+    let out2 = h.run(&["adr", "supersede", "ADR-002", "--remove", "ADR-001"]);
+    out2.assert_exit(0);
+
+    // Both links should be removed
+    let content_new2 = h.read("docs/adrs/ADR-002-new.md");
+    let content_old2 = h.read("docs/adrs/ADR-001-old.md");
+    // After removal, ADR-002 supersedes should be empty and ADR-001 superseded-by should be empty
+    assert!(!content_new2.contains("- ADR-001"), "ADR-001 should be removed from ADR-002 supersedes");
+    assert!(!content_old2.contains("- ADR-002"), "ADR-002 should be removed from ADR-001 superseded-by");
+}
+
+/// TC-466: adr supersede detects cycles
+#[test]
+fn tc_466_adr_supersede_detects_cycles() {
+    let h = fixture_with_domains();
+    h.write("docs/adrs/ADR-001-a.md", "---\nid: ADR-001\ntitle: A\nstatus: proposed\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nA.\n");
+    h.write("docs/adrs/ADR-002-b.md", "---\nid: ADR-002\ntitle: B\nstatus: proposed\nfeatures: []\nsupersedes: [ADR-001]\nsuperseded-by: []\n---\n\nB.\n");
+    h.write("docs/adrs/ADR-003-c.md", "---\nid: ADR-003\ntitle: C\nstatus: proposed\nfeatures: []\nsupersedes: [ADR-002]\nsuperseded-by: []\n---\n\nC.\n");
+
+    // Also set up the reverse links
+    h.write("docs/adrs/ADR-001-a.md", "---\nid: ADR-001\ntitle: A\nstatus: proposed\nfeatures: []\nsupersedes: []\nsuperseded-by: [ADR-002]\n---\n\nA.\n");
+    h.write("docs/adrs/ADR-002-b.md", "---\nid: ADR-002\ntitle: B\nstatus: proposed\nfeatures: []\nsupersedes: [ADR-001]\nsuperseded-by: [ADR-003]\n---\n\nB.\n");
+
+    // Save file contents before the cycle attempt
+    let before_a = h.read("docs/adrs/ADR-001-a.md");
+
+    // ADR-001 supersedes ADR-003 would create cycle: A -> C -> B -> A
+    let out = h.run(&["adr", "supersede", "ADR-001", "--supersedes", "ADR-003"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E004");
+
+    // Verify no files were modified
+    let after_a = h.read("docs/adrs/ADR-001-a.md");
+    assert_eq!(before_a, after_a, "ADR-001 should not be modified on cycle detection");
+}
+
+/// TC-467: test runner validates runner enum
+#[test]
+fn tc_467_test_runner_validates_runner_enum() {
+    let h = fixture_with_domains();
+    h.write("docs/tests/TC-001-test.md", "---\nid: TC-001\ntitle: Test TC\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: []\n  adrs: []\nphase: 1\n---\n\nDesc.\n");
+
+    // Invalid runner → exit 1 with E001
+    let out = h.run(&["test", "runner", "TC-001", "--runner", "invalid-runner", "--args", "test_name"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E001");
+
+    // Valid runners → exit 0
+    for runner in &["cargo-test", "bash", "pytest", "custom"] {
+        let out = h.run(&["test", "runner", "TC-001", "--runner", runner]);
+        out.assert_exit(0);
+        let content = h.read("docs/tests/TC-001-test.md");
+        assert!(content.contains(&format!("runner: {}", runner)),
+            "runner should be set to {} in front-matter, got:\n{}", runner, content);
+    }
+}
+
+/// TC-468: adr source files add and remove
+#[test]
+fn tc_468_adr_source_files_add_and_remove() {
+    let h = fixture_with_domains();
+    h.write("docs/adrs/ADR-001-test.md", "---\nid: ADR-001\ntitle: Test ADR\nstatus: proposed\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nBody.\n");
+
+    // Create a real file for one path
+    h.write("src/drift.rs", "// drift module\n");
+    std::fs::create_dir_all(h.dir.path().join("src/drift")).expect("mkdir");
+
+    // Add source files
+    let out = h.run(&["adr", "source-files", "ADR-001", "--add", "src/drift.rs", "--add", "src/drift/"]);
+    out.assert_exit(0);
+    let content = h.read("docs/adrs/ADR-001-test.md");
+    assert!(content.contains("src/drift.rs"), "should contain src/drift.rs");
+    assert!(content.contains("src/drift/"), "should contain src/drift/");
+
+    // Remove one
+    let out2 = h.run(&["adr", "source-files", "ADR-001", "--remove", "src/drift.rs"]);
+    out2.assert_exit(0);
+    let content2 = h.read("docs/adrs/ADR-001-test.md");
+    assert!(!content2.contains("src/drift.rs"), "src/drift.rs should be removed");
+    assert!(content2.contains("src/drift/"), "src/drift/ should remain");
+
+    // Add nonexistent path → exit 0 with W-class warning
+    let out3 = h.run(&["adr", "source-files", "ADR-001", "--add", "src/nonexistent.rs"]);
+    out3.assert_exit(0);
+    out3.assert_stderr_contains("warning");
+    let content3 = h.read("docs/adrs/ADR-001-test.md");
+    assert!(content3.contains("src/nonexistent.rs"), "nonexistent path should still be added");
+}
+
+/// TC-469: MCP tools mirror CLI for all field mutations
+#[test]
+fn tc_469_mcp_tools_mirror_cli_for_all_field_mutations() {
+    let h = fixture_with_domains();
+    h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n");
+    h.write("docs/adrs/ADR-001-test.md", "---\nid: ADR-001\ntitle: Test ADR\nstatus: proposed\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nBody.\n");
+    h.write("docs/adrs/ADR-002-test.md", "---\nid: ADR-002\ntitle: Test ADR 2\nstatus: proposed\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nBody.\n");
+    h.write("docs/tests/TC-001-test.md", "---\nid: TC-001\ntitle: Test TC\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: []\n  adrs: []\nphase: 1\n---\n\nDesc.\n");
+
+    // Test product_feature_domain via MCP
+    let req = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_feature_domain","arguments":{"id":"FT-001","add":["api"]}}}"#;
+    let out = h.run_with_stdin(&["mcp"], req);
+    assert!(out.stdout.contains("api"), "MCP feature_domain should add api domain");
+    let content = h.read("docs/features/FT-001-test.md");
+    assert!(content.contains("api"), "feature file should have api domain");
+
+    // Test product_feature_acknowledge via MCP
+    let req2 = r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_feature_acknowledge","arguments":{"id":"FT-001","domain":"security","reason":"No trust boundaries"}}}"#;
+    let out2 = h.run_with_stdin(&["mcp"], req2);
+    assert!(!out2.stdout.contains("error"), "MCP feature_acknowledge should succeed: {}", out2.stdout);
+
+    // Test product_adr_domain via MCP
+    let req3 = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"product_adr_domain","arguments":{"id":"ADR-001","add":["error-handling"]}}}"#;
+    let out3 = h.run_with_stdin(&["mcp"], req3);
+    assert!(out3.stdout.contains("error-handling"), "MCP adr_domain should add error-handling");
+
+    // Test product_adr_scope via MCP
+    let req4 = r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"product_adr_scope","arguments":{"id":"ADR-001","scope":"cross-cutting"}}}"#;
+    let out4 = h.run_with_stdin(&["mcp"], req4);
+    assert!(out4.stdout.contains("cross-cutting"), "MCP adr_scope should set cross-cutting");
+
+    // Test product_adr_supersede via MCP
+    let req5 = r#"{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"product_adr_supersede","arguments":{"id":"ADR-002","supersedes":"ADR-001"}}}"#;
+    let out5 = h.run_with_stdin(&["mcp"], req5);
+    assert!(out5.stdout.contains("added"), "MCP adr_supersede should add link: {}", out5.stdout);
+
+    // Test product_adr_source_files via MCP
+    let req6 = r#"{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"product_adr_source_files","arguments":{"id":"ADR-001","add":["src/test.rs"]}}}"#;
+    let out6 = h.run_with_stdin(&["mcp"], req6);
+    assert!(out6.stdout.contains("src/test.rs"), "MCP adr_source_files should add path");
+
+    // Test product_test_runner via MCP
+    let req7 = r#"{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"product_test_runner","arguments":{"id":"TC-001","runner":"cargo-test","args":"tc_001_test"}}}"#;
+    let out7 = h.run_with_stdin(&["mcp"], req7);
+    assert!(out7.stdout.contains("cargo-test"), "MCP test_runner should set runner");
+
+    // Test that write tools require mcp.write = true
+    let h2 = Harness::new(); // default harness has no [mcp] section (write=false)
+    h2.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n");
+    let req_write = r#"{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"product_feature_domain","arguments":{"id":"FT-001","add":["api"]}}}"#;
+    let out_write = h2.run_with_stdin(&["mcp"], req_write);
+    assert!(out_write.stdout.contains("Write tools are disabled") || out_write.stdout.contains("error"),
+        "Write tools should be disabled without mcp.write=true: {}", out_write.stdout);
+}
+
+/// TC-470: all field mutation tools are idempotent
+#[test]
+fn tc_470_all_field_mutation_tools_are_idempotent() {
+    let h = fixture_with_domains();
+    h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n");
+    h.write("docs/adrs/ADR-001-test.md", "---\nid: ADR-001\ntitle: Test ADR\nstatus: proposed\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nBody.\n");
+    h.write("docs/adrs/ADR-002-test.md", "---\nid: ADR-002\ntitle: Test ADR 2\nstatus: proposed\nfeatures: []\nsupersedes: []\nsuperseded-by: []\n---\n\nBody.\n");
+    h.write("docs/tests/TC-001-test.md", "---\nid: TC-001\ntitle: Test TC\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: []\n  adrs: []\nphase: 1\n---\n\nDesc.\n");
+
+    // feature_domain: apply twice, same result
+    h.run(&["feature", "domain", "FT-001", "--add", "api"]).assert_exit(0);
+    let after_first = h.read("docs/features/FT-001-test.md");
+    h.run(&["feature", "domain", "FT-001", "--add", "api"]).assert_exit(0);
+    let after_second = h.read("docs/features/FT-001-test.md");
+    assert_eq!(after_first, after_second, "feature_domain should be idempotent");
+
+    // feature_acknowledge: apply twice, same result
+    h.run(&["feature", "acknowledge", "FT-001", "--domain", "security", "--reason", "No new trust boundaries"]).assert_exit(0);
+    let after_first = h.read("docs/features/FT-001-test.md");
+    h.run(&["feature", "acknowledge", "FT-001", "--domain", "security", "--reason", "No new trust boundaries"]).assert_exit(0);
+    let after_second = h.read("docs/features/FT-001-test.md");
+    assert_eq!(after_first, after_second, "feature_acknowledge should be idempotent");
+
+    // adr_domain: apply twice, same result
+    h.run(&["adr", "domain", "ADR-001", "--add", "error-handling"]).assert_exit(0);
+    let after_first = h.read("docs/adrs/ADR-001-test.md");
+    h.run(&["adr", "domain", "ADR-001", "--add", "error-handling"]).assert_exit(0);
+    let after_second = h.read("docs/adrs/ADR-001-test.md");
+    assert_eq!(after_first, after_second, "adr_domain should be idempotent");
+
+    // adr_scope: apply twice, same result
+    h.run(&["adr", "scope", "ADR-001", "cross-cutting"]).assert_exit(0);
+    let after_first = h.read("docs/adrs/ADR-001-test.md");
+    h.run(&["adr", "scope", "ADR-001", "cross-cutting"]).assert_exit(0);
+    let after_second = h.read("docs/adrs/ADR-001-test.md");
+    assert_eq!(after_first, after_second, "adr_scope should be idempotent");
+
+    // adr_supersede: apply twice, same result
+    h.run(&["adr", "supersede", "ADR-002", "--supersedes", "ADR-001"]).assert_exit(0);
+    let after_first_a = h.read("docs/adrs/ADR-001-test.md");
+    let after_first_b = h.read("docs/adrs/ADR-002-test.md");
+    h.run(&["adr", "supersede", "ADR-002", "--supersedes", "ADR-001"]).assert_exit(0);
+    let after_second_a = h.read("docs/adrs/ADR-001-test.md");
+    let after_second_b = h.read("docs/adrs/ADR-002-test.md");
+    assert_eq!(after_first_a, after_second_a, "adr_supersede should be idempotent (target)");
+    assert_eq!(after_first_b, after_second_b, "adr_supersede should be idempotent (source)");
+
+    // adr_source_files: apply twice, same result
+    h.run(&["adr", "source-files", "ADR-001", "--add", "src/test.rs"]).assert_exit(0);
+    let after_first = h.read("docs/adrs/ADR-001-test.md");
+    h.run(&["adr", "source-files", "ADR-001", "--add", "src/test.rs"]).assert_exit(0);
+    let after_second = h.read("docs/adrs/ADR-001-test.md");
+    assert_eq!(after_first, after_second, "adr_source_files should be idempotent");
+
+    // test_runner: apply twice, same result
+    h.run(&["test", "runner", "TC-001", "--runner", "cargo-test", "--args", "tc_001_test"]).assert_exit(0);
+    let after_first = h.read("docs/tests/TC-001-test.md");
+    h.run(&["test", "runner", "TC-001", "--runner", "cargo-test", "--args", "tc_001_test"]).assert_exit(0);
+    let after_second = h.read("docs/tests/TC-001-test.md");
+    assert_eq!(after_first, after_second, "test_runner should be idempotent");
+}
+
+/// TC-471: front-matter field management complete (exit-criteria)
+/// Verifies all FT-038 tools are available and functional end-to-end.
+#[test]
+fn tc_471_front_matter_field_management_complete() {
+    let h = fixture_with_domains();
+    // 1. Create a feature, ADR, and TC
+    h.run(&["feature", "new", "Test Feature"]).assert_exit(0);
+    h.run(&["adr", "new", "Test Decision"]).assert_exit(0);
+    h.run(&["test", "new", "Test Criterion"]).assert_exit(0);
+
+    // 2. Feature domain management
+    h.run(&["feature", "domain", "FT-001", "--add", "api", "--add", "security"]).assert_exit(0);
+    h.run(&["feature", "domain", "FT-001", "--remove", "security"]).assert_exit(0);
+    let content = h.read("docs/features/FT-001-test-feature.md");
+    assert!(content.contains("api"), "feature should have api domain");
+
+    // 3. Feature acknowledgement
+    h.run(&["feature", "acknowledge", "FT-001", "--domain", "networking", "--reason", "Not applicable"]).assert_exit(0);
+    let content = h.read("docs/features/FT-001-test-feature.md");
+    assert!(content.contains("Not applicable"), "feature should have acknowledgement");
+
+    // 4. ADR domain + scope
+    h.run(&["adr", "domain", "ADR-001", "--add", "error-handling"]).assert_exit(0);
+    h.run(&["adr", "scope", "ADR-001", "cross-cutting"]).assert_exit(0);
+    let content = h.read("docs/adrs/ADR-001-test-decision.md");
+    assert!(content.contains("error-handling"), "ADR should have error-handling domain");
+    assert!(content.contains("cross-cutting"), "ADR should have cross-cutting scope");
+
+    // 5. ADR source files
+    h.run(&["adr", "source-files", "ADR-001", "--add", "src/test.rs"]).assert_exit(0);
+
+    // 6. Test runner configuration
+    h.run(&["test", "runner", "TC-001", "--runner", "cargo-test", "--args", "tc_001_test"]).assert_exit(0);
+    let content = h.read("docs/tests/TC-001-test-criterion.md");
+    assert!(content.contains("cargo-test"), "TC should have runner");
+
+    // 7. Full authoring session is possible without manual YAML editing
+    // All above commands succeeded — complete authoring flow works
+}

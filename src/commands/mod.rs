@@ -1,6 +1,7 @@
 //! Command dispatch module — subcommand enums, run(), shared helpers.
 
 mod adr;
+mod adr_write;
 mod agent_init;
 mod author;
 mod checklist;

@@ -750,19 +750,19 @@
 - [x] TC-367: platform_verify_cross_cutting (scenario) — passing
 - [x] TC-368: product migrate link-tests (scenario) — passing
 
-### FT-038 — Front-Matter Field Management [ ]
+### FT-038 — Front-Matter Field Management [x]
 
-- [ ] ADR-037: Front-Matter Field Management — Granular Mutation Tools (proposed)
+- [x] ADR-037: Front-Matter Field Management — Granular Mutation Tools (accepted)
 - [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
-- [ ] TC-461: feature domain add validates vocabulary (scenario) — unimplemented
-- [ ] TC-462: feature domain add and remove idempotent (scenario) — unimplemented
-- [ ] TC-463: feature acknowledge requires non-empty reason (scenario) — unimplemented
-- [ ] TC-464: adr scope validates enum values (scenario) — unimplemented
-- [ ] TC-465: adr supersede bidirectional write (scenario) — unimplemented
-- [ ] TC-466: adr supersede detects cycles (scenario) — unimplemented
-- [ ] TC-467: test runner validates runner enum (scenario) — unimplemented
-- [ ] TC-468: adr source files add and remove (scenario) — unimplemented
-- [ ] TC-469: MCP tools mirror CLI for all field mutations (scenario) — unimplemented
-- [ ] TC-470: all field mutation tools are idempotent (invariant) — unimplemented
-- [ ] TC-471: front-matter field management complete (exit-criteria) — unimplemented
+- [x] TC-461: feature domain add validates vocabulary (scenario) — passing
+- [x] TC-462: feature domain add and remove idempotent (scenario) — passing
+- [x] TC-463: feature acknowledge requires non-empty reason (scenario) — passing
+- [x] TC-464: adr scope validates enum values (scenario) — passing
+- [x] TC-465: adr supersede bidirectional write (scenario) — passing
+- [x] TC-466: adr supersede detects cycles (scenario) — passing
+- [x] TC-467: test runner validates runner enum (scenario) — passing
+- [x] TC-468: adr source files add and remove (scenario) — passing
+- [x] TC-469: MCP tools mirror CLI for all field mutations (scenario) — passing
+- [x] TC-470: all field mutation tools are idempotent (invariant) — passing
+- [x] TC-471: front-matter field management complete (exit-criteria) — passing
 

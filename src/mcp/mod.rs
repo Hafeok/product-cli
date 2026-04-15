@@ -7,6 +7,7 @@
 pub mod registry;
 mod read_handlers;
 mod write_handlers;
+mod field_handlers;
 pub mod stdio;
 pub mod http;
 pub mod scaffold;

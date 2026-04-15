@@ -70,9 +70,23 @@ pub enum FeatureCommands {
         /// ADR to acknowledge
         #[arg(long)]
         adr: Option<String>,
-        /// Reasoning (required)
+        /// Reasoning (required unless --remove)
         #[arg(long)]
-        reason: String,
+        reason: Option<String>,
+        /// Remove the acknowledgement instead of adding
+        #[arg(long)]
+        remove: bool,
+    },
+    /// Add or remove concern domains on a feature
+    Domain {
+        /// Feature ID
+        id: String,
+        /// Domain to add (repeatable)
+        #[arg(long)]
+        add: Vec<String>,
+        /// Domain to remove (repeatable)
+        #[arg(long)]
+        remove: Vec<String>,
     },
 }
 
@@ -91,8 +105,11 @@ pub(crate) fn handle_feature(cmd: FeatureCommands, fmt: &str) -> BoxResult {
         FeatureCommands::Status { id, new_status } => {
             feature_write_ops::feature_status(&id, &new_status)
         }
-        FeatureCommands::Acknowledge { id, domain, adr, reason } => {
-            feature_write_ops::feature_acknowledge(&id, domain, adr, &reason)
+        FeatureCommands::Acknowledge { id, domain, adr, reason, remove } => {
+            feature_write_ops::feature_acknowledge(&id, domain, adr, reason, remove)
+        }
+        FeatureCommands::Domain { id, add, remove } => {
+            feature_write_ops::feature_domain(&id, add, remove)
         }
     }
 }

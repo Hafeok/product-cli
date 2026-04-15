@@ -2,7 +2,7 @@
 id: FT-038
 title: Front-Matter Field Management
 phase: 5
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-037

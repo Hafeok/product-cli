@@ -334,7 +334,7 @@ impl KnowledgeGraph {
         result.warnings.extend(hash_result.warnings);
     }
 
-    pub(crate) fn detect_supersession_cycle(&self) -> Option<Vec<String>> {
+    pub fn detect_supersession_cycle(&self) -> Option<Vec<String>> {
         for adr in self.adrs.values() {
             let mut visited = std::collections::HashSet::new();
             let mut current = adr.front.id.clone();

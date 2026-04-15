@@ -4,6 +4,9 @@ use clap::Subcommand;
 use product_lib::{author, error::ProductError, fileops, hash, parser, types};
 
 use super::{acquire_write_lock, load_graph, BoxResult};
+mod adr_write_ops {
+    pub(crate) use super::super::adr_write::*;
+}
 
 #[derive(Subcommand)]
 pub enum AdrCommands {
@@ -55,6 +58,47 @@ pub enum AdrCommands {
         #[arg(long)]
         all: bool,
     },
+    /// Add or remove concern domains on an ADR
+    Domain {
+        /// ADR ID
+        id: String,
+        /// Domain to add (repeatable)
+        #[arg(long)]
+        add: Vec<String>,
+        /// Domain to remove (repeatable)
+        #[arg(long)]
+        remove: Vec<String>,
+    },
+    /// Set ADR scope
+    Scope {
+        /// ADR ID
+        id: String,
+        /// Scope value: cross-cutting, domain, feature-specific
+        scope: String,
+    },
+    /// Manage ADR supersession (bidirectional write)
+    Supersede {
+        /// ADR ID (the newer ADR)
+        id: String,
+        /// ADR that this ADR supersedes
+        #[arg(long)]
+        supersedes: Option<String>,
+        /// Remove supersession link to this ADR
+        #[arg(long)]
+        remove: Option<String>,
+    },
+    /// Add or remove governed source files on an ADR
+    #[command(name = "source-files")]
+    SourceFiles {
+        /// ADR ID
+        id: String,
+        /// Source file/directory to add (repeatable)
+        #[arg(long)]
+        add: Vec<String>,
+        /// Source file/directory to remove (repeatable)
+        #[arg(long)]
+        remove: Vec<String>,
+    },
 }
 
 pub(crate) fn handle_adr(cmd: AdrCommands, fmt: &str) -> BoxResult {
@@ -68,6 +112,10 @@ pub(crate) fn handle_adr(cmd: AdrCommands, fmt: &str) -> BoxResult {
         AdrCommands::Review { staged } => adr_review(staged),
         AdrCommands::Amend { id, reason } => adr_amend(&id, reason),
         AdrCommands::Rehash { id, all } => adr_rehash(id, all),
+        AdrCommands::Domain { id, add, remove } => adr_write_ops::adr_domain(&id, add, remove),
+        AdrCommands::Scope { id, scope } => adr_write_ops::adr_scope(&id, &scope),
+        AdrCommands::Supersede { id, supersedes, remove } => adr_write_ops::adr_supersede(&id, supersedes, remove),
+        AdrCommands::SourceFiles { id, add, remove } => adr_write_ops::adr_source_files(&id, add, remove),
     }
 }
 
@@ -345,3 +393,4 @@ fn rehash_single(id: Option<String>, graph: &product_lib::graph::KnowledgeGraph)
     println!("{} sealed: content-hash = {}", adr_id, h);
     Ok(())
 }
+

@@ -38,6 +38,26 @@ pub enum TestCommands {
         /// New status: unimplemented, implemented, passing, failing
         new_status: String,
     },
+    /// Configure test runner (runner, args, timeout, requires)
+    Runner {
+        /// Test ID
+        id: String,
+        /// Runner name: cargo-test, bash, pytest, custom
+        #[arg(long)]
+        runner: Option<String>,
+        /// Runner arguments (e.g. test function name)
+        #[arg(long)]
+        args: Option<String>,
+        /// Runner timeout (e.g. "60s")
+        #[arg(long)]
+        timeout: Option<String>,
+        /// Add prerequisite (repeatable)
+        #[arg(long)]
+        requires: Vec<String>,
+        /// Remove prerequisite (repeatable)
+        #[arg(long)]
+        remove_requires: Vec<String>,
+    },
 }
 
 pub(crate) fn handle_test(cmd: TestCommands, fmt: &str) -> BoxResult {
@@ -52,6 +72,14 @@ pub(crate) fn handle_test(cmd: TestCommands, fmt: &str) -> BoxResult {
         TestCommands::Untested => test_untested(),
         TestCommands::New { title, test_type } => test_new(&title, &test_type),
         TestCommands::Status { id, new_status } => test_status(&id, &new_status),
+        TestCommands::Runner {
+            id,
+            runner,
+            args,
+            timeout,
+            requires,
+            remove_requires,
+        } => test_runner(&id, runner, args, timeout, requires, remove_requires),
     }
 }
 
@@ -238,6 +266,80 @@ fn test_status(id: &str, new_status: &str) -> BoxResult {
     let content = parser::render_test(&front, &t.body);
     fileops::write_file_atomic(&t.path, &content)?;
     println!("{} status -> {}", id, status);
+    Ok(())
+}
+
+const VALID_RUNNERS: &[&str] = &["cargo-test", "bash", "pytest", "custom"];
+
+fn test_runner(
+    id: &str,
+    runner: Option<String>,
+    args: Option<String>,
+    timeout: Option<String>,
+    requires: Vec<String>,
+    remove_requires: Vec<String>,
+) -> BoxResult {
+    let _lock = acquire_write_lock()?;
+    let (config, _, graph) = load_graph()?;
+    let t = graph
+        .tests
+        .get(id)
+        .ok_or_else(|| ProductError::NotFound(format!("test {}", id)))?;
+
+    let mut front = t.front.clone();
+
+    // Validate runner enum (E001)
+    if let Some(ref r) = runner {
+        if !VALID_RUNNERS.contains(&r.as_str()) {
+            return Err(Box::new(ProductError::ConfigError(format!(
+                "error[E001]: unknown runner '{}'. Valid values: {}",
+                r,
+                VALID_RUNNERS.join(", ")
+            ))));
+        }
+        front.runner = Some(r.clone());
+    }
+
+    if let Some(ref a) = args {
+        front.runner_args = Some(a.clone());
+    }
+
+    if let Some(ref t_str) = timeout {
+        // Parse timeout — accept "60s" or plain "60"
+        let secs = t_str
+            .trim_end_matches('s')
+            .parse::<u64>()
+            .map_err(|_| ProductError::ConfigError(format!("invalid timeout: {}", t_str)))?;
+        front.runner_timeout = Some(secs);
+    }
+
+    // Validate and add prerequisites (E001)
+    for req in &requires {
+        if !config.verify.prerequisites.contains_key(req) {
+            return Err(Box::new(ProductError::ConfigError(format!(
+                "error[E001]: unknown prerequisite '{}'. Check [verify.prerequisites] in product.toml",
+                req
+            ))));
+        }
+        if !front.requires.contains(req) {
+            front.requires.push(req.clone());
+        }
+    }
+
+    // Remove prerequisites (idempotent)
+    for req in &remove_requires {
+        front.requires.retain(|r| r != req);
+    }
+
+    let content = parser::render_test(&front, &t.body);
+    fileops::write_file_atomic(&t.path, &content)?;
+    println!(
+        "{} runner: {} args: {} timeout: {}",
+        id,
+        front.runner.as_deref().unwrap_or("(none)"),
+        front.runner_args.as_deref().unwrap_or("(none)"),
+        front.runner_timeout.map_or("(none)".to_string(), |t| format!("{}s", t)),
+    );
     Ok(())
 }
 

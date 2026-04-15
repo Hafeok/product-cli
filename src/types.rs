@@ -150,6 +150,21 @@ impl std::fmt::Display for AdrScope {
     }
 }
 
+impl std::str::FromStr for AdrScope {
+    type Err = String;
+    fn from_str(s: &str) -> std::result::Result<Self, String> {
+        match s {
+            "cross-cutting" => Ok(Self::CrossCutting),
+            "domain" => Ok(Self::Domain),
+            "feature-specific" => Ok(Self::FeatureSpecific),
+            _ => Err(format!(
+                "unknown scope: '{}'. Valid values: cross-cutting, domain, feature-specific",
+                s
+            )),
+        }
+    }
+}
+
 fn default_adr_status() -> AdrStatus {
     AdrStatus::Proposed
 }

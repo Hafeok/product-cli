@@ -272,7 +272,8 @@ pub(crate) fn feature_acknowledge(
     id: &str,
     domain: Option<String>,
     adr: Option<String>,
-    reason: &str,
+    reason: Option<String>,
+    remove: bool,
 ) -> BoxResult {
     let _lock = acquire_write_lock()?;
     let (_, _, graph) = load_graph()?;
@@ -281,14 +282,41 @@ pub(crate) fn feature_acknowledge(
         .get(id)
         .ok_or_else(|| ProductError::NotFound(format!("feature {}", id)))?;
 
+    if remove {
+        // Remove acknowledgement
+        let key = if let Some(ref d) = domain {
+            d.clone()
+        } else if let Some(ref a) = adr {
+            a.clone()
+        } else {
+            return Err(Box::new(ProductError::ConfigError(
+                "must specify --domain or --adr with --remove".to_string(),
+            )));
+        };
+        let mut front = feature.front.clone();
+        front.domains_acknowledged.remove(&key);
+        let content = parser::render_feature(&front, &feature.body);
+        fileops::write_file_atomic(&feature.path, &content)?;
+        println!("{} removed acknowledgement for '{}'", id, key);
+        return Ok(());
+    }
+
+    // Adding acknowledgement — reason is required
+    let reason_str = reason.unwrap_or_default();
+    if reason_str.trim().is_empty() {
+        return Err(Box::new(ProductError::ConfigError(
+            "error[E011]: acknowledgement requires non-empty --reason".to_string(),
+        )));
+    }
+
     let updated_front = if let Some(ref domain_name) = domain {
-        domains::acknowledge_domain(feature, domain_name, reason)?
+        domains::acknowledge_domain(feature, domain_name, &reason_str)?
     } else if let Some(ref adr_id) = adr {
         let adr_obj = graph
             .adrs
             .get(adr_id.as_str())
             .ok_or_else(|| ProductError::NotFound(format!("ADR {}", adr_id)))?;
-        domains::acknowledge_adr(feature, adr_obj, reason)?
+        domains::acknowledge_adr(feature, adr_obj, &reason_str)?
     } else {
         return Err(Box::new(ProductError::ConfigError(
             "must specify --domain or --adr".to_string(),
@@ -298,9 +326,53 @@ pub(crate) fn feature_acknowledge(
     let content = parser::render_feature(&updated_front, &feature.body);
     fileops::write_file_atomic(&feature.path, &content)?;
     if let Some(ref d) = domain {
-        println!("{} acknowledged domain '{}': {}", id, d, reason);
+        println!("{} acknowledged domain '{}': {}", id, d, reason_str);
     } else if let Some(ref a) = adr {
-        println!("{} acknowledged ADR '{}': {}", id, a, reason);
+        println!("{} acknowledged ADR '{}': {}", id, a, reason_str);
     }
+    Ok(())
+}
+
+pub(crate) fn feature_domain(
+    id: &str,
+    add: Vec<String>,
+    remove: Vec<String>,
+) -> BoxResult {
+    let _lock = acquire_write_lock()?;
+    let (config, _, graph) = load_graph()?;
+    let feature = graph
+        .features
+        .get(id)
+        .ok_or_else(|| ProductError::NotFound(format!("feature {}", id)))?;
+
+    // Validate domains against vocabulary (E012)
+    for domain in &add {
+        if !config.domains.contains_key(domain) {
+            return Err(Box::new(ProductError::ConfigError(format!(
+                "error[E012]: unknown domain '{}'\n   = hint: check [domains] vocabulary in product.toml",
+                domain
+            ))));
+        }
+    }
+
+    let mut front = feature.front.clone();
+
+    // Add domains (idempotent — skip duplicates)
+    for domain in &add {
+        if !front.domains.contains(domain) {
+            front.domains.push(domain.clone());
+        }
+    }
+
+    // Remove domains (idempotent — no-op if not present)
+    for domain in &remove {
+        front.domains.retain(|d| d != domain);
+    }
+
+    front.domains.sort();
+
+    let content = parser::render_feature(&front, &feature.body);
+    fileops::write_file_atomic(&feature.path, &content)?;
+    println!("{} domains: [{}]", id, front.domains.join(", "));
     Ok(())
 }

@@ -21,6 +21,9 @@ pub fn build_tool_list() -> Vec<ToolDef> {
     tools.extend(read_agent_context_tools());
     tools.extend(read_prompts_tools());
     tools.extend(write_create_tools());
+    tools.extend(write_field_domain_tools());
+    tools.extend(write_field_adr_tools());
+    tools.extend(write_field_test_tools());
     tools.extend(write_update_tools());
     tools
 }
@@ -211,6 +214,107 @@ fn write_create_tools() -> Vec<ToolDef> {
 // ---------------------------------------------------------------------------
 // Write tools: status updates, body edits, amendments
 // ---------------------------------------------------------------------------
+
+fn write_field_domain_tools() -> Vec<ToolDef> {
+    vec![
+        ToolDef {
+            name: "product_feature_domain".to_string(),
+            description: "Add or remove concern domains on a feature. Domains validated against product.toml.".to_string(),
+            requires_write: true,
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string"}, "add": {"type": "array", "items": {"type": "string"}},
+                    "remove": {"type": "array", "items": {"type": "string"}}
+                }, "required": ["id"]
+            }),
+        },
+        ToolDef {
+            name: "product_feature_acknowledge".to_string(),
+            description: "Acknowledge a domain gap on a feature with mandatory reasoning.".to_string(),
+            requires_write: true,
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string"}, "domain": {"type": "string"},
+                    "reason": {"type": "string"}, "remove": {"type": "boolean", "default": false}
+                }, "required": ["id", "domain"]
+            }),
+        },
+        ToolDef {
+            name: "product_adr_domain".to_string(),
+            description: "Add or remove concern domains on an ADR. Domains validated against product.toml.".to_string(),
+            requires_write: true,
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string"}, "add": {"type": "array", "items": {"type": "string"}},
+                    "remove": {"type": "array", "items": {"type": "string"}}
+                }, "required": ["id"]
+            }),
+        },
+    ]
+}
+
+fn write_field_adr_tools() -> Vec<ToolDef> {
+    vec![
+        ToolDef {
+            name: "product_adr_scope".to_string(),
+            description: "Set ADR scope: cross-cutting, domain, or feature-specific.".to_string(),
+            requires_write: true,
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string"},
+                    "scope": {"type": "string", "enum": ["cross-cutting", "domain", "feature-specific"]}
+                }, "required": ["id", "scope"]
+            }),
+        },
+        ToolDef {
+            name: "product_adr_supersede".to_string(),
+            description: "Declare or remove ADR supersession (bidirectional, with cycle detection).".to_string(),
+            requires_write: true,
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string"}, "supersedes": {"type": "string"},
+                    "remove": {"type": "string"}
+                }, "required": ["id"]
+            }),
+        },
+        ToolDef {
+            name: "product_adr_source_files".to_string(),
+            description: "Add or remove governed source files on an ADR for drift detection.".to_string(),
+            requires_write: true,
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string"}, "add": {"type": "array", "items": {"type": "string"}},
+                    "remove": {"type": "array", "items": {"type": "string"}}
+                }, "required": ["id"]
+            }),
+        },
+    ]
+}
+
+fn write_field_test_tools() -> Vec<ToolDef> {
+    vec![
+        ToolDef {
+            name: "product_test_runner".to_string(),
+            description: "Configure test runner: runner type, arguments, timeout, and prerequisites.".to_string(),
+            requires_write: true,
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string"},
+                    "runner": {"type": "string", "enum": ["cargo-test", "bash", "pytest", "custom"]},
+                    "args": {"type": "string"}, "timeout": {"type": "string"},
+                    "requires": {"type": "array", "items": {"type": "string"}}
+                }, "required": ["id"]
+            }),
+        },
+    ]
+}
 
 fn write_update_tools() -> Vec<ToolDef> {
     vec![

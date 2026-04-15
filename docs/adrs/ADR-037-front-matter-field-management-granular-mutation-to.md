@@ -1,12 +1,13 @@
 ---
 id: ADR-037
 title: Front-Matter Field Management — Granular Mutation Tools
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
 domains: []
 scope: domain
+content-hash: sha256:732c10ff9968964635ad31d4307a8a29394aef463ac09ac2fc77f9ff158d86a1
 ---
 
 **Status:** Proposed

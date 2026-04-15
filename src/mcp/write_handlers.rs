@@ -215,3 +215,4 @@ pub(crate) fn handle_adr_amend(args: &Value, graph: &KnowledgeGraph) -> Result<V
     crate::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))?;
     Ok(serde_json::json!({"id": id, "content_hash": new_hash, "amended": true}))
 }
+
