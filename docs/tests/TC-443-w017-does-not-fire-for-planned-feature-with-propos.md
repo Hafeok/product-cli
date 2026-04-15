@@ -4,8 +4,8 @@ title: W017 does not fire for planned feature with proposed ADR
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features: [FT-036]
+  adrs: [ADR-034]
 phase: 1
 ---
 

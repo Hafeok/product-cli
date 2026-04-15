@@ -4,8 +4,8 @@ title: superseded and abandoned ADRs satisfy lifecycle invariant
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features: [FT-036]
+  adrs: [ADR-034]
 phase: 1
 ---
 

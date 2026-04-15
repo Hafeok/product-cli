@@ -4,8 +4,8 @@ title: E016 names all proposed ADRs not just the first
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features: [FT-036]
+  adrs: [ADR-034]
 phase: 1
 ---
 

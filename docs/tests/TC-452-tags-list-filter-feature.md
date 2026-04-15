@@ -4,8 +4,8 @@ title: tags_list_filter_feature
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features: [FT-037]
+  adrs: [ADR-035, ADR-036]
 phase: 1
 ---
 

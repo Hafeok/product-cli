@@ -4,8 +4,8 @@ title: lifecycle gate exit criteria
 type: exit-criteria
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features: [FT-036]
+  adrs: [ADR-034]
 phase: 1
 ---
 

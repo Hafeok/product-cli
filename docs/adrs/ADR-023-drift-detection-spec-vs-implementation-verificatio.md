@@ -5,9 +5,15 @@ status: accepted
 features: []
 supersedes: []
 superseded-by: []
-domains: [api, observability]
+domains:
+- api
+- observability
 scope: domain
-content-hash: sha256:28a489d1060d7872a137f5d2b3f5adc29268eb19bec19db4f80866873c795c46
+content-hash: sha256:808e8266c396ac231f1b034e0881759c25ae478e888b1b8b17d1ce8a3b745bb8
+amendments:
+- date: 2026-04-15T10:17:10Z
+  reason: Add missing Rejected alternatives section to resolve G003 gap
+  previous-hash: sha256:28a489d1060d7872a137f5d2b3f5adc29268eb19bec19db4f80866873c795c46
 ---
 
 **Status:** Accepted
@@ -105,3 +111,9 @@ Same structure as `gaps.json`. Suppressions reference `DRIFT-{ADR_ID}-{CODE}-{HA
 - Drift detection requires source code access, which makes it qualitatively different from gap analysis. Gap analysis operates entirely within the docs graph. Drift analysis crosses the docs/code boundary. This distinction justifies a separate command, separate finding codes, and a separate baseline file.
 - `source-files` in ADR front-matter is the high-precision path. For ADRs governing specific subsystems (consensus, storage, IAM), the author knows exactly which files implement the decision. For cross-cutting ADRs (ADR-001 Rust), pattern-based discovery is appropriate.
 - D004 (undocumented implementation) is valuable during active development phases when code is written faster than specs. It prompts the developer to write the ADR that should govern the code they just wrote. It is low severity — not a failure, a reminder.
+
+**Rejected alternatives:**
+- **Static file lists only (no pattern discovery).** Requires every ADR author to enumerate governed files upfront. Too burdensome for cross-cutting ADRs (ADR-001 Rust governs every source file) and fragile for ADRs where the implementation evolves. Pattern-based discovery as a fallback catches files the author didn't anticipate.
+- **Full codebase scan on every drift check.** Sending the entire codebase to the LLM for every ADR check. Rejected: unbounded context size, prohibitive cost, and the LLM cannot reason accurately about drift when given thousands of lines of unrelated code. Scoped file association keeps the context bounded and relevant.
+- **Diff-based only (no full file context).** Sending only git diffs since the last check rather than the current file contents. Rejected: the LLM needs the full file to understand whether a change contradicts an ADR. A diff alone lacks the surrounding context needed to judge architectural compliance.
+- **Automated fix suggestions.** Having the LLM propose code fixes for detected drift. Rejected: drift findings should inform the developer, not auto-modify code. The developer decides whether the drift is intentional (spec needs updating) or accidental (code needs fixing).

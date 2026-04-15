@@ -4,8 +4,8 @@ title: tag_based_drift_detection_exit
 type: exit-criteria
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features: [FT-037]
+  adrs: [ADR-035, ADR-036]
 phase: 1
 ---
 

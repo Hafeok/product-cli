@@ -4,8 +4,8 @@ title: verify succeeds when all linked ADRs are accepted
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features: [FT-036]
+  adrs: [ADR-034]
 phase: 1
 ---
 

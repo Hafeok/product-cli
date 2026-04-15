@@ -5,9 +5,14 @@ status: accepted
 features: []
 supersedes: []
 superseded-by: []
-domains: [observability]
+domains:
+- observability
 scope: domain
-content-hash: sha256:37d76d04f58bb1fdda45d4d27828e911604a953fa1d4c17992bf851dc12af111
+content-hash: sha256:46b9fb048c41a8ac90470dee3ac8e76082e1ddf4239b2fd57cbe3fabfcdff937
+amendments:
+- date: 2026-04-15T10:17:11Z
+  reason: Add missing Rejected alternatives section to resolve G003 gap
+  previous-hash: sha256:37d76d04f58bb1fdda45d4d27828e911604a953fa1d4c17992bf851dc12af111
 ---
 
 **Status:** Accepted
@@ -135,3 +140,9 @@ current: 0.78  Δ7d: +0.03  Δ30d: +0.12  trend: ↑
 - ASCII sparklines in terminal are sufficient for a developer tool. An external dashboard would provide more visual richness but would require a server, a URL, and a login. The terminal is always available, especially during the authoring sessions where metrics are most relevant.
 - `implementation_velocity` is tracked but has no threshold. It is an informational metric — fast velocity is not always good (quality may be declining), slow velocity is not always bad (hard problems take time). It should be observed, not gated on.
 - Appending to `metrics.jsonl` rather than updating a single record means the full history is always available without a database. Trend computation reads all records at query time — acceptable for a file that grows by one line per merge to main.
+
+**Rejected alternatives:**
+- **External metrics database (Prometheus, InfluxDB).** Adds operational dependencies that contradict Product's repository-native design principle. The metric history should live alongside the code it measures, not in a separate system requiring its own deployment and maintenance.
+- **Per-commit snapshots instead of per-merge.** Recording metrics on every commit generates noise — WIP commits have incomplete metrics. Merge-to-main is the natural cadence: the repo is in a consistent state, all tests have passed, and the snapshot is meaningful.
+- **Threshold-only (no trend tracking).** Catching violations only when a threshold is breached misses gradual degradation. A metric declining steadily is a signal worth surfacing before it crosses the threshold. Trend arrows and sparklines make this visible early.
+- **Web dashboard instead of terminal output.** Provides richer visualization but requires a server, URL, and authentication. The terminal is always available during authoring sessions where metrics are most relevant. ASCII sparklines are sufficient for a developer tool.

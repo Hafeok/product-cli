@@ -4,8 +4,8 @@ title: verify exits E016 when linked ADR is proposed
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features: [FT-036]
+  adrs: [ADR-034]
 phase: 1
 ---
 

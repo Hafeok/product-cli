@@ -4,8 +4,8 @@ title: graph check emits W017 for complete feature with proposed ADR
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features: [FT-036]
+  adrs: [ADR-034]
 phase: 1
 ---
 
