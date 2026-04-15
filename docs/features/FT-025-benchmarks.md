@@ -10,7 +10,11 @@ adrs:
 tests:
 - TC-180
 domains: [observability]
-domains-acknowledged: {}
+domains-acknowledged:
+  observability: >
+    Benchmarks produce timing metrics and score comparisons but are not a
+    runtime observability surface. ADR-018 (testing strategy) governs the
+    benchmark approach; no dedicated observability ADR is needed.
 ---
 
 Benchmark suite that validates the core value proposition: LLM context assembled from the knowledge graph produces better results than naive approaches.

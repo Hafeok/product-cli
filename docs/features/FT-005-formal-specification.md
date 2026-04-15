@@ -14,7 +14,11 @@ tests:
 - TC-070
 - TC-161
 domains: [data-model, storage]
-domains-acknowledged: {}
+domains-acknowledged:
+  data-model: >
+    Formal types and invariants describe data constraints but do not define
+    persistent storage schemas. ADR-015 (file write safety) governs the
+    write path; formal blocks are parsed in-memory per ADR-011/ADR-016.
 ---
 
 ⟦Σ:Types⟧{

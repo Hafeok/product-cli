@@ -7,7 +7,8 @@ version: "6"
 status: active
 features:
   - FT-033
-adrs: []
+adrs:
+  - ADR-031
 availability-check: "cargo check"
 breaking-change-risk: low
 ---

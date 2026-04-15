@@ -21,7 +21,11 @@ tests:
 - TC-138
 - TC-139
 domains: [data-model, error-handling]
-domains-acknowledged: {}
+domains-acknowledged:
+  error-handling: >
+    Validation diagnostics (E0xx/W0xx) use the error model from ADR-013
+    which is linked via FT-010. The diagnostic format and exit codes are
+    already governed; no separate error-handling ADR is needed here.
 ---
 
 `product graph check` is the primary consistency tool. All output goes to stderr. Exit codes follow the three-tier scheme from ADR-009 and ADR-013.

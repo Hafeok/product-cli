@@ -8,7 +8,8 @@ status: active
 features:
   - FT-015
   - FT-025
-adrs: []
+adrs:
+  - ADR-018
 availability-check: "cargo check"
 breaking-change-risk: low
 ---

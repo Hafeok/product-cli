@@ -6,7 +6,8 @@ source: "https://crates.io/crates/uuid"
 version: "1"
 status: active
 features: []
-adrs: []
+adrs:
+  - ADR-001
 availability-check: "cargo check"
 breaking-change-risk: low
 ---
