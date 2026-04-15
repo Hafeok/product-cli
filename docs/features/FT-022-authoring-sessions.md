@@ -6,6 +6,7 @@ status: complete
 depends-on: []
 adrs:
 - ADR-022
+- ADR-020
 tests:
 - TC-116
 - TC-117
@@ -20,7 +21,8 @@ tests:
 - TC-322
 - TC-323
 - TC-324
-domains: [api]
+domains:
+- api
 domains-acknowledged: {}
 ---
 

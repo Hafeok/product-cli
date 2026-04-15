@@ -6,6 +6,7 @@ status: complete
 depends-on: []
 adrs:
 - ADR-027
+- ADR-022
 tests:
 - TC-168
 - TC-169
@@ -31,12 +32,11 @@ tests:
 - TC-366
 - TC-367
 - TC-368
-domains: [api, data-model]
+domains:
+- api
+- data-model
 domains-acknowledged:
-  api: >
-    The onboard command adds CLI subcommands but the API contract is
-    fully specified in ADR-027 (transitive TC link inference) which
-    is already linked. No separate API-domain ADR is required.
+  api: The onboard command adds CLI subcommands but the API contract is fully specified in ADR-027 (transitive TC link inference) which is already linked. No separate API-domain ADR is required.
 ---
 
 Codebase onboarding discovers load-bearing architectural decisions from an existing codebase and produces a minimum viable knowledge graph. See ADR-027 for the full specification.

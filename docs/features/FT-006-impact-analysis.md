@@ -7,6 +7,7 @@ depends-on:
 - FT-016
 adrs:
 - ADR-012
+- ADR-009
 tests:
 - TC-009
 - TC-010
@@ -36,7 +37,9 @@ tests:
 - TC-237
 - TC-238
 - TC-249
-domains: [data-model, api]
+domains:
+- data-model
+- api
 domains-acknowledged: {}
 ---
 

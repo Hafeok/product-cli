@@ -6,6 +6,7 @@ status: complete
 depends-on: []
 adrs:
 - ADR-020
+- ADR-031
 tests:
 - TC-099
 - TC-100
@@ -17,7 +18,10 @@ tests:
 - TC-106
 - TC-107
 - TC-165
-domains: [api, networking, security]
+domains:
+- api
+- networking
+- security
 domains-acknowledged: {}
 ---
 

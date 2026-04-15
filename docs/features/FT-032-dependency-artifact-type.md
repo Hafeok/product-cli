@@ -6,6 +6,7 @@ status: complete
 depends-on: []
 adrs:
 - ADR-030
+- ADR-002
 tests:
 - TC-381
 - TC-382
@@ -29,7 +30,9 @@ tests:
 - TC-400
 - TC-401
 - TC-403
-domains: [data-model, api]
+domains:
+- data-model
+- api
 domains-acknowledged: {}
 ---
 

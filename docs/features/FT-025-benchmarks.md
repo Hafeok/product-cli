@@ -7,14 +7,13 @@ depends-on:
 - FT-024
 adrs:
 - ADR-018
+- ADR-012
 tests:
 - TC-180
-domains: [observability]
+domains:
+- observability
 domains-acknowledged:
-  observability: >
-    Benchmarks produce timing metrics and score comparisons but are not a
-    runtime observability surface. ADR-018 (testing strategy) governs the
-    benchmark approach; no dedicated observability ADR is needed.
+  observability: Benchmarks produce timing metrics and score comparisons but are not a runtime observability surface. ADR-018 (testing strategy) governs the benchmark approach; no dedicated observability ADR is needed.
 ---
 
 Benchmark suite that validates the core value proposition: LLM context assembled from the knowledge graph produces better results than naive approaches.

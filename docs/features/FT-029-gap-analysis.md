@@ -6,6 +6,7 @@ status: complete
 depends-on: []
 adrs:
 - ADR-019
+- ADR-006
 tests:
 - TC-086
 - TC-087
@@ -20,7 +21,9 @@ tests:
 - TC-096
 - TC-097
 - TC-098
-domains: [observability, api]
+domains:
+- observability
+- api
 domains-acknowledged: {}
 ---
 

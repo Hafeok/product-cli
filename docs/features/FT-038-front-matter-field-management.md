@@ -6,6 +6,7 @@ status: planned
 depends-on: []
 adrs:
 - ADR-037
+- ADR-002
 tests:
 - TC-461
 - TC-462

@@ -6,11 +6,13 @@ status: complete
 depends-on: []
 adrs:
 - ADR-004
+- ADR-011
 tests:
 - TC-011
 - TC-012
 - TC-152
-domains: [data-model]
+domains:
+- data-model
 domains-acknowledged: {}
 ---
 
