@@ -24,7 +24,7 @@ tests:
 - TC-458
 - TC-459
 - TC-460
-domains: []
+domains: [observability, data-model]
 domains-acknowledged: {}
 ---
 

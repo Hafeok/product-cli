@@ -2,10 +2,10 @@
 id: ADR-036
 title: Tag-Based Implementation Tracking
 status: proposed
-features: []
-supersedes: []
+features: [FT-037]
+supersedes: [ADR-035]
 superseded-by: []
-domains: []
+domains: [observability, data-model]
 scope: domain
 ---
 

@@ -4,7 +4,7 @@ title: Git-Based Implementation Tracking
 status: accepted
 features: []
 supersedes: []
-superseded-by: []
+superseded-by: [ADR-036]
 domains: [observability, data-model]
 scope: domain
 content-hash: sha256:b15d19c192b23c8cf6a5a1c36b26d5863aeefec203fcc137191473675bf33e56

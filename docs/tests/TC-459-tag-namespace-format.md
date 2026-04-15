@@ -13,22 +13,22 @@ phase: 1
 
 All tags created by Product follow the `product/{artifact-id}/{event}` namespace format.
 
-```precondition
-∀ tag T created by Product:
-  T.name is a string
-```
+## Formal Specification
 
-```postcondition
-∀ tag T created by Product:
-  T.name matches "product/{ID}/{EVENT}"
-  where ID matches [A-Z]+-\d{3,}
-  and EVENT matches [a-z][a-z0-9-]*
-```
+⟦Σ:Types⟧{
+  Tag ≜ { name: String }
+  ArtifactId ≜ String  // matches [A-Z]+-\d{3,}
+  Event ≜ String       // matches [a-z][a-z0-9-]*
+}
 
-```invariant
-No tag created by Product uses a name outside the product/ namespace.
-Tag names are deterministic given (artifact_id, event, existing_tags).
-```
+⟦Γ:Invariants⟧{
+  ∀t:Tag created by Product: t.name matches "product/{ID}/{EVENT}"
+    where ID matches [A-Z]+-\d{3,} ∧ EVENT matches [a-z][a-z0-9-]*
+
+  ∀t:Tag created by Product: ¬starts_with(t.name, prefix) for prefix ∉ {"product/"}
+
+  ∀(aid:ArtifactId, e:Event, tags:Set<Tag>): create_tag(aid, e, tags) is deterministic
+}
 
 ### Verification
 - Unit test on the `create_tag` function: given any artifact_id and event, the resulting tag name matches the pattern `product/{id}/{event}`
