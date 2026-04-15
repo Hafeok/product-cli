@@ -1,5 +1,9 @@
 name = "product-cli"
+version = "0.1"
 schema-version = "1"
+schema-version-warning = true
+checklist-in-gitignore = true
+
 [paths]
 features = "docs/features"
 adrs = "docs/adrs"
@@ -7,11 +11,68 @@ tests = "docs/tests"
 graph = "docs/graph"
 checklist = "docs/checklist.md"
 dependencies = "docs/dependencies"
+
 [prefixes]
 feature = "FT"
 adr = "ADR"
 test = "TC"
 dependency = "DEP"
+
+[phases]
+1 = "Core CLI & Graph"
+
+[mcp]
+write = true
+port = 7777
+# token = ""
+cors-origins = []
+
+[metrics.thresholds.spec_coverage]
+min = 0.8
+severity = "warning"
+
+[metrics.thresholds.test_coverage]
+min = 0.7
+severity = "warning"
+
+[metrics.thresholds.exit_criteria_coverage]
+min = 0.5
+severity = "warning"
+
+[metrics.thresholds.phi]
+min = 0.6
+severity = "warning"
+
+[metrics.thresholds.gap_density]
+max = 0.3
+severity = "warning"
+
+[metrics.thresholds.gap_resolution_rate]
+min = 0.5
+severity = "warning"
+
+[metrics.thresholds.drift_density]
+max = 0.2
+severity = "warning"
+
+[metrics.thresholds.centrality_stability]
+min = 0.0
+severity = "warning"
+
+[metrics.thresholds.implementation_velocity]
+min = 1.0
+severity = "warning"
+
+[agent-context]
+include-repo-state = true
+include-schemas = true
+include-domains = true
+include-tool-guide = true
+output-file = "AGENTS.md"
+
+[verify.prerequisites]
+build = "cargo build --quiet"
+lint = "cargo clippy --quiet -- -D warnings -D clippy::unwrap_used"
 
 [domains]
 security        = "Authentication, authorisation, secrets, trust boundaries"
