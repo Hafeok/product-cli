@@ -1,7 +1,7 @@
 //! Graph operations: check, rebuild, query, stats, centrality, autolink, coverage, infer.
 
 use clap::Subcommand;
-use product_lib::{domains, fileops, graph::inference, parser, rdf};
+use product_lib::{domains, fileops, graph::{inference, responsibility}, parser, rdf};
 use std::process;
 
 use super::{acquire_write_lock, load_graph, BoxResult};
@@ -78,14 +78,14 @@ fn graph_check(format: Option<String>, global_format: &str) -> BoxResult {
     let (config, _, graph) = load_graph()?;
     let mut result = graph.check();
     domains::validate_domains(&graph, &config.domains, &mut result.errors, &mut result.warnings);
+    responsibility::check_responsibility(&graph, config.responsibility(), &mut result);
+    for w in config.validate_product_section() { eprintln!("{}", w); }
     let fmt = format.as_deref().unwrap_or(global_format);
 
     if fmt == "json" {
         println!("{}", serde_json::to_string_pretty(&result.to_json())?);
         let code = result.exit_code();
-        if code != 0 {
-            process::exit(code);
-        }
+        if code != 0 { process::exit(code); }
     } else {
         result.print_stderr();
         let code = result.exit_code();

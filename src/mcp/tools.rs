@@ -14,7 +14,8 @@ pub struct ToolDef {
 
 /// Build the complete list of tool definitions
 pub fn build_tool_list() -> Vec<ToolDef> {
-    let mut tools = read_feature_tools();
+    let mut tools = read_product_tools();
+    tools.extend(read_feature_tools());
     tools.extend(read_adr_and_test_tools());
     tools.extend(read_graph_tools());
     tools.extend(read_agent_context_tools());
@@ -22,6 +23,21 @@ pub fn build_tool_list() -> Vec<ToolDef> {
     tools.extend(write_create_tools());
     tools.extend(write_update_tools());
     tools
+}
+
+// ---------------------------------------------------------------------------
+// Read tools: product identity (FT-039)
+// ---------------------------------------------------------------------------
+
+fn read_product_tools() -> Vec<ToolDef> {
+    vec![
+        ToolDef {
+            name: "product_responsibility".to_string(),
+            description: "Get the product name and responsibility statement. This is the first call an agent should make in any session.".to_string(),
+            requires_write: false,
+            input_schema: serde_json::json!({"type": "object", "properties": {}}),
+        },
+    ]
 }
 
 // ---------------------------------------------------------------------------

@@ -2,11 +2,16 @@
 id: TC-479
 title: product responsibility feature complete
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
-  features: []
+  features:
+  - FT-039
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: "tc_479_product_responsibility_feature_complete"
+last-run: 2026-04-15T11:22:02.279019545+00:00
+last-run-duration: 0.3s
 ---
 
 FT-039 is complete when all of the following hold:

@@ -13,14 +13,22 @@ pub(crate) fn handle_context(
     order: Option<String>,
     measure: bool,
 ) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
+    let (config, _, graph) = load_graph()?;
     let order_by_centrality = order.as_deref() != Some("id");
+
+    // Build product info for bundle header (FT-039)
+    let product_info = config.responsibility().map(|resp| {
+        context::BundleProductInfo {
+            product_name: config.product_name(),
+            responsibility: resp,
+        }
+    });
 
     if let Some(p) = phase {
         let bundle = context::bundle_phase(&graph, p, depth, adrs_only, order_by_centrality);
         print!("{}", bundle);
     } else if graph.features.contains_key(id) {
-        match context::bundle_feature(&graph, id, depth, order_by_centrality) {
+        match context::bundle_feature_with_product(&graph, id, depth, order_by_centrality, product_info) {
             Some(bundle) => {
                 if measure {
                     // Compute bundle metrics

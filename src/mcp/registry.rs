@@ -130,6 +130,7 @@ fn dispatch_tool(
     repo_root: &Path,
 ) -> Result<Value, String> {
     match name {
+        "product_responsibility" => read_handlers::handle_responsibility(repo_root),
         "product_context" => read_handlers::handle_context(args, graph),
         "product_feature_list" => read_handlers::handle_feature_list(graph),
         "product_feature_show" => read_handlers::handle_feature_show(args, graph),
@@ -137,7 +138,18 @@ fn dispatch_tool(
         "product_adr_list" => read_handlers::handle_adr_list(graph),
         "product_adr_show" => read_handlers::handle_adr_show(args, graph),
         "product_test_show" => read_handlers::handle_test_show(args, graph),
-        "product_graph_check" => Ok(graph.check().to_json()),
+        "product_graph_check" => {
+            let mut result = graph.check();
+            // W019: feature outside product responsibility (FT-039)
+            let config = crate::config::ProductConfig::load(&repo_root.join("product.toml"))
+                .map_err(|e| format!("{}", e))?;
+            crate::graph::responsibility::check_responsibility(
+                graph,
+                config.responsibility(),
+                &mut result,
+            );
+            Ok(result.to_json())
+        }
         "product_graph_central" => read_handlers::handle_graph_central(args, graph),
         "product_impact" => read_handlers::handle_impact(args, graph),
         "product_gap_check" => read_handlers::handle_gap_check(args, graph, repo_root),

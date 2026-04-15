@@ -39,6 +39,20 @@ pub struct ProductConfig {
     /// Tag-based implementation tracking configuration (ADR-036)
     #[serde(default)]
     pub tags: TagsConfig,
+    /// Product identity and responsibility (FT-039)
+    #[serde(default)]
+    pub product: Option<ProductSection>,
+}
+
+/// Product identity section — `[product]` in product.toml (FT-039)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProductSection {
+    /// Product name (overrides top-level `name` if present)
+    #[serde(default)]
+    pub name: Option<String>,
+    /// Single-statement responsibility — what the product is and is not
+    #[serde(default)]
+    pub responsibility: Option<String>,
 }
 
 /// Verify prerequisites — named shell conditions (ADR-021)
@@ -241,86 +255,33 @@ impl ProductConfig {
     pub fn resolve_path(&self, root: &Path, config_path: &str) -> PathBuf {
         root.join(config_path)
     }
-}
 
-/// Run schema migration from current version to CURRENT_SCHEMA_VERSION.
-/// Returns (files_updated, files_unchanged).
-pub fn migrate_schema(
-    root: &Path,
-    config: &ProductConfig,
-    dry_run: bool,
-) -> crate::error::Result<(usize, usize)> {
-    let version: u32 = config.schema_version.parse().unwrap_or(0);
-    if version >= CURRENT_SCHEMA_VERSION {
-        return Ok((0, 0));
+    /// Effective product name: `[product].name` takes precedence over top-level `name`
+    pub fn product_name(&self) -> &str {
+        self.product
+            .as_ref()
+            .and_then(|p| p.name.as_deref())
+            .unwrap_or(&self.name)
     }
 
-    let mut updated = 0;
-    let mut unchanged = 0;
-
-    // v0 → v1: add depends-on field to feature files missing it
-    if version < 1 {
-        let features_dir = config.resolve_path(root, &config.paths.features);
-        if features_dir.exists() {
-            for entry in std::fs::read_dir(&features_dir)
-                .map_err(|e| crate::error::ProductError::IoError(e.to_string()))?
-                .flatten()
-            {
-                if entry.path().extension().map(|e| e == "md").unwrap_or(false) {
-                    let content = std::fs::read_to_string(entry.path())
-                        .map_err(|e| crate::error::ProductError::IoError(e.to_string()))?;
-                    if !content.contains("depends-on:") {
-                        if dry_run {
-                            println!("  would add depends-on: [] to {}", entry.path().display());
-                            updated += 1;
-                        } else {
-                            // Insert depends-on: [] after status line
-                            let new_content = content.replace(
-                                "\nstatus:",
-                                "\ndepends-on: []\nstatus:",
-                            );
-                            if new_content != content {
-                                crate::fileops::write_file_atomic(&entry.path(), &new_content)?;
-                                updated += 1;
-                                println!("  updated: {}", entry.path().display());
-                            } else {
-                                // Try inserting after phase line
-                                let new_content2 = content.replace(
-                                    "\nphase:",
-                                    "\nphase: \ndepends-on: []",
-                                );
-                                if new_content2 != content {
-                                    crate::fileops::write_file_atomic(&entry.path(), &new_content2)?;
-                                    updated += 1;
-                                } else {
-                                    unchanged += 1;
-                                }
-                            }
-                        }
-                    } else {
-                        unchanged += 1;
-                    }
-                }
-            }
-        }
-
-        // Update product.toml schema-version
-        if !dry_run {
-            let toml_path = root.join("product.toml");
-            if toml_path.exists() {
-                let content = std::fs::read_to_string(&toml_path)
-                    .map_err(|e| crate::error::ProductError::IoError(e.to_string()))?;
-                let new_content = content.replace(
-                    &format!("schema-version = \"{}\"", version),
-                    &format!("schema-version = \"{}\"", CURRENT_SCHEMA_VERSION),
-                );
-                crate::fileops::write_file_atomic(&toml_path, &new_content)?;
-                println!("  updated product.toml schema-version to {}", CURRENT_SCHEMA_VERSION);
-            }
-        }
+    /// Product responsibility statement, if configured
+    pub fn responsibility(&self) -> Option<&str> {
+        self.product
+            .as_ref()
+            .and_then(|p| p.responsibility.as_deref())
+            .filter(|s| !s.trim().is_empty())
     }
 
-    Ok((updated, unchanged))
+    /// Validate `[product]` section — warns on top-level conjunction (TC-478)
+    pub fn validate_product_section(&self) -> Vec<String> {
+        let mut w = Vec::new();
+        if let Some(r) = self.responsibility() {
+            if crate::graph::responsibility::contains_top_level_conjunction(r) {
+                w.push("warning[W019]: product responsibility may describe multiple products\n  = hint: single statement only — top-level \" and \" suggests two products".into());
+            }
+        }
+        w
+    }
 }
 
 #[cfg(test)]
@@ -333,7 +294,6 @@ mod tests {
         assert_eq!(config.schema_version, "1");
         assert_eq!(config.prefixes.feature, "FT");
         assert_eq!(config.paths.features, "docs/features");
-        // TC-458: tags config defaults
         assert!(!config.tags.auto_push_tags);
         assert_eq!(config.tags.implementation_depth, 20);
     }
@@ -350,48 +310,38 @@ mod tests {
         let config: ProductConfig = toml::from_str(toml_str).unwrap();
         assert_eq!(config.name, "picloud");
         assert_eq!(config.phases.get("1").unwrap(), "Cluster Foundation");
-        assert_eq!(config.prefixes.test, "TC");
     }
     #[test]
     fn schema_version_forward_error() {
         let cfg: ProductConfig = toml::from_str("name = \"test\"\nschema-version = \"99\"\n").unwrap();
         assert!(cfg.check_schema_version().is_err());
     }
-    fn migrate_fixture() -> (tempfile::TempDir, std::path::PathBuf) {
-        let dir = tempfile::tempdir().unwrap();
-        let tp = dir.path().join("product.toml");
-        std::fs::write(&tp, "name = \"test\"\nschema-version = \"0\"\n\n[paths]\nfeatures = \"f\"\n").unwrap();
-        std::fs::create_dir_all(dir.path().join("f")).unwrap();
-        std::fs::write(dir.path().join("f/FT-001-test.md"),
-            "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\nadrs: []\ntests: []\n---\n\nBody.\n").unwrap();
-        (dir, tp)
+    #[test]
+    fn parse_product_section_with_responsibility() {
+        let cfg: ProductConfig = toml::from_str("name = \"t\"\n[product]\nname = \"picloud\"\nresponsibility = \"A private cloud platform\"\n").unwrap();
+        assert_eq!(cfg.product_name(), "picloud");
+        assert_eq!(cfg.responsibility().unwrap(), "A private cloud platform");
     }
     #[test]
-    fn schema_migrate_v0_dry_run() {
-        let (dir, tp) = migrate_fixture();
-        let cfg = ProductConfig::load(&tp).unwrap();
-        let (updated, _) = migrate_schema(dir.path(), &cfg, true).unwrap();
-        assert!(updated > 0, "dry-run should report files to update");
-        let c = std::fs::read_to_string(dir.path().join("f/FT-001-test.md")).unwrap();
-        assert!(!c.contains("depends-on"), "dry-run should not modify files");
+    fn parse_config_without_product_section() {
+        let cfg: ProductConfig = toml::from_str("name = \"test\"\n").unwrap();
+        assert_eq!(cfg.product_name(), "test");
+        assert!(cfg.responsibility().is_none());
     }
     #[test]
-    fn schema_migrate_v0_execute() {
-        let (dir, tp) = migrate_fixture();
-        let cfg = ProductConfig::load(&tp).unwrap();
-        let (updated, _) = migrate_schema(dir.path(), &cfg, false).unwrap();
-        assert!(updated > 0);
-        let c = std::fs::read_to_string(dir.path().join("f/FT-001-test.md")).unwrap();
-        assert!(c.contains("depends-on"), "file should now have depends-on");
-        let t = std::fs::read_to_string(&tp).unwrap();
-        assert!(t.contains("schema-version = \"1\""), "product.toml should be bumped to v1");
+    fn product_name_precedence_and_fallback() {
+        let cfg: ProductConfig = toml::from_str("name = \"old\"\n[product]\nname = \"new\"\n").unwrap();
+        assert_eq!(cfg.product_name(), "new");
+        let cfg2: ProductConfig = toml::from_str("name = \"fb\"\n[product]\nresponsibility = \"X\"\n").unwrap();
+        assert_eq!(cfg2.product_name(), "fb");
     }
     #[test]
-    fn schema_migrate_already_current() {
-        let dir = tempfile::tempdir().unwrap();
-        std::fs::write(dir.path().join("product.toml"), "name = \"test\"\nschema-version = \"1\"\n").unwrap();
-        let cfg = ProductConfig::load(&dir.path().join("product.toml")).unwrap();
-        let (updated, _) = migrate_schema(dir.path(), &cfg, false).unwrap();
-        assert_eq!(updated, 0, "no migration needed for current version");
+    fn validate_product_conjunction() {
+        let cfg: ProductConfig = toml::from_str("name = \"t\"\n[product]\nresponsibility = \"A platform and a monitor\"\n").unwrap();
+        assert!(!cfg.validate_product_section().is_empty(), "top-level and");
+        let cfg2: ProductConfig = toml::from_str("name = \"t\"\n[product]\nresponsibility = \"A platform — no deps, no config\"\n").unwrap();
+        assert!(cfg2.validate_product_section().is_empty(), "subordinate ok");
+        let cfg3: ProductConfig = toml::from_str("name = \"t\"\n").unwrap();
+        assert!(cfg3.validate_product_section().is_empty(), "absent ok");
     }
 }

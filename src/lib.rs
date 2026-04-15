@@ -4,6 +4,7 @@ pub mod agent_context;
 pub mod author;
 pub mod checklist;
 pub mod config;
+pub mod config_migrate;
 pub mod context;
 pub mod dep_types;
 pub mod domains;

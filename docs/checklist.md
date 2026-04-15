@@ -335,19 +335,19 @@
 - [x] TC-459: tag_namespace_format (invariant) — passing
 - [x] TC-460: tag_based_drift_detection_exit (exit-criteria) — passing
 
-### FT-039 — Product Responsibility Statement [ ]
+### FT-039 — Product Responsibility Statement [x]
 
 - [x] ADR-006: Context Bundle as the Primary LLM Interface (accepted)
 - [x] ADR-013: Error Model and User-Facing Error Format (accepted)
 - [x] ADR-022: Authoring Resources — System Prompts and Pre-Commit Review (accepted)
-- [ ] TC-472: product.toml parses product responsibility field (scenario) — unimplemented
-- [ ] TC-473: product_responsibility MCP tool returns name and responsibility (scenario) — unimplemented
-- [ ] TC-474: context bundle includes responsibility in header (scenario) — unimplemented
-- [ ] TC-475: graph check emits W019 for out-of-scope feature (scenario) — unimplemented
-- [ ] TC-476: W019 suppressed when responsibility field absent (scenario) — unimplemented
-- [ ] TC-477: context bundle omits responsibility when field not configured (scenario) — unimplemented
-- [ ] TC-478: product responsibility is single statement invariant (invariant) — unimplemented
-- [ ] TC-479: product responsibility feature complete (exit-criteria) — unimplemented
+- [x] TC-472: product.toml parses product responsibility field (scenario) — passing
+- [x] TC-473: product_responsibility MCP tool returns name and responsibility (scenario) — passing
+- [x] TC-474: context bundle includes responsibility in header (scenario) — passing
+- [x] TC-475: graph check emits W019 for out-of-scope feature (scenario) — passing
+- [x] TC-476: W019 suppressed when responsibility field absent (scenario) — passing
+- [x] TC-477: context bundle omits responsibility when field not configured (scenario) — passing
+- [x] TC-478: product responsibility is single statement invariant (invariant) — passing
+- [x] TC-479: product responsibility feature complete (exit-criteria) — passing
 
 ## Phase 2
 

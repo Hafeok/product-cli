@@ -2,7 +2,7 @@
 id: FT-039
 title: Product Responsibility Statement
 phase: 1
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-006

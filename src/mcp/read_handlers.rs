@@ -5,6 +5,18 @@ use crate::graph::KnowledgeGraph;
 use serde_json::Value;
 use std::path::Path;
 
+pub(crate) fn handle_responsibility(repo_root: &Path) -> Result<Value, String> {
+    let config = crate::config::ProductConfig::load(&repo_root.join("product.toml"))
+        .map_err(|e| format!("{}", e))?;
+    match config.responsibility() {
+        Some(responsibility) => Ok(serde_json::json!({
+            "name": config.product_name(),
+            "responsibility": responsibility,
+        })),
+        None => Err("Product responsibility is not configured. Add a [product] section with a responsibility field to product.toml".to_string()),
+    }
+}
+
 pub(crate) fn handle_context(args: &Value, graph: &KnowledgeGraph) -> Result<Value, String> {
     let id = args.get("id").and_then(|v| v.as_str()).unwrap_or_default();
     let depth = args.get("depth").and_then(|v| v.as_u64()).unwrap_or(1) as usize;

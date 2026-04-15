@@ -2,11 +2,16 @@
 id: TC-472
 title: product.toml parses product responsibility field
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
+  features:
+  - FT-039
   adrs: []
 phase: 1
+runner: cargo-test
+runner-args: "tc_472_product_toml_parses_product_responsibility_field"
+last-run: 2026-04-15T11:22:02.279019545+00:00
+last-run-duration: 0.4s
 ---
 
 **Given** a product.toml with a `[product]` section containing `name` and `responsibility` fields

@@ -163,7 +163,7 @@ fn migrate_schema(dry_run: bool) -> BoxResult {
             config::CURRENT_SCHEMA_VERSION,
             if dry_run { " (dry-run)" } else { "" }
         );
-        let (updated, unchanged) = config::migrate_schema(&root, &cfg, dry_run)?;
+        let (updated, unchanged) = product_lib::config_migrate::migrate_schema(&root, &cfg, dry_run)?;
         println!("{} files updated, {} unchanged", updated, unchanged);
     }
     Ok(())

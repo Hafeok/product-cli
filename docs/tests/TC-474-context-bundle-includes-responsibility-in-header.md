@@ -2,11 +2,17 @@
 id: TC-474
 title: context bundle includes responsibility in header
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-039
+  adrs:
+  - ADR-006
 phase: 1
+runner: cargo-test
+runner-args: "tc_474_context_bundle_includes_responsibility_in_header"
+last-run: 2026-04-15T11:22:02.279019545+00:00
+last-run-duration: 0.3s
 ---
 
 **Given** a repository with `[product].responsibility` set AND a feature FT-001 exists

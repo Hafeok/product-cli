@@ -5,6 +5,12 @@ use crate::graph::KnowledgeGraph;
 use crate::types::*;
 use std::collections::HashSet;
 
+/// Options for product-level context in bundles (FT-039)
+pub struct BundleProductInfo<'a> {
+    pub product_name: &'a str,
+    pub responsibility: &'a str,
+}
+
 /// Assemble a context bundle for a feature
 pub fn bundle_feature(
     graph: &KnowledgeGraph,
@@ -12,7 +18,18 @@ pub fn bundle_feature(
     depth: usize,
     order_by_centrality: bool,
 ) -> Option<String> {
-    bundle_feature_inner(graph, feature_id, depth, order_by_centrality, false)
+    bundle_feature_inner(graph, feature_id, depth, order_by_centrality, false, None)
+}
+
+/// Assemble a context bundle for a feature with product info in the header
+pub fn bundle_feature_with_product(
+    graph: &KnowledgeGraph,
+    feature_id: &str,
+    depth: usize,
+    order_by_centrality: bool,
+    product_info: Option<BundleProductInfo<'_>>,
+) -> Option<String> {
+    bundle_feature_inner(graph, feature_id, depth, order_by_centrality, false, product_info)
 }
 
 fn bundle_feature_inner(
@@ -21,6 +38,7 @@ fn bundle_feature_inner(
     depth: usize,
     order_by_centrality: bool,
     adrs_only: bool,
+    product_info: Option<BundleProductInfo<'_>>,
 ) -> Option<String> {
     let feature = graph.features.get(feature_id)?;
     let reachable = graph.bfs(feature_id, depth);
@@ -160,8 +178,13 @@ fn bundle_feature_inner(
     ));
 
     // AISP header block
+    out.push_str("⟦Ω:Bundle⟧{\n");
+    if let Some(ref pi) = product_info {
+        out.push_str(&format!("  product≜{}:Product\n", pi.product_name));
+        out.push_str(&format!("  responsibility≜\"{}\"\n", pi.responsibility));
+    }
     out.push_str(&format!(
-        "⟦Ω:Bundle⟧{{\n  feature≜{}:Feature\n  phase≜{}:Phase\n  status≜{:?}:FeatureStatus\n  generated≜{}\n  implementedBy≜⟨{}⟩:Decision+\n  validatedBy≜⟨{}⟩:TestCriterion+\n}}\n",
+        "  feature≜{}:Feature\n  phase≜{}:Phase\n  status≜{:?}:FeatureStatus\n  generated≜{}\n  implementedBy≜⟨{}⟩:Decision+\n  validatedBy≜⟨{}⟩:TestCriterion+\n}}\n",
         feature.front.id,
         feature.front.phase,
         feature.front.status,
@@ -351,7 +374,7 @@ pub fn bundle_phase(
     feature_ids.sort();
 
     for fid in &feature_ids {
-        if let Some(bundle) = bundle_feature_inner(graph, fid, depth, order_by_centrality, adrs_only) {
+        if let Some(bundle) = bundle_feature_inner(graph, fid, depth, order_by_centrality, adrs_only, None) {
             out.push_str(&bundle);
         }
     }
