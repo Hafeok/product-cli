@@ -1,12 +1,18 @@
 ---
 id: ADR-036
 title: Tag-Based Implementation Tracking
-status: proposed
-features: [FT-037]
-supersedes: [ADR-035]
-superseded-by: []
-domains: [observability, data-model]
+status: accepted
+features:
+- FT-037
+supersedes:
+- ADR-035
+superseded-by:
+- emk@contextand.com
+domains:
+- observability
+- data-model
 scope: domain
+content-hash: sha256:2257e2c2ee0a93443099921f75ade147abf9ea6529985296c89723b71ca0d354
 ---
 
 **Status:** Proposed — supersedes ADR-035
