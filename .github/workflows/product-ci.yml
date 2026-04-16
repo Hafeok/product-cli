@@ -53,9 +53,10 @@ jobs:
 
       - name: Graph check JSON
         run: |
-          cargo run -p product -- graph check --format json 2>/dev/null
-          # Verify JSON is valid
-          cargo run -p product -- graph check --format json 2>&1 | python3 -c "import sys,json; json.load(sys.stdin)"
+          # Capture JSON output (discard cargo stderr); allow exit 2 (warnings-only)
+          cargo run -p product -- graph check --format json 2>/dev/null > /tmp/graph-check.json || [ $? -eq 2 ]
+          # Verify the output is valid JSON
+          python3 -c "import sys,json; json.load(open('/tmp/graph-check.json'))"
 
       - name: Benchmarks
         run: cargo bench -p product --bench graph_bench
