@@ -4,8 +4,10 @@ title: request mutation ops cover set append remove delete with dot-notation
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_491_request_mutation_ops_cover_set_append_remove_delete

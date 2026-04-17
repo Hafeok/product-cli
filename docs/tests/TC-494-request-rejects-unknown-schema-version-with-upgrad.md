@@ -4,8 +4,10 @@ title: request rejects unknown schema version with upgrade hint
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_494_request_rejects_unknown_schema_version

@@ -4,8 +4,10 @@ title: request type create round-trips
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_486_request_type_create_round_trips

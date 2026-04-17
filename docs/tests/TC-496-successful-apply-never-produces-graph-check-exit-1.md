@@ -4,8 +4,10 @@ title: successful apply never produces graph check exit 1
 type: invariant
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_496_successful_apply_never_produces_graph_check_exit_1

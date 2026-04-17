@@ -4,8 +4,10 @@ title: request validate findings include jsonpath location
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_499_request_validate_findings_include_jsonpath_location

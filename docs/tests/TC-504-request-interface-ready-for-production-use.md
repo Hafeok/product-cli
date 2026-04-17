@@ -4,8 +4,10 @@ title: request interface ready for production use
 type: exit-criteria
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_504_request_interface_ready_for_production_use

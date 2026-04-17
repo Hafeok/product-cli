@@ -4,8 +4,10 @@ title: request apply proceeds on warnings blocks on errors
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_495_request_apply_proceeds_on_warnings_blocks_on_errors

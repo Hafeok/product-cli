@@ -4,8 +4,10 @@ title: request writes reason to request-log jsonl
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_493_request_writes_reason_to_request_log_jsonl

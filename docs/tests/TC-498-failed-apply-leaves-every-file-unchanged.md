@@ -4,8 +4,10 @@ title: failed apply leaves every file unchanged
 type: invariant
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_498_failed_apply_leaves_every_file_unchanged

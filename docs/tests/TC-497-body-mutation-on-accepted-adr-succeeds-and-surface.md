@@ -4,8 +4,10 @@ title: body mutation on accepted adr succeeds and surfaces e014
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_497_body_mutation_on_accepted_adr_surfaces_e014

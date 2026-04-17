@@ -4,8 +4,10 @@ title: request rejects empty reason
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_492_request_rejects_empty_reason

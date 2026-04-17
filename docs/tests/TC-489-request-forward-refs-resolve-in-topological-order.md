@@ -4,8 +4,10 @@ title: request forward refs resolve in topological order
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_489_request_forward_refs_resolve_in_topological_order

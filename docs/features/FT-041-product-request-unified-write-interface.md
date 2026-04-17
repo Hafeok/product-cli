@@ -3,7 +3,12 @@ id: FT-041
 title: Product Request — Unified Write Interface
 phase: 5
 status: planned
-depends-on: []
+depends-on:
+- FT-004
+- FT-018
+- FT-021
+- FT-034
+- FT-038
 adrs:
 - ADR-002
 - ADR-013

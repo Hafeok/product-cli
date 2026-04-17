@@ -4,8 +4,10 @@ title: granular tools continue to work alongside request interface
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_502_granular_tools_coexist_with_request_interface

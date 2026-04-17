@@ -4,8 +4,10 @@ title: process killed mid-apply leaves recoverable state
 type: chaos
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_503_process_killed_mid_apply_leaves_recoverable_state

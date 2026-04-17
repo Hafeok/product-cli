@@ -2,14 +2,15 @@
 id: ADR-038
 title: Product Request — Unified Atomic Write Interface
 status: proposed
-features: []
+features:
+- FT-041
 supersedes: []
 superseded-by: []
 domains:
 - api
 - data-model
 - error-handling
-scope: cross-cutting
+scope: domain
 source-files:
 - docs/product-request-spec.md
 - src/fileops.rs

@@ -4,8 +4,10 @@ title: request draft lists drafts directory entries
 type: scenario
 status: unimplemented
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-041
+  adrs:
+  - ADR-038
 phase: 1
 runner: cargo-test
 runner-args: tc_500_request_draft_lists_drafts_directory_entries
