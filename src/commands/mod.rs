@@ -12,6 +12,7 @@ mod drift;
 mod feature;
 mod feature_write;
 mod gap;
+mod graph_autolink;
 mod graph_cmd;
 mod hash;
 mod hooks;
@@ -70,8 +71,9 @@ pub enum Commands {
     },
     /// Assemble context bundles for LLM agents
     Context {
-        /// Feature or ADR ID to bundle
-        id: String,
+        /// Feature or ADR ID to bundle (not required with --measure-all)
+        #[arg(required_unless_present = "measure_all")]
+        id: Option<String>,
         /// BFS traversal depth (default: 1)
         #[arg(long, default_value = "1")]
         depth: usize,
@@ -87,6 +89,9 @@ pub enum Commands {
         /// Measure bundle dimensions and write to feature front-matter + metrics.jsonl
         #[arg(long)]
         measure: bool,
+        /// Measure every feature in one pass, printing only the aggregate summary
+        #[arg(long = "measure-all")]
+        measure_all: bool,
     },
     /// Graph operations
     Graph {
@@ -320,14 +325,8 @@ fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> Bo
         Commands::Adr { command } => adr::handle_adr(command, fmt),
         Commands::Test { command } => test_cmd::handle_test(command, fmt),
         Commands::Dep { command } => dep::handle_dep(command, fmt),
-        Commands::Context {
-            id,
-            depth,
-            phase,
-            adrs_only,
-            order,
-            measure,
-        } => context::handle_context(&id, depth, phase, adrs_only, order, measure),
+        Commands::Context { id, depth, phase, adrs_only, order, measure, measure_all } =>
+            context::handle_context(id.as_deref(), depth, phase, adrs_only, order, measure, measure_all),
         Commands::Graph { command } => graph_cmd::handle_graph(command, fmt),
         Commands::Impact { id } => status::handle_impact(&id, fmt),
         Commands::Status {

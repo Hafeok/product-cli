@@ -2,7 +2,7 @@
 id: FT-040
 title: Aggregate Bundle Metrics
 phase: 1
-status: planned
+status: complete
 depends-on: []
 adrs:
 - ADR-006

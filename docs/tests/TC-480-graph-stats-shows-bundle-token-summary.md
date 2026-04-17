@@ -2,11 +2,17 @@
 id: TC-480
 title: graph stats shows bundle token summary
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-040
+  adrs:
+  - ADR-024
 phase: 1
+runner: cargo-test
+runner-args: tc_480_graph_stats_shows_bundle_token_summary
+last-run: 2026-04-17T09:56:49.097152789+00:00
+last-run-duration: 0.2s
 ---
 
 ## Scenario

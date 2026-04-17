@@ -2,11 +2,18 @@
 id: TC-482
 title: context measure-all measures all features
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-040
+  adrs:
+  - ADR-006
+  - ADR-024
 phase: 1
+runner: cargo-test
+runner-args: tc_482_context_measure_all_measures_all_features
+last-run: 2026-04-17T09:56:49.097152789+00:00
+last-run-duration: 0.2s
 ---
 
 ## Scenario

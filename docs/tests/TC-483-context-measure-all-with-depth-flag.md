@@ -2,11 +2,17 @@
 id: TC-483
 title: context measure-all with depth flag
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
+  features:
+  - FT-040
+  adrs:
+  - ADR-012
 phase: 1
+runner: cargo-test
+runner-args: tc_483_context_measure_all_with_depth_flag
+last-run: 2026-04-17T09:56:49.097152789+00:00
+last-run-duration: 0.3s
 ---
 
 ## Scenario

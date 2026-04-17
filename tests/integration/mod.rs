@@ -13365,3 +13365,227 @@ fn tc_471_front_matter_field_management_complete() {
     // 7. Full authoring session is possible without manual YAML editing
     // All above commands succeeded — complete authoring flow works
 }
+
+// ---------------------------------------------------------------------------
+// FT-040: Aggregate Bundle Metrics Tests
+// ---------------------------------------------------------------------------
+
+/// Fixture for FT-040 tests: 3 features with linked ADRs + TCs.
+fn fixture_bundle_summary() -> Harness {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-alpha.md",
+        "---\nid: FT-001\ntitle: Alpha\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nAlpha body.\n",
+    );
+    h.write(
+        "docs/features/FT-002-beta.md",
+        "---\nid: FT-002\ntitle: Beta\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-002]\n---\n\nBeta body.\n",
+    );
+    h.write(
+        "docs/features/FT-003-gamma.md",
+        "---\nid: FT-003\ntitle: Gamma\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-003]\n---\n\nGamma body.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-shared.md",
+        "---\nid: ADR-001\ntitle: Shared ADR\nstatus: accepted\nfeatures: [FT-001, FT-002, FT-003]\n---\n\nADR body.\n",
+    );
+    h.write(
+        "docs/tests/TC-001-a.md",
+        "---\nid: TC-001\ntitle: T1\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\nt1.\n",
+    );
+    h.write(
+        "docs/tests/TC-002-b.md",
+        "---\nid: TC-002\ntitle: T2\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-002]\n  adrs: []\nphase: 1\n---\n\nt2.\n",
+    );
+    h.write(
+        "docs/tests/TC-003-c.md",
+        "---\nid: TC-003\ntitle: T3\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-003]\n  adrs: []\nphase: 1\n---\n\nt3.\n",
+    );
+    h
+}
+
+/// TC-480: graph stats shows bundle token summary when features are measured.
+#[test]
+fn tc_480_graph_stats_shows_bundle_token_summary() {
+    let h = fixture_bundle_summary();
+    // Measure 2 of 3 features.
+    h.run(&["context", "FT-001", "--measure"]).assert_exit(0);
+    h.run(&["context", "FT-002", "--measure"]).assert_exit(0);
+
+    let out = h.run(&["graph", "stats"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("Bundle size");
+    out.assert_stdout_contains("measured:");
+    out.assert_stdout_contains("2 / 3");
+    out.assert_stdout_contains("mean:");
+    out.assert_stdout_contains("median:");
+    out.assert_stdout_contains("p95:");
+    out.assert_stdout_contains("max:");
+    out.assert_stdout_contains("min:");
+    // Max/min should list a feature ID.
+    let has_ft001 = out.stdout.contains("FT-001");
+    let has_ft002 = out.stdout.contains("FT-002");
+    assert!(has_ft001 || has_ft002, "Expected max/min to reference a feature ID.\nstdout:\n{}", out.stdout);
+    // Threshold breach lines exist.
+    out.assert_stdout_contains("Over token threshold");
+    out.assert_stdout_contains("Over ADR threshold");
+    // Unmeasured FT-003 should be reported.
+    out.assert_stdout_contains("FT-003");
+}
+
+/// TC-481: graph stats shows "No bundle measurements" when nothing is measured.
+#[test]
+fn tc_481_graph_stats_shows_no_measurements_message() {
+    let h = fixture_bundle_summary();
+    let out = h.run(&["graph", "stats"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("No bundle measurements");
+    out.assert_stdout_contains("product context --measure-all");
+}
+
+/// TC-482: context --measure-all measures every feature.
+#[test]
+fn tc_482_context_measure_all_measures_all_features() {
+    let h = fixture_bundle_summary();
+    let out = h.run(&["context", "--measure-all"]);
+    out.assert_exit(0);
+
+    // All 3 feature files should now contain bundle blocks.
+    for (path, id) in &[
+        ("docs/features/FT-001-alpha.md", "FT-001"),
+        ("docs/features/FT-002-beta.md", "FT-002"),
+        ("docs/features/FT-003-gamma.md", "FT-003"),
+    ] {
+        let content = h.read(path);
+        assert!(
+            content.contains("bundle:"),
+            "{} should have bundle block.\nContent:\n{}",
+            id,
+            content
+        );
+        assert!(
+            content.contains("tokens-approx:"),
+            "{} should have tokens-approx.\nContent:\n{}",
+            id,
+            content
+        );
+    }
+
+    // metrics.jsonl should have one entry per feature.
+    let metrics = h.read("metrics.jsonl");
+    assert!(metrics.contains("FT-001"), "metrics.jsonl missing FT-001: {}", metrics);
+    assert!(metrics.contains("FT-002"), "metrics.jsonl missing FT-002: {}", metrics);
+    assert!(metrics.contains("FT-003"), "metrics.jsonl missing FT-003: {}", metrics);
+    let lines: Vec<&str> = metrics.lines().filter(|l| !l.is_empty()).collect();
+    assert_eq!(lines.len(), 3, "Expected 3 lines in metrics.jsonl, got {}", lines.len());
+}
+
+/// TC-483: context --measure-all --depth N respects the depth flag.
+#[test]
+fn tc_483_context_measure_all_with_depth_flag() {
+    let h = fixture_bundle_summary();
+
+    // First run with depth 1.
+    let out1 = h.run(&["context", "--measure-all"]);
+    out1.assert_exit(0);
+    let content_d1 = h.read("docs/features/FT-001-alpha.md");
+    let tokens_d1 = extract_tokens_approx(&content_d1);
+
+    // Second run with depth 2 — shared ADR-001 means depth-2 pulls in adjacent features.
+    let out2 = h.run(&["context", "--measure-all", "--depth", "2"]);
+    out2.assert_exit(0);
+    let content_d2 = h.read("docs/features/FT-001-alpha.md");
+    let tokens_d2 = extract_tokens_approx(&content_d2);
+
+    // Depth 2 should produce a bundle at least as large as depth 1.
+    assert!(
+        tokens_d2 >= tokens_d1,
+        "Depth 2 bundle ({}) should be >= depth 1 bundle ({}) for shared-ADR graph.\nd1:\n{}\n\nd2:\n{}",
+        tokens_d2, tokens_d1, content_d1, content_d2
+    );
+    // And exit 0 plus front-matter updated.
+    assert!(content_d2.contains("bundle:"), "FT-001 should still have bundle block after --depth 2");
+}
+
+fn extract_tokens_approx(content: &str) -> usize {
+    for line in content.lines() {
+        let line = line.trim();
+        if let Some(rest) = line.strip_prefix("tokens-approx:") {
+            return rest.trim().parse().unwrap_or(0);
+        }
+    }
+    0
+}
+
+/// TC-484: context --measure-all prints only the aggregate summary, not bundles.
+#[test]
+fn tc_484_context_measure_all_prints_summary_not_bundles() {
+    let h = fixture_bundle_summary();
+    let out = h.run(&["context", "--measure-all"]);
+    out.assert_exit(0);
+
+    // Aggregate table lines on stdout.
+    out.assert_stdout_contains("Bundle size");
+    out.assert_stdout_contains("measured:");
+    out.assert_stdout_contains("mean:");
+    out.assert_stdout_contains("median:");
+
+    // Individual bundle content should NOT be on stdout.
+    assert!(
+        !out.stdout.contains("# Context Bundle:"),
+        "measure-all must not flood stdout with bundle content. Got:\n{}",
+        out.stdout
+    );
+    // Nor the AISP bundle header marker.
+    assert!(
+        !out.stdout.contains("\u{27E6}\u{03A9}:Bundle\u{27E7}"),
+        "measure-all must not print AISP bundle headers. Got:\n{}",
+        out.stdout
+    );
+}
+
+/// TC-485: aggregate bundle metrics exit criteria — covers all of FT-040.
+#[test]
+fn tc_485_aggregate_bundle_metrics_exit_criteria() {
+    // 1. graph stats shows "No bundle measurements" initially.
+    let h = fixture_bundle_summary();
+    let before = h.run(&["graph", "stats"]);
+    before.assert_exit(0);
+    before.assert_stdout_contains("No bundle measurements");
+
+    // 2. measure-all writes bundle blocks + metrics.jsonl entries and exits 0.
+    let measure = h.run(&["context", "--measure-all"]);
+    measure.assert_exit(0);
+    measure.assert_stdout_contains("Bundle size");
+    // But does not flood with bundle content.
+    assert!(!measure.stdout.contains("# Context Bundle:"));
+    assert!(h.exists("metrics.jsonl"), "metrics.jsonl must exist after measure-all");
+
+    // 3. graph stats now shows the aggregate summary with mean/median/p95/max/min.
+    let after = h.run(&["graph", "stats"]);
+    after.assert_exit(0);
+    after.assert_stdout_contains("Bundle size");
+    after.assert_stdout_contains("mean:");
+    after.assert_stdout_contains("median:");
+    after.assert_stdout_contains("p95:");
+    after.assert_stdout_contains("max:");
+    after.assert_stdout_contains("min:");
+    // No "No bundle measurements" line now.
+    assert!(
+        !after.stdout.contains("No bundle measurements"),
+        "After measure-all, stats must not show no-measurements line.\nstdout:\n{}",
+        after.stdout
+    );
+
+    // 4. --depth flag is honored and all features updated.
+    let d2 = h.run(&["context", "--measure-all", "--depth", "2"]);
+    d2.assert_exit(0);
+    for path in &[
+        "docs/features/FT-001-alpha.md",
+        "docs/features/FT-002-beta.md",
+        "docs/features/FT-003-gamma.md",
+    ] {
+        let content = h.read(path);
+        assert!(content.contains("bundle:"), "{} missing bundle block", path);
+    }
+}
