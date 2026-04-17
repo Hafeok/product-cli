@@ -1,7 +1,7 @@
 ---
 id: ADR-038
 title: Product Request — Unified Atomic Write Interface
-status: proposed
+status: accepted
 features:
 - FT-041
 supersedes: []
@@ -11,6 +11,7 @@ domains:
 - data-model
 - error-handling
 scope: domain
+content-hash: sha256:73c61571f9aa267d40305c1701b7063b7048a3be8d0a8440d2ddcd8b02382ff6
 source-files:
 - docs/product-request-spec.md
 - src/fileops.rs
