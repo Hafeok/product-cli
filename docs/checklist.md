@@ -164,7 +164,7 @@
 
 - [x] ADR-011: AISP-Influenced Formal Notation for Test Criteria (accepted)
 - [x] ADR-016: Formal Block Grammar (accepted)
-- [x] ADR-018: Testing Strategy — Property-Based, Integration, and LLM Benchmark (accepted)
+- [x] ADR-018: Testing Strategy — Property-Based, Session-Based, and LLM Benchmark (accepted)
 - [x] TC-035: formal_block_parse_types (scenario) — passing
 - [x] TC-036: formal_block_parse_invariants (invariant) — passing
 - [x] TC-037: formal_block_parse_scenario (scenario) — passing
@@ -517,7 +517,7 @@
 
 ### FT-025 — Benchmarks [x]
 
-- [x] ADR-018: Testing Strategy — Property-Based, Integration, and LLM Benchmark (accepted)
+- [x] ADR-018: Testing Strategy — Property-Based, Session-Based, and LLM Benchmark (accepted)
 - [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
 - [x] TC-180: ft_025_benchmarks_pass (exit-criteria) — passing
 
@@ -841,4 +841,35 @@
 - [x] TC-527: log chain breaks on any deletion (invariant) — passing
 - [x] TC-528: log replay produces same graph (invariant) — passing
 - [x] TC-529: request log hash chain exit criteria (exit-criteria) — passing
+
+### FT-043 — Session-Based Integration Testing [x]
+
+- [x] ADR-009: CI Integration via Exit Codes (accepted)
+- [x] ADR-013: Error Model and User-Facing Error Format (accepted)
+- [x] ADR-015: File Write Safety — Atomic Writes and Advisory Locking (accepted)
+- [x] ADR-018: Testing Strategy — Property-Based, Session-Based, and LLM Benchmark (accepted)
+- [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
+- [x] ADR-039: Hash-Chained Request Log for Tamper-Evident Audit (accepted)
+- [x] TC-530: Session harness exposes documented API surface (scenario) — passing
+- [x] TC-531: ApplyResult.id_for resolves ref names to assigned IDs (scenario) — passing
+- [x] TC-532: Session.run executes compiled product binary against temp dir (scenario) — passing
+- [x] TC-533: session ST-001 create-feature-with-adr-and-tc (scenario) — passing
+- [x] TC-534: session ST-002 create-dep-requires-governing-adr emits E013 (scenario) — passing
+- [x] TC-535: session ST-003 create-dep-with-adr-in-same-request satisfies E013 (scenario) — passing
+- [x] TC-536: session ST-004 create-with-forward-references resolves ref values (scenario) — passing
+- [x] TC-537: session ST-005 create-multiple-adrs-same-phase assigns IDs in order (scenario) — passing
+- [x] TC-538: session ST-006 create-cross-links-bidirectional writes both sides (scenario) — passing
+- [x] TC-539: session ST-020 failed-apply-leaves-zero-files (invariant) — passing
+- [x] TC-540: session ST-021 failed-apply-mid-write-recovery (chaos) — passing
+- [x] TC-541: session ST-022 concurrent-apply-serialised by advisory lock (chaos) — passing
+- [x] TC-542: session ST-030 validation-e013-dep-no-adr (scenario) — passing
+- [x] TC-543: session ST-031 validation-e002-broken-ref (scenario) — passing
+- [x] TC-544: session ST-032 validation-e003-dep-cycle (scenario) — passing
+- [x] TC-545: session ST-033 validation-e012-unknown-domain (scenario) — passing
+- [x] TC-546: session ST-034 validation-e011-empty-acknowledgement (scenario) — passing
+- [x] TC-547: session ST-035 validation-domain-not-in-vocabulary (scenario) — passing
+- [x] TC-548: property TC-P012 failed apply leaves zero files changed (invariant) — passing
+- [x] TC-549: property TC-P013 append is idempotent (invariant) — passing
+- [x] TC-550: property TC-P014 forward-ref resolution is deterministic (invariant) — passing
+- [x] TC-551: session harness and phase-1 session library pass (exit-criteria) — passing
 

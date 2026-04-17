@@ -2,7 +2,7 @@
 id: TC-550
 title: property TC-P014 forward-ref resolution is deterministic
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-041
@@ -11,6 +11,10 @@ validates:
   - ADR-018
   - ADR-038
 phase: 1
+runner: cargo-test
+runner-args: tc_p014_forward_ref_resolution_is_deterministic
+last-run: 2026-04-17T19:48:36.554718669+00:00
+last-run-duration: 0.6s
 ---
 
 ## TC-P014 — forward-ref resolution is deterministic (property)

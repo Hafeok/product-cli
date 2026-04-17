@@ -2,13 +2,17 @@
 id: TC-551
 title: session harness and phase-1 session library pass
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-043
   adrs:
   - ADR-018
 phase: 1
+runner: cargo-test
+runner-args: tc_551_session_harness_and_phase_1_session_library_pass
+last-run: 2026-04-17T19:48:36.554718669+00:00
+last-run-duration: 0.2s
 ---
 
 ## Exit Criteria — Session harness and Phase 1 session library pass

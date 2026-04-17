@@ -2,7 +2,7 @@
 id: TC-549
 title: property TC-P013 append is idempotent
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-041
@@ -11,6 +11,10 @@ validates:
   - ADR-018
   - ADR-038
 phase: 1
+runner: cargo-test
+runner-args: tc_p013_append_is_idempotent
+last-run: 2026-04-17T19:48:36.554718669+00:00
+last-run-duration: 0.9s
 ---
 
 ## TC-P013 — append is idempotent (property)

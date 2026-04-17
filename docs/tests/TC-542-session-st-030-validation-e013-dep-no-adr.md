@@ -2,7 +2,7 @@
 id: TC-542
 title: session ST-030 validation-e013-dep-no-adr
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-041
@@ -12,6 +12,10 @@ validates:
   - ADR-030
   - ADR-038
 phase: 1
+runner: cargo-test
+runner-args: tc_542_session_st_030_validation_e013_dep_no_adr
+last-run: 2026-04-17T19:48:36.554718669+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

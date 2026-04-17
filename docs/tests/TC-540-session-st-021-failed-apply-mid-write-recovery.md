@@ -2,7 +2,7 @@
 id: TC-540
 title: session ST-021 failed-apply-mid-write-recovery
 type: chaos
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-041
@@ -11,6 +11,10 @@ validates:
   - ADR-015
   - ADR-038
 phase: 1
+runner: cargo-test
+runner-args: tc_540_session_st_021_failed_apply_mid_write_recovery
+last-run: 2026-04-17T19:48:36.554718669+00:00
+last-run-duration: 0.2s
 ---
 
 ## ST-021 — failed apply mid-write recovery

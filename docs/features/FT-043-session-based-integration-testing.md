@@ -2,7 +2,7 @@
 id: FT-043
 title: Session-Based Integration Testing
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-015
 - FT-018

@@ -2,7 +2,7 @@
 id: TC-548
 title: property TC-P012 failed apply leaves zero files changed
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-041
@@ -12,6 +12,10 @@ validates:
   - ADR-018
   - ADR-038
 phase: 1
+runner: cargo-test
+runner-args: tc_p012_failed_apply_leaves_zero_files_changed
+last-run: 2026-04-17T19:48:36.554718669+00:00
+last-run-duration: 0.6s
 ---
 
 ## TC-P012 — failed apply leaves zero files changed (property)
