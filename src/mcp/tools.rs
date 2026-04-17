@@ -25,7 +25,41 @@ pub fn build_tool_list() -> Vec<ToolDef> {
     tools.extend(write_field_adr_tools());
     tools.extend(write_field_test_tools());
     tools.extend(write_update_tools());
+    tools.extend(request_tools());
     tools
+}
+
+// ---------------------------------------------------------------------------
+// Request tools (FT-041, ADR-038)
+// ---------------------------------------------------------------------------
+
+fn request_tools() -> Vec<ToolDef> {
+    vec![
+        ToolDef {
+            name: "product_request_validate".to_string(),
+            description: "Validate a request YAML (type: create | change | create-and-change) without writing. Returns every finding in one pass.".to_string(),
+            requires_write: false,
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "request_yaml": {"type": "string", "description": "Full YAML source of the request"}
+                },
+                "required": ["request_yaml"]
+            }),
+        },
+        ToolDef {
+            name: "product_request_apply".to_string(),
+            description: "Validate a request YAML and apply it atomically. Returns created and changed arrays with assigned IDs.".to_string(),
+            requires_write: true,
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "request_yaml": {"type": "string", "description": "Full YAML source of the request"}
+                },
+                "required": ["request_yaml"]
+            }),
+        },
+    ]
 }
 
 // ---------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 id: TC-495
 title: request apply proceeds on warnings blocks on errors
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-041
@@ -11,6 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_495_request_apply_proceeds_on_warnings_blocks_on_errors
+last-run: 2026-04-17T11:51:10.501467904+00:00
+last-run-duration: 0.2s
 ---
 
 Validates FT-041 / ADR-038 decision 7.

@@ -2,7 +2,7 @@
 id: TC-488
 title: request type create-and-change round-trips
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-041
@@ -11,6 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_488_request_type_create_and_change_round_trips
+last-run: 2026-04-17T11:51:10.501467904+00:00
+last-run-duration: 0.3s
 ---
 
 Validates FT-041 / ADR-038 decision 1.

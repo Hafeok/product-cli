@@ -2,7 +2,7 @@
 id: FT-041
 title: Product Request — Unified Write Interface
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-004
 - FT-018

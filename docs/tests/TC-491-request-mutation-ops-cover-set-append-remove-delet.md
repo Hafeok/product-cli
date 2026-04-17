@@ -2,7 +2,7 @@
 id: TC-491
 title: request mutation ops cover set append remove delete with dot-notation
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-041
@@ -10,7 +10,9 @@ validates:
   - ADR-038
 phase: 1
 runner: cargo-test
-runner-args: tc_491_request_mutation_ops_cover_set_append_remove_delete
+runner-args: tc_491_request_mutation_ops_cover_set_append_remove_delete_with_dot_notation
+last-run: 2026-04-17T11:51:10.501467904+00:00
+last-run-duration: 0.2s
 ---
 
 Validates FT-041 / ADR-038 decision 4.

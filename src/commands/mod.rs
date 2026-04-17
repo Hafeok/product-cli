@@ -24,6 +24,7 @@ mod migrate;
 mod onboard;
 mod preflight;
 mod prompts_cmd;
+mod request_cmd;
 mod schema;
 mod status;
 mod tags;
@@ -261,6 +262,11 @@ pub enum Commands {
         #[arg(long)]
         watch: bool,
     },
+    /// Unified atomic write interface (FT-041, ADR-038)
+    Request {
+        #[command(subcommand)]
+        command: request_cmd::RequestCommands,
+    },
 }
 
 pub use self::test_cmd::TestCommands;
@@ -353,5 +359,6 @@ fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> Bo
         Commands::Hash { command } => hash::handle_hash(command),
         Commands::Schema { artifact_type, all } => schema::handle_schema(artifact_type, all),
         Commands::AgentInit { watch } => agent_init::handle_agent_init(watch),
+        Commands::Request { command } => request_cmd::handle_request(command, fmt),
     }
 }

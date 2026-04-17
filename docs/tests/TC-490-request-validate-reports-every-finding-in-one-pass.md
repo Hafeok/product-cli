@@ -2,7 +2,7 @@
 id: TC-490
 title: request validate reports every finding in one pass
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-041
@@ -11,6 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_490_request_validate_reports_every_finding_in_one_pass
+last-run: 2026-04-17T11:51:10.501467904+00:00
+last-run-duration: 0.2s
 ---
 
 Validates FT-041 / ADR-038 decision 3.

@@ -2,7 +2,7 @@
 id: TC-497
 title: body mutation on accepted adr succeeds and surfaces e014
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-041
@@ -10,7 +10,9 @@ validates:
   - ADR-038
 phase: 1
 runner: cargo-test
-runner-args: tc_497_body_mutation_on_accepted_adr_surfaces_e014
+runner-args: tc_497_body_mutation_on_accepted_adr_succeeds_and_surfaces_e014
+last-run: 2026-04-17T11:51:10.501467904+00:00
+last-run-duration: 0.2s
 ---
 
 Validates FT-041 / ADR-038 decision 9.

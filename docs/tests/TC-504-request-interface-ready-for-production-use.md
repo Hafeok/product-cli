@@ -2,7 +2,7 @@
 id: TC-504
 title: request interface ready for production use
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-041
@@ -11,6 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_504_request_interface_ready_for_production_use
+last-run: 2026-04-17T11:51:10.501467904+00:00
+last-run-duration: 0.2s
 ---
 
 Exit criteria for FT-041. The request interface is considered ready for production use when all of the following hold:

@@ -778,7 +778,7 @@
 - [x] TC-470: all field mutation tools are idempotent (invariant) — passing
 - [x] TC-471: front-matter field management complete (exit-criteria) — passing
 
-### FT-041 — Product Request — Unified Write Interface [ ]
+### FT-041 — Product Request — Unified Write Interface [x]
 
 - [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
 - [x] ADR-013: Error Model and User-Facing Error Format (accepted)
@@ -786,24 +786,24 @@
 - [x] ADR-020: MCP Server — Dual Transport (stdio and HTTP) (accepted)
 - [x] ADR-032: Content Hash Immutability Enforcement (accepted)
 - [x] ADR-037: Front-Matter Field Management — Granular Mutation Tools (accepted)
-- [ ] ADR-038: Product Request — Unified Atomic Write Interface (proposed)
-- [ ] TC-486: request type create round-trips (scenario) — unimplemented
-- [ ] TC-487: request type change round-trips (scenario) — unimplemented
-- [ ] TC-488: request type create-and-change round-trips (scenario) — unimplemented
-- [ ] TC-489: request forward refs resolve in topological order (scenario) — unimplemented
-- [ ] TC-490: request validate reports every finding in one pass (scenario) — unimplemented
-- [ ] TC-491: request mutation ops cover set append remove delete with dot-notation (scenario) — unimplemented
-- [ ] TC-492: request rejects empty reason (scenario) — unimplemented
-- [ ] TC-493: request writes reason to request-log jsonl (scenario) — unimplemented
-- [ ] TC-494: request rejects unknown schema version with upgrade hint (scenario) — unimplemented
-- [ ] TC-495: request apply proceeds on warnings blocks on errors (scenario) — unimplemented
-- [ ] TC-496: successful apply never produces graph check exit 1 (invariant) — unimplemented
-- [ ] TC-497: body mutation on accepted adr succeeds and surfaces e014 (scenario) — unimplemented
-- [ ] TC-498: failed apply leaves every file unchanged (invariant) — unimplemented
-- [ ] TC-499: request validate findings include jsonpath location (scenario) — unimplemented
-- [ ] TC-500: request draft lists drafts directory entries (scenario) — unimplemented
-- [ ] TC-501: request rejects invalid ref name format (scenario) — unimplemented
-- [ ] TC-502: granular tools continue to work alongside request interface (scenario) — unimplemented
-- [ ] TC-503: process killed mid-apply leaves recoverable state (chaos) — unimplemented
-- [ ] TC-504: request interface ready for production use (exit-criteria) — unimplemented
+- [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
+- [x] TC-486: request type create round-trips (scenario) — passing
+- [x] TC-487: request type change round-trips (scenario) — passing
+- [x] TC-488: request type create-and-change round-trips (scenario) — passing
+- [x] TC-489: request forward refs resolve in topological order (scenario) — passing
+- [x] TC-490: request validate reports every finding in one pass (scenario) — passing
+- [x] TC-491: request mutation ops cover set append remove delete with dot-notation (scenario) — passing
+- [x] TC-492: request rejects empty reason (scenario) — passing
+- [x] TC-493: request writes reason to request-log jsonl (scenario) — passing
+- [x] TC-494: request rejects unknown schema version with upgrade hint (scenario) — passing
+- [x] TC-495: request apply proceeds on warnings blocks on errors (scenario) — passing
+- [x] TC-496: successful apply never produces graph check exit 1 (invariant) — passing
+- [x] TC-497: body mutation on accepted adr succeeds and surfaces e014 (scenario) — passing
+- [x] TC-498: failed apply leaves every file unchanged (invariant) — passing
+- [x] TC-499: request validate findings include jsonpath location (scenario) — passing
+- [x] TC-500: request draft lists drafts directory entries (scenario) — passing
+- [x] TC-501: request rejects invalid ref name format (scenario) — passing
+- [x] TC-502: granular tools continue to work alongside request interface (scenario) — passing
+- [x] TC-503: process killed mid-apply leaves recoverable state (chaos) — passing
+- [x] TC-504: request interface ready for production use (exit-criteria) — passing
 

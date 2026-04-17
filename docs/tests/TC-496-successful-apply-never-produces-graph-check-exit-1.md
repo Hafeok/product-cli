@@ -2,7 +2,7 @@
 id: TC-496
 title: successful apply never produces graph check exit 1
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-041
@@ -11,6 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_496_successful_apply_never_produces_graph_check_exit_1
+last-run: 2026-04-17T11:51:10.501467904+00:00
+last-run-duration: 0.2s
 ---
 
 Validates FT-041 / ADR-038 decision 8 — invariant.

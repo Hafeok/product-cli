@@ -22,6 +22,7 @@ pub mod migrate;
 pub mod onboard;
 pub mod parser;
 pub mod rdf;
+pub mod request;
 pub mod tags;
 pub mod types;
 

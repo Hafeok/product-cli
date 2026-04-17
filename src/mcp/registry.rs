@@ -115,9 +115,10 @@ fn load_graph(repo_root: &Path) -> Result<KnowledgeGraph, String> {
     let features_dir = config.resolve_path(repo_root, &config.paths.features);
     let adrs_dir = config.resolve_path(repo_root, &config.paths.adrs);
     let tests_dir = config.resolve_path(repo_root, &config.paths.tests);
-    let loaded = crate::parser::load_all(&features_dir, &adrs_dir, &tests_dir)
+    let deps_dir = config.resolve_path(repo_root, &config.paths.dependencies);
+    let loaded = crate::parser::load_all_with_deps(&features_dir, &adrs_dir, &tests_dir, Some(&deps_dir))
         .map_err(|e| format!("{}", e))?;
-    Ok(KnowledgeGraph::build(loaded.features, loaded.adrs, loaded.tests))
+    Ok(KnowledgeGraph::build_with_deps(loaded.features, loaded.adrs, loaded.tests, loaded.dependencies))
 }
 
 // ---------------------------------------------------------------------------
@@ -175,6 +176,9 @@ fn dispatch_tool(
         "product_adr_supersede" => field_handlers::handle_adr_supersede(args, graph),
         "product_adr_source_files" => field_handlers::handle_adr_source_files(args, graph, repo_root),
         "product_test_runner" => field_handlers::handle_test_runner(args, graph, repo_root),
+        // Request tools (FT-041, ADR-038)
+        "product_request_validate" => super::request_handlers::handle_request_validate(args, repo_root),
+        "product_request_apply" => super::request_handlers::handle_request_apply(args, repo_root),
         _ => Err(format!("Tool handler not implemented: {}", name)),
     }
 }
