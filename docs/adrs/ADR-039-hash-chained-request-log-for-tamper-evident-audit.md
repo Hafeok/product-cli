@@ -1,17 +1,21 @@
 ---
 id: ADR-039
 title: Hash-Chained Request Log for Tamper-Evident Audit
-status: proposed
-features: []
+status: accepted
+features:
+- FT-042
 supersedes: []
 superseded-by: []
 domains:
-- api
 - data-model
-- error-handling
 - observability
 - security
-scope: cross-cutting
+scope: domain
+content-hash: sha256:0516156eea7bf9b19914870a18b949957db9b5bcaf58a275581b29d987bf810b
+amendments:
+- date: 2026-04-17T14:12:30Z
+  reason: Sync body Status line with accepted front-matter
+  previous-hash: sha256:d3718d2ffccb92fa200742c513e7b6a208ab7e0ea3f3e405c41789b15d944da5
 source-files:
 - product.toml
 - src/main.rs
@@ -19,7 +23,7 @@ source-files:
 - src/request_log.rs
 ---
 
-**Status:** Proposed
+**Status:** Accepted
 
 **Context:** FT-041 established the Product request as the unified write interface. Every successful `product request apply` appends one line to a request log. As shipped, the log had three gaps:
 
@@ -61,7 +65,7 @@ The system needs a request log that is committed to the repository, cryptographi
 
 **12. Truncation from the end requires git-tag cross-reference.** Hash chaining detects modification, insertion, and deletion from the middle. Truncation from the tail is invisible to the chain alone — the truncated log is still internally consistent. `product request log verify --against-tags` closes this gap: every `product/*/complete` or `product/ADR-*/accepted` git tag must correspond to a `verify` or `change` entry in the log. A tag without a matching entry is W021 — possible truncation, possibly a tag created outside Product.
 
-**13. New validation codes: E015, E016, W021.** E015 is per-entry hash mismatch; E016 is chain break; W021 is tag-without-log-entry. These codes collide with existing codes introduced by ADR-032 (E015 for TC hash mismatch) and must be renumbered during implementation — this ADR acknowledges the collision and **delegates the final code numbers to the implementation**. The spec uses E015/E016/W021 as placeholders; the implementation should select the next free codes and update both the spec and ADR-032's E015 references accordingly. See "Code numbering reconciliation" below.
+**13. Validation codes: E017, E018, W021.** E017 is per-entry hash mismatch (line N's stored `entry-hash` does not match the computed hash). E018 is chain break (entry N+1's `prev-hash` does not match entry N's `entry-hash`). W021 is tag-without-log-entry. These codes were picked by reading the current error catalogue: E014/E015 are taken by ADR-032, E016 is taken by ADR-034; E017/E018 are the next free integrity-tier codes. W017–W020 are taken by existing features; W021 is the next free warning code.
 
 **14. Canonicalisation algorithm is specified explicitly in a test.** TC-P015 asserts that canonical JSON of a given entry equals a byte-for-byte fixed expected string. This pins the canonical serialisation independently of whichever JSON library is used, preventing silent behaviour changes when dependencies update.
 
@@ -69,17 +73,15 @@ The system needs a request log that is committed to the repository, cryptographi
 
 ---
 
-### Code numbering reconciliation
+### Validation code allocation
 
-ADR-032 assigned E015 to "TC protected fields changed — content-hash mismatch". The spec for this feature reuses E015 for "requests.jsonl entry hash mismatch". The two are unrelated failure modes; a single code cannot represent both.
+| Code | Tier | Description |
+|---|---|---|
+| E017 | Integrity | `requests.jsonl` entry hash mismatch — entry at line N has been tampered with |
+| E018 | Integrity | `requests.jsonl` chain break — `prev-hash` at line N does not match the `entry-hash` of line N-1 |
+| W021 | Integrity | Git completion tag has no corresponding `verify` entry — possible log truncation or a tag created outside Product |
 
-The implementation MUST:
-
-1. Pick the next free error codes for the request-log checks. As of this ADR, the next free integer codes in the E-class (integrity tier) series are E017 and E018; the next free W-class code is W022. The implementation is free to choose differently if the numbering has advanced in the interim — what matters is no collision.
-2. Update `docs/product-request-log-spec.md` to reflect the chosen codes.
-3. Leave ADR-032's E015 definition unchanged.
-
-Until reconciliation, references to E015/E016/W021 in the request-log spec are placeholders and do not bind code.
+These codes do not collide with ADR-032 (E014/E015) or ADR-034 (E016). They follow the ADR-009 exit-code convention: E017 and E018 are exit 1; W021 is exit 2.
 
 ---
 
@@ -140,7 +142,7 @@ The feature's TCs (FT-042) cover every decision pinned here:
 - **Replay to a separate directory.** Overwriting the working tree on replay would be a destructive default — a fat-fingered `--to` argument would trash uncommitted work. Replay is a read-and-reconstruct operation; its natural output is a fresh directory. The cost is one extra flag on `graph check`; the benefit is that replay is safe to run casually.
 - **`verify` as a log entry.** Before this ADR, completion tags were the only record of verify runs. Tags are a low-dimensional record — name + SHA, no reason, no TC results. Log entries carry the full run detail and make `product verify` a first-class participant in the audit story.
 - **Tag cross-reference for truncation.** A hash chain cannot detect tail truncation — by construction, a valid prefix of a valid chain is itself a valid chain. Tags are the external anchor: git controls tag creation independently of the log, and a tag without a log entry is structurally impossible under honest operation. The cross-reference test catches the one failure mode the chain alone cannot.
-- **Delegated code numbering.** The spec was written before ADR-032's E015 allocation was checked. Rather than pin potentially-wrong codes in this ADR, delegation lets the implementation pick the first free numbers when code is being written — the point at which collision is easiest to detect.
+- **Allocated codes at ADR time, not implementation time.** An earlier draft of this ADR delegated the code numbers to the implementation because the spec used E015/E016 as placeholders without checking the catalogue. That was the wrong call: allocating codes in the ADR makes the spec, the tests, and the error-message strings all refer to the same identifiers without a future rewrite step. E017/E018/W021 were picked by scanning every E- and W-code reference in `src/` and `docs/`, so they are collision-free at the time of acceptance.
 
 **Rejected alternatives:**
 

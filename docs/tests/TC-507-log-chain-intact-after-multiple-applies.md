@@ -2,13 +2,17 @@
 id: TC-507
 title: log chain intact after multiple applies
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
-phase: 1
+  features:
+  - FT-042
+  adrs:
+  - ADR-039
+phase: 5
 runner: cargo-test
 runner-args: tc_507_log_chain_intact_after_multiple_applies
+last-run: 2026-04-17T15:59:54.039660448+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

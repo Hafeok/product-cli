@@ -7,6 +7,7 @@ use product_lib::request::{self, ApplyOptions};
 use std::path::{Path, PathBuf};
 
 use super::BoxResult;
+use super::request_log_cmd::{self, LogCommands};
 
 #[derive(Subcommand)]
 pub enum RequestCommands {
@@ -34,6 +35,31 @@ pub enum RequestCommands {
     },
     /// List draft YAML files under .product/requests/
     Draft,
+    /// View / verify the hash-chained request log (FT-042)
+    Log {
+        #[command(subcommand)]
+        command: LogCommands,
+    },
+    /// Replay the log into a directory outside the working tree (FT-042)
+    Replay {
+        /// Replay all entries from genesis to head
+        #[arg(long)]
+        full: bool,
+        /// Stop at this entry ID (inclusive)
+        #[arg(long)]
+        to: Option<String>,
+        /// Output directory — must be outside the working tree
+        #[arg(long)]
+        output: Option<PathBuf>,
+    },
+    /// Append an undo entry that reverses a past request (FT-042)
+    Undo {
+        /// Request ID to undo
+        req_id: String,
+        /// Reason for the undo
+        #[arg(long)]
+        reason: Option<String>,
+    },
 }
 
 pub(crate) fn handle_request(cmd: RequestCommands, fmt: &str) -> BoxResult {
@@ -44,6 +70,13 @@ pub(crate) fn handle_request(cmd: RequestCommands, fmt: &str) -> BoxResult {
         RequestCommands::Apply { file, commit } => apply(&file, commit, fmt),
         RequestCommands::Diff { file } => diff(&file, fmt),
         RequestCommands::Draft => list_drafts(),
+        RequestCommands::Log { command } => request_log_cmd::handle_log(command, fmt),
+        RequestCommands::Replay { full, to, output } => {
+            request_log_cmd::handle_replay(full, to, output)
+        }
+        RequestCommands::Undo { req_id, reason } => {
+            request_log_cmd::handle_undo(&req_id, reason.as_deref())
+        }
     }
 }
 
@@ -130,7 +163,7 @@ fn validate(file: &Path, fmt: &str) -> BoxResult {
         &request,
         &config,
         &root,
-        ApplyOptions { dry_run: true },
+        ApplyOptions { dry_run: true, skip_git_identity: true },
     );
     findings.extend(apply_result.findings);
     // Dedup
@@ -232,7 +265,7 @@ fn diff(file: &Path, fmt: &str) -> BoxResult {
         &request,
         &config,
         &root,
-        ApplyOptions { dry_run: true },
+        ApplyOptions { dry_run: true, skip_git_identity: true },
     );
     if fmt == "json" {
         print_json_result(&result);

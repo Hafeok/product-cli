@@ -2,8 +2,13 @@
 id: FT-042
 title: Request Log Hash-Chain and Replay
 phase: 5
-status: planned
-depends-on: []
+status: complete
+depends-on:
+- FT-041
+- FT-018
+- FT-020
+- FT-034
+- FT-036
 adrs:
 - ADR-039
 - ADR-032
@@ -157,11 +162,17 @@ product request log verify
   Log is tamper-free.
 ```
 
-On E015-equivalent (entry hash mismatch), E016-equivalent (chain break), or W021-equivalent (tag without log entry), the command prints a structured error naming the line, the stored hash, and the computed hash.
+On E017 (entry hash mismatch), E018 (chain break), or W021 (tag without log entry), the command prints a structured error naming the line, the stored hash, and the computed hash.
 
-### Code numbering
+### Validation codes
 
-The spec (`docs/product-request-log-spec.md`) provisionally uses E015, E016, W021. These collide with ADR-032's E015 (TC hash mismatch). **The implementation MUST pick the next free codes in the integrity tier** — probably E017, E018, W022, but the exact numbers depend on the state of the error catalogue at implementation time. The spec and test titles should be updated to reflect the chosen codes before the feature is marked complete.
+| Code | Tier | Description |
+|---|---|---|
+| E017 | Integrity | `requests.jsonl` entry hash mismatch — entry at line N has been tampered with |
+| E018 | Integrity | `requests.jsonl` chain break — `prev-hash` at line N does not match `entry-hash` of line N-1 |
+| W021 | Integrity | Git completion tag has no corresponding `verify` entry — possible log truncation |
+
+Allocated by ADR-039 after scanning the current error catalogue. E014/E015 are taken by ADR-032, E016 by ADR-034; E017/E018 are the next free integrity-tier error codes. W020 is reserved by the verify-and-llm-boundary spec; W021 is the next free warning code. No collision.
 
 ---
 
@@ -217,10 +228,10 @@ A user can:
 1. Run `product request apply request.yaml` and observe one new line appended to `requests.jsonl` at the repository root with a populated `entry-hash` and a `prev-hash` matching the previous entry's hash.
 2. On first run of the new binary in a repo that has `.product/request-log.jsonl`, observe that `requests.jsonl` is created with the old entries re-hashed into a valid chain and a final `migrate` entry noting the move.
 3. Run `product request log verify` on a clean log and observe exit 0 with per-entry and chain verification counts.
-4. Manually edit one byte in one entry of `requests.jsonl`, run `product request log verify`, and observe an E015-equivalent at the modified line plus an E016-equivalent at every following line.
-5. Delete one entry from `requests.jsonl`, run `product request log verify`, and observe an E016-equivalent at the entry after the deletion.
-6. Run `product request log verify --against-tags` and observe one warning per git tag that has no matching log entry.
-7. Run `product graph check` on a tampered log and observe exit 1 with the E015-equivalent / E016-equivalent findings.
+4. Manually edit one byte in one entry of `requests.jsonl`, run `product request log verify`, and observe E017 at the modified line plus E018 at every following line.
+5. Delete one entry from `requests.jsonl`, run `product request log verify`, and observe E018 at the entry after the deletion.
+6. Run `product request log verify --against-tags` and observe W021 per git tag that has no matching log entry.
+7. Run `product graph check` on a tampered log and observe exit 1 with the E017 / E018 findings.
 8. Run `product verify FT-XXX` on a feature whose TCs all pass and observe a `verify` entry appended to the log containing the TC results and the tag name.
 9. Run `product request undo REQ-ID` on a past entry and observe an `undo` entry appended to the log (not a deletion of the target entry) and the targeted artifacts returned to their pre-REQ-ID state.
 10. Run `product request replay --full --output /tmp/replay` and observe the command produces a graph in `/tmp/replay` that passes `product graph check --repo /tmp/replay` and whose `docs/` tree matches the current working copy.
@@ -241,4 +252,4 @@ A user can:
 - **Git integration for `applied-by` and `commit`.** Use `git2` if already in the dependency tree, otherwise shell out to `git config` and `git rev-parse HEAD`. Fail apply if either is unavailable.
 - **Replay reuses the apply pipeline.** Each entry's `request` is applied to a fresh directory using the same code path as `product request apply`, only with the target root redirected. This is the single biggest correctness invariant — one code path, two drivers (live apply and replay).
 - **Chain re-hash during the `.product/request-log.jsonl` migration.** Old entries lack `prev-hash` / `entry-hash`. Migration walks them in order, sets `prev-hash` from the previous entry, computes `entry-hash`, and writes the result. The final appended `migrate` entry chains off the last re-hashed entry.
-- **Code numbers E015/E016/W021 must be reconciled** against ADR-032's E015 before implementation commits. The spec and this feature describe them as placeholders.
+- **Validation codes are pinned at ADR-039 time: E017 (entry hash mismatch), E018 (chain break), W021 (tag without log entry).** They do not collide with ADR-032's E014/E015 or ADR-034's E016. No reconciliation step is required at implementation time.

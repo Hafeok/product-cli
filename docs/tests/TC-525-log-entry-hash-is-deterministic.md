@@ -2,13 +2,17 @@
 id: TC-525
 title: log entry hash is deterministic
 type: invariant
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
-phase: 1
+  features:
+  - FT-042
+  adrs:
+  - ADR-039
+phase: 5
 runner: cargo-test
 runner-args: tc_525_log_entry_hash_is_deterministic
+last-run: 2026-04-17T15:59:54.039660448+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

@@ -33,6 +33,8 @@ use std::path::{Path, PathBuf};
 pub struct ApplyOptions {
     /// Never write files — validate only.
     pub dry_run: bool,
+    /// Skip git identity check (used by tests and migration).
+    pub skip_git_identity: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -107,6 +109,23 @@ pub fn apply_request(
         }
     }
     validate::check_dep_governance(request, &refs, &graph, &mut findings);
+
+    // ADR-039 decision 8: git identity is required for apply (not dry-run).
+    let applied_by = if options.dry_run || options.skip_git_identity {
+        crate::request_log::git_identity::resolve_applied_by(repo_root)
+            .unwrap_or_else(|_| "local:unknown".into())
+    } else {
+        match crate::request_log::git_identity::resolve_applied_by(repo_root) {
+            Ok(s) => s,
+            Err(msg) => {
+                findings.push(Finding::error("E009", msg, "$"));
+                return ApplyResult {
+                    applied: false, created: Vec::new(), changed: Vec::new(),
+                    findings, graph_check_clean: false,
+                };
+            }
+        }
+    };
 
     let has_errors = findings.iter().any(|f| f.is_error());
     if has_errors || options.dry_run {
@@ -198,7 +217,36 @@ pub fn apply_request(
         Err(_) => false,
     };
 
+    // FT-041 compat: append to legacy `.product/request-log.jsonl` too.
     let _ = super::log::append_log(repo_root, request, &created, &changed);
+
+    // FT-042: append hash-chained entry to `requests.jsonl` (committed log).
+    let requests_rel = &config.paths.requests;
+    let log_p = crate::request_log::log_path(repo_root, Some(requests_rel));
+    let commit = crate::request_log::git_identity::resolve_commit(repo_root);
+    let entry_type = match request.request_type {
+        RequestType::Create => crate::request_log::entry::EntryType::Create,
+        RequestType::Change => crate::request_log::entry::EntryType::Change,
+        RequestType::CreateAndChange => crate::request_log::entry::EntryType::CreateAndChange,
+    };
+    let created_ids: Vec<String> = created.iter().map(|c| c.id.clone()).collect();
+    let changed_ids: Vec<String> = changed.iter().map(|c| c.id.clone()).collect();
+    let request_json = serde_json::json!({
+        "type": request.request_type.to_string(),
+        "reason": request.reason,
+    });
+    let _ = crate::request_log::append::append_apply_entry(
+        &log_p,
+        crate::request_log::append::ApplyEntryParams {
+            entry_type,
+            applied_by: &applied_by,
+            commit: &commit,
+            reason: &request.reason,
+            request_json,
+            created: created_ids,
+            changed: changed_ids,
+        },
+    );
 
     ApplyResult {
         applied: true, created, changed, findings, graph_check_clean,

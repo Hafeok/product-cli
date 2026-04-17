@@ -60,23 +60,65 @@ pub fn run_verify(
 
     let now = chrono::Utc::now().to_rfc3339();
     let tc_ids: Vec<String> = feature.front.tests.clone();
-    let (all_pass, any_runnable, has_unimplemented, unrunnable_count) =
-        run_tc_list(&tc_ids, graph, root, config, &now)?;
+    let r = run_tc_list(&tc_ids, graph, root, config, &now)?;
 
-    if unrunnable_count > 0 {
+    if r.unrunnable_count > 0 {
         eprintln!(
             "warning[W016]: {} TC(s) acknowledged as unrunnable for {}",
-            unrunnable_count, feature_id
+            r.unrunnable_count, feature_id
         );
     }
 
-    if any_runnable || has_unimplemented {
-        update_feature_and_checklist(feature_id, config, root, all_pass, has_unimplemented, &tc_ids)?;
+    let tag_created_opt = if r.any_runnable || r.has_unimplemented {
+        update_feature_and_checklist(feature_id, config, root, r.all_pass, r.has_unimplemented, &tc_ids)?
     } else {
         eprintln!("warning[W001]: no runnable TCs found for {}", feature_id);
-    }
+        None
+    };
+
+    // ADR-039 decision 6: verify writes a log entry.
+    write_verify_log_entry(
+        config,
+        root,
+        feature_id,
+        &tc_ids,
+        &r.passing,
+        &r.failing,
+        tag_created_opt.as_deref(),
+    );
 
     Ok(())
+}
+
+fn write_verify_log_entry(
+    config: &ProductConfig,
+    root: &Path,
+    feature_id: &str,
+    tcs_run: &[String],
+    passing: &[String],
+    failing: &[String],
+    tag_created: Option<&str>,
+) {
+    // Skip on dry-run / no-tc-run situations? No — verify always logs.
+    let log_p = crate::request_log::log_path(root, Some(&config.paths.requests));
+    let applied_by =
+        crate::request_log::git_identity::resolve_applied_by(root)
+            .unwrap_or_else(|_| "local:unknown".into());
+    let commit = crate::request_log::git_identity::resolve_commit(root);
+    let reason = format!("verify {}: {}/{} passing", feature_id, passing.len(), tcs_run.len());
+    let _ = crate::request_log::append::append_verify_entry(
+        &log_p,
+        crate::request_log::append::VerifyEntryParams {
+            applied_by: &applied_by,
+            commit: &commit,
+            reason: &reason,
+            feature: feature_id,
+            tcs_run: tcs_run.to_vec(),
+            passing: passing.to_vec(),
+            failing: failing.to_vec(),
+            tag_created: tag_created.map(String::from),
+        },
+    );
 }
 
 /// Verify all TCs linked to cross-cutting ADRs, regardless of feature (--platform)
@@ -114,15 +156,27 @@ pub fn run_verify_platform(
     fileops::write_file_atomic(&checklist_path, &crate::checklist::generate(&new_graph))
 }
 
-/// Run a list of TCs, returning (all_pass, any_runnable, has_unimplemented, unrunnable_count).
+/// Result of running a list of TCs.
+pub(crate) struct TcRunResult {
+    pub all_pass: bool,
+    pub any_runnable: bool,
+    pub has_unimplemented: bool,
+    pub unrunnable_count: usize,
+    pub passing: Vec<String>,
+    pub failing: Vec<String>,
+}
+
+/// Run a list of TCs.
 fn run_tc_list(
     tc_ids: &[String], graph: &KnowledgeGraph, root: &Path,
     config: &ProductConfig, now: &str,
-) -> Result<(bool, bool, bool, usize)> {
+) -> Result<TcRunResult> {
     let mut all_pass = true;
     let mut any_runnable = false;
     let mut has_unimplemented = false;
     let mut unrunnable_count: usize = 0;
+    let mut passing: Vec<String> = Vec::new();
+    let mut failing: Vec<String> = Vec::new();
 
     for tc_id in tc_ids {
         let Some(tc) = graph.tests.get(tc_id.as_str()) else { continue };
@@ -170,15 +224,24 @@ fn run_tc_list(
             TcResult::Pass(d) => {
                 println!("  {} {:<30} PASS ({:.1}s)", tc.front.id, tc.front.title, d);
                 update_tc_status(&tc.path, "passing", now, None, Some(d))?;
+                passing.push(tc.front.id.clone());
             }
             TcResult::Fail(d, msg) => {
                 println!("  {} {:<30} FAIL ({:.1}s)", tc.front.id, tc.front.title, d);
                 update_tc_status(&tc.path, "failing", now, Some(&msg), Some(d))?;
                 all_pass = false;
+                failing.push(tc.front.id.clone());
             }
         }
     }
-    Ok((all_pass, any_runnable, has_unimplemented, unrunnable_count))
+    Ok(TcRunResult {
+        all_pass,
+        any_runnable,
+        has_unimplemented,
+        unrunnable_count,
+        passing,
+        failing,
+    })
 }
 
 enum PrereqResult { AllSatisfied, NotSatisfied(String), MissingDefinition(String) }
@@ -204,15 +267,17 @@ fn check_prerequisites(requires: &[String], config: &ProductConfig, root: &Path)
 }
 
 /// Reload the graph, update feature status, create completion tag, and regenerate the checklist.
+/// Returns the created tag name, if one was created.
 fn update_feature_and_checklist(
     feature_id: &str, config: &ProductConfig, root: &Path,
     all_pass: bool, has_unimplemented: bool, tc_ids: &[String],
-) -> Result<()> {
+) -> Result<Option<String>> {
     let features_dir = config.resolve_path(root, &config.paths.features);
     let adrs_dir = config.resolve_path(root, &config.paths.adrs);
     let tests_dir = config.resolve_path(root, &config.paths.tests);
     let loaded = parser::load_all(&features_dir, &adrs_dir, &tests_dir)?;
     let new_graph = KnowledgeGraph::build(loaded.features, loaded.adrs, loaded.tests);
+    let mut created_tag: Option<String> = None;
 
     if let Some(f) = new_graph.features.get(feature_id) {
         let new_status = if all_pass && !has_unimplemented {
@@ -236,6 +301,7 @@ fn update_feature_and_checklist(
                     Ok(tag_name) => {
                         println!("  \u{2713} Tagged: {}", tag_name);
                         println!("    Run `git push --tags` to share.");
+                        created_tag = Some(tag_name);
                     }
                     Err(e) => {
                         eprintln!(
@@ -252,5 +318,6 @@ fn update_feature_and_checklist(
 
     let checklist_path = config.resolve_path(root, &config.paths.checklist);
     if let Some(parent) = checklist_path.parent() { let _ = std::fs::create_dir_all(parent); }
-    fileops::write_file_atomic(&checklist_path, &crate::checklist::generate(&new_graph))
+    fileops::write_file_atomic(&checklist_path, &crate::checklist::generate(&new_graph))?;
+    Ok(created_tag)
 }

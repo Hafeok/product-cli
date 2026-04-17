@@ -2,13 +2,17 @@
 id: TC-524
 title: log verify is pure read
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
-phase: 1
+  features:
+  - FT-042
+  adrs:
+  - ADR-039
+phase: 5
 runner: cargo-test
 runner-args: tc_524_log_verify_is_pure_read
+last-run: 2026-04-17T15:59:54.039660448+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

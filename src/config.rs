@@ -42,7 +42,32 @@ pub struct ProductConfig {
     /// Product identity and responsibility (FT-039)
     #[serde(default)]
     pub product: Option<ProductSection>,
+    /// Request log configuration (FT-042, ADR-039)
+    #[serde(default)]
+    pub log: LogConfig,
 }
+
+/// Hash-chained request log configuration — `[log]` in product.toml (FT-042).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LogConfig {
+    /// When true, `product graph check` also verifies the log chain (default: true).
+    #[serde(rename = "verify-on-check", default = "default_true")]
+    pub verify_on_check: bool,
+    /// Hash algorithm — `sha256` only for v1.
+    #[serde(rename = "hash-algorithm", default = "default_hash_algorithm")]
+    pub hash_algorithm: String,
+}
+
+impl Default for LogConfig {
+    fn default() -> Self {
+        Self {
+            verify_on_check: true,
+            hash_algorithm: default_hash_algorithm(),
+        }
+    }
+}
+
+fn default_hash_algorithm() -> String { "sha256".to_string() }
 
 /// Product identity section — `[product]` in product.toml (FT-039)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -121,6 +146,9 @@ pub struct PathsConfig {
     pub checklist: String,
     #[serde(default = "default_dependencies_path")]
     pub dependencies: String,
+    /// Committed request log path (FT-042, ADR-039) — default `requests.jsonl`.
+    #[serde(default = "default_requests_path")]
+    pub requests: String,
 }
 
 impl Default for PathsConfig {
@@ -132,6 +160,7 @@ impl Default for PathsConfig {
             graph: default_graph_path(),
             checklist: default_checklist_path(),
             dependencies: default_dependencies_path(),
+            requests: default_requests_path(),
         }
     }
 }
@@ -142,6 +171,7 @@ fn default_tests_path() -> String { "docs/tests".into() }
 fn default_graph_path() -> String { "docs/graph".into() }
 fn default_checklist_path() -> String { "docs/checklist.md".into() }
 fn default_dependencies_path() -> String { "docs/dependencies".into() }
+fn default_requests_path() -> String { "requests.jsonl".into() }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrefixConfig {

@@ -113,6 +113,7 @@ fn migrate_from_prd(
         let (written, skipped) =
             migrate::execute_plan(&plan, &features_dir, &adrs_dir, &tests_dir, overwrite, interactive)?;
         println!("\n{} files written, {} skipped", written, skipped);
+        append_migrate_log_entry(&cfg, &root, source, "migrate from-prd", written);
     }
     Ok(())
 }
@@ -146,8 +147,32 @@ fn migrate_from_adrs(
         let (written, skipped) =
             migrate::execute_plan(&plan, &features_dir, &adrs_dir, &tests_dir, overwrite, interactive)?;
         println!("\n{} files written, {} skipped", written, skipped);
+        append_migrate_log_entry(&cfg, &root, source, "migrate from-adrs", written);
     }
     Ok(())
+}
+
+fn append_migrate_log_entry(
+    config: &product_lib::config::ProductConfig,
+    root: &std::path::Path,
+    source: &str,
+    reason: &str,
+    written_count: usize,
+) {
+    use product_lib::request_log::{append, log_path};
+    let log_p = log_path(root, Some(&config.paths.requests));
+    let applied_by = product_lib::request_log::git_identity::resolve_applied_by(root)
+        .unwrap_or_else(|_| "local:unknown".into());
+    let commit = product_lib::request_log::git_identity::resolve_commit(root);
+    let created = vec![format!("{} artifacts", written_count)];
+    let _ = append::append_migrate_entry(
+        &log_p,
+        &applied_by,
+        &commit,
+        reason,
+        vec![source.to_string()],
+        created,
+    );
 }
 
 fn migrate_schema(dry_run: bool) -> BoxResult {
@@ -165,6 +190,22 @@ fn migrate_schema(dry_run: bool) -> BoxResult {
         );
         let (updated, unchanged) = product_lib::config_migrate::migrate_schema(&root, &cfg, dry_run)?;
         println!("{} files updated, {} unchanged", updated, unchanged);
+        if !dry_run && updated > 0 {
+            use product_lib::request_log::{append, log_path};
+            let log_p = log_path(&root, Some(&cfg.paths.requests));
+            let applied_by = product_lib::request_log::git_identity::resolve_applied_by(&root)
+                .unwrap_or_else(|_| "local:unknown".into());
+            let commit = product_lib::request_log::git_identity::resolve_commit(&root);
+            let _ = append::append_schema_upgrade_entry(
+                &log_p,
+                &applied_by,
+                &commit,
+                &format!("schema upgrade {} -> {}", version, config::CURRENT_SCHEMA_VERSION),
+                version,
+                config::CURRENT_SCHEMA_VERSION,
+                &format!("{} files updated", updated),
+            );
+        }
     }
     Ok(())
 }

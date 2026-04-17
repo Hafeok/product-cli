@@ -2,13 +2,17 @@
 id: TC-518
 title: log cross ref tags detects truncation
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
-phase: 1
+  features:
+  - FT-042
+  adrs:
+  - ADR-039
+phase: 5
 runner: cargo-test
 runner-args: tc_518_log_cross_ref_tags_detects_truncation
+last-run: 2026-04-17T15:59:54.039660448+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
@@ -23,9 +27,9 @@ runner-args: tc_518_log_cross_ref_tags_detects_truncation
 ## Steps
 
 1. Run `product request log verify --against-tags`.
-2. Assert exit code 1 (or warning exit, per ADR-009 convention — provisionally W021 is a warning so exit 2).
+2. Assert exit code 2 (warning exit, per ADR-009 — W021 is a warning).
 3. Assert the output reports `product/FT-009/complete` as having no corresponding log entry.
-4. Assert the reconciled tag-without-entry warning code is emitted (provisionally W021).
+4. Assert the emitted warning code is `W021` (per ADR-039).
 
 ## Invariant
 

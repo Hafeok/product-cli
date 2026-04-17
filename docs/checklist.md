@@ -807,3 +807,38 @@
 - [x] TC-503: process killed mid-apply leaves recoverable state (chaos) — passing
 - [x] TC-504: request interface ready for production use (exit-criteria) — passing
 
+### FT-042 — Request Log Hash-Chain and Replay [x]
+
+- [x] ADR-039: Hash-Chained Request Log for Tamper-Evident Audit (accepted)
+- [x] ADR-032: Content Hash Immutability Enforcement (accepted)
+- [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
+- [x] ADR-015: File Write Safety — Atomic Writes and Advisory Locking (accepted)
+- [x] ADR-036: Tag-Based Implementation Tracking (accepted)
+- [x] ADR-009: CI Integration via Exit Codes (accepted)
+- [x] ADR-013: Error Model and User-Facing Error Format (accepted)
+- [x] TC-505: log entry appended on apply (scenario) — passing
+- [x] TC-506: log entry hash valid after apply (scenario) — passing
+- [x] TC-507: log chain intact after multiple applies (scenario) — passing
+- [x] TC-508: log verify passes on clean log (scenario) — passing
+- [x] TC-509: log verify detects entry modification (scenario) — passing
+- [x] TC-510: log verify detects chain break (scenario) — passing
+- [x] TC-511: log verify detects entry deletion (scenario) — passing
+- [x] TC-512: log replay reconstructs state (scenario) — passing
+- [x] TC-513: log replay to checkpoint (scenario) — passing
+- [x] TC-514: log undo appends inverse (scenario) — passing
+- [x] TC-515: log undo does not delete entries (scenario) — passing
+- [x] TC-516: log migrate entry first (scenario) — passing
+- [x] TC-517: log verify entry on product verify (scenario) — passing
+- [x] TC-518: log cross ref tags detects truncation (scenario) — passing
+- [x] TC-519: log graph check integration exits one on tamper (scenario) — passing
+- [x] TC-520: log path migration preserves chain (scenario) — passing
+- [x] TC-521: log apply refuses without git identity (scenario) — passing
+- [x] TC-522: log entry id increments within utc day (scenario) — passing
+- [x] TC-523: log replay never overwrites working tree (scenario) — passing
+- [x] TC-524: log verify is pure read (scenario) — passing
+- [x] TC-525: log entry hash is deterministic (invariant) — passing
+- [x] TC-526: log any field change invalidates hash (invariant) — passing
+- [x] TC-527: log chain breaks on any deletion (invariant) — passing
+- [x] TC-528: log replay produces same graph (invariant) — passing
+- [x] TC-529: request log hash chain exit criteria (exit-criteria) — passing
+

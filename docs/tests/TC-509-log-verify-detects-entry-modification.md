@@ -2,13 +2,17 @@
 id: TC-509
 title: log verify detects entry modification
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
-phase: 1
+  features:
+  - FT-042
+  adrs:
+  - ADR-039
+phase: 5
 runner: cargo-test
 runner-args: tc_509_log_verify_detects_entry_modification
+last-run: 2026-04-17T15:59:54.039660448+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
@@ -26,7 +30,7 @@ Modifying any byte inside an entry (other than `entry-hash` itself) causes `prod
 2. Assert exit code 1.
 3. Assert stdout/stderr identifies the tampered line (line number, REQ-ID).
 4. Assert the error prints the stored hash and the recomputed hash, which differ.
-5. Assert the emitted error code is the reconciled per-entry-hash-mismatch code (see FT-042 code numbering note — provisionally E015, actually next free in the integrity tier).
+5. Assert the emitted error code is `E017` (per-entry hash mismatch, per ADR-039).
 
 ## Invariant
 

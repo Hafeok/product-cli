@@ -2,13 +2,17 @@
 id: TC-511
 title: log verify detects entry deletion
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
-phase: 1
+  features:
+  - FT-042
+  adrs:
+  - ADR-039
+phase: 5
 runner: cargo-test
 runner-args: tc_511_log_verify_detects_entry_deletion
+last-run: 2026-04-17T15:59:54.039660448+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
@@ -26,8 +30,8 @@ Deleting any entry from `requests.jsonl` causes the following entry's `prev-hash
 2. Assert exit code 1.
 3. Assert the chain-break error points at the line following the deletion.
 4. Assert the preserved entries still individually hash correctly.
-5. Assert the emitted error code is the reconciled chain-break code (provisionally E016).
+5. Assert the emitted error code is `E018` (chain break, per ADR-039).
 
 ## Invariant
 
-Deletion is indistinguishable from modification-of-prev-hash for the chain check — both surface as E016-equivalents.
+Deletion is indistinguishable from modification-of-prev-hash for the chain check — both surface as E018.

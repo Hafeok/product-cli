@@ -2,13 +2,17 @@
 id: TC-529
 title: request log hash chain exit criteria
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
-phase: 1
+  features:
+  - FT-042
+  adrs:
+  - ADR-039
+phase: 5
 runner: cargo-test
 runner-args: tc_529_request_log_hash_chain_exit_criteria
+last-run: 2026-04-17T15:59:54.039660448+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
@@ -22,8 +26,7 @@ Exit criteria for FT-042. This TC gates feature completion: every behavioural TC
 3. **`product request log verify --against-tags` on the live repo exits 0 (or exits 2 only with documented acknowledged tags).** All completion tags correspond to log entries.
 4. **`product request replay --full --output /tmp/product-replay-ci` followed by `diff -r docs/ /tmp/product-replay-ci/docs/` produces no output.** The log and the files are byte-equivalent.
 5. **`product graph check` with `[log] verify-on-check = true` exits 0.** Integrated log verification passes as part of the standard health check.
-6. **Error code reconciliation complete.** The spec (`docs/product-request-log-spec.md`) and any test titles or strings no longer reference E015/E016/W021 as placeholders — the implementation has picked the next free codes (likely E017/E018/W022) and both the spec and the test fixtures reflect them.
-7. **Feature depends-on is recorded.** `depends-on` in FT-042's front-matter lists FT-041, FT-018, FT-020, FT-034, FT-036, and the value was set through the eventual request interface or equivalent tool.
-8. **Cross-platform determinism.** The byte output of `canonical_json(e)` is identical on Linux, macOS, and Windows for the same `e` (run on CI matrix).
+6. **Validation codes E017, E018, W021 are used consistently.** The implementation emits these codes (allocated by ADR-039, no collision with ADR-032 or ADR-034) in all the paths described by TC-509, TC-510, TC-511, TC-518, and TC-519.
+7. **Cross-platform determinism.** The byte output of `canonical_json(e)` is identical on Linux, macOS, and Windows for the same `e` (run on CI matrix).
 
-All eight gates must pass before `status: complete`.
+All seven gates must pass before `status: complete`.

@@ -76,11 +76,17 @@ pub(crate) fn handle_graph(cmd: GraphCommands, global_format: &str) -> BoxResult
 }
 
 fn graph_check(format: Option<String>, global_format: &str) -> BoxResult {
-    let (config, _, graph) = load_graph()?;
+    let (config, root, graph) = load_graph()?;
     let mut result = graph.check();
     domains::validate_domains(&graph, &config.domains, &mut result.errors, &mut result.warnings);
     responsibility::check_responsibility(&graph, config.responsibility(), &mut result);
     for w in config.validate_product_section() { eprintln!("{}", w); }
+
+    // FT-042, ADR-039 decision 10: wire log verification into graph check.
+    if config.log.verify_on_check {
+        append_log_findings_to_check(&config, &root, &mut result);
+    }
+
     let fmt = format.as_deref().unwrap_or(global_format);
 
     if fmt == "json" {
@@ -99,6 +105,39 @@ fn graph_check(format: Option<String>, global_format: &str) -> BoxResult {
         process::exit(code);
     }
     Ok(())
+}
+
+/// FT-042: append log-verification findings to the graph check result.
+fn append_log_findings_to_check(
+    config: &product_lib::config::ProductConfig,
+    root: &std::path::Path,
+    result: &mut product_lib::error::CheckResult,
+) {
+    use product_lib::error::Diagnostic;
+    use product_lib::request_log::{log_path, verify::{verify_log, Severity, VerifyOptions}};
+
+    let lp = log_path(root, Some(&config.paths.requests));
+    if !lp.exists() {
+        return;
+    }
+    let outcome = verify_log(&lp, root, &VerifyOptions::default());
+    for f in outcome.findings {
+        let mut diag = match f.severity {
+            Severity::Error => Diagnostic::error(&f.code, &f.message),
+            Severity::Warning => Diagnostic::warning(&f.code, &f.message),
+        };
+        diag = diag.with_file(lp.clone());
+        if let Some(line) = f.line {
+            diag = diag.with_line(line);
+        }
+        if let Some(detail) = f.detail {
+            diag = diag.with_detail(&detail);
+        }
+        match f.severity {
+            Severity::Error => result.errors.push(diag),
+            Severity::Warning => result.warnings.push(diag),
+        }
+    }
 }
 
 fn graph_rebuild() -> BoxResult {

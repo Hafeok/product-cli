@@ -23,6 +23,7 @@ pub mod onboard;
 pub mod parser;
 pub mod rdf;
 pub mod request;
+pub mod request_log;
 pub mod tags;
 pub mod types;
 

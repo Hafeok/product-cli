@@ -25,7 +25,7 @@ pub fn handle_request_validate(args: &Value, repo_root: &Path) -> Result<Value, 
         &request,
         &config,
         repo_root,
-        ApplyOptions { dry_run: true },
+        ApplyOptions { dry_run: true, skip_git_identity: true },
     );
 
     Ok(build_validate_result(&result.findings))

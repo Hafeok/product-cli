@@ -2,13 +2,17 @@
 id: TC-510
 title: log verify detects chain break
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
-phase: 1
+  features:
+  - FT-042
+  adrs:
+  - ADR-039
+phase: 5
 runner: cargo-test
 runner-args: tc_510_log_verify_detects_chain_break
+last-run: 2026-04-17T15:59:54.039660448+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
@@ -26,7 +30,7 @@ Modifying only the `prev-hash` of an entry (without changing the preceding entry
 2. Assert exit code 1.
 3. Assert per-entry hash check passes (entry hashes valid N/N).
 4. Assert the chain check reports a break at entry N with "prev-hash in entry" and "actual hash of entry N-1" lines.
-5. Assert the emitted error code is the reconciled chain-break code (provisionally E016).
+5. Assert the emitted error code is `E018` (chain break, per ADR-039).
 
 ## Invariant
 

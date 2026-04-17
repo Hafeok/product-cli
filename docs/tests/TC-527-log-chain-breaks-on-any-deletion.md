@@ -2,13 +2,17 @@
 id: TC-527
 title: log chain breaks on any deletion
 type: invariant
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
-phase: 1
+  features:
+  - FT-042
+  adrs:
+  - ADR-039
+phase: 5
 runner: cargo-test
 runner-args: tc_527_log_chain_breaks_on_any_deletion
+last-run: 2026-04-17T15:59:54.039660448+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
@@ -22,11 +26,11 @@ Log ≜ Entry+
 Index ≜ Integer
 delete ≜ ⟨Log, Index⟩ → Log
 verify ≜ Log → Result
-Result ≜ Ok | ChainBreak
+Result ≜ Ok | E018
 }
 
 ⟦Γ:Invariants⟧{
-∀ log ∈ Log: ∀ n ∈ Index: 0 < n < |log| ⇒ verify(delete(log, n)) = ChainBreak
+∀ log ∈ Log: ∀ n ∈ Index: 0 < n < |log| ⇒ verify(delete(log, n)) = E018
 }
 
 ## Property test

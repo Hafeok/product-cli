@@ -212,7 +212,7 @@ product request log verify
     stored:   sha256:a3f9b2c1...
     computed: sha256:d7e2f4a8...
 
-  error[E015]: requests.jsonl entry at line 23 has been tampered with
+  error[E017]: requests.jsonl entry at line 23 has been tampered with
     The stored hash does not match the computed hash.
     The entry reason was: "Add rate limiting"
     All entries after line 23 cannot be trusted.
@@ -223,15 +223,15 @@ product request log verify
     prev-hash in entry: sha256:a3f9b2c1...
     actual hash of entry 23: sha256:d7e2f4a8...
 
-  error[E016]: requests.jsonl chain break at line 24
+  error[E018]: requests.jsonl chain break at line 24
     This entry's prev-hash does not match the hash of the preceding entry.
     An entry may have been inserted, deleted, or modified before this point.
 ```
 
 ### `product graph check` integration
 
-`product graph check` runs log verification as part of its standard checks. E015 and
-E016 are exit code 1 — the same severity as broken links and dependency cycles. A
+`product graph check` runs log verification as part of its standard checks. E017 and
+E018 are exit code 1 — the same severity as broken links and dependency cycles. A
 tampered log is a structural integrity violation.
 
 ### `product request log verify --against-tags`
@@ -323,45 +323,47 @@ hash-algorithm = "sha256"     # sha256 only for now
 
 | Code | Tier | Description |
 |---|---|---|
-| E015 | Integrity | `requests.jsonl` entry hash mismatch — entry at line N has been tampered with |
-| E016 | Integrity | `requests.jsonl` chain break — `prev-hash` at line N does not match hash of preceding entry |
+| E017 | Integrity | `requests.jsonl` entry hash mismatch — entry at line N has been tampered with |
+| E018 | Integrity | `requests.jsonl` chain break — `prev-hash` at line N does not match hash of preceding entry |
 | W021 | Integrity | Git completion tag has no corresponding verify entry in the log — possible truncation |
+
+ADR-039 allocates these codes. They do not collide with ADR-032 (E014/E015) or ADR-034 (E016). See the "Validation code allocation" section of ADR-039 for the catalogue scan.
 
 ---
 
 ## Session Tests
 
-These sessions cover the log and hash chain behaviour and belong in `tests/sessions/`:
+These sessions cover the log and hash chain behaviour. Implemented as TC-505..TC-524 under FT-042:
 
 ```
-ST-090  log-entry-appended-on-apply
-ST-091  log-entry-hash-valid-after-apply
-ST-092  log-chain-intact-after-multiple-applies
-ST-093  log-verify-passes-on-clean-log
-ST-094  log-verify-detects-entry-modification     # tamper entry N, assert E015
-ST-095  log-verify-detects-chain-break            # tamper prev-hash, assert E016
-ST-096  log-verify-detects-entry-deletion         # delete entry N, assert E016 at N+1
-ST-097  log-replay-reconstructs-state             # replay --full, diff against current
-ST-098  log-replay-to-checkpoint                  # replay --to N, assert correct state
-ST-099  log-undo-appends-inverse                  # undo, assert undo entry in log
-ST-100  log-undo-does-not-delete-entries          # undo, assert original entry present
-ST-101  log-migrate-entry-first                   # migration creates genesis entry
-ST-102  log-verify-entry-on-product-verify        # product verify writes verify entry
-ST-103  log-cross-ref-tags-detects-truncation     # delete verify entry, assert W021
+TC-505  log-entry-appended-on-apply
+TC-506  log-entry-hash-valid-after-apply
+TC-507  log-chain-intact-after-multiple-applies
+TC-508  log-verify-passes-on-clean-log
+TC-509  log-verify-detects-entry-modification     # tamper entry N, assert E017
+TC-510  log-verify-detects-chain-break            # tamper prev-hash, assert E018
+TC-511  log-verify-detects-entry-deletion         # delete entry N, assert E018 at N+1
+TC-512  log-replay-reconstructs-state             # replay --full, diff against current
+TC-513  log-replay-to-checkpoint                  # replay --to N, assert correct state
+TC-514  log-undo-appends-inverse                  # undo, assert undo entry in log
+TC-515  log-undo-does-not-delete-entries          # undo, assert original entry present
+TC-516  log-migrate-entry-first                   # migration creates genesis entry
+TC-517  log-verify-entry-on-product-verify        # product verify writes verify entry
+TC-518  log-cross-ref-tags-detects-truncation     # delete verify entry, assert W021
 ```
 
 ---
 
 ## Property Tests
 
-Property-level invariants for the hash chain (belong in `tests/property/`):
+Property-level invariants for the hash chain, implemented as TC-525..TC-528 (invariant type) under FT-042:
 
 | TC | Property | Formal expression |
 |---|---|---|
-| TC-P015 | Entry hash is deterministic | `∀e:Entry: hash(e) = hash(e)` |
-| TC-P016 | Any field change invalidates hash | `∀e:Entry, f:Field, v:Value: hash(mutate(e,f,v)) ≠ hash(e)` |
-| TC-P017 | Chain breaks on any deletion | `∀log:Log, n:Index: verify(delete(log,n)) = Err(E016)` |
-| TC-P018 | Replay of log produces same graph | `∀log:Log: graph(replay(log)) = graph(files(log))` |
+| TC-525 | Entry hash is deterministic | `∀e:Entry: hash(e) = hash(e)` |
+| TC-526 | Any field change invalidates hash | `∀e:Entry, f:Field, v:Value: hash(mutate(e,f,v)) ≠ hash(e)` |
+| TC-527 | Chain breaks on any deletion | `∀log:Log, n:Index: verify(delete(log,n)) = Err(E018)` |
+| TC-528 | Replay of log produces same graph | `∀log:Log: graph(replay(log)) = graph(files(log))` |
 
 TC-P018 is the most important — it is the proof that the log and the files are
 equivalent representations of the same state.

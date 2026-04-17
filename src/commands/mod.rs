@@ -25,6 +25,7 @@ mod onboard;
 mod preflight;
 mod prompts_cmd;
 mod request_cmd;
+mod request_log_cmd;
 mod schema;
 mod status;
 mod tags;
@@ -307,7 +308,18 @@ fn load_graph() -> Result<(ProductConfig, PathBuf, KnowledgeGraph), Box<dyn std:
 
 pub fn run(command: Commands, format: &str, cli_command: &mut clap::Command) -> BoxResult {
     cleanup_stale_tmp_files();
+    migrate_log_path_if_needed();
     dispatch(command, format, cli_command)
+}
+
+/// FT-042 one-shot migration from `.product/request-log.jsonl` to `requests.jsonl`.
+fn migrate_log_path_if_needed() {
+    if let Ok((config, root)) = ProductConfig::discover() {
+        let _ = product_lib::request_log::migrate_if_needed(
+            &root,
+            Some(&config.paths.requests),
+        );
+    }
 }
 
 fn cleanup_stale_tmp_files() {
