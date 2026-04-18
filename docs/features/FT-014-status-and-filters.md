@@ -52,8 +52,11 @@ tests:
 - TC-237
 - TC-238
 - TC-249
-domains: [api, data-model]
-domains-acknowledged: {}
+domains:
+- api
+- data-model
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 `product status` provides a summary view of project health by phase, coverage, and dependency state.

@@ -19,8 +19,10 @@ tests:
 - TC-149
 - TC-150
 - TC-151
-domains: [api]
-domains-acknowledged: {}
+domains:
+- api
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 {BUNDLE}

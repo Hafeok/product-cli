@@ -12,6 +12,7 @@ adrs:
 - ADR-021
 - ADR-032
 - ADR-038
+- ADR-040
 tests:
 - TC-577
 - TC-578

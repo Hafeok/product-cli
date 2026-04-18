@@ -49,7 +49,8 @@ domains:
 - error-handling
 - observability
 - security
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 The Product request log is the committed, hash-chained, tamper-evident audit trail of every graph mutation. It is the append-only record behind `product request apply`, `product request undo`, `product verify`, `product migrate`, and `product migrate schema`, and it is replayable — the same log deterministically reconstructs the graph at any point in its history.

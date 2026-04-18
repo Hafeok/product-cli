@@ -20,8 +20,11 @@ tests:
 - TC-129
 - TC-130
 - TC-131
-domains: [observability, api]
-domains-acknowledged: {}
+domains:
+- observability
+- api
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 ### Drift Detection

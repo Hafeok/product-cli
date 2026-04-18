@@ -21,8 +21,11 @@ tests:
 - TC-428
 - TC-429
 - TC-430
-domains: [security, data-model]
-domains-acknowledged: {}
+domains:
+- security
+- data-model
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 ## Description

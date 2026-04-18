@@ -19,8 +19,10 @@ tests:
 - TC-014
 - TC-015
 - TC-156
-domains: [data-model]
-domains-acknowledged: {}
+domains:
+- data-model
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 ### Artifact Types

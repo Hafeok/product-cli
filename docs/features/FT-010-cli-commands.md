@@ -17,8 +17,11 @@ tests:
 - TC-057
 - TC-058
 - TC-059
-domains: [api, error-handling]
-domains-acknowledged: {}
+domains:
+- api
+- error-handling
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 ### Navigation

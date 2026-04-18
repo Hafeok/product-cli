@@ -28,8 +28,11 @@ tests:
 - TC-149
 - TC-150
 - TC-151
-domains: [data-model, api]
-domains-acknowledged: {}
+domains:
+- data-model
+- api
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 `product graph coverage` produces the feature × domain coverage matrix — the portfolio-level view of architectural completeness at scale.

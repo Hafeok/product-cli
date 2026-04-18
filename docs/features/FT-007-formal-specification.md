@@ -13,7 +13,8 @@ tests:
 - TC-152
 domains:
 - data-model
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 ⟦Σ:Types⟧{

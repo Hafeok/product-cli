@@ -20,8 +20,10 @@ tests:
 - TC-437
 - TC-438
 - TC-439
-domains: [api]
-domains-acknowledged: {}
+domains:
+- api
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 ## Description

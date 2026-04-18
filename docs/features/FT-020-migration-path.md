@@ -22,8 +22,11 @@ tests:
 - TC-085
 - TC-162
 - TC-275
-domains: [api, data-model]
-domains-acknowledged: {}
+domains:
+- api
+- data-model
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 Migration is a two-phase extract-then-confirm process. See ADR-017 for full heuristic specification.

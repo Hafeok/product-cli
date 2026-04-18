@@ -41,7 +41,8 @@ domains:
 - api
 - data-model
 - error-handling
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 The Product request is the single composable write interface to the knowledge graph. Multi-artifact mutations — creating a feature with its governing ADRs, TCs and DEPs in one atomic step; linking and re-linking across several artifacts; changing a batch of fields with one audit record — flow through one of two MCP tools (`product_request_validate`, `product_request_apply`) and one CLI command (`product request`).

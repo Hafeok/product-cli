@@ -29,8 +29,10 @@ tests:
 - TC-078
 - TC-079
 - TC-155
-domains: [data-model]
-domains-acknowledged: {}
+domains:
+- data-model
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 ### Feature

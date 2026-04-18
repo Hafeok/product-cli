@@ -18,7 +18,8 @@ tests:
 - TC-478
 - TC-479
 domains: []
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 `product.toml` gains a `[product]` section with a `responsibility` field — a single statement declaring what the product is and what it is not. This field is the semantic scope boundary for all specification work. It is not a mechanical filter; it is a reference point that tools surface at the right moments.

@@ -13,7 +13,8 @@ tests:
 - TC-004
 - TC-164
 domains: []
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 [full content of ADR-001-rust-language.md, front-matter stripped]

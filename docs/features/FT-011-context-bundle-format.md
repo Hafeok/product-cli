@@ -44,8 +44,11 @@ tests:
 - TC-237
 - TC-238
 - TC-249
-domains: [api, data-model]
-domains-acknowledged: {}
+domains:
+- api
+- data-model
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 The context command assembles a deterministic markdown bundle. Order is always: feature → ADRs (by ID ascending) → test criteria (by phase, then type: exit-criteria, scenario, invariant, chaos).

@@ -24,7 +24,8 @@ tests:
 domains:
 - observability
 - api
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 Gap analysis is the continuous LLM-driven process of identifying specification incompleteness, inconsistency, and missing coverage in the repository's ADRs. It runs in CI against changed ADRs and produces structured findings that are tracked over time.

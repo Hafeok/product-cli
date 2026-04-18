@@ -17,8 +17,10 @@ tests:
 - TC-064
 - TC-065
 - TC-179
-domains: [data-model]
-domains-acknowledged: {}
+domains:
+- data-model
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 In-place schema upgrades for front-matter when the schema version changes.

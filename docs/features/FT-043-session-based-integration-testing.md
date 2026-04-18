@@ -41,7 +41,8 @@ tests:
 domains:
 - api
 - error-handling
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 Session-based integration testing is the primary way Product validates end-to-end command correctness. A **session** is a short Rust test function that drives a temporary repository through one or more `product request apply` calls and asserts on the resulting graph state, file content, and command output. The session builds its fixtures through the same interface real users and agents use — there is no separate fixture-writing layer.

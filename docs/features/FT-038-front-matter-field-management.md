@@ -20,7 +20,8 @@ tests:
 - TC-470
 - TC-471
 domains: []
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 Product exposes granular CLI commands and MCP tools for editing every front-matter field on features, ADRs, and test criteria. This closes the authoring gap where agents can scaffold artifacts via `product_feature_new` and `product_adr_new` but cannot set domains, supersession chains, scope, source files, runner config, or domain acknowledgements without manual YAML editing.

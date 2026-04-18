@@ -37,8 +37,10 @@ tests:
 - TC-237
 - TC-238
 - TC-249
-domains: [data-model]
-domains-acknowledged: {}
+domains:
+- data-model
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 Product builds an in-memory directed graph from front-matter on every invocation. The graph is also exportable as RDF Turtle via `product graph rebuild`.

@@ -27,8 +27,11 @@ tests:
 - TC-312
 - TC-313
 - TC-314
-domains: [api, observability]
-domains-acknowledged: {}
+domains:
+- api
+- observability
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 ### `product implement FT-XXX`

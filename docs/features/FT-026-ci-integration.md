@@ -11,8 +11,11 @@ adrs:
 - ADR-013
 tests:
 - TC-181
-domains: [api, error-handling]
-domains-acknowledged: {}
+domains:
+- api
+- error-handling
+domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 Machine-readable output formats and CI/CD integration points that make Product a first-class CI gate.

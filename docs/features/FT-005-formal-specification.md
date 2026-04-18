@@ -18,6 +18,7 @@ domains:
 - data-model
 - storage
 domains-acknowledged:
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
   data-model: Formal types and invariants describe data constraints but do not define persistent storage schemas. ADR-015 (file write safety) governs the write path; formal blocks are parsed in-memory per ADR-011/ADR-016.
 ---
 
