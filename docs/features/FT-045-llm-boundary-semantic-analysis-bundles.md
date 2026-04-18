@@ -30,6 +30,7 @@ tests:
 domains:
 - api
 - error-handling
+- observability
 domains-acknowledged: {}
 ---
 
