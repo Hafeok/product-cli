@@ -2,10 +2,12 @@
 id: ADR-011
 title: AISP-Influenced Formal Notation for Test Criteria
 status: accepted
-features: []
+features:
+- FT-048
 supersedes: []
 superseded-by: []
-domains: [data-model]
+domains:
+- data-model
 scope: domain
 content-hash: sha256:c344130679bce9e79691a067f136180c817ba749ab9d2198a049175e64bd2f49
 ---

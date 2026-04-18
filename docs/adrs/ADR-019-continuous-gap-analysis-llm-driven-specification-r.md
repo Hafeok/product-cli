@@ -2,10 +2,14 @@
 id: ADR-019
 title: Continuous Gap Analysis — LLM-Driven Specification Review in CI
 status: accepted
-features: []
+features:
+- FT-047
+- FT-048
 supersedes: []
 superseded-by: []
-domains: [api, observability]
+domains:
+- api
+- observability
 scope: domain
 content-hash: sha256:f1d5b706ef1879b88c04acfe832052e5b44eb01f4488f387c1fdf8912fbb28c4
 ---

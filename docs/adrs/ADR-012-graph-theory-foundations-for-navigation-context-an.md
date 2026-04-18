@@ -2,10 +2,13 @@
 id: ADR-012
 title: Graph Theory Foundations for Navigation, Context, and Impact Analysis
 status: accepted
-features: []
+features:
+- FT-048
 supersedes: []
 superseded-by: []
-domains: [data-model, api]
+domains:
+- api
+- data-model
 scope: domain
 content-hash: sha256:babc958120bef73567be0426c7048247619d7402482cbb8ad075ae90a8225e33
 ---

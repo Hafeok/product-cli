@@ -2,7 +2,8 @@
 id: ADR-040
 title: Unified Verify Pipeline and the LLM Boundary
 status: accepted
-features: []
+features:
+- FT-047
 supersedes: []
 superseded-by: []
 domains:
