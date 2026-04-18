@@ -2,7 +2,7 @@
 id: TC-578
 title: adr_amend_via_mcp_refuses_to_change_status
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-046
@@ -12,6 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_578_adr_amend_via_mcp_refuses_to_change_status
+last-run: 2026-04-18T19:07:02.858390383+00:00
+last-run-duration: 0.2s
 ---
 
 ## Invariant: adr_amend_via_mcp_refuses_to_change_status

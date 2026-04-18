@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 use super::tools::{self, ToolDef};
 use super::{JsonRpcRequest, JsonRpcResponse};
+use super::adr_lifecycle;
 use super::read_handlers;
 use super::write_handlers;
 use super::field_handlers;
@@ -163,11 +164,12 @@ fn dispatch_tool(
         "product_adr_new" => write_handlers::handle_adr_new(args, graph, repo_root),
         "product_test_new" => write_handlers::handle_test_new(args, graph, repo_root),
         "product_feature_link" => write_handlers::handle_feature_link(args, graph),
-        "product_feature_status" | "product_adr_status" | "product_test_status" => {
+        "product_adr_status" => adr_lifecycle::handle_adr_status_write(args, graph),
+        "product_feature_status" | "product_test_status" => {
             write_handlers::handle_status_update(args)
         }
         "product_body_update" => write_handlers::handle_body_update(args, graph, repo_root),
-        "product_adr_amend" => write_handlers::handle_adr_amend(args, graph),
+        "product_adr_amend" => adr_lifecycle::handle_adr_amend(args, graph),
         // Field management tools (FT-038)
         "product_feature_domain" => field_handlers::handle_feature_domain(args, graph, repo_root),
         "product_feature_acknowledge" => field_handlers::handle_feature_acknowledge(args, graph),

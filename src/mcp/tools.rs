@@ -24,15 +24,13 @@ pub fn build_tool_list() -> Vec<ToolDef> {
     tools.extend(write_field_domain_tools());
     tools.extend(write_field_adr_tools());
     tools.extend(write_field_test_tools());
-    tools.extend(write_update_tools());
+    tools.extend(write_status_tools());
+    tools.extend(write_adr_lifecycle_tools());
     tools.extend(request_tools());
     tools
 }
 
-// ---------------------------------------------------------------------------
 // Request tools (FT-041, ADR-038)
-// ---------------------------------------------------------------------------
-
 fn request_tools() -> Vec<ToolDef> {
     vec![
         ToolDef {
@@ -62,10 +60,7 @@ fn request_tools() -> Vec<ToolDef> {
     ]
 }
 
-// ---------------------------------------------------------------------------
 // Read tools: product identity (FT-039)
-// ---------------------------------------------------------------------------
-
 fn read_product_tools() -> Vec<ToolDef> {
     vec![
         ToolDef {
@@ -77,10 +72,7 @@ fn read_product_tools() -> Vec<ToolDef> {
     ]
 }
 
-// ---------------------------------------------------------------------------
 // Read tools: context and features
-// ---------------------------------------------------------------------------
-
 fn read_feature_tools() -> Vec<ToolDef> {
     vec![
         ToolDef {
@@ -110,10 +102,7 @@ fn read_feature_tools() -> Vec<ToolDef> {
     ]
 }
 
-// ---------------------------------------------------------------------------
 // Read tools: ADRs and test criteria
-// ---------------------------------------------------------------------------
-
 fn read_adr_and_test_tools() -> Vec<ToolDef> {
     vec![
         ToolDef {
@@ -137,10 +126,7 @@ fn read_adr_and_test_tools() -> Vec<ToolDef> {
     ]
 }
 
-// ---------------------------------------------------------------------------
 // Read tools: graph operations, impact, gap analysis
-// ---------------------------------------------------------------------------
-
 fn read_graph_tools() -> Vec<ToolDef> {
     vec![
         ToolDef {
@@ -170,10 +156,7 @@ fn read_graph_tools() -> Vec<ToolDef> {
     ]
 }
 
-// ---------------------------------------------------------------------------
 // Read tools: agent context and schema (ADR-031)
-// ---------------------------------------------------------------------------
-
 fn read_agent_context_tools() -> Vec<ToolDef> {
     vec![
         ToolDef {
@@ -191,10 +174,7 @@ fn read_agent_context_tools() -> Vec<ToolDef> {
     ]
 }
 
-// ---------------------------------------------------------------------------
 // Read tools: authoring prompts (ADR-022)
-// ---------------------------------------------------------------------------
-
 fn read_prompts_tools() -> Vec<ToolDef> {
     vec![
         ToolDef {
@@ -212,10 +192,7 @@ fn read_prompts_tools() -> Vec<ToolDef> {
     ]
 }
 
-// ---------------------------------------------------------------------------
 // Write tools: creating new artifacts
-// ---------------------------------------------------------------------------
-
 fn write_create_tools() -> Vec<ToolDef> {
     vec![
         ToolDef {
@@ -245,10 +222,7 @@ fn write_create_tools() -> Vec<ToolDef> {
     ]
 }
 
-// ---------------------------------------------------------------------------
 // Write tools: status updates, body edits, amendments
-// ---------------------------------------------------------------------------
-
 fn write_field_domain_tools() -> Vec<ToolDef> {
     vec![
         ToolDef {
@@ -350,19 +324,13 @@ fn write_field_test_tools() -> Vec<ToolDef> {
     ]
 }
 
-fn write_update_tools() -> Vec<ToolDef> {
+fn write_status_tools() -> Vec<ToolDef> {
     vec![
         ToolDef {
             name: "product_feature_status".to_string(),
             description: "Set feature status".to_string(),
             requires_write: true,
             input_schema: serde_json::json!({"type": "object", "properties": {"id": {"type": "string"}, "status": {"type": "string"}}, "required": ["id", "status"]}),
-        },
-        ToolDef {
-            name: "product_adr_status".to_string(),
-            description: "Set ADR status".to_string(),
-            requires_write: true,
-            input_schema: serde_json::json!({"type": "object", "properties": {"id": {"type": "string"}, "status": {"type": "string"}, "by": {"type": "string"}}, "required": ["id", "status"]}),
         },
         ToolDef {
             name: "product_test_status".to_string(),
@@ -376,11 +344,38 @@ fn write_update_tools() -> Vec<ToolDef> {
             requires_write: true,
             input_schema: serde_json::json!({"type": "object", "properties": {"id": {"type": "string"}, "body": {"type": "string"}}, "required": ["id", "body"]}),
         },
+    ]
+}
+
+fn write_adr_lifecycle_tools() -> Vec<ToolDef> {
+    vec![
+        ToolDef {
+            name: "product_adr_status".to_string(),
+            description: "Write an ADR status transition (FT-046). Handles proposed<->abandoned, *->superseded (with bidirectional 'by' link), and accepted->abandoned. Rejects 'accepted' with E020 (CLI-only, ADR-032). Rejects accepted->proposed with E021.".to_string(),
+            requires_write: true,
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string"},
+                    "status": {"type": "string", "enum": ["proposed", "superseded", "abandoned"]},
+                    "by": {"type": "string", "description": "When status is 'superseded', the ADR that supersedes this one."}
+                },
+                "required": ["id", "status"]
+            }),
+        },
         ToolDef {
             name: "product_adr_amend".to_string(),
-            description: "Record a legitimate amendment to an accepted ADR with mandatory reason and audit trail (ADR-032)".to_string(),
+            description: "Record an amendment to an accepted ADR with mandatory reason and audit trail (ADR-032). Optional 'body' atomically replaces the markdown body and recomputes the content-hash (FT-046). Payloads carrying 'status' are rejected with E019.".to_string(),
             requires_write: true,
-            input_schema: serde_json::json!({"type": "object", "properties": {"id": {"type": "string"}, "reason": {"type": "string"}}, "required": ["id", "reason"]}),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string"},
+                    "reason": {"type": "string"},
+                    "body": {"type": "string", "description": "Optional new markdown body."}
+                },
+                "required": ["id", "reason"]
+            }),
         },
     ]
 }

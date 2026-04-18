@@ -5,6 +5,7 @@
 //! HTTP: Streamable HTTP transport for remote access (phone, claude.ai).
 
 pub mod registry;
+mod adr_lifecycle;
 mod read_handlers;
 mod write_handlers;
 mod field_handlers;

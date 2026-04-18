@@ -201,18 +201,4 @@ fn update_test_body(id: &str, body: &str, graph: &KnowledgeGraph) -> Result<(), 
     crate::fileops::write_file_atomic(&t.path, &content).map_err(|e| format!("{}", e))
 }
 
-pub(crate) fn handle_adr_amend(args: &Value, graph: &KnowledgeGraph) -> Result<Value, String> {
-    let id = args.get("id").and_then(|v| v.as_str()).unwrap_or_default();
-    let reason = args.get("reason").and_then(|v| v.as_str())
-        .ok_or_else(|| "reason is required for amendments".to_string())?;
-    let a = graph.adrs.get(id).ok_or_else(|| format!("ADR {} not found", id))?;
-    let (new_hash, amendment) = crate::hash::amend_adr(a, reason)
-        .map_err(|e| format!("{}", e))?;
-    let mut front = a.front.clone();
-    front.content_hash = Some(new_hash.clone());
-    front.amendments.push(amendment);
-    let content = crate::parser::render_adr(&front, &a.body);
-    crate::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))?;
-    Ok(serde_json::json!({"id": id, "content_hash": new_hash, "amended": true}))
-}
 

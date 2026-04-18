@@ -8608,13 +8608,15 @@ write = true
         out
     );
 
-    // Verify product_adr_status (front-matter only) still works via MCP
-    // Note: MCP status tool returns a note to use CLI, but doesn't error
-    let input = r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_adr_status","arguments":{"id":"ADR-001","status":"accepted"}}}"#;
+    // Verify product_adr_status (front-matter only) still works via MCP for
+    // non-accepted transitions. FT-046 made `accepted` CLI-only (E020), so
+    // this test exercises `abandoned` which preserves the content-hash and
+    // only touches the mutable `status` field.
+    let input = r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_adr_status","arguments":{"id":"ADR-001","status":"abandoned"}}}"#;
     let out = run_mcp_stdio_write(&h, input);
     assert!(
-        !out.contains("error"),
-        "product_adr_status should work on accepted ADR.\nGot: {}",
+        !out.contains("\"error\""),
+        "product_adr_status should work on accepted ADR for non-accepted transitions.\nGot: {}",
         out
     );
 

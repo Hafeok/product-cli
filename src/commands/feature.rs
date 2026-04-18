@@ -52,6 +52,9 @@ pub enum FeatureCommands {
         /// Feature ID this feature depends on
         #[arg(long)]
         dep: Option<String>,
+        /// Accept inferred transitive TC links without prompting (required in non-TTY use)
+        #[arg(long)]
+        yes: bool,
     },
     /// Set feature status
     Status {
@@ -99,8 +102,8 @@ pub(crate) fn handle_feature(cmd: FeatureCommands, fmt: &str) -> BoxResult {
         FeatureCommands::Deps { id } => feature_deps(&id),
         FeatureCommands::Next { ignore_phase_gate } => feature_next(ignore_phase_gate),
         FeatureCommands::New { title, phase } => feature_write_ops::feature_new(&title, phase),
-        FeatureCommands::Link { id, adr, test, dep } => {
-            feature_write_ops::feature_link(&id, adr, test, dep)
+        FeatureCommands::Link { id, adr, test, dep, yes } => {
+            feature_write_ops::feature_link(&id, adr, test, dep, yes)
         }
         FeatureCommands::Status { id, new_status } => {
             feature_write_ops::feature_status(&id, &new_status)

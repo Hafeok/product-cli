@@ -2,7 +2,7 @@
 id: TC-585
 title: mcp_parity_adr_lifecycle_exit
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-046
@@ -12,6 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_585_mcp_parity_adr_lifecycle_exit
+last-run: 2026-04-18T19:07:02.858390383+00:00
+last-run-duration: 0.2s
 ---
 
 ## Exit Criteria — FT-046 MCP Parity for ADR Lifecycle Operations

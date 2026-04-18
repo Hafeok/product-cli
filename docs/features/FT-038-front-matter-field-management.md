@@ -22,6 +22,8 @@ tests:
 domains: []
 domains-acknowledged:
   ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
+  ADR-041: Pre-dates ADR-041; this feature does not author absence TCs or set removes/deprecates on ADRs. FT-047 owns the mechanics.
+  ADR-042: Pre-dates ADR-042; this feature does not define TC types or validate the type vocabulary. FT-048 owns the mechanics.
 ---
 
 Product exposes granular CLI commands and MCP tools for editing every front-matter field on features, ADRs, and test criteria. This closes the authoring gap where agents can scaffold artifacts via `product_feature_new` and `product_adr_new` but cannot set domains, supersession chains, scope, source files, runner config, or domain acknowledgements without manual YAML editing.

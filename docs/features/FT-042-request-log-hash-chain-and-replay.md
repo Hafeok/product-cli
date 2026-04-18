@@ -50,7 +50,9 @@ domains:
 - observability
 - security
 domains-acknowledged:
+  ADR-041: Pre-dates ADR-041; this feature does not author absence TCs or set removes/deprecates on ADRs. FT-047 owns the mechanics.
   ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
+  ADR-042: Pre-dates ADR-042; this feature does not define TC types or validate the type vocabulary. FT-048 owns the mechanics.
 ---
 
 The Product request log is the committed, hash-chained, tamper-evident audit trail of every graph mutation. It is the append-only record behind `product request apply`, `product request undo`, `product verify`, `product migrate`, and `product migrate schema`, and it is replayable — the same log deterministically reconstructs the graph at any point in its history.

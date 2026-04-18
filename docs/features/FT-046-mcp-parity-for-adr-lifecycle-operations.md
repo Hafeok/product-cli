@@ -2,7 +2,7 @@
 id: FT-046
 title: MCP Parity for ADR Lifecycle Operations
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-021
 - FT-034
@@ -26,7 +26,9 @@ tests:
 domains:
 - api
 - error-handling
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-041: MCP lifecycle parity does not introduce or alter removes/deprecates fields or absence TCs; scope is ADR status/amend transitions only.
+  ADR-042: MCP lifecycle parity does not introduce or alter TC types; wiring is orthogonal to the type system.
 ---
 
 ## Description

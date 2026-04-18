@@ -2,7 +2,7 @@
 id: TC-579
 title: adr_amend_via_mcp_rejects_identical_body
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-046
@@ -12,6 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_579_adr_amend_via_mcp_rejects_identical_body
+last-run: 2026-04-18T19:07:02.858390383+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session: adr_amend_via_mcp_rejects_identical_body

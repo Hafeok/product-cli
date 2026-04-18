@@ -68,3 +68,7 @@ mod st_126_drift_diff;
 
 #[path = "sessions/st_131_conflict_bundle.rs"]
 mod st_131_conflict_bundle;
+
+// FT-046 — MCP Parity for ADR Lifecycle Operations
+#[path = "sessions/st_140_mcp_adr_lifecycle.rs"]
+mod st_140_mcp_adr_lifecycle;

@@ -14,6 +14,7 @@ adrs:
 - ADR-019
 - ADR-041
 - ADR-042
+- ADR-013
 tests:
 - TC-601
 - TC-602
@@ -35,7 +36,8 @@ domains:
 - api
 - data-model
 - error-handling
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-040: TC type system is a data-model concern; verify pipeline's stage-6 already discovers absence TCs by tc-type (owned by FT-047) without hooks from this feature.
 ---
 
 ## Description

@@ -2,7 +2,7 @@
 id: TC-583
 title: adr_status_via_mcp_writes_abandoned
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-046
@@ -11,6 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_583_adr_status_via_mcp_writes_abandoned
+last-run: 2026-04-18T19:07:02.858390383+00:00
+last-run-duration: 0.1s
 ---
 
 ## Session: adr_status_via_mcp_writes_abandoned

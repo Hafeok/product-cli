@@ -10,6 +10,9 @@ adrs:
 - ADR-019
 - ADR-040
 - ADR-041
+- ADR-042
+- ADR-002
+- ADR-013
 tests:
 - TC-586
 - TC-587

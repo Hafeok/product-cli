@@ -40,6 +40,7 @@ pub(crate) fn feature_link(
     adr: Option<String>,
     test: Option<String>,
     dep: Option<String>,
+    assume_yes: bool,
 ) -> BoxResult {
     let _lock = acquire_write_lock()?;
     let (_config, _root, graph) = load_graph()?;
@@ -81,7 +82,7 @@ pub(crate) fn feature_link(
                     }
                     println!();
 
-                    if prompt_confirm("  Add these TC links automatically? [Y/n] ") {
+                    if assume_yes || prompt_confirm("  Add these TC links automatically? [Y/n] ") {
                         // Add TC IDs to the feature's tests list
                         for (tc_id, _) in &inferred {
                             if !front.tests.contains(tc_id) {
@@ -147,7 +148,11 @@ fn compute_inferred_tc_links(
     inferred
 }
 
-/// Prompt user for y/n confirmation, defaulting to yes
+/// Prompt user for y/n confirmation.
+///
+/// In a TTY, empty input (just Enter) defaults to yes.
+/// In a non-TTY (piped/scripted), empty or EOF input defaults to no — callers
+/// that want silent acceptance must either pipe "y" or pass `--yes` explicitly.
 fn prompt_confirm(prompt: &str) -> bool {
     let stdin = io::stdin();
     let is_tty = stdin.is_terminal();
@@ -156,15 +161,17 @@ fn prompt_confirm(prompt: &str) -> bool {
     let _ = io::stdout().flush();
 
     let mut line = String::new();
-    if stdin.lock().read_line(&mut line).is_ok() {
-        let trimmed = line.trim().to_lowercase();
-        // Empty (just enter) or "y"/"yes" = confirm; "n"/"no" = decline
-        trimmed.is_empty() || trimmed == "y" || trimmed == "yes"
-    } else if !is_tty {
-        // Non-interactive with no data: default to no
-        false
-    } else {
-        true
+    match stdin.lock().read_line(&mut line) {
+        Ok(0) => false,
+        Ok(_) => {
+            let trimmed = line.trim().to_lowercase();
+            if trimmed.is_empty() {
+                is_tty
+            } else {
+                trimmed == "y" || trimmed == "yes"
+            }
+        }
+        Err(_) => false,
     }
 }
 

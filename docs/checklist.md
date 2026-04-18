@@ -917,20 +917,70 @@
 - [x] TC-575: adr_check_conflicts_structural_only (invariant) — passing
 - [x] TC-576: llm_boundary_semantic_analysis_exit (exit-criteria) — passing
 
-### FT-046 — MCP Parity for ADR Lifecycle Operations [ ]
+### FT-046 — MCP Parity for ADR Lifecycle Operations [x]
 
 - [x] ADR-015: File Write Safety — Atomic Writes and Advisory Locking (accepted)
 - [x] ADR-020: MCP Server — Dual Transport (stdio and HTTP) (accepted)
 - [x] ADR-021: Implementation Pipeline — `product verify` and the Knowledge Boundary (accepted)
 - [x] ADR-032: Content Hash Immutability Enforcement (accepted)
 - [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
-- [ ] TC-577: adr_amend_via_mcp_body_and_reason_atomic (scenario) — unimplemented
-- [ ] TC-578: adr_amend_via_mcp_refuses_to_change_status (invariant) — unimplemented
-- [ ] TC-579: adr_amend_via_mcp_rejects_identical_body (scenario) — unimplemented
-- [ ] TC-580: adr_status_via_mcp_writes_non_accepted_transitions (scenario) — unimplemented
-- [ ] TC-581: adr_status_via_mcp_rejects_accepted_transition (invariant) — unimplemented
-- [ ] TC-582: adr_status_via_mcp_writes_superseded_with_bidirectional_link (scenario) — unimplemented
-- [ ] TC-583: adr_status_via_mcp_writes_abandoned (scenario) — unimplemented
-- [ ] TC-584: adr_status_via_mcp_rejects_demotion_from_accepted (scenario) — unimplemented
-- [ ] TC-585: mcp_parity_adr_lifecycle_exit (exit-criteria) — unimplemented
+- [x] ADR-040: Unified Verify Pipeline and the LLM Boundary (accepted)
+- [x] TC-577: adr_amend_via_mcp_body_and_reason_atomic (scenario) — passing
+- [x] TC-578: adr_amend_via_mcp_refuses_to_change_status (invariant) — passing
+- [x] TC-579: adr_amend_via_mcp_rejects_identical_body (scenario) — passing
+- [x] TC-580: adr_status_via_mcp_writes_non_accepted_transitions (scenario) — passing
+- [x] TC-581: adr_status_via_mcp_rejects_accepted_transition (invariant) — passing
+- [x] TC-582: adr_status_via_mcp_writes_superseded_with_bidirectional_link (scenario) — passing
+- [x] TC-583: adr_status_via_mcp_writes_abandoned (scenario) — passing
+- [x] TC-584: adr_status_via_mcp_rejects_demotion_from_accepted (scenario) — passing
+- [x] TC-585: mcp_parity_adr_lifecycle_exit (exit-criteria) — passing
+
+### FT-047 — Removal & Deprecation Tracking — Absence TCs and ADR Lifecycle Fields [ ]
+
+- [x] ADR-019: Continuous Gap Analysis — LLM-Driven Specification Review in CI (accepted)
+- [x] ADR-040: Unified Verify Pipeline and the LLM Boundary (accepted)
+- [ ] ADR-041: Removal & Deprecation Verification — Absence TCs and ADR `removes`/`deprecates` Fields (proposed)
+- [ ] ADR-042: TC Type System — Reserved Structural Types and Open Descriptive Types (proposed)
+- [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
+- [x] ADR-013: Error Model and User-Facing Error Format (accepted)
+- [ ] TC-586: absence_tc_passes_when_thing_gone (scenario) — unimplemented
+- [ ] TC-587: absence_tc_fails_when_thing_present (scenario) — unimplemented
+- [ ] TC-588: absence_tc_runs_in_platform_verify (scenario) — unimplemented
+- [ ] TC-589: adr_removes_field_parses_correctly (scenario) — unimplemented
+- [ ] TC-590: adr_deprecates_field_parses_correctly (scenario) — unimplemented
+- [ ] TC-591: g009_fires_when_removes_no_absence_tc (scenario) — unimplemented
+- [ ] TC-592: w022_fires_same_condition (scenario) — unimplemented
+- [ ] TC-593: g009_clear_when_absence_tc_linked (scenario) — unimplemented
+- [ ] TC-594: w023_fires_on_deprecated_field (scenario) — unimplemented
+- [ ] TC-595: deprecated_field_still_processed_for_compat (scenario) — unimplemented
+- [ ] TC-596: w023_names_deprecating_adr (scenario) — unimplemented
+- [ ] TC-597: migration_phase1_deprecation_tc_passes (scenario) — unimplemented
+- [ ] TC-598: migration_phase2_absence_tc_passes (scenario) — unimplemented
+- [ ] TC-599: migration_phase2_phase1_tc_unrunnable_no_block (scenario) — unimplemented
+- [ ] TC-600: removal_deprecation_exit (exit-criteria) — unimplemented
+
+### FT-048 — TC Type System — Structural Reserved Types and Open Descriptive Types [ ]
+
+- [x] ADR-011: AISP-Influenced Formal Notation for Test Criteria (accepted)
+- [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
+- [x] ADR-019: Continuous Gap Analysis — LLM-Driven Specification Review in CI (accepted)
+- [ ] ADR-041: Removal & Deprecation Verification — Absence TCs and ADR `removes`/`deprecates` Fields (proposed)
+- [ ] ADR-042: TC Type System — Reserved Structural Types and Open Descriptive Types (proposed)
+- [x] ADR-013: Error Model and User-Facing Error Format (accepted)
+- [ ] TC-601: tc_type_exit_criteria_drives_phase_gate (scenario) — unimplemented
+- [ ] TC-602: tc_type_invariant_requires_formal_block (scenario) — unimplemented
+- [ ] TC-603: tc_type_chaos_requires_formal_block (scenario) — unimplemented
+- [ ] TC-604: tc_type_absence_drives_g009 (scenario) — unimplemented
+- [ ] TC-605: custom_type_valid_when_in_toml (scenario) — unimplemented
+- [ ] TC-606: custom_type_e006_when_not_in_toml (scenario) — unimplemented
+- [ ] TC-607: custom_type_treated_as_scenario_in_mechanics (scenario) — unimplemented
+- [ ] TC-608: custom_type_appears_in_agent_md_schema (scenario) — unimplemented
+- [ ] TC-609: custom_type_appears_in_context_bundle_after_builtins (scenario) — unimplemented
+- [ ] TC-610: e017_reserved_type_in_custom_list (scenario) — unimplemented
+- [ ] TC-611: e017_fires_at_startup_not_lazily (scenario) — unimplemented
+- [ ] TC-612: bundle_type_ordering_exit_criteria_first (scenario) — unimplemented
+- [ ] TC-613: bundle_type_ordering_custom_types_last_alphabetical (scenario) — unimplemented
+- [ ] TC-614: request_create_with_custom_type_validates_against_toml (scenario) — unimplemented
+- [ ] TC-615: request_create_unknown_type_emits_e006 (scenario) — unimplemented
+- [ ] TC-616: tc_types_system_exit (exit-criteria) — unimplemented
 

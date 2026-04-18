@@ -23,7 +23,9 @@ domains:
 - networking
 - security
 domains-acknowledged:
+  ADR-042: Pre-dates ADR-042; this feature does not define TC types or validate the type vocabulary. FT-048 owns the mechanics.
   ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
+  ADR-041: Pre-dates ADR-041; this feature does not author absence TCs or set removes/deprecates on ADRs. FT-047 owns the mechanics.
 ---
 
 Product exposes its full tool surface as an MCP server. The same binary serves both transports. The transport is a startup flag, not a separate binary.

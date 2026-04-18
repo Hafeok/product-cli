@@ -13,6 +13,8 @@ tests:
 domains:
 - observability
 domains-acknowledged:
+  ADR-041: Pre-dates ADR-041; this feature does not author absence TCs or set removes/deprecates on ADRs. FT-047 owns the mechanics.
+  ADR-042: Pre-dates ADR-042; this feature does not define TC types or validate the type vocabulary. FT-048 owns the mechanics.
   observability: Benchmarks produce timing metrics and score comparisons but are not a runtime observability surface. ADR-018 (testing strategy) governs the benchmark approach; no dedicated observability ADR is needed.
 ---
 
