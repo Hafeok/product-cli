@@ -2,7 +2,7 @@
 id: FT-045
 title: LLM Boundary — Semantic Analysis Bundles
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-029
 - FT-037

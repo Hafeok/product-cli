@@ -4,6 +4,7 @@
 //! Semantic checks for D001/D002 require LLM — stubbed for now.
 
 pub mod check;
+pub mod diff;
 
 use crate::error::{ProductError, Result};
 use serde::{Deserialize, Serialize};
@@ -11,6 +12,7 @@ use std::path::Path;
 
 // Re-export public API
 pub use check::{check_adr, resolve_source_files, scan_source};
+pub use diff::{diff_for_feature, structural_for_feature, DriftDiff, StructuralReport};
 
 // ---------------------------------------------------------------------------
 // Drift types

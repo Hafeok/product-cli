@@ -4,13 +4,16 @@
 //! Semantic checks (G001, G002, G004, G005) require LLM — stubbed for now.
 
 pub mod baseline;
+pub mod bundle;
 pub mod check;
+pub mod conflict;
 pub mod model;
 
 use serde::{Deserialize, Serialize};
 
 // Re-export public API
 pub use baseline::{GapBaseline, Resolved, Suppression};
+pub use bundle::{bundle_all, bundle_changed, bundle_for_adr};
 pub use check::{check_adr, check_all, check_changed, check_feature_dep_gaps, gap_id, gap_stats};
 pub use model::{parse_model_findings, try_model_analysis, ModelError};
 

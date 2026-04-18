@@ -21,6 +21,20 @@ pub enum DriftCommands {
         #[arg(long)]
         all_complete: bool,
     },
+    /// Produce an LLM-ready drift-diff bundle on stdout (ADR-040)
+    Diff {
+        /// Feature ID (mutually exclusive with --all-complete / --changed)
+        feature_id: Option<String>,
+        /// Emit a drift-diff for every complete feature with a completion tag
+        #[arg(long)]
+        all_complete: bool,
+        /// Emit a drift-diff for every feature touched by recent commits
+        #[arg(long)]
+        changed: bool,
+        /// Output format: markdown (default) or json
+        #[arg(long, default_value = "markdown")]
+        format: String,
+    },
     /// Scan a source file to find governing ADRs
     Scan {
         /// Source file path
@@ -60,6 +74,9 @@ pub(crate) fn handle_drift(cmd: DriftCommands, fmt: &str) -> BoxResult {
                 drift_check(None, files, &graph, &root, &baseline, &source_roots, &ignore, fmt)
             }
         }
+        DriftCommands::Diff { feature_id, all_complete, changed, format } => {
+            super::drift_diff::drift_diff(feature_id, all_complete, changed, &format, &graph, &root, &config)
+        }
         DriftCommands::Scan { path } => drift_scan(&path, &graph, fmt),
         DriftCommands::Suppress { drift_id, reason } => {
             drift_suppress(&mut baseline, &drift_id, &reason, &baseline_path)
@@ -69,6 +86,7 @@ pub(crate) fn handle_drift(cmd: DriftCommands, fmt: &str) -> BoxResult {
         }
     }
 }
+
 
 #[allow(clippy::too_many_arguments)]
 fn drift_check(
@@ -103,7 +121,10 @@ fn drift_check(
     Ok(())
 }
 
-/// Check drift for a specific feature using completion tags (ADR-036).
+/// Structural drift check for a feature using completion tags (ADR-036,
+/// ADR-040). No LLM call — reports changed files and exits 0 (no changes) or
+/// 2 (changes detected). Falls back to pattern-based drift only when no tag
+/// and no ADRs are linked.
 #[allow(clippy::too_many_arguments)]
 fn drift_check_feature(
     feature_id: &str,
@@ -115,64 +136,100 @@ fn drift_check_feature(
     config: &product_lib::config::ProductConfig,
     fmt: &str,
 ) -> BoxResult {
-    let is_git = tags::is_git_repo(root);
+    let depth = config.tags.implementation_depth;
+    let report = match drift::structural_for_feature(feature_id, graph, root, depth) {
+        Some(r) => r,
+        None => {
+            eprintln!("error: feature {} not found", feature_id);
+            process::exit(1);
+        }
+    };
 
-    // Try tag-based drift detection
-    if is_git {
-        if let Some(tag_name) = tags::find_completion_tag(root, feature_id) {
-            let depth = config.tags.implementation_depth;
-            let (changed_files, _diff_text) = tags::check_drift_since_tag(root, &tag_name, depth);
-
-            if changed_files.is_empty() {
+    // Tag path — structural only
+    if report.is_git {
+        if let Some(ref tag_name) = report.tag {
+            if report.changed_files.is_empty() {
                 if fmt == "json" {
-                    println!("[]");
+                    let v = serde_json::json!({
+                        "feature": feature_id,
+                        "tag": tag_name,
+                        "tag_timestamp": report.tag_timestamp,
+                        "changed_files": [],
+                        "status": "clean",
+                    });
+                    println!("{}", serde_json::to_string_pretty(&v).unwrap_or_default());
                 } else {
-                    println!("No drift detected for {} since {}", feature_id, tag_name);
+                    let ts = report.tag_timestamp.as_deref().unwrap_or("(unknown)");
+                    println!("{} ({})", tag_name, ts);
+                    println!("No changes since completion.");
                 }
                 return Ok(());
             }
 
-            // Report drift
-            let mut findings = Vec::new();
-            let id = format!("DRIFT-{}-TAG-drift", feature_id);
-            let suppressed = baseline.is_suppressed(&id);
-            findings.push(drift::DriftFinding {
-                id,
-                code: "D003".to_string(),
-                severity: drift::DriftSeverity::Medium,
-                description: format!(
-                    "Implementation files changed since {} was completed ({})",
-                    feature_id, tag_name
-                ),
-                adr_id: feature_id.to_string(),
-                source_files: changed_files,
-                suggested_action: "Review changes to ensure they don't contradict governing ADRs".to_string(),
-                suppressed,
-            });
-
-            print_findings(&findings, fmt);
-            return Ok(());
+            if fmt == "json" {
+                let v = serde_json::json!({
+                    "feature": feature_id,
+                    "tag": tag_name,
+                    "tag_timestamp": report.tag_timestamp,
+                    "changed_files": report.changed_files,
+                    "status": "drift",
+                });
+                println!("{}", serde_json::to_string_pretty(&v).unwrap_or_default());
+            } else {
+                let ts = report.tag_timestamp.as_deref().unwrap_or("(unknown)");
+                println!("Feature: {}", feature_id);
+                println!("Completion tag: {} ({})", tag_name, ts);
+                println!("Changed files since completion:");
+                let counts = tags::diff_stats_since_tag(root, tag_name);
+                for f in &report.changed_files {
+                    match counts.get(f) {
+                        Some((ins, del)) => println!("  {}  (+{}/-{})", f, ins, del),
+                        None => println!("  {}", f),
+                    }
+                }
+                println!();
+                println!(
+                    "Hint: run `product drift diff {}` | your-llm \"check for drift\"",
+                    feature_id
+                );
+            }
+            // Respect suppressions baked into drift.json
+            let drift_id = format!("DRIFT-{}-TAG-drift", feature_id);
+            if baseline.is_suppressed(&drift_id) {
+                return Ok(());
+            }
+            process::exit(2);
         }
     }
 
-    // Fallback: W019, then check ADRs linked to the feature
-    eprintln!("warning[W019]: no completion tag for {} \u{2014} falling back to pattern-based drift detection", feature_id);
+    // No tag path — emit W020 and exit 2
+    eprintln!(
+        "warning[W020]: no completion tag for {} — structural drift check cannot bound changes",
+        feature_id
+    );
 
+    // For features that have linked ADRs, run structural ADR-level drift as a
+    // best-effort fallback; otherwise just report the missing tag.
     if let Some(feature) = graph.features.get(feature_id) {
         let mut all_findings = Vec::new();
         for adr_id in &feature.front.adrs {
-            all_findings.extend(drift::check_adr(adr_id, graph, root, baseline, source_roots, ignore, &[]));
+            all_findings.extend(drift::check_adr(
+                adr_id, graph, root, baseline, source_roots, ignore, &[],
+            ));
         }
-        print_findings(&all_findings, fmt);
-        let has_high = all_findings.iter().any(|f| {
-            f.severity == drift::DriftSeverity::High && !f.suppressed
-        });
-        if has_high {
-            process::exit(1);
+        if !all_findings.is_empty() {
+            print_findings(&all_findings, fmt);
+            let has_high = all_findings
+                .iter()
+                .any(|f| f.severity == drift::DriftSeverity::High && !f.suppressed);
+            if has_high {
+                process::exit(1);
+            }
+        } else if fmt == "json" {
+            println!("[]");
+        } else {
+            println!("No drift findings (no completion tag for {}).", feature_id);
         }
-    } else {
-        eprintln!("error: feature {} not found", feature_id);
-        process::exit(1);
     }
 
     Ok(())

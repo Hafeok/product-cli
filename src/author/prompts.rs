@@ -18,6 +18,9 @@ pub(crate) const DEFAULT_PROMPTS: &[(&str, &str, &str)] = &[
     ("author-adr", "author-adr-v1.md", "1"),
     ("author-review", "author-review-v1.md", "1"),
     ("implement", "implement-v1.md", "1"),
+    ("gap-analysis", "gap-analysis-v1.md", "1"),
+    ("drift-analysis", "drift-analysis-v1.md", "1"),
+    ("conflict-check", "conflict-check-v1.md", "1"),
 ];
 
 /// Initialize prompt files in benchmarks/prompts/
@@ -89,6 +92,9 @@ pub(crate) fn default_content(name: &str) -> String {
         "author-adr" => include_str!("prompts/author_adr.txt").to_string(),
         "author-review" => include_str!("prompts/author_review.txt").to_string(),
         "implement" => include_str!("prompts/implement.txt").to_string(),
+        "gap-analysis" => include_str!("prompts/gap_analysis.txt").to_string(),
+        "drift-analysis" => include_str!("prompts/drift_analysis.txt").to_string(),
+        "conflict-check" => include_str!("prompts/conflict_check.txt").to_string(),
         _ => String::new(),
     }
 }

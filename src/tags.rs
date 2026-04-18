@@ -225,6 +225,31 @@ pub fn check_drift_since_tag(root: &Path, tag_name: &str, depth: usize) -> (Vec<
     (changed, String::from_utf8_lossy(&diff_output.stdout).to_string())
 }
 
+/// Per-file insertion/deletion counts between `TAG` and `HEAD`. Returns a
+/// map keyed by file path with `(insertions, deletions)` values. Unknown /
+/// binary / renamed files are returned with zeros.
+pub fn diff_stats_since_tag(root: &Path, tag_name: &str) -> std::collections::HashMap<String, (u64, u64)> {
+    let mut out = std::collections::HashMap::new();
+    let output = Command::new("git")
+        .args(["diff", "--numstat", &format!("{}..HEAD", tag_name)])
+        .current_dir(root)
+        .output();
+    let stdout = match output {
+        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).to_string(),
+        _ => return out,
+    };
+    for line in stdout.lines() {
+        let mut parts = line.split_whitespace();
+        let ins = parts.next().unwrap_or("0").parse::<u64>().unwrap_or(0);
+        let del = parts.next().unwrap_or("0").parse::<u64>().unwrap_or(0);
+        let path = parts.collect::<Vec<_>>().join(" ");
+        if !path.is_empty() {
+            out.insert(path, (ins, del));
+        }
+    }
+    out
+}
+
 /// Create a completion tag for a feature after verification.
 pub fn create_completion_tag(
     root: &Path, feature_id: &str, tc_ids: &[String], config: &ProductConfig,

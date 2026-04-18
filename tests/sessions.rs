@@ -58,3 +58,13 @@ mod exit_criteria;
 // FT-044 — Unified Verify Pipeline
 #[path = "sessions/st_110_verify_pipeline.rs"]
 mod st_110_verify_pipeline;
+
+// FT-045 — LLM Boundary — Semantic Analysis Bundles
+#[path = "sessions/st_120_gap_bundle.rs"]
+mod st_120_gap_bundle;
+
+#[path = "sessions/st_126_drift_diff.rs"]
+mod st_126_drift_diff;
+
+#[path = "sessions/st_131_conflict_bundle.rs"]
+mod st_131_conflict_bundle;

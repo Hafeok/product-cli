@@ -99,6 +99,21 @@ pub enum AdrCommands {
         #[arg(long)]
         remove: Vec<String>,
     },
+    /// Structural conflict check — cycles, symmetry, domain overlap (ADR-040)
+    #[command(name = "check-conflicts")]
+    CheckConflicts {
+        /// ADR ID to check (omit to check every ADR)
+        id: Option<String>,
+    },
+    /// Emit an LLM-ready conflict-check bundle on stdout (ADR-040)
+    #[command(name = "conflict-bundle")]
+    ConflictBundle {
+        /// ADR ID
+        id: String,
+        /// Output format: markdown (default) or json
+        #[arg(long, default_value = "markdown")]
+        format: String,
+    },
 }
 
 pub(crate) fn handle_adr(cmd: AdrCommands, fmt: &str) -> BoxResult {
@@ -110,12 +125,14 @@ pub(crate) fn handle_adr(cmd: AdrCommands, fmt: &str) -> BoxResult {
         AdrCommands::New { title } => adr_new(&title),
         AdrCommands::Status { id, new_status, by } => adr_status(&id, &new_status, by),
         AdrCommands::Review { staged } => adr_review(staged),
-        AdrCommands::Amend { id, reason } => adr_amend(&id, reason),
-        AdrCommands::Rehash { id, all } => adr_rehash(id, all),
+        AdrCommands::Amend { id, reason } => super::adr_seal::adr_amend(&id, reason),
+        AdrCommands::Rehash { id, all } => super::adr_seal::adr_rehash(id, all),
         AdrCommands::Domain { id, add, remove } => adr_write_ops::adr_domain(&id, add, remove),
         AdrCommands::Scope { id, scope } => adr_write_ops::adr_scope(&id, &scope),
         AdrCommands::Supersede { id, supersedes, remove } => adr_write_ops::adr_supersede(&id, supersedes, remove),
         AdrCommands::SourceFiles { id, add, remove } => adr_write_ops::adr_source_files(&id, add, remove),
+        AdrCommands::CheckConflicts { id } => super::adr_conflicts::adr_check_conflicts(id, fmt),
+        AdrCommands::ConflictBundle { id, format } => super::adr_conflicts::adr_conflict_bundle(&id, &format),
     }
 }
 
@@ -311,86 +328,4 @@ fn adr_review(staged: bool) -> BoxResult {
     Ok(())
 }
 
-fn adr_amend(id: &str, reason: Option<String>) -> BoxResult {
-    let reason = reason.ok_or_else(|| {
-        ProductError::ConfigError("--reason is required for amendments".to_string())
-    })?;
-    let _lock = acquire_write_lock()?;
-    let (_, _, graph) = load_graph()?;
-    let a = graph
-        .adrs
-        .get(id)
-        .ok_or_else(|| ProductError::NotFound(format!("ADR {}", id)))?;
-
-    let (new_hash, amendment) = hash::amend_adr(a, &reason)?;
-
-    let mut front = a.front.clone();
-    front.content_hash = Some(new_hash.clone());
-    front.amendments.push(amendment);
-
-    let content = parser::render_adr(&front, &a.body);
-    fileops::write_file_atomic(&a.path, &content)?;
-    println!("{} amended: content-hash updated to {}", id, new_hash);
-    Ok(())
-}
-
-fn adr_rehash(id: Option<String>, all: bool) -> BoxResult {
-    let _lock = acquire_write_lock()?;
-    let (_, _, graph) = load_graph()?;
-
-    if all {
-        rehash_all(&graph)?;
-    } else {
-        rehash_single(id, &graph)?;
-    }
-    Ok(())
-}
-
-fn rehash_all(graph: &product_lib::graph::KnowledgeGraph) -> BoxResult {
-    let mut sealed = 0;
-    let mut skipped = 0;
-    let mut adrs: Vec<&types::Adr> = graph.adrs.values().collect();
-    adrs.sort_by_key(|a| &a.front.id);
-    for a in adrs {
-        if a.front.status != types::AdrStatus::Accepted {
-            continue;
-        }
-        if a.front.content_hash.is_some() {
-            skipped += 1;
-            continue;
-        }
-        let h = hash::seal_adr(a)?;
-        let mut front = a.front.clone();
-        front.content_hash = Some(h.clone());
-        let content = parser::render_adr(&front, &a.body);
-        fileops::write_file_atomic(&a.path, &content)?;
-        println!("  sealed {} -> {}", a.front.id, h);
-        sealed += 1;
-    }
-    println!("{} ADR(s) sealed, {} already sealed", sealed, skipped);
-    Ok(())
-}
-
-fn rehash_single(id: Option<String>, graph: &product_lib::graph::KnowledgeGraph) -> BoxResult {
-    let adr_id = id.ok_or_else(|| {
-        ProductError::ConfigError(
-            "specify an ADR ID or use --all".to_string(),
-        )
-    })?;
-    let a = graph
-        .adrs
-        .get(&adr_id)
-        .ok_or_else(|| ProductError::NotFound(format!("ADR {}", adr_id)))?;
-    if a.front.content_hash.is_some() {
-        println!("{} is already sealed", adr_id);
-        return Ok(());
-    }
-    let h = hash::seal_adr(a)?;
-    let mut front = a.front.clone();
-    front.content_hash = Some(h.clone());
-    let content = parser::render_adr(&front, &a.body);
-    fileops::write_file_atomic(&a.path, &content)?;
-    println!("{} sealed: content-hash = {}", adr_id, h);
-    Ok(())
-}
 

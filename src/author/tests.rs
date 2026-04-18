@@ -87,18 +87,25 @@ fn schema_prompt_covers_tc_fields() {
 fn prompts_init_creates_files() {
     let dir = tempfile::tempdir().unwrap();
     let created = prompts::init(dir.path()).unwrap();
-    assert_eq!(created.len(), 4, "should create all 4 default prompts");
+    // FT-045 added gap-analysis, drift-analysis, conflict-check.
+    assert_eq!(created.len(), 7, "should create all 7 default prompts");
     assert!(dir.path().join("benchmarks/prompts/author-feature-v1.md").exists());
     assert!(dir.path().join("benchmarks/prompts/implement-v1.md").exists());
+    assert!(dir.path().join("benchmarks/prompts/gap-analysis-v1.md").exists());
+    assert!(dir.path().join("benchmarks/prompts/drift-analysis-v1.md").exists());
+    assert!(dir.path().join("benchmarks/prompts/conflict-check-v1.md").exists());
 }
 
 #[test]
 fn prompts_list_returns_all() {
     let dir = tempfile::tempdir().unwrap();
     let list = prompts::list(dir.path());
-    assert_eq!(list.len(), 4);
+    assert_eq!(list.len(), 7);
     assert!(list.iter().any(|p| p.name == "author-feature"));
     assert!(list.iter().any(|p| p.name == "implement"));
+    assert!(list.iter().any(|p| p.name == "gap-analysis"));
+    assert!(list.iter().any(|p| p.name == "drift-analysis"));
+    assert!(list.iter().any(|p| p.name == "conflict-check"));
 }
 
 #[test]

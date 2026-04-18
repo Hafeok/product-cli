@@ -19,6 +19,20 @@ pub enum GapCommands {
         #[arg(long, default_value = "json")]
         format: String,
     },
+    /// Produce an LLM-ready gap-analysis bundle on stdout (ADR-040)
+    Bundle {
+        /// ADR ID (mutually exclusive with --all / --changed)
+        adr_id: Option<String>,
+        /// Emit a bundle for every ADR in the graph
+        #[arg(long)]
+        all: bool,
+        /// Emit bundles only for ADRs changed since the last commit
+        #[arg(long)]
+        changed: bool,
+        /// Output format: markdown (default) or json
+        #[arg(long, default_value = "markdown")]
+        format: String,
+    },
     /// Print a human-readable gap report for all ADRs
     Report,
     /// Suppress a gap finding
@@ -47,6 +61,9 @@ pub(crate) fn handle_gap(cmd: GapCommands, _global_fmt: &str) -> BoxResult {
         GapCommands::Check { adr_id, changed, format } => {
             gap_check(adr_id, changed, &format, &graph, &mut baseline, &baseline_path, &root)
         }
+        GapCommands::Bundle { adr_id, all, changed, format } => {
+            gap_bundle(adr_id, all, changed, &format, &graph, &root)
+        }
         GapCommands::Report => gap_report(&graph, &baseline),
         GapCommands::Suppress { gap_id, reason } => {
             gap_suppress(&mut baseline, &gap_id, &reason, &baseline_path)
@@ -56,6 +73,40 @@ pub(crate) fn handle_gap(cmd: GapCommands, _global_fmt: &str) -> BoxResult {
         }
         GapCommands::Stats => gap_stats(&graph, &baseline),
     }
+}
+
+fn gap_bundle(
+    adr_id: Option<String>,
+    all: bool,
+    changed: bool,
+    format: &str,
+    graph: &product_lib::graph::KnowledgeGraph,
+    root: &std::path::Path,
+) -> BoxResult {
+    let markdown = if all {
+        gap::bundle_all(graph, root)
+    } else if changed {
+        gap::bundle_changed(graph, root)
+    } else if let Some(ref id) = adr_id {
+        match gap::bundle_for_adr(id, graph, root) {
+            Some(b) => b,
+            None => {
+                eprintln!("error: ADR {} not found", id);
+                process::exit(1);
+            }
+        }
+    } else {
+        eprintln!("error: specify an ADR ID, or use --all or --changed");
+        process::exit(1);
+    };
+
+    if format == "json" {
+        let value = serde_json::json!({ "bundle": markdown });
+        println!("{}", serde_json::to_string_pretty(&value).unwrap_or_default());
+    } else {
+        print!("{}", markdown);
+    }
+    Ok(())
 }
 
 fn gap_check(
@@ -135,17 +186,7 @@ fn build_gap_reports(
 ) -> Vec<gap::GapReport> {
     let mut reports = Vec::new();
     for id in adr_ids {
-        let mut findings = gap::check_adr(graph, id, baseline);
-
-        match gap::try_model_analysis(id, baseline) {
-            Ok(model_findings) => {
-                findings.extend(model_findings);
-            }
-            Err(e) => {
-                eprintln!("error: gap analysis model failure for {}: {}", id, e);
-                process::exit(2);
-            }
-        }
+        let findings = gap::check_adr(graph, id, baseline);
 
         let summary = gap::GapSummary {
             high: findings.iter().filter(|f| f.severity == gap::GapSeverity::High && !f.suppressed).count(),

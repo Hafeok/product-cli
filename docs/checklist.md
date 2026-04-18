@@ -893,27 +893,29 @@
 - [x] TC-561: verify_metrics_threshold_stage_4 (scenario) — passing
 - [x] TC-562: unified_verify_pipeline_exit (exit-criteria) — passing
 
-### FT-045 — LLM Boundary — Semantic Analysis Bundles [ ]
+### FT-045 — LLM Boundary — Semantic Analysis Bundles [x]
 
 - [x] ADR-006: Context Bundle as the Primary LLM Interface (accepted)
 - [x] ADR-019: Continuous Gap Analysis — LLM-Driven Specification Review in CI (accepted)
 - [x] ADR-022: Authoring Resources — System Prompts and Pre-Commit Review (accepted)
 - [x] ADR-023: Drift Detection — Spec vs. Implementation Verification (accepted)
 - [x] ADR-040: Unified Verify Pipeline and the LLM Boundary (accepted)
-- [!] TC-563: gap_bundle_outputs_context_and_instructions (scenario) — failing
-- [!] TC-564: gap_bundle_changed_scopes_correctly (scenario) — failing
-- [!] TC-565: gap_bundle_all_includes_all_adrs (scenario) — failing
-- [!] TC-566: gap_check_structural_only_no_llm_call (invariant) — failing
-- [!] TC-567: gap_check_g002_invariant_no_tc (scenario) — failing
-- [!] TC-568: gap_check_g003_no_rejected_alternatives (scenario) — failing
-- [!] TC-569: drift_diff_outputs_diff_and_governing_adrs (scenario) — failing
-- [!] TC-570: drift_diff_no_tag_warns_w020 (scenario) — failing
-- [!] TC-571: drift_diff_no_changes_empty_diff_section (scenario) — failing
-- [!] TC-572: drift_check_structural_reports_file_changes (scenario) — failing
-- [!] TC-573: drift_check_no_changes_exits_0 (scenario) — failing
-- [!] TC-574: conflict_bundle_includes_related_adrs (scenario) — failing
-- [!] TC-575: adr_check_conflicts_structural_only (invariant) — failing
-- [!] TC-576: llm_boundary_semantic_analysis_exit (exit-criteria) — failing
+- [x] ADR-013: Error Model and User-Facing Error Format (accepted)
+- [x] ADR-036: Tag-Based Implementation Tracking (accepted)
+- [x] TC-563: gap_bundle_outputs_context_and_instructions (scenario) — passing
+- [x] TC-564: gap_bundle_changed_scopes_correctly (scenario) — passing
+- [x] TC-565: gap_bundle_all_includes_all_adrs (scenario) — passing
+- [x] TC-566: gap_check_structural_only_no_llm_call (invariant) — passing
+- [x] TC-567: gap_check_g002_invariant_no_tc (scenario) — passing
+- [x] TC-568: gap_check_g003_no_rejected_alternatives (scenario) — passing
+- [x] TC-569: drift_diff_outputs_diff_and_governing_adrs (scenario) — passing
+- [x] TC-570: drift_diff_no_tag_warns_w020 (scenario) — passing
+- [x] TC-571: drift_diff_no_changes_empty_diff_section (scenario) — passing
+- [x] TC-572: drift_check_structural_reports_file_changes (scenario) — passing
+- [x] TC-573: drift_check_no_changes_exits_0 (scenario) — passing
+- [x] TC-574: conflict_bundle_includes_related_adrs (scenario) — passing
+- [x] TC-575: adr_check_conflicts_structural_only (invariant) — passing
+- [x] TC-576: llm_boundary_semantic_analysis_exit (exit-criteria) — passing
 
 ### FT-046 — MCP Parity for ADR Lifecycle Operations [ ]
 

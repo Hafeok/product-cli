@@ -4862,7 +4862,9 @@ fn tc_090_gap_check_changed_scoping() {
     );
 }
 
-/// TC-091: gap_check_model_error_exits_2 — model failure → exit 2, error on stderr
+/// TC-091: gap_check_model_error_exits_2 — under FT-045 / ADR-040 the LLM
+/// path is removed; injected model errors must be ignored and the structural
+/// check succeeds on a clean repo.
 #[test]
 fn tc_091_gap_check_model_error_exits_2() {
     let h = fixture_gap_clean();
@@ -4871,23 +4873,26 @@ fn tc_091_gap_check_model_error_exits_2() {
         &[("PRODUCT_GAP_INJECT_ERROR", "simulated network failure")],
     );
     assert_eq!(
-        out.exit_code, 2,
-        "Expected exit 2 for model error.\nstdout: {}\nstderr: {}",
+        out.exit_code, 0,
+        "Under FT-045 the gap check is structural only and never exits 2 for a removed LLM path.\nstdout: {}\nstderr: {}",
         out.stdout, out.stderr
     );
     assert!(
-        out.stderr.contains("model failure") || out.stderr.contains("simulated network failure"),
-        "Expected error message on stderr. Got: {}",
+        !out.stderr.contains("model failure"),
+        "Under FT-045 there is no LLM model call; stderr must not reference 'model failure'. Got: {}",
         out.stderr
     );
 }
 
-/// TC-092: gap_check_invalid_json_discarded — valid findings kept, malformed discarded to stderr
+/// TC-092: gap_check_invalid_json_discarded — under FT-045 / ADR-040 the
+/// LLM path is removed; injected responses are ignored. The structural check
+/// still produces valid JSON output.
 #[test]
 fn tc_092_gap_check_invalid_json_discarded() {
     let h = fixture_gap_clean();
 
-    // Inject a response with one valid and one malformed finding
+    // Inject a response with one valid and one malformed finding — FT-045
+    // requires these to be fully ignored.
     let mock_response = r#"[
         {
             "id": "GAP-ADR-001-G004-abcd",
@@ -4909,26 +4914,25 @@ fn tc_092_gap_check_invalid_json_discarded() {
         &[("PRODUCT_GAP_INJECT_RESPONSE", mock_response)],
     );
 
-    // Should not exit 1 (model findings are medium severity here)
-    assert_eq!(out.exit_code, 0, "Expected exit 0.\nstdout: {}\nstderr: {}", out.stdout, out.stderr);
+    assert_eq!(
+        out.exit_code, 0,
+        "Expected exit 0.\nstdout: {}\nstderr: {}",
+        out.stdout, out.stderr
+    );
 
     let reports: serde_json::Value = serde_json::from_str(&out.stdout)
         .unwrap_or_else(|e| panic!("output not valid JSON: {}\nstdout: {}", e, out.stdout));
-    let findings = reports[0]["findings"].as_array().expect("findings array");
 
-    // Valid finding should be present
-    assert!(
-        findings.iter().any(|f| f["id"].as_str() == Some("GAP-ADR-001-G004-abcd")),
-        "Valid finding should be in output. Got: {}",
-        out.stdout
-    );
-
-    // Malformed finding should be discarded and logged to stderr
-    assert!(
-        out.stderr.contains("discarding malformed finding"),
-        "Malformed finding should be logged to stderr. stderr: {}",
-        out.stderr
-    );
+    // Injected findings must NOT appear — Product no longer invokes an LLM.
+    for report in reports.as_array().expect("reports array") {
+        for finding in report["findings"].as_array().expect("findings array") {
+            assert_ne!(
+                finding["id"].as_str(),
+                Some("GAP-ADR-001-G004-abcd"),
+                "Injected model finding must be absent under FT-045"
+            );
+        }
+    }
 }
 
 /// TC-095: gap_changed_expansion — ADR-002 and ADR-005 share FT-001, modifying ADR-002 includes ADR-005
@@ -4990,16 +4994,19 @@ fn tc_097_gap_stdout_stderr_separation() {
     let _parsed: serde_json::Value = serde_json::from_str(&out.stdout)
         .unwrap_or_else(|e| panic!("stdout should be valid JSON: {}\nstdout: {}", e, out.stdout));
 
-    // Test 2: with model error — error on stderr, not on stdout
+    // Test 2: under FT-045 / ADR-040 there is no LLM path. Injected env vars
+    // are ignored — stdout stays valid JSON and there is no model error.
     let h2 = fixture_gap_clean();
     let out2 = h2.run_with_env(
         &["gap", "check", "ADR-001"],
         &[("PRODUCT_GAP_INJECT_ERROR", "test error")],
     );
-    assert_eq!(out2.exit_code, 2);
+    assert_eq!(out2.exit_code, 0);
+    let _parsed2: serde_json::Value = serde_json::from_str(&out2.stdout)
+        .unwrap_or_else(|e| panic!("stdout should be valid JSON: {}\nstdout: {}", e, out2.stdout));
     assert!(
-        out2.stderr.contains("error"),
-        "Error should be on stderr: {}",
+        !out2.stderr.contains("model failure"),
+        "Under FT-045 there is no LLM model call. Got stderr: {}",
         out2.stderr
     );
 }
@@ -12585,14 +12592,15 @@ fn tc_455_drift_check_feature_tag_based() {
     git_add_commit(&h, "modify foo.rs after completion");
 
     let out = h.run(&["drift", "check", "FT-001"]);
-    out.assert_exit(0); // D003 is medium, not high
-    // Should detect that src/foo.rs changed
+    // Under FT-045 the structural drift check exits 2 when changes are
+    // detected (changes since completion tag).
+    out.assert_exit(2);
     assert!(
-        out.stdout.contains("src/foo.rs") || out.stdout.contains("changed since"),
+        out.stdout.contains("src/foo.rs") || out.stdout.contains("Changed files"),
         "Should report drift on changed files.\nStdout: {}", out.stdout
     );
 
-    // No-drift case: check a feature whose files haven't changed
+    // No-drift case: check a feature whose files haven't changed.
     h.write(
         "docs/features/FT-002-test.md",
         "---\nid: FT-002\ntitle: Other Feature\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: []\n---\n\nFeature body.\n",
@@ -12605,7 +12613,7 @@ fn tc_455_drift_check_feature_tag_based() {
     let out2 = h.run(&["drift", "check", "FT-002"]);
     out2.assert_exit(0);
     assert!(
-        out2.stdout.contains("No drift") || out2.stdout.contains("[]"),
+        out2.stdout.contains("No changes since completion") || out2.stdout.contains("No drift"),
         "Should report no drift.\nStdout: {}", out2.stdout
     );
 }
@@ -12632,13 +12640,13 @@ fn tc_456_drift_check_fallback_no_tag() {
     h.write("src/main.rs", "fn main() {}\n");
     git_add_commit(&h, "add source");
 
-    // No completion tag exists — should fallback
+    // No completion tag exists — under FT-045 we emit W020 and fall back
+    // to structural ADR drift checks.
     let out = h.run(&["drift", "check", "FT-001"]);
-    // Should warn about no completion tag (W019)
-    out.assert_stderr_contains("W019");
+    out.assert_stderr_contains("W020");
     // Should still work (no crash)
-    assert!(out.exit_code == 0 || out.exit_code == 1,
-        "Should exit 0 or 1, not crash. Exit: {}", out.exit_code);
+    assert!(out.exit_code == 0 || out.exit_code == 1 || out.exit_code == 2,
+        "Should exit 0, 1 or 2, not crash. Exit: {}", out.exit_code);
 }
 
 /// TC-457: drift_check_all_complete
