@@ -2,7 +2,7 @@
 id: TC-574
 title: conflict_bundle_includes_related_adrs
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-045
@@ -12,6 +12,9 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_574_conflict_bundle_includes_related_adrs
+last-run: 2026-04-18T10:42:24.877521871+00:00
+last-run-duration: 0.1s
+failure-message: "No matching test function found (0 tests ran)"
 ---
 
 ## Session: ST-131 — conflict-bundle-includes-related-adrs

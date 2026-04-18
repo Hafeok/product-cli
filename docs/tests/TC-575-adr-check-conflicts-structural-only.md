@@ -2,7 +2,7 @@
 id: TC-575
 title: adr_check_conflicts_structural_only
 type: invariant
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-045
@@ -12,6 +12,9 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_575_adr_check_conflicts_structural_only
+last-run: 2026-04-18T10:42:24.877521871+00:00
+last-run-duration: 0.1s
+failure-message: "No matching test function found (0 tests ran)"
 ---
 
 ## Invariant: ST-132 — adr-check-conflicts-structural-only

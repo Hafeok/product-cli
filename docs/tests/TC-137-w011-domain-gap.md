@@ -12,6 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_137_w011_domain_gap"
+last-run: 2026-04-18T10:41:39.917241637+00:00
+last-run-duration: 0.1s
 ---
 
 FT-009 declares `domains: [security]`. Security domain has ADRs. FT-009 neither links nor acknowledges security. Assert W011.

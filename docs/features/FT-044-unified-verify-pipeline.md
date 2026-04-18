@@ -2,7 +2,7 @@
 id: FT-044
 title: Unified Verify Pipeline
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-018
 - FT-037

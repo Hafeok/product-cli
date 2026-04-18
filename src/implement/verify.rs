@@ -12,6 +12,40 @@ use std::process::Command;
 
 use super::runner::{self, TcResult, extract_yaml_field, extract_yaml_list, update_tc_status};
 
+// ---------------------------------------------------------------------------
+// Public accessors for the unified pipeline (FT-044)
+// ---------------------------------------------------------------------------
+
+/// Public wrapper: run a TC through its configured runner and return
+/// (success, duration, failure_message).
+pub fn run_tc_public(runner_name: &str, args: &str, root: &Path) -> (bool, f64, String) {
+    match runner::run_tc(runner_name, args, root) {
+        TcResult::Pass(d) => (true, d, String::new()),
+        TcResult::Fail(d, m) => (false, d, m),
+    }
+}
+
+/// Public wrapper: update a TC's status fields in its front-matter.
+pub fn update_tc_status_public(
+    path: &Path,
+    status: &str,
+    timestamp: &str,
+    failure_msg: Option<&str>,
+    duration: Option<f64>,
+) -> Result<()> {
+    update_tc_status(path, status, timestamp, failure_msg, duration)
+}
+
+/// Public wrapper: extract a scalar YAML field value from file content.
+pub fn extract_yaml_field_public(content: &str, field: &str) -> String {
+    extract_yaml_field(content, field)
+}
+
+/// Public wrapper: extract a flow-style YAML list from file content.
+pub fn extract_yaml_list_public(content: &str, field: &str) -> Vec<String> {
+    extract_yaml_list(content, field)
+}
+
 /// Verify all TCs linked to a feature by running their configured runners
 pub fn run_verify(
     feature_id: &str,

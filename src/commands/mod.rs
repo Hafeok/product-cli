@@ -172,9 +172,10 @@ pub enum Commands {
         #[arg(long)]
         headless: bool,
     },
-    /// Verify test criteria for a feature
+    /// Verify test criteria — unified six-stage pipeline (FT-044) when no
+    /// feature ID is supplied, or per-feature (ADR-021) otherwise.
     Verify {
-        /// Feature ID (required unless --platform is used)
+        /// Feature ID (optional — if omitted, runs the full pipeline)
         id: Option<String>,
         /// Run all TCs linked to cross-cutting ADRs, regardless of feature
         #[arg(long)]
@@ -182,6 +183,12 @@ pub enum Commands {
         /// Skip ADR lifecycle check (bypass E016 for migration scenarios)
         #[arg(long)]
         skip_adr_check: bool,
+        /// Scope the pipeline's stage 5 (feature TCs) to a phase
+        #[arg(long)]
+        phase: Option<u32>,
+        /// Emit single-document JSON to stdout for CI pipelines (no colour)
+        #[arg(long)]
+        ci: bool,
     },
     /// Start a graph-aware authoring session
     Author {
@@ -357,7 +364,8 @@ fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> Bo
         Commands::Migrate { command } => migrate::handle_migrate(command),
         Commands::Gap { command } => gap::handle_gap(command, fmt),
         Commands::Implement { id, dry_run, no_verify, headless } => implement::handle_implement(&id, dry_run, no_verify, headless),
-        Commands::Verify { id, platform, skip_adr_check } => implement::handle_verify(id.as_deref(), platform, skip_adr_check),
+        Commands::Verify { id, platform, skip_adr_check, phase, ci } =>
+            implement::handle_verify(id.as_deref(), platform, skip_adr_check, phase, ci),
         Commands::Author { command } => author::handle_author(command),
         Commands::Mcp { http, port, bind, token, repo, write } => mcp_cmd::handle_mcp(http, port, &bind, token, repo, write),
         Commands::InstallHooks => hooks::handle_install_hooks(),

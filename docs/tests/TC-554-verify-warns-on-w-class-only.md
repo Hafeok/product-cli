@@ -2,7 +2,7 @@
 id: TC-554
 title: verify_warns_on_w_class_only
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-044
@@ -11,6 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_554_verify_warns_on_w_class_only
+last-run: 2026-04-18T10:54:35.903075401+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session: ST-112 — verify-warns-on-w-class-only

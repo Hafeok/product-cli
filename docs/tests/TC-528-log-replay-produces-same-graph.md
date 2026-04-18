@@ -11,7 +11,7 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_528_log_replay_produces_same_graph
-last-run: 2026-04-17T15:59:54.039660448+00:00
+last-run: 2026-04-18T10:42:11.121063959+00:00
 last-run-duration: 0.3s
 ---
 

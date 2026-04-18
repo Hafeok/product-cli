@@ -54,3 +54,7 @@ mod st_035_validation_domain_not_in_vocabulary;
 
 #[path = "sessions/exit_criteria.rs"]
 mod exit_criteria;
+
+// FT-044 — Unified Verify Pipeline
+#[path = "sessions/st_110_verify_pipeline.rs"]
+mod st_110_verify_pipeline;

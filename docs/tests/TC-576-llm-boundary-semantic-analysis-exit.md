@@ -2,7 +2,7 @@
 id: TC-576
 title: llm_boundary_semantic_analysis_exit
 type: exit-criteria
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-045
@@ -14,6 +14,9 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_576_llm_boundary_semantic_analysis_exit
+last-run: 2026-04-18T10:42:24.877521871+00:00
+last-run-duration: 0.1s
+failure-message: "No matching test function found (0 tests ran)"
 ---
 
 ## Exit Criteria — FT-045 LLM Boundary — Semantic Analysis Bundles

@@ -11,7 +11,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_490_request_validate_reports_every_finding_in_one_pass
-last-run: 2026-04-17T11:51:10.501467904+00:00
+last-run: 2026-04-18T10:42:07.406621710+00:00
 last-run-duration: 0.2s
 ---
 

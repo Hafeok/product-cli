@@ -2,7 +2,7 @@
 id: TC-559
 title: verify_feature_scope_unchanged
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-044
@@ -12,6 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_559_verify_feature_scope_unchanged
+last-run: 2026-04-18T10:54:35.903075401+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session: ST-117 — verify-feature-scope-unchanged

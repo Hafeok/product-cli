@@ -2,7 +2,7 @@
 id: TC-564
 title: gap_bundle_changed_scopes_correctly
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-045
@@ -12,6 +12,9 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_564_gap_bundle_changed_scopes_correctly
+last-run: 2026-04-18T10:42:24.877521871+00:00
+last-run-duration: 0.2s
+failure-message: "No matching test function found (0 tests ran)"
 ---
 
 ## Session: ST-121 — gap-bundle-changed-scopes-correctly

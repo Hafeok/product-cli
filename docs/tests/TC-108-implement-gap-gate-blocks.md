@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_108_implement_gap_gate_blocks
-last-run: 2026-04-14T18:03:59.846825760+00:00
-last-run-duration: 10.6s
+last-run: 2026-04-18T10:41:51.294040135+00:00
+last-run-duration: 0.2s
 ---
 
 feature with G001 gap unsuppressed. Assert `product implement` exits 1 and prints E009 with the gap details.

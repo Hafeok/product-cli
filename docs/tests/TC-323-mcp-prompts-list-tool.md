@@ -11,7 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_323_mcp_prompts_list_tool"
-last-run: 2026-04-14T17:42:46.235479401+00:00
+last-run: 2026-04-18T10:41:48.879855342+00:00
+last-run-duration: 0.2s
 ---
 
 call `product_prompts_list` via MCP. Assert JSON response lists available prompts.

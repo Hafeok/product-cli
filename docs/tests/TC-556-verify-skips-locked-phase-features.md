@@ -2,7 +2,7 @@
 id: TC-556
 title: verify_skips_locked_phase_features
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-044
@@ -11,6 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_556_verify_skips_locked_phase_features
+last-run: 2026-04-18T10:54:35.903075401+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session: ST-114 — verify-skips-locked-phase-features

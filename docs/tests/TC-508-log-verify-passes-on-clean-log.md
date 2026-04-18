@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_508_log_verify_passes_on_clean_log
-last-run: 2026-04-17T15:59:54.039660448+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-18T10:42:11.121063959+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

@@ -2,7 +2,7 @@
 id: TC-568
 title: gap_check_g003_no_rejected_alternatives
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-045
@@ -12,6 +12,9 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_568_gap_check_g003_no_rejected_alternatives
+last-run: 2026-04-18T10:42:24.877521871+00:00
+last-run-duration: 0.1s
+failure-message: "No matching test function found (0 tests ran)"
 ---
 
 ## Session: ST-125 — gap-check-g003-no-rejected-alternatives

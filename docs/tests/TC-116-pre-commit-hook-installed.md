@@ -11,7 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_116_pre_commit_hook_installed"
-last-run: 2026-04-14T17:42:46.235479401+00:00
+last-run: 2026-04-18T10:41:48.879855342+00:00
+last-run-duration: 0.2s
 ---
 
 run `product install-hooks`. Assert `.git/hooks/pre-commit` exists and is executable.

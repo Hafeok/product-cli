@@ -2,7 +2,7 @@
 id: TC-571
 title: drift_diff_no_changes_empty_diff_section
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-045
@@ -12,6 +12,9 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_571_drift_diff_no_changes_empty_diff_section
+last-run: 2026-04-18T10:42:24.877521871+00:00
+last-run-duration: 0.2s
+failure-message: "No matching test function found (0 tests ran)"
 ---
 
 ## Session: ST-128 — drift-diff-no-changes-empty-diff-section

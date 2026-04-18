@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_529_request_log_hash_chain_exit_criteria
-last-run: 2026-04-17T15:59:54.039660448+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-18T10:42:11.121063959+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

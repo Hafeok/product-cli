@@ -2,7 +2,7 @@
 id: TC-558
 title: verify_ci_json_output
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-044
@@ -12,6 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_558_verify_ci_json_output
+last-run: 2026-04-18T10:54:35.903075401+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session: ST-116 — verify-ci-json-output

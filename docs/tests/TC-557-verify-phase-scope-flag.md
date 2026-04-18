@@ -2,7 +2,7 @@
 id: TC-557
 title: verify_phase_scope_flag
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-044
@@ -11,6 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_557_verify_phase_scope_flag
+last-run: 2026-04-18T10:54:35.903075401+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session: ST-115 — verify-phase-scope-flag

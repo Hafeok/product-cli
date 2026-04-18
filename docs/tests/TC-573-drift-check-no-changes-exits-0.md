@@ -2,7 +2,7 @@
 id: TC-573
 title: drift_check_no_changes_exits_0
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-045
@@ -12,6 +12,9 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_573_drift_check_no_changes_exits_0
+last-run: 2026-04-18T10:42:24.877521871+00:00
+last-run-duration: 0.1s
+failure-message: "No matching test function found (0 tests ran)"
 ---
 
 ## Session: ST-130 — drift-check-no-changes-exits-0

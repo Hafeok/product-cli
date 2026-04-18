@@ -2,7 +2,7 @@
 id: TC-562
 title: unified_verify_pipeline_exit
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-044
@@ -11,6 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_562_unified_verify_pipeline_exit
+last-run: 2026-04-18T10:54:35.903075401+00:00
+last-run-duration: 0.2s
 ---
 
 ## Exit Criteria — FT-044 Unified Verify Pipeline

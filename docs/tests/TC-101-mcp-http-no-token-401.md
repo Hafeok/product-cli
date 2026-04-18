@@ -11,7 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_101_mcp_http_no_token_401"
-last-run: 2026-04-14T17:29:27.893830767+00:00
+last-run: 2026-04-18T10:41:43.286383101+00:00
+last-run-duration: 0.2s
 ---
 
 start server with `--token test`. Send request without Authorization header. Assert 401.

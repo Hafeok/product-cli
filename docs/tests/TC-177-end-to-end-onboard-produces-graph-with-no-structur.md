@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_177_end_to_end_onboard_produces_graph_with_no_structural_errors"
-last-run: 2026-04-14T18:29:03.925615608+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-18T10:41:58.940827843+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description
