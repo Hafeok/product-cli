@@ -1,7 +1,7 @@
 ---
 id: TC-062
 title: schema_migrate_dry_run
-type: scenario
+type: migration
 status: passing
 validates:
   features:

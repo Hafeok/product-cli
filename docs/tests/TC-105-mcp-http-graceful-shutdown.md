@@ -1,7 +1,7 @@
 ---
 id: TC-105
 title: mcp_http_graceful_shutdown
-type: scenario
+type: contract
 status: passing
 validates:
   features:

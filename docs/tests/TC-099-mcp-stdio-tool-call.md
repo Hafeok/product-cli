@@ -1,7 +1,7 @@
 ---
 id: TC-099
 title: mcp_stdio_tool_call
-type: scenario
+type: contract
 status: passing
 validates:
   features:

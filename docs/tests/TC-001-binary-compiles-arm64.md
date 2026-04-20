@@ -1,7 +1,7 @@
 ---
 id: TC-001
 title: binary_compiles_arm64
-type: scenario
+type: smoke
 status: passing
 validates:
   features:

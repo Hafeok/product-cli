@@ -1,7 +1,7 @@
 ---
 id: TC-004
 title: cargo build --release
-type: scenario
+type: smoke
 status: passing
 validates:
   features:

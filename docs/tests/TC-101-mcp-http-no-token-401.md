@@ -1,7 +1,7 @@
 ---
 id: TC-101
 title: mcp_http_no_token_401
-type: scenario
+type: contract
 status: passing
 validates:
   features:

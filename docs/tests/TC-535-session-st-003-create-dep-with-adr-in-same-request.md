@@ -1,7 +1,7 @@
 ---
 id: TC-535
 title: session ST-003 create-dep-with-adr-in-same-request satisfies E013
-type: scenario
+type: session
 status: passing
 validates:
   features:

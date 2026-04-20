@@ -1,7 +1,7 @@
 ---
 id: TC-542
 title: session ST-030 validation-e013-dep-no-adr
-type: scenario
+type: session
 status: passing
 validates:
   features:

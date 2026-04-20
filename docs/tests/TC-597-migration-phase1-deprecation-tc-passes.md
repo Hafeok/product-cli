@@ -1,7 +1,7 @@
 ---
 id: TC-597
 title: migration_phase1_deprecation_tc_passes
-type: scenario
+type: migration
 status: passing
 validates:
   features:

@@ -1,7 +1,7 @@
 ---
 id: TC-002
 title: binary_compiles_x86
-type: scenario
+type: smoke
 status: passing
 validates:
   features:

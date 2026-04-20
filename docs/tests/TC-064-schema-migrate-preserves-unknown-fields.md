@@ -1,7 +1,7 @@
 ---
 id: TC-064
 title: schema_migrate_preserves_unknown_fields
-type: scenario
+type: migration
 status: passing
 validates:
   features:

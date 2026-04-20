@@ -1,7 +1,7 @@
 ---
 id: TC-537
 title: session ST-005 create-multiple-adrs-same-phase assigns IDs in order
-type: scenario
+type: session
 status: passing
 validates:
   features:

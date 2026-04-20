@@ -1,7 +1,7 @@
 ---
 id: TC-516
 title: log migrate entry first
-type: scenario
+type: migration
 status: passing
 validates:
   features:

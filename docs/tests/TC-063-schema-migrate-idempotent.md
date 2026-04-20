@@ -1,7 +1,7 @@
 ---
 id: TC-063
 title: schema_migrate_idempotent
-type: scenario
+type: migration
 status: passing
 validates:
   features:

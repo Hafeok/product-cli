@@ -1,7 +1,7 @@
 ---
 id: TC-104
 title: mcp_http_concurrent_writes
-type: scenario
+type: contract
 status: passing
 validates:
   features:

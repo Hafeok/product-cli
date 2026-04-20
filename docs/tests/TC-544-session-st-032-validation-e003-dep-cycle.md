@@ -1,7 +1,7 @@
 ---
 id: TC-544
 title: session ST-032 validation-e003-dep-cycle
-type: scenario
+type: session
 status: passing
 validates:
   features:

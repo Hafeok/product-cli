@@ -1,7 +1,7 @@
 ---
 id: TC-003
 title: binary_no_deps.sh
-type: scenario
+type: smoke
 status: passing
 validates:
   features:

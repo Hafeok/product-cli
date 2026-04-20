@@ -1,7 +1,7 @@
 ---
 id: TC-413
 title: AGENT.md contains MCP tool usage guide
-type: scenario
+type: contract
 status: passing
 validates:
   features:

@@ -1,7 +1,7 @@
 ---
 id: TC-106
 title: mcp_tool_registry_shared
-type: scenario
+type: contract
 status: passing
 validates:
   features:

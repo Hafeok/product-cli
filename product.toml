@@ -18,6 +18,9 @@ adr = "ADR"
 test = "TC"
 dependency = "DEP"
 
+[tc-types]
+custom = ["contract", "migration", "property", "session", "smoke"]
+
 [phases]
 1 = "Core CLI & Graph"
 

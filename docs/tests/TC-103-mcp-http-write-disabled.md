@@ -1,7 +1,7 @@
 ---
 id: TC-103
 title: mcp_http_write_disabled
-type: scenario
+type: contract
 status: passing
 validates:
   features:

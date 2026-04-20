@@ -1,7 +1,7 @@
 ---
 id: TC-545
 title: session ST-033 validation-e012-unknown-domain
-type: scenario
+type: session
 status: passing
 validates:
   features:

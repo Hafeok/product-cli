@@ -1,7 +1,7 @@
 ---
 id: TC-417
 title: product_agent_context MCP tool returns AGENT.md content
-type: scenario
+type: contract
 status: passing
 validates:
   features:

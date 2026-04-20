@@ -1,7 +1,7 @@
 ---
 id: TC-533
 title: session ST-001 create-feature-with-adr-and-tc
-type: scenario
+type: session
 status: passing
 validates:
   features:

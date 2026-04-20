@@ -1,7 +1,7 @@
 ---
 id: TC-473
 title: product_responsibility MCP tool returns name and responsibility
-type: scenario
+type: contract
 status: passing
 validates:
   features:

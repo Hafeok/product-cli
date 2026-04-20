@@ -1,7 +1,7 @@
 ---
 id: TC-599
 title: migration_phase2_phase1_tc_unrunnable_no_block
-type: scenario
+type: migration
 status: passing
 validates:
   features:

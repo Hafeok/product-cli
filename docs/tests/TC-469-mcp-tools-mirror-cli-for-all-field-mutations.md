@@ -1,7 +1,7 @@
 ---
 id: TC-469
 title: MCP tools mirror CLI for all field mutations
-type: scenario
+type: contract
 status: passing
 validates:
   features:

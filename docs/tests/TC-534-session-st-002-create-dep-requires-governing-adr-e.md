@@ -1,7 +1,7 @@
 ---
 id: TC-534
 title: session ST-002 create-dep-requires-governing-adr emits E013
-type: scenario
+type: session
 status: passing
 validates:
   features:

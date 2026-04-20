@@ -1,7 +1,7 @@
 ---
 id: TC-323
 title: mcp_prompts_list_tool
-type: scenario
+type: contract
 status: passing
 validates:
   features: 

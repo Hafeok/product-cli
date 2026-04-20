@@ -1,7 +1,7 @@
 ---
 id: TC-543
 title: session ST-031 validation-e002-broken-ref
-type: scenario
+type: session
 status: passing
 validates:
   features:

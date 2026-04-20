@@ -1,7 +1,7 @@
 ---
 id: TC-598
 title: migration_phase2_absence_tc_passes
-type: scenario
+type: migration
 status: passing
 validates:
   features:

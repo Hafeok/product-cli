@@ -1,7 +1,7 @@
 ---
 id: TC-546
 title: session ST-034 validation-e011-empty-acknowledgement
-type: scenario
+type: session
 status: passing
 validates:
   features:

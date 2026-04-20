@@ -1,7 +1,7 @@
 ---
 id: TC-102
 title: mcp_http_wrong_token_401
-type: scenario
+type: contract
 status: passing
 validates:
   features:

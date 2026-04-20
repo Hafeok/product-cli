@@ -1,7 +1,7 @@
 ---
 id: TC-520
 title: log path migration preserves chain
-type: scenario
+type: migration
 status: passing
 validates:
   features:

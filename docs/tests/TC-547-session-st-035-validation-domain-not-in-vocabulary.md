@@ -1,7 +1,7 @@
 ---
 id: TC-547
 title: session ST-035 validation-domain-not-in-vocabulary
-type: scenario
+type: session
 status: passing
 validates:
   features:

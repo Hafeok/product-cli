@@ -1,7 +1,7 @@
 ---
 id: TC-530
 title: Session harness exposes documented API surface
-type: scenario
+type: session
 status: passing
 validates:
   features:

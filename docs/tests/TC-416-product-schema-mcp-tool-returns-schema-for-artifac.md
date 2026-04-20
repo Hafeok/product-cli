@@ -1,7 +1,7 @@
 ---
 id: TC-416
 title: product_schema MCP tool returns schema for artifact type
-type: scenario
+type: contract
 status: passing
 validates:
   features:

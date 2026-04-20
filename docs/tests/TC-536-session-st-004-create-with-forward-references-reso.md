@@ -1,7 +1,7 @@
 ---
 id: TC-536
 title: session ST-004 create-with-forward-references resolves ref values
-type: scenario
+type: session
 status: passing
 validates:
   features:

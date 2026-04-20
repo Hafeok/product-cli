@@ -1,7 +1,7 @@
 ---
 id: TC-100
 title: mcp_http_tool_call
-type: scenario
+type: contract
 status: passing
 validates:
   features:

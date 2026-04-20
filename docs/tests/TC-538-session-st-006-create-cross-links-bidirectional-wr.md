@@ -1,7 +1,7 @@
 ---
 id: TC-538
 title: session ST-006 create-cross-links-bidirectional writes both sides
-type: scenario
+type: session
 status: passing
 validates:
   features:

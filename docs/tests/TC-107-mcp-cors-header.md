@@ -1,7 +1,7 @@
 ---
 id: TC-107
 title: mcp_cors_header
-type: scenario
+type: contract
 status: passing
 validates:
   features:

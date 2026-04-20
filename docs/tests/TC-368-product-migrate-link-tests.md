@@ -1,7 +1,7 @@
 ---
 id: TC-368
 title: product migrate link-tests
-type: scenario
+type: migration
 status: passing
 validates:
   features: 
