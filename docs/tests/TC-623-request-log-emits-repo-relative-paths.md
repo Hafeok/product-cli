@@ -2,7 +2,7 @@
 id: TC-623
 title: request_log_emits_repo_relative_paths
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-051
@@ -11,6 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: "tc_623_request_log_emits_repo_relative_paths"
+last-run: 2026-04-20T13:50:09.260044626+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session — request-log-emits-repo-relative-paths

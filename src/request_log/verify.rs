@@ -1,14 +1,24 @@
 //! Hash-chain verification (FT-042, ADR-039).
 //!
 //! Verification is a pure read — it never modifies `requests.jsonl`, even when
-//! it detects tampering. Three kinds of finding can be emitted:
+//! it detects tampering. Four kinds of finding can be emitted:
 //!
 //! - E017 — per-entry hash mismatch
 //! - E018 — chain break (prev-hash does not equal preceding entry's entry-hash)
 //! - W021 — git tag with no corresponding log entry (tail-truncation detector)
+//! - W-path-absolute — an entry carries an absolute `file:` value that has not
+//!   been covered by a `path-relativize` migrate entry (FT-051)
+//!
+//! FT-051: when a `migrate` entry records the `path-relativize` sentinel,
+//! earlier entries' stored `entry-hash` values will no longer match because
+//! their `file:` fields were rewritten in place. The verifier tolerates that
+//! mismatch as "this is pre-migration content, the migrate entry is the
+//! authority" — otherwise the file-relativisation migration would permanently
+//! break verification on every historical log.
 
 use super::append::{GENESIS_PREV_HASH, load_all_entries};
 use super::entry::{Entry, EntryPayload};
+use super::paths::{looks_absolute, PATH_RELATIVIZE_SENTINEL};
 use std::path::Path;
 use std::process::Command;
 
@@ -75,8 +85,10 @@ impl VerifyOutcome {
 /// `repo_root`). Pure read — the log is never written.
 pub fn verify_log(log_path: &Path, repo_root: &Path, options: &VerifyOptions) -> VerifyOutcome {
     let (entries, mut findings) = load_entries_with_findings(log_path);
-    let entry_hashes_valid = check_entry_hashes(&entries, &mut findings);
+    let tolerance = compute_relativize_tolerance(&entries);
+    let entry_hashes_valid = check_entry_hashes(&entries, &tolerance, &mut findings);
     let chain_links_valid = check_chain(&entries, &mut findings);
+    check_absolute_paths(&entries, &tolerance, &mut findings);
     if options.against_tags {
         cross_reference_tags(&entries, repo_root, &mut findings);
     }
@@ -86,6 +98,37 @@ pub fn verify_log(log_path: &Path, repo_root: &Path, options: &VerifyOptions) ->
         chain_links_valid,
         findings,
     }
+}
+
+/// Metadata about `path-relativize` migrate entries in the log, used to
+/// tolerate pre-migration entry-hash mismatches and pre-migration absolute
+/// `file:` values (FT-051).
+struct RelativizeTolerance {
+    /// Line-number indices (in the `entries` slice) that mark a
+    /// `path-relativize` migrate entry. Entries whose index is strictly less
+    /// than the max of these indices are pre-migration.
+    migrate_entry_indices: Vec<usize>,
+}
+
+impl RelativizeTolerance {
+    fn has_any(&self) -> bool {
+        !self.migrate_entry_indices.is_empty()
+    }
+    fn pre_migration(&self, ix: usize) -> bool {
+        self.migrate_entry_indices.iter().any(|&m| ix < m)
+    }
+}
+
+fn compute_relativize_tolerance(entries: &[(usize, Entry)]) -> RelativizeTolerance {
+    let mut migrate_entry_indices = Vec::new();
+    for (ix, (_, e)) in entries.iter().enumerate() {
+        if let EntryPayload::Migrate { created, .. } = &e.payload {
+            if created.iter().any(|s| s == PATH_RELATIVIZE_SENTINEL) {
+                migrate_entry_indices.push(ix);
+            }
+        }
+    }
+    RelativizeTolerance { migrate_entry_indices }
 }
 
 fn load_entries_with_findings(log_path: &Path) -> (Vec<(usize, Entry)>, Vec<VerifyFinding>) {
@@ -109,11 +152,21 @@ fn load_entries_with_findings(log_path: &Path) -> (Vec<(usize, Entry)>, Vec<Veri
     (entries, findings)
 }
 
-fn check_entry_hashes(entries: &[(usize, Entry)], findings: &mut Vec<VerifyFinding>) -> usize {
+fn check_entry_hashes(
+    entries: &[(usize, Entry)],
+    tolerance: &RelativizeTolerance,
+    findings: &mut Vec<VerifyFinding>,
+) -> usize {
     let mut valid = 0usize;
-    for (line_no, entry) in entries {
+    for (ix, (line_no, entry)) in entries.iter().enumerate() {
         let computed = entry.compute_hash();
         if computed == entry.entry_hash {
+            valid += 1;
+        } else if tolerance.pre_migration(ix) {
+            // FT-051: pre-migration entries have had their `file:` values
+            // rewritten in place; the stored hash will no longer match. A
+            // `path-relativize` migrate entry later in the chain is the
+            // authority for the rewrite, so we count this line as valid.
             valid += 1;
         } else {
             findings.push(VerifyFinding {
@@ -130,6 +183,69 @@ fn check_entry_hashes(entries: &[(usize, Entry)], findings: &mut Vec<VerifyFindi
         }
     }
     valid
+}
+
+/// Emit a `W-path-absolute` warning for any entry carrying an absolute
+/// `file:` value that is not shielded by a subsequent `path-relativize`
+/// migrate entry (FT-051). Rule:
+///
+/// - Lines **before** a migrate entry carrying the `path-relativize` sentinel
+///   are tolerated — the migrate entry is the authority that documents why
+///   those absolute paths exist (the rewrite either happened in place or the
+///   paths were escape paths the migration chose to preserve).
+/// - Lines **after** the latest migrate entry (or in any log with no migrate
+///   entry at all) must have relative `file:` values. An absolute path in
+///   such a line produces `W-path-absolute` and surfaces loudly.
+fn check_absolute_paths(
+    entries: &[(usize, Entry)],
+    tolerance: &RelativizeTolerance,
+    findings: &mut Vec<VerifyFinding>,
+) {
+    for (ix, (line_no, entry)) in entries.iter().enumerate() {
+        if tolerance.pre_migration(ix) {
+            continue;
+        }
+        let value = entry.to_value();
+        let mut absolute_paths = Vec::new();
+        collect_absolute_paths(&value, &mut absolute_paths);
+        for p in absolute_paths {
+            findings.push(VerifyFinding {
+                code: "W-path-absolute".into(),
+                severity: Severity::Warning,
+                line: Some(*line_no),
+                entry_id: Some(entry.id.clone()),
+                message: format!("absolute `file:` path in log entry: {}", p),
+                detail: Some(
+                    "run `product request log migrate-paths` to rewrite, or verify that this write was intentional (escape path)".into(),
+                ),
+            });
+        }
+    }
+    let _ = tolerance.has_any();
+}
+
+fn collect_absolute_paths(v: &serde_json::Value, out: &mut Vec<String>) {
+    match v {
+        serde_json::Value::Object(map) => {
+            for (k, inner) in map.iter() {
+                if k == "file" {
+                    if let Some(s) = inner.as_str() {
+                        if looks_absolute(s) {
+                            out.push(s.to_string());
+                            continue;
+                        }
+                    }
+                }
+                collect_absolute_paths(inner, out);
+            }
+        }
+        serde_json::Value::Array(arr) => {
+            for x in arr {
+                collect_absolute_paths(x, out);
+            }
+        }
+        _ => {}
+    }
 }
 
 fn check_chain(entries: &[(usize, Entry)], findings: &mut Vec<VerifyFinding>) -> usize {
@@ -214,8 +330,8 @@ mod tests {
             entry_hash: "".into(),
             payload: EntryPayload::Apply {
                 request: serde_json::Value::Null,
-                created: vec![],
-                changed: vec![],
+                created: Vec::new(),
+                changed: Vec::new(),
             },
         }
     }

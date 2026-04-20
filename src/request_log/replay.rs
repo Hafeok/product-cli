@@ -179,8 +179,8 @@ fn replay_inner(
 fn undo_entry(output: &Path, entry: &Entry) {
     match &entry.payload {
         EntryPayload::Apply { created, .. } => {
-            for id in created {
-                delete_artifact_file(output, id);
+            for r in created {
+                delete_artifact_file(output, &r.id);
             }
         }
         EntryPayload::Verify { .. }

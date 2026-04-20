@@ -27,6 +27,9 @@ pub enum LogCommands {
         #[arg(long = "against-tags")]
         against_tags: bool,
     },
+    /// Rewrite absolute `file:` paths in historical entries to repo-relative
+    /// form and append a `path-relativize` migrate entry (FT-051).
+    MigratePaths,
 }
 
 pub fn handle_log(cmd: LogCommands, _fmt: &str) -> BoxResult {
@@ -80,6 +83,31 @@ pub fn handle_log(cmd: LogCommands, _fmt: &str) -> BoxResult {
         LogCommands::Verify { against_tags } => {
             run_log_verify(&log_p, &root, against_tags);
         }
+        LogCommands::MigratePaths => {
+            run_migrate_paths(&root, &config.paths.requests)?;
+        }
+    }
+    Ok(())
+}
+
+fn run_migrate_paths(root: &std::path::Path, requests_rel: &str) -> BoxResult {
+    use product_lib::request_log::migrate::rewrite_paths;
+    let _lock = fileops::RepoLock::acquire(root)?;
+    let outcome = rewrite_paths(root, Some(requests_rel))?;
+    if outcome.is_noop() {
+        println!("migrate-paths: no absolute paths to rewrite — log already relative.");
+        return Ok(());
+    }
+    println!(
+        "migrate-paths: rewrote {} entr{} to repo-relative form",
+        outcome.rewritten.len(),
+        if outcome.rewritten.len() == 1 { "y" } else { "ies" }
+    );
+    for id in &outcome.rewritten {
+        println!("  - {}", id);
+    }
+    if let Some(ref mig_id) = outcome.migrate_entry_id {
+        println!("appended migrate entry {} (sentinel: path-relativize)", mig_id);
     }
     Ok(())
 }

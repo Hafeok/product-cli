@@ -2,7 +2,7 @@
 id: TC-625
 title: relative_paths_in_log_exit
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-051
@@ -11,6 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: "tc_625_relative_paths_in_log_exit"
+last-run: 2026-04-20T13:50:09.260044626+00:00
+last-run-duration: 0.2s
 ---
 
 ## Exit Criteria — FT-051 Relative Paths in the Request Log

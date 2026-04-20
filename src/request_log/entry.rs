@@ -1,4 +1,8 @@
 //! Entry schema for `requests.jsonl` (FT-042, ADR-039).
+//!
+//! Created/changed artifact arrays may carry optional repo-relative `file:`
+//! fields (FT-051). The JSON emission is backward-compatible: when no file is
+//! present, the entry serialises as a bare ID string just like pre-FT-051 logs.
 
 use serde_json::{json, Map, Value};
 
@@ -45,6 +49,43 @@ impl EntryType {
     }
 }
 
+/// One artifact referenced by an Apply entry. Carries the artifact ID and,
+/// when known, the repo-relative file path the write landed at (FT-051).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ArtifactRef {
+    pub id: String,
+    pub file: Option<String>,
+}
+
+impl ArtifactRef {
+    pub fn id_only(id: impl Into<String>) -> Self {
+        ArtifactRef { id: id.into(), file: None }
+    }
+    pub fn new(id: impl Into<String>, file: impl Into<String>) -> Self {
+        ArtifactRef { id: id.into(), file: Some(file.into()) }
+    }
+    fn to_value(&self) -> Value {
+        match &self.file {
+            Some(f) => {
+                let mut m = Map::new();
+                m.insert("id".into(), Value::String(self.id.clone()));
+                m.insert("file".into(), Value::String(f.clone()));
+                Value::Object(m)
+            }
+            None => Value::String(self.id.clone()),
+        }
+    }
+    fn parse_value(v: &Value) -> Option<Self> {
+        if let Some(s) = v.as_str() {
+            return Some(ArtifactRef::id_only(s));
+        }
+        let obj = v.as_object()?;
+        let id = obj.get("id").and_then(|x| x.as_str())?;
+        let file = obj.get("file").and_then(|x| x.as_str()).map(String::from);
+        Some(ArtifactRef { id: id.to_string(), file })
+    }
+}
+
 /// Type-specific payload carried by an Entry (ADR-039 decision 4).
 #[derive(Debug, Clone)]
 pub enum EntryPayload {
@@ -52,10 +93,10 @@ pub enum EntryPayload {
     Apply {
         /// Full request source (as JSON) — optional, may be a summary
         request: Value,
-        /// `result.created` — list of created artifact IDs
-        created: Vec<String>,
-        /// `result.changed` — list of changed artifact IDs
-        changed: Vec<String>,
+        /// `result.created` — list of created artifact refs (id + optional file)
+        created: Vec<ArtifactRef>,
+        /// `result.changed` — list of changed artifact refs (id + optional file)
+        changed: Vec<ArtifactRef>,
     },
     Undo {
         undoes: String,
@@ -111,13 +152,22 @@ fn str_array(items: &[String]) -> Value {
     Value::Array(items.iter().map(|s| Value::String(s.clone())).collect())
 }
 
-fn merge_apply(map: &mut Map<String, Value>, request: &Value, created: &[String], changed: &[String]) {
+fn ref_array(items: &[ArtifactRef]) -> Value {
+    Value::Array(items.iter().map(|r| r.to_value()).collect())
+}
+
+fn merge_apply(
+    map: &mut Map<String, Value>,
+    request: &Value,
+    created: &[ArtifactRef],
+    changed: &[ArtifactRef],
+) {
     if !request.is_null() {
         map.insert("request".into(), request.clone());
     }
     let mut result = Map::new();
-    result.insert("created".into(), str_array(created));
-    result.insert("changed".into(), str_array(changed));
+    result.insert("created".into(), ref_array(created));
+    result.insert("changed".into(), ref_array(changed));
     map.insert("result".into(), Value::Object(result));
 }
 
@@ -251,12 +301,21 @@ fn result_array(obj: &Map<String, Value>, key: &str) -> Vec<String> {
         .unwrap_or_default()
 }
 
+fn result_ref_array(obj: &Map<String, Value>, key: &str) -> Vec<ArtifactRef> {
+    obj.get("result")
+        .and_then(|v| v.as_object())
+        .and_then(|r| r.get(key))
+        .and_then(|v| v.as_array())
+        .map(|a| a.iter().filter_map(ArtifactRef::parse_value).collect())
+        .unwrap_or_default()
+}
+
 fn parse_payload(obj: &Map<String, Value>, entry_type: EntryType) -> EntryPayload {
     match entry_type {
         EntryType::Create | EntryType::Change | EntryType::CreateAndChange => EntryPayload::Apply {
             request: obj.get("request").cloned().unwrap_or(Value::Null),
-            created: result_array(obj, "created"),
-            changed: result_array(obj, "changed"),
+            created: result_ref_array(obj, "created"),
+            changed: result_ref_array(obj, "changed"),
         },
         EntryType::Undo => EntryPayload::Undo {
             undoes: str_field(obj, "undoes"),
@@ -302,7 +361,7 @@ mod tests {
             entry_hash: "".into(),
             payload: EntryPayload::Apply {
                 request: serde_json::Value::Null,
-                created: vec!["FT-001".into()],
+                created: vec![ArtifactRef::id_only("FT-001")],
                 changed: vec![],
             },
         }

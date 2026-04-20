@@ -229,8 +229,14 @@ pub fn apply_request(
         RequestType::Change => crate::request_log::entry::EntryType::Change,
         RequestType::CreateAndChange => crate::request_log::entry::EntryType::CreateAndChange,
     };
-    let created_ids: Vec<String> = created.iter().map(|c| c.id.clone()).collect();
-    let changed_ids: Vec<String> = changed.iter().map(|c| c.id.clone()).collect();
+    let created_refs: Vec<crate::request_log::ArtifactRef> = created
+        .iter()
+        .map(|c| crate::request_log::ArtifactRef::new(c.id.clone(), c.file.clone()))
+        .collect();
+    let changed_refs: Vec<crate::request_log::ArtifactRef> = changed
+        .iter()
+        .map(|c| crate::request_log::ArtifactRef::new(c.id.clone(), c.file.clone()))
+        .collect();
     let request_json = serde_json::json!({
         "type": request.request_type.to_string(),
         "reason": request.reason,
@@ -239,12 +245,13 @@ pub fn apply_request(
         &log_p,
         crate::request_log::append::ApplyEntryParams {
             entry_type,
+            repo_root,
             applied_by: &applied_by,
             commit: &commit,
             reason: &request.reason,
             request_json,
-            created: created_ids,
-            changed: changed_ids,
+            created: created_refs,
+            changed: changed_refs,
         },
     );
 

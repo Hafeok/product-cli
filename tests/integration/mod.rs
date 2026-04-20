@@ -15672,3 +15672,306 @@ fn tc_622_mcp_body_update_dep_exit() {
         out
     );
 }
+
+// ============================================================================
+// FT-051 — Relative Paths in the Request Log (ADR-039 follow-on)
+// ============================================================================
+
+/// Walk a JSON value collecting every string value at any `file` key.
+fn collect_file_values_from_json(v: &serde_json::Value, out: &mut Vec<String>) {
+    match v {
+        serde_json::Value::Object(map) => {
+            for (k, inner) in map.iter() {
+                if k == "file" {
+                    if let Some(s) = inner.as_str() {
+                        out.push(s.to_string());
+                        continue;
+                    }
+                }
+                collect_file_values_from_json(inner, out);
+            }
+        }
+        serde_json::Value::Array(arr) => {
+            for x in arr {
+                collect_file_values_from_json(x, out);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// TC-623: new log entries only carry repo-relative `file:` values — no
+/// leading slash, no drive letter, no repo-root absolute prefix. Two clones
+/// of the same repo at different absolute paths produce byte-identical
+/// `file:` values in new log entries.
+#[test]
+fn tc_623_request_log_emits_repo_relative_paths() {
+    // Clone A
+    let h_a = fixture_with_domains();
+    write_log_req(&h_a, "r.yaml", "tc-623-clone-a", "Rate Limiting");
+    h_a.run(&["request", "apply", "r.yaml"]).assert_exit(0);
+
+    // Clone B (a separate tempdir at a different absolute path).
+    let h_b = fixture_with_domains();
+    write_log_req(&h_b, "r.yaml", "tc-623-clone-a", "Rate Limiting");
+    h_b.run(&["request", "apply", "r.yaml"]).assert_exit(0);
+
+    // Both clones produced one entry with no absolute file values.
+    for h in [&h_a, &h_b] {
+        let v = log_line_json(h, 0);
+        let mut files: Vec<String> = Vec::new();
+        collect_file_values_from_json(&v, &mut files);
+        assert!(
+            !files.is_empty(),
+            "new log entry should carry at least one file path; got: {}",
+            v
+        );
+        for f in &files {
+            assert!(
+                !f.starts_with('/'),
+                "file value must not be absolute (POSIX): {}",
+                f
+            );
+            let mut chars = f.chars();
+            let c1 = chars.next();
+            let c2 = chars.next();
+            assert!(
+                !(matches!(c1, Some(c) if c.is_ascii_alphabetic()) && c2 == Some(':')),
+                "file value must not carry a drive letter: {}",
+                f
+            );
+            assert!(
+                f.starts_with("docs/"),
+                "file value must be under docs/: {}",
+                f
+            );
+        }
+    }
+
+    // Byte-identical file values across the two clones (machine-independence).
+    let v_a = log_line_json(&h_a, 0);
+    let v_b = log_line_json(&h_b, 0);
+    let mut files_a = Vec::new();
+    let mut files_b = Vec::new();
+    collect_file_values_from_json(&v_a, &mut files_a);
+    collect_file_values_from_json(&v_b, &mut files_b);
+    files_a.sort();
+    files_b.sort();
+    assert_eq!(
+        files_a, files_b,
+        "file values must be byte-identical across clones:\nA: {:?}\nB: {:?}",
+        files_a, files_b
+    );
+    // And no tmpdir leakage.
+    let root_a = h_a.dir.path().display().to_string();
+    let root_b = h_b.dir.path().display().to_string();
+    let line_a = log_lines(&h_a)[0].clone();
+    let line_b = log_lines(&h_b)[0].clone();
+    assert!(
+        !line_a.contains(&root_a),
+        "log entry contains absolute tmpdir prefix {}: {}",
+        root_a,
+        line_a
+    );
+    assert!(
+        !line_b.contains(&root_b),
+        "log entry contains absolute tmpdir prefix {}: {}",
+        root_b,
+        line_b
+    );
+}
+
+/// TC-624: `product request log migrate-paths` rewrites legacy absolute
+/// `file:` values to repo-relative form, appends a migrate entry carrying the
+/// `path-relativize` sentinel, and leaves `product request log verify`
+/// exiting 0. A second run with no outstanding absolute paths is a no-op.
+#[test]
+fn tc_624_request_log_migrate_paths_rewrites_history() {
+    let h = fixture_log();
+
+    // Hand-build a legacy log at `requests.jsonl` with 3 absolute `file:`
+    // values under a bogus absolute prefix the repo does not live at. We use
+    // `product_lib::request_log` primitives to ensure hashes chain correctly.
+    use product_lib::request_log::append::{append_entry, GENESIS_PREV_HASH};
+    use product_lib::request_log::entry::{ArtifactRef, Entry, EntryPayload, EntryType};
+
+    let log_path = h.dir.path().join("requests.jsonl");
+    let legacy_prefix = "/home/alice/work/product-cli/";
+
+    let build_entry = |prev: &str, id: &str, art_id: &str, suffix: &str| Entry {
+        id: id.into(),
+        applied_at: "2026-04-01T00:00:00Z".into(),
+        applied_by: "git:Alice <alice@example.com>".into(),
+        commit: "abc123".into(),
+        entry_type: EntryType::Create,
+        reason: "legacy absolute-path entry".into(),
+        prev_hash: prev.into(),
+        entry_hash: "".into(),
+        payload: EntryPayload::Apply {
+            request: serde_json::Value::Null,
+            created: vec![ArtifactRef::new(
+                art_id,
+                format!("{}docs/features/{}", legacy_prefix, suffix),
+            )],
+            changed: Vec::new(),
+        },
+    };
+
+    let e1 = append_entry(
+        &log_path,
+        build_entry(GENESIS_PREV_HASH, "req-20260401-001", "FT-001", "FT-001-a.md"),
+    )
+    .expect("e1");
+    let e2 = append_entry(
+        &log_path,
+        build_entry(&e1.entry_hash, "req-20260401-002", "FT-002", "FT-002-b.md"),
+    )
+    .expect("e2");
+    let _e3 = append_entry(
+        &log_path,
+        build_entry(&e2.entry_hash, "req-20260401-003", "FT-003", "FT-003-c.md"),
+    )
+    .expect("e3");
+
+    // Pre-migration: verify should exit 2 (warning-only) and emit W-path-absolute.
+    let pre = h.run(&["request", "log", "verify"]);
+    assert_eq!(
+        pre.exit_code, 2,
+        "verify should exit 2 (warnings) on legacy absolute paths;\nstdout: {}\nstderr: {}",
+        pre.stdout, pre.stderr
+    );
+    assert!(
+        pre.stderr.contains("W-path-absolute"),
+        "verify should emit W-path-absolute; got stderr:\n{}",
+        pre.stderr
+    );
+
+    // Run migrate-paths.
+    let mig = h.run(&["request", "log", "migrate-paths"]);
+    mig.assert_exit(0);
+    mig.assert_stdout_contains("path-relativize");
+    mig.assert_stdout_contains("rewrote 3");
+
+    // All three legacy lines now carry relative `file:` values.
+    let lines = log_lines(&h);
+    assert_eq!(
+        lines.len(),
+        4,
+        "log should have 3 rewritten + 1 migrate = 4 lines; got {}",
+        lines.len()
+    );
+    for (i, raw) in lines.iter().take(3).enumerate() {
+        let v: serde_json::Value = serde_json::from_str(raw).expect("json");
+        let mut files = Vec::new();
+        collect_file_values_from_json(&v, &mut files);
+        assert!(
+            !files.is_empty(),
+            "line {} should still carry file values",
+            i
+        );
+        for f in &files {
+            assert!(
+                !f.starts_with('/'),
+                "line {} file value still absolute after migration: {}",
+                i,
+                f
+            );
+            assert!(
+                f.starts_with("docs/features/"),
+                "line {} file value should be docs-relative: {}",
+                i,
+                f
+            );
+        }
+    }
+
+    // The 4th line is the migrate entry with the `path-relativize` sentinel.
+    let migrate_v: serde_json::Value =
+        serde_json::from_str(&lines[3]).expect("migrate line parses");
+    assert_eq!(migrate_v["type"], "migrate");
+    let created = migrate_v["result"]["created"].as_array().expect("array");
+    assert!(
+        created.iter().any(|v| v.as_str() == Some("path-relativize")),
+        "migrate entry must record the path-relativize sentinel; got: {}",
+        migrate_v
+    );
+    let sources = migrate_v["sources"].as_array().expect("sources array");
+    assert_eq!(
+        sources.len(),
+        3,
+        "migrate entry should list the 3 rewritten entry IDs; got: {:?}",
+        sources
+    );
+
+    // verify must now exit 0 — the migrate entry is the authority for the
+    // pre-migration hash mismatch and the previously-absolute paths.
+    let post = h.run(&["request", "log", "verify"]);
+    assert_eq!(
+        post.exit_code, 0,
+        "verify should exit 0 after migrate-paths;\nstdout: {}\nstderr: {}",
+        post.stdout, post.stderr
+    );
+    assert!(
+        !post.stderr.contains("W-path-absolute"),
+        "verify should not emit W-path-absolute after migration; stderr:\n{}",
+        post.stderr
+    );
+    assert!(
+        !post.stderr.contains("E017"),
+        "verify should not emit E017 hash mismatch after migration; stderr:\n{}",
+        post.stderr
+    );
+
+    // Second run with no outstanding absolute paths is a no-op.
+    let lines_before = log_lines(&h).len();
+    let mig2 = h.run(&["request", "log", "migrate-paths"]);
+    mig2.assert_exit(0);
+    mig2.assert_stdout_contains("no absolute paths");
+    let lines_after = log_lines(&h).len();
+    assert_eq!(
+        lines_before, lines_after,
+        "second migrate-paths must not append any entry"
+    );
+}
+
+/// TC-625: FT-051 exit-criteria umbrella — runs the key end-to-end checks
+/// that the individual TCs cover, and additionally confirms that a fresh
+/// post-FT-051 log produces no warnings from `product request log verify`.
+#[test]
+fn tc_625_relative_paths_in_log_exit() {
+    let h = fixture_log();
+    write_log_req(&h, "r.yaml", "tc-625-fresh", "Fresh");
+    h.run(&["request", "apply", "r.yaml"]).assert_exit(0);
+
+    // Exit-criteria #1: emitted paths are repo-relative.
+    let v = log_line_json(&h, 0);
+    let mut files = Vec::new();
+    collect_file_values_from_json(&v, &mut files);
+    assert!(!files.is_empty(), "entry should carry at least one file");
+    for f in &files {
+        assert!(!f.starts_with('/'), "fresh log has absolute file: {}", f);
+        assert!(f.starts_with("docs/"), "fresh log has off-docs file: {}", f);
+    }
+
+    // Exit-criteria #4: verify exits 0 on a fresh post-FT-051 log, no warnings.
+    let out = h.run(&["request", "log", "verify"]);
+    assert_eq!(
+        out.exit_code, 0,
+        "verify should exit 0 on a fresh post-FT-051 log;\nstdout: {}\nstderr: {}",
+        out.stdout, out.stderr
+    );
+    assert!(
+        !out.stderr.contains("W-path-absolute"),
+        "fresh log should not emit W-path-absolute: {}",
+        out.stderr
+    );
+
+    // Exit-criteria #3 (smoke): migrate-paths on an already-clean log is a
+    // no-op and does not append a new entry.
+    let before = log_lines(&h).len();
+    let mig = h.run(&["request", "log", "migrate-paths"]);
+    mig.assert_exit(0);
+    mig.assert_stdout_contains("no absolute paths");
+    let after = log_lines(&h).len();
+    assert_eq!(before, after, "migrate-paths must be a no-op on a clean log");
+}

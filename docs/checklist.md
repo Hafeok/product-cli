@@ -1002,11 +1002,11 @@
 - [x] TC-621: mcp_body_update_dep_error_paths (scenario) — passing
 - [x] TC-622: mcp_body_update_dep_exit (exit-criteria) — passing
 
-### FT-051 — Relative Paths in the Request Log [ ]
+### FT-051 — Relative Paths in the Request Log [x]
 
 - [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
 - [x] ADR-039: Hash-Chained Request Log for Tamper-Evident Audit (accepted)
-- [ ] TC-623: request_log_emits_repo_relative_paths (invariant) — unimplemented
-- [ ] TC-624: request_log_migrate_paths_rewrites_history (scenario) — unimplemented
-- [ ] TC-625: relative_paths_in_log_exit (exit-criteria) — unimplemented
+- [x] TC-623: request_log_emits_repo_relative_paths (invariant) — passing
+- [x] TC-624: request_log_migrate_paths_rewrites_history (scenario) — passing
+- [x] TC-625: relative_paths_in_log_exit (exit-criteria) — passing
 

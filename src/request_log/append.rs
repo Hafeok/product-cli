@@ -1,6 +1,11 @@
 //! Log append: compute IDs, link chain, write one line atomically (FT-042).
+//!
+//! FT-051 — file paths on created/changed artifacts are relativised against
+//! `repo_root` inside `append_apply_entry` so callers can keep passing the
+//! absolute paths the writer produced.
 
-use super::entry::Entry;
+use super::entry::{ArtifactRef, Entry};
+use super::paths::path_relativize;
 use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
@@ -107,35 +112,48 @@ pub fn next_prev_hash(log_path: &Path) -> String {
 }
 
 /// Parameters for `append_apply_entry`.
+///
+/// FT-051 adds `repo_root` so the appender can relativise every `file:` field
+/// it emits (in both the `request_json` payload and on each created/changed
+/// `ArtifactRef`). Callers pass absolute paths — relativisation happens here.
 pub struct ApplyEntryParams<'a> {
     pub entry_type: super::entry::EntryType,
+    pub repo_root: &'a Path,
     pub applied_by: &'a str,
     pub commit: &'a str,
     pub reason: &'a str,
     pub request_json: serde_json::Value,
-    pub created: Vec<String>,
-    pub changed: Vec<String>,
+    pub created: Vec<ArtifactRef>,
+    pub changed: Vec<ArtifactRef>,
 }
 
 /// Shortcut: append an Apply-style entry (`create` / `change` /
 /// `create-and-change`) to the log, looking up the previous hash and assigning
-/// an ID automatically.
+/// an ID automatically. File paths are relativised against `params.repo_root`
+/// before serialisation (FT-051).
 pub fn append_apply_entry(
     log_path: &Path,
     params: ApplyEntryParams<'_>,
 ) -> std::io::Result<Entry> {
     let ApplyEntryParams {
         entry_type,
+        repo_root,
         applied_by,
         commit,
         reason,
-        request_json,
+        mut request_json,
         created,
         changed,
     } = params;
     let applied_at = chrono_now();
     let id = compute_entry_id(&applied_at, log_path);
     let prev_hash = next_prev_hash(log_path);
+
+    // Relativise any `file:` fields inside the request JSON payload (FT-051).
+    super::paths::relativise_files_in_value(&mut request_json, repo_root);
+    let created = relativise_refs(&created, repo_root);
+    let changed = relativise_refs(&changed, repo_root);
+
     let entry = Entry {
         id,
         applied_at,
@@ -152,6 +170,21 @@ pub fn append_apply_entry(
         },
     };
     append_entry(log_path, entry)
+}
+
+/// Return a fresh Vec with each `ArtifactRef`'s `file:` path relativised
+/// against `repo_root` (FT-051). Absolute escape paths are preserved as-is so
+/// the next `verify` can flag them via W-path-absolute.
+fn relativise_refs(refs: &[ArtifactRef], repo_root: &Path) -> Vec<ArtifactRef> {
+    refs.iter()
+        .map(|r| match &r.file {
+            Some(f) => {
+                let rel = path_relativize(f, repo_root).value;
+                ArtifactRef { id: r.id.clone(), file: Some(rel) }
+            }
+            None => r.clone(),
+        })
+        .collect()
 }
 
 /// Parameters for `append_verify_entry`.
