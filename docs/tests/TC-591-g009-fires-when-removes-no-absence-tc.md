@@ -2,13 +2,17 @@
 id: TC-591
 title: g009_fires_when_removes_no_absence_tc
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-047
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_591_g009_fires_when_removes_no_absence_tc
+last-run: 2026-04-20T08:01:08.284116371+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session: ST-145 — g009-fires-when-removes-no-absence-tc

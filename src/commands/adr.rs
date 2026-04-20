@@ -211,6 +211,18 @@ fn render_adr_show_text(a: &types::Adr) -> String {
         "Superseded-by: {}\n",
         if a.front.superseded_by.is_empty() { "(none)".to_string() } else { a.front.superseded_by.join(", ") }
     ));
+    if !a.front.removes.is_empty() {
+        out.push_str("Removes:\n");
+        for r in &a.front.removes {
+            out.push_str(&format!("  - {}\n", r));
+        }
+    }
+    if !a.front.deprecates.is_empty() {
+        out.push_str("Deprecates:\n");
+        for d in &a.front.deprecates {
+            out.push_str(&format!("  - {}\n", d));
+        }
+    }
     out.push_str(&format!("\n{}", a.body));
     out
 }

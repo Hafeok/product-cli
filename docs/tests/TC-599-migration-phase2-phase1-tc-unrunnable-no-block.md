@@ -2,13 +2,17 @@
 id: TC-599
 title: migration_phase2_phase1_tc_unrunnable_no_block
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-047
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_599_migration_phase2_phase1_tc_unrunnable_no_block
+last-run: 2026-04-20T08:01:08.284116371+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session: ST-153 — migration-phase2-phase1-tc-unrunnable-no-block

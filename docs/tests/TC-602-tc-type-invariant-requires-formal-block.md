@@ -2,13 +2,17 @@
 id: TC-602
 title: tc_type_invariant_requires_formal_block
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-048
   adrs:
   - ADR-042
 phase: 1
+runner: cargo-test
+runner-args: "tc_602_tc_type_invariant_requires_formal_block"
+last-run: 2026-04-20T08:00:23.695686320+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session: ST-181 — tc-type-invariant-requires-formal-block

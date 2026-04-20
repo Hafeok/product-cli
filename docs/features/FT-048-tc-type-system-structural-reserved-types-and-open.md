@@ -2,7 +2,7 @@
 id: FT-048
 title: TC Type System — Structural Reserved Types and Open Descriptive Types
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-011
 - FT-018

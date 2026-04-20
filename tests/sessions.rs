@@ -72,3 +72,7 @@ mod st_131_conflict_bundle;
 // FT-046 — MCP Parity for ADR Lifecycle Operations
 #[path = "sessions/st_140_mcp_adr_lifecycle.rs"]
 mod st_140_mcp_adr_lifecycle;
+
+// FT-047 — Removal & Deprecation Tracking
+#[path = "sessions/st_147_removal_deprecation.rs"]
+mod st_147_removal_deprecation;

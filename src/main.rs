@@ -31,6 +31,14 @@ fn main() {
         }
     }
 
+    // E017 (ADR-042): reject malformed `[tc-types].custom` before clap
+    // parses anything — reserved TC-type names in the custom list must
+    // pre-empt every subcommand, including `--help` and `--version`.
+    if let Err(e) = early_config_check() {
+        eprintln!("{e}");
+        process::exit(1);
+    }
+
     let cli = Cli::parse();
     let mut cmd = Cli::command();
 
@@ -39,4 +47,23 @@ fn main() {
         eprintln!("{e}");
         process::exit(1);
     }
+}
+
+/// Walk up from cwd looking for `product.toml`. If one is found, load it —
+/// `ProductConfig::load` runs the E017 check. If no config is found we
+/// silently continue.
+fn early_config_check() -> Result<(), product_lib::error::ProductError> {
+    if let Ok(mut dir) = std::env::current_dir() {
+        loop {
+            let candidate = dir.join("product.toml");
+            if candidate.exists() {
+                product_lib::config::ProductConfig::load(&candidate)?;
+                return Ok(());
+            }
+            if !dir.pop() {
+                return Ok(());
+            }
+        }
+    }
+    Ok(())
 }

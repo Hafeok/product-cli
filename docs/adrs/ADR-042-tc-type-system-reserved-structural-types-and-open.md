@@ -1,7 +1,7 @@
 ---
 id: ADR-042
 title: TC Type System — Reserved Structural Types and Open Descriptive Types
-status: proposed
+status: accepted
 features:
 - FT-048
 supersedes: []
@@ -11,6 +11,7 @@ domains:
 - data-model
 - error-handling
 scope: cross-cutting
+content-hash: sha256:a6f6606f62c03cbad2b7822a35fec992b5e3e8732b5c92c18a9f45db88f9fcad
 ---
 
 **Status:** Proposed

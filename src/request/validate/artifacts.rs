@@ -147,15 +147,15 @@ fn validate_tc(
     findings: &mut Vec<Finding>,
 ) {
     if let Some(Value::String(s)) = a.fields.get(Value::String("tc-type".into())) {
-        if !matches!(
-            s.as_str(),
-            "scenario" | "invariant" | "chaos" | "exit-criteria" | "benchmark"
-        ) {
-            findings.push(Finding::error(
-                "E006",
-                format!("invalid tc-type '{}'", s),
-                format!("$.artifacts[{}].tc-type", a.index),
-            ));
+        if !ctx.config.is_known_tc_type(s.as_str()) {
+            findings.push(
+                Finding::error(
+                    "E006",
+                    format!("unknown tc-type '{}'", s),
+                    format!("$.artifacts[{}].tc-type", a.index),
+                )
+                .with_hint(ctx.config.tc_type_hint()),
+            );
         }
     }
 

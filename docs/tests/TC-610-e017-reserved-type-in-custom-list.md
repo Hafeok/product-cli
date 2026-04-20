@@ -2,13 +2,17 @@
 id: TC-610
 title: e017_reserved_type_in_custom_list
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-048
   adrs:
   - ADR-042
 phase: 1
+runner: cargo-test
+runner-args: "tc_610_e017_reserved_type_in_custom_list"
+last-run: 2026-04-20T08:00:23.695686320+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session: ST-189 — e017-reserved-type-in-custom-list

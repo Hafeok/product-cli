@@ -141,7 +141,13 @@ pub fn execute_seed(
 
 /// Render an ADR file from a proposed ADR.
 fn render_seeded_adr(adr: &ProposedAdr) -> String {
-    let front = AdrFrontMatter {
+    let front = seeded_adr_front(adr);
+    let body = seeded_adr_body(adr);
+    parser::render_adr(&front, &body)
+}
+
+fn seeded_adr_front(adr: &ProposedAdr) -> AdrFrontMatter {
+    AdrFrontMatter {
         id: adr.id.clone(),
         title: adr.title.clone(),
         status: AdrStatus::Proposed,
@@ -153,11 +159,13 @@ fn render_seeded_adr(adr: &ProposedAdr) -> String {
         content_hash: None,
         amendments: vec![],
         source_files: vec![],
-    };
+        removes: vec![],
+        deprecates: vec![],
+    }
+}
 
+fn seeded_adr_body(adr: &ProposedAdr) -> String {
     let mut body = String::new();
-
-    // Context section
     body.push_str("## Context\n\n");
     body.push_str(&adr.observation);
     body.push('\n');
@@ -168,26 +176,17 @@ fn render_seeded_adr(adr: &ProposedAdr) -> String {
         }
     }
     body.push('\n');
-
-    // Decision section
     body.push_str("## Decision\n\n");
     body.push_str(&adr.title);
     body.push_str(".\n\n");
-
-    // Rationale
     body.push_str("## Rationale\n\n");
     body.push_str("<!-- TODO: add rationale -->\n\n");
-
-    // Consequence
     body.push_str("## Consequence\n\n");
     body.push_str(&adr.hypothesised_consequence);
     body.push_str("\n\n");
-
-    // Rejected alternatives
     body.push_str("**Rejected alternatives:**\n\n");
     body.push_str("<!-- TODO: add rejected alternatives -->\n");
-
-    parser::render_adr(&front, &body)
+    body
 }
 
 /// Render a feature stub from a proposed feature.

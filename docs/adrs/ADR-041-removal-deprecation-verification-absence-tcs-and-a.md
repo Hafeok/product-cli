@@ -1,7 +1,7 @@
 ---
 id: ADR-041
 title: Removal & Deprecation Verification — Absence TCs and ADR `removes`/`deprecates` Fields
-status: proposed
+status: accepted
 features:
 - FT-047
 - FT-048
@@ -12,6 +12,7 @@ domains:
 - data-model
 - error-handling
 scope: cross-cutting
+content-hash: sha256:6e7af130ff8ea7eda39ea3a6f7775c8c63b2af4fbeff8013e5e85e1c57548b88
 ---
 
 **Status:** Proposed

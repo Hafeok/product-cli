@@ -6,12 +6,14 @@ mod lifecycle_validation;
 pub mod inference;
 mod model;
 mod ordering;
+mod removal_validation;
 pub mod responsibility;
 mod stats;
 #[cfg(test)]
 mod tests;
 mod types;
 pub(crate) mod validation;
+mod validation_helpers;
 
 pub use model::{Edge, EdgeType, KnowledgeGraph};
 pub use types::{

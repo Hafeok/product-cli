@@ -257,43 +257,7 @@ fn default_test_status() -> TestStatus {
     TestStatus::Unimplemented
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum TestType {
-    Scenario,
-    Invariant,
-    Chaos,
-    ExitCriteria,
-    /// Negative assertion — "the thing is gone". Routed to
-    /// `product verify --platform`. See FT-047 / ADR-041.
-    Absence,
-}
-
-impl std::fmt::Display for TestType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Scenario => write!(f, "scenario"),
-            Self::Invariant => write!(f, "invariant"),
-            Self::Chaos => write!(f, "chaos"),
-            Self::ExitCriteria => write!(f, "exit-criteria"),
-            Self::Absence => write!(f, "absence"),
-        }
-    }
-}
-
-impl std::str::FromStr for TestType {
-    type Err = String;
-    fn from_str(s: &str) -> std::result::Result<Self, String> {
-        match s {
-            "scenario" => Ok(Self::Scenario),
-            "invariant" => Ok(Self::Invariant),
-            "chaos" => Ok(Self::Chaos),
-            "exit-criteria" => Ok(Self::ExitCriteria),
-            "absence" => Ok(Self::Absence),
-            _ => Err(format!("unknown test type: {}", s)),
-        }
-    }
-}
+pub use crate::test_type::TestType;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]

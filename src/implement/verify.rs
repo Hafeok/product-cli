@@ -155,14 +155,16 @@ fn write_verify_log_entry(
     );
 }
 
-/// Verify all TCs linked to cross-cutting ADRs, regardless of feature (--platform)
+/// Verify all platform TCs (cross-cutting + absence). Returns `true` if any
+/// TC failed (caller should exit 1).
 pub fn run_verify_platform(
     config: &ProductConfig,
     root: &Path,
     graph: &KnowledgeGraph,
-) -> Result<()> {
+) -> Result<bool> {
     let now = chrono::Utc::now().to_rfc3339();
     let mut platform_tc_ids: Vec<String> = Vec::new();
+    // TCs linked to cross-cutting ADRs (ADR-025).
     for adr in graph.adrs.values() {
         if adr.front.scope == AdrScope::CrossCutting {
             for tc in graph.tests.values() {
@@ -172,12 +174,21 @@ pub fn run_verify_platform(
             }
         }
     }
-    if platform_tc_ids.is_empty() {
-        eprintln!("warning[W001]: no TCs linked to cross-cutting ADRs found");
-        return Ok(());
+    // Absence TCs (FT-047 / ADR-041) — cross-cutting by nature.
+    for tc in graph.tests.values() {
+        if tc.front.test_type == TestType::Absence
+            && !platform_tc_ids.contains(&tc.front.id)
+        {
+            platform_tc_ids.push(tc.front.id.clone());
+        }
     }
-    println!("  Running {} platform TC(s) linked to cross-cutting ADRs", platform_tc_ids.len());
-    let _ = run_tc_list(&platform_tc_ids, graph, root, config, &now)?;
+    if platform_tc_ids.is_empty() {
+        eprintln!("warning[W001]: no platform TCs found (cross-cutting ADRs or absence TCs)");
+        return Ok(false);
+    }
+    println!("  Running {} platform TC(s)", platform_tc_ids.len());
+    let tc_result = run_tc_list(&platform_tc_ids, graph, root, config, &now)?;
+    let any_failed = !tc_result.failing.is_empty();
 
     // Regenerate checklist after status updates
     let features_dir = config.resolve_path(root, &config.paths.features);
@@ -187,7 +198,8 @@ pub fn run_verify_platform(
     let new_graph = KnowledgeGraph::build(loaded.features, loaded.adrs, loaded.tests);
     let checklist_path = config.resolve_path(root, &config.paths.checklist);
     if let Some(parent) = checklist_path.parent() { let _ = std::fs::create_dir_all(parent); }
-    fileops::write_file_atomic(&checklist_path, &crate::checklist::generate(&new_graph))
+    fileops::write_file_atomic(&checklist_path, &crate::checklist::generate(&new_graph))?;
+    Ok(any_failed)
 }
 
 /// Result of running a list of TCs.

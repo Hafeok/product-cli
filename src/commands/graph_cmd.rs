@@ -77,7 +77,7 @@ pub(crate) fn handle_graph(cmd: GraphCommands, global_format: &str) -> BoxResult
 
 fn graph_check(format: Option<String>, global_format: &str) -> BoxResult {
     let (config, root, graph) = load_graph()?;
-    let mut result = graph.check();
+    let mut result = graph.check_with_config(Some(&config));
     domains::validate_domains(&graph, &config.domains, &mut result.errors, &mut result.warnings);
     responsibility::check_responsibility(&graph, config.responsibility(), &mut result);
     for w in config.validate_product_section() { eprintln!("{}", w); }

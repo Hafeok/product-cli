@@ -2,13 +2,17 @@
 id: TC-608
 title: custom_type_appears_in_agent_md_schema
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-048
   adrs:
   - ADR-042
 phase: 1
+runner: cargo-test
+runner-args: "tc_608_custom_type_appears_in_agent_md_schema"
+last-run: 2026-04-20T08:00:23.695686320+00:00
+last-run-duration: 0.1s
 ---
 
 ## Session: ST-187 — custom-type-appears-in-agent-md-schema

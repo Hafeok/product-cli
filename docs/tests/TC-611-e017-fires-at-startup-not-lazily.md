@@ -2,13 +2,17 @@
 id: TC-611
 title: e017_fires_at_startup_not_lazily
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-048
   adrs:
   - ADR-042
 phase: 1
+runner: cargo-test
+runner-args: "tc_611_e017_fires_at_startup_not_lazily"
+last-run: 2026-04-20T08:00:23.695686320+00:00
+last-run-duration: 0.1s
 ---
 
 ## Session: ST-190 — e017-fires-at-startup-not-lazily

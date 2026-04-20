@@ -2,7 +2,7 @@
 id: FT-047
 title: Removal & Deprecation Tracking — Absence TCs and ADR Lifecycle Fields
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-018
 - FT-029

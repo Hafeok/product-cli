@@ -2,13 +2,17 @@
 id: TC-590
 title: adr_deprecates_field_parses_correctly
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-047
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_590_adr_deprecates_field_parses_correctly
+last-run: 2026-04-20T08:01:08.284116371+00:00
+last-run-duration: 0.1s
 ---
 
 ## Session: ST-144 — adr-deprecates-field-parses-correctly

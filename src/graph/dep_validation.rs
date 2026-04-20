@@ -1,7 +1,7 @@
 //! Dependency validation checks — E013, W013 (ADR-030)
 
 use super::model::KnowledgeGraph;
-use super::validation::push_broken_link;
+use super::validation_helpers::push_broken_link;
 use crate::error::{CheckResult, Diagnostic};
 use std::collections::HashSet;
 

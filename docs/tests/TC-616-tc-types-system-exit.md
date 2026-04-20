@@ -2,13 +2,17 @@
 id: TC-616
 title: tc_types_system_exit
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-048
   adrs:
   - ADR-042
 phase: 1
+runner: cargo-test
+runner-args: "tc_616_tc_types_system_exit"
+last-run: 2026-04-20T08:00:23.695686320+00:00
+last-run-duration: 0.2s
 ---
 
 ## Exit Criteria — FT-048 TC Type System

@@ -9,7 +9,7 @@ use crate::fileops;
 use crate::graph::KnowledgeGraph;
 use crate::implement::verify as verify_impl;
 use crate::parser;
-use crate::types::{AdrScope, TestStatus};
+use crate::types::{AdrScope, TestStatus, TestType};
 use std::path::Path;
 
 pub(super) fn run(
@@ -101,6 +101,13 @@ fn collect_platform_tcs(graph: &KnowledgeGraph) -> Vec<String> {
                     out.push(tc.front.id.clone());
                 }
             }
+        }
+    }
+    // Absence TCs (FT-047 / ADR-041) — cross-cutting by nature regardless of
+    // the ADR scope.
+    for tc in graph.tests.values() {
+        if tc.front.test_type == TestType::Absence && !out.contains(&tc.front.id) {
+            out.push(tc.front.id.clone());
         }
     }
     out

@@ -23,7 +23,10 @@ pub(crate) fn handle_verify(
 
     // --platform keeps the existing per-platform behaviour unchanged.
     if platform {
-        implement::run_verify_platform(&config, &root, &graph)?;
+        let any_fail = implement::run_verify_platform(&config, &root, &graph)?;
+        if any_fail {
+            process::exit(1);
+        }
         return Ok(());
     }
 

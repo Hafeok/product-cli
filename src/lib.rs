@@ -5,6 +5,9 @@ pub mod agent_context;
 pub mod author;
 pub mod checklist;
 pub mod config;
+#[cfg(test)]
+#[path = "config_tests.rs"]
+mod config_tests;
 pub mod config_migrate;
 pub mod context;
 pub mod dep_types;
@@ -29,6 +32,7 @@ pub mod status;
 pub mod tc;
 pub mod request_log;
 pub mod tags;
+pub mod test_type;
 pub mod types;
 
 // Wrapper modules for canonical module structure (ADR-029)

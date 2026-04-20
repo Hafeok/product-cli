@@ -1,12 +1,22 @@
 //! Graph validation — structural checks, diagnostics.
 
-use super::model::{find_reference_line, KnowledgeGraph};
+use super::model::KnowledgeGraph;
+use super::validation_helpers::{push_blocking_tc_warning, push_broken_link};
 use crate::error::{CheckResult, Diagnostic, ProductError};
 use crate::types::*;
 use std::collections::HashSet;
 
 impl KnowledgeGraph {
     pub fn check(&self) -> CheckResult {
+        self.check_with_config(None)
+    }
+
+    /// Full health check. When `config` is supplied, E006 also fires for TCs
+    /// with a Custom type not in `[tc-types].custom` (ADR-042).
+    pub fn check_with_config(
+        &self,
+        config: Option<&crate::config::ProductConfig>,
+    ) -> CheckResult {
         let mut result = CheckResult::new();
         let all_ids = self.all_ids();
 
@@ -31,7 +41,10 @@ impl KnowledgeGraph {
         self.check_dep_has_adr(&mut result);
         self.check_dep_deprecated_usage(&mut result);
         self.check_dep_broken_links(&mut result, &all_ids);
-
+        super::removal_validation::check_all(self, &mut result);
+        if let Some(cfg) = config {
+            super::removal_validation::check_unknown_tc_types(self, cfg, &mut result);
+        }
         result
     }
 
@@ -355,45 +368,3 @@ impl KnowledgeGraph {
     }
 }
 
-/// Helper: push a broken-link E002 diagnostic with optional line info
-pub(crate) fn push_broken_link(
-    result: &mut CheckResult,
-    path: &std::path::Path,
-    from_id: &str,
-    target_id: &str,
-    verb: &str,
-    hint: &str,
-) {
-    let mut diag = Diagnostic::error("E002", "broken link")
-        .with_file(path.to_path_buf())
-        .with_detail(&format!("{} {} {} which does not exist", from_id, verb, target_id));
-    if !hint.is_empty() {
-        diag = diag.with_hint(hint);
-    }
-    if let Some((line, content)) = find_reference_line(path, target_id) {
-        diag = diag.with_line(line).with_context(&content);
-    }
-    result.errors.push(diag);
-}
-
-/// Helper: push W016 warning for complete features with blocking TCs
-fn push_blocking_tc_warning(result: &mut CheckResult, f: &Feature, blocking_tcs: &[&str]) {
-    let preview: Vec<&str> = blocking_tcs.iter().take(5).copied().collect();
-    let suffix = if blocking_tcs.len() > 5 {
-        format!(", ... ({} total)", blocking_tcs.len())
-    } else {
-        String::new()
-    };
-    result.warnings.push(
-        Diagnostic::warning("W016", "complete feature has unimplemented tests")
-            .with_file(f.path.clone())
-            .with_detail(&format!(
-                "{} is complete but has {} unimplemented/failing TC(s): {}{}",
-                f.front.id,
-                blocking_tcs.len(),
-                preview.join(", "),
-                suffix,
-            ))
-            .with_hint("run `product verify` to re-evaluate, or set blocking TCs to `unrunnable`"),
-    );
-}

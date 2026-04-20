@@ -1,5 +1,7 @@
 //! Integration test harness and scenarios (ADR-018)
 
+#![allow(clippy::unwrap_used)]
+
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -14918,4 +14920,319 @@ fn tc_529_request_log_hash_chain_exit_criteria() {
     // graph check clean exits 0 or 2.
     let check = h.run(&["graph", "check"]);
     assert!(check.exit_code == 0 || check.exit_code == 2);
+}
+
+// ===========================================================================
+// FT-048 — TC Type System — Structural Reserved & Open Descriptive Types
+// (ADR-042)
+// ===========================================================================
+
+fn ft048_tc_types(custom: &[&str]) -> Harness {
+    let h = Harness::new();
+    let mut toml = std::fs::read_to_string(h.dir.path().join("product.toml"))
+        .expect("read product.toml");
+    toml.push_str("\n[tc-types]\ncustom = [");
+    toml.push_str(
+        &custom
+            .iter()
+            .map(|c| format!("\"{}\"", c))
+            .collect::<Vec<_>>()
+            .join(", "),
+    );
+    toml.push_str("]\n");
+    std::fs::write(h.dir.path().join("product.toml"), toml).expect("write toml");
+    h
+}
+
+fn ft048_write_feature(h: &Harness, id: &str, phase: u32, tests: &[&str]) {
+    let tests_inline = format!("[{}]", tests.join(", "));
+    let content = format!(
+        "---\nid: {}\ntitle: Feature {}\nphase: {}\nstatus: planned\ndepends-on: []\nadrs: []\ntests: {}\n---\n\nBody\n",
+        id, id, phase, tests_inline
+    );
+    h.write(&format!("docs/features/{}.md", id), &content);
+}
+
+fn ft048_write_tc(h: &Harness, id: &str, title: &str, tc_type: &str, status: &str, feature: &str, phase: u32) {
+    let content = format!(
+        "---\nid: {}\ntitle: {}\ntype: {}\nstatus: {}\nvalidates:\n  features: [{}]\n  adrs: []\nphase: {}\n---\n\nBody\n",
+        id, title, tc_type, status, feature, phase
+    );
+    h.write(&format!("docs/tests/{}.md", id), &content);
+}
+
+#[test]
+fn tc_601_tc_type_exit_criteria_drives_phase_gate() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001.md",
+        "---\nid: FT-001\ntitle: Feature FT-001\nphase: 1\nstatus: complete\ndepends-on: []\nadrs: []\ntests: [TC-001, TC-002]\n---\n\nBody\n",
+    );
+    ft048_write_feature(&h, "FT-002", 2, &[]);
+    ft048_write_tc(&h, "TC-001", "Phase1 Exit", "exit-criteria", "failing", "FT-001", 1);
+    ft048_write_tc(&h, "TC-002", "Scenario", "scenario", "failing", "FT-001", 1);
+    let out = h.run(&["feature", "next"]);
+    assert!(
+        out.stdout.contains("locked") || out.stdout.contains("TC-001") || out.stderr.contains("TC-001"),
+        "expected gate-locked report. stdout: {} stderr: {}",
+        out.stdout, out.stderr
+    );
+    ft048_write_tc(&h, "TC-001", "Phase1 Exit", "exit-criteria", "passing", "FT-001", 1);
+    let out = h.run(&["feature", "next"]);
+    out.assert_stdout_contains("FT-002");
+}
+
+#[test]
+fn tc_602_tc_type_invariant_requires_formal_block() {
+    let h = Harness::new();
+    ft048_write_feature(&h, "FT-001", 1, &["TC-001"]);
+    ft048_write_tc(&h, "TC-001", "Inv", "invariant", "unimplemented", "FT-001", 1);
+    let out = h.run(&["graph", "check"]);
+    assert!(out.stderr.contains("W004"), "expected W004. stderr: {}", out.stderr);
+    ft048_write_tc(&h, "TC-001", "Inv", "scenario", "unimplemented", "FT-001", 1);
+    let out = h.run(&["graph", "check"]);
+    assert!(!out.stderr.contains("W004"), "no W004 for scenario. stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_603_tc_type_chaos_requires_formal_block() {
+    let h = Harness::new();
+    ft048_write_feature(&h, "FT-001", 1, &["TC-001"]);
+    ft048_write_tc(&h, "TC-001", "Chaos", "chaos", "unimplemented", "FT-001", 1);
+    let out = h.run(&["graph", "check"]);
+    assert!(out.stderr.contains("W004"), "expected W004. stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_604_tc_type_absence_drives_g009() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001.md",
+        "---\nid: FT-001\ntitle: F\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-001]\ntests: [TC-001]\n---\n\nBody.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-001-removes.md",
+        "---\nid: ADR-001\ntitle: Remove Foo\nstatus: accepted\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\nremoves:\n  - foo-library\n---\n\n**Rejected alternatives:**\n- none\n",
+    );
+    h.write(
+        "docs/tests/TC-001.md",
+        "---\nid: TC-001\ntitle: Scenario Test\ntype: scenario\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: [ADR-001]\nphase: 1\n---\n\nBody\n",
+    );
+    let out = h.run(&["graph", "check"]);
+    assert!(out.stderr.contains("W022"), "expected W022. stderr: {}", out.stderr);
+    h.write(
+        "docs/tests/TC-002.md",
+        "---\nid: TC-002\ntitle: Abs\ntype: absence\nstatus: passing\nvalidates:\n  features: []\n  adrs: [ADR-001]\nphase: 1\n---\n\nBody\n",
+    );
+    let out = h.run(&["graph", "check"]);
+    assert!(!out.stderr.contains("W022"), "W022 should clear. stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_605_custom_type_valid_when_in_toml() {
+    let h = ft048_tc_types(&["contract"]);
+    ft048_write_feature(&h, "FT-001", 1, &["TC-001"]);
+    ft048_write_tc(&h, "TC-001", "Ct", "contract", "passing", "FT-001", 1);
+    let out = h.run(&["graph", "check"]);
+    assert!(!out.stderr.contains("E006"), "no E006 expected. stderr: {}", out.stderr);
+    let bundle = h.run(&["context", "FT-001"]);
+    bundle.assert_stdout_contains("TC-001");
+}
+
+#[test]
+fn tc_606_custom_type_e006_when_not_in_toml() {
+    let h = ft048_tc_types(&["contract"]);
+    ft048_write_feature(&h, "FT-001", 1, &["TC-001"]);
+    ft048_write_tc(&h, "TC-001", "Smk", "smoke", "passing", "FT-001", 1);
+    let out = h.run(&["graph", "check"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E006");
+    out.assert_stderr_contains("smoke");
+    out.assert_stderr_contains("contract");
+}
+
+#[test]
+fn tc_607_custom_type_treated_as_scenario_in_mechanics() {
+    let h = ft048_tc_types(&["contract"]);
+    ft048_write_feature(&h, "FT-001", 1, &["TC-001", "TC-002"]);
+    ft048_write_tc(&h, "TC-001", "Sc", "scenario", "passing", "FT-001", 1);
+    ft048_write_tc(&h, "TC-002", "Ct", "contract", "passing", "FT-001", 1);
+    let out = h.run(&["graph", "check"]);
+    assert!(!out.stderr.contains("W004"), "custom must not trigger W004");
+    let bundle = h.run(&["context", "FT-001"]);
+    bundle.assert_stdout_contains("TC-001");
+    bundle.assert_stdout_contains("TC-002");
+}
+
+#[test]
+fn tc_608_custom_type_appears_in_agent_md_schema() {
+    let h = ft048_tc_types(&["contract", "migration", "smoke"]);
+    let out = h.run(&["schema", "test"]);
+    out.assert_exit(0);
+    assert!(
+        out.stdout.contains("contract") || out.stdout.contains("smoke"),
+        "custom types must appear in schema. stdout: {}",
+        out.stdout
+    );
+    out.assert_stdout_contains("exit-criteria");
+    out.assert_stdout_contains("absence");
+}
+
+#[test]
+fn tc_609_custom_type_appears_in_context_bundle_after_builtins() {
+    let h = ft048_tc_types(&["contract"]);
+    ft048_write_feature(&h, "FT-001", 1, &["TC-001", "TC-002", "TC-003", "TC-004", "TC-005"]);
+    ft048_write_tc(&h, "TC-001", "X", "exit-criteria", "passing", "FT-001", 1);
+    h.write(
+        "docs/tests/TC-002.md",
+        "---\nid: TC-002\ntitle: Inv\ntype: invariant\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n\u{27E6}\u{0393}:Invariants\u{27E7}{ x }\n",
+    );
+    h.write(
+        "docs/tests/TC-003.md",
+        "---\nid: TC-003\ntitle: Ch\ntype: chaos\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n\u{27E6}\u{0393}:Invariants\u{27E7}{ y }\n",
+    );
+    ft048_write_tc(&h, "TC-004", "Sc", "scenario", "passing", "FT-001", 1);
+    ft048_write_tc(&h, "TC-005", "Co", "contract", "passing", "FT-001", 1);
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    let p1 = out.stdout.find("TC-001").expect("TC-001");
+    let p4 = out.stdout.find("TC-004").expect("TC-004");
+    let p5 = out.stdout.find("TC-005").expect("TC-005");
+    assert!(p1 < p5 && p4 < p5, "custom TC-005 (contract) must come last");
+}
+
+#[test]
+fn tc_610_e017_reserved_type_in_custom_list() {
+    let h = ft048_tc_types(&["contract", "exit-criteria"]);
+    let out = h.run(&["graph", "check"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E017");
+    out.assert_stderr_contains("exit-criteria");
+}
+
+#[test]
+fn tc_611_e017_fires_at_startup_not_lazily() {
+    let h = ft048_tc_types(&["invariant"]);
+    let out = h.run(&["--help"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E017");
+    let out = h.run(&["feature", "list"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E017");
+}
+
+#[test]
+fn tc_612_bundle_type_ordering_exit_criteria_first() {
+    let h = Harness::new();
+    ft048_write_feature(&h, "FT-001", 1, &["TC-099", "TC-004", "TC-003", "TC-002", "TC-001", "TC-005"]);
+    ft048_write_tc(&h, "TC-001", "X", "exit-criteria", "passing", "FT-001", 1);
+    h.write(
+        "docs/tests/TC-002.md",
+        "---\nid: TC-002\ntitle: Inv\ntype: invariant\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n\u{27E6}\u{0393}:Invariants\u{27E7}{ x }\n",
+    );
+    h.write(
+        "docs/tests/TC-003.md",
+        "---\nid: TC-003\ntitle: Ch\ntype: chaos\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n\u{27E6}\u{0393}:Invariants\u{27E7}{ y }\n",
+    );
+    h.write(
+        "docs/tests/TC-004.md",
+        "---\nid: TC-004\ntitle: Ab\ntype: absence\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\nBody\n",
+    );
+    ft048_write_tc(&h, "TC-005", "Sc", "scenario", "passing", "FT-001", 1);
+    ft048_write_tc(&h, "TC-099", "Bn", "benchmark", "passing", "FT-001", 1);
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    let order = ["TC-001", "TC-002", "TC-003", "TC-004", "TC-005", "TC-099"];
+    let mut last = 0usize;
+    for id in order {
+        let pos = out.stdout.find(id).unwrap_or_else(|| panic!("{} missing", id));
+        assert!(pos >= last, "{} pos={} vs last={}", id, pos, last);
+        last = pos;
+    }
+}
+
+#[test]
+fn tc_613_bundle_type_ordering_custom_types_last_alphabetical() {
+    let h = ft048_tc_types(&["migration", "contract", "smoke"]);
+    ft048_write_feature(&h, "FT-001", 1, &["TC-001", "TC-002", "TC-003", "TC-004", "TC-005"]);
+    ft048_write_tc(&h, "TC-001", "Sa", "scenario", "passing", "FT-001", 1);
+    ft048_write_tc(&h, "TC-002", "Sb", "scenario", "passing", "FT-001", 1);
+    ft048_write_tc(&h, "TC-003", "M", "migration", "passing", "FT-001", 1);
+    ft048_write_tc(&h, "TC-004", "C", "contract", "passing", "FT-001", 1);
+    ft048_write_tc(&h, "TC-005", "S", "smoke", "passing", "FT-001", 1);
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    let pc = out.stdout.find("TC-004").expect("contract");
+    let pm = out.stdout.find("TC-003").expect("migration");
+    let ps = out.stdout.find("TC-005").expect("smoke");
+    let p_sa = out.stdout.find("TC-001").expect("sa");
+    let p_sb = out.stdout.find("TC-002").expect("sb");
+    assert!(p_sa < pc && p_sb < pc, "scenarios before custom");
+    assert!(pc < pm && pm < ps, "custom alphabetical");
+}
+
+#[test]
+fn tc_614_request_create_with_custom_type_validates_against_toml() {
+    let h = ft048_tc_types(&["contract"]);
+    ft048_write_feature(&h, "FT-001", 1, &[]);
+    let req = r#"type: create
+reason: add contract TC
+artifacts:
+  - type: tc
+    ref: ct
+    title: A contract TC
+    tc-type: contract
+    validates:
+      features: [FT-001]
+"#;
+    h.write(".product/requests/add.yaml", req);
+    let out = h.run(&["request", "validate", ".product/requests/add.yaml"]);
+    assert!(!out.stderr.contains("E006"), "custom type should validate. stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_615_request_create_unknown_type_emits_e006() {
+    let h = ft048_tc_types(&["contract"]);
+    ft048_write_feature(&h, "FT-001", 1, &[]);
+    let req = r#"type: create
+reason: add bad type
+artifacts:
+  - type: tc
+    ref: rg
+    title: A regression TC
+    tc-type: regression
+    validates:
+      features: [FT-001]
+"#;
+    h.write(".product/requests/bad.yaml", req);
+    let out = h.run(&["request", "validate", ".product/requests/bad.yaml"]);
+    let text = format!("{}{}", out.stdout, out.stderr);
+    assert!(text.contains("E006"), "expected E006. combined: {}", text);
+    assert!(text.contains("regression"), "should name the type. {}", text);
+    assert!(text.contains("contract"), "should show custom list. {}", text);
+}
+
+#[test]
+fn tc_616_tc_types_system_exit() {
+    let h = ft048_tc_types(&["contract"]);
+    ft048_write_feature(&h, "FT-001", 1, &["TC-001", "TC-002", "TC-003", "TC-004", "TC-005"]);
+    ft048_write_tc(&h, "TC-001", "X", "exit-criteria", "passing", "FT-001", 1);
+    h.write(
+        "docs/tests/TC-002.md",
+        "---\nid: TC-002\ntitle: I\ntype: invariant\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n\u{27E6}\u{0393}:Invariants\u{27E7}{ x }\n",
+    );
+    h.write(
+        "docs/tests/TC-003.md",
+        "---\nid: TC-003\ntitle: C\ntype: chaos\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n\u{27E6}\u{0393}:Invariants\u{27E7}{ y }\n",
+    );
+    ft048_write_tc(&h, "TC-004", "Sc", "scenario", "passing", "FT-001", 1);
+    ft048_write_tc(&h, "TC-005", "Ct", "contract", "passing", "FT-001", 1);
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        out.exit_code == 0 || out.exit_code == 2,
+        "exit 0 or 2; got {}; stderr: {}",
+        out.exit_code, out.stderr
+    );
+    assert!(!out.stderr.contains("E006"), "no E006 expected");
+    assert!(!out.stderr.contains("E017"), "no E017 expected");
 }

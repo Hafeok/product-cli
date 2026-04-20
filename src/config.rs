@@ -45,6 +45,17 @@ pub struct ProductConfig {
     /// Request log configuration (FT-042, ADR-039)
     #[serde(default)]
     pub log: LogConfig,
+    /// TC type vocabulary (ADR-042, FT-048).
+    #[serde(rename = "tc-types", default)]
+    pub tc_types: TcTypesConfig,
+}
+
+/// `[tc-types]` section (ADR-042). Reserved structural names must not appear
+/// in `custom`; that is enforced as E017 at startup.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct TcTypesConfig {
+    #[serde(default)]
+    pub custom: Vec<String>,
 }
 
 /// Hash-chained request log configuration — `[log]` in product.toml (FT-042).
@@ -229,7 +240,7 @@ fn default_dep_prefix() -> String { "DEP".into() }
 pub const CURRENT_SCHEMA_VERSION: u32 = 1;
 
 impl ProductConfig {
-    /// Load product.toml from a path
+    /// Load product.toml from a path. Runs E017 immediately (ADR-042).
     pub fn load(path: &Path) -> Result<Self> {
         let content = std::fs::read_to_string(path).map_err(|e| {
             ProductError::ConfigError(format!("Failed to read {}: {}", path.display(), e))
@@ -237,7 +248,34 @@ impl ProductConfig {
         let config: Self = toml::from_str(&content).map_err(|e| {
             ProductError::ConfigError(format!("Failed to parse {}: {}", path.display(), e))
         })?;
+        config.check_tc_types_reserved()?;
         Ok(config)
+    }
+
+    /// E017 (ADR-042): reject reserved structural TC-type names in
+    /// `[tc-types].custom`. Runs on every `load()` — before any subcommand.
+    pub fn check_tc_types_reserved(&self) -> Result<()> {
+        let reserved = crate::types::TestType::RESERVED;
+        let offenders: Vec<String> = self
+            .tc_types
+            .custom
+            .iter()
+            .filter(|name| reserved.contains(&name.as_str()))
+            .cloned()
+            .collect();
+        if !offenders.is_empty() {
+            return Err(ProductError::ConfigError(format!(
+                "error[E017]: reserved TC type name(s) in [tc-types].custom: {}\n   = reserved names: {}\n   = hint: remove the offending entries from product.toml — reserved names drive Product mechanics (phase gate, W004, G002, G009) and cannot be redeclared as custom types",
+                offenders.join(", "),
+                reserved.join(", "),
+            )));
+        }
+        Ok(())
+    }
+
+    /// Configured custom TC types (`[tc-types].custom`, ADR-042).
+    pub fn custom_tc_types(&self) -> &[String] {
+        &self.tc_types.custom
     }
 
     /// Find product.toml by walking up from cwd
@@ -286,6 +324,17 @@ impl ProductConfig {
         root.join(config_path)
     }
 
+    /// Is this TC-type value recognised? (ADR-042). See
+    /// `crate::test_type::is_known_tc_type`.
+    pub fn is_known_tc_type(&self, name: &str) -> bool {
+        crate::test_type::is_known_tc_type(&self.tc_types.custom, name)
+    }
+
+    /// Hint string listing every recognised TC type (ADR-042).
+    pub fn tc_type_hint(&self) -> String {
+        crate::test_type::tc_type_hint(&self.tc_types.custom)
+    }
+
     /// Effective product name: `[product].name` takes precedence over top-level `name`
     pub fn product_name(&self) -> &str {
         self.product
@@ -314,64 +363,3 @@ impl ProductConfig {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn parse_minimal_config() {
-        let config: ProductConfig = toml::from_str("name = \"test-project\"\n").unwrap();
-        assert_eq!(config.name, "test-project");
-        assert_eq!(config.schema_version, "1");
-        assert_eq!(config.prefixes.feature, "FT");
-        assert_eq!(config.paths.features, "docs/features");
-        assert!(!config.tags.auto_push_tags);
-        assert_eq!(config.tags.implementation_depth, 20);
-    }
-    #[test]
-    fn parse_tags_config_explicit() {
-        let toml_str = "name = \"test\"\n[tags]\nauto-push-tags = false\nimplementation-depth = 30\n";
-        let config: ProductConfig = toml::from_str(toml_str).unwrap();
-        assert!(!config.tags.auto_push_tags);
-        assert_eq!(config.tags.implementation_depth, 30);
-    }
-    #[test]
-    fn parse_full_config() {
-        let toml_str = "name = \"picloud\"\nversion = \"0.1\"\nschema-version = \"1\"\n[paths]\nfeatures = \"docs/features\"\nadrs = \"docs/adrs\"\ntests = \"docs/tests\"\ngraph = \"docs/graph\"\nchecklist = \"docs/checklist.md\"\n[phases]\n1 = \"Cluster Foundation\"\n[prefixes]\nfeature = \"FT\"\nadr = \"ADR\"\ntest = \"TC\"\n";
-        let config: ProductConfig = toml::from_str(toml_str).unwrap();
-        assert_eq!(config.name, "picloud");
-        assert_eq!(config.phases.get("1").unwrap(), "Cluster Foundation");
-    }
-    #[test]
-    fn schema_version_forward_error() {
-        let cfg: ProductConfig = toml::from_str("name = \"test\"\nschema-version = \"99\"\n").unwrap();
-        assert!(cfg.check_schema_version().is_err());
-    }
-    #[test]
-    fn parse_product_section_with_responsibility() {
-        let cfg: ProductConfig = toml::from_str("name = \"t\"\n[product]\nname = \"picloud\"\nresponsibility = \"A private cloud platform\"\n").unwrap();
-        assert_eq!(cfg.product_name(), "picloud");
-        assert_eq!(cfg.responsibility().unwrap(), "A private cloud platform");
-    }
-    #[test]
-    fn parse_config_without_product_section() {
-        let cfg: ProductConfig = toml::from_str("name = \"test\"\n").unwrap();
-        assert_eq!(cfg.product_name(), "test");
-        assert!(cfg.responsibility().is_none());
-    }
-    #[test]
-    fn product_name_precedence_and_fallback() {
-        let cfg: ProductConfig = toml::from_str("name = \"old\"\n[product]\nname = \"new\"\n").unwrap();
-        assert_eq!(cfg.product_name(), "new");
-        let cfg2: ProductConfig = toml::from_str("name = \"fb\"\n[product]\nresponsibility = \"X\"\n").unwrap();
-        assert_eq!(cfg2.product_name(), "fb");
-    }
-    #[test]
-    fn validate_product_conjunction() {
-        let cfg: ProductConfig = toml::from_str("name = \"t\"\n[product]\nresponsibility = \"A platform and a monitor\"\n").unwrap();
-        assert!(!cfg.validate_product_section().is_empty(), "top-level and");
-        let cfg2: ProductConfig = toml::from_str("name = \"t\"\n[product]\nresponsibility = \"A platform — no deps, no config\"\n").unwrap();
-        assert!(cfg2.validate_product_section().is_empty(), "subordinate ok");
-        let cfg3: ProductConfig = toml::from_str("name = \"t\"\n").unwrap();
-        assert!(cfg3.validate_product_section().is_empty(), "absent ok");
-    }
-}

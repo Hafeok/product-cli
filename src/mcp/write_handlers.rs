@@ -76,6 +76,8 @@ fn new_adr_front(id: String, title: &str) -> crate::types::AdrFrontMatter {
         content_hash: None,
         amendments: vec![],
         source_files: vec![],
+        removes: vec![],
+        deprecates: vec![],
     }
 }
 
