@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_600_removal_deprecation_exit
 ---
 
 ## Exit Criteria — FT-047 Removal & Deprecation Tracking

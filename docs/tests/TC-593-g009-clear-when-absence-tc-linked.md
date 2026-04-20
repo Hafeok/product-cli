@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_593_g009_clear_when_absence_tc_linked
 ---
 
 ## Session: ST-147 — g009-clear-when-absence-tc-linked

@@ -1,11 +1,22 @@
-//! Front-matter schema definitions for all artifact types (ADR-031)
+//! Front-matter schema definitions for all artifact types (ADR-031, ADR-042)
+
+use crate::config::ProductConfig;
 
 /// Generate human-readable schema for a specific artifact type.
 pub fn generate_schema(artifact_type: &str) -> Result<String, String> {
+    generate_schema_with_config(artifact_type, None)
+}
+
+/// Generate human-readable schema for a specific artifact type, optionally
+/// annotated with project-specific custom TC types from `[tc-types].custom`.
+pub fn generate_schema_with_config(
+    artifact_type: &str,
+    config: Option<&ProductConfig>,
+) -> Result<String, String> {
     match artifact_type {
         "feature" => Ok(feature_schema()),
         "adr" => Ok(adr_schema()),
-        "test" => Ok(test_schema()),
+        "test" => Ok(test_schema_with_config(config)),
         "dep" | "dependency" => Ok(dep_schema()),
         _ => Err(format!(
             "Unknown artifact type: '{}'. Supported: feature, adr, test, dep",
@@ -16,6 +27,12 @@ pub fn generate_schema(artifact_type: &str) -> Result<String, String> {
 
 /// Generate all schemas as a single document.
 pub fn generate_all_schemas() -> String {
+    generate_all_schemas_with_config(None)
+}
+
+/// Generate all schemas as a single document, optionally annotated with
+/// project-specific custom TC types from `[tc-types].custom`.
+pub fn generate_all_schemas_with_config(config: Option<&ProductConfig>) -> String {
     let mut out = String::new();
     out.push_str("# Front-Matter Schemas\n\n");
     out.push_str("## Feature\n\n");
@@ -23,7 +40,7 @@ pub fn generate_all_schemas() -> String {
     out.push_str("\n\n## ADR\n\n");
     out.push_str(&adr_schema());
     out.push_str("\n\n## Test Criterion\n\n");
-    out.push_str(&test_schema());
+    out.push_str(&test_schema_with_config(config));
     out.push_str("\n\n## Dependency\n\n");
     out.push_str(&dep_schema());
     out
@@ -72,11 +89,27 @@ source-files: [String] # Default: []. Source files governed by this ADR
 }
 
 pub(crate) fn test_schema() -> String {
-    r#"```yaml
+    test_schema_with_config(None)
+}
+
+/// Render the TC schema, optionally listing project-specific custom types from
+/// `[tc-types].custom` (ADR-042).
+pub(crate) fn test_schema_with_config(config: Option<&ProductConfig>) -> String {
+    let mut custom_line = String::new();
+    if let Some(cfg) = config {
+        let custom: Vec<String> = cfg.tc_types.custom.clone();
+        if !custom.is_empty() {
+            let list = custom.join(", ");
+            custom_line = format!("                     # Custom (this project): {}\n", list);
+        }
+    }
+    format!(
+        r#"```yaml
 id: String           # Required. Format: TC-NNN (e.g. TC-001)
 title: String        # Required. Human-readable test criterion name
-type: Enum           # Default: scenario. Values: scenario, invariant, chaos, exit-criteria
-status: Enum         # Default: unimplemented. Values: unimplemented, implemented, passing, failing, unrunnable
+type: Enum           # Default: scenario. Structural: exit-criteria, invariant, chaos, absence
+                     # Built-in descriptive: scenario, benchmark
+{}status: Enum         # Default: unimplemented. Values: unimplemented, implemented, passing, failing, unrunnable
 validates:           # Default: empty
   features: [String] # Feature IDs this test validates
   adrs: [String]     # ADR IDs this test validates
@@ -89,8 +122,9 @@ requires: [String]   # Default: []. TC IDs that must pass before this TC
 last-run: String     # Optional. ISO 8601 timestamp of last run
 failure-message: String # Optional. Last failure message
 last-run-duration: Float # Optional. Last run duration in seconds
-```"#
-    .to_string()
+```"#,
+        custom_line
+    )
 }
 
 pub(crate) fn dep_schema() -> String {

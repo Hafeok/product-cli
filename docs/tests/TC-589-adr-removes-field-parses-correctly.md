@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_589_adr_removes_field_parses_correctly
 ---
 
 ## Session: ST-143 — adr-removes-field-parses-correctly

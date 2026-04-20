@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_590_adr_deprecates_field_parses_correctly
 ---
 
 ## Session: ST-144 — adr-deprecates-field-parses-correctly

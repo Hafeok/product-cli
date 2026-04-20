@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_596_w023_names_deprecating_adr
 ---
 
 ## Session: ST-150 — w023-names-deprecating-adr

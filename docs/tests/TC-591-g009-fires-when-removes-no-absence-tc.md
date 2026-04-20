@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_591_g009_fires_when_removes_no_absence_tc
 ---
 
 ## Session: ST-145 — g009-fires-when-removes-no-absence-tc

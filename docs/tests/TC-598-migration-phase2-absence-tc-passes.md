@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_598_migration_phase2_absence_tc_passes
 ---
 
 ## Session: ST-152 — migration-phase2-absence-tc-passes

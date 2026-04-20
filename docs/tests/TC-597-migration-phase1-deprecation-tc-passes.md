@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_597_migration_phase1_deprecation_tc_passes
 ---
 
 ## Session: ST-151 — migration-phase1-deprecation-tc-passes

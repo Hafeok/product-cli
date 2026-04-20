@@ -33,7 +33,7 @@ pub fn generate_agent_md(
         out.push_str(&generate_repo_state_section(config, graph));
     }
     if agent_config.include_schemas {
-        out.push_str(&generate_schemas_section());
+        out.push_str(&generate_schemas_section(Some(config)));
     }
     if agent_config.include_domains {
         out.push_str(&generate_domains_section(config));
@@ -112,14 +112,14 @@ fn format_phase_line(config: &ProductConfig, graph: &KnowledgeGraph, phase: u32)
     }
 }
 
-fn generate_schemas_section() -> String {
+fn generate_schemas_section(config: Option<&ProductConfig>) -> String {
     let mut out = String::from("## Front-Matter Schemas\n\n");
     out.push_str("### Feature\n\n");
     out.push_str(&schema::feature_schema());
     out.push_str("\n\n### ADR\n\n");
     out.push_str(&schema::adr_schema());
     out.push_str("\n\n### Test Criterion\n\n");
-    out.push_str(&schema::test_schema());
+    out.push_str(&schema::test_schema_with_config(config));
     out.push_str("\n\n### Dependency\n\n");
     out.push_str(&schema::dep_schema());
     out.push_str("\n\n");

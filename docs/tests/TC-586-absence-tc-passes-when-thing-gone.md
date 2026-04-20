@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_586_absence_tc_passes_when_thing_gone
 ---
 
 ## Session: ST-140 — absence-tc-passes-when-thing-gone

@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_592_w022_fires_same_condition
 ---
 
 ## Session: ST-146 — w022-fires-same-condition

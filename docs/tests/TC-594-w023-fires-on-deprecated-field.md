@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_594_w023_fires_on_deprecated_field
 ---
 
 ## Session: ST-148 — w023-fires-on-deprecated-field

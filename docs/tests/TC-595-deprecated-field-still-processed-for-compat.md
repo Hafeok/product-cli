@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_595_deprecated_field_still_processed_for_compat
 ---
 
 ## Session: ST-149 — deprecated-field-still-processed-for-compat

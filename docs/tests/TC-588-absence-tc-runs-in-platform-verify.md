@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_588_absence_tc_runs_in_platform_verify
 ---
 
 ## Session: ST-142 — absence-tc-runs-in-platform-verify

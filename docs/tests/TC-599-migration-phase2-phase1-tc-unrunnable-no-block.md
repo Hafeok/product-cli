@@ -9,6 +9,8 @@ validates:
   adrs:
   - ADR-041
 phase: 1
+runner: cargo-test
+runner-args: tc_599_migration_phase2_phase1_tc_unrunnable_no_block
 ---
 
 ## Session: ST-153 — migration-phase2-phase1-tc-unrunnable-no-block

@@ -117,6 +117,8 @@ fn tc_p007_centrality_in_range() {
                     content_hash: None,
                     amendments: vec![],
                     source_files: vec![],
+                    removes: vec![],
+                    deprecates: vec![],
                 },
                 body: String::new(),
                 path: PathBuf::from(format!("ADR-{:03}.md", i + 1)),
