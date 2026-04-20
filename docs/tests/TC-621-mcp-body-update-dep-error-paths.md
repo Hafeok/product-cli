@@ -2,7 +2,7 @@
 id: TC-621
 title: mcp_body_update_dep_error_paths
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-050
@@ -11,6 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: "tc_621_mcp_body_update_dep_error_paths"
+last-run: 2026-04-20T13:27:05.074524328+00:00
+last-run-duration: 0.1s
 ---
 
 ## Session — mcp-body-update-dep-error-paths

@@ -2,7 +2,7 @@
 id: TC-622
 title: mcp_body_update_dep_exit
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-050
@@ -12,6 +12,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: "tc_622_mcp_body_update_dep_exit"
+last-run: 2026-04-20T13:27:05.074524328+00:00
+last-run-duration: 0.2s
 ---
 
 ## Exit Criteria — FT-050 MCP body_update Supports Dependencies

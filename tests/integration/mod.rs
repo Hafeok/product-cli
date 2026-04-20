@@ -15427,3 +15427,248 @@ fn tc_619_formal_blocks_schema_exit() {
         check.stderr
     );
 }
+
+// ===========================================================================
+// FT-050: MCP body_update Supports Dependencies
+// ===========================================================================
+
+/// TC-620 — product_body_update rewrites a dep body, preserving front-matter
+/// and routing through the same atomic-write path as the other three types.
+#[test]
+fn tc_620_mcp_body_update_rewrites_dep_body() {
+    let h = Harness::new();
+
+    // Original dep with a fully populated front-matter and a known body.
+    let front = "---\n\
+                 id: DEP-001\n\
+                 title: openraft\n\
+                 type: library\n\
+                 source: crates.io\n\
+                 version: \">=0.9,<1.0\"\n\
+                 status: active\n\
+                 features:\n  - FT-001\n\
+                 adrs:\n  - ADR-002\n\
+                 supersedes: []\n\
+                 availability-check: ~\n\
+                 breaking-change-risk: medium\n\
+                 ---\n\n";
+    let original_body = "Original rationale text.\n";
+    let original = format!("{}{}", front, original_body);
+    h.write("docs/dependencies/DEP-001-openraft.md", &original);
+
+    // A feature that links to the dep so graph check sees a well-formed graph.
+    h.write(
+        "docs/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: [ADR-002]\ntests: []\n---\n\nBody.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-002-raft.md",
+        "---\nid: ADR-002\ntitle: Raft\nstatus: proposed\nfeatures: [FT-001]\nsupersedes: []\nsuperseded-by: []\n---\n\n**Context:** X\n**Decision:** Y\n**Rationale:** Z\n**Rejected alternatives:** none\n",
+    );
+
+    // Invoke product_body_update on DEP-001 with a new body.
+    let new_body = "Replacement rationale — now with migration plan.";
+    let input = format!(
+        r#"{{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{{"name":"product_body_update","arguments":{{"id":"DEP-001","body":{}}}}}}}"#,
+        serde_json::to_string(new_body).unwrap()
+    );
+    let out = run_mcp_stdio_write(&h, &input);
+
+    // The tool result announces success. The response embeds the tool JSON
+    // as an escaped string inside `result.content[0].text`, so we assert on
+    // substrings rather than the exact byte sequence.
+    assert!(
+        out.contains("\\\"updated\\\": true") || out.contains("\"updated\": true"),
+        "MCP should report updated=true; got: {}",
+        out
+    );
+    assert!(
+        out.contains("DEP-001"),
+        "Response should include DEP-001; got: {}",
+        out
+    );
+    assert!(!out.contains("\"error\":"), "No error expected; got: {}", out);
+
+    // Reading the file back: body is replaced, front-matter is preserved.
+    let on_disk = h.read("docs/dependencies/DEP-001-openraft.md");
+    assert!(
+        on_disk.contains("Replacement rationale"),
+        "body should be replaced; got: {}",
+        on_disk
+    );
+    assert!(
+        !on_disk.contains("Original rationale text."),
+        "old body must be gone; got: {}",
+        on_disk
+    );
+    // Every populated front-matter field is still present. (Fields with
+    // null / empty defaults — availability-check: ~, supersedes: [] — are
+    // serialized with skip_serializing_if and so round-trip to absent, which
+    // matches the behaviour of the other three artifact types.)
+    for field in [
+        "id: DEP-001",
+        "title: openraft",
+        "type: library",
+        "source: crates.io",
+        ">=0.9,<1.0",
+        "status: active",
+        "- FT-001",
+        "- ADR-002",
+        "breaking-change-risk: medium",
+    ] {
+        assert!(
+            on_disk.contains(field),
+            "front-matter field {:?} missing after body_update; got:\n{}",
+            field,
+            on_disk
+        );
+    }
+
+    // The graph still parses cleanly after the rewrite (no E-class errors).
+    let check = h.run(&["graph", "check"]);
+    assert!(
+        check.exit_code == 0 || check.exit_code == 2,
+        "graph check should not emit E-class errors after DEP body update; exit={}, stdout={}, stderr={}",
+        check.exit_code, check.stdout, check.stderr
+    );
+}
+
+/// TC-621 — error paths for product_body_update on DEP IDs.
+/// Unknown DEP IDs produce a "Dep ... not found" error (in parity with the
+/// feature / ADR / TC wording). Unknown prefixes still hit the existing
+/// fallback "Unknown artifact ID prefix" message.
+#[test]
+fn tc_621_mcp_body_update_dep_error_paths() {
+    let h = Harness::new();
+
+    // Record the pre-call state of the dependencies directory.
+    let deps_dir = h.dir.path().join("docs/dependencies");
+    let before: Vec<String> = std::fs::read_dir(&deps_dir)
+        .map(|r| {
+            r.filter_map(|e| e.ok())
+                .map(|e| e.file_name().to_string_lossy().to_string())
+                .collect()
+        })
+        .unwrap_or_default();
+
+    // 1) Valid prefix, unknown ID — error names DEP-999.
+    let input = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_body_update","arguments":{"id":"DEP-999","body":"anything"}}}"#;
+    let out = run_mcp_stdio_write(&h, input);
+    assert!(
+        out.contains("DEP-999"),
+        "error should name DEP-999; got: {}",
+        out
+    );
+    assert!(
+        out.to_lowercase().contains("not found"),
+        "error should mirror 'not found' wording; got: {}",
+        out
+    );
+
+    // 2) Unknown prefix — the existing fallback error is preserved.
+    let input = r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_body_update","arguments":{"id":"FOO-001","body":"anything"}}}"#;
+    let out = run_mcp_stdio_write(&h, input);
+    assert!(
+        out.contains("Unknown artifact ID prefix: FOO-001"),
+        "error must be the unchanged fallback string; got: {}",
+        out
+    );
+
+    // Neither call mutated a file: the dependencies directory listing is
+    // identical before and after.
+    let after: Vec<String> = std::fs::read_dir(&deps_dir)
+        .map(|r| {
+            r.filter_map(|e| e.ok())
+                .map(|e| e.file_name().to_string_lossy().to_string())
+                .collect()
+        })
+        .unwrap_or_default();
+    assert_eq!(
+        before, after,
+        "dependencies directory should not change after failed body_update calls"
+    );
+}
+
+/// TC-622 — exit criteria for FT-050. A consolidated check of the four
+/// observable surfaces: tool description mentions DEP-NNN, a valid DEP
+/// body update writes cleanly, unknown DEP IDs error with a dep-specific
+/// message, unknown prefixes hit the unchanged fallback.
+#[test]
+fn tc_622_mcp_body_update_dep_exit() {
+    let h = Harness::new();
+
+    // 1) Tool description lists DEP-NNN alongside the other prefixes.
+    let input = r#"{"jsonrpc":"2.0","id":0,"method":"tools/list"}"#;
+    let listing = run_mcp_stdio_write(&h, input);
+    assert!(
+        listing.contains("product_body_update"),
+        "tools/list must include product_body_update; got: {}",
+        listing
+    );
+    assert!(
+        listing.contains("DEP-NNN"),
+        "product_body_update tool schema/description must mention DEP-NNN; got: {}",
+        listing
+    );
+
+    // Seed a dep file.
+    let front = "---\n\
+                 id: DEP-001\n\
+                 title: openraft\n\
+                 type: library\n\
+                 source: crates.io\n\
+                 version: \">=0.9\"\n\
+                 status: active\n\
+                 features: []\n\
+                 adrs: []\n\
+                 supersedes: []\n\
+                 availability-check: ~\n\
+                 breaking-change-risk: medium\n\
+                 ---\n\n";
+    h.write(
+        "docs/dependencies/DEP-001-openraft.md",
+        &format!("{}Original.\n", front),
+    );
+
+    // 2) Valid DEP update succeeds and rewrites the body on disk.
+    let new_body = "Rewritten rationale for DEP-001.";
+    let input = format!(
+        r#"{{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{{"name":"product_body_update","arguments":{{"id":"DEP-001","body":{}}}}}}}"#,
+        serde_json::to_string(new_body).unwrap()
+    );
+    let out = run_mcp_stdio_write(&h, &input);
+    assert!(
+        out.contains("\\\"updated\\\": true") || out.contains("\"updated\": true"),
+        "valid DEP body update should report success; got: {}",
+        out
+    );
+    let on_disk = h.read("docs/dependencies/DEP-001-openraft.md");
+    assert!(
+        on_disk.contains("Rewritten rationale for DEP-001."),
+        "body should be replaced; got: {}",
+        on_disk
+    );
+    assert!(
+        on_disk.contains("id: DEP-001") && on_disk.contains("title: openraft"),
+        "front-matter must survive; got: {}",
+        on_disk
+    );
+
+    // 3) Unknown DEP — dep-specific "not found" wording.
+    let input = r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_body_update","arguments":{"id":"DEP-999","body":"x"}}}"#;
+    let out = run_mcp_stdio_write(&h, input);
+    assert!(
+        out.contains("DEP-999") && out.to_lowercase().contains("not found"),
+        "unknown DEP must produce a 'not found' error naming it; got: {}",
+        out
+    );
+
+    // 4) Unknown prefix — the unchanged fallback is returned.
+    let input = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"product_body_update","arguments":{"id":"FOO-001","body":"x"}}}"#;
+    let out = run_mcp_stdio_write(&h, input);
+    assert!(
+        out.contains("Unknown artifact ID prefix: FOO-001"),
+        "unknown prefix must hit the fallback unchanged; got: {}",
+        out
+    );
+}

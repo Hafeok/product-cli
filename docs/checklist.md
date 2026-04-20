@@ -993,14 +993,14 @@
 - [x] TC-618: schema_type_formal_returns_just_formal_section (scenario) — passing
 - [x] TC-619: formal_blocks_schema_exit (exit-criteria) — passing
 
-### FT-050 — MCP body_update Supports Dependencies [ ]
+### FT-050 — MCP body_update Supports Dependencies [x]
 
 - [x] ADR-030: Dependency Artifact Type — First-Class External System Declarations (accepted)
 - [x] ADR-031: Agent Context Generation and Schema MCP Tool (accepted)
 - [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
-- [ ] TC-620: mcp_body_update_rewrites_dep_body (scenario) — unimplemented
-- [ ] TC-621: mcp_body_update_dep_error_paths (scenario) — unimplemented
-- [ ] TC-622: mcp_body_update_dep_exit (exit-criteria) — unimplemented
+- [x] TC-620: mcp_body_update_rewrites_dep_body (scenario) — passing
+- [x] TC-621: mcp_body_update_dep_error_paths (scenario) — passing
+- [x] TC-622: mcp_body_update_dep_exit (exit-criteria) — passing
 
 ### FT-051 — Relative Paths in the Request Log [ ]
 

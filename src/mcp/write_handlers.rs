@@ -172,6 +172,8 @@ pub(crate) fn handle_body_update(
         update_adr_body(id, body, graph)?;
     } else if id.starts_with(&config.prefixes.test) {
         update_test_body(id, body, graph)?;
+    } else if id.starts_with(&config.prefixes.dependency) {
+        update_dep_body(id, body, graph)?;
     } else {
         return Err(format!("Unknown artifact ID prefix: {}", id));
     }
@@ -201,6 +203,15 @@ fn update_test_body(id: &str, body: &str, graph: &KnowledgeGraph) -> Result<(), 
     let t = graph.tests.get(id).ok_or_else(|| format!("TC {} not found", id))?;
     let content = crate::parser::render_test(&t.front, body);
     crate::fileops::write_file_atomic(&t.path, &content).map_err(|e| format!("{}", e))
+}
+
+fn update_dep_body(id: &str, body: &str, graph: &KnowledgeGraph) -> Result<(), String> {
+    let d = graph
+        .dependencies
+        .get(id)
+        .ok_or_else(|| format!("Dep {} not found", id))?;
+    let content = crate::parser::render_dependency(&d.front, body);
+    crate::fileops::write_file_atomic(&d.path, &content).map_err(|e| format!("{}", e))
 }
 
 

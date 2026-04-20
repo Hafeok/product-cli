@@ -340,9 +340,9 @@ fn write_status_tools() -> Vec<ToolDef> {
         },
         ToolDef {
             name: "product_body_update".to_string(),
-            description: "Update the markdown body of a feature, ADR, or test criterion (preserves front-matter). Cannot modify accepted ADR bodies — use product_adr_amend instead.".to_string(),
+            description: "Update the markdown body of a feature, ADR, test criterion, or dependency (preserves front-matter). Cannot modify accepted ADR bodies — use product_adr_amend instead.".to_string(),
             requires_write: true,
-            input_schema: serde_json::json!({"type": "object", "properties": {"id": {"type": "string"}, "body": {"type": "string"}}, "required": ["id", "body"]}),
+            input_schema: serde_json::json!({"type": "object", "properties": {"id": {"type": "string", "description": "Artifact ID — FT-NNN, ADR-NNN, TC-NNN, or DEP-NNN."}, "body": {"type": "string"}}, "required": ["id", "body"]}),
         },
     ]
 }
