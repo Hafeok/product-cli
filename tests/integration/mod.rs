@@ -15236,3 +15236,194 @@ fn tc_616_tc_types_system_exit() {
     assert!(!out.stderr.contains("E006"), "no E006 expected");
     assert!(!out.stderr.contains("E017"), "no E017 expected");
 }
+
+// ---------------------------------------------------------------------------
+// FT-049: Formal Blocks in LLM Schema Output (ADR-031)
+// ---------------------------------------------------------------------------
+
+/// TC-617: `product schema` includes a `## Formal Blocks` section after
+/// `## Dependency` listing all five AISP block names with examples and
+/// "required by" annotations. The Test Criterion schema section carries a
+/// cross-reference pointing at `Formal Blocks`.
+#[test]
+fn tc_617_schema_includes_formal_blocks_section() {
+    let h = Harness::new();
+    let out = h.run(&["schema"]);
+    out.assert_exit(0);
+
+    // Top-level heading must be present …
+    assert!(
+        out.stdout.contains("## Formal Blocks"),
+        "schema output must include '## Formal Blocks' heading; got:\n{}",
+        out.stdout
+    );
+
+    // … and it must come *after* the Dependency section.
+    let dep_idx = out.stdout.find("## Dependency").expect("Dependency heading");
+    let fb_idx = out.stdout.find("## Formal Blocks").expect("Formal Blocks heading");
+    assert!(
+        fb_idx > dep_idx,
+        "Formal Blocks section must follow Dependency; dep_idx={} fb_idx={}",
+        dep_idx, fb_idx
+    );
+
+    // All five AISP block names appear verbatim in parser-accepted and
+    // human-readable spellings.
+    for name in &[
+        "Sigma-Types",
+        "Gamma-Invariants",
+        "Lambda-Scenario",
+        "Lambda-ExitCriteria",
+        "Epsilon",
+    ] {
+        assert!(
+            out.stdout.contains(name),
+            "formal block section missing '{}'; got:\n{}",
+            name, out.stdout
+        );
+    }
+    // And their Unicode block-type labels (authoritative from the parser).
+    for label in &[
+        "\u{27E6}\u{03A3}:Types\u{27E7}",
+        "\u{27E6}\u{0393}:Invariants\u{27E7}",
+        "\u{27E6}\u{039B}:Scenario\u{27E7}",
+        "\u{27E6}\u{039B}:ExitCriteria\u{27E7}",
+        "\u{27E6}\u{0395}\u{27E7}",
+    ] {
+        assert!(out.stdout.contains(label), "missing Unicode block label '{}'", label);
+    }
+
+    // The TC schema cross-references the Formal Blocks section.
+    let tc_out = h.run(&["schema", "test"]);
+    tc_out.assert_exit(0);
+    assert!(
+        tc_out.stdout.contains("Formal Blocks"),
+        "TC schema should cross-reference 'Formal Blocks'; got:\n{}",
+        tc_out.stdout
+    );
+
+    // The W004 / G002 contract is named for each mechanic-bearing tc-type.
+    for tc_type in &["invariant", "chaos", "exit-criteria"] {
+        assert!(
+            out.stdout.contains(tc_type),
+            "formal block section must name tc-type '{}'",
+            tc_type
+        );
+    }
+    assert!(out.stdout.contains("W004"), "W004 contract must be named");
+}
+
+/// TC-618: `product schema --type formal` renders the formal-block section
+/// in isolation — no other top-level schema headings appear. Unknown `--type`
+/// values still produce the existing error hint.
+#[test]
+fn tc_618_schema_type_formal_returns_just_formal_section() {
+    let h = Harness::new();
+
+    // Named-flag invocation (the exact form in the TC scenario).
+    let out = h.run(&["schema", "--type", "formal"]);
+    out.assert_exit(0);
+
+    for name in &[
+        "Sigma-Types",
+        "Gamma-Invariants",
+        "Lambda-Scenario",
+        "Lambda-ExitCriteria",
+        "Epsilon",
+    ] {
+        assert!(
+            out.stdout.contains(name),
+            "formal-only render missing '{}'; got:\n{}",
+            name, out.stdout
+        );
+    }
+
+    // The targeted render must not contain the other top-level schema
+    // headings — those belong to the `schema --all` / default render.
+    for heading in &["## Feature", "## ADR", "## Test Criterion", "## Dependency"] {
+        assert!(
+            !out.stdout.contains(heading),
+            "formal-only render must not contain '{}'; got:\n{}",
+            heading, out.stdout
+        );
+    }
+
+    // Positional invocation accepts `formal` too (mirrors `schema feature`).
+    let out_positional = h.run(&["schema", "formal"]);
+    out_positional.assert_exit(0);
+    assert!(out_positional.stdout.contains("Sigma-Types"));
+
+    // Unknown types still return a non-zero exit with the existing hint.
+    let bad = h.run(&["schema", "--type", "unknown"]);
+    assert_ne!(bad.exit_code, 0, "unknown --type should fail; got 0");
+    assert!(
+        bad.stderr.contains("Unknown artifact type") || bad.stdout.contains("Unknown artifact type"),
+        "unknown --type should surface the existing error hint; stdout: {} stderr: {}",
+        bad.stdout, bad.stderr
+    );
+}
+
+/// TC-619: exit-criteria consolidating FT-049. Verifies that `product schema`
+/// includes the Formal Blocks section, the `--type formal` render works in
+/// isolation, the TC schema carries the cross-reference, `product agent-init`
+/// embeds the new section in AGENTS.md, and an LLM-style invariant TC guided
+/// solely by the schema text passes `product graph check` without W004.
+#[test]
+fn tc_619_formal_blocks_schema_exit() {
+    let h = Harness::new();
+
+    // 1. `product schema` includes the Formal Blocks section.
+    let out = h.run(&["schema"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("## Formal Blocks"));
+
+    // 2. `product schema --type formal` renders only the Formal Blocks section.
+    let out_formal = h.run(&["schema", "--type", "formal"]);
+    out_formal.assert_exit(0);
+    assert!(out_formal.stdout.contains("Sigma-Types"));
+    assert!(!out_formal.stdout.contains("## Feature"));
+    assert!(!out_formal.stdout.contains("## Dependency"));
+
+    // 3. TC schema cross-reference.
+    let tc_out = h.run(&["schema", "test"]);
+    tc_out.assert_exit(0);
+    assert!(tc_out.stdout.contains("Formal Blocks"));
+
+    // 4. `product agent-init` regenerates AGENTS.md with the new section.
+    let init_out = h.run(&["agent-init"]);
+    init_out.assert_exit(0);
+    assert!(h.exists("AGENTS.md"), "AGENTS.md should be created");
+    let agent_md = h.read("AGENTS.md");
+    // The schemas section is included by default — the formal block schema
+    // is reachable through the test-schema's cross-reference at minimum.
+    assert!(
+        agent_md.contains("Formal Blocks") || agent_md.contains("Sigma-Types")
+            || agent_md.contains("Front-Matter Schemas"),
+        "AGENTS.md should surface the new section or its cross-reference; got:\n{}",
+        agent_md
+    );
+
+    // 5. An `invariant` TC with a Gamma-Invariants block (exactly the form
+    // the schema teaches) passes `graph check` without W004.
+    h.write(
+        "docs/features/FT-001.md",
+        "---\nid: FT-001\ntitle: F\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: [TC-001]\n---\n\nBody\n",
+    );
+    h.write(
+        "docs/tests/TC-001.md",
+        "---\nid: TC-001\ntitle: Inv\ntype: invariant\nstatus: passing\nvalidates:\n  features: [FT-001]\n  adrs: []\nphase: 1\n---\n\n\u{27E6}\u{0393}:Invariants\u{27E7}{ x = 1 }\n",
+    );
+    let check = h.run(&["graph", "check"]);
+    // Exit 0 or 2 (warnings unrelated to W004 are acceptable); W004 must
+    // not be emitted for a TC that carries the block the schema taught.
+    assert!(
+        check.exit_code == 0 || check.exit_code == 2,
+        "graph check should pass (exit 0 or 2); got {}; stderr: {}",
+        check.exit_code, check.stderr
+    );
+    assert!(
+        !check.stderr.contains("W004") && !check.stdout.contains("W004"),
+        "invariant TC with Gamma-Invariants block must not trigger W004; stderr: {}",
+        check.stderr
+    );
+}

@@ -1,5 +1,6 @@
 //! Agent context generation — AGENTS.md and schema output (ADR-031)
 
+pub mod formal_schema;
 pub mod schema;
 
 pub use schema::{generate_all_schemas, generate_schema};

@@ -161,9 +161,9 @@ fn read_agent_context_tools() -> Vec<ToolDef> {
     vec![
         ToolDef {
             name: "product_schema".to_string(),
-            description: "Get the front-matter schema for an artifact type (feature, adr, test, dep) or all types".to_string(),
+            description: "Get the front-matter schema for an artifact type (feature, adr, test, dep, formal) or all types".to_string(),
             requires_write: false,
-            input_schema: serde_json::json!({"type": "object", "properties": {"artifact_type": {"type": "string", "description": "Artifact type: feature, adr, test, dep. Omit for all schemas."}}}),
+            input_schema: serde_json::json!({"type": "object", "properties": {"artifact_type": {"type": "string", "description": "Artifact type: feature, adr, test, dep, or formal (AISP formal-block grammar reference). Omit for all schemas."}}}),
         },
         ToolDef {
             name: "product_agent_context".to_string(),

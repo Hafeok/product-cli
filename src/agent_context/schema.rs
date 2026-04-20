@@ -1,4 +1,6 @@
-//! Front-matter schema definitions for all artifact types (ADR-031)
+//! Front-matter schema definitions for all artifact types (ADR-031, FT-049)
+
+pub use super::formal_schema::formal_block_schema;
 
 /// Generate human-readable schema for a specific artifact type.
 pub fn generate_schema(artifact_type: &str) -> Result<String, String> {
@@ -7,8 +9,9 @@ pub fn generate_schema(artifact_type: &str) -> Result<String, String> {
         "adr" => Ok(adr_schema()),
         "test" => Ok(test_schema()),
         "dep" | "dependency" => Ok(dep_schema()),
+        "formal" => Ok(formal_block_schema()),
         _ => Err(format!(
-            "Unknown artifact type: '{}'. Supported: feature, adr, test, dep",
+            "Unknown artifact type: '{}'. Supported: feature, adr, test, dep, formal",
             artifact_type
         )),
     }
@@ -26,6 +29,8 @@ pub fn generate_all_schemas() -> String {
     out.push_str(&test_schema());
     out.push_str("\n\n## Dependency\n\n");
     out.push_str(&dep_schema());
+    out.push_str("\n\n## Formal Blocks\n\n");
+    out.push_str(&formal_block_schema());
     out
 }
 
@@ -96,6 +101,7 @@ title: String        # Required. Human-readable test criterion name
 type: Enum           # Default: scenario.
                      # Structural: exit-criteria | invariant | chaos | absence
                      # Built-in descriptive: scenario | benchmark
+                     # See Formal Blocks below for invariant / chaos / exit-criteria notation
 {custom}status: Enum         # Default: unimplemented. Values: unimplemented, implemented, passing, failing, unrunnable
 validates:           # Default: empty
   features: [String] # Feature IDs this test validates
@@ -123,8 +129,9 @@ pub fn generate_schema_with_config(
         "adr" => Ok(adr_schema()),
         "test" => Ok(test_schema_with_config(config)),
         "dep" | "dependency" => Ok(dep_schema()),
+        "formal" => Ok(formal_block_schema()),
         _ => Err(format!(
-            "Unknown artifact type: '{}'. Supported: feature, adr, test, dep",
+            "Unknown artifact type: '{}'. Supported: feature, adr, test, dep, formal",
             artifact_type
         )),
     }
@@ -141,6 +148,8 @@ pub fn generate_all_schemas_with_config(config: Option<&crate::config::ProductCo
     out.push_str(&test_schema_with_config(config));
     out.push_str("\n\n## Dependency\n\n");
     out.push_str(&dep_schema());
+    out.push_str("\n\n## Formal Blocks\n\n");
+    out.push_str(&formal_block_schema());
     out
 }
 
@@ -244,5 +253,85 @@ mod tests {
         assert!(all.contains("## ADR"));
         assert!(all.contains("## Test Criterion"));
         assert!(all.contains("## Dependency"));
+    }
+
+    // FT-049: formal block schema section
+
+    #[test]
+    fn formal_block_schema_contains_all_five_blocks() {
+        let s = formal_block_schema();
+        // Parser-accepted Unicode spellings.
+        assert!(s.contains("\u{27E6}\u{03A3}:Types\u{27E7}"), "missing Sigma-Types label");
+        assert!(s.contains("\u{27E6}\u{0393}:Invariants\u{27E7}"), "missing Gamma-Invariants label");
+        assert!(s.contains("\u{27E6}\u{039B}:Scenario\u{27E7}"), "missing Lambda-Scenario label");
+        assert!(s.contains("\u{27E6}\u{039B}:ExitCriteria\u{27E7}"), "missing Lambda-ExitCriteria label");
+        assert!(s.contains("\u{27E6}\u{0395}\u{27E7}"), "missing Epsilon evidence label");
+        // Human-readable section headings.
+        assert!(s.contains("Sigma-Types"));
+        assert!(s.contains("Gamma-Invariants"));
+        assert!(s.contains("Lambda-Scenario"));
+        assert!(s.contains("Lambda-ExitCriteria"));
+        assert!(s.contains("Epsilon"));
+    }
+
+    #[test]
+    fn formal_block_schema_documents_required_by_contract() {
+        let s = formal_block_schema();
+        // W004 is the contract that ties tc-type to formal blocks.
+        assert!(s.contains("W004"), "formal block schema should mention W004");
+        // Each of the three mechanic-bearing tc-types is named.
+        assert!(s.contains("invariant"));
+        assert!(s.contains("chaos"));
+        assert!(s.contains("exit-criteria"));
+    }
+
+    #[test]
+    fn generate_schema_formal_returns_formal_section() {
+        let s = generate_schema("formal").expect("formal is a supported type");
+        assert_eq!(s, formal_block_schema());
+    }
+
+    #[test]
+    fn generate_all_schemas_appends_formal_blocks_section() {
+        let all = generate_all_schemas();
+        assert!(all.contains("## Formal Blocks"), "missing Formal Blocks heading");
+        // Must come after Dependency.
+        let dep_idx = all.find("## Dependency").expect("Dependency heading");
+        let fb_idx = all.find("## Formal Blocks").expect("Formal Blocks heading");
+        assert!(fb_idx > dep_idx, "Formal Blocks section must follow Dependency");
+    }
+
+    #[test]
+    fn test_schema_cross_references_formal_blocks() {
+        let s = test_schema();
+        assert!(
+            s.contains("Formal Blocks"),
+            "TC schema must cross-reference the Formal Blocks section"
+        );
+    }
+
+    #[test]
+    fn generate_all_schemas_with_config_appends_formal_blocks_section() {
+        let all = generate_all_schemas_with_config(None);
+        assert!(all.contains("## Formal Blocks"));
+        assert!(all.contains("Sigma-Types"));
+        assert!(all.contains("Gamma-Invariants"));
+    }
+
+    #[test]
+    fn generate_schema_with_config_supports_formal() {
+        let s = generate_schema_with_config("formal", None).expect("formal supported");
+        assert_eq!(s, formal_block_schema());
+    }
+
+    #[test]
+    fn generate_schema_formal_output_excludes_other_sections() {
+        let s = generate_schema("formal").expect("formal supported");
+        // The isolated render must not include the other top-level schema
+        // headings — it is the targeted formal-block render only.
+        assert!(!s.contains("## Feature"));
+        assert!(!s.contains("## ADR"));
+        assert!(!s.contains("## Test Criterion"));
+        assert!(!s.contains("## Dependency"));
     }
 }

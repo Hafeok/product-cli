@@ -2,7 +2,7 @@
 id: TC-617
 title: schema_includes_formal_blocks_section
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-049
@@ -11,6 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: "tc_617_schema_includes_formal_blocks_section"
+last-run: 2026-04-20T13:17:28.076057385+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session — schema-includes-formal-blocks-section

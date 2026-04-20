@@ -263,10 +263,14 @@ pub enum Commands {
         #[command(subcommand)]
         command: HashCommands,
     },
-    /// Display front-matter schemas for artifact types (ADR-031)
+    /// Display front-matter schemas for artifact types (ADR-031, FT-049)
     Schema {
-        /// Artifact type: feature, adr, test, dep
+        /// Artifact type: feature, adr, test, dep, formal
         artifact_type: Option<String>,
+        /// Artifact type as a named flag (alternative to the positional).
+        /// Example: `product schema --type formal`.
+        #[arg(long = "type", value_name = "TYPE")]
+        type_flag: Option<String>,
         /// Show all schemas in a single document
         #[arg(long)]
         all: bool,
@@ -326,7 +330,11 @@ fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> Bo
         Commands::Onboard { command } => onboard::handle_onboard(command),
         Commands::Init { yes, force, name, domains, port, write_tools, path } => init::handle_init(yes, force, name, domains, port, write_tools, path),
         Commands::Hash { command } => hash::handle_hash(command),
-        Commands::Schema { artifact_type, all } => schema::handle_schema(artifact_type, all),
+        Commands::Schema { artifact_type, type_flag, all } => {
+            // `--type` wins over the positional so the idealised invocation
+            // `product schema --type formal` works even when both are given.
+            schema::handle_schema(type_flag.or(artifact_type), all)
+        }
         Commands::AgentInit { watch } => agent_init::handle_agent_init(watch),
         Commands::Request { command } => request_cmd::handle_request(command, fmt),
     }

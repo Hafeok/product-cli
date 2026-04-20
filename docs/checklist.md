@@ -10,10 +10,10 @@
 - [x] ADR-001: Rust as Implementation Language (accepted)
 - [x] ADR-004: Markdown as the Document Format (accepted)
 - [x] ADR-005: Numeric ID Scheme (FT-XXX, ADR-XXX, TC-XXX) (accepted)
-- [x] TC-001: binary_compiles_arm64 (scenario) — passing
-- [x] TC-002: binary_compiles_x86 (scenario) — passing
-- [x] TC-003: binary_no_deps.sh (scenario) — passing
-- [x] TC-004: cargo build --release (scenario) — passing
+- [x] TC-001: binary_compiles_arm64 (smoke) — passing
+- [x] TC-002: binary_compiles_x86 (smoke) — passing
+- [x] TC-003: binary_no_deps.sh (smoke) — passing
+- [x] TC-004: cargo build --release (smoke) — passing
 - [x] TC-011: markdown_front_matter_strip (scenario) — passing
 - [x] TC-012: markdown_passthrough (scenario) — passing
 - [x] TC-013: id_auto_increment (scenario) — passing
@@ -44,9 +44,9 @@
 - [x] TC-008: frontmatter_missing_required (scenario) — passing
 - [x] TC-060: schema_version_forward_error (scenario) — passing
 - [x] TC-061: schema_version_backward_warning (scenario) — passing
-- [x] TC-062: schema_migrate_dry_run (scenario) — passing
-- [x] TC-063: schema_migrate_idempotent (scenario) — passing
-- [x] TC-064: schema_migrate_preserves_unknown_fields (scenario) — passing
+- [x] TC-062: schema_migrate_dry_run (migration) — passing
+- [x] TC-063: schema_migrate_idempotent (migration) — passing
+- [x] TC-064: schema_migrate_preserves_unknown_fields (migration) — passing
 - [x] TC-065: schema_version_mismatch_format (scenario) — passing
 - [x] TC-071: parse_types_block (scenario) — passing
 - [x] TC-072: parse_invariants_block (invariant) — passing
@@ -145,19 +145,19 @@
 ### FT-012 — Feature: FT-001 — Cluster Foundation [x]
 
 - [x] ADR-001: Rust as Implementation Language (accepted)
-- [x] TC-001: binary_compiles_arm64 (scenario) — passing
-- [x] TC-002: binary_compiles_x86 (scenario) — passing
-- [x] TC-003: binary_no_deps.sh (scenario) — passing
-- [x] TC-004: cargo build --release (scenario) — passing
+- [x] TC-001: binary_compiles_arm64 (smoke) — passing
+- [x] TC-002: binary_compiles_x86 (smoke) — passing
+- [x] TC-003: binary_no_deps.sh (smoke) — passing
+- [x] TC-004: cargo build --release (smoke) — passing
 - [x] TC-163: FT-012 cluster foundation binary validated (exit-criteria) — passing
 
 ### FT-013 — ADR-001 — Rust as Implementation Language [x]
 
 - [x] ADR-001: Rust as Implementation Language (accepted)
-- [x] TC-001: binary_compiles_arm64 (scenario) — passing
-- [x] TC-002: binary_compiles_x86 (scenario) — passing
-- [x] TC-003: binary_no_deps.sh (scenario) — passing
-- [x] TC-004: cargo build --release (scenario) — passing
+- [x] TC-001: binary_compiles_arm64 (smoke) — passing
+- [x] TC-002: binary_compiles_x86 (smoke) — passing
+- [x] TC-003: binary_no_deps.sh (smoke) — passing
+- [x] TC-004: cargo build --release (smoke) — passing
 - [x] TC-164: FT-013 Rust implementation compiles clean (exit-criteria) — passing
 
 ### FT-015 — Test Criteria [x]
@@ -250,9 +250,9 @@
 - [x] ADR-014: Schema Versioning and Migration Path (accepted)
 - [x] TC-060: schema_version_forward_error (scenario) — passing
 - [x] TC-061: schema_version_backward_warning (scenario) — passing
-- [x] TC-062: schema_migrate_dry_run (scenario) — passing
-- [x] TC-063: schema_migrate_idempotent (scenario) — passing
-- [x] TC-064: schema_migrate_preserves_unknown_fields (scenario) — passing
+- [x] TC-062: schema_migrate_dry_run (migration) — passing
+- [x] TC-063: schema_migrate_idempotent (migration) — passing
+- [x] TC-064: schema_migrate_preserves_unknown_fields (migration) — passing
 - [x] TC-065: schema_version_mismatch_format (scenario) — passing
 - [x] TC-080: exit_criteria (exit-criteria) — passing
 - [x] TC-081: title (scenario) — passing
@@ -341,7 +341,7 @@
 - [x] ADR-013: Error Model and User-Facing Error Format (accepted)
 - [x] ADR-022: Authoring Resources — System Prompts and Pre-Commit Review (accepted)
 - [x] TC-472: product.toml parses product responsibility field (scenario) — passing
-- [x] TC-473: product_responsibility MCP tool returns name and responsibility (scenario) — passing
+- [x] TC-473: product_responsibility MCP tool returns name and responsibility (contract) — passing
 - [x] TC-474: context bundle includes responsibility in header (scenario) — passing
 - [x] TC-475: graph check emits W019 for out-of-scope feature (scenario) — passing
 - [x] TC-476: W019 suppressed when responsibility field absent (scenario) — passing
@@ -427,9 +427,9 @@
 - [x] ADR-016: Formal Block Grammar (accepted)
 - [x] TC-060: schema_version_forward_error (scenario) — passing
 - [x] TC-061: schema_version_backward_warning (scenario) — passing
-- [x] TC-062: schema_migrate_dry_run (scenario) — passing
-- [x] TC-063: schema_migrate_idempotent (scenario) — passing
-- [x] TC-064: schema_migrate_preserves_unknown_fields (scenario) — passing
+- [x] TC-062: schema_migrate_dry_run (migration) — passing
+- [x] TC-063: schema_migrate_idempotent (migration) — passing
+- [x] TC-064: schema_migrate_preserves_unknown_fields (migration) — passing
 - [x] TC-065: schema_version_mismatch_format (scenario) — passing
 - [x] TC-179: ft_008_schema_migration_exit_criteria (exit-criteria) — passing
 
@@ -588,11 +588,11 @@
 - [x] TC-410: AGENT.md contains working protocol section (scenario) — passing
 - [x] TC-411: AGENT.md contains current repository state summary (scenario) — passing
 - [x] TC-412: AGENT.md contains domain vocabulary from product.toml (scenario) — passing
-- [x] TC-413: AGENT.md contains MCP tool usage guide (scenario) — passing
+- [x] TC-413: AGENT.md contains MCP tool usage guide (contract) — passing
 - [x] TC-414: AGENT.md is regenerated not hand-edited (invariant) — passing
 - [x] TC-415: product agent-init --watch regenerates on graph change (scenario) — passing
-- [x] TC-416: product_schema MCP tool returns schema for artifact type (scenario) — passing
-- [x] TC-417: product_agent_context MCP tool returns AGENT.md content (scenario) — passing
+- [x] TC-416: product_schema MCP tool returns schema for artifact type (contract) — passing
+- [x] TC-417: product_agent_context MCP tool returns AGENT.md content (contract) — passing
 - [x] TC-418: agent-context config controls AGENT.md sections (scenario) — passing
 - [x] TC-419: Agent context generation exit criteria (exit-criteria) — passing
 
@@ -647,15 +647,15 @@
 
 - [x] ADR-020: MCP Server — Dual Transport (stdio and HTTP) (accepted)
 - [x] ADR-031: Agent Context Generation and Schema MCP Tool (accepted)
-- [x] TC-099: mcp_stdio_tool_call (scenario) — passing
-- [x] TC-100: mcp_http_tool_call (scenario) — passing
-- [x] TC-101: mcp_http_no_token_401 (scenario) — passing
-- [x] TC-102: mcp_http_wrong_token_401 (scenario) — passing
-- [x] TC-103: mcp_http_write_disabled (scenario) — passing
-- [x] TC-104: mcp_http_concurrent_writes (scenario) — passing
-- [x] TC-105: mcp_http_graceful_shutdown (scenario) — passing
-- [x] TC-106: mcp_tool_registry_shared (scenario) — passing
-- [x] TC-107: mcp_cors_header (scenario) — passing
+- [x] TC-099: mcp_stdio_tool_call (contract) — passing
+- [x] TC-100: mcp_http_tool_call (contract) — passing
+- [x] TC-101: mcp_http_no_token_401 (contract) — passing
+- [x] TC-102: mcp_http_wrong_token_401 (contract) — passing
+- [x] TC-103: mcp_http_write_disabled (contract) — passing
+- [x] TC-104: mcp_http_concurrent_writes (contract) — passing
+- [x] TC-105: mcp_http_graceful_shutdown (contract) — passing
+- [x] TC-106: mcp_tool_registry_shared (contract) — passing
+- [x] TC-107: mcp_cors_header (contract) — passing
 - [x] TC-165: FT-021 MCP server stdio and HTTP pass (exit-criteria) — passing
 
 ### FT-022 — Authoring Sessions [x]
@@ -673,8 +673,8 @@
 - [x] TC-317: prompts_get_stdout (scenario) — passing
 - [x] TC-321: adr_review_missing_section (scenario) — passing
 - [x] TC-322: adr_review_no_features (scenario) — passing
-- [x] TC-323: mcp_prompts_list_tool (scenario) — passing
-- [x] TC-324: mcp_prompts_get_tool (scenario) — passing
+- [x] TC-323: mcp_prompts_list_tool (contract) — passing
+- [x] TC-324: mcp_prompts_get_tool (contract) — passing
 
 ### FT-023 — Agent Orchestration [x]
 
@@ -760,7 +760,7 @@
 - [x] TC-365: reverse_inference_updates_feature (scenario) — passing
 - [x] TC-366: atomic_batch_write (scenario) — passing
 - [x] TC-367: platform_verify_cross_cutting (scenario) — passing
-- [x] TC-368: product migrate link-tests (scenario) — passing
+- [x] TC-368: product migrate link-tests (migration) — passing
 
 ### FT-038 — Front-Matter Field Management [x]
 
@@ -774,7 +774,7 @@
 - [x] TC-466: adr supersede detects cycles (scenario) — passing
 - [x] TC-467: test runner validates runner enum (scenario) — passing
 - [x] TC-468: adr source files add and remove (scenario) — passing
-- [x] TC-469: MCP tools mirror CLI for all field mutations (scenario) — passing
+- [x] TC-469: MCP tools mirror CLI for all field mutations (contract) — passing
 - [x] TC-470: all field mutation tools are idempotent (invariant) — passing
 - [x] TC-471: front-matter field management complete (exit-criteria) — passing
 
@@ -827,11 +827,11 @@
 - [x] TC-513: log replay to checkpoint (scenario) — passing
 - [x] TC-514: log undo appends inverse (scenario) — passing
 - [x] TC-515: log undo does not delete entries (scenario) — passing
-- [x] TC-516: log migrate entry first (scenario) — passing
+- [x] TC-516: log migrate entry first (migration) — passing
 - [x] TC-517: log verify entry on product verify (scenario) — passing
 - [x] TC-518: log cross ref tags detects truncation (scenario) — passing
 - [x] TC-519: log graph check integration exits one on tamper (scenario) — passing
-- [x] TC-520: log path migration preserves chain (scenario) — passing
+- [x] TC-520: log path migration preserves chain (migration) — passing
 - [x] TC-521: log apply refuses without git identity (scenario) — passing
 - [x] TC-522: log entry id increments within utc day (scenario) — passing
 - [x] TC-523: log replay never overwrites working tree (scenario) — passing
@@ -850,24 +850,24 @@
 - [x] ADR-018: Testing Strategy — Property-Based, Session-Based, and LLM Benchmark (accepted)
 - [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
 - [x] ADR-039: Hash-Chained Request Log for Tamper-Evident Audit (accepted)
-- [x] TC-530: Session harness exposes documented API surface (scenario) — passing
+- [x] TC-530: Session harness exposes documented API surface (session) — passing
 - [x] TC-531: ApplyResult.id_for resolves ref names to assigned IDs (scenario) — passing
 - [x] TC-532: Session.run executes compiled product binary against temp dir (scenario) — passing
-- [x] TC-533: session ST-001 create-feature-with-adr-and-tc (scenario) — passing
-- [x] TC-534: session ST-002 create-dep-requires-governing-adr emits E013 (scenario) — passing
-- [x] TC-535: session ST-003 create-dep-with-adr-in-same-request satisfies E013 (scenario) — passing
-- [x] TC-536: session ST-004 create-with-forward-references resolves ref values (scenario) — passing
-- [x] TC-537: session ST-005 create-multiple-adrs-same-phase assigns IDs in order (scenario) — passing
-- [x] TC-538: session ST-006 create-cross-links-bidirectional writes both sides (scenario) — passing
+- [x] TC-533: session ST-001 create-feature-with-adr-and-tc (session) — passing
+- [x] TC-534: session ST-002 create-dep-requires-governing-adr emits E013 (session) — passing
+- [x] TC-535: session ST-003 create-dep-with-adr-in-same-request satisfies E013 (session) — passing
+- [x] TC-536: session ST-004 create-with-forward-references resolves ref values (session) — passing
+- [x] TC-537: session ST-005 create-multiple-adrs-same-phase assigns IDs in order (session) — passing
+- [x] TC-538: session ST-006 create-cross-links-bidirectional writes both sides (session) — passing
 - [x] TC-539: session ST-020 failed-apply-leaves-zero-files (invariant) — passing
 - [x] TC-540: session ST-021 failed-apply-mid-write-recovery (chaos) — passing
 - [x] TC-541: session ST-022 concurrent-apply-serialised by advisory lock (chaos) — passing
-- [x] TC-542: session ST-030 validation-e013-dep-no-adr (scenario) — passing
-- [x] TC-543: session ST-031 validation-e002-broken-ref (scenario) — passing
-- [x] TC-544: session ST-032 validation-e003-dep-cycle (scenario) — passing
-- [x] TC-545: session ST-033 validation-e012-unknown-domain (scenario) — passing
-- [x] TC-546: session ST-034 validation-e011-empty-acknowledgement (scenario) — passing
-- [x] TC-547: session ST-035 validation-domain-not-in-vocabulary (scenario) — passing
+- [x] TC-542: session ST-030 validation-e013-dep-no-adr (session) — passing
+- [x] TC-543: session ST-031 validation-e002-broken-ref (session) — passing
+- [x] TC-544: session ST-032 validation-e003-dep-cycle (session) — passing
+- [x] TC-545: session ST-033 validation-e012-unknown-domain (session) — passing
+- [x] TC-546: session ST-034 validation-e011-empty-acknowledgement (session) — passing
+- [x] TC-547: session ST-035 validation-domain-not-in-vocabulary (session) — passing
 - [x] TC-548: property TC-P012 failed apply leaves zero files changed (invariant) — passing
 - [x] TC-549: property TC-P013 append is idempotent (invariant) — passing
 - [x] TC-550: property TC-P014 forward-ref resolution is deterministic (invariant) — passing
@@ -935,7 +935,7 @@
 - [x] TC-584: adr_status_via_mcp_rejects_demotion_from_accepted (scenario) — passing
 - [x] TC-585: mcp_parity_adr_lifecycle_exit (exit-criteria) — passing
 
-### FT-047 — Removal & Deprecation Tracking — Absence TCs and ADR Lifecycle Fields [~]
+### FT-047 — Removal & Deprecation Tracking — Absence TCs and ADR Lifecycle Fields [x]
 
 - [x] ADR-019: Continuous Gap Analysis — LLM-Driven Specification Review in CI (accepted)
 - [x] ADR-040: Unified Verify Pipeline and the LLM Boundary (accepted)
@@ -954,9 +954,9 @@
 - [x] TC-594: w023_fires_on_deprecated_field (scenario) — passing
 - [x] TC-595: deprecated_field_still_processed_for_compat (scenario) — passing
 - [x] TC-596: w023_names_deprecating_adr (scenario) — passing
-- [x] TC-597: migration_phase1_deprecation_tc_passes (scenario) — passing
-- [x] TC-598: migration_phase2_absence_tc_passes (scenario) — passing
-- [x] TC-599: migration_phase2_phase1_tc_unrunnable_no_block (scenario) — passing
+- [x] TC-597: migration_phase1_deprecation_tc_passes (migration) — passing
+- [x] TC-598: migration_phase2_absence_tc_passes (migration) — passing
+- [x] TC-599: migration_phase2_phase1_tc_unrunnable_no_block (migration) — passing
 - [x] TC-600: removal_deprecation_exit (exit-criteria) — passing
 
 ### FT-048 — TC Type System — Structural Reserved Types and Open Descriptive Types [x]
@@ -983,4 +983,30 @@
 - [x] TC-614: request_create_with_custom_type_validates_against_toml (scenario) — passing
 - [x] TC-615: request_create_unknown_type_emits_e006 (scenario) — passing
 - [x] TC-616: tc_types_system_exit (exit-criteria) — passing
+
+### FT-049 — Formal Blocks in LLM Schema Output [x]
+
+- [x] ADR-011: AISP-Influenced Formal Notation for Test Criteria (accepted)
+- [x] ADR-016: Formal Block Grammar (accepted)
+- [x] ADR-031: Agent Context Generation and Schema MCP Tool (accepted)
+- [x] TC-617: schema_includes_formal_blocks_section (scenario) — passing
+- [x] TC-618: schema_type_formal_returns_just_formal_section (scenario) — passing
+- [x] TC-619: formal_blocks_schema_exit (exit-criteria) — passing
+
+### FT-050 — MCP body_update Supports Dependencies [ ]
+
+- [x] ADR-030: Dependency Artifact Type — First-Class External System Declarations (accepted)
+- [x] ADR-031: Agent Context Generation and Schema MCP Tool (accepted)
+- [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
+- [ ] TC-620: mcp_body_update_rewrites_dep_body (scenario) — unimplemented
+- [ ] TC-621: mcp_body_update_dep_error_paths (scenario) — unimplemented
+- [ ] TC-622: mcp_body_update_dep_exit (exit-criteria) — unimplemented
+
+### FT-051 — Relative Paths in the Request Log [ ]
+
+- [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
+- [x] ADR-039: Hash-Chained Request Log for Tamper-Evident Audit (accepted)
+- [ ] TC-623: request_log_emits_repo_relative_paths (invariant) — unimplemented
+- [ ] TC-624: request_log_migrate_paths_rewrites_history (scenario) — unimplemented
+- [ ] TC-625: relative_paths_in_log_exit (exit-criteria) — unimplemented
 
