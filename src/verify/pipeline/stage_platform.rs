@@ -9,7 +9,7 @@ use crate::fileops;
 use crate::graph::KnowledgeGraph;
 use crate::implement::verify as verify_impl;
 use crate::parser;
-use crate::types::{AdrScope, TestStatus};
+use crate::types::{AdrScope, TestStatus, TestType};
 use std::path::Path;
 
 pub(super) fn run(
@@ -92,6 +92,7 @@ pub(super) fn run(
 
 fn collect_platform_tcs(graph: &KnowledgeGraph) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
+    // TCs linked to cross-cutting ADRs (ADR-025).
     for adr in graph.adrs.values() {
         if adr.front.scope == AdrScope::CrossCutting {
             for tc in graph.tests.values() {
@@ -101,6 +102,14 @@ fn collect_platform_tcs(graph: &KnowledgeGraph) -> Vec<String> {
                     out.push(tc.front.id.clone());
                 }
             }
+        }
+    }
+    // Absence TCs are cross-cutting by nature (FT-047 / ADR-041) — they
+    // run under `product verify --platform` regardless of which ADR scope
+    // they validate.
+    for tc in graph.tests.values() {
+        if tc.front.test_type == TestType::Absence && !out.contains(&tc.front.id) {
+            out.push(tc.front.id.clone());
         }
     }
     out

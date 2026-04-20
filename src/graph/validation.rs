@@ -7,6 +7,15 @@ use std::collections::HashSet;
 
 impl KnowledgeGraph {
     pub fn check(&self) -> CheckResult {
+        self.check_with_config(None)
+    }
+
+    /// Full graph health check. When `config` is supplied, also validates TC
+    /// types against `[tc-types].custom` (E006, ADR-042).
+    pub fn check_with_config(
+        &self,
+        config: Option<&crate::config::ProductConfig>,
+    ) -> CheckResult {
         let mut result = CheckResult::new();
         let all_ids = self.all_ids();
 
@@ -31,8 +40,124 @@ impl KnowledgeGraph {
         self.check_dep_has_adr(&mut result);
         self.check_dep_deprecated_usage(&mut result);
         self.check_dep_broken_links(&mut result, &all_ids);
+        self.check_removes_deprecates_has_absence_tc(&mut result);
+        self.check_deprecated_fields_in_use(&mut result);
+        if let Some(cfg) = config {
+            self.check_unknown_tc_types(cfg, &mut result);
+        }
 
         result
+    }
+
+    /// E006: every TC with a `Custom(name)` type must have that name in
+    /// `[tc-types].custom` (ADR-042).
+    fn check_unknown_tc_types(
+        &self,
+        config: &crate::config::ProductConfig,
+        result: &mut CheckResult,
+    ) {
+        for t in self.tests.values() {
+            if let TestType::Custom(name) = &t.front.test_type {
+                if !config.is_known_tc_type(name) {
+                    result.errors.push(
+                        Diagnostic::error("E006", "unknown TC type")
+                            .with_file(t.path.clone())
+                            .with_detail(&format!(
+                                "{} declares type '{}' which is not a built-in type and not in [tc-types].custom",
+                                t.front.id, name
+                            ))
+                            .with_hint(&config.tc_type_hint()),
+                    );
+                }
+            }
+        }
+    }
+
+    /// W022: ADR has non-empty `removes` or `deprecates` but no linked
+    /// absence TC (FT-047 / ADR-041). Same condition as G009.
+    fn check_removes_deprecates_has_absence_tc(&self, result: &mut CheckResult) {
+        for adr in self.adrs.values() {
+            if adr.front.removes.is_empty() && adr.front.deprecates.is_empty() {
+                continue;
+            }
+            let has_absence = self.tests.values().any(|t| {
+                t.front.test_type == TestType::Absence
+                    && t.front.validates.adrs.contains(&adr.front.id)
+            });
+            if !has_absence {
+                let detail = if !adr.front.removes.is_empty() && !adr.front.deprecates.is_empty() {
+                    format!(
+                        "{} declares removes/deprecates but no linked `tc-type: absence` TC",
+                        adr.front.id
+                    )
+                } else if !adr.front.removes.is_empty() {
+                    format!(
+                        "{} declares `removes` but no linked `tc-type: absence` TC",
+                        adr.front.id
+                    )
+                } else {
+                    format!(
+                        "{} declares `deprecates` but no linked `tc-type: absence` TC",
+                        adr.front.id
+                    )
+                };
+                result.warnings.push(
+                    Diagnostic::warning("W022", "removal/deprecation without absence TC")
+                        .with_file(adr.path.clone())
+                        .with_detail(&detail)
+                        .with_hint(
+                            "create a TC with `tc-type: absence` whose `validates.adrs` links this ADR",
+                        ),
+                );
+            }
+        }
+    }
+
+    /// W023: a front-matter field whose name appears in any accepted ADR's
+    /// `deprecates` list is present in a loaded artifact (FT-047 / ADR-041).
+    /// Non-blocking: the field is still parsed; we just emit the warning.
+    fn check_deprecated_fields_in_use(&self, result: &mut CheckResult) {
+        // Build map field-name -> deprecating ADR id (first one wins).
+        let mut deprecated: std::collections::HashMap<String, String> =
+            std::collections::HashMap::new();
+        for adr in self.adrs.values() {
+            if adr.front.status != AdrStatus::Accepted {
+                continue;
+            }
+            for name in &adr.front.deprecates {
+                let key = name.trim().to_string();
+                if key.is_empty() {
+                    continue;
+                }
+                deprecated.entry(key).or_insert_with(|| adr.front.id.clone());
+            }
+        }
+        if deprecated.is_empty() {
+            return;
+        }
+
+        for path in self.artifact_paths_for_scan() {
+            scan_file_for_deprecated_fields(&path, &deprecated, result);
+        }
+    }
+
+    /// All artifact file paths whose front-matter should be scanned for
+    /// deprecated field names.
+    fn artifact_paths_for_scan(&self) -> Vec<std::path::PathBuf> {
+        let mut paths: Vec<std::path::PathBuf> = Vec::new();
+        for f in self.features.values() {
+            paths.push(f.path.clone());
+        }
+        for a in self.adrs.values() {
+            paths.push(a.path.clone());
+        }
+        for t in self.tests.values() {
+            paths.push(t.path.clone());
+        }
+        for d in self.dependencies.values() {
+            paths.push(d.path.clone());
+        }
+        paths
     }
 
     fn check_parse_errors(&self, result: &mut CheckResult) {
@@ -352,6 +477,66 @@ impl KnowledgeGraph {
             }
         }
         None
+    }
+}
+
+/// Read the front-matter of `path` and emit W023 for every top-level scalar
+/// key that appears in the `deprecated` map (FT-047 / ADR-041).
+fn scan_file_for_deprecated_fields(
+    path: &std::path::Path,
+    deprecated: &std::collections::HashMap<String, String>,
+    result: &mut CheckResult,
+) {
+    let content = match std::fs::read_to_string(path) {
+        Ok(c) => c,
+        Err(_) => return,
+    };
+    // Extract front-matter block.
+    let trimmed = content.trim_start();
+    let after = match trimmed.strip_prefix("---") {
+        Some(rest) => rest,
+        None => return,
+    };
+    let fm = match after.find("\n---") {
+        Some(end) => &after[..end],
+        None => return,
+    };
+    // Match top-level keys only (no indentation). Handles:
+    //   key: value
+    //   key:
+    // Ignores list items (start with '-') and comments (#).
+    let re = match regex::Regex::new(r"(?m)^([a-zA-Z_][a-zA-Z0-9_-]*)\s*:") {
+        Ok(r) => r,
+        Err(_) => return,
+    };
+    let mut emitted: std::collections::HashSet<String> = std::collections::HashSet::new();
+    for cap in re.captures_iter(fm) {
+        let key = match cap.get(1) {
+            Some(m) => m.as_str().to_string(),
+            None => continue,
+        };
+        if !deprecated.contains_key(&key) {
+            continue;
+        }
+        if emitted.contains(&key) {
+            continue;
+        }
+        emitted.insert(key.clone());
+        let adr_id = match deprecated.get(&key) {
+            Some(id) => id.clone(),
+            None => continue,
+        };
+        result.warnings.push(
+            Diagnostic::warning("W023", "deprecated front-matter field in use")
+                .with_file(path.to_path_buf())
+                .with_detail(&format!(
+                    "field '{}' is deprecated by {}",
+                    key, adr_id
+                ))
+                .with_hint(
+                    "migrate away from this field; it is still parsed but scheduled for removal",
+                ),
+        );
     }
 }
 

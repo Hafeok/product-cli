@@ -146,16 +146,21 @@ fn validate_tc(
     ctx: &ValidationContext<'_>,
     findings: &mut Vec<Finding>,
 ) {
-    if let Some(Value::String(s)) = a.fields.get(Value::String("tc-type".into())) {
-        if !matches!(
-            s.as_str(),
-            "scenario" | "invariant" | "chaos" | "exit-criteria" | "benchmark"
-        ) {
-            findings.push(Finding::error(
-                "E006",
-                format!("invalid tc-type '{}'", s),
-                format!("$.artifacts[{}].tc-type", a.index),
-            ));
+    let tc_type = a
+        .fields
+        .get(Value::String("tc-type".into()))
+        .and_then(|v| v.as_str())
+        .map(str::to_string);
+    if let Some(ref s) = tc_type {
+        if !ctx.config.is_known_tc_type(s.as_str()) {
+            findings.push(
+                Finding::error(
+                    "E006",
+                    format!("unknown tc-type '{}'", s),
+                    format!("$.artifacts[{}].tc-type", a.index),
+                )
+                .with_hint(ctx.config.tc_type_hint()),
+            );
         }
     }
 
@@ -167,6 +172,40 @@ fn validate_tc(
         if let Some(v) = m.get(Value::String("adrs".into())) {
             check_id_list_value(v, ArtifactType::Adr, refs, ctx.graph,
                 &format!("$.artifacts[{}].validates.adrs", a.index), findings);
+        }
+    }
+
+    // FT-047 / ADR-041: absence TCs must have empty validates.features and
+    // non-empty validates.adrs.
+    if tc_type.as_deref() == Some("absence") {
+        let validates = a.fields.get(Value::String("validates".into()));
+        let (features_nonempty, adrs_nonempty) = match validates {
+            Some(Value::Mapping(m)) => {
+                let f = matches!(
+                    m.get(Value::String("features".into())),
+                    Some(Value::Sequence(s)) if !s.is_empty()
+                );
+                let aa = matches!(
+                    m.get(Value::String("adrs".into())),
+                    Some(Value::Sequence(s)) if !s.is_empty()
+                );
+                (f, aa)
+            }
+            _ => (false, false),
+        };
+        if features_nonempty {
+            findings.push(Finding::error(
+                "E006",
+                "absence TC requires empty `validates.features` (cross-cutting only)",
+                format!("$.artifacts[{}].validates.features", a.index),
+            ));
+        }
+        if !adrs_nonempty {
+            findings.push(Finding::error(
+                "E006",
+                "absence TC requires non-empty `validates.adrs` linking the governing ADR(s)",
+                format!("$.artifacts[{}].validates.adrs", a.index),
+            ));
         }
     }
 

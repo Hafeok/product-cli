@@ -63,23 +63,21 @@ fn bundle_feature_inner(
             .collect()
     };
 
-    // Order tests by phase then type (exit-criteria first, then scenario, invariant, chaos)
+    // Order tests by phase then type (ADR-042 built-in sequence, then custom
+    // types alphabetically): exit-criteria → invariant → chaos → absence →
+    // scenario → benchmark → [custom alphabetical].
     test_ids.sort_by(|a, b| {
         let ta = graph.tests.get(a.as_str());
         let tb = graph.tests.get(b.as_str());
         let phase_a = ta.map(|t| t.front.phase).unwrap_or(0);
         let phase_b = tb.map(|t| t.front.phase).unwrap_or(0);
-        let type_order = |tt: TestType| -> u8 {
-            match tt {
-                TestType::ExitCriteria => 0,
-                TestType::Scenario => 1,
-                TestType::Invariant => 2,
-                TestType::Chaos => 3,
-            }
-        };
-        let type_a = ta.map(|t| type_order(t.front.test_type)).unwrap_or(9);
-        let type_b = tb.map(|t| type_order(t.front.test_type)).unwrap_or(9);
-        phase_a.cmp(&phase_b).then(type_a.cmp(&type_b))
+        let key_a = ta
+            .map(|t| t.front.test_type.bundle_sort_key())
+            .unwrap_or((2, 9, String::new()));
+        let key_b = tb
+            .map(|t| t.front.test_type.bundle_sort_key())
+            .unwrap_or((2, 9, String::new()));
+        phase_a.cmp(&phase_b).then(key_a.cmp(&key_b))
     });
 
     // ADR-025: Three-tier ADR ordering

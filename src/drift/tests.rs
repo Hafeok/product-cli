@@ -44,6 +44,8 @@ fn scan_finds_adr_references() {
             content_hash: None,
             amendments: vec![],
             source_files: vec![],
+            removes: vec![],
+            deprecates: vec![],
         },
         body: String::new(),
         path: PathBuf::from("adr.md"),

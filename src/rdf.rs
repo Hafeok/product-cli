@@ -68,7 +68,7 @@ fn write_ttl_tests(out: &mut String, graph: &KnowledgeGraph) {
         let iri = format!("tc:{}", t.front.id);
         out.push_str(&format!("{} a pm:TestCriterion ;\n", iri));
         out.push_str(&format!("    pm:title \"{}\" ;\n", escape_turtle(&t.front.title)));
-        out.push_str(&format!("    pm:type pm:{:?} ;\n", t.front.test_type));
+        out.push_str(&format!("    pm:type pm:{} ;\n", t.front.test_type));
         out.push_str(&format!("    pm:status pm:{:?} ", t.front.status));
         for f_id in &t.front.validates.features {
             out.push_str(&format!(";\n    pm:validates ft:{} ", f_id));

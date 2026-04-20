@@ -45,6 +45,20 @@ pub struct ProductConfig {
     /// Request log configuration (FT-042, ADR-039)
     #[serde(default)]
     pub log: LogConfig,
+    /// TC type vocabulary — custom descriptive types (ADR-042)
+    #[serde(rename = "tc-types", default)]
+    pub tc_types: TcTypesConfig,
+}
+
+/// `[tc-types]` section — custom descriptive TC types (ADR-042).
+///
+/// Reserved structural names (`exit-criteria`, `invariant`, `chaos`,
+/// `absence`) must never appear in `custom`. That check is E017.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct TcTypesConfig {
+    /// Custom descriptive type names declared by this project.
+    #[serde(default)]
+    pub custom: Vec<String>,
 }
 
 /// Hash-chained request log configuration — `[log]` in product.toml (FT-042).
@@ -229,7 +243,7 @@ fn default_dep_prefix() -> String { "DEP".into() }
 pub const CURRENT_SCHEMA_VERSION: u32 = 1;
 
 impl ProductConfig {
-    /// Load product.toml from a path
+    /// Load product.toml from a path. Runs E017 validation immediately.
     pub fn load(path: &Path) -> Result<Self> {
         let content = std::fs::read_to_string(path).map_err(|e| {
             ProductError::ConfigError(format!("Failed to read {}: {}", path.display(), e))
@@ -237,7 +251,30 @@ impl ProductConfig {
         let config: Self = toml::from_str(&content).map_err(|e| {
             ProductError::ConfigError(format!("Failed to parse {}: {}", path.display(), e))
         })?;
+        // E017: reserved structural names must never appear in [tc-types].custom.
+        config.check_tc_types_reserved()?;
         Ok(config)
+    }
+
+    /// E017 — reject configs whose `[tc-types].custom` contains a reserved
+    /// structural TC type name. Runs at startup before any command.
+    pub fn check_tc_types_reserved(&self) -> Result<()> {
+        let reserved = crate::types::TestType::RESERVED;
+        let offenders: Vec<String> = self
+            .tc_types
+            .custom
+            .iter()
+            .filter(|name| reserved.contains(&name.as_str()))
+            .cloned()
+            .collect();
+        if !offenders.is_empty() {
+            return Err(ProductError::ConfigError(format!(
+                "error[E017]: reserved TC type name(s) in [tc-types].custom: {}\n   = reserved names: {}\n   = hint: remove the offending entries from product.toml — reserved names drive Product mechanics (phase gate, W004, G002, G009) and cannot be redeclared as custom types",
+                offenders.join(", "),
+                reserved.join(", "),
+            )));
+        }
+        Ok(())
     }
 
     /// Find product.toml by walking up from cwd
@@ -300,6 +337,50 @@ impl ProductConfig {
             .as_ref()
             .and_then(|p| p.responsibility.as_deref())
             .filter(|s| !s.trim().is_empty())
+    }
+
+    /// Return a reference to the configured custom TC type list
+    /// (`[tc-types].custom`, ADR-042).
+    pub fn custom_tc_types(&self) -> &[String] {
+        &self.tc_types.custom
+    }
+
+    /// Is this TC-type value recognised — either a built-in (structural or
+    /// descriptive) or present in `[tc-types].custom`?
+    pub fn is_known_tc_type(&self, name: &str) -> bool {
+        use crate::types::TestType;
+        TestType::RESERVED.contains(&name)
+            || TestType::BUILTIN_DESCRIPTIVE.contains(&name)
+            || self.tc_types.custom.iter().any(|s| s == name)
+    }
+
+    /// Hint string listing every recognised TC type plus the configured
+    /// custom list. Used in E006 diagnostics for unknown type values.
+    pub fn tc_type_hint(&self) -> String {
+        use crate::types::TestType;
+        let builtin = TestType::RESERVED
+            .iter()
+            .chain(TestType::BUILTIN_DESCRIPTIVE.iter())
+            .copied()
+            .collect::<Vec<_>>()
+            .join(", ");
+        let custom = if self.tc_types.custom.is_empty() {
+            "[]".to_string()
+        } else {
+            format!(
+                "[{}]",
+                self.tc_types
+                    .custom
+                    .iter()
+                    .map(|s| format!("\"{}\"", s))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
+        };
+        format!(
+            "valid TC types:\n     built-in: {}\n     [tc-types].custom in product.toml: {}\n   to accept a new type, run:\n     product request change --type create-and-change --reason \"accept new TC type\" \\\n       --mutation 'set tc-types.custom += [\"<name>\"]'",
+            builtin, custom
+        )
     }
 
     /// Validate `[product]` section — warns on top-level conjunction (TC-478)

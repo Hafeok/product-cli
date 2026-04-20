@@ -116,6 +116,12 @@ pub struct AdrFrontMatter {
     /// Source files governed by this ADR
     #[serde(rename = "source-files", default, skip_serializing_if = "Vec::is_empty")]
     pub source_files: Vec<String>,
+    /// Things this ADR mandates be removed (ADR-041)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub removes: Vec<String>,
+    /// Things this ADR deprecates (ADR-041)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub deprecates: Vec<String>,
 }
 
 /// Amendment record for accepted ADR edits (ADR-032)
@@ -251,23 +257,108 @@ fn default_test_status() -> TestStatus {
     TestStatus::Unimplemented
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+/// TC type — ADR-042 structural / descriptive partition.
+///
+/// Structural (reserved, compiled-in): `ExitCriteria`, `Invariant`, `Chaos`, `Absence`.
+/// Built-in descriptive: `Scenario`, `Benchmark`.
+/// Custom descriptive: `Custom(String)` — declared in `[tc-types].custom` in product.toml.
+///
+/// This type is no longer `Copy` because `Custom` carries a `String`.
+/// Comparisons via `==` remain cheap and work as before.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TestType {
-    Scenario,
+    // Structural (reserved) — drive Product mechanics by exact-string match.
+    ExitCriteria,
     Invariant,
     Chaos,
-    ExitCriteria,
+    Absence,
+    // Built-in descriptive — no mechanics beyond bundle inclusion.
+    Scenario,
+    Benchmark,
+    /// Custom descriptive type — treated identically to `Scenario` in mechanics.
+    Custom(String),
+}
+
+impl TestType {
+    /// The four reserved structural TC-type names (ADR-042).
+    /// Each drives a specific Product mechanic by exact-string match.
+    pub const RESERVED: &'static [&'static str] =
+        &["exit-criteria", "invariant", "chaos", "absence"];
+
+    /// The two built-in descriptive TC-type names (ADR-042).
+    pub const BUILTIN_DESCRIPTIVE: &'static [&'static str] = &["scenario", "benchmark"];
+
+    /// Returns `true` for the four structural variants.
+    pub fn is_structural(&self) -> bool {
+        matches!(
+            self,
+            Self::ExitCriteria | Self::Invariant | Self::Chaos | Self::Absence
+        )
+    }
+
+    /// Returns `true` for descriptive variants (built-in + custom).
+    pub fn is_descriptive(&self) -> bool {
+        !self.is_structural()
+    }
+
+    /// Returns `true` if the variant is the built-in or structural set
+    /// (i.e. not `Custom`).
+    pub fn is_builtin(&self) -> bool {
+        !matches!(self, Self::Custom(_))
+    }
+
+    /// The canonical string spelling, matching FromStr round-trip.
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::ExitCriteria => "exit-criteria",
+            Self::Invariant => "invariant",
+            Self::Chaos => "chaos",
+            Self::Absence => "absence",
+            Self::Scenario => "scenario",
+            Self::Benchmark => "benchmark",
+            Self::Custom(s) => s.as_str(),
+        }
+    }
+
+    /// Bundle sort key (ADR-042). Built-in types sort before custom types;
+    /// custom types sort alphabetically among themselves.
+    ///
+    /// Returns `(category, position, name)`.
+    /// `category`: 0 for built-in, 1 for custom.
+    /// `position`: fixed index for built-in types, 0 for custom.
+    /// `name`: the canonical string, used to break ties alphabetically.
+    pub fn bundle_sort_key(&self) -> (u8, u8, String) {
+        let (cat, pos) = match self {
+            Self::ExitCriteria => (0, 0),
+            Self::Invariant => (0, 1),
+            Self::Chaos => (0, 2),
+            Self::Absence => (0, 3),
+            Self::Scenario => (0, 4),
+            Self::Benchmark => (0, 5),
+            Self::Custom(_) => (1, 0),
+        };
+        (cat, pos, self.as_str().to_string())
+    }
+
+    /// Parse a string into a `TestType` without consulting the config's custom
+    /// list. Unknown strings become `Custom(s)`. Validation against the
+    /// configured custom list is performed separately (E006).
+    pub fn parse_permissive(s: &str) -> Self {
+        match s {
+            "exit-criteria" => Self::ExitCriteria,
+            "invariant" => Self::Invariant,
+            "chaos" => Self::Chaos,
+            "absence" => Self::Absence,
+            "scenario" => Self::Scenario,
+            "benchmark" => Self::Benchmark,
+            other => Self::Custom(other.to_string()),
+        }
+    }
 }
 
 impl std::fmt::Display for TestType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Scenario => write!(f, "scenario"),
-            Self::Invariant => write!(f, "invariant"),
-            Self::Chaos => write!(f, "chaos"),
-            Self::ExitCriteria => write!(f, "exit-criteria"),
-        }
+        f.write_str(self.as_str())
     }
 }
 
@@ -279,8 +370,44 @@ impl std::str::FromStr for TestType {
             "invariant" => Ok(Self::Invariant),
             "chaos" => Ok(Self::Chaos),
             "exit-criteria" => Ok(Self::ExitCriteria),
-            _ => Err(format!("unknown test type: {}", s)),
+            "absence" => Ok(Self::Absence),
+            "benchmark" => Ok(Self::Benchmark),
+            other => {
+                // Validate custom name shape — same as builtin (lowercase, kebab)
+                let re = regex::Regex::new(r"^[a-z][a-z0-9-]*$").expect("constant regex");
+                if !re.is_match(other) {
+                    Err(format!(
+                        "invalid tc type: '{}' — must be one of {} | {} or a custom name matching ^[a-z][a-z0-9-]*$",
+                        other,
+                        Self::RESERVED.join(" | "),
+                        Self::BUILTIN_DESCRIPTIVE.join(" | "),
+                    ))
+                } else {
+                    Ok(Self::Custom(other.to_string()))
+                }
+            }
         }
+    }
+}
+
+impl Serialize for TestType {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> Deserialize<'de> for TestType {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        // Permissive: accept any valid-shaped name; validation against the
+        // configured custom list happens in graph/request validators.
+        Ok(Self::parse_permissive(&s))
     }
 }
 

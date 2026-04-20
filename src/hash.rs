@@ -216,6 +216,8 @@ mod tests {
                 content_hash: hash.map(String::from),
                 amendments: vec![],
                 source_files: vec![],
+            removes: vec![],
+            deprecates: vec![],
             },
             body: body.to_string(),
             path: PathBuf::from("ADR-001.md"),

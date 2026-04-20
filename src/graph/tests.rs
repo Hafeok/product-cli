@@ -40,6 +40,8 @@ fn make_adr(id: &str) -> Adr {
             content_hash: Some(hash),
             amendments: vec![],
             source_files: vec![],
+            removes: vec![],
+            deprecates: vec![],
         },
         body,
         path: PathBuf::from(format!("{}.md", id)),

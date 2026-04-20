@@ -39,8 +39,59 @@ pub fn check_adr(graph: &KnowledgeGraph, adr_id: &str, baseline: &GapBaseline) -
     check_g007_stale_rationale(graph, adr, adr_id, baseline, &mut findings);
     check_g001_testable_claims(graph, adr, adr_id, baseline, &mut findings);
     check_g002_formal_invariants(graph, adr, adr_id, baseline, &mut findings);
+    check_g009_removes_deprecates_has_absence_tc(graph, adr, adr_id, baseline, &mut findings);
 
     findings
+}
+
+/// G009: ADR has non-empty `removes` or `deprecates` but no linked absence TC
+/// (FT-047 / ADR-041). Same condition as W022, surfaced as a gap finding.
+fn check_g009_removes_deprecates_has_absence_tc(
+    graph: &KnowledgeGraph,
+    adr: &crate::types::Adr,
+    adr_id: &str,
+    baseline: &GapBaseline,
+    findings: &mut Vec<GapFinding>,
+) {
+    if adr.front.removes.is_empty() && adr.front.deprecates.is_empty() {
+        return;
+    }
+    let has_absence = graph.tests.values().any(|t| {
+        t.front.test_type == TestType::Absence
+            && t.front.validates.adrs.contains(&adr_id.to_string())
+    });
+    if has_absence {
+        return;
+    }
+    let desc = if !adr.front.removes.is_empty() && !adr.front.deprecates.is_empty() {
+        format!(
+            "{} declares removes/deprecates but has no linked `tc-type: absence` TC",
+            adr_id
+        )
+    } else if !adr.front.removes.is_empty() {
+        format!(
+            "{} declares `removes` but has no linked `tc-type: absence` TC",
+            adr_id
+        )
+    } else {
+        format!(
+            "{} declares `deprecates` but has no linked `tc-type: absence` TC",
+            adr_id
+        )
+    };
+    let id = gap_id(adr_id, "G009", &[adr_id], &desc);
+    let suppressed = baseline.is_suppressed(&id);
+    findings.push(GapFinding {
+        id,
+        code: "G009".to_string(),
+        severity: GapSeverity::High,
+        description: desc,
+        affected_artifacts: vec![adr_id.to_string()],
+        suggested_action:
+            "Create a TC with `tc-type: absence` whose `validates.adrs` links this ADR."
+                .to_string(),
+        suppressed,
+    });
 }
 
 /// Run G008 gap analysis for a feature: check deps have governing ADRs (ADR-030)

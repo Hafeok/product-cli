@@ -83,6 +83,8 @@ pub fn execute_plan(
             content_hash: None,
             amendments: vec![],
             source_files: vec![],
+            removes: vec![],
+            deprecates: vec![],
         };
         let content = crate::parser::render_adr(&front, &a.body);
         crate::fileops::write_file_atomic(&path, &content)?;
@@ -110,7 +112,7 @@ pub fn execute_plan(
         let front = TestFrontMatter {
             id: t.id.clone(),
             title: t.title.clone(),
-            test_type: t.test_type,
+            test_type: t.test_type.clone(),
             status: TestStatus::Unimplemented,
             validates: ValidatesBlock {
                 features: vec![],

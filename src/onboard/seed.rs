@@ -153,6 +153,8 @@ fn render_seeded_adr(adr: &ProposedAdr) -> String {
         content_hash: None,
         amendments: vec![],
         source_files: vec![],
+        removes: vec![],
+        deprecates: vec![],
     };
 
     let mut body = String::new();

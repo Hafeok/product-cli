@@ -55,6 +55,8 @@ fn schema_prompt_covers_adr_fields() {
         content_hash: None,
         amendments: vec![],
         source_files: vec![],
+            removes: vec![],
+            deprecates: vec![],
     };
     let yaml = serde_yaml::to_string(&adr).unwrap();
     assert_yaml_keys_in_doc(&yaml, &doc, "ADR");

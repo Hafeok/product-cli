@@ -39,6 +39,8 @@ fn make_adr(id: &str, scope: AdrScope, domains: Vec<&str>) -> Adr {
             content_hash: None,
             amendments: vec![],
             source_files: vec![],
+            removes: vec![],
+            deprecates: vec![],
         },
         body: String::new(),
         path: PathBuf::from(format!("{}.md", id)),
