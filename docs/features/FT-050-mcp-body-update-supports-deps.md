@@ -17,6 +17,11 @@ tests:
 domains:
 - api
 - data-model
+domains-acknowledged:
+  ADR-040: body_update is an MCP write-path, not a verify-pipeline stage; no new stage hook is added and the LLM-boundary surface expands only by one accepted prefix.
+  ADR-041: Deps participate in absence-TC semantics via FT-047; this feature only adds body-text editing, leaving removal / deprecation lifecycle untouched.
+  ADR-042: Dep bodies carry no tc-type partition; the body_update contract is identical for every artifact type and does not depend on the TC vocabulary.
+  ADR-043: MCP handlers live in `src/mcp/`; the feature adds one branch to the existing prefix dispatcher and one helper mirroring the other three, rather than a new slice.
 ---
 
 ## Description

@@ -17,6 +17,11 @@ domains:
 - data-model
 - security
 - observability
+domains-acknowledged:
+  ADR-040: Request-log writes are the record-side of the LLM boundary already owned by FT-041 / FT-042; relativisation is a pure string transform at the same boundary and adds no new pipeline stage.
+  ADR-041: Path normalisation is orthogonal to absence-TC and ADR removes/deprecates lifecycle; the transform applies to all entry types uniformly.
+  ADR-042: Log entries carry no tc-type partition; the transform is independent of the TC vocabulary defined by ADR-042.
+  ADR-043: Implementation is a new pure helper under `src/request_log/` paired with the existing append adapters; it follows the slice + adapter split by construction.
 ---
 
 ## Description
