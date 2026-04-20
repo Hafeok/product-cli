@@ -25,17 +25,21 @@ mod mcp_cmd;
 mod metrics_cmd;
 mod migrate;
 mod onboard;
+mod output;
 mod preflight;
 mod prompts_cmd;
 mod request_cmd;
 mod request_log_cmd;
 mod schema;
+mod shared;
 mod status;
 mod tags;
 mod test_cmd;
 
+pub(crate) use self::output::{render_result as render, CmdResult, Output};
+pub(crate) use self::shared::{acquire_write_lock, acquire_write_lock_typed, load_graph, load_graph_typed};
+
 use clap::Subcommand;
-use product_lib::{config::ProductConfig, fileops, graph::KnowledgeGraph, parser};
 use std::path::PathBuf;
 
 pub use self::adr::AdrCommands;
@@ -284,67 +288,9 @@ pub use self::test_cmd::TestCommands;
 
 type BoxResult = Result<(), Box<dyn std::error::Error>>;
 
-/// Acquire the advisory lock for write operations (ADR-015).
-/// Returns a `RepoLock` that must be held for the duration of the write.
-fn acquire_write_lock() -> Result<fileops::RepoLock, Box<dyn std::error::Error>> {
-    let (_, root) = ProductConfig::discover()?;
-    Ok(fileops::RepoLock::acquire(&root)?)
-}
-
-fn load_graph() -> Result<(ProductConfig, PathBuf, KnowledgeGraph), Box<dyn std::error::Error>> {
-    let (config, root) = ProductConfig::discover()?;
-
-    // Check schema version
-    for warning in config.check_schema_version()? {
-        eprintln!("{}", warning);
-    }
-
-    let features_dir = config.resolve_path(&root, &config.paths.features);
-    let adrs_dir = config.resolve_path(&root, &config.paths.adrs);
-    let tests_dir = config.resolve_path(&root, &config.paths.tests);
-    let deps_dir = config.resolve_path(&root, &config.paths.dependencies);
-
-    let loaded = parser::load_all_with_deps(&features_dir, &adrs_dir, &tests_dir, Some(&deps_dir))?;
-
-    // Print parse errors to stderr so they are visible for all commands (ADR-013)
-    for e in &loaded.parse_errors {
-        eprintln!("{}", e);
-    }
-
-    let graph = KnowledgeGraph::build_with_deps(loaded.features, loaded.adrs, loaded.tests, loaded.dependencies)
-        .with_parse_errors(loaded.parse_errors);
-    Ok((config, root, graph))
-}
-
 pub fn run(command: Commands, format: &str, cli_command: &mut clap::Command) -> BoxResult {
-    cleanup_stale_tmp_files();
-    migrate_log_path_if_needed();
+    shared::run_startup_hooks()?;
     dispatch(command, format, cli_command)
-}
-
-/// FT-042 one-shot migration from `.product/request-log.jsonl` to `requests.jsonl`.
-fn migrate_log_path_if_needed() {
-    if let Ok((config, root)) = ProductConfig::discover() {
-        let _ = product_lib::request_log::migrate_if_needed(
-            &root,
-            Some(&config.paths.requests),
-        );
-    }
-}
-
-fn cleanup_stale_tmp_files() {
-    // Clean up any leftover tmp files from prior crashes (ADR-015)
-    if let Ok((config, root)) = ProductConfig::discover() {
-        let dirs = [
-            config.resolve_path(&root, &config.paths.features),
-            config.resolve_path(&root, &config.paths.adrs),
-            config.resolve_path(&root, &config.paths.tests),
-            config.resolve_path(&root, &config.paths.dependencies),
-        ];
-        for dir in &dirs {
-            fileops::cleanup_tmp_files(dir);
-        }
-    }
 }
 
 fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> BoxResult {
@@ -356,12 +302,12 @@ fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> Bo
         Commands::Context { id, depth, phase, adrs_only, order, measure, measure_all } =>
             context::handle_context(id.as_deref(), depth, phase, adrs_only, order, measure, measure_all),
         Commands::Graph { command } => graph_cmd::handle_graph(command, fmt),
-        Commands::Impact { id } => status::handle_impact(&id, fmt),
+        Commands::Impact { id } => render(status::handle_impact(&id, fmt), fmt),
         Commands::Status {
             phase,
             untested,
             failing,
-        } => status::handle_status(phase, untested, failing, fmt),
+        } => render(status::handle_status(phase, untested, failing, fmt), fmt),
         Commands::Checklist { command } => checklist::handle_checklist(command),
         Commands::Completions { shell } => completions::handle_completions(&shell, cli_command),
         Commands::Migrate { command } => migrate::handle_migrate(command),

@@ -1,9 +1,9 @@
 //! ADR navigation, creation, status, review, amendment, sealing.
 
 use clap::Subcommand;
-use product_lib::{author, error::ProductError, fileops, hash, parser, types};
+use product_lib::{adr as adr_slice, author, error::ProductError, types};
 
-use super::{acquire_write_lock, load_graph, BoxResult};
+use super::{acquire_write_lock_typed, load_graph, load_graph_typed, BoxResult, CmdResult, Output};
 mod adr_write_ops {
     pub(crate) use super::super::adr_write::*;
 }
@@ -118,37 +118,44 @@ pub enum AdrCommands {
 
 pub(crate) fn handle_adr(cmd: AdrCommands, fmt: &str) -> BoxResult {
     match cmd {
-        AdrCommands::List { status } => adr_list(status, fmt),
-        AdrCommands::Show { id } => adr_show(&id, fmt),
-        AdrCommands::Features { id } => adr_features(&id),
-        AdrCommands::Tests { id } => adr_tests(&id),
-        AdrCommands::New { title } => adr_new(&title),
-        AdrCommands::Status { id, new_status, by } => adr_status(&id, &new_status, by),
+        AdrCommands::List { status } => super::render(adr_list(status), fmt),
+        AdrCommands::Show { id } => super::render(adr_show(&id), fmt),
+        AdrCommands::Features { id } => super::render(adr_features(&id), fmt),
+        AdrCommands::Tests { id } => super::render(adr_tests(&id), fmt),
+        AdrCommands::New { title } => super::render(adr_new(&title), fmt),
+        AdrCommands::Status { id, new_status, by } => {
+            super::render(adr_status(&id, &new_status, by), fmt)
+        }
         AdrCommands::Review { staged } => adr_review(staged),
-        AdrCommands::Amend { id, reason } => super::adr_seal::adr_amend(&id, reason),
-        AdrCommands::Rehash { id, all } => super::adr_seal::adr_rehash(id, all),
-        AdrCommands::Domain { id, add, remove } => adr_write_ops::adr_domain(&id, add, remove),
-        AdrCommands::Scope { id, scope } => adr_write_ops::adr_scope(&id, &scope),
-        AdrCommands::Supersede { id, supersedes, remove } => adr_write_ops::adr_supersede(&id, supersedes, remove),
-        AdrCommands::SourceFiles { id, add, remove } => adr_write_ops::adr_source_files(&id, add, remove),
-        AdrCommands::CheckConflicts { id } => super::adr_conflicts::adr_check_conflicts(id, fmt),
+        AdrCommands::Amend { id, reason } => super::render(super::adr_seal::adr_amend(&id, reason), fmt),
+        AdrCommands::Rehash { id, all } => super::render(super::adr_seal::adr_rehash(id, all), fmt),
+        AdrCommands::Domain { id, add, remove } => {
+            super::render(adr_write_ops::adr_domain(&id, add, remove), fmt)
+        }
+        AdrCommands::Scope { id, scope } => super::render(adr_write_ops::adr_scope(&id, &scope), fmt),
+        AdrCommands::Supersede { id, supersedes, remove } => {
+            super::render(adr_write_ops::adr_supersede(&id, supersedes, remove), fmt)
+        }
+        AdrCommands::SourceFiles { id, add, remove } => {
+            super::render(adr_write_ops::adr_source_files(&id, add, remove), fmt)
+        }
+        AdrCommands::CheckConflicts { id } => {
+            super::render(super::adr_conflicts::adr_check_conflicts(id, fmt), fmt)
+        }
         AdrCommands::ConflictBundle { id, format } => super::adr_conflicts::adr_conflict_bundle(&id, &format),
     }
 }
 
-fn adr_list(status: Option<String>, fmt: &str) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
+fn adr_list(status: Option<String>) -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
     let mut adrs: Vec<&types::Adr> = graph.adrs.values().collect();
     adrs.sort_by_key(|a| &a.front.id);
-
     if let Some(ref s) = status {
-        let target: types::AdrStatus = s.parse().map_err(|e: String| ProductError::ConfigError(e))?;
+        let target: types::AdrStatus = s.parse().map_err(ProductError::ConfigError)?;
         adrs.retain(|a| a.front.status == target);
     }
-
-    if fmt == "json" {
-        let arr: Vec<serde_json::Value> = adrs
-            .iter()
+    let json = serde_json::Value::Array(
+        adrs.iter()
             .map(|a| {
                 serde_json::json!({
                     "id": a.front.id,
@@ -156,160 +163,131 @@ fn adr_list(status: Option<String>, fmt: &str) -> BoxResult {
                     "title": a.front.title,
                 })
             })
-            .collect();
-        println!("{}", serde_json::to_string_pretty(&arr).unwrap_or_default());
-    } else {
-        println!("{:<10} {:<15} TITLE", "ID", "STATUS");
-        println!("{}", "-".repeat(60));
-        for a in &adrs {
-            println!("{:<10} {:<15} {}", a.front.id, a.front.status, a.front.title);
-        }
+            .collect(),
+    );
+    let mut text = format!("{:<10} {:<15} TITLE\n", "ID", "STATUS");
+    text.push_str(&"-".repeat(60));
+    text.push('\n');
+    for a in &adrs {
+        text.push_str(&format!(
+            "{:<10} {:<15} {}\n",
+            a.front.id, a.front.status, a.front.title
+        ));
     }
-    Ok(())
+    Ok(Output::both(text, json))
 }
 
-fn adr_show(id: &str, fmt: &str) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
+fn adr_show(id: &str) -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
     let a = graph
         .adrs
         .get(id)
         .ok_or_else(|| ProductError::NotFound(format!("ADR {}", id)))?;
-    if fmt == "json" {
-        let obj = serde_json::json!({
-            "id": a.front.id,
-            "title": a.front.title,
-            "status": a.front.status.to_string(),
-            "features": a.front.features,
-            "supersedes": a.front.supersedes,
-            "superseded_by": a.front.superseded_by,
-            "body": a.body,
-        });
-        println!("{}", serde_json::to_string_pretty(&obj).unwrap_or_default());
-    } else {
-        println!("# {} — {}\n", a.front.id, a.front.title);
-        println!("Status:        {}", a.front.status);
-        println!("Features:      {}", if a.front.features.is_empty() { "(none)".to_string() } else { a.front.features.join(", ") });
-        println!("Supersedes:    {}", if a.front.supersedes.is_empty() { "(none)".to_string() } else { a.front.supersedes.join(", ") });
-        println!("Superseded-by: {}", if a.front.superseded_by.is_empty() { "(none)".to_string() } else { a.front.superseded_by.join(", ") });
-        println!("\n{}", a.body);
-    }
-    Ok(())
+    let json = serde_json::json!({
+        "id": a.front.id,
+        "title": a.front.title,
+        "status": a.front.status.to_string(),
+        "features": a.front.features,
+        "supersedes": a.front.supersedes,
+        "superseded_by": a.front.superseded_by,
+        "body": a.body,
+    });
+    let text = render_adr_show_text(a);
+    Ok(Output::both(text, json))
 }
 
-fn adr_features(id: &str) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
-    println!("Features referencing {}:", id);
+fn render_adr_show_text(a: &types::Adr) -> String {
+    let mut out = format!("# {} — {}\n\n", a.front.id, a.front.title);
+    out.push_str(&format!("Status:        {}\n", a.front.status));
+    out.push_str(&format!(
+        "Features:      {}\n",
+        if a.front.features.is_empty() { "(none)".to_string() } else { a.front.features.join(", ") }
+    ));
+    out.push_str(&format!(
+        "Supersedes:    {}\n",
+        if a.front.supersedes.is_empty() { "(none)".to_string() } else { a.front.supersedes.join(", ") }
+    ));
+    out.push_str(&format!(
+        "Superseded-by: {}\n",
+        if a.front.superseded_by.is_empty() { "(none)".to_string() } else { a.front.superseded_by.join(", ") }
+    ));
+    out.push_str(&format!("\n{}", a.body));
+    out
+}
+
+fn adr_features(id: &str) -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
     let id_string = id.to_string();
+    let mut text = format!("Features referencing {}:\n", id);
+    let mut arr: Vec<serde_json::Value> = Vec::new();
     for f in graph.features.values() {
         if f.front.adrs.contains(&id_string) {
-            println!("  {} — {} ({})", f.front.id, f.front.title, f.front.status);
+            text.push_str(&format!(
+                "  {} — {} ({})\n",
+                f.front.id, f.front.title, f.front.status
+            ));
+            arr.push(serde_json::json!({
+                "id": f.front.id,
+                "title": f.front.title,
+                "status": f.front.status.to_string(),
+            }));
         }
     }
-    Ok(())
+    Ok(Output::both(text, serde_json::Value::Array(arr)))
 }
 
-fn adr_tests(id: &str) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
-    println!("Tests validating {}:", id);
+fn adr_tests(id: &str) -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
     let id_string = id.to_string();
+    let mut text = format!("Tests validating {}:\n", id);
+    let mut arr: Vec<serde_json::Value> = Vec::new();
     for t in graph.tests.values() {
         if t.front.validates.adrs.contains(&id_string) {
-            println!(
-                "  {} — {} ({}, {})",
+            text.push_str(&format!(
+                "  {} — {} ({}, {})\n",
                 t.front.id, t.front.title, t.front.test_type, t.front.status
-            );
+            ));
+            arr.push(serde_json::json!({
+                "id": t.front.id,
+                "title": t.front.title,
+                "type": t.front.test_type.to_string(),
+                "status": t.front.status.to_string(),
+            }));
         }
     }
-    Ok(())
+    Ok(Output::both(text, serde_json::Value::Array(arr)))
 }
 
-fn adr_new(title: &str) -> BoxResult {
-    let _lock = acquire_write_lock()?;
-    let (config, root, graph) = load_graph()?;
+fn adr_new(title: &str) -> CmdResult {
+    let _lock = acquire_write_lock_typed()?;
+    let (config, root, graph) = load_graph_typed()?;
     let existing: Vec<String> = graph.adrs.keys().cloned().collect();
-    let id = parser::next_id(&config.prefixes.adr, &existing);
-    let filename = parser::id_to_filename(&id, title);
-    let dir = config.resolve_path(&root, &config.paths.adrs);
-    std::fs::create_dir_all(&dir)?;
-    let path = dir.join(&filename);
-
-    let front = types::AdrFrontMatter {
-        id: id.clone(),
-        title: title.to_string(),
-        status: types::AdrStatus::Proposed,
-        features: vec![],
-        supersedes: vec![],
-        superseded_by: vec![],
-        domains: vec![],
-        scope: types::AdrScope::Domain,
-        content_hash: None,
-        amendments: vec![],
-        source_files: vec![],
-    };
-    let body = "**Status:** Proposed\n\n**Context:**\n\n[Describe the context here.]\n\n**Decision:**\n\n[Describe the decision.]\n\n**Rationale:**\n\n[Explain why.]\n\n**Rejected alternatives:**\n\n- [Alternative 1]\n".to_string();
-    let content = parser::render_adr(&front, &body);
-    fileops::write_file_atomic(&path, &content)?;
-    println!("Created: {} at {}", id, path.display());
-    Ok(())
+    let plan = adr_slice::plan_create(title, &existing, &config.prefixes.adr)?;
+    let target_dir = config.resolve_path(&root, &config.paths.adrs);
+    let path = adr_slice::apply_create(&plan, &target_dir)?;
+    Ok(Output::text(format!("Created: {} at {}", plan.id, path.display())))
 }
 
-fn adr_status(id: &str, new_status: &str, by: Option<String>) -> BoxResult {
-    let _lock = acquire_write_lock()?;
-    let (_, _, graph) = load_graph()?;
-    let a = graph
-        .adrs
-        .get(id)
-        .ok_or_else(|| ProductError::NotFound(format!("ADR {}", id)))?;
-
+fn adr_status(id: &str, new_status: &str, by: Option<String>) -> CmdResult {
+    let _lock = acquire_write_lock_typed()?;
+    let (_, _, graph) = load_graph_typed()?;
     let status: types::AdrStatus = new_status
         .parse()
-        .map_err(|e: String| ProductError::ConfigError(e))?;
+        .map_err(ProductError::ConfigError)?;
 
-    // If superseding, show impact first
+    // Preserve the legacy behaviour of printing impact before a supersession
+    // status change. This prints to stdout directly — a future refactor
+    // could move impact rendering into a pure formatter and return it as
+    // part of the Output value.
     if status == types::AdrStatus::Superseded {
         let impact = graph.impact(id);
         impact.print(&graph);
         println!();
     }
 
-    let mut front = a.front.clone();
-    front.status = status;
-
-    // Compute content-hash on acceptance (ADR-032)
-    if status == types::AdrStatus::Accepted {
-        let h = hash::compute_adr_hash(&front.title, &a.body);
-        front.content_hash = Some(h);
-    }
-
-    if let Some(by_id) = by {
-        update_supersession(&mut front, id, &by_id, &graph)?;
-    }
-
-    let content = parser::render_adr(&front, &a.body);
-    fileops::write_file_atomic(&a.path, &content)?;
-    println!("{} status -> {}", id, status);
-    Ok(())
-}
-
-fn update_supersession(
-    front: &mut types::AdrFrontMatter,
-    id: &str,
-    by_id: &str,
-    graph: &product_lib::graph::KnowledgeGraph,
-) -> BoxResult {
-    if !front.superseded_by.contains(&by_id.to_string()) {
-        front.superseded_by.push(by_id.to_string());
-    }
-    // Also update the successor to list this in supersedes
-    if let Some(successor) = graph.adrs.get(by_id) {
-        let mut succ_front = successor.front.clone();
-        if !succ_front.supersedes.contains(&id.to_string()) {
-            succ_front.supersedes.push(id.to_string());
-        }
-        let succ_content = parser::render_adr(&succ_front, &successor.body);
-        fileops::write_file_atomic(&successor.path, &succ_content)?;
-    }
-    Ok(())
+    let plan = adr_slice::plan_status_change(&graph, id, status, by.as_deref())?;
+    adr_slice::apply_status_change(&plan)?;
+    Ok(Output::text(format!("{} status -> {}", id, plan.new_status)))
 }
 
 fn adr_review(staged: bool) -> BoxResult {

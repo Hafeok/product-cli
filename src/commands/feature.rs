@@ -3,7 +3,7 @@
 use clap::Subcommand;
 use product_lib::{error::ProductError, graph, types};
 
-use super::{load_graph, BoxResult};
+use super::{load_graph, load_graph_typed, BoxResult, CmdResult, Output};
 mod feature_write_ops {
     pub(crate) use super::super::feature_write::*;
 }
@@ -95,30 +95,34 @@ pub enum FeatureCommands {
 
 pub(crate) fn handle_feature(cmd: FeatureCommands, fmt: &str) -> BoxResult {
     match cmd {
-        FeatureCommands::List { phase, status } => feature_list(phase, status, fmt),
-        FeatureCommands::Show { id } => feature_show(&id, fmt),
-        FeatureCommands::Adrs { id } => feature_adrs(&id),
-        FeatureCommands::Tests { id } => feature_tests(&id),
-        FeatureCommands::Deps { id } => feature_deps(&id),
+        FeatureCommands::List { phase, status } => {
+            super::render(feature_list(phase, status), fmt)
+        }
+        FeatureCommands::Show { id } => super::render(feature_show(&id), fmt),
+        FeatureCommands::Adrs { id } => super::render(feature_adrs(&id), fmt),
+        FeatureCommands::Tests { id } => super::render(feature_tests(&id), fmt),
+        FeatureCommands::Deps { id } => super::render(feature_deps(&id), fmt),
         FeatureCommands::Next { ignore_phase_gate } => feature_next(ignore_phase_gate),
-        FeatureCommands::New { title, phase } => feature_write_ops::feature_new(&title, phase),
+        FeatureCommands::New { title, phase } => {
+            super::render(feature_write_ops::feature_new(&title, phase), fmt)
+        }
         FeatureCommands::Link { id, adr, test, dep, yes } => {
             feature_write_ops::feature_link(&id, adr, test, dep, yes)
         }
         FeatureCommands::Status { id, new_status } => {
-            feature_write_ops::feature_status(&id, &new_status)
+            super::render(feature_write_ops::feature_status(&id, &new_status), fmt)
         }
         FeatureCommands::Acknowledge { id, domain, adr, reason, remove } => {
             feature_write_ops::feature_acknowledge(&id, domain, adr, reason, remove)
         }
         FeatureCommands::Domain { id, add, remove } => {
-            feature_write_ops::feature_domain(&id, add, remove)
+            super::render(feature_write_ops::feature_domain(&id, add, remove), fmt)
         }
     }
 }
 
-fn feature_list(phase: Option<u32>, status: Option<String>, fmt: &str) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
+fn feature_list(phase: Option<u32>, status: Option<String>) -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
     let mut features: Vec<&types::Feature> = graph.features.values().collect();
     features.sort_by_key(|f| &f.front.id);
 
@@ -126,12 +130,12 @@ fn feature_list(phase: Option<u32>, status: Option<String>, fmt: &str) -> BoxRes
         features.retain(|f| f.front.phase == p);
     }
     if let Some(ref s) = status {
-        let target: types::FeatureStatus = s.parse().map_err(|e: String| ProductError::ConfigError(e))?;
+        let target: types::FeatureStatus = s.parse().map_err(ProductError::ConfigError)?;
         features.retain(|f| f.front.status == target);
     }
 
-    if fmt == "json" {
-        let arr: Vec<serde_json::Value> = features
+    let json = serde_json::Value::Array(
+        features
             .iter()
             .map(|f| {
                 serde_json::json!({
@@ -141,97 +145,142 @@ fn feature_list(phase: Option<u32>, status: Option<String>, fmt: &str) -> BoxRes
                     "title": f.front.title,
                 })
             })
-            .collect();
-        println!("{}", serde_json::to_string_pretty(&arr).unwrap_or_default());
-    } else {
-        println!("{:<10} {:<8} {:<15} TITLE", "ID", "PHASE", "STATUS");
-        println!("{}", "-".repeat(60));
-        for f in &features {
-            println!(
-                "{:<10} {:<8} {:<15} {}",
-                f.front.id, f.front.phase, f.front.status, f.front.title
-            );
+            .collect(),
+    );
+    let text = render_feature_list_text(&features);
+    Ok(Output::both(text, json))
+}
+
+fn render_feature_list_text(features: &[&types::Feature]) -> String {
+    let mut out = format!("{:<10} {:<8} {:<15} TITLE\n", "ID", "PHASE", "STATUS");
+    out.push_str(&"-".repeat(60));
+    out.push('\n');
+    for f in features {
+        out.push_str(&format!(
+            "{:<10} {:<8} {:<15} {}\n",
+            f.front.id, f.front.phase, f.front.status, f.front.title
+        ));
+    }
+    out
+}
+
+fn feature_show(id: &str) -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
+    let f = graph
+        .features
+        .get(id)
+        .ok_or_else(|| ProductError::NotFound(format!("feature {}", id)))?;
+    let json = serde_json::json!({
+        "id": f.front.id,
+        "title": f.front.title,
+        "phase": f.front.phase,
+        "status": f.front.status.to_string(),
+        "depends_on": f.front.depends_on,
+        "adrs": f.front.adrs,
+        "tests": f.front.tests,
+        "body": f.body,
+    });
+    let text = render_feature_show_text(f);
+    Ok(Output::both(text, json))
+}
+
+fn render_feature_show_text(f: &types::Feature) -> String {
+    let mut out = format!("# {} — {}\n\n", f.front.id, f.front.title);
+    out.push_str(&format!("Phase:      {}\n", f.front.phase));
+    out.push_str(&format!("Status:     {}\n", f.front.status));
+    out.push_str(&format!(
+        "Depends-on: {}\n",
+        if f.front.depends_on.is_empty() {
+            "(none)".to_string()
+        } else {
+            f.front.depends_on.join(", ")
         }
-    }
-    Ok(())
+    ));
+    out.push_str(&format!(
+        "ADRs:       {}\n",
+        if f.front.adrs.is_empty() {
+            "(none)".to_string()
+        } else {
+            f.front.adrs.join(", ")
+        }
+    ));
+    out.push_str(&format!(
+        "Tests:      {}\n",
+        if f.front.tests.is_empty() {
+            "(none)".to_string()
+        } else {
+            f.front.tests.join(", ")
+        }
+    ));
+    out.push_str(&format!("\n{}", f.body));
+    out
 }
 
-fn feature_show(id: &str, fmt: &str) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
+fn feature_adrs(id: &str) -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
     let f = graph
         .features
         .get(id)
         .ok_or_else(|| ProductError::NotFound(format!("feature {}", id)))?;
-    if fmt == "json" {
-        let obj = serde_json::json!({
-            "id": f.front.id,
-            "title": f.front.title,
-            "phase": f.front.phase,
-            "status": f.front.status.to_string(),
-            "depends_on": f.front.depends_on,
-            "adrs": f.front.adrs,
-            "tests": f.front.tests,
-            "body": f.body,
-        });
-        println!("{}", serde_json::to_string_pretty(&obj).unwrap_or_default());
-    } else {
-        println!("# {} — {}\n", f.front.id, f.front.title);
-        println!("Phase:      {}", f.front.phase);
-        println!("Status:     {}", f.front.status);
-        println!("Depends-on: {}", if f.front.depends_on.is_empty() { "(none)".to_string() } else { f.front.depends_on.join(", ") });
-        println!("ADRs:       {}", if f.front.adrs.is_empty() { "(none)".to_string() } else { f.front.adrs.join(", ") });
-        println!("Tests:      {}", if f.front.tests.is_empty() { "(none)".to_string() } else { f.front.tests.join(", ") });
-        println!("\n{}", f.body);
-    }
-    Ok(())
-}
-
-fn feature_adrs(id: &str) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
-    let f = graph
-        .features
-        .get(id)
-        .ok_or_else(|| ProductError::NotFound(format!("feature {}", id)))?;
-    println!("ADRs linked to {}:", id);
+    let mut text = format!("ADRs linked to {}:\n", id);
+    let mut json_arr: Vec<serde_json::Value> = Vec::new();
     for adr_id in &f.front.adrs {
         if let Some(adr) = graph.adrs.get(adr_id.as_str()) {
-            println!("  {} — {} ({})", adr.front.id, adr.front.title, adr.front.status);
+            text.push_str(&format!(
+                "  {} — {} ({})\n",
+                adr.front.id, adr.front.title, adr.front.status
+            ));
+            json_arr.push(serde_json::json!({
+                "id": adr.front.id,
+                "title": adr.front.title,
+                "status": adr.front.status.to_string(),
+            }));
         } else {
-            println!("  {} (broken link)", adr_id);
+            text.push_str(&format!("  {} (broken link)\n", adr_id));
+            json_arr.push(serde_json::json!({ "id": adr_id, "broken_link": true }));
         }
     }
-    Ok(())
+    Ok(Output::both(text, serde_json::Value::Array(json_arr)))
 }
 
-fn feature_tests(id: &str) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
+fn feature_tests(id: &str) -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
     let f = graph
         .features
         .get(id)
         .ok_or_else(|| ProductError::NotFound(format!("feature {}", id)))?;
-    println!("Tests linked to {}:", id);
+    let mut text = format!("Tests linked to {}:\n", id);
+    let mut json_arr: Vec<serde_json::Value> = Vec::new();
     for test_id in &f.front.tests {
         if let Some(tc) = graph.tests.get(test_id.as_str()) {
-            println!(
-                "  {} — {} ({}, {})",
+            text.push_str(&format!(
+                "  {} — {} ({}, {})\n",
                 tc.front.id, tc.front.title, tc.front.test_type, tc.front.status
-            );
+            ));
+            json_arr.push(serde_json::json!({
+                "id": tc.front.id,
+                "title": tc.front.title,
+                "type": tc.front.test_type.to_string(),
+                "status": tc.front.status.to_string(),
+            }));
         } else {
-            println!("  {} (broken link)", test_id);
+            text.push_str(&format!("  {} (broken link)\n", test_id));
+            json_arr.push(serde_json::json!({ "id": test_id, "broken_link": true }));
         }
     }
-    Ok(())
+    Ok(Output::both(text, serde_json::Value::Array(json_arr)))
 }
 
-fn feature_deps(id: &str) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
+fn feature_deps(id: &str) -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
     let _f = graph
         .features
         .get(id)
         .ok_or_else(|| ProductError::NotFound(format!("feature {}", id)))?;
-    println!("Dependency tree for {}:", id);
-    print_dep_tree(&graph, id, 0, &mut std::collections::HashSet::new());
-    Ok(())
+    let mut text = format!("Dependency tree for {}:\n", id);
+    append_dep_tree(&mut text, &graph, id, 0, &mut std::collections::HashSet::new());
+    // JSON rendering for a tree is a deeper restructure — text only for now.
+    Ok(Output::text(text))
 }
 
 fn feature_next(ignore_phase_gate: bool) -> BoxResult {
@@ -281,14 +330,15 @@ fn print_blocked_next(
     eprintln!("  To skip the gate:  product feature next --ignore-phase-gate");
 }
 
-fn print_dep_tree(
+fn append_dep_tree(
+    out: &mut String,
     graph: &graph::KnowledgeGraph,
     id: &str,
     indent: usize,
     visited: &mut std::collections::HashSet<String>,
 ) {
     if visited.contains(id) {
-        println!("{}  {} (circular)", "  ".repeat(indent), id);
+        out.push_str(&format!("{}  {} (circular)\n", "  ".repeat(indent), id));
         return;
     }
     visited.insert(id.to_string());
@@ -300,9 +350,15 @@ fn print_dep_tree(
             types::FeatureStatus::Planned => "[ ]",
             types::FeatureStatus::Abandoned => "[-]",
         };
-        println!("{}{} {} — {}", "  ".repeat(indent), marker, f.front.id, f.front.title);
+        out.push_str(&format!(
+            "{}{} {} — {}\n",
+            "  ".repeat(indent),
+            marker,
+            f.front.id,
+            f.front.title
+        ));
         for dep in &f.front.depends_on {
-            print_dep_tree(graph, dep, indent + 1, visited);
+            append_dep_tree(out, graph, dep, indent + 1, visited);
         }
     }
 }

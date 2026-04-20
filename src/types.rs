@@ -116,6 +116,12 @@ pub struct AdrFrontMatter {
     /// Source files governed by this ADR
     #[serde(rename = "source-files", default, skip_serializing_if = "Vec::is_empty")]
     pub source_files: Vec<String>,
+    /// Things this ADR mandates be removed (FT-047 / ADR-041).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub removes: Vec<String>,
+    /// Things this ADR deprecates (FT-047 / ADR-041).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub deprecates: Vec<String>,
 }
 
 /// Amendment record for accepted ADR edits (ADR-032)
@@ -258,6 +264,9 @@ pub enum TestType {
     Invariant,
     Chaos,
     ExitCriteria,
+    /// Negative assertion — "the thing is gone". Routed to
+    /// `product verify --platform`. See FT-047 / ADR-041.
+    Absence,
 }
 
 impl std::fmt::Display for TestType {
@@ -267,6 +276,7 @@ impl std::fmt::Display for TestType {
             Self::Invariant => write!(f, "invariant"),
             Self::Chaos => write!(f, "chaos"),
             Self::ExitCriteria => write!(f, "exit-criteria"),
+            Self::Absence => write!(f, "absence"),
         }
     }
 }
@@ -279,6 +289,7 @@ impl std::str::FromStr for TestType {
             "invariant" => Ok(Self::Invariant),
             "chaos" => Ok(Self::Chaos),
             "exit-criteria" => Ok(Self::ExitCriteria),
+            "absence" => Ok(Self::Absence),
             _ => Err(format!("unknown test type: {}", s)),
         }
     }

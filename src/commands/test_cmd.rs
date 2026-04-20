@@ -1,9 +1,9 @@
 //! Test criterion navigation, creation, status management.
 
 use clap::Subcommand;
-use product_lib::{error::ProductError, fileops, parser, types};
+use product_lib::{error::ProductError, tc, types};
 
-use super::{acquire_write_lock, load_graph, BoxResult};
+use super::{acquire_write_lock_typed, load_graph_typed, BoxResult, CmdResult, Output};
 
 #[derive(Subcommand)]
 pub enum TestCommands {
@@ -67,11 +67,11 @@ pub(crate) fn handle_test(cmd: TestCommands, fmt: &str) -> BoxResult {
             test_type,
             status,
             failing,
-        } => test_list(phase, test_type, status, failing, fmt),
-        TestCommands::Show { id } => test_show(&id, fmt),
-        TestCommands::Untested => test_untested(),
-        TestCommands::New { title, test_type } => test_new(&title, &test_type),
-        TestCommands::Status { id, new_status } => test_status(&id, &new_status),
+        } => super::render(test_list(phase, test_type, status, failing), fmt),
+        TestCommands::Show { id } => super::render(test_show(&id), fmt),
+        TestCommands::Untested => super::render(test_untested(), fmt),
+        TestCommands::New { title, test_type } => super::render(test_new(&title, &test_type), fmt),
+        TestCommands::Status { id, new_status } => super::render(test_status(&id, &new_status), fmt),
         TestCommands::Runner {
             id,
             runner,
@@ -79,7 +79,7 @@ pub(crate) fn handle_test(cmd: TestCommands, fmt: &str) -> BoxResult {
             timeout,
             requires,
             remove_requires,
-        } => test_runner(&id, runner, args, timeout, requires, remove_requires),
+        } => super::render(test_runner(&id, runner, args, timeout, requires, remove_requires), fmt),
     }
 }
 
@@ -88,28 +88,25 @@ fn test_list(
     test_type: Option<String>,
     status: Option<String>,
     failing: bool,
-    fmt: &str,
-) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
+) -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
     let mut tests: Vec<&types::TestCriterion> = graph.tests.values().collect();
     tests.sort_by_key(|t| &t.front.id);
-
     if let Some(p) = phase {
         tests.retain(|t| t.front.phase == p);
     }
     if let Some(ref tt) = test_type {
-        let target: types::TestType = tt.parse().map_err(|e: String| ProductError::ConfigError(e))?;
+        let target: types::TestType = tt.parse().map_err(ProductError::ConfigError)?;
         tests.retain(|t| t.front.test_type == target);
     }
     if failing {
         tests.retain(|t| t.front.status == types::TestStatus::Failing);
     } else if let Some(ref s) = status {
-        let target: types::TestStatus = s.parse().map_err(|e: String| ProductError::ConfigError(e))?;
+        let target: types::TestStatus = s.parse().map_err(ProductError::ConfigError)?;
         tests.retain(|t| t.front.status == target);
     }
-
-    if fmt == "json" {
-        let arr: Vec<serde_json::Value> = tests
+    let json = serde_json::Value::Array(
+        tests
             .iter()
             .map(|t| {
                 serde_json::json!({
@@ -120,40 +117,30 @@ fn test_list(
                     "title": t.front.title,
                 })
             })
-            .collect();
-        println!("{}", serde_json::to_string_pretty(&arr).unwrap_or_default());
-    } else {
-        println!(
-            "{:<10} {:<8} {:<15} {:<15} TITLE",
-            "ID", "PHASE", "TYPE", "STATUS"
-        );
-        println!("{}", "-".repeat(70));
-        for t in &tests {
-            println!(
-                "{:<10} {:<8} {:<15} {:<15} {}",
-                t.front.id, t.front.phase, t.front.test_type, t.front.status, t.front.title
-            );
-        }
+            .collect(),
+    );
+    let mut text = format!(
+        "{:<10} {:<8} {:<15} {:<15} TITLE\n",
+        "ID", "PHASE", "TYPE", "STATUS"
+    );
+    text.push_str(&"-".repeat(70));
+    text.push('\n');
+    for t in &tests {
+        text.push_str(&format!(
+            "{:<10} {:<8} {:<15} {:<15} {}\n",
+            t.front.id, t.front.phase, t.front.test_type, t.front.status, t.front.title
+        ));
     }
-    Ok(())
+    Ok(Output::both(text, json))
 }
 
-fn test_show(id: &str, fmt: &str) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
+fn test_show(id: &str) -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
     let t = graph
         .tests
         .get(id)
         .ok_or_else(|| ProductError::NotFound(format!("test {}", id)))?;
-    if fmt == "json" {
-        print_test_json(t);
-    } else {
-        print_test_text(t);
-    }
-    Ok(())
-}
-
-fn print_test_json(t: &types::TestCriterion) {
-    let obj = serde_json::json!({
+    let json = serde_json::json!({
         "id": t.front.id,
         "title": t.front.title,
         "type": t.front.test_type.to_string(),
@@ -165,111 +152,65 @@ fn print_test_json(t: &types::TestCriterion) {
         },
         "body": t.body,
     });
-    println!("{}", serde_json::to_string_pretty(&obj).unwrap_or_default());
+    let text = render_test_show_text(t);
+    Ok(Output::both(text, json))
 }
 
-fn print_test_text(t: &types::TestCriterion) {
-    println!("# {} — {}\n", t.front.id, t.front.title);
-    println!("Type:     {}", t.front.test_type);
-    println!("Status:   {}", t.front.status);
-    println!("Phase:    {}", t.front.phase);
-    println!(
-        "Features: {}",
+fn render_test_show_text(t: &types::TestCriterion) -> String {
+    let mut out = format!("# {} — {}\n\n", t.front.id, t.front.title);
+    out.push_str(&format!("Type:     {}\n", t.front.test_type));
+    out.push_str(&format!("Status:   {}\n", t.front.status));
+    out.push_str(&format!("Phase:    {}\n", t.front.phase));
+    out.push_str(&format!(
+        "Features: {}\n",
         if t.front.validates.features.is_empty() {
             "(none)".to_string()
         } else {
             t.front.validates.features.join(", ")
         }
-    );
-    println!(
-        "ADRs:     {}",
+    ));
+    out.push_str(&format!(
+        "ADRs:     {}\n",
         if t.front.validates.adrs.is_empty() {
             "(none)".to_string()
         } else {
             t.front.validates.adrs.join(", ")
         }
+    ));
+    out.push_str(&format!("\n{}", t.body));
+    out
+}
+
+fn test_untested() -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
+    let list = product_lib::status::build_untested_list(&graph);
+    let text = product_lib::status::render_feature_list_text(
+        "Features with no linked test criteria:",
+        &list,
     );
-    println!("\n{}", t.body);
+    let json = serde_json::to_value(&list.items).unwrap_or(serde_json::Value::Null);
+    Ok(Output::both(text, json))
 }
 
-fn test_untested() -> BoxResult {
-    let (_, _, graph) = load_graph()?;
-    println!("Features with no linked test criteria:");
-    let mut found = false;
-    for f in graph.features.values() {
-        if f.front.status != types::FeatureStatus::Abandoned && f.front.tests.is_empty() {
-            println!("  {} — {} (phase {})", f.front.id, f.front.title, f.front.phase);
-            found = true;
-        }
-    }
-    if !found {
-        println!("  (none — all features have linked tests)");
-    }
-    Ok(())
-}
-
-fn test_new(title: &str, test_type: &str) -> BoxResult {
-    let _lock = acquire_write_lock()?;
-    let (config, root, graph) = load_graph()?;
+fn test_new(title: &str, test_type: &str) -> CmdResult {
+    let _lock = acquire_write_lock_typed()?;
+    let (config, root, graph) = load_graph_typed()?;
+    let tt: types::TestType = test_type.parse().map_err(ProductError::ConfigError)?;
     let existing: Vec<String> = graph.tests.keys().cloned().collect();
-    let id = parser::next_id(&config.prefixes.test, &existing);
-    let filename = parser::id_to_filename(&id, title);
-    let dir = config.resolve_path(&root, &config.paths.tests);
-    std::fs::create_dir_all(&dir)?;
-    let path = dir.join(&filename);
-
-    let tt: types::TestType = test_type
-        .parse()
-        .map_err(|e: String| ProductError::ConfigError(e))?;
-
-    let front = types::TestFrontMatter {
-        id: id.clone(),
-        title: title.to_string(),
-        test_type: tt,
-        status: types::TestStatus::Unimplemented,
-        validates: types::ValidatesBlock {
-            features: vec![],
-            adrs: vec![],
-        },
-        phase: 1,
-        content_hash: None,
-        runner: None,
-        runner_args: None,
-        runner_timeout: None,
-        requires: vec![],
-        last_run: None,
-        failure_message: None,
-        last_run_duration: None,
-    };
-
-    let body = "## Description\n\n[Describe the test criterion here.]\n".to_string();
-    let content = parser::render_test(&front, &body);
-    fileops::write_file_atomic(&path, &content)?;
-    println!("Created: {} at {}", id, path.display());
-    Ok(())
+    let plan = tc::plan_create(title, tt, &existing, &config.prefixes.test)?;
+    let target_dir = config.resolve_path(&root, &config.paths.tests);
+    let path = tc::apply_create(&plan, &target_dir)?;
+    Ok(Output::text(format!("Created: {} at {}", plan.id, path.display())))
 }
 
-fn test_status(id: &str, new_status: &str) -> BoxResult {
-    let _lock = acquire_write_lock()?;
-    let (_, _, graph) = load_graph()?;
-    let t = graph
-        .tests
-        .get(id)
-        .ok_or_else(|| ProductError::NotFound(format!("test {}", id)))?;
-
-    let status: types::TestStatus = new_status
-        .parse()
-        .map_err(|e: String| ProductError::ConfigError(e))?;
-
-    let mut front = t.front.clone();
-    front.status = status;
-    let content = parser::render_test(&front, &t.body);
-    fileops::write_file_atomic(&t.path, &content)?;
-    println!("{} status -> {}", id, status);
-    Ok(())
+fn test_status(id: &str, new_status: &str) -> CmdResult {
+    let _lock = acquire_write_lock_typed()?;
+    let (_, _, graph) = load_graph_typed()?;
+    let status: types::TestStatus = new_status.parse().map_err(ProductError::ConfigError)?;
+    let plan = tc::plan_status_change(&graph, id, status)?;
+    tc::apply_status_change(&plan)?;
+    Ok(Output::text(format!("{} status -> {}", id, plan.new_status)))
 }
-
-const VALID_RUNNERS: &[&str] = &["cargo-test", "bash", "pytest", "custom"];
 
 fn test_runner(
     id: &str,
@@ -278,68 +219,27 @@ fn test_runner(
     timeout: Option<String>,
     requires: Vec<String>,
     remove_requires: Vec<String>,
-) -> BoxResult {
-    let _lock = acquire_write_lock()?;
-    let (config, _, graph) = load_graph()?;
-    let t = graph
-        .tests
-        .get(id)
-        .ok_or_else(|| ProductError::NotFound(format!("test {}", id)))?;
-
-    let mut front = t.front.clone();
-
-    // Validate runner enum (E001)
-    if let Some(ref r) = runner {
-        if !VALID_RUNNERS.contains(&r.as_str()) {
-            return Err(Box::new(ProductError::ConfigError(format!(
-                "error[E001]: unknown runner '{}'. Valid values: {}",
-                r,
-                VALID_RUNNERS.join(", ")
-            ))));
-        }
-        front.runner = Some(r.clone());
-    }
-
-    if let Some(ref a) = args {
-        front.runner_args = Some(a.clone());
-    }
-
-    if let Some(ref t_str) = timeout {
-        // Parse timeout — accept "60s" or plain "60"
-        let secs = t_str
-            .trim_end_matches('s')
-            .parse::<u64>()
-            .map_err(|_| ProductError::ConfigError(format!("invalid timeout: {}", t_str)))?;
-        front.runner_timeout = Some(secs);
-    }
-
-    // Validate and add prerequisites (E001)
-    for req in &requires {
-        if !config.verify.prerequisites.contains_key(req) {
-            return Err(Box::new(ProductError::ConfigError(format!(
-                "error[E001]: unknown prerequisite '{}'. Check [verify.prerequisites] in product.toml",
-                req
-            ))));
-        }
-        if !front.requires.contains(req) {
-            front.requires.push(req.clone());
-        }
-    }
-
-    // Remove prerequisites (idempotent)
-    for req in &remove_requires {
-        front.requires.retain(|r| r != req);
-    }
-
-    let content = parser::render_test(&front, &t.body);
-    fileops::write_file_atomic(&t.path, &content)?;
-    println!(
+) -> CmdResult {
+    let _lock = acquire_write_lock_typed()?;
+    let (config, _, graph) = load_graph_typed()?;
+    let plan = tc::plan_runner_config(
+        &config,
+        &graph,
+        id,
+        runner.as_deref(),
+        args.as_deref(),
+        timeout.as_deref(),
+        &requires,
+        &remove_requires,
+    )?;
+    tc::apply_runner_config(&plan)?;
+    Ok(Output::text(format!(
         "{} runner: {} args: {} timeout: {}",
         id,
-        front.runner.as_deref().unwrap_or("(none)"),
-        front.runner_args.as_deref().unwrap_or("(none)"),
-        front.runner_timeout.map_or("(none)".to_string(), |t| format!("{}s", t)),
-    );
-    Ok(())
+        plan.final_runner.as_deref().unwrap_or("(none)"),
+        plan.final_args.as_deref().unwrap_or("(none)"),
+        plan.final_timeout
+            .map_or("(none)".to_string(), |t| format!("{}s", t)),
+    )))
 }
 
