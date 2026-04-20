@@ -8,37 +8,43 @@ Product is a Rust CLI and MCP server that manages a file-based knowledge graph o
 
 ```bash
 cargo build                                          # compile
-cargo test                                           # all tests (83 unit + 32 integration + 9 property)
+cargo test                                           # full suite (lib + integration + property + quality)
 cargo clippy -- -D warnings -D clippy::unwrap_used   # lint (zero unwrap policy)
 cargo bench                                          # 4 benchmarks
 ```
 
-All three (build, test, clippy) must pass before any commit.
+All three (build, test, clippy) must pass before any commit. Code-quality
+fitness tests (`tests/code_quality_tests.rs`) enforce a 400-line-per-file hard
+limit and a single-responsibility check on module doc comments (the first
+`//!` line must not contain the word "and").
 
 ## Project Structure
 
 ```
 src/
-  main.rs        # CLI entry point + all command handlers (~1700 lines)
-  lib.rs         # Module re-exports
-  types.rs       # Core artifact types (Feature, Adr, TestCriterion)
-  parser.rs      # YAML front-matter parser
-  config.rs      # product.toml parsing
-  graph.rs       # Knowledge graph + algorithms (centrality, BFS, topo sort)
-  context.rs     # Context bundle assembly
-  rdf.rs         # TTL export + SPARQL queries (Oxigraph)
-  formal.rs      # AISP formal block parser
-  gap.rs         # Specification gap analysis
-  drift.rs       # Spec-vs-code drift detection
-  metrics.rs     # Architectural fitness functions
-  implement.rs   # implement + verify pipeline (agent orchestration)
-  author.rs      # Authoring sessions
-  mcp.rs         # MCP server (stdio + HTTP via axum)
-  migrate.rs     # PRD/ADR document migration
-  fileops.rs     # Atomic writes + advisory locking
-  checklist.rs   # Checklist generation
-  domains.rs     # ADR concern domain classification
-  error.rs       # Error model (ProductError enum, exit codes)
+  main.rs             # Clap entry point — 42 lines, delegates to commands::run
+  lib.rs              # Module re-exports for tests and library consumers
+  commands/           # CLI adapter layer — one file per subcommand family
+    mod.rs            # Subcommand enum + dispatch match
+    shared.rs         # load_graph/acquire_write_lock helpers (typed + boxed)
+    output.rs         # Output enum, CmdResult, render_result bridge
+    feature.rs        # Feature navigation (list, show, next)
+    feature_write.rs  # Feature write adapters → call product_lib::feature
+    status.rs         # Status/impact adapters → call product_lib::status
+    ...
+  feature/            # Feature domain slice — pure plan_* + thin apply_*
+  status/             # Status domain slice — pure build_* + render_*
+  gap/                # Gap analysis
+  drift/              # Drift detection
+  request/            # Unified atomic write interface
+  implement/          # implement + verify pipeline orchestration
+  graph/              # Knowledge graph + algorithms (centrality, BFS, topo)
+  mcp/                # MCP server (stdio + HTTP via axum)
+  types.rs            # Core artifact types (Feature, Adr, TestCriterion)
+  parser.rs           # YAML front-matter parser
+  config.rs           # product.toml parsing
+  fileops.rs          # Atomic writes + advisory locking
+  error.rs            # Error model (ProductError enum, exit codes)
 docs/
   product-prd.md     # Full PRD
   product-adrs.md    # All ADRs in one file
@@ -83,15 +89,67 @@ Do not manually edit feature status or CHECKLIST.md — let the CLI manage that 
 - **IDs**: Features=FT-XXX, ADRs=ADR-XXX, Tests=TC-XXX (ADR-005)
 - **Test types**: scenario, invariant, chaos, exit-criteria (ADR-011)
 
+## Architecture Pattern — Slice + Adapter
+
+The codebase is organised as vertical slices, each with a pure domain module
+in the library and a thin CLI adapter in `src/commands/`. This separation
+keeps business logic unit-testable without tempdirs, print capture, or
+`cargo run`.
+
+**Slice modules (`src/<slice>/`)** — pure, testable:
+- `plan_*` / `build_*` functions take current state + user input, return a
+  struct describing the intended change. No I/O, no println, no exit.
+- `apply_*` functions take a plan struct and perform the minimal I/O
+  (`fileops::write_file_atomic`, `write_batch_atomic`) needed to commit it.
+- `render_*` functions turn result structs into text strings. JSON rendering
+  is derived from `serde::Serialize` on the plan / result types.
+- Unit tests (`src/<slice>/tests.rs`) exercise the pure functions directly.
+
+Reference slices:
+- `src/feature/` — create, status change (with ADR-010 cascade), domain edit
+- `src/adr/` — create, status change, domain/scope/source-files edits,
+  supersession (bidirectional + cycle detection), amend, seal, conflicts
+- `src/tc/` — create, status change, runner config
+- `src/status/` — project summary, untested/failing feature lists
+- `src/request/` — the unified atomic-write pipeline (pre-existing)
+
+**Command adapters (`src/commands/<cmd>.rs`)** — thin:
+- Return `CmdResult = Result<Output, ProductError>` (not `BoxResult`).
+- Load graph via `shared::load_graph_typed()`, acquire lock via
+  `shared::acquire_write_lock_typed()` when writing.
+- Call the slice's `plan_*` + `apply_*` (for writes) or `build_*` +
+  `render_*_text` (for reads), then wrap in `Output::text(...)` /
+  `Output::both { text, json }`. Never call `println!`.
+- Wire into `dispatch()` in `commands/mod.rs` via `render(...)` which
+  handles the format flag and error conversion.
+
+**Handlers that remain on `BoxResult`** are not legacy — they're intentional.
+Keep them that way when:
+- The handler prints continuous progress during a long operation
+  (`implement`, `author`, `init`, `onboard`, `migrate`, `mcp`).
+- The handler has exit-code semantics that `CmdResult` cannot express, such
+  as exit 2 for "warning-only" states (`dep check`, `preflight`).
+- The handler is an interactive flow that reads stdin mid-computation
+  (`feature link` with TC-inference prompts, `feature acknowledge`).
+- The handler is a trivial wrapper (`completions`, `hooks`, `schema`) where
+  `Output::Empty` wrapping is pure churn.
+
+Migrate a `BoxResult` handler only when you have a reason: adding JSON
+parity, extracting a pure function for unit testing, or fixing a bug where
+the pure/I/O split makes the fix cleaner.
+
 ## Adding a New Command
 
-1. Add the clap subcommand in `main.rs` (Commands enum or sub-enum)
-2. Add the handler function in `main.rs` (or a new module if >200 lines)
-3. Wire up in the match block in `main()`
-4. Add unit tests in the same module
-5. Add integration tests in `tests/integration.rs`
-6. Create TC-XXX doc in `docs/tests/` if the feature has a formal test criterion
-7. **Add runner config to every TC** — see "TC Runner Configuration" below
+1. Add the clap subcommand in `src/commands/<cmd>.rs` and re-export from
+   `commands/mod.rs`.
+2. If the command has non-trivial logic, create a slice at `src/<cmd>/`
+   following the Slice + Adapter pattern above.
+3. Implement the handler as a thin adapter returning `CmdResult`.
+4. Wire into the match block in `dispatch()` via `render(...)`.
+5. Add unit tests on the pure slice functions (in `src/<cmd>/tests.rs`).
+6. Add integration tests in `tests/integration/` with `assert_cmd`.
+7. Create TC-XXX doc in `docs/tests/` if the feature has a formal test
+   criterion. **Add runner config to every TC** — see section below.
 
 ## TC Runner Configuration
 
@@ -122,9 +180,11 @@ Rules:
 
 ## Adding a New Module
 
-1. Create `src/foo.rs`
+1. Create `src/foo.rs` (or `src/foo/mod.rs` for a multi-file slice)
 2. Add `pub mod foo;` in `src/lib.rs`
-3. Add `use product_lib::foo;` in `src/main.rs` as needed
+3. Consume from command adapters via `use product_lib::foo;`
+4. Keep the first `//!` doc line free of the word "and" (SRP fitness test)
+5. Keep every file under 400 lines (file-length fitness test)
 
 ## Test Organization
 

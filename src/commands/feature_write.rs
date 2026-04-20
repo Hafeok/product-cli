@@ -1,37 +1,27 @@
 //! Feature write operations — creation, linking, status changes.
+//!
+//! Migrated handlers (`feature_new`, `feature_status`, `feature_domain`) are
+//! thin adapters over pure planning functions in `product_lib::feature`.
+//! Legacy handlers (`feature_link`, `feature_acknowledge`) still use BoxResult
+//! and print directly; migrate them when touching.
 
-use product_lib::{domains, error::ProductError, fileops, graph, parser, types};
+use product_lib::{domains, error::ProductError, feature as feat, fileops, graph, parser, types};
 use std::io::{self, BufRead, IsTerminal, Write};
 
-use super::{acquire_write_lock, load_graph, BoxResult};
+use super::{acquire_write_lock, acquire_write_lock_typed, load_graph, load_graph_typed, BoxResult, CmdResult, Output};
 
-pub(crate) fn feature_new(title: &str, phase: u32) -> BoxResult {
-    let _lock = acquire_write_lock()?;
-    let (config, root, graph) = load_graph()?;
+pub(crate) fn feature_new(title: &str, phase: u32) -> CmdResult {
+    let _lock = acquire_write_lock_typed()?;
+    let (config, root, graph) = load_graph_typed()?;
     let existing: Vec<String> = graph.features.keys().cloned().collect();
-    let id = parser::next_id(&config.prefixes.feature, &existing);
-    let filename = parser::id_to_filename(&id, title);
-    let dir = config.resolve_path(&root, &config.paths.features);
-    std::fs::create_dir_all(&dir)?;
-    let path = dir.join(&filename);
-
-    let front = types::FeatureFrontMatter {
-        id: id.clone(),
-        title: title.to_string(),
-        phase,
-        status: types::FeatureStatus::Planned,
-        depends_on: vec![],
-        adrs: vec![],
-        tests: vec![],
-        domains: vec![],
-        domains_acknowledged: std::collections::HashMap::new(),
-        bundle: None,
-    };
-    let body = format!("## Description\n\n[Describe {} here.]\n", title);
-    let content = parser::render_feature(&front, &body);
-    fileops::write_file_atomic(&path, &content)?;
-    println!("Created: {} at {}", id, path.display());
-    Ok(())
+    let plan = feat::plan_create(title, phase, &existing, &config.prefixes.feature)?;
+    let target_dir = config.resolve_path(&root, &config.paths.features);
+    let path = feat::apply_create(&plan, &target_dir)?;
+    Ok(Output::text(format!(
+        "Created: {} at {}",
+        plan.id,
+        path.display()
+    )))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -232,47 +222,28 @@ fn link_dep(
     Ok(false)
 }
 
-pub(crate) fn feature_status(id: &str, new_status: &str) -> BoxResult {
-    let _lock = acquire_write_lock()?;
-    let (_, _, graph) = load_graph()?;
-    let f = graph
-        .features
-        .get(id)
-        .ok_or_else(|| ProductError::NotFound(format!("feature {}", id)))?;
+pub(crate) fn feature_status(id: &str, new_status: &str) -> CmdResult {
+    let _lock = acquire_write_lock_typed()?;
+    let (_, _, graph) = load_graph_typed()?;
 
     let status: types::FeatureStatus = new_status
         .parse()
-        .map_err(|e: String| ProductError::ConfigError(e))?;
+        .map_err(ProductError::ConfigError)?;
 
-    let mut front = f.front.clone();
-    front.status = status;
-    let content = parser::render_feature(&front, &f.body);
-    fileops::write_file_atomic(&f.path, &content)?;
-    println!("{} status -> {}", id, status);
+    let plan = feat::plan_status_change(&graph, id, status)?;
+    feat::apply_status_change(&plan)?;
 
-    // ADR-010: Auto-orphan tests on feature abandonment
-    if status == types::FeatureStatus::Abandoned {
-        orphan_tests_for_abandoned_feature(id, f, &graph)?;
-    }
-    Ok(())
-}
-
-fn orphan_tests_for_abandoned_feature(
-    id: &str,
-    f: &types::Feature,
-    graph: &graph::KnowledgeGraph,
-) -> BoxResult {
-    println!("Auto-orphaning test criteria linked to abandoned feature:");
-    for test_id in &f.front.tests {
-        if let Some(tc) = graph.tests.get(test_id.as_str()) {
-            let mut test_front = tc.front.clone();
-            test_front.validates.features.retain(|fid| fid != id);
-            let test_content = parser::render_test(&test_front, &tc.body);
-            fileops::write_file_atomic(&tc.path, &test_content)?;
-            println!("  {} — removed {} from validates.features", test_id, id);
+    let mut lines = vec![format!("{} status -> {}", id, status)];
+    if !plan.orphaned_tests.is_empty() {
+        lines.push("Auto-orphaning test criteria linked to abandoned feature:".to_string());
+        for upd in &plan.orphaned_tests {
+            lines.push(format!(
+                "  {} — removed {} from validates.features",
+                upd.test_id, id
+            ));
         }
     }
-    Ok(())
+    Ok(Output::text(lines.join("\n")))
 }
 
 pub(crate) fn feature_acknowledge(
@@ -344,42 +315,14 @@ pub(crate) fn feature_domain(
     id: &str,
     add: Vec<String>,
     remove: Vec<String>,
-) -> BoxResult {
-    let _lock = acquire_write_lock()?;
-    let (config, _, graph) = load_graph()?;
-    let feature = graph
-        .features
-        .get(id)
-        .ok_or_else(|| ProductError::NotFound(format!("feature {}", id)))?;
-
-    // Validate domains against vocabulary (E012)
-    for domain in &add {
-        if !config.domains.contains_key(domain) {
-            return Err(Box::new(ProductError::ConfigError(format!(
-                "error[E012]: unknown domain '{}'\n   = hint: check [domains] vocabulary in product.toml",
-                domain
-            ))));
-        }
-    }
-
-    let mut front = feature.front.clone();
-
-    // Add domains (idempotent — skip duplicates)
-    for domain in &add {
-        if !front.domains.contains(domain) {
-            front.domains.push(domain.clone());
-        }
-    }
-
-    // Remove domains (idempotent — no-op if not present)
-    for domain in &remove {
-        front.domains.retain(|d| d != domain);
-    }
-
-    front.domains.sort();
-
-    let content = parser::render_feature(&front, &feature.body);
-    fileops::write_file_atomic(&feature.path, &content)?;
-    println!("{} domains: [{}]", id, front.domains.join(", "));
-    Ok(())
+) -> CmdResult {
+    let _lock = acquire_write_lock_typed()?;
+    let (config, _, graph) = load_graph_typed()?;
+    let plan = feat::plan_domain_edit(&config, &graph, id, &add, &remove)?;
+    feat::apply_domain_edit(&plan)?;
+    Ok(Output::text(format!(
+        "{} domains: [{}]",
+        id,
+        plan.final_domains.join(", ")
+    )))
 }

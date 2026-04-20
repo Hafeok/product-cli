@@ -1,86 +1,63 @@
-//! ADR sealing — amend + rehash handlers.
+//! Thin adapters for ADR sealing — amend, rehash.
 
-use product_lib::{error::ProductError, fileops, hash, parser, types};
+use product_lib::{adr, error::ProductError};
 
-use super::{acquire_write_lock, load_graph, BoxResult};
+use super::{acquire_write_lock_typed, load_graph_typed, CmdResult, Output};
 
-pub fn adr_amend(id: &str, reason: Option<String>) -> BoxResult {
+pub fn adr_amend(id: &str, reason: Option<String>) -> CmdResult {
     let reason = reason.ok_or_else(|| {
         ProductError::ConfigError("--reason is required for amendments".to_string())
     })?;
-    let _lock = acquire_write_lock()?;
-    let (_, _, graph) = load_graph()?;
-    let a = graph
-        .adrs
-        .get(id)
-        .ok_or_else(|| ProductError::NotFound(format!("ADR {}", id)))?;
-
-    let (new_hash, amendment) = hash::amend_adr(a, &reason)?;
-
-    let mut front = a.front.clone();
-    front.content_hash = Some(new_hash.clone());
-    front.amendments.push(amendment);
-
-    let content = parser::render_adr(&front, &a.body);
-    fileops::write_file_atomic(&a.path, &content)?;
-    println!("{} amended: content-hash updated to {}", id, new_hash);
-    Ok(())
+    let _lock = acquire_write_lock_typed()?;
+    let (_, _, graph) = load_graph_typed()?;
+    let plan = adr::plan_amend(&graph, id, &reason)?;
+    adr::apply_amend(&plan)?;
+    Ok(Output::text(format!(
+        "{} amended: content-hash updated to {}",
+        id, plan.new_hash
+    )))
 }
 
-pub fn adr_rehash(id: Option<String>, all: bool) -> BoxResult {
-    let _lock = acquire_write_lock()?;
-    let (_, _, graph) = load_graph()?;
-
+pub fn adr_rehash(id: Option<String>, all: bool) -> CmdResult {
+    let _lock = acquire_write_lock_typed()?;
+    let (_, _, graph) = load_graph_typed()?;
     if all {
-        rehash_all(&graph)?;
+        let ids = adr::unsealed_accepted_ids(&graph);
+        let total_already_sealed = graph
+            .adrs
+            .values()
+            .filter(|a| {
+                a.front.status == product_lib::types::AdrStatus::Accepted
+                    && a.front.content_hash.is_some()
+            })
+            .count();
+        let mut lines: Vec<String> = Vec::new();
+        let mut sealed = 0;
+        for adr_id in &ids {
+            if let Some(plan) = adr::plan_seal(&graph, adr_id)? {
+                adr::apply_seal(&plan)?;
+                lines.push(format!("  sealed {} -> {}", plan.adr_id, plan.new_hash));
+                sealed += 1;
+            }
+        }
+        lines.push(format!(
+            "{} ADR(s) sealed, {} already sealed",
+            sealed, total_already_sealed
+        ));
+        Ok(Output::text(lines.join("\n")))
     } else {
-        rehash_single(id, &graph)?;
-    }
-    Ok(())
-}
-
-fn rehash_all(graph: &product_lib::graph::KnowledgeGraph) -> BoxResult {
-    let mut sealed = 0;
-    let mut skipped = 0;
-    let mut adrs: Vec<&types::Adr> = graph.adrs.values().collect();
-    adrs.sort_by_key(|a| &a.front.id);
-    for a in adrs {
-        if a.front.status != types::AdrStatus::Accepted {
-            continue;
+        let adr_id = id.ok_or_else(|| {
+            ProductError::ConfigError("specify an ADR ID or use --all".to_string())
+        })?;
+        match adr::plan_seal(&graph, &adr_id)? {
+            None => Ok(Output::text(format!("{} is already sealed", adr_id))),
+            Some(plan) => {
+                adr::apply_seal(&plan)?;
+                Ok(Output::text(format!(
+                    "{} sealed: content-hash = {}",
+                    adr_id, plan.new_hash
+                )))
+            }
         }
-        if a.front.content_hash.is_some() {
-            skipped += 1;
-            continue;
-        }
-        let h = hash::seal_adr(a)?;
-        let mut front = a.front.clone();
-        front.content_hash = Some(h.clone());
-        let content = parser::render_adr(&front, &a.body);
-        fileops::write_file_atomic(&a.path, &content)?;
-        println!("  sealed {} -> {}", a.front.id, h);
-        sealed += 1;
     }
-    println!("{} ADR(s) sealed, {} already sealed", sealed, skipped);
-    Ok(())
-}
-
-fn rehash_single(id: Option<String>, graph: &product_lib::graph::KnowledgeGraph) -> BoxResult {
-    let adr_id = id.ok_or_else(|| {
-        ProductError::ConfigError("specify an ADR ID or use --all".to_string())
-    })?;
-    let a = graph
-        .adrs
-        .get(&adr_id)
-        .ok_or_else(|| ProductError::NotFound(format!("ADR {}", adr_id)))?;
-    if a.front.content_hash.is_some() {
-        println!("{} is already sealed", adr_id);
-        return Ok(());
-    }
-    let h = hash::seal_adr(a)?;
-    let mut front = a.front.clone();
-    front.content_hash = Some(h.clone());
-    let content = parser::render_adr(&front, &a.body);
-    fileops::write_file_atomic(&a.path, &content)?;
-    println!("{} sealed: content-hash = {}", adr_id, h);
-    Ok(())
 }

@@ -1,10 +1,11 @@
-//! Dependency management commands (ADR-030)
+//! Dependency management commands (ADR-030) — thin read-only adapters.
 
 use clap::Subcommand;
+use product_lib::config::ProductConfig;
 use product_lib::error::ProductError;
-use product_lib::types::{DependencyStatus, DependencyType};
+use product_lib::types::{Dependency, DependencyStatus, DependencyType};
 
-use super::{load_graph, BoxResult};
+use super::{load_graph_typed, BoxResult, CmdResult, Output};
 
 #[derive(Subcommand)]
 pub enum DepCommands {
@@ -45,22 +46,35 @@ pub enum DepCommands {
 
 pub(crate) fn handle_dep(cmd: DepCommands, global_fmt: &str) -> BoxResult {
     match cmd {
-        DepCommands::List { r#type, status } => dep_list(r#type, status, global_fmt),
-        DepCommands::Show { id } => dep_show(&id, global_fmt),
-        DepCommands::Features { id } => dep_features(&id, global_fmt),
+        DepCommands::List { r#type, status } => {
+            super::render(dep_list(r#type, status), global_fmt)
+        }
+        DepCommands::Show { id } => super::render(dep_show(&id), global_fmt),
+        DepCommands::Features { id } => super::render(dep_features(&id), global_fmt),
         DepCommands::Check { id, all } => dep_check(id, all),
-        DepCommands::Bom { format } => dep_bom(format, global_fmt),
+        DepCommands::Bom { format } => {
+            let fmt = format.as_deref().unwrap_or(global_fmt);
+            super::render(dep_bom(), fmt)
+        }
     }
 }
 
-fn dep_list(type_filter: Option<String>, status_filter: Option<String>, fmt: &str) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
-    let type_enum: Option<DependencyType> = type_filter.as_deref()
-        .map(|s| s.parse::<DependencyType>()).transpose().map_err(ProductError::ConfigError)?;
-    let status_enum: Option<DependencyStatus> = status_filter.as_deref()
-        .map(|s| s.parse::<DependencyStatus>()).transpose().map_err(ProductError::ConfigError)?;
+fn dep_list(type_filter: Option<String>, status_filter: Option<String>) -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
+    let type_enum: Option<DependencyType> = type_filter
+        .as_deref()
+        .map(|s| s.parse::<DependencyType>())
+        .transpose()
+        .map_err(ProductError::ConfigError)?;
+    let status_enum: Option<DependencyStatus> = status_filter
+        .as_deref()
+        .map(|s| s.parse::<DependencyStatus>())
+        .transpose()
+        .map_err(ProductError::ConfigError)?;
 
-    let mut deps: Vec<_> = graph.dependencies.values()
+    let mut deps: Vec<&Dependency> = graph
+        .dependencies
+        .values()
         .filter(|d| {
             type_enum.is_none_or(|t| d.front.dep_type == t)
                 && status_enum.is_none_or(|s| d.front.status == s)
@@ -68,16 +82,98 @@ fn dep_list(type_filter: Option<String>, status_filter: Option<String>, fmt: &st
         .collect();
     deps.sort_by(|a, b| a.front.id.cmp(&b.front.id));
 
-    if fmt == "json" {
-        let arr: Vec<serde_json::Value> = deps.iter().map(|d| dep_to_json(d)).collect();
-        println!("{}", serde_json::to_string_pretty(&arr).unwrap_or_default());
+    let json = serde_json::Value::Array(deps.iter().map(|d| dep_to_json(d)).collect());
+    let text = render_dep_list_text(&deps);
+    Ok(Output::both(text, json))
+}
+
+fn dep_show(id: &str) -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
+    let dep = graph
+        .dependencies
+        .get(id)
+        .ok_or_else(|| ProductError::NotFound(format!("dependency {}", id)))?;
+    let json = serde_json::json!({
+        "id": dep.front.id, "title": dep.front.title,
+        "type": dep.front.dep_type.to_string(), "source": dep.front.source,
+        "version": dep.front.version, "status": dep.front.status.to_string(),
+        "features": dep.front.features, "adrs": dep.front.adrs,
+        "availability-check": dep.front.availability_check,
+        "breaking-change-risk": dep.front.breaking_change_risk,
+        "interface": dep.front.interface.as_ref().map(|i| serde_json::to_value(i).unwrap_or_default()),
+    });
+    let text = render_dep_show_text(dep);
+    Ok(Output::both(text, json))
+}
+
+fn dep_features(id: &str) -> CmdResult {
+    let (_, _, graph) = load_graph_typed()?;
+    let dep = graph
+        .dependencies
+        .get(id)
+        .ok_or_else(|| ProductError::NotFound(format!("dependency {}", id)))?;
+    let mut text = format!("Features using {}:\n", dep.front.id);
+    for fid in &dep.front.features {
+        let title = graph
+            .features
+            .get(fid)
+            .map(|f| f.front.title.as_str())
+            .unwrap_or("(unknown)");
+        text.push_str(&format!("  {} \u{2014} {}\n", fid, title));
+    }
+    let json = serde_json::to_value(&dep.front.features).unwrap_or(serde_json::Value::Null);
+    Ok(Output::both(text, json))
+}
+
+/// Left as `BoxResult` because availability-check failure has exit-code-2
+/// semantics that the `CmdResult`/`ProductError` surface cannot express.
+/// Prints progress to stdout directly.
+fn dep_check(id: Option<String>, all: bool) -> BoxResult {
+    let (_, _, graph) = load_graph_typed()?;
+    let deps_to_check: Vec<&Dependency> = if all {
+        let mut d: Vec<_> = graph.dependencies.values().collect();
+        d.sort_by(|a, b| a.front.id.cmp(&b.front.id));
+        d
+    } else if let Some(ref dep_id) = id {
+        vec![graph
+            .dependencies
+            .get(dep_id)
+            .ok_or_else(|| ProductError::NotFound(format!("dependency {}", dep_id)))?]
     } else {
-        dep_list_text(&deps);
+        return Err(Box::new(ProductError::ConfigError(
+            "provide a dependency ID or use --all".to_string(),
+        )));
+    };
+
+    let mut any_failed = false;
+    for dep in &deps_to_check {
+        let (line, failed) = run_single_check(dep);
+        println!("{}", line);
+        any_failed |= failed;
+    }
+    if any_failed {
+        std::process::exit(2);
     }
     Ok(())
 }
 
-fn dep_to_json(d: &product_lib::types::Dependency) -> serde_json::Value {
+fn dep_bom() -> CmdResult {
+    let (config, _, graph) = load_graph_typed()?;
+    let mut deps: Vec<&Dependency> = graph.dependencies.values().collect();
+    deps.sort_by(|a, b| a.front.id.cmp(&b.front.id));
+    let arr: Vec<serde_json::Value> = deps.iter().map(|d| dep_to_json(d)).collect();
+    let json = serde_json::json!({
+        "product": config.name,
+        "dependencies": arr,
+        "total": deps.len(),
+    });
+    let text = render_dep_bom_text(&config, &deps);
+    Ok(Output::both(text, json))
+}
+
+// ---- pure renderers ------------------------------------------------------
+
+fn dep_to_json(d: &Dependency) -> serde_json::Value {
     serde_json::json!({
         "id": d.front.id,
         "title": d.front.title,
@@ -89,156 +185,140 @@ fn dep_to_json(d: &product_lib::types::Dependency) -> serde_json::Value {
     })
 }
 
-fn dep_list_text(deps: &[&product_lib::types::Dependency]) {
-    println!("{:<10} {:<30} {:<10} {:<15} STATUS", "ID", "TITLE", "TYPE", "VERSION");
-    println!("{}", "-".repeat(75));
+fn render_dep_list_text(deps: &[&Dependency]) -> String {
+    let mut out = String::new();
+    out.push_str(&format!(
+        "{:<10} {:<30} {:<10} {:<15} STATUS\n",
+        "ID", "TITLE", "TYPE", "VERSION"
+    ));
+    out.push_str(&"-".repeat(75));
+    out.push('\n');
     for d in deps {
         let version = d.front.version.as_deref().unwrap_or("~");
-        println!("{:<10} {:<30} {:<10} {:<15} {}", d.front.id, d.front.title, d.front.dep_type, version, d.front.status);
+        out.push_str(&format!(
+            "{:<10} {:<30} {:<10} {:<15} {}\n",
+            d.front.id, d.front.title, d.front.dep_type, version, d.front.status
+        ));
     }
+    out
 }
 
-fn dep_show(id: &str, fmt: &str) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
-    let dep = graph.dependencies.get(id)
-        .ok_or_else(|| ProductError::NotFound(format!("dependency {}", id)))?;
-    if fmt == "json" {
-        let obj = serde_json::json!({
-            "id": dep.front.id, "title": dep.front.title,
-            "type": dep.front.dep_type.to_string(), "source": dep.front.source,
-            "version": dep.front.version, "status": dep.front.status.to_string(),
-            "features": dep.front.features, "adrs": dep.front.adrs,
-            "availability-check": dep.front.availability_check,
-            "breaking-change-risk": dep.front.breaking_change_risk,
-            "interface": dep.front.interface.as_ref().map(|i| serde_json::to_value(i).unwrap_or_default()),
-        });
-        println!("{}", serde_json::to_string_pretty(&obj).unwrap_or_default());
-    } else {
-        dep_show_text(dep);
-    }
-    Ok(())
-}
-
-fn dep_show_text(dep: &product_lib::types::Dependency) {
-    println!("{} \u{2014} {}", dep.front.id, dep.front.title);
-    println!("  Type:    {}", dep.front.dep_type);
-    println!("  Version: {}", dep.front.version.as_deref().unwrap_or("~"));
-    println!("  Status:  {}", dep.front.status);
-    println!("  Risk:    {}", dep.front.breaking_change_risk);
+fn render_dep_show_text(dep: &Dependency) -> String {
+    let mut out = format!("{} \u{2014} {}\n", dep.front.id, dep.front.title);
+    out.push_str(&format!("  Type:    {}\n", dep.front.dep_type));
+    out.push_str(&format!(
+        "  Version: {}\n",
+        dep.front.version.as_deref().unwrap_or("~")
+    ));
+    out.push_str(&format!("  Status:  {}\n", dep.front.status));
+    out.push_str(&format!("  Risk:    {}\n", dep.front.breaking_change_risk));
     if !dep.front.features.is_empty() {
-        println!("  Features: {}", dep.front.features.join(", "));
+        out.push_str(&format!("  Features: {}\n", dep.front.features.join(", ")));
     }
     if !dep.front.adrs.is_empty() {
-        println!("  ADRs:    {}", dep.front.adrs.join(", "));
+        out.push_str(&format!("  ADRs:    {}\n", dep.front.adrs.join(", ")));
     }
     if let Some(ref check) = dep.front.availability_check {
-        println!("  Check:   {}", check);
+        out.push_str(&format!("  Check:   {}\n", check));
     }
+    out
 }
 
-fn dep_features(id: &str, fmt: &str) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
-    let dep = graph.dependencies.get(id)
-        .ok_or_else(|| ProductError::NotFound(format!("dependency {}", id)))?;
-    if fmt == "json" {
-        println!("{}", serde_json::to_string_pretty(&dep.front.features).unwrap_or_default());
-    } else {
-        println!("Features using {}:", dep.front.id);
-        for fid in &dep.front.features {
-            let title = graph.features.get(fid).map(|f| f.front.title.as_str()).unwrap_or("(unknown)");
-            println!("  {} \u{2014} {}", fid, title);
-        }
+fn render_dep_bom_text(config: &ProductConfig, deps: &[&Dependency]) -> String {
+    let mut out = format!(
+        "Dependency Bill of Materials \u{2014} {} v{}\n\n",
+        config.name, config.version
+    );
+    for (dep_type, label) in &BOM_TYPES {
+        append_bom_section(&mut out, deps, *dep_type, label);
     }
-    Ok(())
+    append_bom_summary(&mut out, deps);
+    out
 }
 
-fn dep_check(id: Option<String>, all: bool) -> BoxResult {
-    let (_, _, graph) = load_graph()?;
-    let deps_to_check: Vec<&product_lib::types::Dependency> = if all {
-        let mut d: Vec<_> = graph.dependencies.values().collect();
-        d.sort_by(|a, b| a.front.id.cmp(&b.front.id));
-        d
-    } else if let Some(ref dep_id) = id {
-        vec![graph.dependencies.get(dep_id)
-            .ok_or_else(|| ProductError::NotFound(format!("dependency {}", dep_id)))?]
-    } else {
-        return Err(Box::new(ProductError::ConfigError("provide a dependency ID or use --all".into())));
-    };
-    let mut any_failed = false;
-    for dep in &deps_to_check {
-        any_failed |= run_single_check(dep);
+const BOM_TYPES: [(DependencyType, &str); 6] = [
+    (DependencyType::Library, "Libraries (build-time)"),
+    (DependencyType::Service, "Services (runtime)"),
+    (DependencyType::Api, "APIs (external)"),
+    (DependencyType::Tool, "Tools (CLI)"),
+    (DependencyType::Runtime, "Runtimes"),
+    (DependencyType::Hardware, "Hardware"),
+];
+
+fn append_bom_section(out: &mut String, deps: &[&Dependency], dep_type: DependencyType, label: &str) {
+    let typed: Vec<&&Dependency> = deps.iter().filter(|d| d.front.dep_type == dep_type).collect();
+    if typed.is_empty() {
+        return;
     }
-    if any_failed { std::process::exit(2); }
-    Ok(())
+    out.push_str(&format!("{}:\n", label));
+    for d in &typed {
+        let v = d.front.version.as_deref().unwrap_or("~");
+        let s = d.front.source.as_deref().unwrap_or("\u{2014}");
+        out.push_str(&format!(
+            "  {:<10} {:<25} {:<15} {:<15} {}\n",
+            d.front.id, d.front.title, v, s, d.front.status
+        ));
+    }
+    out.push('\n');
 }
 
-fn run_single_check(dep: &product_lib::types::Dependency) -> bool {
-    match &dep.front.availability_check {
-        None => {
-            println!("  {}  {} [no check]  \u{2713}", dep.front.id, dep.front.title);
-            false
-        }
-        Some(check_cmd) => {
-            let ok = std::process::Command::new("sh").args(["-c", check_cmd])
-                .stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null())
-                .status().map(|s| s.success()).unwrap_or(false);
-            if ok {
-                println!("  {}  {} [check passed]  \u{2713}", dep.front.id, dep.front.title);
-            } else {
-                println!("  {}  {} [check FAILED]  \u{2717}", dep.front.id, dep.front.title);
-            }
-            !ok
-        }
-    }
-}
-
-fn dep_bom(format: Option<String>, global_fmt: &str) -> BoxResult {
-    let (config, _, graph) = load_graph()?;
-    let fmt = format.as_deref().unwrap_or(global_fmt);
-    let mut deps: Vec<_> = graph.dependencies.values().collect();
-    deps.sort_by(|a, b| a.front.id.cmp(&b.front.id));
-
-    if fmt == "json" {
-        dep_bom_json(&config, &deps);
-    } else {
-        dep_bom_text(&config, &deps);
-    }
-    Ok(())
-}
-
-fn dep_bom_json(config: &product_lib::config::ProductConfig, deps: &[&product_lib::types::Dependency]) {
-    let arr: Vec<serde_json::Value> = deps.iter().map(|d| dep_to_json(d)).collect();
-    let bom = serde_json::json!({ "product": config.name, "dependencies": arr, "total": deps.len() });
-    println!("{}", serde_json::to_string_pretty(&bom).unwrap_or_default());
-}
-
-fn dep_bom_text(config: &product_lib::config::ProductConfig, deps: &[&product_lib::types::Dependency]) {
-    println!("Dependency Bill of Materials \u{2014} {} v{}", config.name, config.version);
-    println!();
-    let types_and_labels = [
-        (DependencyType::Library, "Libraries (build-time)"),
-        (DependencyType::Service, "Services (runtime)"),
-        (DependencyType::Api, "APIs (external)"),
-        (DependencyType::Tool, "Tools (CLI)"),
-        (DependencyType::Runtime, "Runtimes"),
-        (DependencyType::Hardware, "Hardware"),
-    ];
-    for (dep_type, label) in &types_and_labels {
-        let typed: Vec<_> = deps.iter().filter(|d| d.front.dep_type == *dep_type).collect();
-        if typed.is_empty() { continue; }
-        println!("{}:", label);
-        for d in &typed {
-            let v = d.front.version.as_deref().unwrap_or("~");
-            let s = d.front.source.as_deref().unwrap_or("\u{2014}");
-            println!("  {:<10} {:<25} {:<15} {:<15} {}", d.front.id, d.front.title, v, s, d.front.status);
-        }
-        println!();
-    }
+fn append_bom_summary(out: &mut String, deps: &[&Dependency]) {
     let type_count: std::collections::HashSet<_> = deps.iter().map(|d| d.front.dep_type).collect();
-    println!("Total: {} dependencies across {} types", deps.len(), type_count.len());
-    let risk: Vec<_> = ["high", "medium", "low"].iter().filter_map(|r| {
-        let n = deps.iter().filter(|d| d.front.breaking_change_risk == *r).count();
-        if n > 0 { Some(format!("{} {}", n, r)) } else { None }
-    }).collect();
-    if !risk.is_empty() { println!("Breaking change risk: {}", risk.join(", ")); }
+    out.push_str(&format!(
+        "Total: {} dependencies across {} types\n",
+        deps.len(),
+        type_count.len()
+    ));
+    let risk: Vec<_> = ["high", "medium", "low"]
+        .iter()
+        .filter_map(|r| {
+            let n = deps.iter().filter(|d| d.front.breaking_change_risk == *r).count();
+            if n > 0 {
+                Some(format!("{} {}", n, r))
+            } else {
+                None
+            }
+        })
+        .collect();
+    if !risk.is_empty() {
+        out.push_str(&format!("Breaking change risk: {}\n", risk.join(", ")));
+    }
+}
+
+fn run_single_check(dep: &Dependency) -> (String, bool) {
+    match &dep.front.availability_check {
+        None => (
+            format!(
+                "  {}  {} [no check]  \u{2713}",
+                dep.front.id, dep.front.title
+            ),
+            false,
+        ),
+        Some(check_cmd) => {
+            let ok = std::process::Command::new("sh")
+                .args(["-c", check_cmd])
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .status()
+                .map(|s| s.success())
+                .unwrap_or(false);
+            if ok {
+                (
+                    format!(
+                        "  {}  {} [check passed]  \u{2713}",
+                        dep.front.id, dep.front.title
+                    ),
+                    false,
+                )
+            } else {
+                (
+                    format!(
+                        "  {}  {} [check FAILED]  \u{2717}",
+                        dep.front.id, dep.front.title
+                    ),
+                    true,
+                )
+            }
+        }
+    }
 }
