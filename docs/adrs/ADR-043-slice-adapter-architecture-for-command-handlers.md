@@ -1,7 +1,7 @@
 ---
 id: ADR-043
 title: Slice + Adapter Architecture for Command Handlers
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
@@ -10,6 +10,7 @@ domains:
 - testability
 - error-handling
 scope: cross-cutting
+content-hash: sha256:73fb825ad51d0bd3d6fd755c0888ef3d5d5487fa9fa2cbce948e32ef1ac30947
 ---
 
 **Status:** Proposed
