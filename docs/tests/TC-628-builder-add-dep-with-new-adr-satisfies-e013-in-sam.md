@@ -2,13 +2,17 @@
 id: TC-628
 title: builder_add_dep_with_new_adr_satisfies_e013_in_same_step
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-052
   adrs:
   - ADR-044
 phase: 5
+runner: cargo-test
+runner-args: "tc_628_builder_add_dep_with_new_adr_satisfies_e013_in_same_step"
+last-run: 2026-04-21T12:40:57.330357420+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session — builder-add-dep-with-new-adr-closes-e013

@@ -76,3 +76,7 @@ mod st_140_mcp_adr_lifecycle;
 // FT-047 — Removal & Deprecation Tracking
 #[path = "sessions/st_147_removal_deprecation.rs"]
 mod st_147_removal_deprecation;
+
+// FT-052 — Product Request Builder
+#[path = "sessions/ft_052_builder.rs"]
+mod ft_052_builder;

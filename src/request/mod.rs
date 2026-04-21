@@ -6,6 +6,7 @@
 //! `docs/product-request-spec.md`.
 
 pub mod apply;
+pub mod builder;
 pub mod log;
 pub mod parse;
 pub mod types;

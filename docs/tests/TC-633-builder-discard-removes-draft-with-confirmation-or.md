@@ -2,13 +2,17 @@
 id: TC-633
 title: builder_discard_removes_draft_with_confirmation_or_force
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-052
   adrs:
   - ADR-044
 phase: 5
+runner: cargo-test
+runner-args: "tc_633_builder_discard_removes_draft_with_confirmation_or_force"
+last-run: 2026-04-21T12:40:57.330357420+00:00
+last-run-duration: 0.3s
 ---
 
 ## Session — builder-discard-removes-draft

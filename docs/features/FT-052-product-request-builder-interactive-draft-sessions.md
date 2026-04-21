@@ -2,7 +2,7 @@
 id: FT-052
 title: Product Request Builder — Interactive Draft Sessions
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-038
 - FT-041
@@ -25,8 +25,8 @@ domains:
 - data-model
 - error-handling
 domains-acknowledged:
-  ADR-040: The builder reuses the existing `product request apply` pipeline verbatim for submit; it adds no new stage to the unified verify pipeline and no new hooks at the LLM boundary — incremental validation is structural-only and intentionally stays off the LLM side of the knowledge boundary.
   ADR-043: 'Implementation follows the slice + adapter pattern: a new `src/request/builder/` slice with pure `plan_*` planners and a thin `src/commands/request.rs` dispatch extension — no deviation from ADR-043.'
+  ADR-040: The builder reuses the existing `product request apply` pipeline verbatim for submit; it adds no new stage to the unified verify pipeline and no new hooks at the LLM boundary — incremental validation is structural-only and intentionally stays off the LLM side of the knowledge boundary.
   ADR-042: Consumed unchanged — when the user runs `add tc`, the builder validates `tc-type` against the ADR-042 structural/built-in-descriptive/custom partition; it does not extend the partition or introduce new TC types.
   ADR-041: The builder does not introduce absence TCs and does not interact with ADR removes/deprecates lifecycle fields; draft artifacts are ordinary create/change requests against the existing schema.
 ---

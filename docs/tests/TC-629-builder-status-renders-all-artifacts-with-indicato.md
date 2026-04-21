@@ -2,13 +2,17 @@
 id: TC-629
 title: builder_status_renders_all_artifacts_with_indicators_and_counts
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-052
   adrs:
   - ADR-044
 phase: 5
+runner: cargo-test
+runner-args: "tc_629_builder_status_renders_all_artifacts_with_indicators_and_counts"
+last-run: 2026-04-21T12:40:57.330357420+00:00
+last-run-duration: 0.3s
 ---
 
 ## Session — builder-status-shows-indicators

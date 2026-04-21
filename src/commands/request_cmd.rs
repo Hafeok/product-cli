@@ -6,8 +6,14 @@ use product_lib::fileops;
 use product_lib::request::{self, ApplyOptions};
 use std::path::{Path, PathBuf};
 
-use super::BoxResult;
+use super::request_builder_add::AddCommands as BuilderAddCommands;
+use super::request_builder_cmd::{self, BuilderCommands};
+use super::request_cmd_helpers::{
+    dedup_findings, print_apply_summary, print_findings, print_json_result, resolve_file_or_draft,
+    run_git_commit,
+};
 use super::request_log_cmd::{self, LogCommands};
+use super::BoxResult;
 
 #[derive(Subcommand)]
 pub enum RequestCommands {
@@ -17,8 +23,8 @@ pub enum RequestCommands {
     Change,
     /// Validate a request YAML without writing — reports every finding
     Validate {
-        /// Path to the request YAML file
-        file: PathBuf,
+        /// Path to the request YAML file (defaults to the active draft)
+        file: Option<PathBuf>,
     },
     /// Validate and apply a request atomically
     Apply {
@@ -30,11 +36,42 @@ pub enum RequestCommands {
     },
     /// Show what would change without writing
     Diff {
-        /// Path to the request YAML file
-        file: PathBuf,
+        /// Path to the request YAML file (defaults to the active draft)
+        file: Option<PathBuf>,
     },
     /// List draft YAML files under .product/requests/
     Draft,
+    /// Start a new interactive draft session (FT-052)
+    New {
+        /// Draft kind: "create" or "change"
+        kind: String,
+    },
+    /// Resume the active interactive draft session (FT-052)
+    #[command(name = "continue")]
+    Continue,
+    /// Remove the active interactive draft (FT-052)
+    Discard {
+        /// Skip confirmation
+        #[arg(long)]
+        force: bool,
+    },
+    /// Show the active draft's state with per-artifact indicators (FT-052)
+    Status,
+    /// Print the raw draft YAML to stdout (FT-052)
+    Show,
+    /// Submit the active draft — validate, apply, archive (FT-052)
+    Submit {
+        /// Submit through warnings without prompting
+        #[arg(long)]
+        force: bool,
+    },
+    /// Open the active draft in `$EDITOR` (FT-052)
+    Edit,
+    /// Append an artifact or change to the active draft (FT-052)
+    Add {
+        #[command(subcommand)]
+        command: BuilderAddCommands,
+    },
     /// View / verify the hash-chained request log (FT-042)
     Log {
         #[command(subcommand)]
@@ -66,10 +103,28 @@ pub(crate) fn handle_request(cmd: RequestCommands, fmt: &str) -> BoxResult {
     match cmd {
         RequestCommands::Create => create_draft("create"),
         RequestCommands::Change => create_draft("change"),
-        RequestCommands::Validate { file } => validate(&file, fmt),
+        RequestCommands::Validate { file } => validate(file.as_deref(), fmt),
         RequestCommands::Apply { file, commit } => apply(&file, commit, fmt),
-        RequestCommands::Diff { file } => diff(&file, fmt),
+        RequestCommands::Diff { file } => diff(file.as_deref(), fmt),
         RequestCommands::Draft => list_drafts(),
+        RequestCommands::New { kind } => {
+            request_builder_cmd::handle_builder(BuilderCommands::New { kind })
+        }
+        RequestCommands::Continue => {
+            request_builder_cmd::handle_builder(BuilderCommands::Continue)
+        }
+        RequestCommands::Discard { force } => {
+            request_builder_cmd::handle_builder(BuilderCommands::Discard { force })
+        }
+        RequestCommands::Status => request_builder_cmd::handle_builder(BuilderCommands::Status),
+        RequestCommands::Show => request_builder_cmd::handle_builder(BuilderCommands::Show),
+        RequestCommands::Submit { force } => {
+            request_builder_cmd::handle_builder(BuilderCommands::Submit { force })
+        }
+        RequestCommands::Edit => request_builder_cmd::handle_builder(BuilderCommands::Edit),
+        RequestCommands::Add { command } => {
+            request_builder_cmd::handle_builder(BuilderCommands::Add { command })
+        }
         RequestCommands::Log { command } => request_log_cmd::handle_log(command, fmt),
         RequestCommands::Replay { full, to, output } => {
             request_log_cmd::handle_replay(full, to, output)
@@ -125,20 +180,22 @@ changes:
     Ok(())
 }
 
-fn validate(file: &Path, fmt: &str) -> BoxResult {
+fn validate(file: Option<&Path>, fmt: &str) -> BoxResult {
     let (config, root) = ProductConfig::discover()?;
+    let file = resolve_file_or_draft(file, &root)?;
 
-    // Load graph (for cross-reference checks)
     let features_dir = config.resolve_path(&root, &config.paths.features);
     let adrs_dir = config.resolve_path(&root, &config.paths.adrs);
     let tests_dir = config.resolve_path(&root, &config.paths.tests);
     let deps_dir = config.resolve_path(&root, &config.paths.dependencies);
-    let loaded = product_lib::parser::load_all_with_deps(&features_dir, &adrs_dir, &tests_dir, Some(&deps_dir))?;
+    let loaded = product_lib::parser::load_all_with_deps(
+        &features_dir, &adrs_dir, &tests_dir, Some(&deps_dir),
+    )?;
     let graph = product_lib::graph::KnowledgeGraph::build_with_deps(
         loaded.features, loaded.adrs, loaded.tests, loaded.dependencies,
     );
 
-    let request = match request::parse_request(file) {
+    let request = match request::parse_request(&file) {
         Ok(r) => r,
         Err(findings) => {
             print_findings(&findings, fmt);
@@ -149,16 +206,6 @@ fn validate(file: &Path, fmt: &str) -> BoxResult {
     let ctx = request::ValidationContext { config: &config, graph: &graph };
     let mut findings = request::validate_request(&request, &ctx);
 
-    // Collect ref names for dep-governance pass
-    let mut refs = std::collections::HashMap::new();
-    for a in &request.artifacts {
-        if let Some(ref n) = a.ref_name {
-            refs.insert(n.clone(), (a.artifact_type, a.index));
-        }
-    }
-    // This needs access to the private fn — use the apply module's facade.
-    // We re-run check_dep_governance by triggering a dry-run apply.
-
     let apply_result = request::apply_request(
         &request,
         &config,
@@ -166,7 +213,6 @@ fn validate(file: &Path, fmt: &str) -> BoxResult {
         ApplyOptions { dry_run: true, skip_git_identity: true },
     );
     findings.extend(apply_result.findings);
-    // Dedup
     dedup_findings(&mut findings);
 
     print_findings(&findings, fmt);
@@ -189,12 +235,7 @@ fn apply(file: &Path, commit: bool, fmt: &str) -> BoxResult {
         }
     };
 
-    let result = request::apply_request(
-        &request,
-        &config,
-        &root,
-        ApplyOptions::default(),
-    );
+    let result = request::apply_request(&request, &config, &root, ApplyOptions::default());
 
     if fmt == "json" {
         print_json_result(&result);
@@ -217,50 +258,16 @@ fn apply(file: &Path, commit: bool, fmt: &str) -> BoxResult {
     Ok(())
 }
 
-fn print_apply_summary(result: &request::ApplyResult) {
-    println!("\n  Applying:");
-    for c in &result.created {
-        println!("    {}  (new) -> {}", c.id, c.file);
-    }
-    for c in &result.changed {
-        println!("    {}  ({} mutation(s)) -> {}", c.id, c.mutations, c.file);
-    }
-    if result.graph_check_clean {
-        println!("\n  Graph check:  clean");
-    } else {
-        println!("\n  Graph check:  post-apply findings (inspect with `product graph check`)");
-    }
-    println!(
-        "  Done. {} created, {} changed.",
-        result.created.len(),
-        result.changed.len()
-    );
-}
-
-fn run_git_commit(root: &std::path::Path, reason: &str) {
-    let git = std::process::Command::new("git")
-        .args(["add", "-A"])
-        .current_dir(root)
-        .status();
-    if git.map(|s| s.success()).unwrap_or(false) {
-        let message = format!("product request apply\n\n{}", reason);
-        let _ = std::process::Command::new("git")
-            .args(["commit", "-m", &message])
-            .current_dir(root)
-            .status();
-    }
-}
-
-fn diff(file: &Path, fmt: &str) -> BoxResult {
+fn diff(file: Option<&Path>, fmt: &str) -> BoxResult {
     let (config, root) = ProductConfig::discover()?;
-    let request = match request::parse_request(file) {
+    let file = resolve_file_or_draft(file, &root)?;
+    let request = match request::parse_request(&file) {
         Ok(r) => r,
         Err(findings) => {
             print_findings(&findings, fmt);
             std::process::exit(1);
         }
     };
-    // Dry run: validate + show what would be applied without writing
     let result = request::apply_request(
         &request,
         &config,
@@ -289,12 +296,7 @@ fn list_drafts() -> BoxResult {
     }
     let mut entries: Vec<_> = std::fs::read_dir(&dir)?
         .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.path()
-                .extension()
-                .and_then(|x| x.to_str())
-                == Some("yaml")
-        })
+        .filter(|e| e.path().extension().and_then(|x| x.to_str()) == Some("yaml"))
         .collect();
     entries.sort_by_key(|e| {
         e.metadata()
@@ -328,38 +330,4 @@ fn list_drafts() -> BoxResult {
         }
     }
     Ok(())
-}
-
-fn print_findings(findings: &[product_lib::request::Finding], fmt: &str) {
-    if fmt == "json" {
-        let v = serde_json::json!({
-            "findings": findings,
-            "errors":   findings.iter().filter(|f| f.is_error()).count(),
-            "warnings": findings.iter().filter(|f| !f.is_error()).count(),
-        });
-        println!("{}", serde_json::to_string_pretty(&v).unwrap_or_default());
-        return;
-    }
-    for f in findings {
-        eprintln!("{}\n", f);
-    }
-}
-
-fn print_json_result(result: &product_lib::request::ApplyResult) {
-    let v = serde_json::json!({
-        "applied": result.applied,
-        "created": result.created,
-        "changed": result.changed,
-        "findings": result.findings,
-        "graph_check_clean": result.graph_check_clean,
-    });
-    println!("{}", serde_json::to_string_pretty(&v).unwrap_or_default());
-}
-
-fn dedup_findings(findings: &mut Vec<product_lib::request::Finding>) {
-    let mut seen: std::collections::HashSet<(String, String, String)> = std::collections::HashSet::new();
-    findings.retain(|f| {
-        let k = (f.code.clone(), f.location.clone(), f.message.clone());
-        seen.insert(k)
-    });
 }

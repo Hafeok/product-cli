@@ -2,13 +2,17 @@
 id: TC-630
 title: builder_submit_applies_and_archives_draft_on_success
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-052
   adrs:
   - ADR-044
 phase: 5
+runner: cargo-test
+runner-args: "tc_630_builder_submit_applies_and_archives_draft_on_success"
+last-run: 2026-04-21T12:40:57.330357420+00:00
+last-run-duration: 0.4s
 ---
 
 ## Session — builder-submit-archives-on-success

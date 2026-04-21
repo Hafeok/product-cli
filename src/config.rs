@@ -48,7 +48,36 @@ pub struct ProductConfig {
     /// TC type vocabulary (ADR-042, FT-048).
     #[serde(rename = "tc-types", default)]
     pub tc_types: TcTypesConfig,
+    /// Interactive request builder — `[request-builder]` (FT-052, ADR-044).
+    #[serde(rename = "request-builder", default)]
+    pub request_builder: RequestBuilderConfig,
 }
+
+/// `[request-builder]` section (FT-052, ADR-044).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RequestBuilderConfig {
+    /// Prompt for missing fields when stdin is a TTY.
+    #[serde(default = "default_true")]
+    pub interactive: bool,
+    /// How to handle W-class findings at submit time: always | warn | block.
+    #[serde(rename = "warn-on-warnings", default = "default_warn_policy")]
+    pub warn_on_warnings: String,
+    /// Optional `$EDITOR` override used by `product request edit`.
+    #[serde(default)]
+    pub editor: Option<String>,
+}
+
+impl Default for RequestBuilderConfig {
+    fn default() -> Self {
+        Self {
+            interactive: true,
+            warn_on_warnings: default_warn_policy(),
+            editor: None,
+        }
+    }
+}
+
+fn default_warn_policy() -> String { "warn".into() }
 
 /// `[tc-types]` section (ADR-042). Reserved structural names must not appear
 /// in `custom`; that is enforced as E017 at startup.
