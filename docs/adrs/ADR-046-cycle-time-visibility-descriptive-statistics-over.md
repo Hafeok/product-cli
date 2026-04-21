@@ -1,7 +1,7 @@
 ---
 id: ADR-046
 title: Cycle Time Visibility — Descriptive Statistics Over Probabilistic Forecasting
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
@@ -9,6 +9,7 @@ domains:
 - observability
 - scheduling
 scope: feature-specific
+content-hash: sha256:f9204281e1f959467806cf3fc3c8a9efbffe7265e2365107805a395561f4c0d3
 ---
 
 **Status:** Proposed

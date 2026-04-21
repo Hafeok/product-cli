@@ -1,7 +1,7 @@
 ---
 id: ADR-044
 title: Request Builder — Interactive Draft Lifecycle as a Composition Layer over ADR-038
-status: proposed
+status: accepted
 features:
 - FT-052
 supersedes: []
@@ -11,6 +11,7 @@ domains:
 - data-model
 - error-handling
 scope: domain
+content-hash: sha256:e7b6d9f781121ada16b603db8ba3fc99794578899f9bdb68a98c55bb08441168
 ---
 
 **Status:** Proposed — amends ADR-038

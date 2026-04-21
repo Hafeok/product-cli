@@ -1,7 +1,7 @@
 ---
 id: ADR-045
 title: Planning Annotations — Due Dates as Advisory Signals and Started Tags as Cycle-Time Anchors
-status: proposed
+status: accepted
 features:
 - FT-053
 supersedes: []
@@ -10,6 +10,7 @@ domains:
 - observability
 - scheduling
 scope: domain
+content-hash: sha256:7d038d3dcbd5cd0aa697233eedb9ae6c5572b9a41bf3e5f978f1336be074ac6e
 ---
 
 **Status:** Proposed
