@@ -8,9 +8,10 @@ validates:
   - FT-031
   adrs:
   - ADR-029
+  - ADR-043
 phase: 3
 runner: cargo-test
-runner-args: "tc_402_all_source_files_under_400_lines_and_all_quality_checks_pass"
+runner-args: tc_402_all_source_files_under_400_lines_and_all_quality_checks_pass
 last-run: 2026-04-14T16:41:17.424364011+00:00
 ---
 

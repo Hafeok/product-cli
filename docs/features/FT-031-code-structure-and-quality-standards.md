@@ -5,8 +5,8 @@ phase: 3
 status: complete
 depends-on: []
 adrs:
-- ADR-029
 - ADR-001
+- ADR-029
 - ADR-043
 tests:
 - TC-369
@@ -24,9 +24,9 @@ tests:
 - TC-402
 domains: []
 domains-acknowledged:
-  ADR-042: Pre-dates ADR-042; this feature does not define TC types or validate the type vocabulary. FT-048 owns the mechanics.
   ADR-041: Pre-dates ADR-041; this feature does not author absence TCs or set removes/deprecates on ADRs. FT-047 owns the mechanics.
   ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
+  ADR-042: Pre-dates ADR-042; this feature does not define TC types or validate the type vocabulary. FT-048 owns the mechanics.
 ---
 
 ## Description
