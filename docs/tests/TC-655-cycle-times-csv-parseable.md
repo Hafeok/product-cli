@@ -2,7 +2,7 @@
 id: TC-655
 title: cycle_times_csv_parseable
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-054
@@ -11,6 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_655_cycle_times_csv_parseable
+last-run: 2026-04-21T13:48:57.409699651+00:00
+last-run-duration: 0.4s
 ---
 
 ## TC — `product cycle-times --format csv` is parseable and schema-stable (invariant)

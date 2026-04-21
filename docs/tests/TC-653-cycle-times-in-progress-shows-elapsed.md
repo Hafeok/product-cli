@@ -2,7 +2,7 @@
 id: TC-653
 title: cycle_times_in_progress_shows_elapsed
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-054
@@ -12,6 +12,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_653_cycle_times_in_progress_shows_elapsed
+last-run: 2026-04-21T13:48:57.409699651+00:00
+last-run-duration: 0.8s
 ---
 
 ## Session — cycle-times-in-progress-shows-elapsed

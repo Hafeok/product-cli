@@ -2,7 +2,7 @@
 id: TC-648
 title: cycle_times_uses_first_complete_tag_for_v2_features
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-054
@@ -12,6 +12,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_648_cycle_times_uses_first_complete_tag_for_v2_features
+last-run: 2026-04-21T13:48:57.409699651+00:00
+last-run-duration: 0.6s
 ---
 
 ## TC — cycle-times uses the first `complete` tag, not the most recent `complete-vN` (invariant)

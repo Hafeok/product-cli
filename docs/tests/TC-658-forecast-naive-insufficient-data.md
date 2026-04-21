@@ -2,7 +2,7 @@
 id: TC-658
 title: forecast_naive_insufficient_data
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-054
@@ -11,6 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_658_forecast_naive_insufficient_data
+last-run: 2026-04-21T13:48:57.409699651+00:00
+last-run-duration: 0.4s
 ---
 
 ## Session — forecast-naive-insufficient-data

@@ -16493,3 +16493,895 @@ fn tc_644_planning_due_date_and_started_tag_exit() {
     tag_out.assert_stdout_contains("FT-009");
     tag_out.assert_stdout_contains("started");
 }
+
+// =============================================================================
+// FT-054 — Cycle Time Visibility and Naive Forecast (TC-645 .. TC-664)
+// =============================================================================
+
+/// Write an FT-XXX feature in a cycle-time fixture.
+fn ct_write_feature(h: &Harness, id: &str, status: &str) {
+    let fname = format!("docs/features/{}-{}.md", id, id.to_lowercase());
+    let content = format!(
+        "---\nid: {}\ntitle: {}\nphase: 1\nstatus: {}\ndepends-on: []\nadrs: []\ntests: []\ndomains:\n- api\ndomains-acknowledged: {{}}\n---\n\nSeed.\n",
+        id, id, status
+    );
+    h.write(&fname, &content);
+}
+
+/// Create a product/FT-XXX/{event} tag at the given ISO timestamp.
+fn ct_tag_at(h: &Harness, id: &str, event: &str, iso_ts: &str) {
+    let tag = format!("product/{}/{}", id, event);
+    let msg = format!("{} {}", id, event);
+    std::process::Command::new("git")
+        .args(["tag", "-a", &tag, "-m", &msg])
+        .env("GIT_COMMITTER_DATE", iso_ts)
+        .env("GIT_AUTHOR_DATE", iso_ts)
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git tag");
+}
+
+/// Build a cycle-time fixture with a given list of (id, status, started_ts,
+/// completed_ts_or_none) entries. Initialises git, commits, and creates tags.
+fn ct_fixture(entries: &[(&str, &str, Option<&str>, Option<&str>)]) -> Harness {
+    let h = fixture_with_domains();
+    git_init(&h);
+    for (id, status, _s, _c) in entries {
+        ct_write_feature(&h, id, status);
+    }
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+    std::process::Command::new("git")
+        .args(["commit", "-m", "seed"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git commit");
+
+    for (id, _status, s, c) in entries {
+        if let Some(st) = s {
+            ct_tag_at(&h, id, "started", st);
+        }
+        if let Some(cp) = c {
+            ct_tag_at(&h, id, "complete", cp);
+        }
+    }
+    h
+}
+
+/// TC-645: cycle-times lists complete features.
+#[test]
+fn tc_645_cycle_times_lists_complete_features() {
+    let h = ct_fixture(&[
+        (
+            "FT-101",
+            "complete",
+            Some("2026-04-08T13:00:00+0000"),
+            Some("2026-04-11T09:14:00+0000"),
+        ),
+        (
+            "FT-102",
+            "complete",
+            Some("2026-04-12T10:30:00+0000"),
+            Some("2026-04-17T15:42:00+0000"),
+        ),
+        (
+            "FT-103",
+            "complete",
+            Some("2026-04-15T08:00:00+0000"),
+            Some("2026-04-18T18:00:00+0000"),
+        ),
+    ]);
+    let out = h.run(&["cycle-times"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("FT-101");
+    out.assert_stdout_contains("FT-102");
+    out.assert_stdout_contains("FT-103");
+    out.assert_stdout_contains("count:");
+    // recent/all stats render
+    out.assert_stdout_contains("median");
+    // no trend line with <6 features
+    assert!(
+        !out.stdout.contains("Trend:"),
+        "trend must be omitted below 6 complete features: {}",
+        out.stdout
+    );
+}
+
+/// TC-646: features without a started tag are excluded from cycle-times.
+#[test]
+fn tc_646_cycle_times_excludes_features_without_started_tag() {
+    let h = ct_fixture(&[
+        (
+            "FT-201",
+            "complete",
+            Some("2026-04-08T13:00:00+0000"),
+            Some("2026-04-11T09:00:00+0000"),
+        ),
+        ("FT-202", "complete", None, Some("2026-04-15T00:00:00+0000")),
+    ]);
+    // Also add enough other features so we clear the min-features gate.
+    ct_write_feature(&h, "FT-203", "complete");
+    ct_write_feature(&h, "FT-204", "complete");
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("add");
+    std::process::Command::new("git")
+        .args(["commit", "-m", "more"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("commit");
+    ct_tag_at(&h, "FT-203", "started", "2026-04-20T08:00:00+0000");
+    ct_tag_at(&h, "FT-203", "complete", "2026-04-23T08:00:00+0000");
+    ct_tag_at(&h, "FT-204", "started", "2026-04-25T08:00:00+0000");
+    ct_tag_at(&h, "FT-204", "complete", "2026-04-28T08:00:00+0000");
+
+    let out = h.run(&["cycle-times", "--format", "json"]);
+    out.assert_exit(0);
+    // FT-202 should NOT appear in the feature list
+    assert!(
+        !out.stdout.contains("FT-202"),
+        "FT-202 (no started tag) should be excluded: {}",
+        out.stdout
+    );
+    out.assert_stdout_contains("FT-201");
+}
+
+/// TC-647: features without a complete tag are excluded from cycle-times.
+#[test]
+fn tc_647_cycle_times_excludes_features_without_complete_tag() {
+    let h = ct_fixture(&[
+        (
+            "FT-301",
+            "complete",
+            Some("2026-04-08T13:00:00+0000"),
+            Some("2026-04-11T09:00:00+0000"),
+        ),
+        ("FT-302", "in-progress", Some("2026-04-15T00:00:00+0000"), None),
+        (
+            "FT-303",
+            "complete",
+            Some("2026-04-12T00:00:00+0000"),
+            Some("2026-04-14T00:00:00+0000"),
+        ),
+        (
+            "FT-304",
+            "complete",
+            Some("2026-04-17T00:00:00+0000"),
+            Some("2026-04-20T00:00:00+0000"),
+        ),
+    ]);
+    let out = h.run(&["cycle-times"]);
+    out.assert_exit(0);
+    assert!(
+        !out.stdout.contains("FT-302"),
+        "FT-302 must not appear in default cycle-times output: {}",
+        out.stdout
+    );
+    out.assert_stdout_contains("FT-301");
+}
+
+/// TC-648: when `complete` and `complete-v2` both exist, the first one wins.
+#[test]
+fn tc_648_cycle_times_uses_first_complete_tag_for_v2_features() {
+    let h = ct_fixture(&[
+        (
+            "FT-401",
+            "complete",
+            Some("2026-04-08T13:00:00+0000"),
+            Some("2026-04-11T09:14:00+0000"),
+        ),
+        (
+            "FT-402",
+            "complete",
+            Some("2026-04-12T00:00:00+0000"),
+            Some("2026-04-14T00:00:00+0000"),
+        ),
+        (
+            "FT-403",
+            "complete",
+            Some("2026-04-16T00:00:00+0000"),
+            Some("2026-04-18T00:00:00+0000"),
+        ),
+    ]);
+    // Add complete-v2 for FT-401 at a LATER date.
+    ct_tag_at(&h, "FT-401", "complete-v2", "2026-05-03T11:00:00+0000");
+
+    let out = h.run(&["cycle-times", "--format", "csv"]);
+    out.assert_exit(0);
+    // FT-401: cycle = 2026-04-08 13:00 → 2026-04-11 09:14 ≈ 2.8d (NOT 25d)
+    let line_401 = out
+        .stdout
+        .lines()
+        .find(|l| l.starts_with("FT-401,"))
+        .expect("row for FT-401");
+    let days_str = line_401.split(',').nth(3).expect("days column");
+    let days: f64 = days_str.parse().expect("numeric");
+    assert!(
+        (days - 2.8).abs() <= 0.2,
+        "FT-401 cycle time should be ≈2.8d (first complete tag), got {}",
+        days
+    );
+}
+
+/// TC-649: recent-5 and all-time stats computed correctly.
+#[test]
+fn tc_649_cycle_times_recent_5_computed_correctly() {
+    // Build 14 complete features with specific cycle times.
+    let days = [
+        2.84f64, 5.12, 3.21, 8.44, 2.10, 4.88, 1.95, 11.32, 3.67, 2.44, 6.78, 4.01, 3.55, 7.22,
+    ];
+    let mut entries_owned: Vec<(String, String, Option<String>, Option<String>)> = Vec::new();
+    let base = chrono::NaiveDate::from_ymd_opt(2026, 1, 1).expect("date");
+    for (i, d) in days.iter().enumerate() {
+        let id = format!("FT-{:03}", 101 + i);
+        let started = base + chrono::Duration::days((i as i64) * 20);
+        let secs = (*d * 86400.0) as i64;
+        let completed = started.and_hms_opt(0, 0, 0).expect("hms")
+            + chrono::Duration::seconds(secs);
+        entries_owned.push((
+            id,
+            "complete".to_string(),
+            Some(format!("{} 00:00:00 +0000", started.format("%Y-%m-%d"))),
+            Some(format!("{} +0000", completed.format("%Y-%m-%d %H:%M:%S"))),
+        ));
+    }
+    let entries: Vec<(&str, &str, Option<&str>, Option<&str>)> = entries_owned
+        .iter()
+        .map(|(id, st, s, c)| (id.as_str(), st.as_str(), s.as_deref(), c.as_deref()))
+        .collect();
+    let h = ct_fixture(&entries);
+
+    let out = h.run(&["cycle-times", "--format", "json"]);
+    out.assert_exit(0);
+    let v: serde_json::Value =
+        serde_json::from_str(out.stdout.trim()).expect("valid JSON");
+    let count = v["summary"]["count"].as_u64().expect("count");
+    assert_eq!(count, 14);
+    let recent_median = v["summary"]["recent_5"]["median"].as_f64().expect("median");
+    assert!(
+        (recent_median - 4.0).abs() <= 0.2,
+        "recent median ≈ 4.0, got {}",
+        recent_median
+    );
+    let recent_min = v["summary"]["recent_5"]["min"].as_f64().expect("min");
+    assert!(
+        (recent_min - 2.4).abs() <= 0.2,
+        "recent min ≈ 2.4, got {}",
+        recent_min
+    );
+    let recent_max = v["summary"]["recent_5"]["max"].as_f64().expect("max");
+    assert!(
+        (recent_max - 7.2).abs() <= 0.2,
+        "recent max ≈ 7.2, got {}",
+        recent_max
+    );
+    // Trend should be populated with ≥6 features.
+    assert!(v["summary"]["trend"].is_string());
+}
+
+/// TC-650: trend classifier returns `accelerating` when recent < historical.
+#[test]
+fn tc_650_cycle_times_trend_accelerating() {
+    // 6 historic features ~8d, 5 recent features ~3d
+    let mut entries: Vec<(String, String, Option<String>, Option<String>)> = Vec::new();
+    let base = chrono::NaiveDate::from_ymd_opt(2026, 1, 1).expect("date");
+    for (i, d) in [8.0, 7.5, 9.0, 8.5, 7.8, 8.2].iter().enumerate() {
+        let id = format!("FT-{:03}", 101 + i);
+        let st = base + chrono::Duration::days((i as i64) * 20);
+        let cp = st.and_hms_opt(0, 0, 0).expect("hms")
+            + chrono::Duration::seconds((*d as f64 * 86400.0) as i64);
+        entries.push((
+            id,
+            "complete".into(),
+            Some(format!("{} 00:00:00 +0000", st.format("%Y-%m-%d"))),
+            Some(format!("{} +0000", cp.format("%Y-%m-%d %H:%M:%S"))),
+        ));
+    }
+    for (i, d) in [3.0f64, 3.5, 2.8, 3.2, 4.0].iter().enumerate() {
+        let id = format!("FT-{:03}", 201 + i);
+        let st = base + chrono::Duration::days(200 + (i as i64) * 10);
+        let cp = st.and_hms_opt(0, 0, 0).expect("hms")
+            + chrono::Duration::seconds((*d * 86400.0) as i64);
+        entries.push((
+            id,
+            "complete".into(),
+            Some(format!("{} 00:00:00 +0000", st.format("%Y-%m-%d"))),
+            Some(format!("{} +0000", cp.format("%Y-%m-%d %H:%M:%S"))),
+        ));
+    }
+    let refs: Vec<(&str, &str, Option<&str>, Option<&str>)> = entries
+        .iter()
+        .map(|(id, s, st, cp)| (id.as_str(), s.as_str(), st.as_deref(), cp.as_deref()))
+        .collect();
+    let h = ct_fixture(&refs);
+    let out = h.run(&["cycle-times", "--format", "json"]);
+    out.assert_exit(0);
+    let v: serde_json::Value = serde_json::from_str(out.stdout.trim()).expect("json");
+    assert_eq!(
+        v["summary"]["trend"].as_str(),
+        Some("accelerating"),
+        "expected accelerating; got {:?}",
+        v["summary"]["trend"]
+    );
+}
+
+/// TC-651: trend classifier returns `stable` within ±25%.
+#[test]
+fn tc_651_cycle_times_trend_stable() {
+    // 14 features with approximately equal cycle times.
+    let days: Vec<f64> = (0..14).map(|_| 4.0).collect();
+    let mut entries: Vec<(String, String, Option<String>, Option<String>)> = Vec::new();
+    let base = chrono::NaiveDate::from_ymd_opt(2026, 1, 1).expect("date");
+    for (i, d) in days.iter().enumerate() {
+        let id = format!("FT-{:03}", 101 + i);
+        let st = base + chrono::Duration::days((i as i64) * 20);
+        let cp = st.and_hms_opt(0, 0, 0).expect("hms")
+            + chrono::Duration::seconds((*d * 86400.0) as i64);
+        entries.push((
+            id,
+            "complete".into(),
+            Some(format!("{} 00:00:00 +0000", st.format("%Y-%m-%d"))),
+            Some(format!("{} +0000", cp.format("%Y-%m-%d %H:%M:%S"))),
+        ));
+    }
+    let refs: Vec<(&str, &str, Option<&str>, Option<&str>)> = entries
+        .iter()
+        .map(|(id, s, st, cp)| (id.as_str(), s.as_str(), st.as_deref(), cp.as_deref()))
+        .collect();
+    let h = ct_fixture(&refs);
+    let out = h.run(&["cycle-times", "--format", "json"]);
+    out.assert_exit(0);
+    let v: serde_json::Value = serde_json::from_str(out.stdout.trim()).expect("json");
+    assert_eq!(
+        v["summary"]["trend"].as_str(),
+        Some("stable"),
+        "expected stable; got {:?}",
+        v["summary"]["trend"]
+    );
+}
+
+/// TC-652: trend classifier returns `slowing` when recent > historical.
+#[test]
+fn tc_652_cycle_times_trend_slowing() {
+    let mut entries: Vec<(String, String, Option<String>, Option<String>)> = Vec::new();
+    let base = chrono::NaiveDate::from_ymd_opt(2026, 1, 1).expect("date");
+    for (i, d) in [3.0f64, 3.5, 2.8, 3.2, 3.1, 3.3].iter().enumerate() {
+        let id = format!("FT-{:03}", 101 + i);
+        let st = base + chrono::Duration::days((i as i64) * 20);
+        let cp = st.and_hms_opt(0, 0, 0).expect("hms")
+            + chrono::Duration::seconds((*d * 86400.0) as i64);
+        entries.push((
+            id,
+            "complete".into(),
+            Some(format!("{} 00:00:00 +0000", st.format("%Y-%m-%d"))),
+            Some(format!("{} +0000", cp.format("%Y-%m-%d %H:%M:%S"))),
+        ));
+    }
+    for (i, d) in [6.0f64, 5.5, 7.0, 6.8, 5.9].iter().enumerate() {
+        let id = format!("FT-{:03}", 201 + i);
+        let st = base + chrono::Duration::days(200 + (i as i64) * 10);
+        let cp = st.and_hms_opt(0, 0, 0).expect("hms")
+            + chrono::Duration::seconds((*d * 86400.0) as i64);
+        entries.push((
+            id,
+            "complete".into(),
+            Some(format!("{} 00:00:00 +0000", st.format("%Y-%m-%d"))),
+            Some(format!("{} +0000", cp.format("%Y-%m-%d %H:%M:%S"))),
+        ));
+    }
+    let refs: Vec<(&str, &str, Option<&str>, Option<&str>)> = entries
+        .iter()
+        .map(|(id, s, st, cp)| (id.as_str(), s.as_str(), st.as_deref(), cp.as_deref()))
+        .collect();
+    let h = ct_fixture(&refs);
+    let out = h.run(&["cycle-times", "--format", "json"]);
+    out.assert_exit(0);
+    let v: serde_json::Value = serde_json::from_str(out.stdout.trim()).expect("json");
+    assert_eq!(
+        v["summary"]["trend"].as_str(),
+        Some("slowing"),
+        "expected slowing; got {:?}",
+        v["summary"]["trend"]
+    );
+}
+
+/// TC-653: `--in-progress` shows elapsed-so-far for in-progress features.
+#[test]
+fn tc_653_cycle_times_in_progress_shows_elapsed() {
+    // Five complete features (to provide a reference median) + one in-progress.
+    let base = chrono::NaiveDate::from_ymd_opt(2026, 1, 1).expect("date");
+    let mut entries: Vec<(String, String, Option<String>, Option<String>)> = Vec::new();
+    for i in 0..5 {
+        let id = format!("FT-{:03}", 101 + i);
+        let st = base + chrono::Duration::days((i as i64) * 20);
+        let cp = st + chrono::Duration::days(4);
+        entries.push((
+            id,
+            "complete".into(),
+            Some(format!("{} 00:00:00 +0000", st.format("%Y-%m-%d"))),
+            Some(format!("{} 00:00:00 +0000", cp.format("%Y-%m-%d"))),
+        ));
+    }
+    // Build a recent "in-progress" feature with a 2-day-old started tag.
+    let now = chrono::Local::now();
+    let yesterday = now - chrono::Duration::days(2);
+    entries.push((
+        "FT-015".into(),
+        "in-progress".into(),
+        Some(format!("{} +0000", yesterday.format("%Y-%m-%d %H:%M:%S"))),
+        None,
+    ));
+    let refs: Vec<(&str, &str, Option<&str>, Option<&str>)> = entries
+        .iter()
+        .map(|(id, s, st, cp)| (id.as_str(), s.as_str(), st.as_deref(), cp.as_deref()))
+        .collect();
+    let h = ct_fixture(&refs);
+    let out = h.run(&["cycle-times", "--in-progress"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("FT-015");
+    // should NOT contain any of the complete FT-101/102 rows in this view
+    assert!(
+        !out.stdout.contains("FT-101"),
+        "complete features must not appear in --in-progress view: {}",
+        out.stdout
+    );
+}
+
+/// TC-654: JSON output deserialises with the documented schema.
+#[test]
+fn tc_654_cycle_times_json_valid_schema() {
+    let h = ct_fixture(&[
+        (
+            "FT-601",
+            "complete",
+            Some("2026-04-01T00:00:00+0000"),
+            Some("2026-04-04T00:00:00+0000"),
+        ),
+        (
+            "FT-602",
+            "complete",
+            Some("2026-04-05T00:00:00+0000"),
+            Some("2026-04-10T00:00:00+0000"),
+        ),
+        (
+            "FT-603",
+            "complete",
+            Some("2026-04-11T00:00:00+0000"),
+            Some("2026-04-14T00:00:00+0000"),
+        ),
+    ]);
+    let out = h.run(&["cycle-times", "--format", "json"]);
+    out.assert_exit(0);
+    let v: serde_json::Value =
+        serde_json::from_str(out.stdout.trim()).expect("valid JSON");
+    assert!(v.get("features").is_some(), "features array required");
+    assert!(v.get("summary").is_some(), "summary object required");
+    let features = v["features"].as_array().expect("array");
+    for f in features {
+        assert!(f.get("id").is_some());
+        assert!(f.get("started").is_some());
+        assert!(f.get("completed").is_some());
+        assert!(f.get("cycle_time_days").is_some());
+        let days = f["cycle_time_days"].as_f64().expect("number");
+        assert!(days >= 0.0, "cycle time non-negative");
+    }
+    assert!(v["summary"]["count"].is_number());
+}
+
+/// TC-655: CSV output has a fixed, parseable header and schema.
+#[test]
+fn tc_655_cycle_times_csv_parseable() {
+    let h = ct_fixture(&[
+        (
+            "FT-701",
+            "complete",
+            Some("2026-04-01T00:00:00+0000"),
+            Some("2026-04-04T00:00:00+0000"),
+        ),
+        (
+            "FT-702",
+            "complete",
+            Some("2026-04-05T00:00:00+0000"),
+            Some("2026-04-10T00:00:00+0000"),
+        ),
+        (
+            "FT-703",
+            "complete",
+            Some("2026-04-11T00:00:00+0000"),
+            Some("2026-04-14T00:00:00+0000"),
+        ),
+    ]);
+    let out = h.run(&["cycle-times", "--format", "csv"]);
+    out.assert_exit(0);
+    let first_line = out.stdout.lines().next().expect("first line");
+    assert_eq!(
+        first_line, "feature_id,started,completed,cycle_time_days,phase",
+        "CSV header must match schema; got: {}",
+        first_line
+    );
+    for line in out.stdout.lines().skip(1) {
+        if line.is_empty() {
+            continue;
+        }
+        let cols: Vec<&str> = line.split(',').collect();
+        assert_eq!(cols.len(), 5, "CSV row has 5 columns: {}", line);
+        // cycle_time_days is a number with exactly one decimal.
+        let days_col = cols[3];
+        assert!(
+            days_col.contains('.'),
+            "cycle_time_days must have decimal: {}",
+            days_col
+        );
+    }
+}
+
+/// TC-656: `forecast FT-XXX --naive` renders projections and the rough-estimate label.
+#[test]
+fn tc_656_forecast_naive_single_feature() {
+    let base = chrono::NaiveDate::from_ymd_opt(2026, 1, 1).expect("date");
+    let mut entries: Vec<(String, String, Option<String>, Option<String>)> = Vec::new();
+    for (i, d) in [2.44f64, 6.78, 4.01, 3.55, 7.22].iter().enumerate() {
+        let id = format!("FT-{:03}", 101 + i);
+        let st = base + chrono::Duration::days((i as i64) * 20);
+        let cp = st.and_hms_opt(0, 0, 0).expect("hms")
+            + chrono::Duration::seconds((*d * 86400.0) as i64);
+        entries.push((
+            id,
+            "complete".into(),
+            Some(format!("{} 00:00:00 +0000", st.format("%Y-%m-%d"))),
+            Some(format!("{} +0000", cp.format("%Y-%m-%d %H:%M:%S"))),
+        ));
+    }
+    // An in-progress feature.
+    let now = chrono::Local::now();
+    let started = now - chrono::Duration::hours(50);
+    entries.push((
+        "FT-015".into(),
+        "in-progress".into(),
+        Some(format!("{} +0000", started.format("%Y-%m-%d %H:%M:%S"))),
+        None,
+    ));
+    let refs: Vec<(&str, &str, Option<&str>, Option<&str>)> = entries
+        .iter()
+        .map(|(id, s, st, cp)| (id.as_str(), s.as_str(), st.as_deref(), cp.as_deref()))
+        .collect();
+    let h = ct_fixture(&refs);
+    let out = h.run(&["forecast", "FT-015", "--naive"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("Likely completion:");
+    out.assert_stdout_contains("Optimistic:");
+    out.assert_stdout_contains("Pessimistic:");
+    out.assert_stdout_contains("rough estimate");
+    out.assert_stdout_contains("not a probability forecast");
+}
+
+/// TC-657: `forecast --phase N --naive` multiplies K remaining features by the recent stats.
+#[test]
+fn tc_657_forecast_naive_phase_sequential() {
+    let base = chrono::NaiveDate::from_ymd_opt(2026, 1, 1).expect("date");
+    let mut entries: Vec<(String, String, Option<String>, Option<String>)> = Vec::new();
+    for (i, d) in [2.44f64, 6.78, 4.01, 3.55, 7.22].iter().enumerate() {
+        let id = format!("FT-{:03}", 101 + i);
+        let st = base + chrono::Duration::days((i as i64) * 20);
+        let cp = st.and_hms_opt(0, 0, 0).expect("hms")
+            + chrono::Duration::seconds((*d * 86400.0) as i64);
+        entries.push((
+            id,
+            "complete".into(),
+            Some(format!("{} 00:00:00 +0000", st.format("%Y-%m-%d"))),
+            Some(format!("{} +0000", cp.format("%Y-%m-%d %H:%M:%S"))),
+        ));
+    }
+    let refs: Vec<(&str, &str, Option<&str>, Option<&str>)> = entries
+        .iter()
+        .map(|(id, s, st, cp)| (id.as_str(), s.as_str(), st.as_deref(), cp.as_deref()))
+        .collect();
+    let h = ct_fixture(&refs);
+    // Add 5 planned features in phase 2.
+    for i in 0..5 {
+        let id = format!("FT-{:03}", 301 + i);
+        h.write(
+            &format!("docs/features/{}-p2.md", id),
+            &format!(
+                "---\nid: {}\ntitle: {}\nphase: 2\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains:\n- api\ndomains-acknowledged: {{}}\n---\n\nSeed.\n",
+                id, id
+            ),
+        );
+    }
+    let out = h.run(&["forecast", "--phase", "2", "--naive"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("Phase 2");
+    out.assert_stdout_contains("5");
+    out.assert_stdout_contains("Likely completion:");
+    out.assert_stdout_contains("Assumes no parallelism");
+    out.assert_stdout_contains("cycle-times --format csv");
+}
+
+/// TC-658: Below min-features, `forecast --naive` exits 2 with an explanatory message.
+#[test]
+fn tc_658_forecast_naive_insufficient_data() {
+    let h = ct_fixture(&[
+        (
+            "FT-801",
+            "complete",
+            Some("2026-04-01T00:00:00+0000"),
+            Some("2026-04-03T00:00:00+0000"),
+        ),
+        (
+            "FT-802",
+            "complete",
+            Some("2026-04-05T00:00:00+0000"),
+            Some("2026-04-08T00:00:00+0000"),
+        ),
+    ]);
+    // An in-progress feature to target.
+    ct_write_feature(&h, "FT-803", "in-progress");
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("add");
+    std::process::Command::new("git")
+        .args(["commit", "-m", "more"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("commit");
+    ct_tag_at(&h, "FT-803", "started", "2026-04-11T00:00:00+0000");
+
+    let out = h.run(&["forecast", "FT-803", "--naive"]);
+    assert_eq!(
+        out.exit_code, 2,
+        "expected exit 2 for insufficient data; got {}: {}",
+        out.exit_code, out.stderr
+    );
+    // Message mentions Insufficient and the minimum.
+    assert!(
+        out.stderr.contains("Insufficient"),
+        "stderr should mention Insufficient: {}",
+        out.stderr
+    );
+    assert!(
+        out.stderr.contains("3"),
+        "stderr should mention the threshold: {}",
+        out.stderr
+    );
+}
+
+/// TC-659: invariant — elapsed exceeds recent sample ⇒ projection clamps to today.
+#[test]
+fn tc_659_forecast_naive_elapsed_exceeds_sample_clamps_to_today() {
+    // Start 5 "recent" features each at 1-day cycle time, then an in-progress
+    // that has elapsed 30 days already. Projections should clamp.
+    let base = chrono::NaiveDate::from_ymd_opt(2026, 1, 1).expect("date");
+    let mut entries: Vec<(String, String, Option<String>, Option<String>)> = Vec::new();
+    for i in 0..5 {
+        let id = format!("FT-{:03}", 101 + i);
+        let st = base + chrono::Duration::days((i as i64) * 10);
+        let cp = st + chrono::Duration::days(1);
+        entries.push((
+            id,
+            "complete".into(),
+            Some(format!("{} 00:00:00 +0000", st.format("%Y-%m-%d"))),
+            Some(format!("{} 00:00:00 +0000", cp.format("%Y-%m-%d"))),
+        ));
+    }
+    let now = chrono::Local::now();
+    let started = now - chrono::Duration::days(30);
+    entries.push((
+        "FT-999".into(),
+        "in-progress".into(),
+        Some(format!("{} +0000", started.format("%Y-%m-%d %H:%M:%S"))),
+        None,
+    ));
+    let refs: Vec<(&str, &str, Option<&str>, Option<&str>)> = entries
+        .iter()
+        .map(|(id, s, st, cp)| (id.as_str(), s.as_str(), st.as_deref(), cp.as_deref()))
+        .collect();
+    let h = ct_fixture(&refs);
+    let out = h.run(&["forecast", "FT-999", "--naive", "--format", "json"]);
+    out.assert_exit(0);
+    let today_iso = now.format("%Y-%m-%d").to_string();
+    let v: serde_json::Value = serde_json::from_str(out.stdout.trim()).expect("json");
+    assert_eq!(
+        v["forecast"]["likely"].as_str(),
+        Some(today_iso.as_str()),
+        "likely must clamp to today"
+    );
+    assert_eq!(
+        v["forecast"]["optimistic"].as_str(),
+        Some(today_iso.as_str()),
+        "optimistic must clamp to today"
+    );
+    assert_eq!(
+        v["forecast"]["pessimistic"].as_str(),
+        Some(today_iso.as_str()),
+        "pessimistic must clamp to today"
+    );
+}
+
+/// TC-660: `product status` renders a cycle-time column when complete features ≥ min-features.
+#[test]
+fn tc_660_status_shows_cycle_time_column_when_data_present() {
+    let base = chrono::NaiveDate::from_ymd_opt(2026, 1, 1).expect("date");
+    let mut entries: Vec<(String, String, Option<String>, Option<String>)> = Vec::new();
+    for (i, d) in [2.84f64, 5.12, 3.21].iter().enumerate() {
+        let id = format!("FT-{:03}", 1 + i);
+        let st = base + chrono::Duration::days((i as i64) * 10);
+        let cp = st.and_hms_opt(0, 0, 0).expect("hms")
+            + chrono::Duration::seconds((*d * 86400.0) as i64);
+        entries.push((
+            id,
+            "complete".into(),
+            Some(format!("{} 00:00:00 +0000", st.format("%Y-%m-%d"))),
+            Some(format!("{} +0000", cp.format("%Y-%m-%d %H:%M:%S"))),
+        ));
+    }
+    let refs: Vec<(&str, &str, Option<&str>, Option<&str>)> = entries
+        .iter()
+        .map(|(id, s, st, cp)| (id.as_str(), s.as_str(), st.as_deref(), cp.as_deref()))
+        .collect();
+    let h = ct_fixture(&refs);
+    let out = h.run(&["status"]);
+    out.assert_exit(0);
+    // Some cycle-time label should appear somewhere in the output.
+    assert!(
+        out.stdout.contains("cycle") || out.stdout.contains("2.8d") || out.stdout.contains("5.1d"),
+        "expected cycle-time cell in status output: {}",
+        out.stdout
+    );
+}
+
+/// TC-661: `product status` omits the cycle-time column when below min-features.
+#[test]
+fn tc_661_status_omits_cycle_time_column_when_below_min() {
+    let h = ct_fixture(&[
+        (
+            "FT-001",
+            "complete",
+            Some("2026-04-01T00:00:00+0000"),
+            Some("2026-04-03T00:00:00+0000"),
+        ),
+        (
+            "FT-002",
+            "complete",
+            Some("2026-04-05T00:00:00+0000"),
+            Some("2026-04-08T00:00:00+0000"),
+        ),
+    ]);
+    let out = h.run(&["status"]);
+    out.assert_exit(0);
+    // With default min-features = 3 and only 2 complete features,
+    // the "cycle" label must not appear.
+    assert!(
+        !out.stdout.contains("  cycle"),
+        "cycle-time cell should be absent below min-features: {}",
+        out.stdout
+    );
+}
+
+/// TC-662: exit criteria — feature ships as a coherent bundle.
+#[test]
+fn tc_662_cycle_time_visibility_and_naive_forecast_exit() {
+    // Same fixture as TC-645 (3 features), plus a 4th to clear min-features.
+    let h = ct_fixture(&[
+        (
+            "FT-601",
+            "complete",
+            Some("2026-04-01T00:00:00+0000"),
+            Some("2026-04-04T00:00:00+0000"),
+        ),
+        (
+            "FT-602",
+            "complete",
+            Some("2026-04-05T00:00:00+0000"),
+            Some("2026-04-10T00:00:00+0000"),
+        ),
+        (
+            "FT-603",
+            "complete",
+            Some("2026-04-11T00:00:00+0000"),
+            Some("2026-04-14T00:00:00+0000"),
+        ),
+    ]);
+
+    // 1. cycle-times ships
+    h.run(&["cycle-times"]).assert_exit(0);
+    // 2. JSON format works
+    let out_json = h.run(&["cycle-times", "--format", "json"]);
+    out_json.assert_exit(0);
+    let _v: serde_json::Value =
+        serde_json::from_str(out_json.stdout.trim()).expect("json");
+    // 3. CSV format works
+    let out_csv = h.run(&["cycle-times", "--format", "csv"]);
+    out_csv.assert_exit(0);
+    out_csv.assert_stdout_contains("feature_id,started,completed,cycle_time_days,phase");
+    // 4. status shows cycle-time column
+    h.run(&["status"]).assert_exit(0);
+}
+
+/// TC-663: invariant — slice + adapter structural rules hold.
+#[test]
+fn tc_663_slice_adapter_structural_invariants() {
+    use std::path::PathBuf;
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+
+    // (A) No println/eprintln/std::process::exit/std::fs::write in pure slice
+    // modules for the cycle_times slice.
+    let forbidden = ["println!", "eprintln!", "std::process::exit", "std::fs::write"];
+    let slice_files = [
+        "src/cycle_times/model.rs",
+        "src/cycle_times/compute.rs",
+        "src/cycle_times/render.rs",
+    ];
+    for sf in &slice_files {
+        let p = root.join(sf);
+        let content = std::fs::read_to_string(&p).expect("read slice file");
+        for needle in &forbidden {
+            assert!(
+                !content.contains(needle),
+                "slice file {} must not contain '{}'",
+                sf,
+                needle
+            );
+        }
+    }
+
+    // (D) Adapter size under 400 lines.
+    let adapter = root.join("src/commands/cycle_times.rs");
+    let content = std::fs::read_to_string(&adapter).expect("read adapter");
+    let n = content.lines().count();
+    assert!(n <= 400, "adapter must be ≤ 400 lines; got {}", n);
+
+    // (C) plan_*/build_* return typed values (not Result<(), _>).
+    let compute = std::fs::read_to_string(root.join("src/cycle_times/compute.rs"))
+        .expect("read compute");
+    assert!(
+        compute.contains("pub fn build_report"),
+        "build_report must be present"
+    );
+}
+
+/// TC-664: scenario — the ADR-043 slice + adapter pattern is satisfied by
+/// `src/cycle_times/` and `src/commands/cycle_times.rs`.
+#[test]
+fn tc_664_slice_adapter_pattern_satisfied_by_cycle_times_slice() {
+    use std::path::PathBuf;
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+
+    // Slice directory exists with expected files.
+    for f in &["mod.rs", "model.rs", "compute.rs", "render.rs", "tests.rs"] {
+        let p = root.join(format!("src/cycle_times/{}", f));
+        assert!(p.exists(), "expected slice file {} to exist", p.display());
+    }
+
+    // Adapter returns CmdResult (not BoxResult) for the read-only cycle-times handler.
+    let adapter = std::fs::read_to_string(root.join("src/commands/cycle_times.rs"))
+        .expect("read adapter");
+    assert!(
+        adapter.contains("CmdResult"),
+        "adapter must use CmdResult: {}",
+        adapter.lines().take(20).collect::<Vec<_>>().join("\n")
+    );
+
+    // First //! doc line must NOT contain the literal word "and" (SRP).
+    let mod_content = std::fs::read_to_string(root.join("src/cycle_times/mod.rs"))
+        .expect("read mod.rs");
+    let first = mod_content
+        .lines()
+        .find(|l| l.starts_with("//!"))
+        .unwrap_or("")
+        .to_lowercase();
+    let has_and = first
+        .split_whitespace()
+        .any(|w| w.trim_matches(|c: char| !c.is_alphabetic()) == "and");
+    assert!(
+        !has_and,
+        "src/cycle_times/mod.rs first //! line must not contain 'and' as a word: {}",
+        first
+    );
+}

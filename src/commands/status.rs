@@ -4,6 +4,7 @@
 //! then return `Output::Both { text, json }` so the dispatcher renders per
 //! the `--format` flag. No println!, no format branching in the handler.
 
+use product_lib::cycle_times;
 use product_lib::{error::ProductError, status};
 
 use super::{load_graph_typed, CmdResult, Output};
@@ -42,7 +43,7 @@ pub(crate) fn handle_status(
     failing: bool,
     _fmt: &str,
 ) -> CmdResult {
-    let (config, _, graph) = load_graph_typed()?;
+    let (config, root, graph) = load_graph_typed()?;
 
     if untested {
         let list = status::build_untested_list(&graph);
@@ -57,7 +58,27 @@ pub(crate) fn handle_status(
         return Ok(Output::both(text, json));
     }
 
-    let summary = status::build_project_summary(&config, &graph, phase);
+    // Build cycle-time context so the status view can render the column
+    // (FT-054, ADR-046 §12).
+    let tag_ts = super::cycle_times::read_tag_timestamps(&root, &graph);
+    let ct_report = cycle_times::build_report(
+        &graph,
+        &tag_ts,
+        config.cycle_times.recent_window,
+        config.cycle_times.trend_threshold,
+        None,
+    );
+    let recent_median = ct_report.summary.recent_5.as_ref().map(|s| s.median);
+    let complete_count = ct_report.summary.count;
+
+    let summary = status::build_project_summary_with_cycle_times(
+        &config,
+        &graph,
+        phase,
+        Some(&tag_ts),
+        recent_median,
+        complete_count,
+    );
     let text = status::render_project_summary_text(&summary, phase.is_some());
     let json = serde_json::to_value(&summary).unwrap_or(serde_json::Value::Null);
     Ok(Output::both(text, json))

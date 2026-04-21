@@ -2,7 +2,7 @@
 id: TC-663
 title: slice_adapter_structural_invariants
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-054
@@ -11,6 +11,8 @@ validates:
 phase: 3
 runner: cargo-test
 runner-args: tc_663_slice_adapter_structural_invariants
+last-run: 2026-04-21T13:48:57.409699651+00:00
+last-run-duration: 0.3s
 ---
 
 ## TC — slice + adapter architecture holds (fitness invariant)

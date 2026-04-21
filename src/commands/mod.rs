@@ -9,6 +9,7 @@ mod author;
 mod checklist;
 mod completions;
 mod context;
+mod cycle_times;
 mod dep;
 mod drift;
 mod drift_diff;
@@ -289,6 +290,35 @@ pub enum Commands {
         #[command(subcommand)]
         command: request_cmd::RequestCommands,
     },
+    /// Historical cycle times (FT-054, ADR-046)
+    CycleTimes {
+        /// Recent-N sample window (default: [cycle-times].recent-window)
+        #[arg(long)]
+        recent: Option<usize>,
+        /// Restrict to a phase
+        #[arg(long)]
+        phase: Option<u32>,
+        /// Show in-progress elapsed-so-far table instead
+        #[arg(long = "in-progress")]
+        in_progress: bool,
+        /// Output format override: text | json | csv
+        #[arg(long = "format", value_name = "FMT")]
+        format: Option<String>,
+    },
+    /// Naive completion forecast (FT-054, ADR-046)
+    Forecast {
+        /// Feature ID (for single-feature forecast)
+        id: Option<String>,
+        /// Phase number (for phase forecast)
+        #[arg(long)]
+        phase: Option<u32>,
+        /// Required flag — opts into a rough estimate labelled as such
+        #[arg(long)]
+        naive: bool,
+        /// Override `[cycle-times].recent-window` for this invocation
+        #[arg(long = "sample-size")]
+        sample_size: Option<usize>,
+    },
 }
 
 pub use self::test_cmd::TestCommands;
@@ -310,11 +340,7 @@ fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> Bo
             context::handle_context(id.as_deref(), depth, phase, adrs_only, order, measure, measure_all),
         Commands::Graph { command } => graph_cmd::handle_graph(command, fmt),
         Commands::Impact { id } => render(status::handle_impact(&id, fmt), fmt),
-        Commands::Status {
-            phase,
-            untested,
-            failing,
-        } => render(status::handle_status(phase, untested, failing, fmt), fmt),
+        Commands::Status { phase, untested, failing } => render(status::handle_status(phase, untested, failing, fmt), fmt),
         Commands::Checklist { command } => checklist::handle_checklist(command),
         Commands::Completions { shell } => completions::handle_completions(&shell, cli_command),
         Commands::Migrate { command } => migrate::handle_migrate(command),
@@ -333,12 +359,24 @@ fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> Bo
         Commands::Onboard { command } => onboard::handle_onboard(command),
         Commands::Init { yes, force, name, domains, port, write_tools, path } => init::handle_init(yes, force, name, domains, port, write_tools, path),
         Commands::Hash { command } => hash::handle_hash(command),
-        Commands::Schema { artifact_type, type_flag, all } => {
-            // `--type` wins over the positional so the idealised invocation
-            // `product schema --type formal` works even when both are given.
-            schema::handle_schema(type_flag.or(artifact_type), all)
-        }
+        Commands::Schema { artifact_type, type_flag, all } => schema::handle_schema(type_flag.or(artifact_type), all),
         Commands::AgentInit { watch } => agent_init::handle_agent_init(watch),
         Commands::Request { command } => request_cmd::handle_request(command, fmt),
+        Commands::CycleTimes { recent, phase, in_progress, format } => dispatch_cycle_times(recent, phase, in_progress, format, fmt),
+        Commands::Forecast { id, phase, naive, sample_size } => cycle_times::handle_forecast(id.as_deref(), phase, naive, sample_size, fmt),
     }
+}
+
+fn dispatch_cycle_times(
+    recent: Option<usize>,
+    phase: Option<u32>,
+    in_progress: bool,
+    format_flag: Option<String>,
+    fmt: &str,
+) -> BoxResult {
+    let effective_fmt = format_flag.as_deref().unwrap_or(fmt);
+    render(
+        cycle_times::handle_cycle_times(recent, phase, in_progress, effective_fmt),
+        effective_fmt,
+    )
 }

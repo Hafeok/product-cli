@@ -2,7 +2,7 @@
 id: TC-656
 title: forecast_naive_single_feature
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-054
@@ -11,6 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_656_forecast_naive_single_feature
+last-run: 2026-04-21T13:48:57.409699651+00:00
+last-run-duration: 0.5s
 ---
 
 ## Session — forecast-naive-single-feature

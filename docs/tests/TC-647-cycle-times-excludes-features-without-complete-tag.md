@@ -2,7 +2,7 @@
 id: TC-647
 title: cycle_times_excludes_features_without_complete_tag
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-054
@@ -11,6 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_647_cycle_times_excludes_features_without_complete_tag
+last-run: 2026-04-21T13:48:57.409699651+00:00
+last-run-duration: 0.6s
 ---
 
 ## Session — cycle-times-excludes-features-without-complete-tag

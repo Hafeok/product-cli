@@ -1041,29 +1041,29 @@
 - [x] TC-643: due_date_never_blocks_verification_or_phase_gate (scenario) — passing
 - [x] TC-644: planning_due_date_and_started_tag_exit (exit-criteria) — passing
 
-### FT-054 — Cycle Time Visibility and Naive Forecast [ ]
+### FT-054 — Cycle Time Visibility and Naive Forecast [x]
 
 - [x] ADR-036: Tag-Based Implementation Tracking (accepted)
 - [x] ADR-045: Planning Annotations — Due Dates as Advisory Signals and Started Tags as Cycle-Time Anchors (accepted)
 - [x] ADR-046: Cycle Time Visibility — Descriptive Statistics Over Probabilistic Forecasting (accepted)
-- [ ] TC-645: cycle_times_lists_complete_features (scenario) — unimplemented
-- [ ] TC-646: cycle_times_excludes_features_without_started_tag (scenario) — unimplemented
-- [ ] TC-647: cycle_times_excludes_features_without_complete_tag (scenario) — unimplemented
-- [ ] TC-648: cycle_times_uses_first_complete_tag_for_v2_features (invariant) — unimplemented
-- [ ] TC-649: cycle_times_recent_5_computed_correctly (scenario) — unimplemented
-- [ ] TC-650: cycle_times_trend_accelerating (scenario) — unimplemented
-- [ ] TC-651: cycle_times_trend_stable (scenario) — unimplemented
-- [ ] TC-652: cycle_times_trend_slowing (scenario) — unimplemented
-- [ ] TC-653: cycle_times_in_progress_shows_elapsed (scenario) — unimplemented
-- [ ] TC-654: cycle_times_json_valid_schema (invariant) — unimplemented
-- [ ] TC-655: cycle_times_csv_parseable (invariant) — unimplemented
-- [ ] TC-656: forecast_naive_single_feature (scenario) — unimplemented
-- [ ] TC-657: forecast_naive_phase_sequential (scenario) — unimplemented
-- [ ] TC-658: forecast_naive_insufficient_data (scenario) — unimplemented
-- [ ] TC-659: forecast_naive_elapsed_exceeds_sample_clamps_to_today (invariant) — unimplemented
-- [ ] TC-660: status_shows_cycle_time_column_when_data_present (scenario) — unimplemented
-- [ ] TC-661: status_omits_cycle_time_column_when_below_min (scenario) — unimplemented
-- [ ] TC-662: cycle_time_visibility_and_naive_forecast_exit (exit-criteria) — unimplemented
-- [ ] TC-663: slice_adapter_structural_invariants (invariant) — unimplemented
-- [ ] TC-664: slice_adapter_pattern_satisfied_by_cycle_times_slice (scenario) — unimplemented
+- [x] TC-645: cycle_times_lists_complete_features (scenario) — passing
+- [x] TC-646: cycle_times_excludes_features_without_started_tag (scenario) — passing
+- [x] TC-647: cycle_times_excludes_features_without_complete_tag (scenario) — passing
+- [x] TC-648: cycle_times_uses_first_complete_tag_for_v2_features (invariant) — passing
+- [x] TC-649: cycle_times_recent_5_computed_correctly (scenario) — passing
+- [x] TC-650: cycle_times_trend_accelerating (scenario) — passing
+- [x] TC-651: cycle_times_trend_stable (scenario) — passing
+- [x] TC-652: cycle_times_trend_slowing (scenario) — passing
+- [x] TC-653: cycle_times_in_progress_shows_elapsed (scenario) — passing
+- [x] TC-654: cycle_times_json_valid_schema (invariant) — passing
+- [x] TC-655: cycle_times_csv_parseable (invariant) — passing
+- [x] TC-656: forecast_naive_single_feature (scenario) — passing
+- [x] TC-657: forecast_naive_phase_sequential (scenario) — passing
+- [x] TC-658: forecast_naive_insufficient_data (scenario) — passing
+- [x] TC-659: forecast_naive_elapsed_exceeds_sample_clamps_to_today (invariant) — passing
+- [x] TC-660: status_shows_cycle_time_column_when_data_present (scenario) — passing
+- [x] TC-661: status_omits_cycle_time_column_when_below_min (scenario) — passing
+- [x] TC-662: cycle_time_visibility_and_naive_forecast_exit (exit-criteria) — passing
+- [x] TC-663: slice_adapter_structural_invariants (invariant) — passing
+- [x] TC-664: slice_adapter_pattern_satisfied_by_cycle_times_slice (scenario) — passing
 

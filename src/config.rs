@@ -54,8 +54,12 @@ pub struct ProductConfig {
     /// Planning annotations — `[planning]` (FT-053, ADR-045).
     #[serde(default)]
     pub planning: crate::config_planning::PlanningConfig,
+    /// Cycle-time visibility — `[cycle-times]` (FT-054, ADR-046).
+    #[serde(rename = "cycle-times", default)]
+    pub cycle_times: CycleTimesConfig,
 }
 
+pub use crate::config_cycle_times::CycleTimesConfig;
 pub use crate::config_planning::PlanningConfig;
 
 /// `[request-builder]` section (FT-052, ADR-044).
@@ -71,17 +75,11 @@ pub struct RequestBuilderConfig {
     #[serde(default)]
     pub editor: Option<String>,
 }
-
 impl Default for RequestBuilderConfig {
     fn default() -> Self {
-        Self {
-            interactive: true,
-            warn_on_warnings: default_warn_policy(),
-            editor: None,
-        }
+        Self { interactive: true, warn_on_warnings: default_warn_policy(), editor: None }
     }
 }
-
 fn default_warn_policy() -> String { "warn".into() }
 
 /// `[tc-types]` section (ADR-042). Reserved structural names must not appear

@@ -2,7 +2,7 @@
 id: TC-662
 title: cycle_time_visibility_and_naive_forecast_exit
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-054
@@ -11,6 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_662_cycle_time_visibility_and_naive_forecast_exit
+last-run: 2026-04-21T13:48:57.409699651+00:00
+last-run-duration: 0.5s
 ---
 
 ## Exit Criteria — FT-054 Cycle Time Visibility and Naive Forecast

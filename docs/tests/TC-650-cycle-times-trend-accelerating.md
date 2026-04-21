@@ -2,7 +2,7 @@
 id: TC-650
 title: cycle_times_trend_accelerating
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-054
@@ -11,6 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_650_cycle_times_trend_accelerating
+last-run: 2026-04-21T13:48:57.409699651+00:00
+last-run-duration: 0.7s
 ---
 
 ## Session — cycle-times-trend-accelerating

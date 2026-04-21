@@ -14,7 +14,13 @@ pub fn render_project_summary_text(summary: &ProjectSummary, show_exit_criteria:
     let _ = writeln!(&mut out);
 
     for phase in &summary.phases {
-        render_phase_into(&mut out, phase, show_exit_criteria);
+        render_phase_into(
+            &mut out,
+            phase,
+            show_exit_criteria,
+            summary.show_cycle_time_column,
+            summary.recent_median_days,
+        );
     }
 
     out
@@ -34,7 +40,13 @@ pub fn render_feature_list_text(heading: &str, list: &FeatureList) -> String {
     out
 }
 
-fn render_phase_into(out: &mut String, phase: &PhaseSummary, show_exit_criteria: bool) {
+fn render_phase_into(
+    out: &mut String,
+    phase: &PhaseSummary,
+    show_exit_criteria: bool,
+    show_cycle_time: bool,
+    recent_median: Option<f64>,
+) {
     let gate_label = if phase.gate.is_open {
         "[OPEN]".to_string()
     } else {
@@ -64,12 +76,17 @@ fn render_phase_into(out: &mut String, phase: &PhaseSummary, show_exit_criteria:
     }
 
     for row in &phase.features {
-        render_feature_row_into(out, row);
+        render_feature_row_into(out, row, show_cycle_time, recent_median);
     }
     let _ = writeln!(out);
 }
 
-fn render_feature_row_into(out: &mut String, row: &FeatureRow) {
+fn render_feature_row_into(
+    out: &mut String,
+    row: &FeatureRow,
+    show_cycle_time: bool,
+    recent_median: Option<f64>,
+) {
     let marker = match row.status.as_str() {
         "complete" => "[x]",
         "in-progress" => "[~]",
@@ -83,9 +100,22 @@ fn render_feature_row_into(out: &mut String, row: &FeatureRow) {
         (Some(d), false) => format!("  due {}", d),
         (None, _) => String::new(),
     };
+    // FT-054 / ADR-046: append cycle-time cell when column is enabled.
+    let ct_suffix = if show_cycle_time {
+        match (row.status.as_str(), row.cycle_time_days) {
+            ("complete", Some(d)) => format!("  cycle {:.1}d", d),
+            ("in-progress", Some(d)) => match recent_median {
+                Some(m) => format!("  elapsed {:.1}d (recent median: {:.1}d)", d, m),
+                None => format!("  elapsed {:.1}d", d),
+            },
+            _ => String::new(),
+        }
+    } else {
+        String::new()
+    };
     let _ = writeln!(
         out,
-        "  {} {:<15} {} (tests: {}/{}){}",
-        marker, row.id, row.title, row.tests_passing, row.tests_total, due_suffix
+        "  {} {:<15} {} (tests: {}/{}){}{}",
+        marker, row.id, row.title, row.tests_passing, row.tests_total, due_suffix, ct_suffix
     );
 }

@@ -11,8 +11,9 @@ pub mod summary;
 
 pub use render::{render_feature_list_text, render_project_summary_text};
 pub use summary::{
-    build_failing_list, build_project_summary, build_untested_list, ExitCriterionSummary,
-    FeatureList, FeatureRow, GateSummary, PhaseSummary, ProjectSummary,
+    build_failing_list, build_project_summary, build_project_summary_with_cycle_times,
+    build_untested_list, ExitCriterionSummary, FeatureList, FeatureRow, GateSummary,
+    PhaseSummary, ProjectSummary,
 };
 
 #[cfg(test)]

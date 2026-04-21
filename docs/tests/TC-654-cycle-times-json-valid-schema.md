@@ -2,7 +2,7 @@
 id: TC-654
 title: cycle_times_json_valid_schema
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-054
@@ -11,6 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_654_cycle_times_json_valid_schema
+last-run: 2026-04-21T13:48:57.409699651+00:00
+last-run-duration: 0.5s
 ---
 
 ## TC — `product cycle-times --format json` matches a documented, versioned schema (invariant)
