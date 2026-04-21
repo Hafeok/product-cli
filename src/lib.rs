@@ -9,6 +9,7 @@ pub mod config;
 #[path = "config_tests.rs"]
 mod config_tests;
 pub mod config_migrate;
+pub mod config_planning;
 pub mod context;
 pub mod dep_types;
 pub mod domains;

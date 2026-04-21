@@ -43,6 +43,7 @@ proptest! {
             tests: vec![],
             domains: vec![],
             domains_acknowledged: std::collections::HashMap::new(),
+            due_date: None,
             bundle: None,
         };
         let body = "Test body content.\n";

@@ -26,6 +26,7 @@ fn feature(id: &str, title: &str, phase: u32, status: FeatureStatus, tests: Vec<
             tests,
             domains: vec![],
             domains_acknowledged: HashMap::new(),
+            due_date: None,
             bundle: None,
         },
         body: String::new(),

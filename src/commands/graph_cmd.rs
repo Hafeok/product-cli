@@ -80,6 +80,11 @@ fn graph_check(format: Option<String>, global_format: &str) -> BoxResult {
     let mut result = graph.check_with_config(Some(&config));
     domains::validate_domains(&graph, &config.domains, &mut result.errors, &mut result.warnings);
     responsibility::check_responsibility(&graph, config.responsibility(), &mut result);
+    // FT-053 / ADR-045 — W028 (due-date passed) and W029 (approaching).
+    let today = chrono::Local::now().date_naive();
+    product_lib::graph::planning_validation::check_due_dates(
+        &graph, &config.planning, today, &mut result,
+    );
     for w in config.validate_product_section() { eprintln!("{}", w); }
 
     // FT-042, ADR-039 decision 10: wire log verification into graph check.

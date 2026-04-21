@@ -6,6 +6,7 @@ mod lifecycle_validation;
 pub mod inference;
 mod model;
 mod ordering;
+pub mod planning_validation;
 mod removal_validation;
 pub mod responsibility;
 mod stats;

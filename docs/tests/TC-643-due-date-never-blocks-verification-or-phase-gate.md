@@ -2,13 +2,17 @@
 id: TC-643
 title: due_date_never_blocks_verification_or_phase_gate
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-053
   adrs:
   - ADR-045
 phase: 5
+runner: cargo-test
+runner-args: tc_643_due_date_never_blocks_verification_or_phase_gate
+last-run: 2026-04-21T13:09:33.430942991+00:00
+last-run-duration: 0.6s
 ---
 
 ## Session — due-date-is-advisory

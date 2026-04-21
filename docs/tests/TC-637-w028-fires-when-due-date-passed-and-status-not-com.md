@@ -2,13 +2,17 @@
 id: TC-637
 title: w028_fires_when_due_date_passed_and_status_not_complete
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-053
   adrs:
   - ADR-045
 phase: 5
+runner: cargo-test
+runner-args: tc_637_w028_fires_when_due_date_passed_and_status_not_complete
+last-run: 2026-04-21T13:09:33.430942991+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session — w028-fires-when-overdue

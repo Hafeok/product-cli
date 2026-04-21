@@ -18,6 +18,7 @@ fn make_feature(id: &str, adrs: Vec<&str>, domains: Vec<&str>) -> Feature {
             tests: vec![],
             domains: domains.into_iter().map(String::from).collect(),
             domains_acknowledged: HashMap::new(),
+            due_date: None,
             bundle: None,
         },
         body: String::new(),

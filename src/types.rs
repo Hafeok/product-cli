@@ -27,6 +27,15 @@ pub struct FeatureFrontMatter {
     /// Acknowledged domain gaps with reasoning (ADR-025)
     #[serde(rename = "domains-acknowledged", default)]
     pub domains_acknowledged: std::collections::HashMap<String, String>,
+    /// Optional commitment date (FT-053, ADR-045) — ISO 8601 YYYY-MM-DD.
+    /// Advisory only — never blocks verification or phase gate.
+    #[serde(
+        rename = "due-date",
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_due_date"
+    )]
+    pub due_date: Option<chrono::NaiveDate>,
     /// Bundle measurement metrics (written by `product context --measure`)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bundle: Option<BundleMetrics>,
@@ -51,6 +60,8 @@ fn default_phase() -> u32 {
 fn default_feature_status() -> FeatureStatus {
     FeatureStatus::Planned
 }
+
+pub(crate) use crate::parse::deserialize_due_date;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]

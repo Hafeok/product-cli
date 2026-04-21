@@ -2,13 +2,17 @@
 id: TC-644
 title: planning_due_date_and_started_tag_exit
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-053
   adrs:
   - ADR-045
 phase: 5
+runner: cargo-test
+runner-args: tc_644_planning_due_date_and_started_tag_exit
+last-run: 2026-04-21T13:09:33.430942991+00:00
+last-run-duration: 0.5s
 ---
 
 ## Exit Criteria — FT-053 Planning Due Dates and Started Tags

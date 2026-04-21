@@ -1026,20 +1026,20 @@
 - [x] TC-634: builder_output_identical_to_hand_written_request_yaml (scenario) — passing
 - [x] TC-635: product_request_builder_exit (exit-criteria) — passing
 
-### FT-053 — Planning — Feature Due Dates and Started Tags [ ]
+### FT-053 — Planning — Feature Due Dates and Started Tags [x]
 
 - [x] ADR-036: Tag-Based Implementation Tracking (accepted)
 - [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
 - [x] ADR-045: Planning Annotations — Due Dates as Advisory Signals and Started Tags as Cycle-Time Anchors (accepted)
-- [ ] TC-636: due_date_field_parses_iso_8601_date (scenario) — unimplemented
-- [ ] TC-637: w028_fires_when_due_date_passed_and_status_not_complete (scenario) — unimplemented
-- [ ] TC-638: w029_fires_within_configurable_warning_window_and_can_be_disabled (scenario) — unimplemented
-- [ ] TC-639: started_tag_created_on_first_in_progress_transition (scenario) — unimplemented
-- [ ] TC-640: started_tag_not_recreated_on_replan_or_restart (scenario) — unimplemented
-- [ ] TC-641: product_status_shows_due_date_column_and_overdue_flag (scenario) — unimplemented
-- [ ] TC-642: change_request_sets_and_deletes_due_date_field (scenario) — unimplemented
-- [ ] TC-643: due_date_never_blocks_verification_or_phase_gate (scenario) — unimplemented
-- [ ] TC-644: planning_due_date_and_started_tag_exit (exit-criteria) — unimplemented
+- [x] TC-636: due_date_field_parses_iso_8601_date (scenario) — passing
+- [x] TC-637: w028_fires_when_due_date_passed_and_status_not_complete (scenario) — passing
+- [x] TC-638: w029_fires_within_configurable_warning_window_and_can_be_disabled (scenario) — passing
+- [x] TC-639: started_tag_created_on_first_in_progress_transition (scenario) — passing
+- [x] TC-640: started_tag_not_recreated_on_replan_or_restart (scenario) — passing
+- [x] TC-641: product_status_shows_due_date_column_and_overdue_flag (scenario) — passing
+- [x] TC-642: change_request_sets_and_deletes_due_date_field (scenario) — passing
+- [x] TC-643: due_date_never_blocks_verification_or_phase_gate (scenario) — passing
+- [x] TC-644: planning_due_date_and_started_tag_exit (exit-criteria) — passing
 
 ### FT-054 — Cycle Time Visibility and Naive Forecast [ ]
 

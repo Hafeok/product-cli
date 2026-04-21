@@ -45,6 +45,13 @@ pub struct FeatureRow {
     pub status: String,
     pub tests_passing: usize,
     pub tests_total: usize,
+    /// Optional commitment date, ISO 8601 (FT-053 / ADR-045). Absent when
+    /// the feature has no `due-date` field.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub due_date: Option<String>,
+    /// True when `due-date < today AND status != complete`.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub overdue: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -214,6 +221,15 @@ fn feature_row(f: &types::Feature, graph: &KnowledgeGraph) -> FeatureRow {
                 .is_some_and(|t| t.front.status == types::TestStatus::Passing)
         })
         .count();
+    let (due_date, overdue) = match f.front.due_date {
+        Some(d) => {
+            let today = chrono::Local::now().date_naive();
+            let overdue =
+                d < today && f.front.status != types::FeatureStatus::Complete;
+            (Some(d.format("%Y-%m-%d").to_string()), overdue)
+        }
+        None => (None, false),
+    };
     FeatureRow {
         id: f.front.id.clone(),
         title: f.front.title.clone(),
@@ -221,5 +237,7 @@ fn feature_row(f: &types::Feature, graph: &KnowledgeGraph) -> FeatureRow {
         status: f.front.status.to_string(),
         tests_passing,
         tests_total,
+        due_date,
+        overdue,
     }
 }

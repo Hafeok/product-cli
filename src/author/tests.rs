@@ -34,6 +34,7 @@ fn schema_prompt_covers_feature_fields() {
         tests: vec![],
         domains: vec![],
         domains_acknowledged: Default::default(),
+        due_date: None,
         bundle: None,
     };
     let yaml = serde_yaml::to_string(&feature).unwrap();

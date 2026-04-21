@@ -2,13 +2,17 @@
 id: TC-642
 title: change_request_sets_and_deletes_due_date_field
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-053
   adrs:
   - ADR-045
 phase: 5
+runner: cargo-test
+runner-args: tc_642_change_request_sets_and_deletes_due_date_field
+last-run: 2026-04-21T13:09:33.430942991+00:00
+last-run-duration: 0.3s
 ---
 
 ## Session — change-request-sets-and-deletes-due-date

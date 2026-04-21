@@ -2,13 +2,17 @@
 id: TC-641
 title: product_status_shows_due_date_column_and_overdue_flag
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-053
   adrs:
   - ADR-045
 phase: 5
+runner: cargo-test
+runner-args: tc_641_product_status_shows_due_date_column_and_overdue_flag
+last-run: 2026-04-21T13:09:33.430942991+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session — status-shows-due-date-column

@@ -51,6 +51,7 @@ pub fn plan_create(
         tests: vec![],
         domains: vec![],
         domains_acknowledged: HashMap::new(),
+        due_date: None,
         bundle: None,
     };
     let body = format!("## Description\n\n[Describe {} here.]\n", title);

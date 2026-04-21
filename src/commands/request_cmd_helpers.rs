@@ -44,6 +44,8 @@ pub fn print_json_result(result: &ApplyResult) {
         "changed": result.changed,
         "findings": result.findings,
         "graph_check_clean": result.graph_check_clean,
+        "started_tags": result.started_tags,
+        "started_tag_warnings": result.started_tag_warnings,
     });
     println!("{}", serde_json::to_string_pretty(&v).unwrap_or_default());
 }
@@ -69,6 +71,12 @@ pub fn print_apply_summary(result: &request::ApplyResult) {
         println!("\n  Graph check:  clean");
     } else {
         println!("\n  Graph check:  post-apply findings (inspect with `product graph check`)");
+    }
+    for tag in &result.started_tags {
+        println!("  Tagged: {}", tag);
+    }
+    for warn in &result.started_tag_warnings {
+        eprintln!("{}", warn);
     }
     println!(
         "  Done. {} created, {} changed.",

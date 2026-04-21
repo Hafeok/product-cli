@@ -2,13 +2,17 @@
 id: TC-640
 title: started_tag_not_recreated_on_replan_or_restart
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-053
   adrs:
   - ADR-045
 phase: 5
+runner: cargo-test
+runner-args: tc_640_started_tag_not_recreated_on_replan_or_restart
+last-run: 2026-04-21T13:09:33.430942991+00:00
+last-run-duration: 0.3s
 ---
 
 ## Session — started-tag-preserved-on-replan

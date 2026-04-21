@@ -2,7 +2,7 @@
 id: FT-053
 title: Planning — Feature Due Dates and Started Tags
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-036
 - FT-037
@@ -25,10 +25,10 @@ domains:
 - observability
 - scheduling
 domains-acknowledged:
-  ADR-042: The exit-criteria TC (TC-644) uses the existing `exit-criteria` structural type from ADR-042 unchanged; no new TC types are introduced and the scenario/invariant partition is not touched.
+  ADR-043: Implementation adds to existing slices (`src/verify/` for the W-class stage, `src/tags/` for the started-tag helper, `src/status/` for the due-date cell) following the plan-then-apply pattern; no monolithic handlers introduced.
   ADR-041: No absence TCs or ADR removes/deprecates interaction — `due-date` is a feature front-matter addition and the started tag extends ADR-036's existing implementation-tracking namespace.
   ADR-040: W028/W029 fire in the existing verify stage 2 (graph structure) alongside W002/W010; the planning warnings reuse the existing W-class channel and exit-code contract without adding a new verify stage or LLM-boundary hook.
-  ADR-043: Implementation adds to existing slices (`src/verify/` for the W-class stage, `src/tags/` for the started-tag helper, `src/status/` for the due-date cell) following the plan-then-apply pattern; no monolithic handlers introduced.
+  ADR-042: The exit-criteria TC (TC-644) uses the existing `exit-criteria` structural type from ADR-042 unchanged; no new TC types are introduced and the scenario/invariant partition is not touched.
 ---
 
 ## Description

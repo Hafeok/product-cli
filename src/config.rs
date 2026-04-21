@@ -51,7 +51,12 @@ pub struct ProductConfig {
     /// Interactive request builder — `[request-builder]` (FT-052, ADR-044).
     #[serde(rename = "request-builder", default)]
     pub request_builder: RequestBuilderConfig,
+    /// Planning annotations — `[planning]` (FT-053, ADR-045).
+    #[serde(default)]
+    pub planning: crate::config_planning::PlanningConfig,
 }
+
+pub use crate::config_planning::PlanningConfig;
 
 /// `[request-builder]` section (FT-052, ADR-044).
 #[derive(Debug, Clone, Serialize, Deserialize)]

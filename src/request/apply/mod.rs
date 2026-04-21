@@ -59,6 +59,15 @@ pub struct ApplyResult {
     pub changed: Vec<ChangedArtifact>,
     pub findings: Vec<Finding>,
     pub graph_check_clean: bool,
+    /// FT-053 / ADR-045 — features whose `started` tag was created as part
+    /// of this apply (first `planned → in-progress` transition, or direct
+    /// creation with `status: in-progress`). Empty when git is unavailable.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub started_tags: Vec<String>,
+    /// FT-053 / ADR-045 — W-class messages emitted when started-tag creation
+    /// was skipped (git unavailable) or failed.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub started_tag_warnings: Vec<String>,
 }
 
 impl ApplyResult {
@@ -92,12 +101,21 @@ pub fn apply_request(
                 applied: false, created: Vec::new(), changed: Vec::new(),
                 findings: vec![Finding::error("E001", format!("failed to load graph: {}", e), "$")],
                 graph_check_clean: false,
+                started_tags: Vec::new(), started_tag_warnings: Vec::new(),
             };
         }
     };
     let graph = KnowledgeGraph::build_with_deps(
         loaded.features, loaded.adrs, loaded.tests, loaded.dependencies,
     );
+
+    // FT-053 / ADR-045 — snapshot pre-apply feature statuses so we can detect
+    // `planned → in-progress` transitions and emit started tags.
+    let pre_feature_statuses: HashMap<String, crate::types::FeatureStatus> = graph
+        .features
+        .iter()
+        .map(|(id, f)| (id.clone(), f.front.status))
+        .collect();
 
     let ctx = ValidationContext { config, graph: &graph };
     let mut findings = validate::validate_request(request, &ctx);
@@ -122,6 +140,7 @@ pub fn apply_request(
                 return ApplyResult {
                     applied: false, created: Vec::new(), changed: Vec::new(),
                     findings, graph_check_clean: false,
+                    started_tags: Vec::new(), started_tag_warnings: Vec::new(),
                 };
             }
         }
@@ -132,6 +151,7 @@ pub fn apply_request(
         return ApplyResult {
             applied: false, created: Vec::new(), changed: Vec::new(),
             findings, graph_check_clean: !has_errors,
+            started_tags: Vec::new(), started_tag_warnings: Vec::new(),
         };
     }
 
@@ -142,6 +162,7 @@ pub fn apply_request(
             return ApplyResult {
                 applied: false, created: Vec::new(), changed: Vec::new(),
                 findings, graph_check_clean: false,
+                started_tags: Vec::new(), started_tag_warnings: Vec::new(),
             };
         }
     };
@@ -155,6 +176,7 @@ pub fn apply_request(
             return ApplyResult {
                 applied: false, created: Vec::new(), changed: Vec::new(),
                 findings, graph_check_clean: false,
+                started_tags: Vec::new(), started_tag_warnings: Vec::new(),
             };
         }
     };
@@ -185,6 +207,7 @@ pub fn apply_request(
         return ApplyResult {
             applied: false, created: Vec::new(), changed: Vec::new(),
             findings, graph_check_clean: false,
+            started_tags: Vec::new(), started_tag_warnings: Vec::new(),
         };
     }
 
@@ -205,17 +228,29 @@ pub fn apply_request(
         })
         .collect();
 
-    let graph_check_clean = match parser::load_all_with_deps(
+    let (graph_check_clean, post_feature_statuses) = match parser::load_all_with_deps(
         &features_dir, &adrs_dir, &tests_dir, Some(&deps_dir),
     ) {
         Ok(l) => {
+            let post_statuses: HashMap<String, crate::types::FeatureStatus> = l
+                .features
+                .iter()
+                .map(|f| (f.front.id.clone(), f.front.status))
+                .collect();
             let g = KnowledgeGraph::build_with_deps(
                 l.features, l.adrs, l.tests, l.dependencies,
             );
-            g.check().errors.is_empty()
+            (g.check().errors.is_empty(), post_statuses)
         }
-        Err(_) => false,
+        Err(_) => (false, HashMap::new()),
     };
+
+    // FT-053 / ADR-045 — best-effort started-tag creation for every feature
+    // whose status is now `in-progress` and was either not previously present
+    // or was previously `planned`. Tag creation is skipped (W-class warning)
+    // when git is unavailable, and never overwrites an existing tag.
+    let (started_tags, started_tag_warnings) =
+        emit_started_tags(repo_root, &pre_feature_statuses, &post_feature_statuses);
 
     // FT-041 compat: append to legacy `.product/request-log.jsonl` too.
     let _ = super::log::append_log(repo_root, request, &created, &changed);
@@ -256,6 +291,68 @@ pub fn apply_request(
     );
 
     ApplyResult {
-        applied: true, created, changed, findings, graph_check_clean,
+        applied: true,
+        created,
+        changed,
+        findings,
+        graph_check_clean,
+        started_tags,
+        started_tag_warnings,
     }
+}
+
+/// FT-053 / ADR-045 — create `product/FT-XXX/started` tags for features that
+/// have entered `in-progress` as a result of this apply. Only the first
+/// `planned → in-progress` transition (or a fresh creation already at
+/// `in-progress`) triggers tag creation; pre-existing `in-progress` features
+/// are ignored so replans don't overwrite the earliest-start anchor.
+fn emit_started_tags(
+    repo_root: &Path,
+    pre: &HashMap<String, crate::types::FeatureStatus>,
+    post: &HashMap<String, crate::types::FeatureStatus>,
+) -> (Vec<String>, Vec<String>) {
+    use crate::types::FeatureStatus;
+    let mut tags: Vec<String> = Vec::new();
+    let mut warnings: Vec<String> = Vec::new();
+    let mut ids: Vec<&String> = post.keys().collect();
+    ids.sort();
+    for id in ids {
+        let post_status = match post.get(id) {
+            Some(s) => s,
+            None => continue,
+        };
+        if *post_status != FeatureStatus::InProgress {
+            continue;
+        }
+        // Either the feature is brand new (no pre-apply entry) or was `planned`
+        // before. If it was already `in-progress` pre-apply, skip.
+        let pre_status = pre.get(id).copied();
+        let is_fresh_start = match pre_status {
+            None => true,
+            Some(FeatureStatus::Planned) => true,
+            Some(_) => false,
+        };
+        if !is_fresh_start {
+            continue;
+        }
+        match crate::tags::create_started_tag(repo_root, id) {
+            crate::tags::StartedTagOutcome::Created(name) => tags.push(name),
+            crate::tags::StartedTagOutcome::AlreadyExists => {
+                // Idempotent no-op — earliest start preserved (decision 5).
+            }
+            crate::tags::StartedTagOutcome::SkippedNoGit => {
+                warnings.push(format!(
+                    "warning[W030]: started tag for {} skipped — not a git repository",
+                    id
+                ));
+            }
+            crate::tags::StartedTagOutcome::Failed(msg) => {
+                warnings.push(format!(
+                    "warning[W030]: started tag for {} not created — {}",
+                    id, msg
+                ));
+            }
+        }
+    }
+    (tags, warnings)
 }

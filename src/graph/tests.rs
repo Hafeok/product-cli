@@ -16,6 +16,7 @@ fn make_feature(id: &str, deps: Vec<&str>, adrs: Vec<&str>, tests: Vec<&str>, st
             tests: tests.into_iter().map(String::from).collect(),
             domains: vec![],
             domains_acknowledged: std::collections::HashMap::new(),
+            due_date: None,
             bundle: None,
         },
         body: String::new(),

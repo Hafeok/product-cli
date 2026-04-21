@@ -13,6 +13,11 @@ pub(super) fn run(config: &ProductConfig, graph: &KnowledgeGraph) -> StageResult
     let mut result: CheckResult = graph.check();
     domains::validate_domains(graph, &config.domains, &mut result.errors, &mut result.warnings);
     crate::graph::responsibility::check_responsibility(graph, config.responsibility(), &mut result);
+    // FT-053 / ADR-045 — due-date advisories in stage 2.
+    let today = chrono::Local::now().date_naive();
+    crate::graph::planning_validation::check_due_dates(
+        graph, &config.planning, today, &mut result,
+    );
 
     let mut findings: Vec<Finding> = Vec::new();
     let mut seen = std::collections::HashSet::new();

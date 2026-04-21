@@ -24,6 +24,7 @@ fn empty_front(id: &str, title: &str) -> FeatureFrontMatter {
         tests: vec![],
         domains: vec![],
         domains_acknowledged: HashMap::new(),
+        due_date: None,
         bundle: None,
     }
 }

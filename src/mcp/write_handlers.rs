@@ -38,6 +38,7 @@ fn new_feature_front(id: String, title: &str, phase: u32) -> crate::types::Featu
         tests: vec![],
         domains: vec![],
         domains_acknowledged: std::collections::HashMap::new(),
+        due_date: None,
         bundle: None,
     }
 }

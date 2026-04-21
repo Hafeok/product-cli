@@ -262,6 +262,38 @@ pub fn create_completion_tag(
     create_tag(root, feature_id, &event, &message)
 }
 
+/// Outcome of a started-tag creation attempt (FT-053, ADR-045).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StartedTagOutcome {
+    /// The `product/FT-XXX/started` tag was newly created.
+    Created(String),
+    /// A started tag already existed — never overwrite (decision 5).
+    AlreadyExists,
+    /// Not inside a git repository — skipped silently (decision 7).
+    SkippedNoGit,
+    /// git reported an error — surfaced as a W-class warning by the caller.
+    Failed(String),
+}
+
+/// Create a `product/FT-XXX/started` tag once per feature. Idempotent: any
+/// subsequent call on the same feature is a no-op, preserving the earliest
+/// start timestamp (ADR-045 decisions 5 + 6). Best-effort — git-unavailable
+/// environments return `SkippedNoGit` (decision 7).
+pub fn create_started_tag(root: &Path, feature_id: &str) -> StartedTagOutcome {
+    if !is_git_repo(root) {
+        return StartedTagOutcome::SkippedNoGit;
+    }
+    let tag = format_tag_name(feature_id, "started");
+    if tag_exists(root, &tag) {
+        return StartedTagOutcome::AlreadyExists;
+    }
+    let message = format!("{} started: status changed to in-progress", feature_id);
+    match create_tag(root, feature_id, "started", &message) {
+        Ok(name) => StartedTagOutcome::Created(name),
+        Err(e) => StartedTagOutcome::Failed(e.to_string()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

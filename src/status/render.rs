@@ -77,9 +77,15 @@ fn render_feature_row_into(out: &mut String, row: &FeatureRow) {
         "abandoned" => "[-]",
         _ => "[?]",
     };
+    // FT-053 / ADR-045: append due-date cell when present; flag overdue with `!`.
+    let due_suffix = match (&row.due_date, row.overdue) {
+        (Some(d), true) => format!("  due {} \u{203C} overdue", d),
+        (Some(d), false) => format!("  due {}", d),
+        (None, _) => String::new(),
+    };
     let _ = writeln!(
         out,
-        "  {} {:<15} {} (tests: {}/{})",
-        marker, row.id, row.title, row.tests_passing, row.tests_total
+        "  {} {:<15} {} (tests: {}/{}){}",
+        marker, row.id, row.title, row.tests_passing, row.tests_total, due_suffix
     );
 }

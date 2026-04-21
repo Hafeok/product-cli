@@ -46,6 +46,7 @@ pub fn execute_plan(
             tests: vec![],
             domains: vec![],
             domains_acknowledged: std::collections::HashMap::new(),
+            due_date: None,
             bundle: None,
         };
         let content = crate::parser::render_feature(&front, &f.body);

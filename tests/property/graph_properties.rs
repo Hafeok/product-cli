@@ -18,6 +18,7 @@ fn make_feature(id: &str, deps: Vec<String>) -> Feature {
             tests: vec![],
             domains: vec![],
             domains_acknowledged: std::collections::HashMap::new(),
+            due_date: None,
             bundle: None,
         },
         body: String::new(),

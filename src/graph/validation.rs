@@ -52,11 +52,25 @@ impl KnowledgeGraph {
         for pe in &self.parse_errors {
             match pe {
                 ProductError::ParseError { file, line, message } => {
-                    let mut diag = Diagnostic::error("E001", "malformed front-matter")
+                    // FT-053 / ADR-045: due-date malformed → E006 with a
+                    // field-specific hint, not E001.
+                    let (code, msg, hint) = if message.contains("due-date: expected YYYY-MM-DD") {
+                        (
+                            "E006",
+                            "malformed due-date field",
+                            Some("expected YYYY-MM-DD (ISO 8601 date)"),
+                        )
+                    } else {
+                        ("E001", "malformed front-matter", None)
+                    };
+                    let mut diag = Diagnostic::error(code, msg)
                         .with_file(file.clone())
                         .with_detail(message);
                     if let Some(l) = line {
                         diag = diag.with_line(*l);
+                    }
+                    if let Some(h) = hint {
+                        diag = diag.with_hint(h);
                     }
                     result.errors.push(diag);
                 }

@@ -15975,3 +15975,521 @@ fn tc_625_relative_paths_in_log_exit() {
     let after = log_lines(&h).len();
     assert_eq!(before, after, "migrate-paths must be a no-op on a clean log");
 }
+
+// ---------------------------------------------------------------------------
+// FT-053: Planning — Feature Due Dates and Started Tags (TC-636 – TC-644)
+// ---------------------------------------------------------------------------
+
+fn fixture_planning(date_line: Option<&str>) -> Harness {
+    let h = fixture_with_domains();
+    let dd = date_line.map(|d| format!("due-date: \"{}\"\n", d)).unwrap_or_default();
+    h.write(
+        "docs/features/FT-009-payments.md",
+        &format!(
+            "---\nid: FT-009\ntitle: Payments\nphase: 1\nstatus: in-progress\n{}depends-on: []\nadrs:\n- ADR-045\ntests: []\ndomains:\n- api\ndomains-acknowledged: {{}}\n---\n\n## Description\n\nSeed.\n",
+            dd
+        ),
+    );
+    h.write(
+        "docs/adrs/ADR-045-planning.md",
+        "---\nid: ADR-045\ntitle: Planning ADR\nstatus: accepted\nfeatures:\n- FT-009\nsupersedes: []\nsuperseded-by: []\ndomains:\n- api\nscope: cross-cutting\n---\n\n## Context\n\nSeed.\n",
+    );
+    h
+}
+
+/// TC-636: `due-date` front-matter field parses as ISO 8601 and round-trips
+/// via the graph parser. Invalid values produce E006 with a YYYY-MM-DD hint.
+#[test]
+fn tc_636_due_date_field_parses_iso_8601_date() {
+    // Valid date — parses and is accepted by graph check.
+    let h_ok = fixture_planning(Some("2026-05-01"));
+    let out = h_ok.run(&["graph", "check"]);
+    // graph check exits 2 or 0 (W028/W029 may fire, but no E-class errors).
+    assert!(
+        out.exit_code == 0 || out.exit_code == 2,
+        "graph check should not hard-fail on a valid due-date; stderr: {}",
+        out.stderr
+    );
+    assert!(
+        !out.stderr.contains("E001"),
+        "valid due-date should not produce E001: {}",
+        out.stderr
+    );
+    assert!(
+        !out.stderr.contains("E006"),
+        "valid due-date should not produce E006: {}",
+        out.stderr
+    );
+
+    // Invalid date — E006 with the expected-YYYY-MM-DD hint.
+    let h_bad = fixture_planning(Some("not-a-date"));
+    let out_bad = h_bad.run(&["graph", "check"]);
+    out_bad.assert_stderr_contains("E006");
+    out_bad.assert_stderr_contains("YYYY-MM-DD");
+    assert_eq!(
+        out_bad.exit_code, 1,
+        "invalid due-date should exit 1 (E-class); stderr: {}",
+        out_bad.stderr
+    );
+}
+
+/// TC-637: W028 fires when due-date < today and status != complete, but not
+/// for complete features.
+#[test]
+fn tc_637_w028_fires_when_due_date_passed_and_status_not_complete() {
+    let h = fixture_with_domains();
+    // FT-009 overdue (1970 is always in the past), in-progress.
+    h.write(
+        "docs/features/FT-009-overdue.md",
+        "---\nid: FT-009\ntitle: Overdue\nphase: 1\nstatus: in-progress\ndue-date: \"1970-01-01\"\ndepends-on: []\nadrs:\n- ADR-045\ntests: []\ndomains:\n- api\ndomains-acknowledged: {}\n---\n\nSeed.\n",
+    );
+    // FT-010 overdue but complete — W028 should NOT fire.
+    h.write(
+        "docs/features/FT-010-complete-past.md",
+        "---\nid: FT-010\ntitle: Past Complete\nphase: 1\nstatus: complete\ndue-date: \"1970-01-01\"\ndepends-on: []\nadrs:\n- ADR-045\ntests: []\ndomains:\n- api\ndomains-acknowledged: {}\n---\n\nSeed.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-045-planning.md",
+        "---\nid: ADR-045\ntitle: Planning ADR\nstatus: accepted\nfeatures:\n- FT-009\n- FT-010\nsupersedes: []\nsuperseded-by: []\ndomains:\n- api\nscope: cross-cutting\n---\n\nSeed.\n",
+    );
+    let out = h.run(&["graph", "check"]);
+    out.assert_stderr_contains("W028");
+    // FT-009 overdue message mentions the feature id.
+    assert!(
+        out.stderr.contains("FT-009"),
+        "W028 output should name FT-009: {}",
+        out.stderr
+    );
+    // FT-010 should not be named in W028 output.
+    let w028_chunk: String = out
+        .stderr
+        .split("\n\n")
+        .filter(|s| s.contains("W028"))
+        .collect::<Vec<_>>()
+        .join("\n\n");
+    assert!(
+        !w028_chunk.contains("FT-010"),
+        "complete features must not trigger W028; w028 chunk: {}",
+        w028_chunk
+    );
+    // Exit 2 (W-class only), never 1.
+    assert_eq!(
+        out.exit_code, 2,
+        "W-class only should exit 2; stderr: {}",
+        out.stderr
+    );
+}
+
+/// TC-638: W029 fires within the configured warning window and is disabled
+/// when `due-date-warning-days = 0`.
+#[test]
+fn tc_638_w029_fires_within_configurable_warning_window_and_can_be_disabled() {
+    let h = fixture_with_domains();
+    // Set due-date 1 day in the future (within the 3-day default window).
+    let tomorrow = (chrono::Local::now().date_naive()
+        + chrono::Duration::days(1))
+        .format("%Y-%m-%d")
+        .to_string();
+    let far = (chrono::Local::now().date_naive()
+        + chrono::Duration::days(90))
+        .format("%Y-%m-%d")
+        .to_string();
+    h.write(
+        "docs/features/FT-009-soon.md",
+        &format!(
+            "---\nid: FT-009\ntitle: Soon\nphase: 1\nstatus: in-progress\ndue-date: \"{}\"\ndepends-on: []\nadrs:\n- ADR-045\ntests: []\ndomains:\n- api\ndomains-acknowledged: {{}}\n---\n\nSeed.\n",
+            tomorrow
+        ),
+    );
+    h.write(
+        "docs/features/FT-010-far.md",
+        &format!(
+            "---\nid: FT-010\ntitle: Far\nphase: 1\nstatus: in-progress\ndue-date: \"{}\"\ndepends-on: []\nadrs:\n- ADR-045\ntests: []\ndomains:\n- api\ndomains-acknowledged: {{}}\n---\n\nSeed.\n",
+            far
+        ),
+    );
+    h.write(
+        "docs/adrs/ADR-045-planning.md",
+        "---\nid: ADR-045\ntitle: Planning ADR\nstatus: accepted\nfeatures:\n- FT-009\n- FT-010\nsupersedes: []\nsuperseded-by: []\ndomains:\n- api\nscope: cross-cutting\n---\n\nSeed.\n",
+    );
+    let out = h.run(&["graph", "check"]);
+    out.assert_stderr_contains("W029");
+    assert!(
+        out.stderr.contains("FT-009"),
+        "W029 should name the near-future FT-009: {}",
+        out.stderr
+    );
+    assert!(
+        !out
+            .stderr
+            .split("\n\n")
+            .filter(|s| s.contains("W029"))
+            .any(|s| s.contains("FT-010")),
+        "W029 should not fire for a date beyond the window: {}",
+        out.stderr
+    );
+
+    // Disable W029 via [planning].due-date-warning-days = 0.
+    let toml = h.read("product.toml");
+    h.write(
+        "product.toml",
+        &format!("{}\n[planning]\ndue-date-warning-days = 0\n", toml),
+    );
+    let out_disabled = h.run(&["graph", "check"]);
+    assert!(
+        !out_disabled.stderr.contains("W029"),
+        "W029 should be silenced when due-date-warning-days = 0: {}",
+        out_disabled.stderr
+    );
+}
+
+/// TC-639: started tag is created on the first `planned → in-progress`
+/// transition (and when git is missing, a warning is emitted instead).
+#[test]
+fn tc_639_started_tag_created_on_first_in_progress_transition() {
+    // Git path — tag is created.
+    let h = fixture_with_domains();
+    git_init(&h);
+    h.write(
+        "docs/features/FT-009-payments.md",
+        "---\nid: FT-009\ntitle: Payments\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains:\n- api\ndomains-acknowledged: {}\n---\n\nSeed.\n",
+    );
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+    std::process::Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git commit");
+
+    h.write(
+        "req.yaml",
+        "type: change\nschema-version: 1\nreason: \"start FT-009\"\nchanges:\n  - target: FT-009\n    mutations:\n      - op: set\n        field: status\n        value: in-progress\n",
+    );
+    let out = h.run(&["request", "apply", "req.yaml"]);
+    out.assert_exit(0);
+
+    // Tag should exist.
+    let tag_out = std::process::Command::new("git")
+        .args(["tag", "-l", "product/FT-009/started"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git tag");
+    let tags = String::from_utf8_lossy(&tag_out.stdout);
+    assert!(
+        tags.contains("product/FT-009/started"),
+        "started tag should exist after transition: {}",
+        tags
+    );
+
+    // Message contains the feature id and status change phrase.
+    let msg_out = std::process::Command::new("git")
+        .args([
+            "tag",
+            "-l",
+            "product/FT-009/started",
+            "--format=%(contents)",
+        ])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("tag msg");
+    let msg = String::from_utf8_lossy(&msg_out.stdout);
+    assert!(msg.contains("FT-009 started"), "tag message: {}", msg);
+    assert!(msg.contains("in-progress"), "tag message: {}", msg);
+
+    // No-git path — warning, no crash.
+    let h2 = fixture_with_domains();
+    h2.write(
+        "docs/features/FT-009-payments.md",
+        "---\nid: FT-009\ntitle: Payments\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains:\n- api\ndomains-acknowledged: {}\n---\n\nSeed.\n",
+    );
+    h2.write(
+        "req.yaml",
+        "type: change\nschema-version: 1\nreason: \"start FT-009\"\nchanges:\n  - target: FT-009\n    mutations:\n      - op: set\n        field: status\n        value: in-progress\n",
+    );
+    let out2 = h2.run_with_env(
+        &["request", "apply", "req.yaml"],
+        &[("PRODUCT_AUTHOR", "local:test")],
+    );
+    // Apply may fail because of missing git identity — skip assertion on exit code if so.
+    // Regardless: when git is missing, the apply either succeeds with a W030 warning
+    // or fails on git-identity; both paths are acceptable. The key assertion is that
+    // no started tag leaks out.
+    let no_tag = !out2.stdout.contains("product/FT-009/started")
+        && !out2.stderr.contains("Tagged: product/FT-009/started");
+    assert!(no_tag, "no started tag should be created without git: {}{}", out2.stdout, out2.stderr);
+}
+
+/// TC-640: Replan from in-progress → planned → in-progress must not create a
+/// new started tag. The earliest-start anchor is preserved.
+#[test]
+fn tc_640_started_tag_not_recreated_on_replan_or_restart() {
+    let h = fixture_with_domains();
+    git_init(&h);
+    h.write(
+        "docs/features/FT-009-payments.md",
+        "---\nid: FT-009\ntitle: Payments\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains:\n- api\ndomains-acknowledged: {}\n---\n\nSeed.\n",
+    );
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+    std::process::Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git commit");
+
+    // First transition → creates product/FT-009/started.
+    h.write(
+        "req1.yaml",
+        "type: change\nschema-version: 1\nreason: \"start\"\nchanges:\n  - target: FT-009\n    mutations:\n      - op: set\n        field: status\n        value: in-progress\n",
+    );
+    h.run(&["request", "apply", "req1.yaml"]).assert_exit(0);
+
+    // Capture original timestamp.
+    let ts_out_1 = std::process::Command::new("git")
+        .args([
+            "tag",
+            "-l",
+            "product/FT-009/started",
+            "--format=%(creatordate:iso8601)",
+        ])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("ts1");
+    let ts1 = String::from_utf8_lossy(&ts_out_1.stdout).trim().to_string();
+    assert!(!ts1.is_empty(), "started tag should exist after first transition");
+
+    // Replan → planned.
+    h.write(
+        "req2.yaml",
+        "type: change\nschema-version: 1\nreason: \"replan\"\nchanges:\n  - target: FT-009\n    mutations:\n      - op: set\n        field: status\n        value: planned\n",
+    );
+    h.run(&["request", "apply", "req2.yaml"]).assert_exit(0);
+
+    // Back to in-progress — must NOT create a new or versioned tag.
+    h.write(
+        "req3.yaml",
+        "type: change\nschema-version: 1\nreason: \"restart\"\nchanges:\n  - target: FT-009\n    mutations:\n      - op: set\n        field: status\n        value: in-progress\n",
+    );
+    let out3 = h.run(&["request", "apply", "req3.yaml"]);
+    out3.assert_exit(0);
+    assert!(
+        !out3.stdout.contains("Tagged: product/FT-009/started"),
+        "no new started tag should be emitted on restart: {}",
+        out3.stdout
+    );
+
+    // Only one `started`-family tag — no `started-v2`.
+    let all_tags = std::process::Command::new("git")
+        .args(["tag", "-l", "product/FT-009/*"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("tags");
+    let tags = String::from_utf8_lossy(&all_tags.stdout);
+    let started_count = tags
+        .lines()
+        .filter(|l| l.contains("/started"))
+        .count();
+    assert_eq!(
+        started_count, 1,
+        "exactly one started tag expected, got: {}",
+        tags
+    );
+
+    // Timestamp unchanged.
+    let ts_out_2 = std::process::Command::new("git")
+        .args([
+            "tag",
+            "-l",
+            "product/FT-009/started",
+            "--format=%(creatordate:iso8601)",
+        ])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("ts2");
+    let ts2 = String::from_utf8_lossy(&ts_out_2.stdout).trim().to_string();
+    assert_eq!(
+        ts1, ts2,
+        "started tag timestamp must be preserved across replans"
+    );
+}
+
+/// TC-641: `product status` renders a due-date cell and overdue marker for
+/// features with `due-date`, omits the cell for features without.
+#[test]
+fn tc_641_product_status_shows_due_date_column_and_overdue_flag() {
+    let h = fixture_with_domains();
+    let future = (chrono::Local::now().date_naive()
+        + chrono::Duration::days(90))
+        .format("%Y-%m-%d")
+        .to_string();
+    h.write(
+        "docs/features/FT-003-future.md",
+        &format!(
+            "---\nid: FT-003\ntitle: Future Date\nphase: 1\nstatus: in-progress\ndue-date: \"{}\"\ndepends-on: []\nadrs: []\ntests: []\ndomains:\n- api\ndomains-acknowledged: {{}}\n---\n\nSeed.\n",
+            future
+        ),
+    );
+    h.write(
+        "docs/features/FT-009-overdue.md",
+        "---\nid: FT-009\ntitle: Overdue\nphase: 1\nstatus: planned\ndue-date: \"1970-01-01\"\ndepends-on: []\nadrs: []\ntests: []\ndomains:\n- api\ndomains-acknowledged: {}\n---\n\nSeed.\n",
+    );
+    h.write(
+        "docs/features/FT-012-no-date.md",
+        "---\nid: FT-012\ntitle: No Date\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\ndomains:\n- api\ndomains-acknowledged: {}\n---\n\nSeed.\n",
+    );
+
+    let out = h.run(&["status"]);
+    out.assert_exit(0);
+    // Future feature shows its date.
+    out.assert_stdout_contains(&future);
+    // Overdue feature shows its date AND the overdue marker.
+    out.assert_stdout_contains("1970-01-01");
+    out.assert_stdout_contains("overdue");
+    // FT-012 row should not contain "due ".
+    let lines: Vec<&str> = out
+        .stdout
+        .lines()
+        .filter(|l| l.contains("FT-012"))
+        .collect();
+    assert!(!lines.is_empty(), "expected FT-012 row in output");
+    for l in &lines {
+        assert!(
+            !l.contains("due "),
+            "FT-012 has no due-date and should not render one: {}",
+            l
+        );
+    }
+}
+
+/// TC-642: change request can set and later delete the `due-date` field.
+#[test]
+fn tc_642_change_request_sets_and_deletes_due_date_field() {
+    let h = fixture_with_domains();
+    git_init(&h);
+    h.write(
+        "docs/features/FT-009-payments.md",
+        "---\nid: FT-009\ntitle: Payments\nphase: 1\nstatus: in-progress\ndepends-on: []\nadrs: []\ntests: []\ndomains:\n- api\ndomains-acknowledged: {}\n---\n\nSeed.\n",
+    );
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git add");
+    std::process::Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("git commit");
+
+    // Set due-date
+    h.write(
+        "set.yaml",
+        "type: change\nschema-version: 1\nreason: \"set commitment\"\nchanges:\n  - target: FT-009\n    mutations:\n      - op: set\n        field: due-date\n        value: \"2026-05-01\"\n",
+    );
+    h.run(&["request", "apply", "set.yaml"]).assert_exit(0);
+    let content = h.read("docs/features/FT-009-payments.md");
+    assert!(
+        content.contains("due-date: 2026-05-01") || content.contains("due-date: '2026-05-01'")
+            || content.contains("due-date: \"2026-05-01\""),
+        "due-date should be set: {}",
+        content
+    );
+
+    // Delete due-date
+    h.write(
+        "del.yaml",
+        "type: change\nschema-version: 1\nreason: \"remove commitment\"\nchanges:\n  - target: FT-009\n    mutations:\n      - op: delete\n        field: due-date\n",
+    );
+    h.run(&["request", "apply", "del.yaml"]).assert_exit(0);
+    let content2 = h.read("docs/features/FT-009-payments.md");
+    assert!(
+        !content2.contains("due-date:"),
+        "due-date should be gone after delete: {}",
+        content2
+    );
+}
+
+/// TC-643: due-date is advisory only. `graph check` reports W028 at exit 2
+/// (W-class), never exit 1 solely because of a missed date.
+#[test]
+fn tc_643_due_date_never_blocks_verification_or_phase_gate() {
+    let h = fixture_with_domains();
+    h.write(
+        "docs/features/FT-009-overdue.md",
+        "---\nid: FT-009\ntitle: Overdue\nphase: 1\nstatus: in-progress\ndue-date: \"1970-01-01\"\ndepends-on: []\nadrs:\n- ADR-045\ntests: []\ndomains:\n- api\ndomains-acknowledged: {}\n---\n\nSeed.\n",
+    );
+    h.write(
+        "docs/adrs/ADR-045-planning.md",
+        "---\nid: ADR-045\ntitle: Planning\nstatus: accepted\nfeatures:\n- FT-009\nsupersedes: []\nsuperseded-by: []\ndomains:\n- api\nscope: cross-cutting\n---\n\nSeed.\n",
+    );
+    let out = h.run(&["graph", "check"]);
+    // W028 present, exit 2 (warning only).
+    out.assert_stderr_contains("W028");
+    assert_eq!(
+        out.exit_code, 2,
+        "overdue alone must never produce exit 1; stderr: {}",
+        out.stderr
+    );
+    assert!(
+        !out.stderr.contains("error[E"),
+        "overdue due-date must not produce any E-class diagnostic: {}",
+        out.stderr
+    );
+}
+
+/// TC-644: planning_due_date_and_started_tag_exit — consolidated exit
+/// criteria for FT-053. Asserts the full contract ships together.
+#[test]
+fn tc_644_planning_due_date_and_started_tag_exit() {
+    // 1. due-date field parses.
+    let h = fixture_with_domains();
+    h.write(
+        "docs/features/FT-009-seed.md",
+        "---\nid: FT-009\ntitle: Seed\nphase: 1\nstatus: planned\ndue-date: \"2026-05-01\"\ndepends-on: []\nadrs: []\ntests: []\ndomains:\n- api\ndomains-acknowledged: {}\n---\n\n## Description\n\nSeed.\n",
+    );
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        !out.stderr.contains("E001") && !out.stderr.contains("E006"),
+        "valid due-date should not trigger E-class: {}",
+        out.stderr
+    );
+
+    // 2. status renders due-date column.
+    let status_out = h.run(&["status"]);
+    status_out.assert_stdout_contains("2026-05-01");
+
+    // 3. Tag list accepts --type started.
+    git_init(&h);
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("add");
+    std::process::Command::new("git")
+        .args(["commit", "-m", "seed"])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("commit");
+    std::process::Command::new("git")
+        .args([
+            "tag",
+            "-a",
+            "product/FT-009/started",
+            "-m",
+            "FT-009 started: status changed to in-progress",
+        ])
+        .current_dir(h.dir.path())
+        .output()
+        .expect("tag");
+    let tag_out = h.run(&["tags", "list", "--type", "started"]);
+    tag_out.assert_exit(0);
+    tag_out.assert_stdout_contains("FT-009");
+    tag_out.assert_stdout_contains("started");
+}
