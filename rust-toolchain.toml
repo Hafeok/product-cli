@@ -1,0 +1,7 @@
+[toolchain]
+# Pinned to align local builds with CI. Bump this when you want to adopt a new
+# toolchain — CI's dtolnay/rust-toolchain@master reads this file, so a single
+# change keeps local and CI in lockstep.
+channel = "1.95"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

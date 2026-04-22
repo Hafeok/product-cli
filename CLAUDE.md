@@ -36,6 +36,14 @@ Code-quality fitness tests (`tests/code_quality_tests.rs`) enforce a
 400-line-per-file hard limit and a single-responsibility check on module doc
 comments (the first `//!` line must not contain the word "and").
 
+### Rust toolchain
+
+The toolchain is pinned in `rust-toolchain.toml` at the repo root. `rustup`
+reads this automatically, so `cargo` / `cargo clippy` always run on the
+pinned version locally. CI (`dtolnay/rust-toolchain@master`) reads the same
+file, so local and CI stay in lockstep. To upgrade, bump the `channel`
+value in `rust-toolchain.toml` — no workflow change needed.
+
 ## Project Structure
 
 ```

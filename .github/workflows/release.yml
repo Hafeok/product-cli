@@ -33,7 +33,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
+      # Toolchain version is pinned in rust-toolchain.toml.
+      - uses: dtolnay/rust-toolchain@master
         with:
           targets: ${{ matrix.target }}
 
