@@ -25,6 +25,25 @@ mod st_005_create_multiple_adrs_same_phase;
 #[path = "sessions/st_006_create_cross_links_bidirectional.rs"]
 mod st_006_create_cross_links_bidirectional;
 
+// Change operations (ST-010..ST-015) — ADR-018 Design 2
+#[path = "sessions/st_010_change_append_domain.rs"]
+mod st_010_change_append_domain;
+
+#[path = "sessions/st_011_change_set_acknowledgement.rs"]
+mod st_011_change_set_acknowledgement;
+
+#[path = "sessions/st_012_change_invalid_target.rs"]
+mod st_012_change_invalid_target;
+
+#[path = "sessions/st_013_change_body_mutation.rs"]
+mod st_013_change_body_mutation;
+
+#[path = "sessions/st_014_change_remove_from_array.rs"]
+mod st_014_change_remove_from_array;
+
+#[path = "sessions/st_015_change_append_deduplicates.rs"]
+mod st_015_change_append_deduplicates;
+
 #[path = "sessions/st_020_failed_apply_leaves_zero_files.rs"]
 mod st_020_failed_apply_leaves_zero_files;
 

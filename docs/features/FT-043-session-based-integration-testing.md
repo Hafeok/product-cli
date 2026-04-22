@@ -38,14 +38,20 @@ tests:
 - TC-549
 - TC-550
 - TC-551
+- TC-665
+- TC-666
+- TC-667
+- TC-668
+- TC-669
+- TC-670
 domains:
 - api
 - error-handling
 domains-acknowledged:
-  ADR-042: Pre-dates ADR-042; this feature does not define TC types or validate the type vocabulary. FT-048 owns the mechanics.
   ADR-041: Pre-dates ADR-041; this feature does not author absence TCs or set removes/deprecates on ADRs. FT-047 owns the mechanics.
-  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
   ADR-043: Predates ADR-043; feature command adapters were written before the slice+adapter pattern was formalised and are not retroactively refactored.
+  ADR-042: Pre-dates ADR-042; this feature does not define TC types or validate the type vocabulary. FT-048 owns the mechanics.
+  ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
 ---
 
 Session-based integration testing is the primary way Product validates end-to-end command correctness. A **session** is a short Rust test function that drives a temporary repository through one or more `product request apply` calls and asserts on the resulting graph state, file content, and command output. The session builds its fixtures through the same interface real users and agents use — there is no separate fixture-writing layer.
