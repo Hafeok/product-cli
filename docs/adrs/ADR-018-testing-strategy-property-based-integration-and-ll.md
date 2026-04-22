@@ -8,7 +8,7 @@ superseded-by: []
 domains:
 - testing
 scope: cross-cutting
-content-hash: sha256:41096132e46d9ac3ea4b29f56828d8afe050a1e2a536f73c8efda2e0a097ca0a
+content-hash: sha256:cbd88ee3c19d2d0ac563cffb7514cc3ef0ce573a63904fe13e281998b4bed022
 amendments:
 - date: 2026-04-17T19:26:17Z
   reason: Replace Design 2 (Rust fixture-based Integration Test Harness) with Design 2 (Session-Based Integration Testing built on the request model from ADR-038). The original harness wrote raw YAML strings to disk — a second copy of the front-matter schema that had to be maintained in parallel with the product. With the request interface (ADR-038) now shipping, session tests can build fixtures through the same apply pipeline real users and agents use. Adds TC-P012..TC-P014 for request-model property invariants (failed apply leaves zero files, append is idempotent, forward-ref resolution is deterministic). Adds the canonical session library (ST-001..ST-083) and updates phase assignments. Also retitles the ADR to Property-Based, Session-Based, and LLM Benchmark to match the new Design 2. Captured as an amendment rather than a supersession because the three-design structure, the property/benchmark designs, and the rationale all carry forward unchanged.
@@ -16,6 +16,9 @@ amendments:
 - date: 2026-04-22T10:45:37Z
   reason: Promote scope from domain to cross-cutting and add the testing domain. Session-based testing, property tests, and LLM benchmarking are expectations on every feature, not decisions inside a single slice. Flipping to cross-cutting activates the ADR-025 forcing function so new feature requests must link or acknowledge this ADR. The three-design structure, the property/session/benchmark designs, and the rationale all carry forward unchanged, so this is an amendment rather than a supersession.
   previous-hash: sha256:08c82f15ce4c6f556bd79c20b24df77631837ea7c0bce8c9a04d76862e365b39
+- date: 2026-04-22T12:50:49Z
+  reason: 'Drop stale ST-055 and ST-056 session entries. Those entries predated ADR-032 (content-hash immutability) and ADR-034 (lifecycle gate), which reassigned W016 and W017 to different canonical meanings: W016 = accepted ADR has no content-hash, W017 = complete feature with proposed ADR. The original claims (body-change after complete emits W017; new TC after complete emits W016) describe checks that were never implemented. The two actual W-code scenarios are covered by integration tests TC-424 and TC-442. Shrinks the Session library range from ST-050..ST-056 to ST-050..ST-054 and keeps ST-053/054 since they map to real drift behaviour. Captured as an amendment because the three-design structure and rationale are unchanged.'
+  previous-hash: sha256:41096132e46d9ac3ea4b29f56828d8afe050a1e2a536f73c8efda2e0a097ca0a
 ---
 
 **Status:** Accepted (amended to replace Design 2 with session-based integration testing and add request-model property invariants)
@@ -150,7 +153,7 @@ Sessions are the primary way to describe expected Product behaviour. Every signi
 - **ST-020..ST-022** — atomicity (zero files on failure, mid-write recovery, lock serialisation)
 - **ST-030..ST-035** — validation (E002, E003, E011, E012, E013, vocabulary)
 - **ST-040..ST-042** — phase gate behaviour
-- **ST-050..ST-056** — verification, drift, completion tags
+- **ST-050..ST-054** — verification, drift, completion tags
 - **ST-060..ST-062** — context bundles
 - **ST-070..ST-072** — domain coverage
 - **ST-080..ST-083** — full end-to-end workflows
@@ -213,7 +216,7 @@ Both must hold.
 | Sessions: phase gate (ST-040–ST-042) | Phase 2 | Phase gate implemented |
 | Sessions: context bundles (ST-060–ST-062) | Phase 2 | Context assembly implemented |
 | Property: graph algorithms (TC-P005–TC-P009) | Phase 2 | Algorithms implemented |
-| Sessions: verification and drift (ST-050–ST-056) | Phase 3 | `product verify`, git tags |
+| Sessions: verification and drift (ST-050–ST-054) | Phase 3 | `product verify`, git tags |
 | Sessions: domain coverage (ST-070–ST-072) | Phase 3 | Preflight implemented |
 | Sessions: full workflows (ST-080–ST-083) | Phase 3 | All commands implemented |
 | LLM benchmark (TC-030–TC-032) | Phase 3 | Context bundles complete |

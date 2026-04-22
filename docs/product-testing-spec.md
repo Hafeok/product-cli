@@ -313,8 +313,6 @@ tests/sessions/
   ST-052  verify-failing-tc-stays-in-progress
   ST-053  drift-check-detects-changes-since-tag
   ST-054  drift-check-no-tag-emits-w020
-  ST-055  body-change-after-complete-emits-w017
-  ST-056  new-tc-after-complete-emits-w016
 
   # Context bundles
   ST-060  context-includes-dependency-section
@@ -332,6 +330,30 @@ tests/sessions/
   ST-082  workflow-supersede-adr
   ST-083  workflow-migration-then-request-links
 ```
+
+#### W-code semantics and dropped sessions
+
+An earlier draft of this spec included two sessions that have since been
+dropped:
+
+| Dropped | Claimed behaviour |
+|---|---|
+| `body-change-after-complete-emits-w017` | editing a feature body after it is marked complete should warn |
+| `new-tc-after-complete-emits-w016` | adding a TC to a complete feature should warn |
+
+Those checks were never implemented, and the W-codes they referenced
+have been assigned different canonical meanings by later ADRs:
+
+- **W016** now means "accepted ADR has no content-hash" (ADR-032,
+  FT-034). Covered by integration test TC-424.
+- **W017** now means "feature in-progress or complete has a linked ADR
+  still in status `proposed`" (ADR-034, FT-036). Covered by integration
+  tests TC-442 (fires) and TC-443 (does not fire on planned features).
+
+Both scenarios already have integration-test coverage; adding session
+duplicates would not add signal. If a future decision wants the
+original post-completion body/TC checks, it will need to allocate a
+new W-code and state the detection mechanism.
 
 #### Session files as documentation
 
@@ -486,7 +508,7 @@ Both conditions must hold.
 | Sessions: phase gate (ST-040–ST-042) | Phase 2 | Phase gate implemented |
 | Sessions: context bundles (ST-060–ST-062) | Phase 2 | Context assembly implemented |
 | Property: graph algorithms (TC-P005–TC-P009) | Phase 2 | Algorithms implemented |
-| Sessions: verification and drift (ST-050–ST-056) | Phase 3 | `product verify`, git tags |
+| Sessions: verification and drift (ST-050–ST-054) | Phase 3 | `product verify`, git tags |
 | Sessions: domain coverage (ST-070–ST-072) | Phase 3 | Preflight implemented |
 | Sessions: full workflows (ST-080–ST-083) | Phase 3 | All commands implemented |
 | LLM benchmark (TC-030–TC-032) | Phase 3 | Context bundles complete |
@@ -625,8 +647,6 @@ ST-051  verify-complete-feature-status
 ST-052  verify-failing-tc-stays-in-progress
 ST-053  drift-check-detects-changes-since-tag
 ST-054  drift-check-no-tag-emits-w020
-ST-055  body-change-after-complete-emits-w017
-ST-056  new-tc-after-complete-emits-w016
 ST-060  context-includes-dependency-section
 ST-061  context-depth-2-includes-shared-adrs
 ST-062  context-measure-writes-bundle-block
