@@ -101,6 +101,16 @@ mod st_052_verify_failing_tc_stays_in_progress;
 #[path = "sessions/st_054_drift_check_no_tag_emits_w020.rs"]
 mod st_054_drift_check_no_tag_emits_w020;
 
+// Context bundle sessions (ST-060..062) — ADR-018 Design 2 + ADR-006
+#[path = "sessions/st_060_context_includes_dependency_section.rs"]
+mod st_060_context_includes_dependency_section;
+
+#[path = "sessions/st_061_context_depth_2_includes_shared_adrs.rs"]
+mod st_061_context_depth_2_includes_shared_adrs;
+
+#[path = "sessions/st_062_context_measure_writes_bundle_block.rs"]
+mod st_062_context_measure_writes_bundle_block;
+
 #[path = "sessions/st_110_verify_pipeline.rs"]
 mod st_110_verify_pipeline;
 

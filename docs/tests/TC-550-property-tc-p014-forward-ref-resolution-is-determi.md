@@ -13,8 +13,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_p014_forward_ref_resolution_is_deterministic
-last-run: 2026-04-22T11:46:15.496146315+00:00
-last-run-duration: 0.6s
+last-run: 2026-04-22T12:59:08.455929045+00:00
+last-run-duration: 1.0s
 ---
 
 ## TC-P014 — forward-ref resolution is deterministic (property)

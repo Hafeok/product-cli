@@ -13,7 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_534_session_st_002_create_dep_requires_governing_adr_emits_e013
-last-run: 2026-04-22T11:46:15.496146315+00:00
+last-run: 2026-04-22T12:59:08.455929045+00:00
 last-run-duration: 0.2s
 ---
 

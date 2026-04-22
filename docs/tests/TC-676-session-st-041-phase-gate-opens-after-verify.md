@@ -12,7 +12,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_676_session_st_041_phase_gate_opens_after_verify
-last-run: 2026-04-22T11:46:15.496146315+00:00
+last-run: 2026-04-22T12:59:08.455929045+00:00
 last-run-duration: 0.2s
 ---
 

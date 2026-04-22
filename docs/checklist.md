@@ -360,6 +360,7 @@
 - [x] TC-483: context measure-all with depth flag (scenario) — passing
 - [x] TC-484: context measure-all prints summary not bundles (scenario) — passing
 - [x] TC-485: aggregate bundle metrics exit criteria (exit-criteria) — passing
+- [x] TC-680: session ST-062 context-measure-writes-bundle-block (session) — passing
 
 ## Phase 2
 
@@ -572,6 +573,7 @@
 - [x] TC-400: product dep bom (scenario) — passing
 - [x] TC-401: product impact DEP-001 (scenario) — passing
 - [x] TC-403: Dependency BOM and impact analysis produce correct output (exit-criteria) — passing
+- [x] TC-678: session ST-060 context-includes-dependency-section (session) — passing
 
 ### FT-033 — Agent Context Generation [x]
 
@@ -716,6 +718,8 @@
 - [x] TC-149: author_session_preflight_first (scenario) — passing
 - [x] TC-150: product preflight FT-001 (scenario) — passing
 - [x] TC-151: product graph coverage (scenario) — passing
+- [x] TC-678: session ST-060 context-includes-dependency-section (session) — passing
+- [x] TC-679: session ST-061 context-depth-2-includes-shared-adrs (session) — passing
 
 ### FT-028 — Engineering Workflows [x]
 
@@ -892,6 +896,9 @@
 - [x] TC-675: session ST-040 phase-gate-blocks-on-failing-exit-criteria (session) — passing
 - [x] TC-676: session ST-041 phase-gate-opens-after-verify (session) — passing
 - [x] TC-677: session ST-042 phase-gate-no-exit-criteria-always-open (session) — passing
+- [x] TC-678: session ST-060 context-includes-dependency-section (session) — passing
+- [x] TC-679: session ST-061 context-depth-2-includes-shared-adrs (session) — passing
+- [x] TC-680: session ST-062 context-measure-writes-bundle-block (session) — passing
 
 ### FT-044 — Unified Verify Pipeline [x]
 

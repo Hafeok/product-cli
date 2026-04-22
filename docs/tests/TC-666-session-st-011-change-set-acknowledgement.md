@@ -13,8 +13,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_666_session_st_011_change_set_acknowledgement
-last-run: 2026-04-22T11:46:15.496146315+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-22T12:59:08.455929045+00:00
+last-run-duration: 0.3s
 ---
 
 Session ST-011 — change sets a nested domains-acknowledged.<ADR> entry. Validates dot-notation mutation of map fields.
