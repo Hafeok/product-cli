@@ -7,6 +7,9 @@ mod harness;
 #[path = "sessions/harness_self_tests.rs"]
 mod harness_self_tests;
 
+#[path = "sessions/repo_scaffold.rs"]
+mod repo_scaffold;
+
 #[path = "sessions/st_001_create_feature_with_adr_and_tc.rs"]
 mod st_001_create_feature_with_adr_and_tc;
 
@@ -75,6 +78,29 @@ mod st_035_validation_domain_not_in_vocabulary;
 mod exit_criteria;
 
 // FT-044 — Unified Verify Pipeline
+// Phase-gate sessions (ST-040..042) — ADR-018 Design 2 + ADR-040
+#[path = "sessions/st_040_phase_gate_blocks_on_failing_exit_criteria.rs"]
+mod st_040_phase_gate_blocks_on_failing_exit_criteria;
+
+#[path = "sessions/st_041_phase_gate_opens_after_verify.rs"]
+mod st_041_phase_gate_opens_after_verify;
+
+#[path = "sessions/st_042_phase_gate_no_exit_criteria_always_open.rs"]
+mod st_042_phase_gate_no_exit_criteria_always_open;
+
+// Verify + lifecycle sessions (ST-050..056) — ADR-018 Design 2 + ADR-021 + ADR-034
+#[path = "sessions/st_050_verify_creates_completion_tag.rs"]
+mod st_050_verify_creates_completion_tag;
+
+#[path = "sessions/st_051_verify_complete_feature_status.rs"]
+mod st_051_verify_complete_feature_status;
+
+#[path = "sessions/st_052_verify_failing_tc_stays_in_progress.rs"]
+mod st_052_verify_failing_tc_stays_in_progress;
+
+#[path = "sessions/st_054_drift_check_no_tag_emits_w020.rs"]
+mod st_054_drift_check_no_tag_emits_w020;
+
 #[path = "sessions/st_110_verify_pipeline.rs"]
 mod st_110_verify_pipeline;
 

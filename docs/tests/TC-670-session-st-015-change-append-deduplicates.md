@@ -13,8 +13,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_670_session_st_015_change_append_deduplicates
-last-run: 2026-04-22T11:30:45.579976087+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-22T11:46:15.496146315+00:00
+last-run-duration: 0.2s
 ---
 
 Session ST-015 — appending a value that already exists is idempotent. Validates deduplication semantics of the append op.

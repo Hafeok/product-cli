@@ -13,8 +13,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_543_session_st_031_validation_e002_broken_ref
-last-run: 2026-04-22T11:30:45.579976087+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-22T11:46:15.496146315+00:00
+last-run-duration: 0.1s
 ---
 
 ## Description

@@ -885,6 +885,13 @@
 - [x] TC-668: session ST-013 change-body-mutation (session) — passing
 - [x] TC-669: session ST-014 change-remove-from-array (session) — passing
 - [x] TC-670: session ST-015 change-append-deduplicates (session) — passing
+- [x] TC-671: session ST-050 verify-creates-completion-tag (session) — passing
+- [x] TC-672: session ST-051 verify-complete-feature-status (session) — passing
+- [x] TC-673: session ST-052 verify-failing-tc-stays-in-progress (session) — passing
+- [x] TC-674: session ST-054 drift-check-no-tag-emits-w020 (session) — passing
+- [x] TC-675: session ST-040 phase-gate-blocks-on-failing-exit-criteria (session) — passing
+- [x] TC-676: session ST-041 phase-gate-opens-after-verify (session) — passing
+- [x] TC-677: session ST-042 phase-gate-no-exit-criteria-always-open (session) — passing
 
 ### FT-044 — Unified Verify Pipeline [x]
 
@@ -905,6 +912,9 @@
 - [x] TC-560: verify_log_integrity_stage_1 (scenario) — passing
 - [x] TC-561: verify_metrics_threshold_stage_4 (scenario) — passing
 - [x] TC-562: unified_verify_pipeline_exit (exit-criteria) — passing
+- [x] TC-671: session ST-050 verify-creates-completion-tag (session) — passing
+- [x] TC-672: session ST-051 verify-complete-feature-status (session) — passing
+- [x] TC-673: session ST-052 verify-failing-tc-stays-in-progress (session) — passing
 
 ### FT-045 — LLM Boundary — Semantic Analysis Bundles [x]
 
@@ -929,6 +939,7 @@
 - [x] TC-574: conflict_bundle_includes_related_adrs (scenario) — passing
 - [x] TC-575: adr_check_conflicts_structural_only (invariant) — passing
 - [x] TC-576: llm_boundary_semantic_analysis_exit (exit-criteria) — passing
+- [x] TC-674: session ST-054 drift-check-no-tag-emits-w020 (session) — passing
 
 ### FT-046 — MCP Parity for ADR Lifecycle Operations [x]
 

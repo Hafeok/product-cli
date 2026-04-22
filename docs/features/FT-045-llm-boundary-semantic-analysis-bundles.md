@@ -29,6 +29,7 @@ tests:
 - TC-574
 - TC-575
 - TC-576
+- TC-674
 domains:
 - api
 - error-handling
