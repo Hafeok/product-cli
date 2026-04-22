@@ -126,7 +126,7 @@ fn detect_consistency(
         .into_iter()
         .filter(|(_, locs)| locs.len() >= 3)
         .collect();
-    patterns.sort_by(|a, b| b.1.len().cmp(&a.1.len()));
+    patterns.sort_by_key(|p| std::cmp::Reverse(p.1.len()));
 
     for (pattern, locations) in patterns.iter().take(3) {
         *counter += 1;
