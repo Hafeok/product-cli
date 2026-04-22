@@ -8,15 +8,33 @@ Product is a Rust CLI and MCP server that manages a file-based knowledge graph o
 
 ```bash
 cargo build                                          # compile
-cargo test                                           # full suite (lib + integration + property + quality)
+cargo t                                              # full suite, runs every binary (alias in .cargo/config.toml)
 cargo clippy -- -D warnings -D clippy::unwrap_used   # lint (zero unwrap policy)
 cargo bench                                          # 4 benchmarks
 ```
 
-All three (build, test, clippy) must pass before any commit. Code-quality
-fitness tests (`tests/code_quality_tests.rs`) enforce a 400-line-per-file hard
-limit and a single-responsibility check on module doc comments (the first
-`//!` line must not contain the word "and").
+**Always run `cargo t`, never plain `cargo test`.** Plain `cargo test` stops at
+the first failing binary and silently skips subsequent suites — so a failure
+in the code-quality fitness tests hides regressions in integration, sessions,
+and property tests. The `t` alias is defined as `test --no-fail-fast` in
+`.cargo/config.toml`: it runs every test binary and reports the complete
+result set at the end.
+
+Suite composition (six binaries, ~820 tests, ~14s wall-clock):
+
+| Binary | Tests | What it covers |
+|---|---|---|
+| `cargo test --lib` | 253 | Unit tests on pure functions (in `#[cfg(test)] mod tests`) |
+| `--doc` | 6 | Doc tests in `///` examples |
+| `--test code_quality_tests` | 13 | File length ≤ 400, SRP in doc comments |
+| `--test integration_tests` | 448 | `assert_cmd`-driven CLI scenarios |
+| `--test property_tests` | 13 | `proptest`, 1000 cases each |
+| `--test sessions` | 94 | Session-based integration (ADR-018 Design 2) |
+
+All three gates (build, `cargo t`, clippy) must pass before any commit.
+Code-quality fitness tests (`tests/code_quality_tests.rs`) enforce a
+400-line-per-file hard limit and a single-responsibility check on module doc
+comments (the first `//!` line must not contain the word "and").
 
 ## Project Structure
 

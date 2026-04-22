@@ -1,3 +1,9 @@
+[alias]
+# Run every test binary in one pass — continues past failures and reports all
+# results at the end. Use this instead of `cargo test`, which bails on the
+# first failing binary and skips subsequent suites.
+t = "test --no-fail-fast"
+
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"
 
