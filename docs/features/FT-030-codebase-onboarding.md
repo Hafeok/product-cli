@@ -5,8 +5,8 @@ phase: 5
 status: complete
 depends-on: []
 adrs:
-- ADR-027
 - ADR-022
+- ADR-027
 tests:
 - TC-168
 - TC-169
@@ -36,6 +36,7 @@ domains:
 - api
 - data-model
 domains-acknowledged:
+  ADR-018: Predates the 2026-04-22 scope promotion of ADR-018 to cross-cutting. Test coverage reflects the property/session/benchmark strategy as it existed when this feature shipped; not retroactively reclassified.
   api: The onboard command adds CLI subcommands but the API contract is fully specified in ADR-027 (transitive TC link inference) which is already linked. No separate API-domain ADR is required.
 ---
 

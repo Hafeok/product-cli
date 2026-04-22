@@ -17,10 +17,11 @@ tests:
 domains:
 - api
 domains-acknowledged:
-  ADR-041: The feature documents which tc-types require formal blocks; it does not interact with absence TCs or ADR removes/deprecates lifecycle.
+  ADR-018: Predates the 2026-04-22 scope promotion of ADR-018 to cross-cutting. Test coverage reflects the property/session/benchmark strategy as it existed when this feature shipped; not retroactively reclassified.
+  ADR-042: Consumed unchanged — the structural / built-in-descriptive / custom partition from ADR-042 is the source of the "required by" annotations; this feature documents but does not alter the partition.
   ADR-040: Schema render is a read-only documentation surface; it does not participate in the verify pipeline stages and adds no hooks to the LLM boundary beyond the existing agent-context bundle.
   ADR-043: Implementation adds functions to the existing `src/agent_context/schema.rs` pure module; no new slice or command adapter is introduced.
-  ADR-042: Consumed unchanged — the structural / built-in-descriptive / custom partition from ADR-042 is the source of the "required by" annotations; this feature documents but does not alter the partition.
+  ADR-041: The feature documents which tc-types require formal blocks; it does not interact with absence TCs or ADR removes/deprecates lifecycle.
 ---
 
 ## Description

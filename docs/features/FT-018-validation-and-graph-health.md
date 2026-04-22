@@ -20,12 +20,12 @@ tests:
 - TC-137
 - TC-138
 - TC-139
-domains: [data-model, error-handling]
+domains:
+- data-model
+- error-handling
 domains-acknowledged:
-  error-handling: >
-    Validation diagnostics (E0xx/W0xx) use the error model from ADR-013
-    which is linked via FT-010. The diagnostic format and exit codes are
-    already governed; no separate error-handling ADR is needed here.
+  error-handling: Validation diagnostics (E0xx/W0xx) use the error model from ADR-013 which is linked via FT-010. The diagnostic format and exit codes are already governed; no separate error-handling ADR is needed here.
+  ADR-018: Predates the 2026-04-22 scope promotion of ADR-018 to cross-cutting. Test coverage reflects the property/session/benchmark strategy as it existed when this feature shipped; not retroactively reclassified.
 ---
 
 `product graph check` is the primary consistency tool. All output goes to stderr. Exit codes follow the three-tier scheme from ADR-009 and ADR-013.

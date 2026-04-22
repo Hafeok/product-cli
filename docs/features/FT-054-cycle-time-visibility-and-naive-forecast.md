@@ -37,10 +37,11 @@ domains:
 - scheduling
 domains-acknowledged:
   ADR-041: No absence TCs or ADR removes/deprecates interaction — cycle-times and forecast --naive are additive read surfaces over existing git tags. Nothing is removed or deprecated by this feature.
-  ADR-038: product cycle-times and product forecast --naive are read-only commands — no front-matter mutations, no tag writes, no request-log entries. They never interact with the request pipeline and therefore do not need new request-shape extensions.
   ADR-040: No new verify stage or LLM-boundary hook. product cycle-times and product forecast --naive are pure read commands with their own render path; they do not extend the verify pipeline or the semantic-analysis bundle surface.
-  ADR-043: 'Implementation follows the slice + adapter pattern: new src/cycle_times/ slice exposes pure build_* and render_* functions, thin src/commands/cycle_times.rs and src/commands/forecast.rs adapters load the graph, call the slice, and wrap results in Output::text or Output::both. No monolithic handlers.'
+  ADR-018: Predates the 2026-04-22 scope promotion of ADR-018 to cross-cutting. Test coverage reflects the property/session/benchmark strategy as it existed when this feature shipped; not retroactively reclassified.
   ADR-042: Uses existing TC types — scenario for behavioural rows, invariant for the JSON/CSV schema stability, first-complete-tag and clamp-to-today rules, and exit-criteria for the consolidated check-list. No new TC types introduced; ADR-042's reserved-structural / open-descriptive partition is unchanged.
+  ADR-038: product cycle-times and product forecast --naive are read-only commands — no front-matter mutations, no tag writes, no request-log entries. They never interact with the request pipeline and therefore do not need new request-shape extensions.
+  ADR-043: 'Implementation follows the slice + adapter pattern: new src/cycle_times/ slice exposes pure build_* and render_* functions, thin src/commands/cycle_times.rs and src/commands/forecast.rs adapters load the graph, call the slice, and wrap results in Output::text or Output::both. No monolithic handlers.'
 ---
 
 ## Description

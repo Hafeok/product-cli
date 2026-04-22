@@ -27,8 +27,10 @@ domains:
 - api
 - error-handling
 domains-acknowledged:
-  ADR-041: MCP lifecycle parity does not introduce or alter removes/deprecates fields or absence TCs; scope is ADR status/amend transitions only.
   ADR-042: MCP lifecycle parity does not introduce or alter TC types; wiring is orthogonal to the type system.
+  ADR-041: MCP lifecycle parity does not introduce or alter removes/deprecates fields or absence TCs; scope is ADR status/amend transitions only.
+  ADR-018: Predates the 2026-04-22 scope promotion of ADR-018 to cross-cutting. Test coverage reflects the property/session/benchmark strategy as it existed when this feature shipped; not retroactively reclassified.
+  ADR-043: Predates ADR-043; feature command adapters were written before the slice+adapter pattern was formalised and are not retroactively refactored.
 ---
 
 ## Description

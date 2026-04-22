@@ -9097,11 +9097,12 @@ fn tc_432_init_interactive_mode_prompts_for_name_and_domains() {
 
     // Stdin input:
     //   Line 1: project name "my-interactive-proj"
-    //   Line 2: select domain 1 (security)
-    //   Line 3: blank (no custom domain)
-    //   Line 4: blank (no MCP write tools — default N)
-    //   Line 5: blank (default port)
-    let stdin_input = "my-interactive-proj\n1\n\n\n\n";
+    //   Line 2: product description (blank to skip)
+    //   Line 3: select domain 1 (security)
+    //   Line 4: blank (no custom domain)
+    //   Line 5: blank (no MCP write tools — default N)
+    //   Line 6: blank (default port)
+    let stdin_input = "my-interactive-proj\n\n1\n\n\n\n";
     let out = h.run_with_stdin(&["init"], stdin_input);
 
     // 4. Exit code is 0

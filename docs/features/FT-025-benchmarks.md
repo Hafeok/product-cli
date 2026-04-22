@@ -6,13 +6,14 @@ status: complete
 depends-on:
 - FT-024
 adrs:
-- ADR-018
 - ADR-012
+- ADR-018
 tests:
 - TC-180
 domains:
 - observability
 domains-acknowledged:
+  ADR-043: Predates ADR-043; feature command adapters were written before the slice+adapter pattern was formalised and are not retroactively refactored.
   ADR-041: Pre-dates ADR-041; this feature does not author absence TCs or set removes/deprecates on ADRs. FT-047 owns the mechanics.
   ADR-042: Pre-dates ADR-042; this feature does not define TC types or validate the type vocabulary. FT-048 owns the mechanics.
   observability: Benchmarks produce timing metrics and score comparisons but are not a runtime observability surface. ADR-018 (testing strategy) governs the benchmark approach; no dedicated observability ADR is needed.

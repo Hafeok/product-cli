@@ -249,6 +249,9 @@ pub enum Commands {
         /// Project name (default: directory name)
         #[arg(long)]
         name: Option<String>,
+        /// Product responsibility — single statement of what the product is and is not (FT-039)
+        #[arg(long, visible_alias = "responsibility", value_name = "TEXT")]
+        description: Option<String>,
         /// Add a domain (repeatable): --domain security="Auth, secrets"
         #[arg(long = "domain", value_name = "K=V")]
         domains: Vec<String>,
@@ -357,7 +360,7 @@ fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> Bo
         Commands::Metrics { command } => metrics_cmd::handle_metrics(command),
         Commands::Preflight { id } => preflight::handle_preflight(&id),
         Commands::Onboard { command } => onboard::handle_onboard(command),
-        Commands::Init { yes, force, name, domains, port, write_tools, path } => init::handle_init(yes, force, name, domains, port, write_tools, path),
+        Commands::Init { yes, force, name, description, domains, port, write_tools, path } => init::handle_init(yes, force, name, description, domains, port, write_tools, path),
         Commands::Hash { command } => hash::handle_hash(command),
         Commands::Schema { artifact_type, type_flag, all } => schema::handle_schema(type_flag.or(artifact_type), all),
         Commands::AgentInit { watch } => agent_init::handle_agent_init(watch),

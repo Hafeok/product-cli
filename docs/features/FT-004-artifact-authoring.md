@@ -29,12 +29,12 @@ tests:
 - TC-079
 - TC-155
 - TC-160
-domains: [api, data-model]
+domains:
+- api
+- data-model
 domains-acknowledged:
-  api: >
-    Authoring commands (feature new, adr new, test new, dep new) define CLI
-    subcommands but the API surface is governed by ADR-002 (front-matter schema)
-    and ADR-005 (ID scheme), both already linked.
+  api: Authoring commands (feature new, adr new, test new, dep new) define CLI subcommands but the API surface is governed by ADR-002 (front-matter schema) and ADR-005 (ID scheme), both already linked.
+  ADR-018: Predates the 2026-04-22 scope promotion of ADR-018 to cross-cutting. Test coverage reflects the property/session/benchmark strategy as it existed when this feature shipped; not retroactively reclassified.
 ---
 
 Scaffold, link, and update artifacts from the command line. These commands are the write-side counterpart to the read-only navigation commands in Phase 1.

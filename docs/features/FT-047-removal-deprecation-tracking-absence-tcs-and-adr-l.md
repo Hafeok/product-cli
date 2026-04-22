@@ -7,12 +7,12 @@ depends-on:
 - FT-018
 - FT-029
 adrs:
+- ADR-002
+- ADR-013
 - ADR-019
 - ADR-040
 - ADR-041
 - ADR-042
-- ADR-002
-- ADR-013
 tests:
 - TC-586
 - TC-587
@@ -33,7 +33,9 @@ domains:
 - api
 - data-model
 - error-handling
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-043: Predates ADR-043; feature command adapters were written before the slice+adapter pattern was formalised and are not retroactively refactored.
+  ADR-018: Predates the 2026-04-22 scope promotion of ADR-018 to cross-cutting. Test coverage reflects the property/session/benchmark strategy as it existed when this feature shipped; not retroactively reclassified.
 ---
 
 ## Description

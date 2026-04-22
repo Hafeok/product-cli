@@ -5,13 +5,17 @@ status: accepted
 features: []
 supersedes: []
 superseded-by: []
-domains: []
-scope: domain
-content-hash: sha256:08c82f15ce4c6f556bd79c20b24df77631837ea7c0bce8c9a04d76862e365b39
+domains:
+- testing
+scope: cross-cutting
+content-hash: sha256:41096132e46d9ac3ea4b29f56828d8afe050a1e2a536f73c8efda2e0a097ca0a
 amendments:
 - date: 2026-04-17T19:26:17Z
   reason: Replace Design 2 (Rust fixture-based Integration Test Harness) with Design 2 (Session-Based Integration Testing built on the request model from ADR-038). The original harness wrote raw YAML strings to disk — a second copy of the front-matter schema that had to be maintained in parallel with the product. With the request interface (ADR-038) now shipping, session tests can build fixtures through the same apply pipeline real users and agents use. Adds TC-P012..TC-P014 for request-model property invariants (failed apply leaves zero files, append is idempotent, forward-ref resolution is deterministic). Adds the canonical session library (ST-001..ST-083) and updates phase assignments. Also retitles the ADR to Property-Based, Session-Based, and LLM Benchmark to match the new Design 2. Captured as an amendment rather than a supersession because the three-design structure, the property/benchmark designs, and the rationale all carry forward unchanged.
   previous-hash: sha256:660cd17f84e0773b44d486846c5fc60addb23fb787907bfad77fcf5a2d9b2c3a
+- date: 2026-04-22T10:45:37Z
+  reason: Promote scope from domain to cross-cutting and add the testing domain. Session-based testing, property tests, and LLM benchmarking are expectations on every feature, not decisions inside a single slice. Flipping to cross-cutting activates the ADR-025 forcing function so new feature requests must link or acknowledge this ADR. The three-design structure, the property/session/benchmark designs, and the rationale all carry forward unchanged, so this is an amendment rather than a supersession.
+  previous-hash: sha256:08c82f15ce4c6f556bd79c20b24df77631837ea7c0bce8c9a04d76862e365b39
 ---
 
 **Status:** Accepted (amended to replace Design 2 with session-based integration testing and add request-model property invariants)
@@ -234,5 +238,17 @@ Both must hold.
 - **Manual LLM evaluation.** Subjective, unrepeatable, non-comparable across releases. The rubric-based approach is mechanical and produces a number that can be tracked over time.
 - **Golden file tests for sessions.** Session assertions are explicit conditions, not file snapshots. Golden files accumulate churn when IDs change. Explicit assertions (`assert_array_contains`, `assert_frontmatter`) are more readable and more stable. Rejected.
 - **Session files as separate Rust files per step.** Embedding the request YAML inline in Rust source keeps tests readable. A separate file per session step adds filesystem overhead without benefit. Rejected.
+
+---
+
+### Scope — Cross-Cutting
+
+This ADR is classified **cross-cutting** under ADR-025. The three designs are expectations on every feature, not decisions inside one slice:
+
+- Any feature that adds pure algorithmic logic should declare its property tests (Design 1) or acknowledge the absence in `domains-acknowledged`.
+- Any feature that adds CLI, request-model, or graph behaviour should land with a session in `tests/sessions/` (Design 2) or acknowledge the gap.
+- Context-bundle-shaping features should include or update a benchmark task (Design 3) when they change bundle content.
+
+Cross-cutting scope activates the ADR-025 forcing function: new feature requests are surfaced for test-strategy review and must link or acknowledge this ADR. The three existing links (FT-015, FT-025, FT-043) remain; the change is prospective — future features pick up the obligation, completed features are not retroactively required to amend.
 
 ---

@@ -5,10 +5,12 @@ use std::path::PathBuf;
 
 use super::BoxResult;
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn handle_init(
     yes: bool,
     force: bool,
     name: Option<String>,
+    description: Option<String>,
     cli_domains: Vec<String>,
     port: u16,
     write_tools: bool,
@@ -28,21 +30,24 @@ pub(crate) fn handle_init(
     };
     let toml_path = target_dir.join("product.toml");
 
-    // Determine checklist-in-gitignore setting.
-    // If --force and product.toml exists, preserve the existing setting.
-    let checklist_in_gitignore = if toml_path.exists() {
+    // Determine settings to preserve from an existing config when --force is used.
+    let (checklist_in_gitignore, preserved_responsibility) = if toml_path.exists() {
         if !force {
             return Err(Box::new(ProductError::ConfigError(format!(
                 "product.toml already exists\n  --> {}\n  = hint: use `product init --force` to overwrite, or edit the file directly",
                 toml_path.display()
             ))));
         }
-        // --force: read existing config to preserve checklist-in-gitignore
-        ProductConfig::load(&toml_path)
-            .map(|c| c.checklist_in_gitignore)
-            .unwrap_or(true)
+        // --force: read existing config to preserve checklist-in-gitignore and responsibility
+        match ProductConfig::load(&toml_path) {
+            Ok(c) => (
+                c.checklist_in_gitignore,
+                c.responsibility().map(|s| s.to_string()),
+            ),
+            Err(_) => (true, None),
+        }
     } else {
-        true
+        (true, None)
     };
 
     // Default project name from directory name
@@ -63,12 +68,15 @@ pub(crate) fn handle_init(
     }
 
     let project_name;
+    let responsibility;
     let mcp_write;
     let mcp_port;
 
     if yes {
         // Non-interactive mode: use defaults and CLI overrides
         project_name = name.unwrap_or(default_name);
+        // Prefer CLI value; on --force without a CLI value, keep the old responsibility.
+        responsibility = description.or(preserved_responsibility);
         mcp_write = write_tools;
         mcp_port = port;
     } else {
@@ -90,6 +98,24 @@ pub(crate) fn handle_init(
             name_default
         } else {
             trimmed.to_string()
+        };
+
+        // Product responsibility — single-statement description of what the product is and is not (FT-039)
+        let resp_default = description.clone().or_else(|| preserved_responsibility.clone());
+        if let Some(ref d) = resp_default {
+            write!(out, "Product description [{}]: ", d)?;
+        } else {
+            writeln!(out, "\nProduct description — a single statement of what the product is and is not (FT-039).")?;
+            write!(out, "Description (blank to skip): ")?;
+        }
+        out.flush()?;
+        let mut line = String::new();
+        reader.read_line(&mut line)?;
+        let trimmed = line.trim();
+        responsibility = if trimmed.is_empty() {
+            resp_default
+        } else {
+            Some(trimmed.to_string())
         };
 
         // Domains — prompt for common domains
@@ -183,13 +209,26 @@ pub(crate) fn handle_init(
             + "\n"
     };
 
+    // Build [product] section — scaffolds product identity (FT-039).
+    // Always emitted so users have a clear place to fill in the responsibility
+    // statement, even if they skipped the prompt.
+    let product_section = match responsibility.as_deref() {
+        Some(r) if !r.trim().is_empty() => {
+            let escaped = r.replace('\\', "\\\\").replace('"', "\\\"");
+            format!("[product]\nresponsibility = \"{}\"\n\n", escaped)
+        }
+        _ => {
+            "[product]\n# responsibility — single statement of what the product is and is not (FT-039)\nresponsibility = \"\"\n\n".to_string()
+        }
+    };
+
     // Generate product.toml
     let toml_content = format!(
         r#"name = "{project_name}"
 schema-version = "1"
 checklist-in-gitignore = {checklist_in_gitignore}
 
-[paths]
+{product_section}[paths]
 features = "docs/features"
 adrs = "docs/adrs"
 tests = "docs/tests"

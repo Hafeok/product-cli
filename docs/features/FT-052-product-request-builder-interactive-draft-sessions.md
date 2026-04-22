@@ -25,10 +25,11 @@ domains:
 - data-model
 - error-handling
 domains-acknowledged:
+  ADR-018: Predates the 2026-04-22 scope promotion of ADR-018 to cross-cutting. Test coverage reflects the property/session/benchmark strategy as it existed when this feature shipped; not retroactively reclassified.
   ADR-043: 'Implementation follows the slice + adapter pattern: a new `src/request/builder/` slice with pure `plan_*` planners and a thin `src/commands/request.rs` dispatch extension — no deviation from ADR-043.'
   ADR-040: The builder reuses the existing `product request apply` pipeline verbatim for submit; it adds no new stage to the unified verify pipeline and no new hooks at the LLM boundary — incremental validation is structural-only and intentionally stays off the LLM side of the knowledge boundary.
-  ADR-042: Consumed unchanged — when the user runs `add tc`, the builder validates `tc-type` against the ADR-042 structural/built-in-descriptive/custom partition; it does not extend the partition or introduce new TC types.
   ADR-041: The builder does not introduce absence TCs and does not interact with ADR removes/deprecates lifecycle fields; draft artifacts are ordinary create/change requests against the existing schema.
+  ADR-042: Consumed unchanged — when the user runs `add tc`, the builder validates `tc-type` against the ADR-042 structural/built-in-descriptive/custom partition; it does not extend the partition or introduce new TC types.
 ---
 
 ## Description

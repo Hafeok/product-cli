@@ -11,10 +11,10 @@ depends-on:
 adrs:
 - ADR-011
 - ADR-012
+- ADR-013
 - ADR-019
 - ADR-041
 - ADR-042
-- ADR-013
 tests:
 - TC-601
 - TC-602
@@ -37,6 +37,8 @@ domains:
 - data-model
 - error-handling
 domains-acknowledged:
+  ADR-018: Predates the 2026-04-22 scope promotion of ADR-018 to cross-cutting. Test coverage reflects the property/session/benchmark strategy as it existed when this feature shipped; not retroactively reclassified.
+  ADR-043: Predates ADR-043; feature command adapters were written before the slice+adapter pattern was formalised and are not retroactively refactored.
   ADR-040: TC type system is a data-model concern; verify pipeline's stage-6 already discovers absence TCs by tc-type (owned by FT-047) without hooks from this feature.
 ---
 

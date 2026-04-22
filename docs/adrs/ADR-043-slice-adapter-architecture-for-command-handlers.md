@@ -7,7 +7,7 @@ supersedes: []
 superseded-by: []
 domains:
 - api
-- testability
+- testing
 - error-handling
 scope: cross-cutting
 content-hash: sha256:73fb825ad51d0bd3d6fd755c0888ef3d5d5487fa9fa2cbce948e32ef1ac30947

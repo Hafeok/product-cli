@@ -5,8 +5,8 @@ phase: 1
 status: complete
 depends-on: []
 adrs:
-- ADR-015
 - ADR-011
+- ADR-015
 tests:
 - TC-066
 - TC-067
@@ -18,6 +18,8 @@ domains:
 - data-model
 - storage
 domains-acknowledged:
+  ADR-043: Predates ADR-043; feature command adapters were written before the slice+adapter pattern was formalised and are not retroactively refactored.
+  ADR-018: Predates the 2026-04-22 scope promotion of ADR-018 to cross-cutting. Test coverage reflects the property/session/benchmark strategy as it existed when this feature shipped; not retroactively reclassified.
   ADR-040: predates ADR-040; feature ships independently of the unified verify / LLM-boundary pipeline
   data-model: Formal types and invariants describe data constraints but do not define persistent storage schemas. ADR-015 (file write safety) governs the write path; formal blocks are parsed in-memory per ADR-011/ADR-016.
 ---
