@@ -39,8 +39,12 @@ jobs:
       - name: Build
         run: cargo build -p product
 
-      - name: Unit tests
-        run: cargo test -p product
+      - name: Tests (all binaries)
+        # --no-fail-fast runs every test binary (lib, integration, sessions,
+        # property, code_quality, doc) and reports the full result set rather
+        # than stopping at the first failing binary. Matches the `cargo t`
+        # alias defined in .cargo/config.toml.
+        run: cargo test -p product --no-fail-fast
 
       - name: Clippy
         run: cargo clippy -p product -- -D clippy::unwrap_used -D warnings
