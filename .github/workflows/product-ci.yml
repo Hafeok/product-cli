@@ -36,10 +36,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Toolchain version is read from rust-toolchain.toml at the repo root so
-      # local builds and CI stay in lockstep — to upgrade Rust, bump that file
-      # and nothing else.
+      # Single source of truth for the Rust version is rust-toolchain.toml.
+      # Parse its channel field and pass it to the action so local builds and
+      # CI stay in lockstep — bump rust-toolchain.toml and nothing else to
+      # upgrade the compiler.
+      - name: Parse toolchain version
+        id: rust
+        run: |
+          version=$(grep '^channel' rust-toolchain.toml | sed 's/.*"\(.*\)".*/\1/')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
       - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.rust.outputs.version }}
 
       - uses: Swatinem/rust-cache@v2
 

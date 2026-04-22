@@ -33,9 +33,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Toolchain version is pinned in rust-toolchain.toml.
+      # Single source of truth for the Rust version is rust-toolchain.toml.
+      - name: Parse toolchain version
+        id: rust
+        shell: bash
+        run: |
+          version=$(grep '^channel' rust-toolchain.toml | sed 's/.*"\(.*\)".*/\1/')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
       - uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: ${{ steps.rust.outputs.version }}
           targets: ${{ matrix.target }}
 
       - name: Install cross-compilation tools
