@@ -4,6 +4,26 @@ use super::*;
 use crate::types::*;
 
 #[test]
+fn agent_cli_parse_accepts_claude_and_copilot() {
+    assert!(matches!(AgentCli::parse("claude"), Ok(AgentCli::Claude)));
+    assert!(matches!(AgentCli::parse("CLAUDE"), Ok(AgentCli::Claude)));
+    assert!(matches!(AgentCli::parse("copilot"), Ok(AgentCli::Copilot)));
+    assert!(matches!(AgentCli::parse(" Copilot "), Ok(AgentCli::Copilot)));
+}
+
+#[test]
+fn agent_cli_parse_rejects_unknown() {
+    let err = AgentCli::parse("cursor").expect_err("should reject unknown CLI");
+    assert!(err.to_string().contains("unknown author.cli value"));
+}
+
+#[test]
+fn author_config_default_is_claude() {
+    let cfg = crate::config::AuthorConfig::default();
+    assert_eq!(cfg.cli, "claude");
+}
+
+#[test]
 fn default_prompts_not_empty() {
     assert!(!prompts::default_content("author-feature").is_empty());
     assert!(!prompts::default_content("author-adr").is_empty());

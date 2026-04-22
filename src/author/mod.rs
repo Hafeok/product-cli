@@ -30,9 +30,41 @@ impl std::fmt::Display for SessionType {
     }
 }
 
+/// Agent CLI that hosts the authoring session.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AgentCli {
+    Claude,
+    Copilot,
+}
+
+impl AgentCli {
+    /// Parse from a config/flag string. Accepts `claude` or `copilot`
+    /// (case-insensitive). Returns `ProductError::ConfigError` otherwise.
+    pub fn parse(s: &str) -> Result<Self> {
+        match s.trim().to_lowercase().as_str() {
+            "claude" => Ok(Self::Claude),
+            "copilot" => Ok(Self::Copilot),
+            other => Err(ProductError::ConfigError(format!(
+                "unknown author.cli value: {}\n  = hint: use `claude` or `copilot`",
+                other
+            ))),
+        }
+    }
+}
+
+impl std::fmt::Display for AgentCli {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Claude => write!(f, "claude"),
+            Self::Copilot => write!(f, "copilot"),
+        }
+    }
+}
+
 /// Start an authoring session
 pub fn start_session(
     session_type: SessionType,
+    cli: AgentCli,
     _config: &ProductConfig,
     root: &Path,
 ) -> Result<()> {
@@ -62,7 +94,7 @@ pub fn start_session(
         message: e.to_string(),
     })?;
 
-    println!("Starting {} authoring session...", session_type);
+    println!("Starting {} authoring session ({})...", session_type, cli);
     println!(
         "  System prompt: {}",
         if prompt_path.exists() {
@@ -87,20 +119,24 @@ pub fn start_session(
     });
     let mcp_json = serde_json::to_string(&mcp_config).unwrap_or_default();
 
-    let status = Command::new("claude")
-        .args([
-            "--system-prompt-file",
-            &tmp_path.display().to_string(),
-            "--tools",
-            "Read",
-            "--allowedTools",
-            "Read,mcp__product__*",
-            "--mcp-config",
-            &mcp_json,
-            "--strict-mcp-config",
-        ])
-        .current_dir(root)
-        .status();
+    // Persist the MCP config to a temp file. Copilot's
+    // `--additional-mcp-config` accepts a `@path` form and we use it to avoid
+    // any shell-escape issues with embedded JSON on the command line (seen in
+    // the wild: the server silently failed to start, so the agent fell back
+    // to native tools).
+    let mcp_path = tmp_dir.join(format!(
+        "product-author-mcp-{}.json",
+        chrono::Utc::now().timestamp()
+    ));
+    std::fs::write(&mcp_path, &mcp_json).map_err(|e| ProductError::WriteError {
+        path: mcp_path.clone(),
+        message: e.to_string(),
+    })?;
+
+    let status = match cli {
+        AgentCli::Claude => launch_claude(&tmp_path, &mcp_json, root),
+        AgentCli::Copilot => launch_copilot(&prompt, &mcp_path, root),
+    };
 
     match status {
         Ok(s) if s.success() => {
@@ -112,8 +148,8 @@ pub fn start_session(
             eprintln!("Agent exited with status: {}", s);
         }
         Err(e) => {
-            eprintln!("Could not start Claude Code: {}", e);
-            eprintln!("Ensure 'claude' is in your PATH.");
+            eprintln!("Could not start {}: {}", cli, e);
+            eprintln!("Ensure '{}' is in your PATH.", cli_binary(cli));
             eprintln!();
             eprintln!("System prompt written to: {}", tmp_path.display());
             eprintln!("You can use it manually with any agent.");
@@ -121,6 +157,70 @@ pub fn start_session(
     }
 
     Ok(())
+}
+
+fn cli_binary(cli: AgentCli) -> &'static str {
+    match cli {
+        AgentCli::Claude => "claude",
+        AgentCli::Copilot => "copilot",
+    }
+}
+
+fn launch_claude(tmp_path: &Path, mcp_json: &str, root: &Path) -> std::io::Result<std::process::ExitStatus> {
+    Command::new("claude")
+        .args([
+            "--system-prompt-file",
+            &tmp_path.display().to_string(),
+            "--tools",
+            "Read",
+            "--allowedTools",
+            "Read,mcp__product__*",
+            "--mcp-config",
+            mcp_json,
+            "--strict-mcp-config",
+        ])
+        .current_dir(root)
+        .status()
+}
+
+/// Launch GitHub Copilot CLI with the authoring prompt as the initial
+/// interactive message. Copilot has no `--system-prompt-file`, so we feed the
+/// full prompt via `-i`.
+///
+/// Tool access is broad on the read side (read/glob/grep/list) so the agent
+/// can discover artifacts and route through the `product` MCP server, but
+/// mutations still go through MCP rather than direct file writes:
+/// * `--available-tools` lists every tool the model can see.
+/// * `--allow-tool` pre-approves the same set, skipping permission prompts.
+/// * `--disable-builtin-mcps` removes Copilot's default `github-mcp-server`.
+/// * `--no-custom-instructions` prevents repo AGENTS.md from mixing with the
+///   authoring prompt.
+///
+/// The MCP config is passed via the `@path` form (Copilot's documented
+/// alternative to inline JSON) because inline JSON on the command line
+/// silently failed to start the server in practice.
+fn launch_copilot(prompt: &str, mcp_config_path: &Path, root: &Path) -> std::io::Result<std::process::ExitStatus> {
+    let mcp_arg = format!("@{}", mcp_config_path.display());
+    // Read-side tools for discovery + the product MCP server for all
+    // mutations. Direct `write`/`edit`/`shell` are intentionally omitted:
+    // spec changes must flow through product MCP to get atomic writes,
+    // validation, and CHECKLIST.md regeneration.
+    let allowed = "read,glob,grep,list,view,product";
+    Command::new("copilot")
+        .args([
+            "-i",
+            prompt,
+            "--additional-mcp-config",
+            &mcp_arg,
+            "--available-tools",
+            allowed,
+            "--allow-tool",
+            allowed,
+            "--disable-builtin-mcps",
+            "--no-custom-instructions",
+        ])
+        .current_dir(root)
+        .status()
 }
 
 /// Review staged ADR files (pre-commit hook)

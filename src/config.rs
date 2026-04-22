@@ -57,8 +57,11 @@ pub struct ProductConfig {
     /// Cycle-time visibility — `[cycle-times]` (FT-054, ADR-046).
     #[serde(rename = "cycle-times", default)]
     pub cycle_times: CycleTimesConfig,
+    #[serde(default)]
+    pub author: AuthorConfig,
 }
 
+pub use crate::config_author::AuthorConfig;
 pub use crate::config_cycle_times::CycleTimesConfig;
 pub use crate::config_planning::PlanningConfig;
 

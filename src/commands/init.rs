@@ -209,6 +209,9 @@ test = "TC"
 [mcp]
 write = {mcp_write}
 port = {mcp_port}
+
+[author]
+cli = "claude"
 "#
     );
     fileops::write_file_atomic(&toml_path, &toml_content)?;
