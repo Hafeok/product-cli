@@ -1,7 +1,7 @@
 ---
 id: ADR-047
 title: Functional Specification Lives in Feature Body, Not a Separate Artifact
-status: proposed
+status: accepted
 features:
 - FT-055
 supersedes: []
@@ -10,6 +10,7 @@ domains:
 - api
 - data-model
 scope: cross-cutting
+content-hash: sha256:19601476e3db7a3f6597841b77db0381306bbc7fb848fcc9ec16264eccdd7078
 source-files:
 - docs/product-functional-spec.md
 - src/config.rs
