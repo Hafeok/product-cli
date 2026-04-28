@@ -22,6 +22,7 @@ mod hash;
 mod hooks;
 mod implement;
 mod init;
+mod init_helpers;
 mod mcp_cmd;
 mod metrics_cmd;
 mod migrate;
@@ -238,12 +239,12 @@ pub enum Commands {
         #[command(subcommand)]
         command: OnboardCommands,
     },
-    /// Initialize a new Product repository (ADR-033)
+    /// Initialize a new Product repository (ADR-033, ADR-048)
     Init {
         /// Accept all defaults without prompting
         #[arg(short = 'y', long)]
         yes: bool,
-        /// Overwrite existing product.toml
+        /// Overwrite existing config file
         #[arg(long)]
         force: bool,
         /// Project name (default: directory name)
@@ -261,6 +262,10 @@ pub enum Commands {
         /// Enable MCP write tools by default
         #[arg(long)]
         write_tools: bool,
+        /// Use the pre-FT-057 root-based layout (`product.toml` + `docs/...`).
+        /// Default is the canonical `.product/` layout (ADR-048).
+        #[arg(long)]
+        legacy_layout: bool,
         /// Target directory (default: current directory)
         #[arg(long, value_name = "DIR")]
         path: Option<PathBuf>,
@@ -360,7 +365,7 @@ fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> Bo
         Commands::Metrics { command } => metrics_cmd::handle_metrics(command),
         Commands::Preflight { id } => preflight::handle_preflight(&id),
         Commands::Onboard { command } => onboard::handle_onboard(command),
-        Commands::Init { yes, force, name, description, domains, port, write_tools, path } => init::handle_init(yes, force, name, description, domains, port, write_tools, path),
+        Commands::Init { yes, force, name, description, domains, port, write_tools, legacy_layout, path } => init::handle_init(yes, force, name, description, domains, port, write_tools, legacy_layout, path),
         Commands::Hash { command } => hash::handle_hash(command),
         Commands::Schema { artifact_type, type_flag, all } => schema::handle_schema(type_flag.or(artifact_type), all),
         Commands::AgentInit { watch } => agent_init::handle_agent_init(watch),

@@ -183,8 +183,20 @@ pub(crate) fn handle_agent_context(
     }))
 }
 
+fn resolve_prompts_path(repo_root: &Path) -> String {
+    let cfg_path = match crate::config::find_config_in_dir(repo_root) {
+        Some(p) => p,
+        None => return "benchmarks/prompts".to_string(),
+    };
+    match crate::config::ProductConfig::load(&cfg_path) {
+        Ok(c) => c.paths.prompts_resolved().to_string(),
+        Err(_) => "benchmarks/prompts".to_string(),
+    }
+}
+
 pub(crate) fn handle_prompts_list(repo_root: &Path) -> Result<Value, String> {
-    let prompts = crate::author::prompts_list(repo_root);
+    let prompts_path = resolve_prompts_path(repo_root);
+    let prompts = crate::author::prompts_list(repo_root, &prompts_path);
     let items: Vec<Value> = prompts
         .iter()
         .map(|p| {
@@ -204,7 +216,8 @@ pub(crate) fn handle_prompts_get(args: &Value, repo_root: &Path) -> Result<Value
         .get("name")
         .and_then(|v| v.as_str())
         .unwrap_or_default();
-    let content = crate::author::prompts_get(repo_root, name).map_err(|e| format!("{}", e))?;
+    let prompts_path = resolve_prompts_path(repo_root);
+    let content = crate::author::prompts_get(repo_root, &prompts_path, name).map_err(|e| format!("{}", e))?;
     Ok(serde_json::json!({
         "name": name,
         "content": content,

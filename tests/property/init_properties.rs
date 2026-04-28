@@ -87,8 +87,8 @@ proptest! {
             String::from_utf8_lossy(&output.stderr)
         );
 
-        // 1. ProductConfig::load() succeeds
-        let toml_path = dir.path().join("product.toml");
+        // 1. ProductConfig::load() succeeds (canonical layout per FT-057)
+        let toml_path = dir.path().join(".product/config.toml");
         let config = product_lib::config::ProductConfig::load(&toml_path);
         prop_assert!(
             config.is_ok(),

@@ -18,7 +18,8 @@ use std::collections::HashSet;
 use std::path::Path;
 
 fn instructions_section(root: &Path) -> String {
-    let content = match prompt_defs::get(root, "conflict-check") {
+    let prompts_path = crate::author::prompts::resolve_prompts_path_for_root(root);
+    let content = match prompt_defs::get(root, &prompts_path, "conflict-check") {
         Ok(c) if !c.trim().is_empty() => c,
         _ => prompt_defs::default_content("conflict-check"),
     };

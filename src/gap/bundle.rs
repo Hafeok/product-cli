@@ -20,7 +20,8 @@ use std::path::Path;
 
 /// Render the Instructions header for gap analysis bundles.
 fn instructions_section(root: &Path) -> String {
-    let content = match prompt_defs::get(root, "gap-analysis") {
+    let prompts_path = crate::author::prompts::resolve_prompts_path_for_root(root);
+    let content = match prompt_defs::get(root, &prompts_path, "gap-analysis") {
         Ok(c) if !c.trim().is_empty() => c,
         _ => prompt_defs::default_content("gap-analysis"),
     };

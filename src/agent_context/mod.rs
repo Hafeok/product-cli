@@ -188,9 +188,8 @@ pub fn watch_and_regenerate(
             watcher.watch(dir, RecursiveMode::Recursive)?;
         }
     }
-    let product_toml = repo_root.join("product.toml");
-    if product_toml.exists() {
-        watcher.watch(&product_toml, RecursiveMode::NonRecursive)?;
+    if let Some(cfg) = crate::config::find_config_in_dir(repo_root) {
+        watcher.watch(&cfg, RecursiveMode::NonRecursive)?;
     }
 
     eprintln!("Watching for changes... (press Ctrl+C to stop)");
@@ -215,7 +214,13 @@ pub fn watch_and_regenerate(
 
 /// Regenerate AGENTS.md from current repo state.
 fn regenerate(repo_root: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    let config = ProductConfig::load(&repo_root.join("product.toml"))?;
+    let cfg_path = crate::config::find_config_in_dir(repo_root).ok_or_else(|| {
+        crate::error::ProductError::ConfigError(format!(
+            "no product config found under {}",
+            repo_root.display()
+        ))
+    })?;
+    let config = ProductConfig::load(&cfg_path)?;
     let features_dir = config.resolve_path(repo_root, &config.paths.features);
     let adrs_dir = config.resolve_path(repo_root, &config.paths.adrs);
     let tests_dir = config.resolve_path(repo_root, &config.paths.tests);

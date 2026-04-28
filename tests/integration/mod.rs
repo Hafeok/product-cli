@@ -8154,27 +8154,28 @@ fn tc_249_product_feature_next() {
 #[test]
 fn tc_209_checklist_gitignore_default() {
     let h = Harness::new();
-    // Remove existing product.toml to simulate a new repository
+    // Remove any pre-existing config so init runs cleanly into the canonical layout
     let _ = std::fs::remove_file(h.dir.path().join("product.toml"));
+    let _ = std::fs::remove_file(h.dir.path().join(".product/config.toml"));
 
     let out = h.run(&["init", "--yes"]);
     out.assert_exit(0);
 
-    // product.toml should exist
+    // .product/config.toml should exist (canonical default)
     assert!(
-        h.exists("product.toml"),
-        "product.toml should be created by init"
+        h.exists(".product/config.toml"),
+        ".product/config.toml should be created by init"
     );
 
-    // .gitignore should exist and contain checklist.md
+    // .gitignore should exist and contain the canonical checklist path
     assert!(
         h.exists(".gitignore"),
         ".gitignore should be created by init"
     );
     let gitignore = h.read(".gitignore");
     assert!(
-        gitignore.contains("checklist.md"),
-        "checklist.md should appear in .gitignore by default.\nGot:\n{}",
+        gitignore.contains(".product/checklist.md"),
+        ".product/checklist.md should appear in .gitignore by default.\nGot:\n{}",
         gitignore
     );
 }
@@ -8186,19 +8187,21 @@ fn tc_209_checklist_gitignore_default() {
 #[test]
 fn tc_210_checklist_gitignore_opt_out() {
     let h = Harness::new();
-    // Pre-create product.toml with checklist-in-gitignore = false
+    let _ = std::fs::remove_file(h.dir.path().join("product.toml"));
+    let _ = std::fs::remove_file(h.dir.path().join(".product/config.toml"));
+    // Pre-create canonical config with checklist-in-gitignore = false
     h.write(
-        "product.toml",
+        ".product/config.toml",
         r#"name = "test"
 schema-version = "1"
 checklist-in-gitignore = false
 
 [paths]
-features = "docs/features"
-adrs = "docs/adrs"
-tests = "docs/tests"
-graph = "docs/graph"
-checklist = "docs/checklist.md"
+features = ".product/features"
+adrs = ".product/adrs"
+tests = ".product/tests"
+graph = ".product/graph"
+checklist = ".product/checklist.md"
 
 [prefixes]
 feature = "FT"
@@ -8210,7 +8213,7 @@ test = "TC"
     let out = h.run(&["init", "--force", "--yes"]);
     out.assert_exit(0);
 
-    // .gitignore should exist (for docs/graph/ at least)
+    // .gitignore should exist (for .product/graph/ at least)
     assert!(
         h.exists(".gitignore"),
         ".gitignore should be created by init"
@@ -8224,10 +8227,10 @@ test = "TC"
         gitignore
     );
 
-    // docs/graph/ should still be present (always gitignored)
+    // .product/graph/ should still be present (always gitignored)
     assert!(
-        gitignore.contains("docs/graph/"),
-        "docs/graph/ should still appear in .gitignore.\nGot:\n{}",
+        gitignore.contains(".product/graph/"),
+        ".product/graph/ should still appear in .gitignore.\nGot:\n{}",
         gitignore
     );
 }
@@ -9036,16 +9039,23 @@ fn tc_430_content_hash_system_passes_on_sealed_repository() {
 // Init tests (FT-035, ADR-033) — TC-431 through TC-437
 // ---------------------------------------------------------------------------
 
-/// TC-431: init creates product.toml and directory skeleton
+/// TC-431: init writes the canonical `.product/` layout (FT-057, ADR-048)
 #[test]
 fn tc_431_init_creates_product_toml_and_directory_skeleton() {
     let h = Harness::new_bare();
     let out = h.run(&["init", "--yes"]);
     out.assert_exit(0);
 
-    // 1. product.toml exists and contains all required sections
-    assert!(h.exists("product.toml"), "product.toml should exist");
-    let toml_content = h.read("product.toml");
+    // 1. .product/config.toml exists with all required sections
+    assert!(
+        h.exists(".product/config.toml"),
+        ".product/config.toml should exist"
+    );
+    assert!(
+        !h.exists("product.toml"),
+        "legacy product.toml should NOT exist for default canonical init"
+    );
+    let toml_content = h.read(".product/config.toml");
     assert!(toml_content.contains("name = "), "should contain name");
     assert!(
         toml_content.contains("schema-version = "),
@@ -9083,20 +9093,35 @@ fn tc_431_init_creates_product_toml_and_directory_skeleton() {
         "schema-version should be 1"
     );
 
-    // 4. Directories exist
-    assert!(h.exists("docs/features"), "docs/features/ should exist");
-    assert!(h.exists("docs/adrs"), "docs/adrs/ should exist");
-    assert!(h.exists("docs/tests"), "docs/tests/ should exist");
-    assert!(h.exists("docs/graph"), "docs/graph/ should exist");
+    // 4. Canonical directories exist
+    assert!(
+        h.exists(".product/features"),
+        ".product/features/ should exist"
+    );
+    assert!(h.exists(".product/adrs"), ".product/adrs/ should exist");
+    assert!(h.exists(".product/tests"), ".product/tests/ should exist");
+    assert!(h.exists(".product/graph"), ".product/graph/ should exist");
+    assert!(
+        !h.exists("docs/features"),
+        "legacy docs/features/ should not be created"
+    );
 
-    // 5. Exit code 0 — already asserted
+    // 5. [paths] block uses canonical paths and includes the FT-057 keys
+    assert!(toml_content.contains("features = \".product/features\""));
+    assert!(toml_content.contains("adrs = \".product/adrs\""));
+    assert!(toml_content.contains("tests = \".product/tests\""));
+    assert!(toml_content.contains("graph = \".product/graph\""));
+    assert!(toml_content.contains("checklist = \".product/checklist.md\""));
+    assert!(toml_content.contains("prompts = \".product/prompts\""));
+    assert!(toml_content.contains("gaps = \".product/gaps.json\""));
+    assert!(toml_content.contains("requests = \".product/requests.jsonl\""));
 
-    // 6. Stdout contains summary of created files
-    out.assert_stdout_contains("product.toml");
-    out.assert_stdout_contains("docs/features/");
-    out.assert_stdout_contains("docs/adrs/");
-    out.assert_stdout_contains("docs/tests/");
-    out.assert_stdout_contains("docs/graph/");
+    // 6. Stdout summary covers the canonical layout
+    out.assert_stdout_contains(".product/config.toml");
+    out.assert_stdout_contains(".product/features/");
+    out.assert_stdout_contains(".product/adrs/");
+    out.assert_stdout_contains(".product/tests/");
+    out.assert_stdout_contains(".product/graph/");
 }
 
 /// TC-432: init interactive mode prompts for name and domains
@@ -9117,8 +9142,8 @@ fn tc_432_init_interactive_mode_prompts_for_name_and_domains() {
     // 4. Exit code is 0
     out.assert_exit(0);
 
-    // 1. product.toml contains the provided project name
-    let toml_content = h.read("product.toml");
+    // 1. canonical config contains the provided project name
+    let toml_content = h.read(".product/config.toml");
     assert!(
         toml_content.contains("name = \"my-interactive-proj\""),
         "should contain provided project name, got:\n{}",
@@ -9161,8 +9186,8 @@ fn tc_433_init_yes_uses_defaults_without_prompts() {
     // 5. Exit code is 0
     out.assert_exit(0);
 
-    // 2. product.toml exists with name = "test-project"
-    let toml_content = h.read("product.toml");
+    // 2. canonical config exists with name = "test-project"
+    let toml_content = h.read(".product/config.toml");
     assert!(
         toml_content.contains("name = \"test-project\""),
         "should contain name = \"test-project\", got:\n{}",
@@ -9199,20 +9224,20 @@ fn tc_433_init_yes_uses_defaults_without_prompts() {
     );
 }
 
-/// TC-434: init errors on existing product.toml without --force
+/// TC-434: init errors on existing canonical config without --force
 #[test]
 fn tc_434_init_errors_on_existing_product_toml_without_force() {
     let h = Harness::new_bare();
     let original_content = "name = \"original\"\nschema-version = \"1\"\n";
-    h.write("product.toml", original_content);
+    h.write(".product/config.toml", original_content);
 
     let out = h.run(&["init", "--yes"]);
 
     // 1. Exit code is 1
     out.assert_exit(1);
 
-    // 2. Stderr contains "product.toml already exists"
-    out.assert_stderr_contains("product.toml already exists");
+    // 2. Stderr contains "config.toml already exists"
+    out.assert_stderr_contains("config.toml already exists");
 
     // 3. Stderr contains a hint mentioning --force
     assert!(
@@ -9222,30 +9247,33 @@ fn tc_434_init_errors_on_existing_product_toml_without_force() {
     );
 
     // 4. Original content is unchanged
-    let content = h.read("product.toml");
+    let content = h.read(".product/config.toml");
     assert_eq!(
         content, original_content,
-        "original product.toml should be unchanged"
+        "original .product/config.toml should be unchanged"
     );
 }
 
-/// TC-435: init --force overwrites existing product.toml
+/// TC-435: init --force overwrites existing canonical config
 #[test]
 fn tc_435_init_force_overwrites_existing_product_toml() {
     let h = Harness::new_bare();
-    h.write("product.toml", "name = \"old\"\nschema-version = \"1\"\n");
+    h.write(".product/config.toml", "name = \"old\"\nschema-version = \"1\"\n");
 
     // Create an existing artifact directory to verify it's not deleted
-    std::fs::create_dir_all(h.dir.path().join("docs/features")).expect("mkdir");
-    h.write("docs/features/FT-001-test.md", "---\nid: FT-001\ntitle: Test\n---\n");
+    std::fs::create_dir_all(h.dir.path().join(".product/features")).expect("mkdir");
+    h.write(
+        ".product/features/FT-001-test.md",
+        "---\nid: FT-001\ntitle: Test\n---\n",
+    );
 
     let out = h.run(&["init", "--yes", "--force", "--name", "new-project"]);
 
     // 1. Exit code is 0
     out.assert_exit(0);
 
-    // 2. product.toml now contains name = "new-project"
-    let toml_content = h.read("product.toml");
+    // 2. .product/config.toml now contains name = "new-project"
+    let toml_content = h.read(".product/config.toml");
     assert!(
         toml_content.contains("name = \"new-project\""),
         "should contain new name, got:\n{}",
@@ -9260,12 +9288,12 @@ fn tc_435_init_force_overwrites_existing_product_toml() {
 
     // 4. Existing artifact directories and files are not deleted
     assert!(
-        h.exists("docs/features/FT-001-test.md"),
+        h.exists(".product/features/FT-001-test.md"),
         "existing feature file should be preserved"
     );
 }
 
-/// TC-436: init appends to existing .gitignore
+/// TC-436: init appends canonical entries to existing .gitignore
 #[test]
 fn tc_436_init_appends_to_existing_gitignore() {
     let h = Harness::new_bare();
@@ -9282,26 +9310,37 @@ fn tc_436_init_appends_to_existing_gitignore() {
         gitignore
     );
 
-    // 2. .gitignore now also contains docs/graph/
+    // 2. .gitignore now also contains canonical graph + sessions entries
     assert!(
-        gitignore.contains("docs/graph/"),
-        "should contain docs/graph/, got:\n{}",
+        gitignore.contains(".product/graph/"),
+        "should contain .product/graph/, got:\n{}",
+        gitignore
+    );
+    assert!(
+        gitignore.contains(".product/sessions/"),
+        "should contain .product/sessions/, got:\n{}",
         gitignore
     );
 
-    // 3. Running init --force --yes again does not duplicate docs/graph/
+    // 3. Running init --force --yes again does not duplicate canonical entries
     let out2 = h.run(&["init", "--force", "--yes"]);
     out2.assert_exit(0);
     let gitignore2 = h.read(".gitignore");
-    let count = gitignore2.matches("docs/graph/").count();
+    let count = gitignore2.matches(".product/graph/").count();
     assert_eq!(
         count, 1,
-        "docs/graph/ should appear exactly once after second init, found {} times in:\n{}",
+        ".product/graph/ should appear exactly once after second init, found {} times in:\n{}",
         count, gitignore2
+    );
+    let sessions_count = gitignore2.matches(".product/sessions/").count();
+    assert_eq!(
+        sessions_count, 1,
+        ".product/sessions/ should appear exactly once after second init, found {} times in:\n{}",
+        sessions_count, gitignore2
     );
 }
 
-/// TC-437: init creates .gitignore when absent
+/// TC-437: init creates .gitignore when absent (canonical entries)
 #[test]
 fn tc_437_init_creates_gitignore_when_absent() {
     let h = Harness::new_bare();
@@ -9313,11 +9352,16 @@ fn tc_437_init_creates_gitignore_when_absent() {
     // 1. .gitignore is created
     assert!(h.exists(".gitignore"), ".gitignore should be created");
 
-    // 2. .gitignore contains docs/graph/
+    // 2. .gitignore contains the canonical graph entry
     let gitignore = h.read(".gitignore");
     assert!(
-        gitignore.contains("docs/graph/"),
-        "should contain docs/graph/, got:\n{}",
+        gitignore.contains(".product/graph/"),
+        "should contain .product/graph/, got:\n{}",
+        gitignore
+    );
+    assert!(
+        gitignore.contains(".product/sessions/"),
+        "should contain .product/sessions/, got:\n{}",
         gitignore
     );
 
@@ -9337,18 +9381,21 @@ fn tc_439_ft_035_repository_initialization_validated() {
     // create, configure, verify parsability, idempotency of gitignore, and force overwrite.
     let h = Harness::new_bare();
 
-    // 1. Init with --yes creates valid repo (TC-431, TC-433, TC-437)
+    // 1. Init with --yes creates valid canonical repo (TC-431, TC-433, TC-437)
     let out = h.run(&["init", "--yes", "--name", "exit-criteria-test"]);
     out.assert_exit(0);
-    assert!(h.exists("product.toml"), "product.toml created");
-    assert!(h.exists("docs/features"), "features dir created");
-    assert!(h.exists("docs/adrs"), "adrs dir created");
-    assert!(h.exists("docs/tests"), "tests dir created");
-    assert!(h.exists("docs/graph"), "graph dir created");
+    assert!(
+        h.exists(".product/config.toml"),
+        ".product/config.toml created"
+    );
+    assert!(h.exists(".product/features"), "features dir created");
+    assert!(h.exists(".product/adrs"), "adrs dir created");
+    assert!(h.exists(".product/tests"), "tests dir created");
+    assert!(h.exists(".product/graph"), "graph dir created");
     assert!(h.exists(".gitignore"), "gitignore created");
 
     // 2. Generated TOML is valid and parseable (TC-438)
-    let toml_content = h.read("product.toml");
+    let toml_content = h.read(".product/config.toml");
     assert!(toml_content.contains("name = \"exit-criteria-test\""));
     assert!(toml_content.contains("[domains]"));
     assert!(toml_content.contains("[mcp]"));
@@ -9356,18 +9403,123 @@ fn tc_439_ft_035_repository_initialization_validated() {
     // 3. Re-running without --force fails (TC-434)
     let out = h.run(&["init", "--yes"]);
     out.assert_exit(1);
-    out.assert_stderr_contains("product.toml already exists");
+    out.assert_stderr_contains("config.toml already exists");
 
     // 4. --force overwrites successfully (TC-435)
     let out = h.run(&["init", "--yes", "--force", "--name", "overwritten"]);
     out.assert_exit(0);
-    let toml_content = h.read("product.toml");
+    let toml_content = h.read(".product/config.toml");
     assert!(toml_content.contains("name = \"overwritten\""));
 
     // 5. Gitignore is not duplicated on re-init (TC-436)
     let gitignore = h.read(".gitignore");
-    let count = gitignore.matches("docs/graph/").count();
-    assert_eq!(count, 1, "docs/graph/ should appear exactly once");
+    let count = gitignore.matches(".product/graph/").count();
+    assert_eq!(count, 1, ".product/graph/ should appear exactly once");
+}
+
+/// TC-703: `product init` (no flags) emits the canonical `.product/` layout,
+/// and `--legacy-layout` opts into the pre-FT-057 root-based layout.
+///
+/// Regression test for the FT-057 ship — the migration command and discovery
+/// fallback shipped, but `product init` was not updated, so a fresh repo
+/// kept getting a `product.toml` + `docs/` skeleton. TC-703 codifies the
+/// acceptance criterion for both branches.
+#[test]
+fn tc_703_product_init_emits_canonical_product_layout() {
+    // --- Default canonical layout ---
+    let h = Harness::new_bare();
+    let out = h.run(&["init", "--yes", "--name", "canonical-test"]);
+    out.assert_exit(0);
+
+    assert!(
+        h.exists(".product/config.toml"),
+        ".product/config.toml should exist by default"
+    );
+    assert!(
+        !h.exists("product.toml"),
+        "root product.toml should not exist by default"
+    );
+
+    let toml = h.read(".product/config.toml");
+    for expected in [
+        "features = \".product/features\"",
+        "adrs = \".product/adrs\"",
+        "tests = \".product/tests\"",
+        "graph = \".product/graph\"",
+        "checklist = \".product/checklist.md\"",
+        "dependencies = \".product/dependencies\"",
+        "requests = \".product/requests.jsonl\"",
+        "prompts = \".product/prompts\"",
+        "gaps = \".product/gaps.json\"",
+    ] {
+        assert!(
+            toml.contains(expected),
+            "canonical config missing `{}`. Full content:\n{}",
+            expected,
+            toml
+        );
+    }
+
+    for d in [
+        ".product/features",
+        ".product/adrs",
+        ".product/tests",
+        ".product/graph",
+    ] {
+        assert!(h.exists(d), "{} should be created", d);
+    }
+    assert!(
+        !h.exists("docs/features"),
+        "legacy docs/features should not be created in canonical mode"
+    );
+
+    let gitignore = h.read(".gitignore");
+    assert!(gitignore.contains(".product/graph/"));
+    assert!(gitignore.contains(".product/sessions/"));
+    assert!(
+        !gitignore.contains("docs/graph/"),
+        "legacy docs/graph/ should not appear in canonical .gitignore"
+    );
+
+    // Re-running without --force should refuse to clobber
+    let out_again = h.run(&["init", "--yes"]);
+    out_again.assert_exit(1);
+    out_again.assert_stderr_contains("config.toml already exists");
+
+    // --- Legacy opt-in via --legacy-layout ---
+    let h2 = Harness::new_bare();
+    let out2 = h2.run(&[
+        "init",
+        "--yes",
+        "--legacy-layout",
+        "--name",
+        "legacy-test",
+    ]);
+    out2.assert_exit(0);
+    assert!(
+        h2.exists("product.toml"),
+        "--legacy-layout should write product.toml at root"
+    );
+    assert!(
+        !h2.exists(".product/config.toml"),
+        "--legacy-layout should not create .product/config.toml"
+    );
+    let legacy_toml = h2.read("product.toml");
+    assert!(legacy_toml.contains("features = \"docs/features\""));
+    assert!(legacy_toml.contains("graph = \"docs/graph\""));
+    assert!(h2.exists("docs/features"));
+    assert!(h2.exists("docs/graph"));
+    assert!(!h2.exists(".product"));
+    let legacy_gi = h2.read(".gitignore");
+    assert!(legacy_gi.contains("docs/graph/"));
+    assert!(
+        !legacy_gi.contains(".product/graph/"),
+        "legacy gitignore should not list canonical graph entry"
+    );
+    assert!(
+        !legacy_gi.contains(".product/sessions/"),
+        "legacy gitignore should not list canonical sessions entry"
+    );
 }
 
 // --- TC-179: ft_008_schema_migration_exit_criteria ---
@@ -18409,8 +18561,11 @@ fn tc_699_ft_056_exit_criteria() {
 
     // Invariant: the pipeline reads the per-repo override via
     // `author::prompts::get` rather than the inline format string.
+    // FT-057 added the prompts-path argument so the call honours
+    // `[paths].prompts` (ADR-048) — the test accepts either signature.
     assert!(
-        pipeline_src.contains("crate::author::prompts::get(root, \"implement\")"),
+        pipeline_src.contains("crate::author::prompts::get(root,")
+            && pipeline_src.contains("\"implement\""),
         "pipeline.rs should source the base prompt via author::prompts::get"
     );
 }

@@ -19,29 +19,30 @@ pub enum PromptsCommands {
 }
 
 pub(crate) fn handle_prompts(cmd: PromptsCommands) -> BoxResult {
-    let (_config, root) = ProductConfig::discover()?;
+    let (config, root) = ProductConfig::discover()?;
+    let prompts_path = config.paths.prompts_resolved().to_string();
     match cmd {
-        PromptsCommands::Init => prompts_init(&root),
-        PromptsCommands::List => prompts_list(&root),
-        PromptsCommands::Get { name } => prompts_get(&root, &name),
+        PromptsCommands::Init => prompts_init(&root, &prompts_path),
+        PromptsCommands::List => prompts_list(&root, &prompts_path),
+        PromptsCommands::Get { name } => prompts_get(&root, &prompts_path, &name),
     }
 }
 
-fn prompts_init(root: &std::path::Path) -> BoxResult {
-    let created = author::prompts_init(root)?;
+fn prompts_init(root: &std::path::Path, prompts_path: &str) -> BoxResult {
+    let created = author::prompts_init(root, prompts_path)?;
     if created.is_empty() {
         println!("All prompt files already exist.");
     } else {
         for f in &created {
-            println!("  created: benchmarks/prompts/{}", f);
+            println!("  created: {}/{}", prompts_path, f);
         }
         println!("{} prompt file(s) created.", created.len());
     }
     Ok(())
 }
 
-fn prompts_list(root: &std::path::Path) -> BoxResult {
-    let prompts = author::prompts_list(root);
+fn prompts_list(root: &std::path::Path, prompts_path: &str) -> BoxResult {
+    let prompts = author::prompts_list(root, prompts_path);
     println!("{:<20} {:<8} FILE", "NAME", "VERSION");
     println!("{}", "-".repeat(60));
     for p in &prompts {
@@ -50,8 +51,8 @@ fn prompts_list(root: &std::path::Path) -> BoxResult {
     Ok(())
 }
 
-fn prompts_get(root: &std::path::Path, name: &str) -> BoxResult {
-    let content = author::prompts_get(root, name)?;
+fn prompts_get(root: &std::path::Path, prompts_path: &str, name: &str) -> BoxResult {
+    let content = author::prompts_get(root, prompts_path, name)?;
     print!("{}", content);
     Ok(())
 }

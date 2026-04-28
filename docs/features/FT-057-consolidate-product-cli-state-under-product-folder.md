@@ -16,6 +16,7 @@ tests:
 - TC-700
 - TC-701
 - TC-702
+- TC-703
 domains: []
 domains-acknowledged:
   ADR-046: No interaction with cycle-time visibility. Tag timestamps consumed by `product cycle-times` come from git, not from product-managed paths; relocating `requests.jsonl` to `.product/requests.jsonl` does not affect tag reads. The migration is invisible to the cycle-time pipeline.

@@ -41,7 +41,7 @@ pub fn run_implement(
 
     // Step 1 — Gap gate
     print!("  Step 1: Gap gate... ");
-    let baseline = gap::GapBaseline::load(&root.join("gaps.json"));
+    let baseline = gap::GapBaseline::load(&root.join(config.paths.gaps_resolved()));
     let mut all_findings = Vec::new();
     for adr_id in &feature.front.adrs {
         let findings = gap::check_adr(graph, adr_id, &baseline);
@@ -87,11 +87,10 @@ pub fn run_implement(
     }
 
     // Per ADR-022, load the base prompt from the per-repo override file
-    // (`benchmarks/prompts/implement-v1.md`) when present; fall back to
-    // the embedded default otherwise. `prompts::get` already encapsulates
-    // both halves of that contract, so we reuse it here for parity with
-    // `product prompts get implement` and `author::start_session`.
-    let base_prompt = crate::author::prompts::get(root, "implement").unwrap_or_default();
+    // when present; fall back to the embedded default otherwise.
+    // `prompts::get` honours `[paths].prompts` (FT-057, ADR-048) with a
+    // legacy `benchmarks/prompts/` fallback.
+    let base_prompt = crate::author::prompts::get(root, config.paths.prompts_resolved(), "implement").unwrap_or_default();
 
     let dynamic_suffix = format!(
         "# Implementation Task: {} — {}\n\n## Current test status\n{}\n\n## Hard constraints\n- Run the test suite before reporting complete\n- When done: `product verify {}`\n\n## Context Bundle\n{}\n",
