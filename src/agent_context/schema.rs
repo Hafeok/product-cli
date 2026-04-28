@@ -4,17 +4,7 @@ pub use super::formal_schema::formal_block_schema;
 
 /// Generate human-readable schema for a specific artifact type.
 pub fn generate_schema(artifact_type: &str) -> Result<String, String> {
-    match artifact_type {
-        "feature" => Ok(feature_schema()),
-        "adr" => Ok(adr_schema()),
-        "test" => Ok(test_schema()),
-        "dep" | "dependency" => Ok(dep_schema()),
-        "formal" => Ok(formal_block_schema()),
-        _ => Err(format!(
-            "Unknown artifact type: '{}'. Supported: feature, adr, test, dep, formal",
-            artifact_type
-        )),
-    }
+    generate_schema_with_config(artifact_type, None)
 }
 
 /// Generate all schemas as a single document.
@@ -35,7 +25,15 @@ pub fn generate_all_schemas() -> String {
 }
 
 pub(crate) fn feature_schema() -> String {
-    r#"```yaml
+    feature_schema_with_config(None)
+}
+
+/// Render the feature schema, including the FT-055 body-structure convention.
+/// When `config` is provided, the convention block reflects the project's
+/// `[features]` settings; otherwise it shows the FT-055 defaults.
+pub fn feature_schema_with_config(config: Option<&crate::config::ProductConfig>) -> String {
+    let mut out = String::from(
+        r#"```yaml
 id: String           # Required. Format: FT-NNN (e.g. FT-001)
 title: String        # Required. Human-readable feature name
 phase: Integer       # Default: 1. Delivery phase number
@@ -52,8 +50,46 @@ bundle:              # Optional. Written by `product context --measure`
   domains: [String]
   tokens-approx: Integer
   measured-at: String  # ISO 8601 timestamp
-```"#
-    .to_string()
+```"#,
+    );
+    out.push_str("\n\n");
+    out.push_str(&feature_body_convention_block(config));
+    out
+}
+
+/// Render the markdown body-structure convention required by FT-055 / ADR-047.
+/// Uses the project's `[features]` config when available; otherwise renders
+/// the defaults shipped with `product`.
+fn feature_body_convention_block(config: Option<&crate::config::ProductConfig>) -> String {
+    let features = config
+        .map(|c| c.features.clone())
+        .unwrap_or_default();
+    let severity = match features.completeness_severity {
+        crate::config::CompletenessSeverity::Warning => "warning",
+        crate::config::CompletenessSeverity::Error => "error",
+    };
+    let mut out = String::from("### Body Structure Convention (FT-055, ADR-047)\n\n");
+    out.push_str(
+        "Feature bodies must include the H2 sections below. Empty content under a heading\n\
+         counts as deliberate — only an absent or whitespace-only section emits W030.\n\n",
+    );
+    out.push_str("Required H2 sections:\n\n");
+    for s in &features.required_sections {
+        out.push_str(&format!("- `## {}`\n", s));
+    }
+    out.push_str("\nRequired H3 subsections under `## Functional Specification`:\n\n");
+    for s in &features.functional_spec_subsections {
+        out.push_str(&format!("- `### {}`\n", s));
+    }
+    out.push_str(&format!(
+        "\nCompleteness check (W030):\n\
+         - Severity: `{severity}` (set via `[features].completeness-severity`)\n\
+         - Applies from phase: `{phase}` (`[features].required-from-phase`)\n\
+         - Features with `status: abandoned` are exempt.\n",
+        severity = severity,
+        phase = features.required_from_phase,
+    ));
+    out
 }
 
 pub(crate) fn adr_schema() -> String {
@@ -125,7 +161,7 @@ pub fn generate_schema_with_config(
     config: Option<&crate::config::ProductConfig>,
 ) -> Result<String, String> {
     match artifact_type {
-        "feature" => Ok(feature_schema()),
+        "feature" => Ok(feature_schema_with_config(config)),
         "adr" => Ok(adr_schema()),
         "test" => Ok(test_schema_with_config(config)),
         "dep" | "dependency" => Ok(dep_schema()),
@@ -141,7 +177,7 @@ pub fn generate_all_schemas_with_config(config: Option<&crate::config::ProductCo
     let mut out = String::new();
     out.push_str("# Front-Matter Schemas\n\n");
     out.push_str("## Feature\n\n");
-    out.push_str(&feature_schema());
+    out.push_str(&feature_schema_with_config(config));
     out.push_str("\n\n## ADR\n\n");
     out.push_str(&adr_schema());
     out.push_str("\n\n## Test Criterion\n\n");
@@ -207,6 +243,29 @@ mod tests {
         ] {
             assert!(schema.contains(field), "Feature schema missing field: {}", field);
         }
+    }
+
+    #[test]
+    fn schema_feature_documents_body_structure_convention() {
+        // FT-055 / ADR-047: `product schema feature` must explain the
+        // required H2 / H3 sections so editors don't have to read source.
+        let s = feature_schema();
+        assert!(s.contains("Body Structure Convention"), "missing convention header");
+        assert!(s.contains("FT-055"), "convention should cite FT-055");
+        for h2 in ["## Description", "## Functional Specification", "## Out of scope"] {
+            assert!(s.contains(h2), "convention missing H2 `{}`", h2);
+        }
+        for h3 in [
+            "### Inputs", "### Outputs", "### State", "### Behaviour",
+            "### Invariants", "### Error handling", "### Boundaries",
+        ] {
+            assert!(s.contains(h3), "convention missing H3 `{}`", h3);
+        }
+        assert!(s.contains("W030"), "convention must reference W030");
+        assert!(
+            s.contains("Severity: `warning`"),
+            "convention should print the default severity"
+        );
     }
 
     #[test]

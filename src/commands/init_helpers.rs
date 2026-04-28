@@ -248,6 +248,14 @@ port = {mcp_port}
 
 [author]
 cli = "claude"
+
+# FT-055 / ADR-047 — feature body completeness check (W030).
+# Defaults are listed explicitly to future-proof against changes upstream.
+[features]
+required-sections = ["Description", "Functional Specification", "Out of scope"]
+functional-spec-subsections = ["Inputs", "Outputs", "State", "Behaviour", "Invariants", "Error handling", "Boundaries"]
+required-from-phase = 1
+completeness-severity = "warning"
 "#,
         name = project_name,
         clg = checklist_in_gitignore,

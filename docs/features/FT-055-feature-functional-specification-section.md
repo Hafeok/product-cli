@@ -30,6 +30,7 @@ tests:
 - TC-695
 - TC-696
 - TC-697
+- TC-704
 domains:
 - api
 - data-model

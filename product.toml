@@ -89,3 +89,11 @@ scheduling      = "Workload placement, resource limits, eviction, CPU/memory"
 api             = "CLI surface, MCP tools, event schema, resource language"
 data-model      = "RDF, SPARQL, ontology, event sourcing, projections"
 testing         = "Property, session, and LLM-benchmark test strategy (ADR-018)"
+
+# FT-055 / ADR-047 — feature body completeness check (W030).
+# Defaults listed explicitly to future-proof against upstream changes.
+[features]
+required-sections = ["Description", "Functional Specification", "Out of scope"]
+functional-spec-subsections = ["Inputs", "Outputs", "State", "Behaviour", "Invariants", "Error handling", "Boundaries"]
+required-from-phase = 1
+completeness-severity = "warning"
