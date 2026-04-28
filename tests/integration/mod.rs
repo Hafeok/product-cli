@@ -18229,3 +18229,189 @@ fn tc_697_functional_specification_feature_exit_criteria() {
     assert!(out.stderr.contains("W030"));
 }
 
+/// TC-698: implement_pipeline_honors_per_repo_implement_prompt
+///
+/// FT-056 — `product implement FT-XXX --dry-run` must compose its agent
+/// prompt by reading `benchmarks/prompts/implement-v1.md` (the per-repo
+/// override) when present and falling back to the embedded default
+/// otherwise. The dynamic suffix (TC table, hard constraints, context
+/// bundle) is appended to the base prompt.
+#[test]
+fn tc_698_implement_pipeline_honors_per_repo_implement_prompt() {
+    let h = fixture_gap_clean();
+
+    // --- Override path -------------------------------------------------
+    let sentinel = "# CUSTOM IMPLEMENT PROMPT — sentinel-9f3b2a";
+    h.write("benchmarks/prompts/implement-v1.md", sentinel);
+
+    let out = h.run(&["implement", "FT-001", "--dry-run"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("Context file:");
+
+    let path_line = out
+        .stdout
+        .lines()
+        .find(|l| l.contains("Context file:"))
+        .expect("should have context file line");
+    let path_str = path_line
+        .split("Context file:")
+        .nth(1)
+        .expect("path after colon")
+        .trim();
+    let content =
+        std::fs::read_to_string(path_str).expect("context file should be readable");
+
+    assert!(
+        content.starts_with(sentinel),
+        "Override prompt should appear at top of context file.\nfile starts with:\n{}",
+        &content[..content.len().min(200)]
+    );
+    // Dynamic suffix is appended below the sentinel.
+    assert!(
+        content.contains("# Implementation Task: FT-001"),
+        "Dynamic suffix should include the feature header. file:\n{}",
+        content
+    );
+    assert!(
+        content.contains("## Current test status"),
+        "Dynamic suffix should include the TC status table. file:\n{}",
+        content
+    );
+    assert!(
+        content.contains("product verify FT-001"),
+        "Dynamic suffix should include the verify hard constraint. file:\n{}",
+        content
+    );
+    assert!(
+        content.contains("## Context Bundle"),
+        "Dynamic suffix should include the context bundle. file:\n{}",
+        content
+    );
+
+    // --- Fallback path -------------------------------------------------
+    std::fs::remove_file(h.dir.path().join("benchmarks/prompts/implement-v1.md"))
+        .expect("remove override");
+
+    let out2 = h.run(&["implement", "FT-001", "--dry-run"]);
+    out2.assert_exit(0);
+
+    let path_line2 = out2
+        .stdout
+        .lines()
+        .find(|l| l.contains("Context file:"))
+        .expect("should have context file line");
+    let path_str2 = path_line2
+        .split("Context file:")
+        .nth(1)
+        .expect("path after colon")
+        .trim();
+    let content2 =
+        std::fs::read_to_string(path_str2).expect("context file should be readable");
+
+    // Embedded default begins with the title from src/author/prompts/implement.txt
+    assert!(
+        content2.starts_with("# Product Implementation Session"),
+        "Fallback prompt should use the embedded default body.\nfile starts with:\n{}",
+        &content2[..content2.len().min(200)]
+    );
+    // Dynamic suffix still appended.
+    assert!(
+        content2.contains("# Implementation Task: FT-001"),
+        "Dynamic suffix should still be appended in fallback path."
+    );
+    assert!(
+        content2.contains("product verify FT-001"),
+        "Dynamic suffix should still be appended in fallback path."
+    );
+
+    // --- Negative case (empty override file) ---------------------------
+    h.write("benchmarks/prompts/implement-v1.md", "");
+
+    let out3 = h.run(&["implement", "FT-001", "--dry-run"]);
+    out3.assert_exit(0);
+
+    let path_line3 = out3
+        .stdout
+        .lines()
+        .find(|l| l.contains("Context file:"))
+        .expect("should have context file line");
+    let path_str3 = path_line3
+        .split("Context file:")
+        .nth(1)
+        .expect("path after colon")
+        .trim();
+    let content3 =
+        std::fs::read_to_string(path_str3).expect("context file should be readable");
+
+    // Empty override: file still produced, dynamic suffix still present.
+    assert!(
+        content3.contains("# Implementation Task: FT-001"),
+        "Empty override should still produce the dynamic suffix."
+    );
+    assert!(
+        content3.contains("product verify FT-001"),
+        "Empty override should still produce the dynamic suffix."
+    );
+}
+
+/// TC-699: FT-056 exit criteria
+///
+/// FT-056 is complete when the per-repo `implement` prompt override
+/// flows through `product implement`. The full criteria are validated
+/// by TC-698 (override + fallback) plus the suite-wide build/clippy
+/// gates. This test asserts the structural invariants that the
+/// implementation now follows the documented composition contract:
+///
+/// 1. The pipeline routes through `author::prompts::get` (verified by
+///    inspecting the produced prompt content under both override and
+///    fallback paths in TC-698).
+/// 2. `pipeline.rs` stays under the 400-line file budget enforced by
+///    `tests/code_quality_tests.rs`.
+/// 3. The embedded default prompt body is non-empty and contains the
+///    documented composition note so a user editing
+///    `implement-v1.md` understands the seam.
+#[test]
+fn tc_699_ft_056_exit_criteria() {
+    // Invariant: the embedded default prompt body is present and
+    // documents the composition seam. We can read it via the same
+    // mechanism the binary uses by spawning the CLI.
+    let h = Harness::new();
+    let out = h.run(&["prompts", "get", "implement"]);
+    out.assert_exit(0);
+    assert!(
+        out.stdout.contains("Product Implementation Session"),
+        "embedded default prompt should carry the documented header.\nstdout: {}",
+        out.stdout
+    );
+    assert!(
+        out.stdout.to_lowercase().contains("composition"),
+        "embedded default prompt should describe the base+suffix composition seam.\nstdout: {}",
+        out.stdout
+    );
+
+    // Invariant: pipeline.rs is comfortably under the 400-line budget.
+    // Walk up from the test binary to find the workspace root.
+    let mut root = std::env::current_exe().expect("current_exe");
+    while !root.join("Cargo.toml").exists() {
+        if !root.pop() {
+            panic!("could not locate workspace root from test binary");
+        }
+    }
+    let pipeline_path = root.join("src/implement/pipeline.rs");
+    let pipeline_src = std::fs::read_to_string(&pipeline_path)
+        .expect("read pipeline.rs");
+    let line_count = pipeline_src.lines().count();
+    assert!(
+        line_count < 400,
+        "src/implement/pipeline.rs should stay under 400 lines (got {})",
+        line_count
+    );
+
+    // Invariant: the pipeline reads the per-repo override via
+    // `author::prompts::get` rather than the inline format string.
+    assert!(
+        pipeline_src.contains("crate::author::prompts::get(root, \"implement\")"),
+        "pipeline.rs should source the base prompt via author::prompts::get"
+    );
+}
+

@@ -1121,12 +1121,12 @@
 - [x] TC-696: functional_spec_subsections_configurable (scenario) — passing
 - [x] TC-697: functional_specification_feature_exit_criteria (exit-criteria) — passing
 
-### FT-056 — Implement Pipeline Honors Per-Repo Implement Prompt Override [ ]
+### FT-056 — Implement Pipeline Honors Per-Repo Implement Prompt Override [x]
 
 - [x] ADR-022: Authoring Resources — System Prompts and Pre-Commit Review (accepted)
 - [x] ADR-021: Implementation Pipeline — `product verify` and the Knowledge Boundary (accepted)
-- [ ] TC-698: implement_pipeline_honors_per_repo_implement_prompt (scenario) — unimplemented
-- [ ] TC-699: FT-056 exit criteria (exit-criteria) — unimplemented
+- [x] TC-698: implement_pipeline_honors_per_repo_implement_prompt (scenario) — passing
+- [x] TC-699: FT-056 exit criteria (exit-criteria) — passing
 
 ### FT-057 — Consolidate Product CLI State Under `.product/` Folder [ ]
 

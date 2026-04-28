@@ -2,12 +2,16 @@
 id: TC-699
 title: FT-056 exit criteria
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-056
   adrs: []
 phase: 5
+runner: cargo-test
+runner-args: "tc_699_ft_056_exit_criteria"
+last-run: 2026-04-28T09:50:28.631429697+00:00
+last-run-duration: 0.2s
 ---
 
 **Test Type:** exit-criteria

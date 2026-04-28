@@ -2,13 +2,17 @@
 id: TC-698
 title: implement_pipeline_honors_per_repo_implement_prompt
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-056
   adrs:
   - ADR-022
 phase: 5
+runner: cargo-test
+runner-args: "tc_698_implement_pipeline_honors_per_repo_implement_prompt"
+last-run: 2026-04-28T09:50:28.631429697+00:00
+last-run-duration: 0.2s
 ---
 
 **Test Type:** scenario

@@ -86,13 +86,22 @@ pub fn run_implement(
         }
     }
 
-    let impl_prompt = format!(
-        "# Implementation Task: {} — {}\n\n## Your role\nImplement this feature according to the architectural decisions in the context bundle. The test criteria define done — your implementation is complete when all linked TCs pass.\n\n## Current test status\n{}\n\n## Hard constraints\n- Run the test suite before reporting complete\n- When done: `product verify {}`\n\n## Context Bundle\n{}\n",
+    // Per ADR-022, load the base prompt from the per-repo override file
+    // (`benchmarks/prompts/implement-v1.md`) when present; fall back to
+    // the embedded default otherwise. `prompts::get` already encapsulates
+    // both halves of that contract, so we reuse it here for parity with
+    // `product prompts get implement` and `author::start_session`.
+    let base_prompt = crate::author::prompts::get(root, "implement").unwrap_or_default();
+
+    let dynamic_suffix = format!(
+        "# Implementation Task: {} — {}\n\n## Current test status\n{}\n\n## Hard constraints\n- Run the test suite before reporting complete\n- When done: `product verify {}`\n\n## Context Bundle\n{}\n",
         feature.front.id, feature.front.title,
         tc_table,
         feature.front.id,
         bundle,
     );
+
+    let impl_prompt = format!("{}\n\n{}", base_prompt, dynamic_suffix);
 
     // Write to temp file
     let tmp_dir = std::env::temp_dir();
