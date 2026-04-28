@@ -211,7 +211,7 @@ fn render_cross_cutting_section(out: &mut String, gaps: &[CrossCuttingGap]) {
         };
         let label = match &gap.status {
             CoverageStatus::Linked => "linked".to_string(),
-            CoverageStatus::Acknowledged(r) => format!("acknowledged: {}", &r[..r.len().min(30)]),
+            CoverageStatus::Acknowledged(r) => format!("acknowledged: {}", r.chars().take(30).collect::<String>()),
             CoverageStatus::Gap => "NOT COVERED".to_string(),
         };
         out.push_str(&format!("  {}  {:<10} {:<40} [{}]\n", symbol, gap.adr_id, gap.adr_title, label));

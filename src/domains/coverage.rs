@@ -97,7 +97,7 @@ pub fn render_coverage_matrix_filtered(
     // Header
     out.push_str(&format!("{:<20}", ""));
     for d in &display_domains {
-        let short = if d.len() > 5 { &d[..5] } else { d };
+        let short: String = d.chars().take(5).collect();
         out.push_str(&format!(" {:<5}", short));
     }
     out.push('\n');
@@ -105,7 +105,7 @@ pub fn render_coverage_matrix_filtered(
     // Rows
     for fid in &matrix.features {
         let title = graph.features.get(fid).map(|f| f.front.title.as_str()).unwrap_or("");
-        let label = format!("{} {}", fid, &title[..title.len().min(12)]);
+        let label = format!("{} {}", fid, title.chars().take(12).collect::<String>());
         out.push_str(&format!("{:<20}", label));
         for d in &display_domains {
             let cell = matrix.cells.get(&(fid.clone(), (*d).clone()))
