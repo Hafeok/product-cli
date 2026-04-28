@@ -6,11 +6,21 @@ status: planned
 depends-on: []
 adrs:
 - ADR-022
+- ADR-021
 tests:
 - TC-698
 - TC-699
 domains: []
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-044: No interaction with the request builder draft lifecycle. The change is internal to `product implement` and `src/author/prompts/implement.txt`; users author prompt customizations by editing the file directly per ADR-022, not via the request builder. The identical-semantics invariant is preserved — there is no request shape change.
+  ADR-040: No new verify stage and no LLM-boundary change. The change is an internal refactor of how `product implement` composes its agent prompt; it does not extend `product verify`'s six-stage pipeline or the semantic-analysis bundle surface.
+  ADR-042: Uses only existing TC types — `scenario` for the per-repo prompt session test (TC-698) and `exit-criteria` for the consolidated check-list (TC-699). No new TC types introduced; ADR-042's reserved-structural / open-descriptive partition is unchanged.
+  ADR-018: 'Test coverage uses the session-based integration pattern (Design 2): a tempdir repo with sentinel `benchmarks/prompts/implement-v1.md`, `product implement FT-X --dry-run`, and parsing the `Context file:` line from stdout. Property tests do not apply — the change is a pure base-prompt-plus-suffix concatenation already covered by the session test.'
+  ADR-046: No interaction with cycle-time visibility. The change is purely the prompt-composition refactor and does not emit cycle-time anchors, consume started/complete tag timestamps, or extend the `product cycle-times` / `product forecast --naive` surfaces.
+  ADR-041: No absence TCs or ADR removes/deprecates interaction. This feature is purely additive — wiring an existing function (`author::prompts::get`) into a code path that previously inlined a format string. Nothing is removed or deprecated.
+  ADR-043: The change is a ~10-line local refactor inside an existing `BoxResult` handler (`run_implement`) which is intentionally retained per CLAUDE.md (interactive flow that spawns an agent and reads progress). No new slice; the existing `author::prompts::get` already follows the slice pattern. Adapter size budget unchanged.
+  ADR-038: No request pipeline interaction — the change is internal to `src/implement/pipeline.rs::run_implement` and `src/author/prompts/implement.txt`. No front-matter mutations, no request-log entries. The implement pipeline reads from disk only.
+  ADR-045: No interaction with planning annotations. Due dates and started tags remain advisory; this feature does not consume or emit either signal. Features with or without `due-date` see identical implement-pipeline behaviour.
 ---
 
 ## Description

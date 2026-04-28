@@ -3,15 +3,30 @@ id: FT-057
 title: Consolidate Product CLI State Under `.product/` Folder
 phase: 5
 status: planned
-depends-on: []
+depends-on:
+- FT-051
+- FT-056
 adrs:
+- ADR-022
+- ADR-033
+- ADR-038
+- ADR-039
 - ADR-048
 tests:
 - TC-700
 - TC-701
 - TC-702
 domains: []
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-045: No interaction with planning annotations. Due dates and started tags remain advisory; the consolidation migration is orthogonal to the planning surface. Tag references in the request log continue to resolve identically post-migration since the log retains repo-root-relative paths (FT-051).
+  ADR-042: Uses only existing TC types — `scenario` for the migration and discovery tests (TC-700, TC-701) and `exit-criteria` for the consolidated check-list (TC-702). No new TC types introduced; ADR-042's reserved-structural / open-descriptive partition is unchanged.
+  ADR-018: 'Test coverage follows ADR-018 Design 2 (session-based integration tests): TC-700 exercises the migration end-to-end on a legacy-layout fixture, TC-701 verifies discovery walks canonical → alias → legacy paths, and TC-702 is the consolidated exit-criteria. Property tests do not apply — the migration is a deterministic file-move operation already covered by the sessions.'
+  ADR-038: The migration command writes a single new `migrate` entry to the request log with sentinel `consolidate-paths`, reusing the established machinery added in FT-051. No new request shape, no new mutation operations — only a new sentinel value on the existing migrate entry type. Hash-chain integrity is preserved by appending to the log via the existing path.
+  ADR-046: No interaction with cycle-time visibility. Tag timestamps consumed by `product cycle-times` come from git, not from product-managed paths; relocating `requests.jsonl` to `.product/requests.jsonl` does not affect tag reads. The migration is invisible to the cycle-time pipeline.
+  ADR-043: 'Implementation follows the slice + adapter pattern: new `src/migrate/consolidate.rs` slice exposes pure `plan_consolidate` returning a `ConsolidationPlan` and `apply_consolidate` performing the I/O via `fileops::write_batch_atomic` semantics; the `src/commands/migrate.rs` adapter remains thin. Path-consumer updates in `src/author/prompts.rs` and `src/implement/pipeline.rs` only swap hardcoded strings for `config.paths.*` reads.'
+  ADR-041: No absence TCs or ADR removes/deprecates interaction. The legacy `docs/` layout is not deprecated by this feature — it remains a supported configuration via explicit `[paths]` overrides; the change is purely additive (new defaults plus a migration command). A future deprecation feature would handle the lifecycle transition.
+  ADR-040: No new verify stage and no LLM-boundary change. `product migrate consolidate` is a one-shot administrative operation invoked outside the verify pipeline; it touches `[paths]` and the request log via the existing `migrate` entry sentinel mechanism (FT-051) without extending the six-stage pipeline.
+  ADR-044: No interaction with the request builder draft lifecycle. The migration command is a one-shot administrative action; it does not extend the builder's draft surface, does not introduce new mutation operations, and the new `[paths]` keys are read-only configuration consumed by existing path consumers.
 ---
 
 ## Description
