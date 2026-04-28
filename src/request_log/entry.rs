@@ -1,14 +1,12 @@
-//! Entry schema for `requests.jsonl` (FT-042, ADR-039).
-//!
-//! Created/changed artifact arrays may carry optional repo-relative `file:`
-//! fields (FT-051). The JSON emission is backward-compatible: when no file is
-//! present, the entry serialises as a bare ID string just like pre-FT-051 logs.
+//! Entry schema for `requests.jsonl` (FT-042, ADR-039, FT-051).
 
 use serde_json::{json, Map, Value};
 
-/// Sentinel string indicating this migrate entry documents the log-path move
-/// from `.product/request-log.jsonl` to `requests.jsonl`.
+/// Sentinel — log-path migration from `.product/request-log.jsonl`.
 pub const MIGRATE_LOG_SENTINEL: &str = "log-path";
+
+/// Sentinel — `product migrate consolidate` (FT-057, ADR-048).
+pub const MIGRATE_LOG_SENTINEL_CONSOLIDATE: &str = "consolidate-paths";
 
 /// Seven entry types per ADR-039 decision 4.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

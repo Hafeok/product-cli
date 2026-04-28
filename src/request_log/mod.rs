@@ -24,7 +24,7 @@ pub mod paths;
 
 pub use append::{append_entry, compute_entry_id, load_last_entry, GENESIS_PREV_HASH};
 pub use canonical::canonical_json;
-pub use entry::{ArtifactRef, Entry, EntryPayload, EntryType, MIGRATE_LOG_SENTINEL};
+pub use entry::{ArtifactRef, Entry, EntryPayload, EntryType, MIGRATE_LOG_SENTINEL, MIGRATE_LOG_SENTINEL_CONSOLIDATE};
 pub use migrate::migrate_if_needed;
 pub use paths::{path_relativize, PATH_RELATIVIZE_SENTINEL};
 pub use replay::{replay_full, replay_to, ReplayOptions};

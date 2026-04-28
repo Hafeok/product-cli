@@ -2,13 +2,17 @@
 id: TC-701
 title: product_config_discover_walks_canonical_then_legacy
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-057
   adrs:
   - ADR-048
 phase: 5
+runner: cargo-test
+runner-args: "--test sessions tc_701a_canonical_layout_loads"
+last-run: 2026-04-28T10:28:42.987969930+00:00
+last-run-duration: 0.2s
 ---
 
 **Test Type:** scenario

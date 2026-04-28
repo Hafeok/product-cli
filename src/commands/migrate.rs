@@ -60,6 +60,17 @@ pub enum MigrateCommands {
         #[arg(long)]
         dry_run: bool,
     },
+    /// Consolidate the legacy `docs/`, `benchmarks/prompts/`, and root files
+    /// under the canonical `.product/` layout (FT-057, ADR-048).
+    /// Default is dry-run; pass `--apply` to perform the migration.
+    Consolidate {
+        /// Perform the migration (default is dry-run)
+        #[arg(short = 'a', long)]
+        apply: bool,
+        /// Skip the dirty-tree guard (allow uncommitted changes in moved paths)
+        #[arg(long = "force-uncommitted")]
+        force_uncommitted: bool,
+    },
     /// Report what migration would produce without writing
     Validate,
 }
@@ -86,8 +97,28 @@ pub(crate) fn handle_migrate(cmd: MigrateCommands) -> BoxResult {
             feature,
         } => migrate_link_tests(dry_run, adr, feature),
         MigrateCommands::Schema { dry_run } => migrate_schema(dry_run),
+        MigrateCommands::Consolidate { apply, force_uncommitted } => {
+            migrate_consolidate(apply, force_uncommitted)
+        }
         MigrateCommands::Validate => migrate_validate(),
     }
+}
+
+fn migrate_consolidate(apply: bool, force_uncommitted: bool) -> BoxResult {
+    let _lock = if apply { Some(acquire_write_lock()?) } else { None };
+    let (cfg, root) = product_lib::config::ProductConfig::discover()?;
+    let plan = product_lib::migrate::plan_consolidate(&root, &cfg);
+    print!("{}", plan.render());
+    if plan.is_noop() {
+        return Ok(());
+    }
+    if !apply {
+        println!("\nRun with --apply to perform the migration.");
+        return Ok(());
+    }
+    product_lib::migrate::apply_consolidate(&root, &plan, force_uncommitted)?;
+    println!("\nConsolidation complete.");
+    Ok(())
 }
 
 fn migrate_from_prd(

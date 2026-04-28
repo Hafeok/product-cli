@@ -135,3 +135,13 @@ mod st_147_removal_deprecation;
 // FT-052 — Product Request Builder
 #[path = "sessions/ft_052_builder.rs"]
 mod ft_052_builder;
+
+// FT-057 — Consolidate Product CLI State Under .product/ Folder
+#[path = "sessions/st_700_migrate_consolidate.rs"]
+mod st_700_migrate_consolidate;
+
+#[path = "sessions/st_701_discover_canonical_alias_legacy.rs"]
+mod st_701_discover_canonical_alias_legacy;
+
+#[path = "sessions/st_702_ft057_exit_criteria.rs"]
+mod st_702_ft057_exit_criteria;

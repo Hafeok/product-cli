@@ -164,46 +164,7 @@ fn default_version() -> String { "0.1".to_string() }
 fn default_schema_version() -> String { "1".to_string() }
 fn default_true() -> bool { true }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PathsConfig {
-    #[serde(default = "default_features_path")]
-    pub features: String,
-    #[serde(default = "default_adrs_path")]
-    pub adrs: String,
-    #[serde(default = "default_tests_path")]
-    pub tests: String,
-    #[serde(default = "default_graph_path")]
-    pub graph: String,
-    #[serde(default = "default_checklist_path")]
-    pub checklist: String,
-    #[serde(default = "default_dependencies_path")]
-    pub dependencies: String,
-    /// Committed request log path (FT-042, ADR-039) — default `requests.jsonl`.
-    #[serde(default = "default_requests_path")]
-    pub requests: String,
-}
-
-impl Default for PathsConfig {
-    fn default() -> Self {
-        Self {
-            features: default_features_path(),
-            adrs: default_adrs_path(),
-            tests: default_tests_path(),
-            graph: default_graph_path(),
-            checklist: default_checklist_path(),
-            dependencies: default_dependencies_path(),
-            requests: default_requests_path(),
-        }
-    }
-}
-
-fn default_features_path() -> String { "docs/features".into() }
-fn default_adrs_path() -> String { "docs/adrs".into() }
-fn default_tests_path() -> String { "docs/tests".into() }
-fn default_graph_path() -> String { "docs/graph".into() }
-fn default_checklist_path() -> String { "docs/checklist.md".into() }
-fn default_dependencies_path() -> String { "docs/dependencies".into() }
-fn default_requests_path() -> String { "requests.jsonl".into() }
+pub use crate::config_paths::PathsConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrefixConfig {
@@ -260,6 +221,22 @@ fn default_dep_prefix() -> String { "DEP".into() }
 /// Current schema version supported by this binary
 pub const CURRENT_SCHEMA_VERSION: u32 = 1;
 
+/// Find a Product config file in `dir` per FT-057 / ADR-048 discovery order.
+/// Returns the first existing path among:
+/// 1. `.product/config.toml` (canonical)
+/// 2. `.product/product.toml` (legacy alias inside `.product/`)
+/// 3. `product.toml` (root, pre-`.product/` layout)
+pub fn find_config_in_dir(dir: &Path) -> Option<PathBuf> {
+    const CANDIDATES: [&str; 3] = [".product/config.toml", ".product/product.toml", "product.toml"];
+    for c in CANDIDATES {
+        let p = dir.join(c);
+        if p.exists() {
+            return Some(p);
+        }
+    }
+    None
+}
+
 impl ProductConfig {
     /// Load product.toml from a path. Runs E017 immediately (ADR-042).
     pub fn load(path: &Path) -> Result<Self> {
@@ -299,14 +276,16 @@ impl ProductConfig {
         &self.tc_types.custom
     }
 
-    /// Find product.toml by walking up from cwd
+    /// Find a config file by walking up from cwd (FT-057, ADR-048).
+    /// Discovery order at each level: `.product/config.toml`,
+    /// `.product/product.toml` (legacy alias), `product.toml` (root).
+    /// First match wins.
     pub fn discover() -> Result<(Self, PathBuf)> {
         let mut dir = std::env::current_dir().map_err(|e| {
             ProductError::ConfigError(format!("Cannot determine working directory: {}", e))
         })?;
         loop {
-            let candidate = dir.join("product.toml");
-            if candidate.exists() {
+            if let Some(candidate) = find_config_in_dir(&dir) {
                 let config = Self::load(&candidate)?;
                 return Ok((config, dir));
             }

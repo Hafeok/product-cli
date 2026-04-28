@@ -1128,14 +1128,14 @@
 - [x] TC-698: implement_pipeline_honors_per_repo_implement_prompt (scenario) — passing
 - [x] TC-699: FT-056 exit criteria (exit-criteria) — passing
 
-### FT-057 — Consolidate Product CLI State Under `.product/` Folder [ ]
+### FT-057 — Consolidate Product CLI State Under `.product/` Folder [x]
 
 - [x] ADR-022: Authoring Resources — System Prompts and Pre-Commit Review (accepted)
 - [x] ADR-033: Repository Initialization — `product init` Command (accepted)
 - [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
 - [x] ADR-039: Hash-Chained Request Log for Tamper-Evident Audit (accepted)
 - [x] ADR-048: Canonical Repository Layout — All Product State Under `.product/` (accepted)
-- [ ] TC-700: product_migrate_consolidate_moves_legacy_layout (scenario) — unimplemented
-- [ ] TC-701: product_config_discover_walks_canonical_then_legacy (scenario) — unimplemented
-- [ ] TC-702: FT-057 exit criteria (exit-criteria) — unimplemented
+- [x] TC-700: product_migrate_consolidate_moves_legacy_layout (scenario) — passing
+- [x] TC-701: product_config_discover_walks_canonical_then_legacy (scenario) — passing
+- [x] TC-702: FT-057 exit criteria (exit-criteria) — passing
 

@@ -2,13 +2,17 @@
 id: TC-700
 title: product_migrate_consolidate_moves_legacy_layout
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-057
   adrs:
   - ADR-048
 phase: 5
+runner: cargo-test
+runner-args: "--test sessions tc_700_product_migrate_consolidate_moves_legacy_layout"
+last-run: 2026-04-28T10:28:42.987969930+00:00
+last-run-duration: 17.5s
 ---
 
 **Test Type:** scenario

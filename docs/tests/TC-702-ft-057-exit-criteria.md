@@ -2,12 +2,16 @@
 id: TC-702
 title: FT-057 exit criteria
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-057
   adrs: []
 phase: 5
+runner: cargo-test
+runner-args: "--test sessions tc_702_ft_057_exit_criteria"
+last-run: 2026-04-28T10:28:42.987969930+00:00
+last-run-duration: 0.2s
 ---
 
 **Test Type:** exit-criteria
