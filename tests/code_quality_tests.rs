@@ -497,3 +497,57 @@ fn tc_402_all_source_files_under_400_lines_and_all_quality_checks_pass() {
         String::from_utf8_lossy(&output.stdout)
     );
 }
+
+// =============================================================================
+// TC-403: All test files under the test-file hard limit
+// Mirrors tc_402 for tests/ — guards against another 18k-line monolith like
+// the one tests/integration/mod.rs grew into before being split by topic.
+// =============================================================================
+#[test]
+fn tc_403_all_test_files_under_test_file_hard_limit() {
+    let root = project_root();
+
+    let output = Command::new("bash")
+        .arg(root.join("scripts/checks/test-file-length.sh"))
+        .current_dir(&root)
+        .output()
+        .expect("run test-file-length.sh");
+    let code = output.status.code().unwrap();
+    assert_ne!(
+        code, 1,
+        "test-file-length.sh failed (exit 1): {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+}
+
+// =============================================================================
+// TC-404: test-file-length.sh fails when a test file exceeds the hard limit
+// =============================================================================
+#[test]
+fn tc_404_test_file_length_fail() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::create_dir_all(dir.path().join("tests")).expect("mkdir");
+
+    // Generate 1700 lines (over default 1600 hard limit)
+    let content = format!("//! Test module.\n{}", filler_lines(1699));
+    std::fs::write(dir.path().join("tests/huge_test.rs"), &content).expect("write");
+
+    let output = Command::new("bash")
+        .arg(script_path("test-file-length.sh"))
+        .current_dir(dir.path())
+        .output()
+        .expect("run script");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert_eq!(
+        output.status.code().unwrap(),
+        1,
+        "Expected exit 1 (hard fail), got {}. Output: {}",
+        output.status.code().unwrap(),
+        stdout
+    );
+    assert!(
+        stdout.contains("huge_test.rs"),
+        "Expected file name in output, got: {stdout}"
+    );
+}
