@@ -14,8 +14,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_p012_failed_apply_leaves_zero_files_changed
-last-run: 2026-04-28T17:17:56.374243242+00:00
-last-run-duration: 0.9s
+last-run: 2026-04-29T03:13:14.087193266+00:00
+last-run-duration: 0.8s
 ---
 
 ## TC-P012 — failed apply leaves zero files changed (property)

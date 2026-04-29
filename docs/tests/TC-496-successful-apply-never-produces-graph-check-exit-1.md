@@ -11,7 +11,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_496_successful_apply_never_produces_graph_check_exit_1
-last-run: 2026-04-28T17:17:43.112648128+00:00
+last-run: 2026-04-29T03:13:02.598043429+00:00
 last-run-duration: 0.2s
 ---
 

@@ -12,8 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_133_cross_cutting_bundle_position"
-last-run: 2026-04-28T17:16:47.983760652+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-29T03:12:32.676112147+00:00
+last-run-duration: 0.2s
 ---
 
 assert cross-cutting ADRs appear before domain ADRs in the bundle, which appear before feature-linked ADRs.

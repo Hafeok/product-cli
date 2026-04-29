@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_127_metrics_threshold_error_exits_1"
-last-run: 2026-04-28T17:17:23.018590299+00:00
-last-run-duration: 0.4s
+last-run: 2026-04-29T03:12:53.190597947+00:00
+last-run-duration: 0.2s
 ---
 
 set `spec_coverage` threshold, configure a repo below it. Run `product metrics threshold`. Assert exit code 1.

@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_305_verify_unimplemented_no_runner_blocks
-last-run: 2026-04-28T17:17:12.743696450+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-29T03:12:46.161410171+00:00
+last-run-duration: 0.2s
 ---
 
 All TCs have no `runner` field. Assert feature goes to in-progress (unimplemented blocks completion). Distinct from `status: unrunnable` which is an explicit acknowledgement that does not block.

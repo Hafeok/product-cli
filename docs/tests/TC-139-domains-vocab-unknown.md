@@ -12,7 +12,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_139_domains_vocab_unknown"
-last-run: 2026-04-28T17:16:47.983760652+00:00
+last-run: 2026-04-29T03:12:32.676112147+00:00
 last-run-duration: 0.2s
 ---
 

@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_104_mcp_http_concurrent_writes"
-last-run: 2026-04-28T17:17:03.134785629+00:00
-last-run-duration: 3.3s
+last-run: 2026-04-29T03:12:37.040470115+00:00
+last-run-duration: 3.2s
 ---
 
 send two concurrent write tool calls. Assert one succeeds, one returns the lock-held error with PID.

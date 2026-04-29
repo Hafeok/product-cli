@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_171_triage_confirm_converts_candidate_to_adr"
-last-run: 2026-04-28T17:17:27.967937293+00:00
-last-run-duration: 0.6s
+last-run: 2026-04-29T03:12:55.121081119+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

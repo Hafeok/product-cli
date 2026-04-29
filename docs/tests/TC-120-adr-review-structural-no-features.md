@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_120_adr_review_structural_no_features"
-last-run: 2026-04-28T17:17:09.499731955+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-29T03:12:43.749153090+00:00
+last-run-duration: 0.2s
 ---
 
 review an ADR with empty `features: []`. Assert W001-class finding.

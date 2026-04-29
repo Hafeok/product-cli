@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_366_atomic_batch_write"
-last-run: 2026-04-28T17:17:27.967937293+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-29T03:12:55.121081119+00:00
+last-run-duration: 0.2s
 ---
 
 inject a write failure midway through a multi-file inference batch. Assert all-or-nothing: either all files updated or none. Assert no partial state.

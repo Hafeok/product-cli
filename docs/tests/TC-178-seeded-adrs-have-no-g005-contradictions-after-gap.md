@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_178_seeded_adrs_have_no_g005_contradictions_after_gap_check"
-last-run: 2026-04-28T17:17:27.967937293+00:00
-last-run-duration: 0.5s
+last-run: 2026-04-29T03:12:55.121081119+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

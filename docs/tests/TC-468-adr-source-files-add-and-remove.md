@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_468_adr_source_files_add_and_remove"
-last-run: 2026-04-28T17:17:38.553838845+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-29T03:12:59.694015503+00:00
+last-run-duration: 0.2s
 ---
 
 Run `product adr source-files ADR-XXX --add src/drift.rs --add src/drift/`. Assert the `source-files` list in front-matter contains both entries. Run `--remove src/drift.rs`. Assert it is removed and `src/drift/` remains. Run `--add src/nonexistent.rs` for a path that doesn't exist. Assert exit code 0 with a W-class warning (path validated but not required to exist).

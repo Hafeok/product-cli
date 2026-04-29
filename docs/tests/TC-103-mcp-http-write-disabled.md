@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_103_mcp_http_write_disabled"
-last-run: 2026-04-28T17:17:03.134785629+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-29T03:12:37.040470115+00:00
+last-run-duration: 0.2s
 ---
 
 start server with `mcp.write = false`. Call a write tool. Assert tool error (not HTTP error), message "write tools disabled".

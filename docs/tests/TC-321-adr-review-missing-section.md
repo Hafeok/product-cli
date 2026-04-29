@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_321_adr_review_missing_section"
-last-run: 2026-04-28T17:17:09.499731955+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-29T03:12:43.749153090+00:00
+last-run-duration: 0.2s
 ---
 
 review ADR missing Rejected alternatives. Assert finding with file path and section name.

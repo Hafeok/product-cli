@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_489_request_forward_refs_resolve_in_topological_order
-last-run: 2026-04-28T17:17:43.112648128+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-29T03:13:02.598043429+00:00
+last-run-duration: 0.2s
 ---
 
 Validates FT-041 / ADR-038 decision 2.

@@ -11,6 +11,6 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_368_product_migrate_link_tests"
-last-run: 2026-04-28T17:17:27.967937293+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-29T03:12:55.121081119+00:00
+last-run-duration: 0.2s
 ---

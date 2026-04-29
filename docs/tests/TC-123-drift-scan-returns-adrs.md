@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_123_drift_scan_returns_adrs"
-last-run: 2026-04-28T17:17:23.018590299+00:00
-last-run-duration: 0.4s
+last-run: 2026-04-29T03:12:53.190597947+00:00
+last-run-duration: 0.2s
 ---
 
 call `product drift scan src/consensus/raft.rs` on a fixture where ADR-002 has `source-files: [src/consensus/raft.rs]`. Assert ADR-002 is in the result.

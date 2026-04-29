@@ -13,8 +13,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_541_session_st_022_concurrent_apply_serialised_by_advisory_lock
-last-run: 2026-04-28T17:17:56.374243242+00:00
-last-run-duration: 3.2s
+last-run: 2026-04-29T03:13:14.087193266+00:00
+last-run-duration: 3.1s
 ---
 
 ## ST-022 — concurrent apply serialised by advisory lock

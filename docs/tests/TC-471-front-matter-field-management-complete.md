@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_471_front_matter_field_management_complete"
-last-run: 2026-04-28T17:17:38.553838845+00:00
-last-run-duration: 0.5s
+last-run: 2026-04-29T03:12:59.694015503+00:00
+last-run-duration: 0.4s
 ---
 
 Exit criteria for FT-038:

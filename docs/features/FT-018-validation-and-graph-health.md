@@ -20,6 +20,7 @@ tests:
 - TC-137
 - TC-138
 - TC-139
+- TC-715
 domains:
 - data-model
 - error-handling

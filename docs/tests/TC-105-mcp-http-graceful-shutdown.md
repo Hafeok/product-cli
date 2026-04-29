@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_105_mcp_http_graceful_shutdown"
-last-run: 2026-04-28T17:17:03.134785629+00:00
-last-run-duration: 0.4s
+last-run: 2026-04-29T03:12:37.040470115+00:00
+last-run-duration: 0.3s
 ---
 
 start server, send SIGTERM during an in-flight tool call. Assert the in-flight call completes before the process exits.

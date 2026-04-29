@@ -12,8 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_149_author_session_preflight_first"
-last-run: 2026-04-28T17:17:18.543072383+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-29T03:12:50.451184613+00:00
+last-run-duration: 0.2s
 ---
 
 start `product author feature` for FT-009 with preflight gaps. Assert the first MCP tool call from the session is `product_preflight`, not a content scaffold call.

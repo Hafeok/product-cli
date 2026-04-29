@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_130_metrics_trend_renders"
-last-run: 2026-04-28T17:17:23.018590299+00:00
-last-run-duration: 0.5s
+last-run: 2026-04-29T03:12:53.190597947+00:00
+last-run-duration: 0.2s
 ---
 
 `metrics.jsonl` with 10 records. Run `product metrics trend`. Assert stdout contains sparkline output (non-empty, no errors).

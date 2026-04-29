@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_362_graph_infer_general"
-last-run: 2026-04-28T17:17:27.967937293+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-29T03:12:55.121081119+00:00
+last-run-duration: 0.2s
 ---
 
 add FT-009 → ADR-021 link. Run `product graph infer --feature FT-009`. Assert TC-041 and TC-042 (which validate ADR-021) gain FT-009 in their features list.

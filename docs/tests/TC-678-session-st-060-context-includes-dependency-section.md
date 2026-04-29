@@ -15,8 +15,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_678_session_st_060_context_includes_dependency_section
-last-run: 2026-04-28T17:17:56.374243242+00:00
-last-run-duration: 0.4s
+last-run: 2026-04-29T03:12:50.451184613+00:00
+last-run-duration: 0.3s
 ---
 
 Session ST-060 — context output includes ## Dependencies when the feature has a dep linked via its governing ADR.

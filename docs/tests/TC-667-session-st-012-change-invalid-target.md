@@ -13,7 +13,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_667_session_st_012_change_invalid_target
-last-run: 2026-04-28T17:17:56.374243242+00:00
+last-run: 2026-04-29T03:13:02.598043429+00:00
 last-run-duration: 0.2s
 ---
 

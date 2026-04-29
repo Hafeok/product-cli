@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_128_metrics_threshold_warning_exits_2"
-last-run: 2026-04-28T17:17:23.018590299+00:00
-last-run-duration: 0.4s
+last-run: 2026-04-29T03:12:53.190597947+00:00
+last-run-duration: 0.2s
 ---
 
 breach a warning-severity threshold only. Assert exit code 2.

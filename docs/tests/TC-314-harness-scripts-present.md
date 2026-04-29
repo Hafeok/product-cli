@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_314_harness_scripts_present
-last-run: 2026-04-28T17:17:12.743696450+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-29T03:12:46.161410171+00:00
+last-run-duration: 0.2s
 ---
 
 assert `scripts/harness/implement.sh` and `scripts/harness/author.sh` exist and are executable.
