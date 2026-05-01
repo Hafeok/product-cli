@@ -34,21 +34,52 @@ If your project has more than one decision worth remembering and more than one f
 
 ---
 
+## Install
+
+Pick whichever fits your environment. None require a Rust toolchain except option 2.
+
+**1. Prebuilt binary (recommended)** — works on macOS, Linux, Windows:
+
+```bash
+# macOS / Linux
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/Hafeok/product-cli/releases/latest/download/product-installer.sh | sh
+
+# Windows (PowerShell)
+irm https://github.com/Hafeok/product-cli/releases/latest/download/product-installer.ps1 | iex
+```
+
+The script drops `product` into `~/.cargo/bin` (or `%CARGO_HOME%\bin` on Windows). Add that to your `PATH` if it isn't already.
+
+**2. From source (if you have Rust)**:
+
+```bash
+cargo install --git https://github.com/Hafeok/product-cli
+```
+
+**3. Via Dagger** — for hermetic CI use, no install on the runner:
+
+```bash
+dagger -m github.com/Hafeok/product-cli call binary export --path ./product
+```
+
+Verify any of the above with:
+
+```bash
+product --version    # → product 0.1.0
+```
+
+---
+
 ## 60-second quickstart
 
 ```bash
-# 1. install (no Rust toolchain required)
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/Hafeok/product-cli/releases/latest/download/product-installer.sh | sh
-# Windows: irm https://github.com/Hafeok/product-cli/releases/latest/download/product-installer.ps1 | iex
-# Already have cargo? `cargo install --git https://github.com/Hafeok/product-cli` works too.
-
-# 2. scaffold a project (anywhere)
+# 1. scaffold a project (anywhere)
 mkdir my-app && cd my-app
 product init -y --name my-app \
   --domain api="HTTP surface" \
   --domain storage="Persistence"
 
-# 3. create a feature + its ADR + a test, all linked, in one atomic write
+# 2. create a feature + its ADR + a test, all linked, in one atomic write
 cat > /tmp/req.yaml <<'EOF'
 type: create
 reason: "Rate limit the public API"
@@ -72,11 +103,13 @@ artifacts:
 EOF
 product request apply /tmp/req.yaml
 
-# 4. ask the graph what you'd hand to an LLM to implement this
+# 3. ask the graph what you'd hand to an LLM to implement this
 product context FT-001 --depth 2
 ```
 
-Step 4 prints a single self-contained markdown document with the feature, the ADR that governs it, and the test that validates it — sized for an LLM context window, deterministic, and free of unrelated noise. That bundle is the entire point of the tool.
+Step 3 prints a single self-contained markdown document with the feature, the ADR that governs it, and the test that validates it — sized for an LLM context window, deterministic, and free of unrelated noise. That bundle is the entire point of the tool.
+
+> Don't want to write the YAML yourself? Skip to **Author with Claude** below — `product author feature` does the same thing through a guided conversation.
 
 ---
 
@@ -93,6 +126,40 @@ product verify FT-007           # run the linked TCs and update status
 ```
 
 `product implement` runs the full pipeline: gap-checks the spec, assembles the bundle, spawns your configured agent (Claude Code by default), then verifies. `product verify` executes each TC's configured runner (e.g. `cargo test`) and writes results back into front-matter.
+
+---
+
+## Author with Claude
+
+Writing well-formed features by hand is tedious — you have to remember which ADRs are relevant, link the right tests, pick the right phase, and not duplicate something that already exists. `product author feature` makes that someone else's problem.
+
+```bash
+product author feature
+```
+
+What this does:
+
+1. Spawns Claude Code (or whatever agent you configured in `[author]` of `product.toml`) with a versioned authoring system prompt pre-loaded.
+2. Connects the Product MCP server so Claude has **full read access to your graph from the first message**.
+3. Before proposing anything, Claude calls `product_feature_list`, `product_graph_central`, and `product_context` on related features — so its proposal is grounded in what already exists, not invented.
+4. You describe what you want in plain English. Claude asks clarifying questions tied to existing decisions ("ADR-012 already governs rate limiting via token bucket — should this feature inherit that or override?").
+5. When you agree on the shape, Claude scaffolds the feature file, drafts any new ADRs and TCs, and links everything bidirectionally — typically as a single `product request apply` so the write is atomic.
+6. Before exiting, it runs `product graph check` and `product gap check` so you don't end up with broken links or untested features.
+
+```bash
+product author feature                    # open-ended: "I want to add X"
+product author feature --feature FT-007   # extend an existing feature; gates on preflight
+product author adr                        # for a pure decision (no new capability)
+product author review                     # spec gardening — fix orphans, weak metrics, missing TCs
+```
+
+Three useful properties:
+
+- **It cannot hallucinate IDs.** Claude scaffolds via the request interface, which assigns real IDs only on apply. No ghost references to features that don't exist.
+- **It reads before it writes.** The system prompt forces graph reads before scaffolding, so the proposal isn't a duplicate of something you wrote three weeks ago.
+- **It works from your phone.** If `product mcp --http` is running on your dev box or a server, the same authoring flow runs in any claude.ai conversation that has the Product MCP server configured. Author a feature on the train; verify it on a laptop.
+
+If you don't have Claude Code installed, point `[author].cli` at `copilot` in `product.toml`, or stick with the `product request` flow shown in the quickstart.
 
 ---
 
@@ -174,20 +241,67 @@ Wire them into pre-commit or CI and your specs stop rotting.
 
 ## Use it from Dagger
 
-Product ships as a [Dagger](https://dagger.io/) module so you can drop it into any pipeline without installing it on the runner:
+Product ships as a [Dagger](https://dagger.io/) module. If you already use Dagger for CI, this gives you a hermetic, no-install path to running graph checks, assembling context bundles, or shipping the binary into a downstream container — without ever putting `product` on the runner image.
+
+### Why through Dagger
+
+- **Zero-install CI.** Your runner doesn't need a Rust toolchain or even `curl`. Dagger pulls the prebuilt binary from the GitHub Release and caches it.
+- **Pinned and reproducible.** `--version=v0.1.0` locks the binary; the pipeline gives the same result on a laptop and in CI.
+- **Composable.** `dag.Product().Container()` returns a container with `product` on PATH that you can chain into your own pipelines.
+
+### Functions
+
+```bash
+dagger -m github.com/Hafeok/product-cli functions
+```
+
+| Function | What it does |
+|---|---|
+| `binary --version --platform` | Returns the `product` binary as a `*File`. Default version is `latest`, default platform is `linux/amd64`. |
+| `container --version --platform` | Debian slim with `product` on PATH and as the entrypoint. |
+| `validate --source --version` | Runs `product graph check` against a directory containing `product.toml`. Fails the pipeline on any graph error — perfect CI gate. |
+| `context --source --feature --depth --version` | Assembles an LLM context bundle for a feature inside a sandbox; returns the markdown as a string. |
+
+### Common one-liners
 
 ```bash
 # Drop the binary on disk
 dagger -m github.com/Hafeok/product-cli call binary export --path ./product
 
-# One-liner CI gate: fail the pipeline if your graph is broken
+# Specific version + platform
+dagger -m github.com/Hafeok/product-cli call binary \
+  --version=v0.1.0 --platform=darwin/arm64 \
+  export --path ./product
+
+# Fail CI if the graph is broken
 dagger -m github.com/Hafeok/product-cli call validate --source=.
 
-# Assemble a context bundle inside a sandbox
-dagger -m github.com/Hafeok/product-cli call context --source=. --feature=FT-007
+# Pipe a context bundle into a downstream tool
+dagger -m github.com/Hafeok/product-cli call context \
+  --source=. --feature=FT-007 --depth=2 > bundle.md
 ```
 
-The module exposes `binary`, `container`, `validate`, and `context` functions. See [`dagger/main.go`](dagger/main.go) for signatures. Pin a specific release with `--version=v0.1.0`; defaults to `latest`.
+### GitHub Actions example
+
+```yaml
+- uses: dagger/dagger-for-github@v6
+  with:
+    verb: call
+    module: github.com/Hafeok/product-cli
+    args: validate --source=.
+```
+
+That's the entire CI gate. No setup-rust, no cargo install, no version drift between local and CI.
+
+### Local development of the module
+
+If you're iterating on the module itself (in `dagger/`):
+
+```bash
+cd dagger && dagger develop          # regenerate the SDK after editing main.go
+dagger -m . functions                # list functions
+dagger -m . call binary export ...   # test against the latest GitHub Release
+```
 
 ---
 
