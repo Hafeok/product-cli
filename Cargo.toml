@@ -5,6 +5,9 @@ edition = "2021"
 authors = ["PiCloud Contributors"]
 license = "Apache-2.0"
 description = "Knowledge graph CLI for managing features, ADRs, and test criteria"
+repository = "https://github.com/Hafeok/product-cli"
+homepage = "https://github.com/Hafeok/product-cli"
+readme = "README.md"
 
 [lib]
 name = "product_lib"
@@ -42,3 +45,8 @@ proptest = "1"
 [[bench]]
 name = "graph_bench"
 harness = false
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"

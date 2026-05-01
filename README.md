@@ -37,8 +37,10 @@ If your project has more than one decision worth remembering and more than one f
 ## 60-second quickstart
 
 ```bash
-# 1. install
-git clone <this repo> && cd product-cli && cargo install --path .
+# 1. install (no Rust toolchain required)
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/Hafeok/product-cli/releases/latest/download/product-installer.sh | sh
+# Windows: irm https://github.com/Hafeok/product-cli/releases/latest/download/product-installer.ps1 | iex
+# Already have cargo? `cargo install --git https://github.com/Hafeok/product-cli` works too.
 
 # 2. scaffold a project (anywhere)
 mkdir my-app && cd my-app
