@@ -172,6 +172,25 @@ Wire them into pre-commit or CI and your specs stop rotting.
 
 ---
 
+## Use it from Dagger
+
+Product ships as a [Dagger](https://dagger.io/) module so you can drop it into any pipeline without installing it on the runner:
+
+```bash
+# Drop the binary on disk
+dagger -m github.com/Hafeok/product-cli call binary export --path ./product
+
+# One-liner CI gate: fail the pipeline if your graph is broken
+dagger -m github.com/Hafeok/product-cli call validate --source=.
+
+# Assemble a context bundle inside a sandbox
+dagger -m github.com/Hafeok/product-cli call context --source=. --feature=FT-007
+```
+
+The module exposes `binary`, `container`, `validate`, and `context` functions. See [`dagger/main.go`](dagger/main.go) for signatures. Pin a specific release with `--version=v0.1.0`; defaults to `latest`.
+
+---
+
 ## Command reference
 
 | Group | What it covers |
