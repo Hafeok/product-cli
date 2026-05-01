@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_493_request_writes_reason_to_request_log_jsonl
-last-run: 2026-04-29T03:13:02.598043429+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:23:39.203275164+00:00
+last-run-duration: 0.3s
 ---
 
 Validates FT-041 / ADR-038 decision 5.

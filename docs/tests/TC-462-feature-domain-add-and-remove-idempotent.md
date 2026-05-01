@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_462_feature_domain_add_and_remove_idempotent"
-last-run: 2026-04-29T03:12:59.694015503+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:23:36.093552301+00:00
+last-run-duration: 0.3s
 ---
 
 Run `product feature domain FT-XXX --add api` twice. Assert the second call exits 0 and the `domains` list contains `api` exactly once (no duplicates). Run `product feature domain FT-XXX --remove storage` when `storage` is not in the domains list. Assert exit code 0 (no-op, not an error). Verify the file is unchanged.

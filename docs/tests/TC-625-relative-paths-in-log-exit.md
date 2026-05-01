@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: "tc_625_relative_paths_in_log_exit"
-last-run: 2026-04-28T17:18:29.646301301+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:30.977837657+00:00
+last-run-duration: 0.4s
 ---
 
 ## Exit Criteria — FT-051 Relative Paths in the Request Log

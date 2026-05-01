@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_497_body_mutation_on_accepted_adr_succeeds_and_surfaces_e014
-last-run: 2026-04-29T03:13:02.598043429+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:23:39.203275164+00:00
+last-run-duration: 0.3s
 ---
 
 Validates FT-041 / ADR-038 decision 9.

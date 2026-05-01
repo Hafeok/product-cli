@@ -14,8 +14,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_679_session_st_061_context_depth_2_includes_shared_adrs
-last-run: 2026-04-29T03:12:50.451184613+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:23:51.770116705+00:00
+last-run-duration: 0.4s
 ---
 
 Session ST-061 — --depth 2 reaches ADRs that are only linked transitively through a shared dependency.

@@ -13,8 +13,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_667_session_st_012_change_invalid_target
-last-run: 2026-04-29T03:13:02.598043429+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:23:51.770116705+00:00
+last-run-duration: 0.5s
 ---
 
 Session ST-012 — change against a non-existent target ID fails with E002, docs/ is byte-identical after. Validates atomicity of validation.

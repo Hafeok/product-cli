@@ -15,7 +15,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_678_session_st_060_context_includes_dependency_section
-last-run: 2026-04-29T03:12:50.451184613+00:00
+last-run: 2026-04-30T09:23:51.770116705+00:00
 last-run-duration: 0.3s
 ---
 

@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_636_due_date_field_parses_iso_8601_date
-last-run: 2026-04-28T17:18:33.449983095+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:42.295715757+00:00
+last-run-duration: 0.4s
 ---
 
 ## Session — due-date-parses-iso-8601

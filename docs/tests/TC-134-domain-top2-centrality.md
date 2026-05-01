@@ -12,8 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_134_domain_top2_centrality"
-last-run: 2026-04-29T03:12:32.676112147+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:22:52.644540918+00:00
+last-run-duration: 0.3s
 ---
 
 domain `security` has 6 ADRs with known centrality scores. Feature FT-009 declares `domains: [security]` with no acknowledged ADRs. Assert the context bundle includes exactly the 2 highest-centrality security ADRs.

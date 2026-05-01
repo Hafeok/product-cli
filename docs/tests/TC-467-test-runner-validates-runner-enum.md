@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_467_test_runner_validates_runner_enum"
-last-run: 2026-04-29T03:12:59.694015503+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-30T09:23:36.093552301+00:00
+last-run-duration: 0.2s
 ---
 
 Run `product test runner TC-XXX --runner invalid-runner --args "test_name"`. Assert exit code 1 and error E001. Run with each valid runner: `cargo-test`, `bash`, `pytest`, `custom`. Assert exit code 0 for each and the `runner` field in front-matter matches.

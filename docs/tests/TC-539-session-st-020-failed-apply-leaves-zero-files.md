@@ -13,8 +13,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_539_session_st_020_failed_apply_leaves_zero_files
-last-run: 2026-04-29T03:13:14.087193266+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:23:51.770116705+00:00
+last-run-duration: 0.4s
 ---
 
 ## ST-020 — failed apply leaves zero files

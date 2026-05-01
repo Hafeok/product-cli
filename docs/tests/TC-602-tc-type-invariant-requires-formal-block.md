@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_602_tc_type_invariant_requires_formal_block"
-last-run: 2026-04-28T17:18:24.403922937+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:24.547388853+00:00
+last-run-duration: 0.3s
 ---
 
 ## Session: ST-181 — tc-type-invariant-requires-formal-block

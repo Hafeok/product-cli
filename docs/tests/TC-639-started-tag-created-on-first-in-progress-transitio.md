@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_639_started_tag_created_on_first_in_progress_transition
-last-run: 2026-04-28T17:18:33.449983095+00:00
-last-run-duration: 0.4s
+last-run: 2026-04-30T09:24:42.295715757+00:00
+last-run-duration: 1.7s
 ---
 
 ## Session — started-tag-created-on-in-progress-transition

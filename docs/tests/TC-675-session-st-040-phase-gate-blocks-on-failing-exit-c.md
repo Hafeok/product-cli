@@ -12,7 +12,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_675_session_st_040_phase_gate_blocks_on_failing_exit_criteria
-last-run: 2026-04-28T17:17:56.374243242+00:00
+last-run: 2026-04-30T09:23:51.770116705+00:00
 last-run-duration: 0.2s
 ---
 

@@ -11,7 +11,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_120_adr_review_structural_no_features"
-last-run: 2026-04-29T03:12:43.749153090+00:00
+last-run: 2026-04-30T09:23:14.884691727+00:00
 last-run-duration: 0.2s
 ---
 

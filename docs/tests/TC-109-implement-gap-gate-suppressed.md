@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_109_implement_gap_gate_suppressed
-last-run: 2026-04-29T03:12:46.161410171+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:23:18.004925059+00:00
+last-run-duration: 0.3s
 ---
 
 same feature with the gap suppressed. Assert pipeline proceeds past gap gate.

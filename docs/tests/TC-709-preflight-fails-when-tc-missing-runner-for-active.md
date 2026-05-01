@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_709_preflight_fails_when_tc_missing_runner_for_active_feature"
-last-run: 2026-04-29T04:25:48.268455013+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-30T09:25:29.076293260+00:00
+last-run-duration: 0.5s
 ---
 
 **Test Type:** scenario

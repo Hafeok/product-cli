@@ -12,8 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_694_context_bundle_preserves_subsection_structure"
-last-run: 2026-04-28T17:18:43.768781364+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-30T09:25:16.632272257+00:00
+last-run-duration: 0.5s
 ---
 
 **Covers session test ST-353** — `context-bundle-preserves-subsection-structure`.

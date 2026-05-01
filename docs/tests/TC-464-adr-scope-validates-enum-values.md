@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_464_adr_scope_validates_enum_values"
-last-run: 2026-04-29T03:12:59.694015503+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:23:36.093552301+00:00
+last-run-duration: 0.4s
 ---
 
 Run `product adr scope ADR-XXX invalid-scope`. Assert exit code 1 and error E001. Run with each valid value: `cross-cutting`, `domain`, `feature-specific`. Assert exit code 0 for each and the `scope` field in front-matter matches the set value.

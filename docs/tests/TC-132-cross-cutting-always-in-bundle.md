@@ -12,8 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_132_cross_cutting_always_in_bundle"
-last-run: 2026-04-29T03:12:32.676112147+00:00
-last-run-duration: 1.1s
+last-run: 2026-04-30T09:22:52.644540918+00:00
+last-run-duration: 11.1s
 ---
 
 ADR-013 marked `scope: cross-cutting`. Feature FT-009 has no explicit link to ADR-013. Assert `product context FT-009` includes ADR-013 in the bundle.

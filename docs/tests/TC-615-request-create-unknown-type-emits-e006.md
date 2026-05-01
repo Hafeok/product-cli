@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_615_request_create_unknown_type_emits_e006"
-last-run: 2026-04-28T17:18:24.403922937+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:24.547388853+00:00
+last-run-duration: 0.3s
 ---
 
 ## Session: ST-194 — request-create-unknown-type-emits-e006

@@ -13,8 +13,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_p013_append_is_idempotent
-last-run: 2026-04-28T17:17:56.374243242+00:00
-last-run-duration: 1.3s
+last-run: 2026-04-30T09:23:51.770116705+00:00
+last-run-duration: 1.7s
 ---
 
 ## TC-P013 — append is idempotent (property)

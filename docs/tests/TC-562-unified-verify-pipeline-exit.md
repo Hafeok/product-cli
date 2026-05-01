@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_562_unified_verify_pipeline_exit
-last-run: 2026-04-28T17:18:11.333024438+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:09.130880839+00:00
+last-run-duration: 0.3s
 ---
 
 ## Exit Criteria — FT-044 Unified Verify Pipeline

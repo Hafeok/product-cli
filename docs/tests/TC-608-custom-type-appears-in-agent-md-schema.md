@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_608_custom_type_appears_in_agent_md_schema"
-last-run: 2026-04-28T17:18:24.403922937+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:24.547388853+00:00
+last-run-duration: 0.3s
 ---
 
 ## Session: ST-187 — custom-type-appears-in-agent-md-schema

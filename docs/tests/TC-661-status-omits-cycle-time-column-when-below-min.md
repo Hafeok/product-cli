@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_661_status_omits_cycle_time_column_when_below_min
-last-run: 2026-04-28T17:18:35.823456220+00:00
-last-run-duration: 0.7s
+last-run: 2026-04-30T09:24:55.286742151+00:00
+last-run-duration: 0.6s
 ---
 
 ## Session — status-omits-cycle-time-column-when-below-min

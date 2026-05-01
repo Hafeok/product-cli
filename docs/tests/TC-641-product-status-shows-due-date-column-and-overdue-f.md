@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_641_product_status_shows_due_date_column_and_overdue_flag
-last-run: 2026-04-28T17:18:33.449983095+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:42.295715757+00:00
+last-run-duration: 1.8s
 ---
 
 ## Session — status-shows-due-date-column

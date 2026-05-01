@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_660_status_shows_cycle_time_column_when_data_present
-last-run: 2026-04-28T17:18:35.823456220+00:00
-last-run-duration: 0.4s
+last-run: 2026-04-30T09:24:55.286742151+00:00
+last-run-duration: 0.6s
 ---
 
 ## Session — status-shows-cycle-time-column-when-data-present

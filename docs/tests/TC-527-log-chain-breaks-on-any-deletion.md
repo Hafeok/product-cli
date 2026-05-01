@@ -11,7 +11,7 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_527_log_chain_breaks_on_any_deletion
-last-run: 2026-04-29T03:13:07.488269633+00:00
+last-run: 2026-04-30T09:23:45.673173660+00:00
 last-run-duration: 0.3s
 ---
 

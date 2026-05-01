@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_107_mcp_cors_header"
-last-run: 2026-04-29T03:12:37.040470115+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-30T09:23:08.718018813+00:00
+last-run-duration: 0.4s
 ---
 
 configure `cors-origins = ["https://claude.ai"]`. Assert CORS response headers are correct for a preflight request from that origin.

@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_687_completeness_severity_warning_w030_is_w_class"
-last-run: 2026-04-28T17:18:43.768781364+00:00
-last-run-duration: 0.4s
+last-run: 2026-04-30T09:25:16.632272257+00:00
+last-run-duration: 0.8s
 ---
 
 **Covers session test ST-346** — `completeness-severity-warning-w030-is-w-class`.

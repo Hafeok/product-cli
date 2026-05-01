@@ -12,8 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_564_gap_bundle_changed_scopes_correctly
-last-run: 2026-04-28T17:18:15.123973165+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-30T09:24:13.180841882+00:00
+last-run-duration: 0.4s
 ---
 
 ## Session: ST-121 — gap-bundle-changed-scopes-correctly

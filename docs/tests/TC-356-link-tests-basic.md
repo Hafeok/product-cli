@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_356_link_tests_basic"
-last-run: 2026-04-29T03:12:55.121081119+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:23:29.899904351+00:00
+last-run-duration: 0.3s
 ---
 
 FT-001 links ADR-002. TC-002 validates ADR-002. Run `product migrate link-tests`. Assert TC-002 gains `validates.features: [FT-001]`. Assert FT-001 gains `tests: [TC-002]`.

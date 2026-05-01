@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_644_planning_due_date_and_started_tag_exit
-last-run: 2026-04-28T17:18:33.449983095+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-30T09:24:42.295715757+00:00
+last-run-duration: 1.1s
 ---
 
 ## Exit Criteria — FT-053 Planning Due Dates and Started Tags

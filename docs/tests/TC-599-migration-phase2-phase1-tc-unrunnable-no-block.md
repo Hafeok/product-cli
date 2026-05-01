@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_599_migration_phase2_phase1_tc_unrunnable_no_block
-last-run: 2026-04-28T17:18:20.851202996+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:19.316558880+00:00
+last-run-duration: 0.3s
 ---
 
 ## Session: ST-153 — migration-phase2-phase1-tc-unrunnable-no-block

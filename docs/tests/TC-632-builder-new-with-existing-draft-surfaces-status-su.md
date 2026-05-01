@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: "tc_632_builder_new_with_existing_draft_surfaces_status_submit_discard_continue"
-last-run: 2026-04-28T17:18:30.314161058+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:32.046643478+00:00
+last-run-duration: 1.3s
 ---
 
 ## Session — builder-new-with-existing-draft

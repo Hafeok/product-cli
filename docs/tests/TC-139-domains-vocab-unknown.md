@@ -12,8 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_139_domains_vocab_unknown"
-last-run: 2026-04-29T03:12:32.676112147+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:22:52.644540918+00:00
+last-run-duration: 0.3s
 ---
 
 feature declares `domains: [unknown-domain]`. Assert E012 (unknown domain, not in `product.toml` vocabulary).

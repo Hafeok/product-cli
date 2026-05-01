@@ -11,7 +11,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_582_adr_status_via_mcp_writes_superseded_with_bidirectional_link
-last-run: 2026-04-28T17:18:18.822211606+00:00
+last-run: 2026-04-30T09:24:16.977905676+00:00
 last-run-duration: 0.2s
 ---
 

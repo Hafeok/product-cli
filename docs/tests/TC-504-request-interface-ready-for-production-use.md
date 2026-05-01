@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_504_request_interface_ready_for_production_use
-last-run: 2026-04-29T03:13:02.598043429+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:23:39.203275164+00:00
+last-run-duration: 0.3s
 ---
 
 Exit criteria for FT-041. The request interface is considered ready for production use when all of the following hold:

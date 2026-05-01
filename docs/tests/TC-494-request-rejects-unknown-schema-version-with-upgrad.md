@@ -11,7 +11,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_494_request_rejects_unknown_schema_version_with_upgrade_hint
-last-run: 2026-04-29T03:13:02.598043429+00:00
+last-run: 2026-04-30T09:23:39.203275164+00:00
 last-run-duration: 0.2s
 ---
 

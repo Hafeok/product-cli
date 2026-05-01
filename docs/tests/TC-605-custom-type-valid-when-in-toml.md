@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_605_custom_type_valid_when_in_toml"
-last-run: 2026-04-28T17:18:24.403922937+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:24.547388853+00:00
+last-run-duration: 0.3s
 ---
 
 ## Session: ST-184 — custom-type-valid-when-in-toml

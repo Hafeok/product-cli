@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_658_forecast_naive_insufficient_data
-last-run: 2026-04-28T17:18:35.823456220+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-30T09:24:55.286742151+00:00
+last-run-duration: 0.5s
 ---
 
 ## Session — forecast-naive-insufficient-data

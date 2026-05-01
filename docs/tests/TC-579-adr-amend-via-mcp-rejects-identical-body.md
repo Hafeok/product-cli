@@ -12,8 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_579_adr_amend_via_mcp_rejects_identical_body
-last-run: 2026-04-28T17:18:18.822211606+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-30T09:24:16.977905676+00:00
+last-run-duration: 0.2s
 ---
 
 ## Session: adr_amend_via_mcp_rejects_identical_body

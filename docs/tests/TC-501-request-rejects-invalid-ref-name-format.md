@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_501_request_rejects_invalid_ref_name_format
-last-run: 2026-04-29T03:13:02.598043429+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:23:39.203275164+00:00
+last-run-duration: 0.4s
 ---
 
 Validates FT-041 / ADR-038 decision 13.

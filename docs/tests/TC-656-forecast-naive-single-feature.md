@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_656_forecast_naive_single_feature
-last-run: 2026-04-28T17:18:35.823456220+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-30T09:24:55.286742151+00:00
+last-run-duration: 1.4s
 ---
 
 ## Session — forecast-naive-single-feature

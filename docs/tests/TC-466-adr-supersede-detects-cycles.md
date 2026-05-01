@@ -11,7 +11,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_466_adr_supersede_detects_cycles"
-last-run: 2026-04-29T03:12:59.694015503+00:00
+last-run: 2026-04-30T09:23:36.093552301+00:00
 last-run-duration: 0.2s
 ---
 

@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: "tc_619_formal_blocks_schema_exit"
-last-run: 2026-04-28T17:18:28.211113744+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:29.235446496+00:00
+last-run-duration: 0.3s
 ---
 
 ## Exit Criteria — FT-049 Formal Blocks in LLM Schema Output

@@ -12,8 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_585_mcp_parity_adr_lifecycle_exit
-last-run: 2026-04-28T17:18:18.822211606+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-30T09:24:16.977905676+00:00
+last-run-duration: 0.4s
 ---
 
 ## Exit Criteria — FT-046 MCP Parity for ADR Lifecycle Operations

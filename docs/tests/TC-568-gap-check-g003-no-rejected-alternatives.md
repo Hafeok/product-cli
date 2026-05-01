@@ -12,8 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_568_gap_check_g003_no_rejected_alternatives
-last-run: 2026-04-28T17:18:15.123973165+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:13.180841882+00:00
+last-run-duration: 0.3s
 ---
 
 ## Session: ST-125 — gap-check-g003-no-rejected-alternatives

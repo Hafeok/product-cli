@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_598_migration_phase2_absence_tc_passes
-last-run: 2026-04-28T17:18:20.851202996+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:19.316558880+00:00
+last-run-duration: 0.3s
 ---
 
 ## Session: ST-152 — migration-phase2-absence-tc-passes

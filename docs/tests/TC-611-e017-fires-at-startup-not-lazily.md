@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_611_e017_fires_at_startup_not_lazily"
-last-run: 2026-04-28T17:18:24.403922937+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:24.547388853+00:00
+last-run-duration: 0.3s
 ---
 
 ## Session: ST-190 — e017-fires-at-startup-not-lazily

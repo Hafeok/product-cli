@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: "tc_626_builder_new_create_starts_draft_and_lists_next_commands"
-last-run: 2026-04-28T17:18:30.314161058+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-30T09:24:32.046643478+00:00
+last-run-duration: 0.4s
 ---
 
 ## Session — builder-new-create-starts-draft

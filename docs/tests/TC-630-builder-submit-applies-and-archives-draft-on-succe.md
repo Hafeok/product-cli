@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: "tc_630_builder_submit_applies_and_archives_draft_on_success"
-last-run: 2026-04-28T17:18:30.314161058+00:00
-last-run-duration: 0.4s
+last-run: 2026-04-30T09:24:32.046643478+00:00
+last-run-duration: 2.1s
 ---
 
 ## Session — builder-submit-archives-on-success

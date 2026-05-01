@@ -12,8 +12,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_537_session_st_005_create_multiple_adrs_same_phase_assigns_ids_in_order
-last-run: 2026-04-29T03:13:14.087193266+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:23:51.770116705+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

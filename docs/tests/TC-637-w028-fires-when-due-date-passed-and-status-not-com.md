@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_637_w028_fires_when_due_date_passed_and_status_not_complete
-last-run: 2026-04-28T17:18:33.449983095+00:00
-last-run-duration: 0.2s
+last-run: 2026-04-30T09:24:42.295715757+00:00
+last-run-duration: 0.7s
 ---
 
 ## Session — w028-fires-when-overdue

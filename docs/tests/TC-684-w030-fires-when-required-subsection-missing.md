@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: "tc_684_w030_fires_when_required_subsection_missing"
-last-run: 2026-04-28T17:18:43.768781364+00:00
-last-run-duration: 0.3s
+last-run: 2026-04-30T09:25:16.632272257+00:00
+last-run-duration: 0.6s
 ---
 
 **Covers session test ST-343** — `w030-fires-when-required-subsection-missing`.

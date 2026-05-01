@@ -11,7 +11,7 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_556_verify_skips_locked_phase_features
-last-run: 2026-04-28T17:18:11.333024438+00:00
+last-run: 2026-04-30T09:24:09.130880839+00:00
 last-run-duration: 0.2s
 ---
 
