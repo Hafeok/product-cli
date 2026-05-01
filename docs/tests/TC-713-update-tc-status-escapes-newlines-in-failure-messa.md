@@ -2,7 +2,7 @@
 id: TC-713
 title: update_tc_status_escapes_newlines_in_failure_message
 type: scenario
-status: unimplemented
+status: unrunnable
 validates:
   features:
   - FT-023
@@ -10,6 +10,8 @@ validates:
   - ADR-002
   - ADR-021
 phase: 1
+runner: cargo-test
+runner-args: "tc_713_update_tc_status_escapes_newlines_in_failure_message"
 ---
 
 **Test Type:** scenario

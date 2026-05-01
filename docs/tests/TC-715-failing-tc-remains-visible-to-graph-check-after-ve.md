@@ -2,7 +2,7 @@
 id: TC-715
 title: failing_tc_remains_visible_to_graph_check_after_verify
 type: scenario
-status: unimplemented
+status: unrunnable
 validates:
   features:
   - FT-018
@@ -11,6 +11,8 @@ validates:
   - ADR-002
   - ADR-021
 phase: 1
+runner: cargo-test
+runner-args: "tc_715_failing_tc_remains_visible_to_graph_check_after_verify"
 ---
 
 **Test Type:** scenario
