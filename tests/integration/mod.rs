@@ -18970,3 +18970,298 @@ fn tc_711_requires_failure_remains_unrunnable_not_hard_fail() {
     );
 }
 
+// --- FT-PATH-SCOPING: --root flag and PRODUCT_ROOT env var ---
+
+/// Build a minimal product graph rooted at `dir`. Creates `product.toml`,
+/// `.product/`, the docs subtree, and a single feature with the supplied id.
+fn write_root_graph(dir: &Path, feature_id: &str) {
+    let config = r#"name = "test"
+schema-version = "1"
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+dependencies = "docs/dependencies"
+[prefixes]
+feature = "FT"
+adr = "ADR"
+test = "TC"
+dependency = "DEP"
+[features]
+required-sections = []
+functional-spec-subsections = []
+"#;
+    std::fs::create_dir_all(dir.join(".product")).unwrap();
+    std::fs::write(dir.join("product.toml"), config).unwrap();
+    std::fs::create_dir_all(dir.join("docs/features")).unwrap();
+    std::fs::create_dir_all(dir.join("docs/adrs")).unwrap();
+    std::fs::create_dir_all(dir.join("docs/tests")).unwrap();
+    std::fs::create_dir_all(dir.join("docs/graph")).unwrap();
+    std::fs::create_dir_all(dir.join("docs/dependencies")).unwrap();
+    let feature = format!(
+        "---\nid: {fid}\ntitle: Root-scoped feature\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody for {fid}.\n",
+        fid = feature_id,
+    );
+    std::fs::write(
+        dir.join(format!("docs/features/{}-root-scoped.md", feature_id)),
+        feature,
+    )
+    .unwrap();
+}
+
+#[test]
+fn ft_path_scoping_root_flag_targets_explicit_graph() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-local.md",
+        "---\nid: FT-001\ntitle: Local\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nLocal body.\n",
+    );
+
+    let other = tempfile::tempdir().unwrap();
+    write_root_graph(other.path(), "FT-077");
+
+    // From the local harness cwd, --root must operate on the other graph.
+    let out = h.run(&[
+        "--root",
+        other.path().to_str().unwrap(),
+        "feature",
+        "show",
+        "FT-077",
+    ]);
+    out.assert_exit(0).assert_stdout_contains("FT-077");
+
+    // FT-077 does not exist in the local graph — without --root it must fail.
+    let out_local = h.run(&["feature", "show", "FT-077"]);
+    assert_ne!(out_local.exit_code, 0);
+}
+
+#[test]
+fn ft_path_scoping_product_root_env_targets_explicit_graph() {
+    let h = Harness::new();
+    let other = tempfile::tempdir().unwrap();
+    write_root_graph(other.path(), "FT-088");
+
+    let out = h.run_with_env(
+        &["feature", "show", "FT-088"],
+        &[("PRODUCT_ROOT", other.path().to_str().unwrap())],
+    );
+    out.assert_exit(0).assert_stdout_contains("FT-088");
+}
+
+#[test]
+fn ft_path_scoping_root_flag_overrides_product_root_env() {
+    let h = Harness::new();
+    let flag_root = tempfile::tempdir().unwrap();
+    write_root_graph(flag_root.path(), "FT-100");
+    let env_root = tempfile::tempdir().unwrap();
+    write_root_graph(env_root.path(), "FT-200");
+
+    // Both set; flag must win — querying FT-100 succeeds.
+    let out = h.run_with_env(
+        &[
+            "--root",
+            flag_root.path().to_str().unwrap(),
+            "feature",
+            "show",
+            "FT-100",
+        ],
+        &[("PRODUCT_ROOT", env_root.path().to_str().unwrap())],
+    );
+    out.assert_exit(0).assert_stdout_contains("FT-100");
+
+    // Querying FT-200 (only in the env graph) must fail when --root wins.
+    let out2 = h.run_with_env(
+        &[
+            "--root",
+            flag_root.path().to_str().unwrap(),
+            "feature",
+            "show",
+            "FT-200",
+        ],
+        &[("PRODUCT_ROOT", env_root.path().to_str().unwrap())],
+    );
+    assert_ne!(out2.exit_code, 0);
+}
+
+#[test]
+fn ft_path_scoping_walk_up_unchanged_when_overrides_unset() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-walkup.md",
+        "---\nid: FT-001\ntitle: Walk-up\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nWalk-up body.\n",
+    );
+    // No --root, no PRODUCT_ROOT — existing walk-up behavior is preserved.
+    let out = h.run(&["feature", "show", "FT-001"]);
+    out.assert_exit(0).assert_stdout_contains("FT-001");
+}
+
+#[test]
+fn ft_path_scoping_root_flag_missing_path_errors() {
+    let h = Harness::new();
+    let out = h.run(&[
+        "--root",
+        "/tmp/this-path-must-not-exist-xyz-9876543",
+        "feature",
+        "list",
+    ]);
+    out.assert_exit(24)
+        .assert_stderr_contains("error[E024]")
+        .assert_stderr_contains("directory does not exist")
+        .assert_stderr_contains("source: flag");
+}
+
+#[test]
+fn ft_path_scoping_product_root_env_missing_errors() {
+    let h = Harness::new();
+    let out = h.run_with_env(
+        &["feature", "list"],
+        &[("PRODUCT_ROOT", "/tmp/this-path-must-not-exist-xyz-9876543")],
+    );
+    out.assert_exit(24)
+        .assert_stderr_contains("error[E024]")
+        .assert_stderr_contains("source: env");
+}
+
+#[test]
+fn ft_path_scoping_root_flag_path_is_file_errors() {
+    let h = Harness::new();
+    let f = tempfile::NamedTempFile::new().unwrap();
+    let out = h.run(&[
+        "--root",
+        f.path().to_str().unwrap(),
+        "feature",
+        "list",
+    ]);
+    out.assert_exit(24)
+        .assert_stderr_contains("error[E024]")
+        .assert_stderr_contains("path is not a directory");
+}
+
+#[test]
+fn ft_path_scoping_root_flag_no_dot_product_errors() {
+    let h = Harness::new();
+    let plain = tempfile::tempdir().unwrap();
+    let out = h.run(&[
+        "--root",
+        plain.path().to_str().unwrap(),
+        "feature",
+        "list",
+    ]);
+    out.assert_exit(24)
+        .assert_stderr_contains("error[E024]")
+        .assert_stderr_contains("no .product/ subdirectory found");
+}
+
+#[test]
+fn ft_path_scoping_friendly_redirect_from_dot_product_path() {
+    let h = Harness::new();
+    let other = tempfile::tempdir().unwrap();
+    write_root_graph(other.path(), "FT-301");
+    let dot = other.path().join(".product");
+    let out = h.run(&[
+        "--root",
+        dot.to_str().unwrap(),
+        "feature",
+        "show",
+        "FT-301",
+    ]);
+    out.assert_exit(0).assert_stdout_contains("FT-301");
+}
+
+#[test]
+fn ft_path_scoping_empty_product_root_treated_as_unset() {
+    let h = Harness::new();
+    h.write(
+        "docs/features/FT-001-emptyenv.md",
+        "---\nid: FT-001\ntitle: Empty env\nphase: 1\nstatus: planned\ndepends-on: []\nadrs: []\ntests: []\n---\n\nBody.\n",
+    );
+    // Empty PRODUCT_ROOT must not block walk-up.
+    let out = h.run_with_env(&["feature", "show", "FT-001"], &[("PRODUCT_ROOT", "")]);
+    out.assert_exit(0).assert_stdout_contains("FT-001");
+}
+
+#[test]
+fn ft_path_scoping_root_flag_after_subcommand_position() {
+    // global = true on --root means clap accepts it after the subcommand
+    // name as well. Per the spec: "keeps semantics consistent regardless of
+    // where on the line the flag appears."
+    let h = Harness::new();
+    let other = tempfile::tempdir().unwrap();
+    write_root_graph(other.path(), "FT-444");
+    let out = h.run(&[
+        "feature",
+        "show",
+        "FT-444",
+        "--root",
+        other.path().to_str().unwrap(),
+    ]);
+    out.assert_exit(0).assert_stdout_contains("FT-444");
+}
+
+#[test]
+fn ft_path_scoping_mcp_honors_product_root_env() {
+    let h = Harness::new();
+    let other = tempfile::tempdir().unwrap();
+    write_root_graph(other.path(), "FT-555");
+
+    use std::io::Write;
+    use std::process::{Command as PC, Stdio as PSt};
+    let mut child = PC::new(&h.bin)
+        .arg("mcp")
+        .current_dir(h.dir.path())
+        .env("PRODUCT_ROOT", other.path().to_str().unwrap())
+        .stdin(PSt::piped())
+        .stdout(PSt::piped())
+        .stderr(PSt::piped())
+        .spawn()
+        .expect("spawn mcp");
+    let init = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{}}\n";
+    let call = "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"product_feature_list\",\"arguments\":{}}}\n";
+    if let Some(stdin) = child.stdin.as_mut() {
+        stdin.write_all(init.as_bytes()).unwrap();
+        stdin.write_all(call.as_bytes()).unwrap();
+    }
+    drop(child.stdin.take());
+    let output = child.wait_with_output().expect("wait mcp");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains("FT-555"),
+        "MCP feature_list must reflect PRODUCT_ROOT graph (FT-555). Got stdout:\n{}",
+        stdout,
+    );
+}
+
+#[test]
+fn ft_path_scoping_mcp_invalid_product_root_exits_nonzero() {
+    let h = Harness::new();
+    use std::io::Write;
+    use std::process::{Command as PC, Stdio as PSt};
+    let mut child = PC::new(&h.bin)
+        .arg("mcp")
+        .current_dir(h.dir.path())
+        .env("PRODUCT_ROOT", "/tmp/this-path-must-not-exist-xyz-9876543")
+        .stdin(PSt::piped())
+        .stdout(PSt::piped())
+        .stderr(PSt::piped())
+        .spawn()
+        .expect("spawn mcp");
+    // Send something so the MCP server has the chance to initialise.
+    let _ = child
+        .stdin
+        .as_mut()
+        .unwrap()
+        .write_all(b"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{}}\n");
+    drop(child.stdin.take());
+    let output = child.wait_with_output().expect("wait mcp");
+    let code = output.status.code().unwrap_or(-1);
+    assert_ne!(code, 0, "MCP must exit non-zero on invalid PRODUCT_ROOT");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("E024") || stderr.contains("does not exist"),
+        "stderr must surface the resolution failure. stderr: {}",
+        stderr
+    );
+}
+

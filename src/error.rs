@@ -176,6 +176,12 @@ pub enum ProductError {
         tc_ids: Vec<String>,
         tc_paths: Vec<PathBuf>,
     },
+    /// E024: explicit graph root (`--root` or `PRODUCT_ROOT`) failed validation
+    RootNotFound {
+        supplied: PathBuf,
+        source: &'static str,
+        reason: String,
+    },
     /// Configuration error
     ConfigError(String),
     /// Generic IO error
@@ -214,6 +220,11 @@ impl fmt::Display for ProductError {
             Self::TcRunnerMissing { feature_id, tc_ids, tc_paths } => {
                 render_tc_runner_missing(f, feature_id, tc_ids, tc_paths)
             }
+            Self::RootNotFound { supplied, source, reason } => write!(
+                f,
+                "error[E024]: graph root not found\n   = supplied: {}\n   = source: {}\n   = reason: {}\n   = hint: pass --root <dir> or set PRODUCT_ROOT to a directory containing .product/",
+                supplied.display(), source, reason,
+            ),
             Self::ConfigError(msg) => write!(f, "error: {}", msg),
             Self::IoError(msg) => write!(f, "error: {}", msg),
             Self::NotFound(msg) => write!(f, "error: not found — {}", msg),
@@ -256,6 +267,7 @@ impl ProductError {
     pub fn exit_code(&self) -> i32 {
         match self {
             Self::TcRunnerMissing { .. } => 22,
+            Self::RootNotFound { .. } => 24,
             _ => 1,
         }
     }

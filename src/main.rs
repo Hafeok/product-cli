@@ -5,6 +5,7 @@
 mod commands;
 
 use clap::{CommandFactory, Parser};
+use std::path::PathBuf;
 use std::process;
 
 #[derive(Parser)]
@@ -17,6 +18,12 @@ struct Cli {
     /// Output format: text (default) or json
     #[arg(long, global = true, default_value = "text")]
     format: String,
+
+    /// Path to the directory containing the .product/ graph. Overrides
+    /// PRODUCT_ROOT and walk-up from the current directory. Accepts an
+    /// absolute or relative path; ~/ is expanded; symlinks are resolved.
+    #[arg(long, global = true, value_name = "PATH")]
+    root: Option<PathBuf>,
 
     #[command(subcommand)]
     command: commands::Commands,
@@ -34,12 +41,15 @@ fn main() {
     // E017 (ADR-042): reject malformed `[tc-types].custom` before clap
     // parses anything — reserved TC-type names in the custom list must
     // pre-empt every subcommand, including `--help` and `--version`.
-    if let Err(e) = early_config_check() {
+    if let Err(e) = product_lib::root::early_check() {
         eprintln!("{e}");
         process::exit(1);
     }
 
     let cli = Cli::parse();
+    if let Some(ref root) = cli.root {
+        product_lib::root::set_root_flag(root.clone());
+    }
     let mut cmd = Cli::command();
 
     let result = commands::run(cli.command, &cli.format, &mut cmd);
@@ -55,21 +65,3 @@ fn main() {
     }
 }
 
-/// Walk up from cwd looking for `product.toml`. If one is found, load it —
-/// `ProductConfig::load` runs the E017 check. If no config is found we
-/// silently continue.
-fn early_config_check() -> Result<(), product_lib::error::ProductError> {
-    if let Ok(mut dir) = std::env::current_dir() {
-        loop {
-            let candidate = dir.join("product.toml");
-            if candidate.exists() {
-                product_lib::config::ProductConfig::load(&candidate)?;
-                return Ok(());
-            }
-            if !dir.pop() {
-                return Ok(());
-            }
-        }
-    }
-    Ok(())
-}

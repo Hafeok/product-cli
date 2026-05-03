@@ -35,6 +35,7 @@ pub mod onboard;
 pub mod parser;
 pub mod rdf;
 pub mod request;
+pub mod root;
 pub mod status;
 pub mod tc;
 pub mod request_log;

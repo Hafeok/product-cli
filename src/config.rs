@@ -237,6 +237,7 @@ pub fn find_config_in_dir(dir: &Path) -> Option<PathBuf> {
     None
 }
 
+
 impl ProductConfig {
     /// Load product.toml from a path. Runs E017 immediately (ADR-042).
     pub fn load(path: &Path) -> Result<Self> {
@@ -280,7 +281,22 @@ impl ProductConfig {
     /// Discovery order at each level: `.product/config.toml`,
     /// `.product/product.toml` (legacy alias), `product.toml` (root).
     /// First match wins.
+    ///
+    /// Honours the `--root` flag and `PRODUCT_ROOT` env var: when either is
+    /// set the explicit value short-circuits the walk-up, after validation
+    /// (path exists, is a directory, contains `.product/`).
     pub fn discover() -> Result<(Self, PathBuf)> {
+        if let Some(resolved) = crate::root::resolve_active()? {
+            let candidate = find_config_in_dir(&resolved.path).ok_or_else(|| {
+                ProductError::RootNotFound {
+                    supplied: resolved.path.clone(),
+                    source: resolved.source.as_str(),
+                    reason: "no product config file (.product/config.toml, .product/product.toml, or product.toml) in supplied root".to_string(),
+                }
+            })?;
+            let config = Self::load(&candidate)?;
+            return Ok((config, resolved.path));
+        }
         let mut dir = std::env::current_dir().map_err(|e| {
             ProductError::ConfigError(format!("Cannot determine working directory: {}", e))
         })?;

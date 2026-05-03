@@ -331,6 +331,39 @@ Run `product <group> --help` for the flags on any of them.
 
 ---
 
+## Path scoping
+
+`product` locates the graph it operates on by, in priority order:
+
+1. **`--root <path>`** — top-level flag, accepted before or after the
+   subcommand. Highest priority; use for one-off scripting.
+2. **`PRODUCT_ROOT` env var** — session-level override. Use to scope an
+   entire shell or container at a single graph. Empty values are ignored.
+3. **Walk-up from the current directory** — the default, unchanged. Picks
+   the nearest ancestor that contains a `.product/` directory or
+   `product.toml`.
+
+When `--root` and `PRODUCT_ROOT` are both set, `--root` wins.
+
+```bash
+product --root crates/verify-cli feature list   # one-off
+PRODUCT_ROOT=/workspace/typo-cli product mcp    # whole-session scope
+```
+
+Explicit paths are tilde-expanded, resolved against the current directory
+when relative, and canonicalized (symlinks followed). Pointing at the
+`.product/` directory itself (`--root foo/.product`) is treated as the
+parent. The path must exist, be a directory, and contain a `.product/`
+subdirectory; otherwise the binary exits with code 24 and an
+`error[E024]: graph root not found` diagnostic naming the supplied value
+and the source (`flag` or `env`).
+
+The MCP server reads the same resolution at startup and is fixed to the
+resolved root for its lifetime — restart the server to point at a
+different graph.
+
+---
+
 ## Architecture in one paragraph
 
 Single Rust binary, no runtime deps. The graph is rebuilt in memory from front-matter on every invocation (ADR-003), so it can never drift from the files. Oxigraph powers SPARQL queries (ADR-008). Betweenness centrality ranks ADR importance (ADR-012). All file writes go through atomic write + advisory lock (ADR-015). `#![deny(clippy::unwrap_used)]` — zero panics on user input.
