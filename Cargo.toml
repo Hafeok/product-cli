@@ -17,6 +17,20 @@ path = "src/lib.rs"
 name = "product"
 path = "src/main.rs"
 
+[lints]
+workspace = true
+
+[workspace]
+members = ["xtask"]
+resolver = "2"
+
+# Workspace-wide convention enforcement (Tier 3a).
+# See conventions/docs/CTX002.md and conventions/README.md for the rule catalogue.
+# Each lint should map to a CTX rule documented under conventions/docs/.
+[workspace.lints.clippy]
+# CTX002 — No unwrap in production code paths.
+unwrap_used = "deny"
+
 [dependencies]
 clap       = { version = "4", features = ["derive", "env"] }
 clap_complete = "4"

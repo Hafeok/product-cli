@@ -62,7 +62,25 @@ jobs:
         run: cargo test -p product --no-fail-fast
 
       - name: Clippy
-        run: cargo clippy -p product -- -D clippy::unwrap_used -D warnings
+        run: cargo clippy --workspace -- -D clippy::unwrap_used -D warnings
+
+      - name: Convention check (xtask)
+        # Enforces every CTX rule registered under xtask/src/checks/.
+        # See conventions/README.md for the rule catalogue.
+        run: cargo xtask check
+
+      - name: Convention drift self-test
+        # Verifies every registered Check has a matching conventions/docs/<id>.md
+        # whose frontmatter id/title/adrs match the implementation.
+        run: cargo xtask check --self-test
+
+      - name: Supply-chain check (cargo-deny)
+        # Enforces deny.toml — license allow-list, advisory database, banned
+        # crates, and source restrictions. See conventions/docs/CTX-DEPS.md.
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          arguments: --workspace
 
       - name: Graph check
         run: |

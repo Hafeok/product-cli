@@ -1,0 +1,25 @@
+[package]
+name    = "xtask"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Workspace convention enforcement (cargo xtask check)."
+
+# xtask is intentionally a sibling of the main crate, not a dev-dependency.
+# It runs via the `cargo xtask` alias defined in .cargo/config.toml.
+[[bin]]
+name = "xtask"
+path = "src/main.rs"
+
+[dependencies]
+clap        = { version = "4", features = ["derive"] }
+serde       = { version = "1", features = ["derive"] }
+serde_json  = "1"
+serde_yaml  = "0.9"
+walkdir     = "2"
+syn         = { version = "2", features = ["full", "extra-traits", "parsing", "visit"] }
+proc-macro2 = { version = "1", features = ["span-locations"] }
+anyhow      = "1"
+
+[lints]
+workspace = true
