@@ -4,6 +4,9 @@
 # first failing binary and skips subsequent suites.
 t = "test --no-fail-fast"
 
+# Workspace convention enforcement — see conventions/README.md.
+xtask = "run --package xtask --release --"
+
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"
 
