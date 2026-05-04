@@ -1,0 +1,8 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 6a6845d4348b1ae8ba093698ef15d26d87ceaadc1f2a0c4d39fc331b87b76167 # shrinks to extra = "security"
+cc 17325c6c5278fed431f9c97a7203641996d5dd2f1c7a9589b949f977f4ca4051 # shrinks to (yaml, _kind) = ("type: create\nschema-version: 1\nreason: \"\"\nartifacts:\n  - type: feature\n    title: a a\n    phase: 1\n    domains: [api]\n", EmptyReason)
