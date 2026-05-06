@@ -6,10 +6,11 @@
 
 pub mod registry;
 mod adr_lifecycle;
-mod read_handlers;
-mod write_handlers;
 mod field_handlers;
+mod health_handlers;
+mod read_handlers;
 mod request_handlers;
+mod write_handlers;
 pub mod stdio;
 pub mod http;
 pub mod scaffold;

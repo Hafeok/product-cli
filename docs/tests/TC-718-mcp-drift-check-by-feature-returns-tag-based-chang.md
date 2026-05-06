@@ -2,7 +2,7 @@
 id: TC-718
 title: mcp drift check by feature returns tag-based changed files
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-059
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_718_mcp_drift_check_feature_tag_changed_files
+last-run: 2026-05-06T13:31:35.056793027+00:00
+last-run-duration: 0.3s
 ---
 
 ## Given

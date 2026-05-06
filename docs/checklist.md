@@ -1174,19 +1174,19 @@
 - [x] TC-711: requires_failure_remains_unrunnable_not_hard_fail (scenario) — passing
 - [x] TC-716: ft_058_exit_criteria (exit-criteria) — passing
 
-### FT-059 — MCP Parity for Health-Check Tools — drift check and preflight [ ]
+### FT-059 — MCP Parity for Health-Check Tools — drift check and preflight [x]
 
 - [x] ADR-013: Error Model and User-Facing Error Format (accepted)
 - [x] ADR-020: MCP Server — Dual Transport (stdio and HTTP) (accepted)
 - [x] ADR-023: Drift Detection — Spec vs. Implementation Verification (accepted)
 - [x] ADR-026: Pre-flight Analysis — Systematic Coverage Before Authoring (accepted)
 - [x] ADR-043: Slice + Adapter Architecture for Command Handlers (accepted)
-- [ ] TC-717: mcp drift check returns aggregate envelope across all ADRs (scenario) — unimplemented
-- [ ] TC-718: mcp drift check by feature returns tag-based changed files (scenario) — unimplemented
-- [ ] TC-719: mcp drift check with unknown id returns E022 (scenario) — unimplemented
-- [ ] TC-720: mcp preflight returns cross-cutting domain and dep coverage (scenario) — unimplemented
-- [ ] TC-721: mcp preflight with missing tc runners returns E024 (scenario) — unimplemented
-- [ ] TC-722: mcp preflight with unknown id returns E022 (scenario) — unimplemented
-- [ ] TC-723: AGENTS.md key mcp tools table matches registry (invariant) — unimplemented
-- [ ] TC-724: FT-059 exit criteria — health-check parity gate (exit-criteria) — unimplemented
+- [x] TC-717: mcp drift check returns aggregate envelope across all ADRs (scenario) — passing
+- [x] TC-718: mcp drift check by feature returns tag-based changed files (scenario) — passing
+- [x] TC-719: mcp drift check with unknown id returns E022 (scenario) — passing
+- [x] TC-720: mcp preflight returns cross-cutting domain and dep coverage (scenario) — passing
+- [x] TC-721: mcp preflight with missing tc runners returns E024 (scenario) — passing
+- [x] TC-722: mcp preflight with unknown id returns E022 (scenario) — passing
+- [x] TC-723: AGENTS.md key mcp tools table matches registry (invariant) — passing
+- [x] TC-724: FT-059 exit criteria — health-check parity gate (exit-criteria) — passing
 

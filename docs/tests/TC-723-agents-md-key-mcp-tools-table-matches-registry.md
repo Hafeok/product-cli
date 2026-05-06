@@ -2,7 +2,7 @@
 id: TC-723
 title: AGENTS.md key mcp tools table matches registry
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-059
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_723_agents_md_key_mcp_tools_table_matches_registry
+last-run: 2026-05-06T13:31:35.056793027+00:00
+last-run-duration: 0.2s
 ---
 
 ## Given

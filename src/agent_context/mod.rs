@@ -151,8 +151,7 @@ fn generate_tool_guide_section() -> String {
 | `product_schema` | Get current front-matter schema for any type |
 | `product_preflight` | Before agent work — check domain coverage |
 | `product_gap_check` | Before implementing — check spec completeness |
-| `product_feature_next` | Find the next feature to implement |
-| `product_dep_bom` | Audit all external dependencies |
+| `product_drift_check` | Before committing — check for spec/code drift |
 | `product_agent_context` | Get full AGENTS.md content via MCP |
 "#
     .to_string()
@@ -258,6 +257,7 @@ mod tests {
         assert!(section.contains("product_graph_central"));
         assert!(section.contains("product_preflight"));
         assert!(section.contains("product_gap_check"));
+        assert!(section.contains("product_drift_check"));
         assert!(section.contains("product_agent_context"));
     }
 }

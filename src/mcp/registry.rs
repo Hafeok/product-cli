@@ -8,9 +8,10 @@ use std::path::{Path, PathBuf};
 use super::tools::{self, ToolDef};
 use super::{JsonRpcRequest, JsonRpcResponse};
 use super::adr_lifecycle;
+use super::field_handlers;
+use super::health_handlers;
 use super::read_handlers;
 use super::write_handlers;
-use super::field_handlers;
 
 // ---------------------------------------------------------------------------
 // Tool registry
@@ -156,6 +157,8 @@ fn dispatch_tool(
         "product_graph_central" => read_handlers::handle_graph_central(args, graph),
         "product_impact" => read_handlers::handle_impact(args, graph),
         "product_gap_check" => read_handlers::handle_gap_check(args, graph, repo_root),
+        "product_drift_check" => health_handlers::handle_drift_check(args, graph, repo_root),
+        "product_preflight" => health_handlers::handle_preflight(args, graph, repo_root),
         "product_schema" => read_handlers::handle_schema(args),
         "product_agent_context" => read_handlers::handle_agent_context(graph, repo_root),
         "product_prompts_list" => read_handlers::handle_prompts_list(repo_root),

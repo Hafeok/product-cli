@@ -2,7 +2,7 @@
 id: TC-720
 title: mcp preflight returns cross-cutting domain and dep coverage
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-059
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_720_mcp_preflight_cross_cutting_domain_dep_coverage
+last-run: 2026-05-06T13:31:35.056793027+00:00
+last-run-duration: 0.2s
 ---
 
 ## Given
