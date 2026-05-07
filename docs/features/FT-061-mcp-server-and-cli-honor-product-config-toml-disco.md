@@ -10,7 +10,8 @@ adrs:
 - ADR-018
 - ADR-043
 - ADR-047
-tests: []
+tests:
+- TC-729
 domains:
 - api
 - error-handling

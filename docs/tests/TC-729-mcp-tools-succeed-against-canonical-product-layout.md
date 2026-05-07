@@ -2,13 +2,15 @@
 id: TC-729
 title: mcp tools succeed against canonical .product layout
 type: session
-status: unimplemented
+status: passing
 validates:
-  features: []
-  adrs: []
-phase: 1
+  features:
+  - FT-061
+  adrs:
+  - ADR-048
+phase: 5
 runner: cargo-test
-runner-args: tc_729_mcp_tools_succeed_against_canonical_product_layout
+runner-args: "--test sessions ft_061_mcp"
 ---
 
 ## Description
