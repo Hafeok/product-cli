@@ -22,6 +22,7 @@ pub mod domains;
 pub mod drift;
 pub mod error;
 pub mod feature;
+pub mod field_schema;
 pub mod fileops;
 pub mod formal;
 pub mod gap;

@@ -131,8 +131,35 @@ fn new_test_front(
 pub(crate) fn handle_feature_link(args: &Value, graph: &KnowledgeGraph) -> Result<Value, String> {
     let id = args.get("id").and_then(|v| v.as_str()).unwrap_or_default();
     let f = graph.features.get(id).ok_or_else(|| format!("Feature {} not found", id))?;
+
     let mut front = f.front.clone();
     let mut changed = false;
+
+    // FT-062 — accept an optional `feature` argument with the same semantics
+    // as `product_feature_depends_on` with a single-element `add`. Cycle
+    // detection and graph-existence validation use the same plan helper to
+    // keep the contract identical across the two MCP surfaces. Idempotent —
+    // already-present links don't fail or set `changed` for the feature
+    // axis but the response shape preserves the existing `linked` flag.
+    let mut dep_added = false;
+    if let Some(dep_id) = args.get("feature").and_then(|v| v.as_str()) {
+        let plan = crate::feature::plan_depends_on_edit(
+            graph,
+            id,
+            std::slice::from_ref(&dep_id.to_string()),
+            &[],
+        )
+        .map_err(|e| format!("{}", e))?;
+        // Pull the planned final list onto our working front so any
+        // subsequent adr/test edits write the merged state, not just the
+        // adr/test slice.
+        front.depends_on = plan.final_depends_on.clone();
+        if plan.is_changed() {
+            dep_added = true;
+            changed = true;
+        }
+    }
+
     if let Some(adr_id) = args.get("adr").and_then(|v| v.as_str()) {
         if !front.adrs.contains(&adr_id.to_string()) {
             front.adrs.push(adr_id.to_string());
@@ -149,6 +176,7 @@ pub(crate) fn handle_feature_link(args: &Value, graph: &KnowledgeGraph) -> Resul
         let content = crate::parser::render_feature(&front, &f.body);
         crate::fileops::write_file_atomic(&f.path, &content).map_err(|e| format!("{}", e))?;
     }
+    let _ = dep_added; // kept for future structured-response extension
     Ok(serde_json::json!({"id": id, "linked": changed}))
 }
 

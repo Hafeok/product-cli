@@ -346,6 +346,37 @@ pub(crate) fn handle_test_runner(
 }
 
 // ---------------------------------------------------------------------------
+// Feature depends-on (FT-062)
+// ---------------------------------------------------------------------------
+
+/// FT-062 — `product_feature_depends_on` MCP tool. Idempotent add/remove
+/// against a feature's `depends-on` list with cycle detection.
+pub(crate) fn handle_feature_depends_on(
+    args: &Value,
+    graph: &KnowledgeGraph,
+) -> Result<Value, String> {
+    let id = args.get("id").and_then(|v| v.as_str()).unwrap_or_default();
+    if id.is_empty() {
+        return Err("E001: missing required argument 'id'".to_string());
+    }
+    let add = extract_string_array(args, "add");
+    let remove = extract_string_array(args, "remove");
+
+    let plan = crate::feature::plan_depends_on_edit(graph, id, &add, &remove)
+        .map_err(|e| format!("{}", e))?;
+    if plan.is_changed() {
+        crate::feature::apply_depends_on_edit(&plan).map_err(|e| format!("{}", e))?;
+    }
+    Ok(serde_json::json!({
+        "id": id,
+        "depends_on": plan.final_depends_on,
+        "added": plan.added,
+        "removed": plan.removed,
+        "changed": plan.is_changed(),
+    }))
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 

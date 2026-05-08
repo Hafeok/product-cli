@@ -1199,11 +1199,23 @@
 - [x] ADR-047: Functional Specification Lives in Feature Body, Not a Separate Artifact (accepted)
 - [x] TC-729: mcp tools succeed against canonical .product layout (session) — passing
 
-### FT-062 — MCP Parity for Feature `depends-on` and Strict Request Shape Validation [ ]
+### FT-062 — MCP Parity for Feature `depends-on` and Strict Request Shape Validation [x]
 
 - [x] ADR-013: Error Model and User-Facing Error Format (accepted)
 - [x] ADR-020: MCP Server — Dual Transport (stdio and HTTP) (accepted)
 - [x] ADR-037: Front-Matter Field Management — Granular Mutation Tools (accepted)
 - [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
 - [x] ADR-043: Slice + Adapter Architecture for Command Handlers (accepted)
+- [x] ADR-018: Testing Strategy — Property-Based, Session-Based, and LLM Benchmark (accepted)
+- [x] ADR-047: Functional Specification Lives in Feature Body, Not a Separate Artifact (accepted)
+- [x] TC-732: product_schema and request validator share field allowlist (invariant) — passing
+- [x] TC-733: product_feature_depends_on add writes the edge (scenario) — passing
+- [x] TC-734: product_feature_depends_on rejects cycle-creating add (scenario) — passing
+- [x] TC-735: product_feature_depends_on rejects unknown target (scenario) — passing
+- [x] TC-736: product_feature_link feature arg adds depends-on edge (scenario) — passing
+- [x] TC-737: CLI feature depends-on mirrors MCP tool (scenario) — passing
+- [x] TC-738: request rejects unknown top-level key with E025 (scenario) — passing
+- [x] TC-739: request rejects unknown mutation field with E026 (scenario) — passing
+- [x] TC-740: request accepts dot-notation on known head field (scenario) — passing
+- [x] TC-741: FT-062 exit criteria (exit-criteria) — passing
 

@@ -58,6 +58,13 @@ Before writing any specification content:
 Never scaffold an artifact without first reading the graph.
 Never write front-matter without consulting the schema below.
 
+Requests with unknown top-level keys (anything other than
+`type`, `schema-version`, `reason`, `artifacts`, `changes`) are rejected
+with **E025**, not silently accepted. Mutation `field` values that do
+not match a known front-matter field for the target artifact type are
+rejected with **E026** — `product_request_apply` will not silently
+no-op on a mistyped field name.
+
 "#
     .to_string()
 }
@@ -153,6 +160,7 @@ fn generate_tool_guide_section() -> String {
 | `product_gap_check` | Before implementing — check spec completeness |
 | `product_drift_check` | Before committing — check for spec/code drift |
 | `product_agent_context` | Get full AGENTS.md content via MCP |
+| `product_feature_depends_on` | Add or remove `depends-on` feature links — idempotent, cycle-checked |
 "#
     .to_string()
 }

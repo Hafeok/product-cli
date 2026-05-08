@@ -167,6 +167,7 @@ fn dispatch_tool(
         "product_adr_new" => write_handlers::handle_adr_new(args, graph, repo_root),
         "product_test_new" => write_handlers::handle_test_new(args, graph, repo_root),
         "product_feature_link" => write_handlers::handle_feature_link(args, graph),
+        "product_feature_depends_on" => field_handlers::handle_feature_depends_on(args, graph),
         "product_adr_status" => adr_lifecycle::handle_adr_status_write(args, graph),
         "product_feature_status" | "product_test_status" => {
             write_handlers::handle_status_update(args)

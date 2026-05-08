@@ -29,6 +29,18 @@ pub enum FeatureCommands {
     },
     /// List ADRs linked to a feature
     Adrs { id: String },
+    /// Add or remove `depends-on` feature links (FT-062)
+    #[command(name = "depends-on")]
+    DependsOn {
+        /// Feature ID
+        id: String,
+        /// Feature ID to add (repeatable)
+        #[arg(long)]
+        add: Vec<String>,
+        /// Feature ID to remove (repeatable)
+        #[arg(long)]
+        remove: Vec<String>,
+    },
     /// Show the full dependency tree for a feature
     Deps { id: String },
     /// Add or remove concern domains on a feature
@@ -99,6 +111,10 @@ pub(crate) fn handle_feature(cmd: FeatureCommands, fmt: &str) -> BoxResult {
             feature_write_ops::feature_acknowledge(&id, domain, adr, reason, remove)
         }
         FeatureCommands::Adrs { id } => super::render(feature_adrs(&id), fmt),
+        FeatureCommands::DependsOn { id, add, remove } => super::render(
+            feature_write_ops::feature_depends_on(&id, add, remove),
+            fmt,
+        ),
         FeatureCommands::Deps { id } => super::render(feature_deps(&id), fmt),
         FeatureCommands::Domain { id, add, remove } => {
             super::render(feature_write_ops::feature_domain(&id, add, remove), fmt)

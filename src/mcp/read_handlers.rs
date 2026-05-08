@@ -164,9 +164,32 @@ pub(crate) fn handle_schema(args: &Value) -> Result<Value, String> {
         crate::agent_context::generate_schema(artifact_type)?
     };
 
+    // FT-062 — every response carries the canonical field allowlists so an
+    // agent can introspect what `product_request_apply` will accept. Same
+    // source `field_schema::known_fields_for_label` the request validator
+    // consults — they cannot diverge.
+    let fields = if artifact_type.is_empty() {
+        serde_json::json!({
+            "feature": crate::field_schema::FEATURE_FIELDS,
+            "adr": crate::field_schema::ADR_FIELDS,
+            "tc": crate::field_schema::TC_FIELDS,
+            "dep": crate::field_schema::DEP_FIELDS,
+        })
+    } else {
+        let key = match artifact_type {
+            "test" => "tc",
+            "dependency" => "dep",
+            other => other,
+        };
+        serde_json::json!({
+            key: crate::field_schema::known_fields_for_label(key),
+        })
+    };
+
     Ok(serde_json::json!({
         "content": content,
-        "type": "text"
+        "type": "text",
+        "fields": fields,
     }))
 }
 

@@ -2,7 +2,7 @@
 id: FT-062
 title: MCP Parity for Feature `depends-on` and Strict Request Shape Validation
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-018
 - FT-021
@@ -14,12 +14,28 @@ adrs:
 - ADR-037
 - ADR-038
 - ADR-043
-tests: []
+- ADR-018
+- ADR-047
+tests:
+- TC-732
+- TC-733
+- TC-734
+- TC-735
+- TC-736
+- TC-737
+- TC-738
+- TC-739
+- TC-740
+- TC-741
 domains:
 - api
 - error-handling
 - testing
-domains-acknowledged: {}
+domains-acknowledged:
+  ADR-040: No verify-pipeline structural change and no LLM calls introduced. New E025/E026 findings surface through the existing Stage 2 graph check; ADR-040's six-stage layout and zero-LLM boundary are unaffected.
+  ADR-042: All TCs in this feature use the existing scenario type (and exit-criteria for TC-741). No new structural types are introduced and no custom descriptive types are added to product.toml; ADR-042's reserved/open partition is unaffected.
+  ADR-041: Purely additive feature. Scope (Out section) explicitly preserves all previously-valid requests; nothing is removed or deprecated, so no removes/deprecates fields and no absence TCs are required.
+  ADR-048: No file-layout changes. New code reads and writes through the existing repo-root + config-discovery path (FT-061) and introduces no hardcoded directory references; the .product/ canonicalisation is orthogonal to this feature.
 ---
 
 ## Description

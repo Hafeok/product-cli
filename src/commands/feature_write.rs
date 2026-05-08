@@ -351,3 +351,40 @@ pub(crate) fn feature_domain(
         plan.final_domains.join(", ")
     )))
 }
+
+/// FT-062 — `product feature depends-on` adapter. Mirrors the field-edit
+/// pattern: thin wrapper over `plan_depends_on_edit` + `apply_depends_on_edit`.
+pub(crate) fn feature_depends_on(
+    id: &str,
+    add: Vec<String>,
+    remove: Vec<String>,
+) -> CmdResult {
+    let _lock = acquire_write_lock_typed()?;
+    let (_config, _, graph) = load_graph_typed()?;
+    let plan = feat::plan_depends_on_edit(&graph, id, &add, &remove)?;
+    if plan.is_changed() {
+        feat::apply_depends_on_edit(&plan)?;
+    }
+    let json = serde_json::json!({
+        "id": id,
+        "depends_on": plan.final_depends_on,
+        "added": plan.added,
+        "removed": plan.removed,
+        "changed": plan.is_changed(),
+    });
+    let mut text = format!(
+        "{} depends-on: [{}]",
+        id,
+        plan.final_depends_on.join(", ")
+    );
+    if !plan.added.is_empty() {
+        text.push_str(&format!("\n  added: {}", plan.added.join(", ")));
+    }
+    if !plan.removed.is_empty() {
+        text.push_str(&format!("\n  removed: {}", plan.removed.join(", ")));
+    }
+    if !plan.is_changed() {
+        text.push_str("\n  (no changes)");
+    }
+    Ok(Output::both(text, json))
+}

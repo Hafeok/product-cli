@@ -17,31 +17,75 @@ pub(super) fn all() -> Vec<ToolDef> {
 // Write tools: creating new artifacts
 fn create_tools() -> Vec<ToolDef> {
     vec![
-        ToolDef {
-            name: "product_feature_new".to_string(),
-            description: "Create a new feature file".to_string(),
-            requires_write: true,
-            input_schema: serde_json::json!({"type": "object", "properties": {"title": {"type": "string"}, "phase": {"type": "integer", "default": 1}}, "required": ["title"]}),
-        },
-        ToolDef {
-            name: "product_adr_new".to_string(),
-            description: "Create a new ADR file".to_string(),
-            requires_write: true,
-            input_schema: serde_json::json!({"type": "object", "properties": {"title": {"type": "string"}}, "required": ["title"]}),
-        },
-        ToolDef {
-            name: "product_test_new".to_string(),
-            description: "Create a new test criterion file".to_string(),
-            requires_write: true,
-            input_schema: serde_json::json!({"type": "object", "properties": {"title": {"type": "string"}, "test_type": {"type": "string", "default": "scenario"}}, "required": ["title"]}),
-        },
-        ToolDef {
-            name: "product_feature_link".to_string(),
-            description: "Link a feature to an ADR, test, or dependency".to_string(),
-            requires_write: true,
-            input_schema: serde_json::json!({"type": "object", "properties": {"id": {"type": "string"}, "adr": {"type": "string"}, "test": {"type": "string"}, "dep": {"type": "string"}}, "required": ["id"]}),
-        },
+        feature_new_tool(),
+        adr_new_tool(),
+        test_new_tool(),
+        feature_link_tool(),
+        feature_depends_on_tool(),
     ]
+}
+
+fn feature_new_tool() -> ToolDef {
+    ToolDef {
+        name: "product_feature_new".to_string(),
+        description: "Create a new feature file".to_string(),
+        requires_write: true,
+        input_schema: serde_json::json!({"type": "object", "properties": {"title": {"type": "string"}, "phase": {"type": "integer", "default": 1}}, "required": ["title"]}),
+    }
+}
+
+fn adr_new_tool() -> ToolDef {
+    ToolDef {
+        name: "product_adr_new".to_string(),
+        description: "Create a new ADR file".to_string(),
+        requires_write: true,
+        input_schema: serde_json::json!({"type": "object", "properties": {"title": {"type": "string"}}, "required": ["title"]}),
+    }
+}
+
+fn test_new_tool() -> ToolDef {
+    ToolDef {
+        name: "product_test_new".to_string(),
+        description: "Create a new test criterion file".to_string(),
+        requires_write: true,
+        input_schema: serde_json::json!({"type": "object", "properties": {"title": {"type": "string"}, "test_type": {"type": "string", "default": "scenario"}}, "required": ["title"]}),
+    }
+}
+
+fn feature_link_tool() -> ToolDef {
+    ToolDef {
+        name: "product_feature_link".to_string(),
+        description: "Link a feature to an ADR, test, dependency, or another feature (depends-on). Pass 'feature' for the lightweight one-shot depends-on add — the dedicated product_feature_depends_on tool is preferred for batch add/remove.".to_string(),
+        requires_write: true,
+        input_schema: serde_json::json!({
+            "type": "object",
+            "properties": {
+                "id": {"type": "string"},
+                "adr": {"type": "string"},
+                "test": {"type": "string"},
+                "dep": {"type": "string"},
+                "feature": {"type": "string", "description": "Feature ID to add to depends-on. Cycle-checked. Idempotent."}
+            },
+            "required": ["id"]
+        }),
+    }
+}
+
+fn feature_depends_on_tool() -> ToolDef {
+    ToolDef {
+        name: "product_feature_depends_on".to_string(),
+        description: "Add or remove `depends-on` feature links (FT-062). Idempotent add/remove with cycle detection (E003) and broken-link detection (E002).".to_string(),
+        requires_write: true,
+        input_schema: serde_json::json!({
+            "type": "object",
+            "properties": {
+                "id": {"type": "string", "description": "Feature ID — FT-NNN."},
+                "add": {"type": "array", "items": {"type": "string"}, "description": "Feature IDs to add."},
+                "remove": {"type": "array", "items": {"type": "string"}, "description": "Feature IDs to remove."}
+            },
+            "required": ["id"]
+        }),
+    }
 }
 
 // Write tools: domain edits on features and ADRs (FT-038)

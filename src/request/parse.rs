@@ -15,19 +15,33 @@ pub fn parse_request(path: &Path) -> Result<Request, Vec<Finding>> {
     parse_request_str(&content)
 }
 
+/// Closed set of recognised top-level request keys. Any other key surfaces
+/// as **E025 unknown-request-key** (FT-062).
+const KNOWN_TOP_LEVEL_KEYS: &[&str] = &[
+    "type",
+    "schema-version",
+    "reason",
+    "artifacts",
+    "changes",
+];
+
 pub fn parse_request_str(yaml: &str) -> Result<Request, Vec<Finding>> {
     let doc: Value = serde_yaml::from_str(yaml)
         .map_err(|e| vec![Finding::error("E001", format!("malformed YAML: {}", e), "$")])?;
     let map = doc.as_mapping().ok_or_else(|| {
         vec![Finding::error("E001", "request document must be a YAML mapping", "$")]
     })?;
-
-    let request_type = parse_type(map)?;
-    let schema_version = parse_schema_version(map)?;
+    // FT-062 — closed-set top-level key validation. Surface every offender
+    // in one pass so the caller doesn't ping-pong.
+    let mut unknown = check_unknown_top_level_keys(map);
+    let request_type = combine(&mut unknown, parse_type(map))?;
+    let schema_version = combine(&mut unknown, parse_schema_version(map))?;
     let reason = parse_reason(map);
-    let artifacts = parse_artifacts_array(map)?;
-    let changes = parse_changes_array(map)?;
-
+    let artifacts = combine(&mut unknown, parse_artifacts_array(map))?;
+    let changes = combine(&mut unknown, parse_changes_array(map))?;
+    if !unknown.is_empty() {
+        return Err(unknown);
+    }
     Ok(Request {
         request_type,
         schema_version,
@@ -36,6 +50,43 @@ pub fn parse_request_str(yaml: &str) -> Result<Request, Vec<Finding>> {
         changes,
         source_yaml: yaml.to_string(),
     })
+}
+
+/// Merge an accumulator of pending findings with a fallible parser result.
+/// On error, the parser's findings are appended to the accumulator and the
+/// combined list is returned as a single error.
+fn combine<T>(
+    pending: &mut Vec<Finding>,
+    result: Result<T, Vec<Finding>>,
+) -> Result<T, Vec<Finding>> {
+    match result {
+        Ok(v) => Ok(v),
+        Err(mut errs) => {
+            errs.append(pending);
+            Err(errs)
+        }
+    }
+}
+
+/// Emit **E025** for every top-level key not in `KNOWN_TOP_LEVEL_KEYS`.
+fn check_unknown_top_level_keys(map: &Mapping) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    for (k, _v) in map.iter() {
+        if let Some(name) = k.as_str() {
+            if !KNOWN_TOP_LEVEL_KEYS.contains(&name) {
+                findings.push(Finding::error(
+                    "E025",
+                    format!(
+                        "unknown top-level key '{}' in request — expected one of: {}",
+                        name,
+                        KNOWN_TOP_LEVEL_KEYS.join(", ")
+                    ),
+                    format!("$.{}", name),
+                ));
+            }
+        }
+    }
+    findings
 }
 
 fn parse_type(map: &Mapping) -> Result<RequestType, Vec<Finding>> {

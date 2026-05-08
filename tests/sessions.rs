@@ -149,3 +149,7 @@ mod st_702_ft057_exit_criteria;
 // FT-061 — MCP server and CLI honor `.product/config.toml` discovery
 #[path = "sessions/st_761_mcp_canonical_layout.rs"]
 mod st_761_mcp_canonical_layout;
+
+// FT-062 — MCP parity for feature `depends-on` and strict request shape validation
+#[path = "sessions/ft_062_depends_on_and_strict_validation.rs"]
+mod ft_062_depends_on_and_strict_validation;
