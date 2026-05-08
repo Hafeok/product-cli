@@ -182,6 +182,21 @@ pub enum ProductError {
         source: &'static str,
         reason: String,
     },
+    /// E027: --target NAME references a template that does not exist (FT-063)
+    UnknownTarget {
+        name: String,
+        available: Vec<String>,
+    },
+    /// E028: --for-llm and --target passed together (FT-063)
+    ConflictingTargetFlags,
+    /// E029: --reset NAME on a template that resolves only to a built-in (FT-063)
+    CannotResetBuiltin { name: String },
+    /// E030: template failed structural validation (FT-063)
+    InvalidTemplate {
+        name: String,
+        path: Option<PathBuf>,
+        reason: String,
+    },
     /// Configuration error
     ConfigError(String),
     /// Generic IO error
@@ -225,11 +240,42 @@ impl fmt::Display for ProductError {
                 "error[E024]: graph root not found\n   = supplied: {}\n   = source: {}\n   = reason: {}\n   = hint: pass --root <dir> or set PRODUCT_ROOT to a directory containing .product/",
                 supplied.display(), source, reason,
             ),
+            Self::UnknownTarget { .. }
+            | Self::ConflictingTargetFlags
+            | Self::CannotResetBuiltin { .. }
+            | Self::InvalidTemplate { .. } => render_ft063_template_error(f, self),
             Self::ConfigError(msg) => write!(f, "error: {}", msg),
             Self::IoError(msg) => write!(f, "error: {}", msg),
             Self::NotFound(msg) => write!(f, "error: not found — {}", msg),
             Self::Internal(msg) => write!(f, "internal error: {}\n  This is a bug in Product. Please report it.", msg),
         }
+    }
+}
+
+fn render_ft063_template_error(f: &mut fmt::Formatter<'_>, err: &ProductError) -> fmt::Result {
+    match err {
+        ProductError::UnknownTarget { name, available } => write!(
+            f,
+            "error[E027]: unknown context target {:?}\n   = available: {}\n   = hint: list templates with `product context templates`",
+            name, available.join(", "),
+        ),
+        ProductError::ConflictingTargetFlags => write!(
+            f,
+            "error[E028]: --for-llm and --target are mutually exclusive\n   = hint: --for-llm is a deprecated alias for --target claude-opus; use one or the other",
+        ),
+        ProductError::CannotResetBuiltin { name } => write!(
+            f,
+            "error[E029]: cannot reset built-in template {:?}\n   = hint: built-in templates ship with Product and are read-only; copy them with `product context templates --show {} > ~/.product/templates/{}.toml` to override",
+            name, name, name,
+        ),
+        ProductError::InvalidTemplate { name, path, reason } => {
+            writeln!(f, "error[E030]: invalid template {:?}", name)?;
+            if let Some(p) = path {
+                writeln!(f, "  --> {}", p.display())?;
+            }
+            write!(f, "   = {}", reason)
+        }
+        _ => unreachable!("render_ft063_template_error called with non-FT-063 variant"),
     }
 }
 

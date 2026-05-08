@@ -1219,3 +1219,43 @@
 - [x] TC-740: request accepts dot-notation on known head field (scenario) — passing
 - [x] TC-741: FT-062 exit criteria (exit-criteria) — passing
 
+### FT-063 — Per-Model Context Bundle Templates [x]
+
+- [x] ADR-049: Per-Model Context Bundle Templates as Data Files (accepted)
+- [x] ADR-006: Context Bundle as the Primary LLM Interface (accepted)
+- [x] ADR-013: Error Model and User-Facing Error Format (accepted)
+- [x] ADR-020: MCP Server — Dual Transport (stdio and HTTP) (accepted)
+- [x] ADR-043: Slice + Adapter Architecture for Command Handlers (accepted)
+- [x] ADR-047: Functional Specification Lives in Feature Body, Not a Separate Artifact (accepted)
+- [x] ADR-018: Testing Strategy — Property-Based, Session-Based, and LLM Benchmark (accepted)
+- [x] ADR-040: Unified Verify Pipeline and the LLM Boundary (accepted)
+- [x] ADR-041: Removal & Deprecation Verification — Absence TCs and ADR `removes`/`deprecates` Fields (accepted)
+- [x] ADR-042: TC Type System — Reserved Structural Types and Open Descriptive Types (accepted)
+- [x] ADR-048: Canonical Repository Layout — All Product State Under `.product/` (accepted)
+- [x] TC-742: template-toml-parses (scenario) — passing
+- [x] TC-743: template-validates-required-tables (scenario) — passing
+- [x] TC-744: template-validates-format-structure-value (scenario) — passing
+- [x] TC-745: template-validates-section-names (scenario) — passing
+- [x] TC-746: invalid-template-excluded-from-targets-list (scenario) — passing
+- [x] TC-747: template-resolution-repo-overrides-user (scenario) — passing
+- [x] TC-748: template-resolution-user-overrides-builtin (scenario) — passing
+- [x] TC-749: context-target-claude-opus-produces-xml (scenario) — passing
+- [x] TC-750: context-target-gpt-4-markdown-produces-markdown (scenario) — passing
+- [x] TC-751: context-target-gemini-yaml-produces-yaml (scenario) — passing
+- [x] TC-752: context-target-gpt-mini-json-produces-json (scenario) — passing
+- [x] TC-753: context-target-human-produces-markdown-no-framing (scenario) — passing
+- [x] TC-754: context-target-omits-sections-not-in-ordering-list (scenario) — passing
+- [x] TC-755: context-target-orders-sections-as-template-specifies (scenario) — passing
+- [x] TC-756: context-target-respects-deliverables-at-top (scenario) — passing
+- [x] TC-757: default-target-from-product-toml (scenario) — passing
+- [x] TC-758: default-target-fallback-to-human (scenario) — passing
+- [x] TC-759: templates-list-shows-all-resolved-templates (scenario) — passing
+- [x] TC-760: templates-list-where-shows-resolution-path (scenario) — passing
+- [x] TC-761: templates-show-prints-template-toml (scenario) — passing
+- [x] TC-762: templates-reset-removes-user-override (scenario) — passing
+- [x] TC-763: templates-reset-cannot-touch-builtin (scenario) — passing
+- [x] TC-764: mcp-context-target-parameter (scenario) — passing
+- [x] TC-765: mcp-context-output-includes-format-and-target (scenario) — passing
+- [x] TC-766: for-llm-flag-is-deprecated-alias-for-target (scenario) — passing
+- [x] TC-767: FT-063 exit criteria (exit-criteria) — passing
+

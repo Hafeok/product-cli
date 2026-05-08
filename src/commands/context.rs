@@ -1,60 +1,133 @@
-//! Context bundle assembly for LLM agents.
+//! Context bundle assembly for LLM agents — `--target` selection (FT-063),
+//! template management, and the legacy measurement path.
 
-use product_lib::{context, context::summary as bundle_summary, error::ProductError, fileops, parser, types};
+use product_lib::{
+    context::{self, summary as bundle_summary, template},
+    error::ProductError,
+    fileops, parser, types,
+};
 use std::path::Path;
 use std::process;
 
 use super::{load_graph, BoxResult};
 
-pub(crate) fn handle_context(
-    id: Option<&str>,
-    depth: usize,
-    phase: Option<u32>,
-    adrs_only: bool,
-    order: Option<String>,
-    measure: bool,
-    measure_all: bool,
-) -> BoxResult {
-    let (config, root, graph) = load_graph()?;
-    let order_by_centrality = order.as_deref() != Some("id");
+mod templates;
 
-    // --measure-all takes precedence: measure every feature, print summary only.
-    if measure_all {
-        return handle_measure_all(&config, &root, &graph, depth, order_by_centrality);
+pub(crate) struct ContextArgs<'a> {
+    pub id: Option<&'a str>,
+    pub depth: usize,
+    pub phase: Option<u32>,
+    pub adrs_only: bool,
+    pub order: Option<String>,
+    pub measure: bool,
+    pub measure_all: bool,
+    pub target: Option<String>,
+    pub for_llm: bool,
+    pub show: Option<String>,
+    pub where_flag: bool,
+    pub reset: Option<String>,
+}
+
+pub(crate) fn handle_context(args: ContextArgs<'_>) -> BoxResult {
+    if is_templates_cmd(&args) {
+        return templates::dispatch(args.show, args.where_flag, args.reset);
     }
-
-    // Without --measure-all, `id` is required.
-    let id = match id {
+    let (config, root, graph) = load_graph()?;
+    let order_by_centrality = args.order.as_deref() != Some("id");
+    if args.measure_all {
+        return handle_measure_all(&config, &root, &graph, args.depth, order_by_centrality);
+    }
+    let id = match args.id {
         Some(v) => v,
         None => {
             eprintln!("error: the ID argument is required unless --measure-all is passed");
             process::exit(2);
         }
     };
-
-    // Build product info for bundle header (FT-039)
-    let product_info = config.responsibility().map(|resp| {
-        context::BundleProductInfo {
-            product_name: config.product_name(),
-            responsibility: resp,
-        }
-    });
-
-    if let Some(p) = phase {
-        let bundle = context::bundle_phase(&graph, p, depth, adrs_only, order_by_centrality);
+    if args.for_llm && args.target.is_some() {
+        eprintln!("{}", ProductError::ConflictingTargetFlags);
+        process::exit(1);
+    }
+    let effective_target = resolve_effective_target(&args, &config, &graph, id);
+    if let Some(p) = args.phase {
+        let bundle =
+            context::bundle_phase(&graph, p, args.depth, args.adrs_only, order_by_centrality);
         print!("{}", bundle);
-    } else if graph.features.contains_key(id) {
-        match context::bundle_feature_with_product(&graph, id, depth, order_by_centrality, product_info) {
+        return Ok(());
+    }
+    render_artifact(
+        &args,
+        &config,
+        &root,
+        &graph,
+        id,
+        order_by_centrality,
+        effective_target,
+    )
+}
+
+fn is_templates_cmd(args: &ContextArgs<'_>) -> bool {
+    args.id == Some("templates")
+        || args.show.is_some()
+        || args.where_flag
+        || args.reset.is_some()
+}
+
+/// Resolve the effective target name.
+///
+/// When `--target` is unset and `[context].default-target` is unset in
+/// product.toml, return `None` — that triggers the legacy bundle renderer,
+/// which produces the AISP-framed output pre-FT-063 callers rely on. An
+/// explicit `--target NAME` (or a configured `default-target`) opts into
+/// per-model template rendering.
+fn resolve_effective_target(
+    args: &ContextArgs<'_>,
+    config: &product_lib::config::ProductConfig,
+    graph: &product_lib::graph::KnowledgeGraph,
+    id: &str,
+) -> Option<String> {
+    if args.for_llm {
+        eprintln!("Note: --for-llm is a deprecated alias for --target claude-opus.");
+        eprintln!("      Update your scripts to use --target NAME explicitly.");
+        return Some("claude-opus".to_string());
+    }
+    if let Some(t) = args.target.clone() {
+        return Some(t);
+    }
+    if !graph.adrs.contains_key(id) && args.phase.is_none() {
+        return config.context.default_target.clone();
+    }
+    None
+}
+
+fn render_artifact(
+    args: &ContextArgs<'_>,
+    config: &product_lib::config::ProductConfig,
+    root: &Path,
+    graph: &product_lib::graph::KnowledgeGraph,
+    id: &str,
+    order_by_centrality: bool,
+    effective_target: Option<String>,
+) -> BoxResult {
+    let product_info = config.responsibility().map(|resp| context::BundleProductInfo {
+        product_name: config.product_name(),
+        responsibility: resp,
+    });
+    if graph.features.contains_key(id) {
+        if let Some(target_name) = effective_target {
+            return render_with_template(root, graph, id, args.depth, &target_name, config);
+        }
+        match context::bundle_feature_with_product(graph, id, args.depth, order_by_centrality, product_info) {
             Some(bundle) => {
-                if measure {
-                    measure_and_write(id, &graph, &bundle, &root)?;
+                if args.measure {
+                    measure_and_write(id, graph, &bundle, root)?;
                 }
                 print!("{}", bundle);
             }
             None => eprintln!("Feature {} not found", id),
         }
     } else if graph.adrs.contains_key(id) {
-        match context::bundle_adr(&graph, id, depth) {
+        match context::bundle_adr(graph, id, args.depth) {
             Some(bundle) => print!("{}", bundle),
             None => eprintln!("ADR {} not found", id),
         }
@@ -62,6 +135,56 @@ pub(crate) fn handle_context(
         eprintln!("Artifact {} not found", id);
         process::exit(1);
     }
+    Ok(())
+}
+
+fn render_with_template(
+    root: &Path,
+    graph: &product_lib::graph::KnowledgeGraph,
+    feature_id: &str,
+    depth: usize,
+    target: &str,
+    config: &product_lib::config::ProductConfig,
+) -> BoxResult {
+    let outcome = template::resolve_all(root);
+    let resolved = match outcome.resolved.get(target) {
+        Some(t) => t.clone(),
+        None => {
+            let mut available: Vec<String> = outcome.resolved.keys().cloned().collect();
+            available.sort();
+            eprintln!(
+                "{}",
+                ProductError::UnknownTarget {
+                    name: target.to_string(),
+                    available,
+                }
+            );
+            process::exit(1);
+        }
+    };
+    let pi = config.responsibility().map(|resp| template::ProductInfo {
+        name: config.product_name(),
+        responsibility: resp,
+    });
+    let rendered = match template::render_feature(graph, feature_id, depth, &resolved, pi) {
+        Some(r) => r,
+        None => {
+            eprintln!("Feature {} not found", feature_id);
+            process::exit(1);
+        }
+    };
+    if rendered.exceeded_hard_max {
+        eprintln!(
+            "warning: bundle ({} approx tokens) exceeds template hard_max",
+            rendered.token_count_approx,
+        );
+    } else if rendered.exceeded_target_max {
+        eprintln!(
+            "note: bundle ({} approx tokens) exceeds template target_max",
+            rendered.token_count_approx,
+        );
+    }
+    print!("{}", rendered.content);
     Ok(())
 }
 
@@ -76,15 +199,11 @@ fn measure_and_write(
         .features
         .get(id)
         .ok_or_else(|| ProductError::NotFound(format!("feature {}", id)))?;
-
-    // Count depth-1 ADRs (only direct ADRs)
     let depth_1_adrs = feature.front.adrs.len();
     let tcs = feature.front.tests.len();
     let domains = feature.front.domains.clone();
-    // Approximate token count: ~4 chars per token is a reasonable estimate
     let tokens_approx = bundle.len() / 4;
     let measured_at = chrono::Utc::now().to_rfc3339();
-
     let bundle_metrics = types::BundleMetrics {
         depth_1_adrs,
         tcs,
@@ -92,14 +211,11 @@ fn measure_and_write(
         tokens_approx,
         measured_at: measured_at.clone(),
     };
-
-    // Update feature front-matter with bundle metrics
     let mut front = feature.front.clone();
     front.bundle = Some(bundle_metrics.clone());
     let content = parser::render_feature(&front, &feature.body);
     fileops::write_file_atomic(&feature.path, &content)?;
 
-    // Append to metrics.jsonl
     let metrics_path = root.join("metrics.jsonl");
     let entry = serde_json::json!({
         "feature": id,
@@ -116,12 +232,9 @@ fn measure_and_write(
         .append(true)
         .open(&metrics_path)?;
     std::io::Write::write_all(&mut file, line.as_bytes())?;
-
     Ok(())
 }
 
-/// FT-040: measure every feature in ID order, then print the aggregate
-/// summary table. Bundle content is suppressed (not printed to stdout).
 fn handle_measure_all(
     config: &product_lib::config::ProductConfig,
     root: &Path,
@@ -129,20 +242,13 @@ fn handle_measure_all(
     depth: usize,
     order_by_centrality: bool,
 ) -> BoxResult {
-    // Build product info once for all bundles (FT-039)
-    let product_info = config.responsibility().map(|resp| {
-        context::BundleProductInfo {
-            product_name: config.product_name(),
-            responsibility: resp,
-        }
+    let product_info = config.responsibility().map(|resp| context::BundleProductInfo {
+        product_name: config.product_name(),
+        responsibility: resp,
     });
-
-    // Iterate features in ID order.
     let mut feature_ids: Vec<&String> = graph.features.keys().collect();
     feature_ids.sort();
-
     for fid in &feature_ids {
-        // Build a fresh product_info each iteration (borrow of config).
         let pi = product_info.as_ref().map(|p| context::BundleProductInfo {
             product_name: p.product_name,
             responsibility: p.responsibility,
@@ -153,8 +259,6 @@ fn handle_measure_all(
             }
         }
     }
-
-    // Reload graph so the bundle summary reflects the freshly-written metrics.
     let (config2, _, graph2) = load_graph()?;
     let summary = bundle_summary::compute_summary(&graph2, &config2);
     print!("{}", bundle_summary::render_summary(&summary));

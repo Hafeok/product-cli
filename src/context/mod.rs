@@ -1,6 +1,7 @@
 //! Context bundle assembly (ADR-006, ADR-012, ADR-025)
 
 pub mod summary;
+pub mod template;
 
 use crate::formal;
 use crate::graph::KnowledgeGraph;

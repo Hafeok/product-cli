@@ -1,0 +1,33 @@
+schema_version = 1
+
+[template]
+name = "gpt-4-markdown"
+description = "Markdown bundle for GPT-4o / GPT-4 Turbo (128K context)"
+target_model = "gpt-4o"
+context_window = 128000
+
+[format]
+structure = "markdown"
+content_format = "markdown"
+
+[format.markdown]
+heading_levels = "h2-h3"
+table_format = "github"
+
+[ordering]
+sections = [
+  "feature",
+  "governing_adrs",
+  "test_criteria",
+  "dependencies",
+  "deliverables",
+  "constraints",
+]
+deliverables_at_top = false
+critical_first = false
+adrs_ordered_by = "centrality"
+tcs_ordered_by = "type"
+
+[token_budget]
+target_max = 100000
+hard_max = 128000

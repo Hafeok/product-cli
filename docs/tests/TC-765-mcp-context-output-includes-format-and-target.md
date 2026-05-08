@@ -2,14 +2,17 @@
 id: TC-765
 title: mcp-context-output-includes-format-and-target
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
+  features:
+  - FT-063
   adrs:
   - ADR-049
 phase: 1
 runner: cargo-test
 runner-args: tc_765_mcp_context_output_includes_format_and_target
+last-run: 2026-05-08T12:14:59.128626357+00:00
+last-run-duration: 0.3s
 ---
 
 ## Scenario — `mcp-context-output-includes-format-and-target`

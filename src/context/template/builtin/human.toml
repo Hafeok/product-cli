@@ -1,0 +1,31 @@
+schema_version = 1
+
+[template]
+name = "human"
+description = "Terminal-readable Markdown — no LLM framing"
+target_model = "human-readable"
+context_window = 0
+
+[format]
+structure = "plain"
+content_format = "markdown"
+
+[format.markdown]
+heading_levels = "h2-h3"
+table_format = "github"
+
+[ordering]
+sections = [
+  "feature",
+  "governing_adrs",
+  "dependencies",
+  "test_criteria",
+]
+deliverables_at_top = false
+critical_first = false
+adrs_ordered_by = "centrality"
+tcs_ordered_by = "type"
+
+[token_budget]
+target_max = 0
+hard_max = 0

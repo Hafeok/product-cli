@@ -1,7 +1,7 @@
 ---
 id: ADR-049
 title: Per-Model Context Bundle Templates as Data Files
-status: proposed
+status: accepted
 features: []
 supersedes: []
 superseded-by: []
@@ -9,6 +9,7 @@ domains:
 - api
 - observability
 scope: cross-cutting
+content-hash: sha256:d301365ce79df7402f8a5469223b76196bafb1325b5c162044f5f1c265639af3
 ---
 
 **Status:** Proposed

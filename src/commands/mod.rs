@@ -11,6 +11,7 @@ mod completions;
 mod context;
 mod cycle_times;
 mod dep;
+mod dispatch;
 mod drift;
 mod drift_diff;
 mod feature;
@@ -91,7 +92,7 @@ pub enum Commands {
     },
     /// Assemble context bundles for LLM agents
     Context {
-        /// Feature or ADR ID to bundle (not required with --measure-all)
+        /// Feature or ADR ID, OR the literal "templates" subcommand
         #[arg(required_unless_present = "measure_all")]
         id: Option<String>,
         /// BFS traversal depth (default: 1)
@@ -112,6 +113,21 @@ pub enum Commands {
         /// Measure every feature in one pass, printing only the aggregate summary
         #[arg(long = "measure-all")]
         measure_all: bool,
+        /// Per-model template name (FT-063); falls back to [context].default-target
+        #[arg(long, value_name = "NAME")]
+        target: Option<String>,
+        /// Deprecated alias for --target claude-opus (FT-063)
+        #[arg(long = "for-llm")]
+        for_llm: bool,
+        /// `templates --show NAME` — print template TOML to stdout
+        #[arg(long, value_name = "NAME")]
+        show: Option<String>,
+        /// `templates --where` — show resolution path for each template
+        #[arg(long = "where")]
+        where_flag: bool,
+        /// `templates --reset NAME` — remove user override
+        #[arg(long, value_name = "NAME")]
+        reset: Option<String>,
     },
     /// Historical cycle times (FT-054, ADR-046)
     CycleTimes {
@@ -335,56 +351,5 @@ type BoxResult = Result<(), Box<dyn std::error::Error>>;
 
 pub fn run(command: Commands, format: &str, cli_command: &mut clap::Command) -> BoxResult {
     shared::run_startup_hooks()?;
-    dispatch(command, format, cli_command)
-}
-
-fn dispatch(command: Commands, fmt: &str, cli_command: &mut clap::Command) -> BoxResult {
-    match command {
-        Commands::Adr { command } => adr::handle_adr(command, fmt),
-        Commands::AgentInit { watch } => agent_init::handle_agent_init(watch),
-        Commands::Author { command } => author::handle_author(command),
-        Commands::Checklist { command } => checklist::handle_checklist(command),
-        Commands::Completions { shell } => completions::handle_completions(&shell, cli_command),
-        Commands::Context { id, depth, phase, adrs_only, order, measure, measure_all } =>
-            context::handle_context(id.as_deref(), depth, phase, adrs_only, order, measure, measure_all),
-        Commands::CycleTimes { recent, phase, in_progress, format } => dispatch_cycle_times(recent, phase, in_progress, format, fmt),
-        Commands::Dep { command } => dep::handle_dep(command, fmt),
-        Commands::Drift { command } => drift::handle_drift(command, fmt),
-        Commands::Feature { command } => feature::handle_feature(command, fmt),
-        Commands::Forecast { id, phase, naive, sample_size } => cycle_times::handle_forecast(id.as_deref(), phase, naive, sample_size, fmt),
-        Commands::Gap { command } => gap::handle_gap(command, fmt),
-        Commands::Graph { command } => graph_cmd::handle_graph(command, fmt),
-        Commands::Hash { command } => hash::handle_hash(command),
-        Commands::Impact { id } => render(status::handle_impact(&id, fmt), fmt),
-        Commands::Implement { id, dry_run, no_verify, headless } => implement::handle_implement(&id, dry_run, no_verify, headless),
-        Commands::Init { yes, force, name, description, domains, port, write_tools, legacy_layout, path } => init::handle_init(yes, force, name, description, domains, port, write_tools, legacy_layout, path),
-        Commands::InstallHooks => hooks::handle_install_hooks(),
-        Commands::Mcp { http, port, bind, token, repo, write } => mcp_cmd::handle_mcp(http, port, &bind, token, repo, write),
-        Commands::Metrics { command } => metrics_cmd::handle_metrics(command),
-        Commands::Migrate { command } => migrate::handle_migrate(command),
-        Commands::Onboard { command } => onboard::handle_onboard(command),
-        Commands::Preflight { id } => preflight::handle_preflight(&id),
-        Commands::Prompts { command } => prompts_cmd::handle_prompts(command),
-        Commands::Request { command } => request_cmd::handle_request(command, fmt),
-        Commands::Schema { artifact_type, type_flag, all } => schema::handle_schema(type_flag.or(artifact_type), all),
-        Commands::Status { phase, untested, failing } => render(status::handle_status(phase, untested, failing, fmt), fmt),
-        Commands::Tags { command } => tags::handle_tags(command, fmt),
-        Commands::Test { command } => test_cmd::handle_test(command, fmt),
-        Commands::Verify { id, platform, skip_adr_check, phase, ci } =>
-            implement::handle_verify(id.as_deref(), platform, skip_adr_check, phase, ci, fmt),
-    }
-}
-
-fn dispatch_cycle_times(
-    recent: Option<usize>,
-    phase: Option<u32>,
-    in_progress: bool,
-    format_flag: Option<String>,
-    fmt: &str,
-) -> BoxResult {
-    let effective_fmt = format_flag.as_deref().unwrap_or(fmt);
-    render(
-        cycle_times::handle_cycle_times(recent, phase, in_progress, effective_fmt),
-        effective_fmt,
-    )
+    dispatch::dispatch(command, format, cli_command)
 }

@@ -2,14 +2,17 @@
 id: TC-756
 title: context-target-respects-deliverables-at-top
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
+  features:
+  - FT-063
   adrs:
   - ADR-049
 phase: 1
 runner: cargo-test
 runner-args: tc_756_context_target_respects_deliverables_at_top
+last-run: 2026-05-08T12:14:59.128626357+00:00
+last-run-duration: 0.4s
 ---
 
 ## Scenario — `context-target-respects-deliverables-at-top`

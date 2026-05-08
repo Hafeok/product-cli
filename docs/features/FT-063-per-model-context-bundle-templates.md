@@ -2,7 +2,7 @@
 id: FT-063
 title: Per-Model Context Bundle Templates
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-011
 - FT-027

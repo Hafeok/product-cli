@@ -1,0 +1,31 @@
+schema_version = 1
+
+[template]
+name = "gemini-yaml"
+description = "YAML bundle for Gemini 2.5 Pro (1M context window)"
+target_model = "gemini-2.5-pro"
+context_window = 1000000
+
+[format]
+structure = "yaml"
+content_format = "markdown"
+
+[ordering]
+sections = [
+  "task",
+  "feature",
+  "deliverables",
+  "governing_adrs",
+  "test_criteria",
+  "dependencies",
+  "constraints",
+  "bundle_metrics",
+]
+deliverables_at_top = true
+critical_first = true
+adrs_ordered_by = "centrality"
+tcs_ordered_by = "type"
+
+[token_budget]
+target_max = 200000
+hard_max = 1000000

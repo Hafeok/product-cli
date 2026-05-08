@@ -2,14 +2,17 @@
 id: TC-755
 title: context-target-orders-sections-as-template-specifies
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
+  features:
+  - FT-063
   adrs:
   - ADR-049
 phase: 1
 runner: cargo-test
 runner-args: tc_755_context_target_orders_sections_as_template_specifies
+last-run: 2026-05-08T12:14:59.128626357+00:00
+last-run-duration: 0.4s
 ---
 
 ## Scenario — `context-target-orders-sections-as-template-specifies`

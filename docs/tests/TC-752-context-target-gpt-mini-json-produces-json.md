@@ -2,14 +2,17 @@
 id: TC-752
 title: context-target-gpt-mini-json-produces-json
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
+  features:
+  - FT-063
   adrs:
   - ADR-049
 phase: 1
 runner: cargo-test
 runner-args: tc_752_context_target_gpt_mini_json_produces_json
+last-run: 2026-05-08T12:14:59.128626357+00:00
+last-run-duration: 0.4s
 ---
 
 ## Scenario — `context-target-gpt-mini-json-produces-json`

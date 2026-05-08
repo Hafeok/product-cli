@@ -135,7 +135,7 @@ fn dispatch_tool(
 ) -> Result<Value, String> {
     match name {
         "product_responsibility" => read_handlers::handle_responsibility(repo_root),
-        "product_context" => read_handlers::handle_context(args, graph),
+        "product_context" => read_handlers::handle_context(args, graph, repo_root),
         "product_feature_list" => read_handlers::handle_feature_list(graph),
         "product_feature_show" => read_handlers::handle_feature_show(args, graph),
         "product_feature_deps" => read_handlers::handle_feature_deps(args, graph),

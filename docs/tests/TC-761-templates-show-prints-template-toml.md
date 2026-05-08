@@ -2,14 +2,17 @@
 id: TC-761
 title: templates-show-prints-template-toml
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
+  features:
+  - FT-063
   adrs:
   - ADR-049
 phase: 1
 runner: cargo-test
 runner-args: tc_761_templates_show_prints_template_toml
+last-run: 2026-05-08T12:14:59.128626357+00:00
+last-run-duration: 0.3s
 ---
 
 ## Scenario — `templates-show-prints-template-toml`

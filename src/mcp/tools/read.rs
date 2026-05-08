@@ -31,9 +31,17 @@ fn feature_tools() -> Vec<ToolDef> {
     vec![
         ToolDef {
             name: "product_context".to_string(),
-            description: "Assemble a context bundle for a feature or ADR".to_string(),
+            description: "Assemble a context bundle for a feature or ADR. Pass `target` to render through a per-model template (FT-063).".to_string(),
             requires_write: false,
-            input_schema: serde_json::json!({"type": "object", "properties": {"id": {"type": "string"}, "depth": {"type": "integer", "default": 1}}, "required": ["id"]}),
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string"},
+                    "depth": {"type": "integer", "default": 1},
+                    "target": {"type": "string", "description": "Per-model template name (e.g. claude-opus, gpt-4-markdown). Falls back to [context].default-target."}
+                },
+                "required": ["id"]
+            }),
         },
         ToolDef {
             name: "product_feature_list".to_string(),

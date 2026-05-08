@@ -17,17 +17,74 @@ pub(crate) fn handle_responsibility(repo_root: &Path) -> Result<Value, String> {
     }
 }
 
-pub(crate) fn handle_context(args: &Value, graph: &KnowledgeGraph) -> Result<Value, String> {
+pub(crate) fn handle_context(
+    args: &Value,
+    graph: &KnowledgeGraph,
+    repo_root: &Path,
+) -> Result<Value, String> {
     let id = args.get("id").and_then(|v| v.as_str()).unwrap_or_default();
     let depth = args.get("depth").and_then(|v| v.as_u64()).unwrap_or(1) as usize;
-    let bundle = if graph.features.contains_key(id) {
-        crate::context::bundle_feature(graph, id, depth, true)
-    } else {
-        crate::context::bundle_adr(graph, id, depth)
-    };
+    let explicit_target = args.get("target").and_then(|v| v.as_str()).map(|s| s.to_string());
+
+    // Feature path with target template (FT-063).
+    //
+    // When `target` is supplied OR `[context].default-target` is set, render
+    // through the per-model template renderer. When neither is set, fall back
+    // to the legacy AISP-framed bundle for backward compatibility with
+    // pre-FT-063 MCP consumers.
+    if graph.features.contains_key(id) {
+        let config = crate::config::ProductConfig::load_from_root(repo_root)
+            .map_err(|e| format!("{}", e))?;
+        let target_name: Option<String> =
+            explicit_target.or_else(|| config.context.default_target.clone());
+        if let Some(target_name) = target_name {
+            let outcome = crate::context::template::resolve_all(repo_root);
+            let resolved = match outcome.resolved.get(&target_name) {
+                Some(t) => t.clone(),
+                None => {
+                    let mut available: Vec<String> = outcome.resolved.keys().cloned().collect();
+                    available.sort();
+                    return Err(format!(
+                        "error[E027]: unknown context target {:?}; available: {}",
+                        target_name,
+                        available.join(", "),
+                    ));
+                }
+            };
+            let pi = config.responsibility().map(|resp| crate::context::template::ProductInfo {
+                name: config.product_name(),
+                responsibility: resp,
+            });
+            let rendered = crate::context::template::render_feature(graph, id, depth, &resolved, pi)
+                .ok_or_else(|| format!("Feature {} not found", id))?;
+            return Ok(serde_json::json!({
+                "format": rendered.format,
+                "target": rendered.target,
+                "content": rendered.content,
+                "token_count_approx": rendered.token_count_approx,
+                "exceeded_target_max": rendered.exceeded_target_max,
+                "exceeded_hard_max": rendered.exceeded_hard_max,
+                "type": "text",
+            }));
+        }
+        // Legacy fallback: AISP-framed bundle.
+        let pi = config.responsibility().map(|resp| crate::context::BundleProductInfo {
+            product_name: config.product_name(),
+            responsibility: resp,
+        });
+        let bundle = crate::context::bundle_feature_with_product(graph, id, depth, true, pi)
+            .ok_or_else(|| format!("Feature {} not found", id))?;
+        return Ok(serde_json::json!({
+            "content": bundle,
+            "type": "text",
+        }));
+    }
+
+    // ADR fallback (legacy bundle).
+    let bundle = crate::context::bundle_adr(graph, id, depth);
     Ok(serde_json::json!({
         "content": bundle.unwrap_or_default(),
-        "type": "text"
+        "type": "text",
     }))
 }
 

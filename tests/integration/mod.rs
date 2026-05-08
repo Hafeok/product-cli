@@ -20038,3 +20038,464 @@ fn tc_724_ft_059_exit_criteria() {
     // and the runner_required predicate. This exit-criteria gate composes
     // those signals into a single function the verify pipeline can call.
 }
+
+// ===========================================================================
+// FT-063: Per-Model Context Bundle Templates (TC-742..TC-767)
+// ===========================================================================
+
+/// Build a minimal harness with one feature so the templates subcommand and
+/// `product context FT-001 --target NAME` flow have something to render.
+fn ft063_fixture() -> Harness {
+    fixture_minimal()
+}
+
+/// Write a custom template into the repo or user dir and return its path.
+fn ft063_write_template(h: &Harness, dir: &str, name: &str, body: &str) -> std::path::PathBuf {
+    let rel = format!("{}/{}.toml", dir, name);
+    h.write(&rel, body);
+    h.dir.path().join(&rel)
+}
+
+const FT063_VALID_TOML: &str = r#"schema_version = 1
+[template]
+name = "sample"
+description = "Sample template for tests"
+[format]
+structure = "markdown"
+[ordering]
+sections = ["task", "feature"]
+"#;
+
+#[test]
+fn tc_742_template_toml_parses() {
+    let h = ft063_fixture();
+    ft063_write_template(&h, ".product/templates", "sample", FT063_VALID_TOML);
+    let out = h.run(&["context", "templates"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("sample");
+}
+
+#[test]
+fn tc_743_template_validates_required_tables() {
+    let h = ft063_fixture();
+    // Missing [ordering] table.
+    let bad = r#"schema_version = 1
+[template]
+name = "broken"
+[format]
+structure = "markdown"
+"#;
+    ft063_write_template(&h, ".product/templates", "broken", bad);
+    let out = h.run(&["context", "templates"]);
+    // Invalid templates are warnings, not hard errors — exit 0 with warnings.
+    assert!(
+        out.exit_code == 0 || out.exit_code == 2,
+        "expected non-error exit, got {} stderr={}",
+        out.exit_code,
+        out.stderr
+    );
+    assert!(
+        out.stderr.contains("E030") || out.stderr.contains("invalid template"),
+        "expected E030 warning on stderr, got: {}",
+        out.stderr
+    );
+    assert!(!out.stdout.contains("broken"));
+}
+
+#[test]
+fn tc_744_template_validates_format_structure_value() {
+    let h = ft063_fixture();
+    let bad = r#"schema_version = 1
+[template]
+name = "bad-structure"
+[format]
+structure = "toml"
+[ordering]
+sections = ["task"]
+"#;
+    ft063_write_template(&h, ".product/templates", "bad-structure", bad);
+    let out = h.run(&["context", "templates"]);
+    assert!(
+        out.stderr.contains("E030") || out.stderr.contains("structure"),
+        "expected E030 on bad structure, got: {}",
+        out.stderr
+    );
+    assert!(!out.stdout.contains("bad-structure"));
+}
+
+#[test]
+fn tc_745_template_validates_section_names() {
+    let h = ft063_fixture();
+    let bad = r#"schema_version = 1
+[template]
+name = "bad-section"
+[format]
+structure = "markdown"
+[ordering]
+sections = ["task", "meta", "feature"]
+"#;
+    ft063_write_template(&h, ".product/templates", "bad-section", bad);
+    let out = h.run(&["context", "templates"]);
+    assert!(
+        out.stderr.contains("E030") || out.stderr.contains("meta"),
+        "expected E030 on unknown section, got: {}",
+        out.stderr
+    );
+    assert!(!out.stdout.contains("bad-section"));
+}
+
+#[test]
+fn tc_746_invalid_template_excluded_from_targets_list() {
+    let h = ft063_fixture();
+    let good = r#"schema_version = 1
+[template]
+name = "good"
+description = "Good template"
+[format]
+structure = "markdown"
+[ordering]
+sections = ["task", "feature"]
+"#;
+    ft063_write_template(&h, ".product/templates", "good", good);
+    let bad = r#"schema_version = 1
+[template]
+name = "bad"
+[format]
+structure = "markdown"
+"#;
+    ft063_write_template(&h, ".product/templates", "bad", bad);
+    let out = h.run(&["context", "templates"]);
+    out.assert_stdout_contains("good");
+    // The repo-local "bad" template must not be in the list.
+    let lines: Vec<&str> = out.stdout.lines().collect();
+    let has_bad = lines.iter().any(|l| l.starts_with("bad "));
+    assert!(!has_bad, "'bad' template should be excluded; got:\n{}", out.stdout);
+    assert!(out.stderr.contains("E030") || out.stderr.contains("invalid template"));
+}
+
+#[test]
+fn tc_747_template_resolution_repo_overrides_user() {
+    let h = ft063_fixture();
+    // Use HOME set to harness dir so we can place a "user" template.
+    let user_dir = h.dir.path().join("home").join(".product").join("templates");
+    std::fs::create_dir_all(&user_dir).expect("mkdir user");
+    let user_toml = r#"schema_version = 1
+[template]
+name = "claude-opus"
+description = "USER OVERRIDE"
+[format]
+structure = "markdown"
+[ordering]
+sections = ["task", "feature"]
+"#;
+    std::fs::write(user_dir.join("claude-opus.toml"), user_toml).expect("write user");
+    let repo_toml = r#"schema_version = 1
+[template]
+name = "claude-opus"
+description = "REPO OVERRIDE"
+[format]
+structure = "markdown"
+[ordering]
+sections = ["task", "feature"]
+"#;
+    ft063_write_template(&h, ".product/templates", "claude-opus", repo_toml);
+    let home = h.dir.path().join("home");
+    let out = h.run_with_env(&["context", "templates"], &[("HOME", &home.display().to_string())]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("REPO OVERRIDE");
+    assert!(!out.stdout.contains("USER OVERRIDE"));
+}
+
+#[test]
+fn tc_748_template_resolution_user_overrides_builtin() {
+    let h = ft063_fixture();
+    let user_dir = h.dir.path().join("home").join(".product").join("templates");
+    std::fs::create_dir_all(&user_dir).expect("mkdir user");
+    let user_toml = r#"schema_version = 1
+[template]
+name = "claude-opus"
+description = "USER OVERRIDE"
+[format]
+structure = "markdown"
+[ordering]
+sections = ["task", "feature"]
+"#;
+    std::fs::write(user_dir.join("claude-opus.toml"), user_toml).expect("write user");
+    let home = h.dir.path().join("home");
+    let out = h.run_with_env(&["context", "templates"], &[("HOME", &home.display().to_string())]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("USER OVERRIDE");
+    let where_out = h.run_with_env(&["context", "templates", "--where"], &[("HOME", &home.display().to_string())]);
+    assert!(where_out.stdout.contains("USER OVERRIDE") || where_out.stdout.contains("home/.product/templates"));
+}
+
+#[test]
+fn tc_749_context_target_claude_opus_produces_xml() {
+    let h = ft063_fixture();
+    let out = h.run(&["context", "FT-001", "--target", "claude-opus"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("<context_bundle");
+    out.assert_stdout_contains("</context_bundle>");
+    out.assert_stdout_contains("<feature>");
+}
+
+#[test]
+fn tc_750_context_target_gpt_4_markdown_produces_markdown() {
+    let h = ft063_fixture();
+    let out = h.run(&["context", "FT-001", "--target", "gpt-4-markdown"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("# Context Bundle");
+    out.assert_stdout_contains("## Feature");
+    assert!(!out.stdout.contains("<context_bundle"));
+}
+
+#[test]
+fn tc_751_context_target_gemini_yaml_produces_yaml() {
+    let h = ft063_fixture();
+    let out = h.run(&["context", "FT-001", "--target", "gemini-yaml"]);
+    out.assert_exit(0);
+    let parsed: Result<serde_yaml::Value, _> = serde_yaml::from_str(&out.stdout);
+    assert!(parsed.is_ok(), "stdout must be valid YAML, got:\n{}", out.stdout);
+    let v = parsed.expect("yaml");
+    assert!(v.get("target").is_some(), "yaml top-level needs 'target'");
+}
+
+#[test]
+fn tc_752_context_target_gpt_mini_json_produces_json() {
+    let h = ft063_fixture();
+    let out = h.run(&["context", "FT-001", "--target", "gpt-mini-json"]);
+    out.assert_exit(0);
+    let parsed: Result<serde_json::Value, _> = serde_json::from_str(&out.stdout);
+    assert!(parsed.is_ok(), "stdout must be valid JSON, got:\n{}", out.stdout);
+    let v = parsed.expect("json");
+    assert_eq!(v["target"].as_str(), Some("gpt-mini-json"));
+}
+
+#[test]
+fn tc_753_context_target_human_produces_markdown_no_framing() {
+    let h = ft063_fixture();
+    let out = h.run(&["context", "FT-001", "--target", "human"]);
+    out.assert_exit(0);
+    assert!(!out.stdout.contains("<context_bundle"));
+    assert!(!out.stdout.starts_with("# Context Bundle:"));
+    out.assert_stdout_contains("FT-001");
+}
+
+#[test]
+fn tc_754_context_target_omits_sections_not_in_ordering_list() {
+    let h = ft063_fixture();
+    let minimal = r#"schema_version = 1
+[template]
+name = "minimal"
+[format]
+structure = "markdown"
+[ordering]
+sections = ["task", "feature"]
+"#;
+    ft063_write_template(&h, ".product/templates", "minimal", minimal);
+    let out = h.run(&["context", "FT-001", "--target", "minimal"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("## Task");
+    out.assert_stdout_contains("## Feature");
+    assert!(!out.stdout.contains("## Governing ADRs"));
+    assert!(!out.stdout.contains("## Test Criteria"));
+    assert!(!out.stdout.contains("## Constraints"));
+}
+
+#[test]
+fn tc_755_context_target_orders_sections_as_template_specifies() {
+    let h = ft063_fixture();
+    let opus = h.run(&["context", "FT-001", "--target", "claude-opus"]);
+    let human = h.run(&["context", "FT-001", "--target", "human"]);
+    opus.assert_exit(0);
+    human.assert_exit(0);
+    // claude-opus has critical_first + deliverables_at_top → task before feature.
+    let opus_task_pos = opus.stdout.find("<task>").expect("task");
+    let opus_feature_pos = opus.stdout.find("<feature>").expect("feature");
+    assert!(opus_task_pos < opus_feature_pos, "task must precede feature in claude-opus");
+    // human has feature first, no task section.
+    assert!(!human.stdout.contains("## Task"));
+    let human_feat = human.stdout.find("## Feature").expect("feature heading");
+    assert!(human_feat < human.stdout.len());
+}
+
+#[test]
+fn tc_756_context_target_respects_deliverables_at_top() {
+    let h = ft063_fixture();
+    let opus = h.run(&["context", "FT-001", "--target", "claude-opus"]);
+    opus.assert_exit(0);
+    let task_pos = opus.stdout.find("<task>").expect("task");
+    let deliv_pos = opus.stdout.find("<deliverables>").expect("deliverables");
+    let feature_pos = opus.stdout.find("<feature>").expect("feature");
+    assert!(task_pos < deliv_pos, "task before deliverables");
+    assert!(deliv_pos < feature_pos, "deliverables at top before feature");
+
+    let human = h.run(&["context", "FT-001", "--target", "human"]);
+    human.assert_exit(0);
+    assert!(!human.stdout.contains("## Deliverables"), "human template suppresses deliverables");
+}
+
+#[test]
+fn tc_757_default_target_from_product_toml() {
+    let h = ft063_fixture();
+    // Append [context] section.
+    let cfg = h.read("product.toml");
+    let new_cfg = format!("{}\n[context]\ndefault-target = \"claude-opus\"\n", cfg);
+    h.write("product.toml", &new_cfg);
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("<context_bundle");
+}
+
+#[test]
+fn tc_758_default_target_fallback_to_human() {
+    let h = ft063_fixture();
+    let out = h.run(&["context", "FT-001"]);
+    out.assert_exit(0);
+    assert!(!out.stdout.contains("<context_bundle"), "default fallback should be human (Markdown), got:\n{}", &out.stdout[..200.min(out.stdout.len())]);
+}
+
+#[test]
+fn tc_759_templates_list_shows_all_resolved_templates() {
+    let h = ft063_fixture();
+    let out = h.run(&["context", "templates"]);
+    out.assert_exit(0);
+    for name in ["claude-opus", "claude-haiku", "gpt-4-markdown", "gpt-mini-json", "gemini-yaml", "human"] {
+        out.assert_stdout_contains(name);
+    }
+    out.assert_stdout_contains("Default target");
+}
+
+#[test]
+fn tc_760_templates_list_where_shows_resolution_path() {
+    let h = ft063_fixture();
+    let out = h.run(&["context", "templates", "--where"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("claude-opus");
+    // For built-ins, the marker is "(built-in)"; for repo/user, an absolute path.
+    out.assert_stdout_contains("(built-in)");
+}
+
+#[test]
+fn tc_761_templates_show_prints_template_toml() {
+    let h = ft063_fixture();
+    let out = h.run(&["context", "templates", "--show", "claude-opus"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("name = \"claude-opus\"");
+    out.assert_stdout_contains("structure = \"xml\"");
+    out.assert_stdout_contains("schema_version = 1");
+}
+
+#[test]
+fn tc_762_templates_reset_removes_user_override() {
+    let h = ft063_fixture();
+    let user_dir = h.dir.path().join("home").join(".product").join("templates");
+    std::fs::create_dir_all(&user_dir).expect("mkdir");
+    let user_toml = r#"schema_version = 1
+[template]
+name = "claude-opus"
+[format]
+structure = "markdown"
+[ordering]
+sections = ["task", "feature"]
+"#;
+    let path = user_dir.join("claude-opus.toml");
+    std::fs::write(&path, user_toml).expect("write");
+    assert!(path.exists());
+    let home = h.dir.path().join("home");
+    let out = h.run_with_env(
+        &["context", "templates", "--reset", "claude-opus"],
+        &[("HOME", &home.display().to_string())],
+    );
+    out.assert_exit(0);
+    assert!(!path.exists(), "user override should be deleted");
+}
+
+#[test]
+fn tc_763_templates_reset_cannot_touch_builtin() {
+    let h = ft063_fixture();
+    // Use a HOME without any templates so reset only sees the built-in.
+    let home = h.dir.path().join("home_clean");
+    std::fs::create_dir_all(&home).expect("mkdir home");
+    let out = h.run_with_env(
+        &["context", "templates", "--reset", "claude-opus"],
+        &[("HOME", &home.display().to_string())],
+    );
+    out.assert_exit(1);
+    out.assert_stderr_contains("E029");
+}
+
+#[test]
+fn tc_764_mcp_context_target_parameter() {
+    let h = ft063_fixture();
+    let input = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_context","arguments":{"id":"FT-001","depth":1,"target":"claude-opus"}}}"#;
+    let out = run_mcp_stdio(&h, input);
+    // The inner payload is pretty-printed JSON inside a JSON string, so
+    // both pretty (space-after-colon) and compact forms must be tolerated.
+    assert!(
+        out.contains("\\\"format\\\": \\\"xml\\\"") || out.contains("\"format\":\"xml\""),
+        "expected format=xml in MCP response: {}",
+        out
+    );
+    assert!(
+        out.contains("claude-opus"),
+        "expected claude-opus target in MCP response: {}",
+        out
+    );
+}
+
+#[test]
+fn tc_765_mcp_context_output_includes_format_and_target() {
+    let h = ft063_fixture();
+    let input = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_context","arguments":{"id":"FT-001","depth":1,"target":"gpt-mini-json"}}}"#;
+    let out = run_mcp_stdio(&h, input);
+    assert!(
+        out.contains("\\\"format\\\": \\\"json\\\"") || out.contains("\"format\":\"json\""),
+        "format key required: {}",
+        out
+    );
+    assert!(
+        out.contains("gpt-mini-json"),
+        "target key required: {}",
+        out
+    );
+    assert!(out.contains("token_count_approx"), "token_count_approx key required: {}", out);
+    assert!(out.contains("exceeded_target_max"), "exceeded_target_max key required: {}", out);
+    assert!(out.contains("exceeded_hard_max"), "exceeded_hard_max key required: {}", out);
+}
+
+#[test]
+fn tc_766_for_llm_flag_is_deprecated_alias_for_target() {
+    let h = ft063_fixture();
+    let out = h.run(&["context", "FT-001", "--for-llm"]);
+    out.assert_exit(0);
+    out.assert_stderr_contains("deprecated");
+    out.assert_stdout_contains("<context_bundle");
+    let direct = h.run(&["context", "FT-001", "--target", "claude-opus"]);
+    direct.assert_exit(0);
+    assert_eq!(out.stdout, direct.stdout, "--for-llm should match --target claude-opus output");
+    let conflict = h.run(&["context", "FT-001", "--for-llm", "--target", "human"]);
+    conflict.assert_exit(1);
+    conflict.assert_stderr_contains("E028");
+}
+
+#[test]
+fn tc_767_ft063_exit_criteria() {
+    // Aggregate exit-criteria smoke check: every key behaviour must work
+    // end-to-end on a single repository.
+    let h = ft063_fixture();
+    h.run(&["context", "templates"]).assert_exit(0);
+    h.run(&["context", "templates", "--where"]).assert_exit(0);
+    h.run(&["context", "templates", "--show", "human"]).assert_exit(0);
+    h.run(&["context", "FT-001", "--target", "claude-opus"]).assert_exit(0);
+    h.run(&["context", "FT-001", "--target", "gpt-4-markdown"]).assert_exit(0);
+    h.run(&["context", "FT-001", "--target", "gemini-yaml"]).assert_exit(0);
+    h.run(&["context", "FT-001", "--target", "gpt-mini-json"]).assert_exit(0);
+    h.run(&["context", "FT-001", "--target", "human"]).assert_exit(0);
+    let unknown = h.run(&["context", "FT-001", "--target", "no-such-template"]);
+    unknown.assert_exit(1);
+    unknown.assert_stderr_contains("E027");
+    let conflict = h.run(&["context", "FT-001", "--for-llm", "--target", "human"]);
+    conflict.assert_exit(1);
+    conflict.assert_stderr_contains("E028");
+}

@@ -2,14 +2,17 @@
 id: TC-758
 title: default-target-fallback-to-human
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
+  features:
+  - FT-063
   adrs:
   - ADR-049
 phase: 1
 runner: cargo-test
 runner-args: tc_758_default_target_fallback_to_human
+last-run: 2026-05-08T12:14:59.128626357+00:00
+last-run-duration: 0.3s
 ---
 
 ## Scenario — `default-target-fallback-to-human`

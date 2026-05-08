@@ -2,14 +2,17 @@
 id: TC-747
 title: template-resolution-repo-overrides-user
 type: scenario
-status: unimplemented
+status: passing
 validates:
-  features: []
+  features:
+  - FT-063
   adrs:
   - ADR-049
 phase: 1
 runner: cargo-test
 runner-args: tc_747_template_resolution_repo_overrides_user
+last-run: 2026-05-08T12:14:59.128626357+00:00
+last-run-duration: 0.3s
 ---
 
 ## Scenario — `template-resolution-repo-overrides-user`
