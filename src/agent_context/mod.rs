@@ -156,7 +156,7 @@ fn generate_tool_guide_section() -> String {
 | `product_graph_central` | First call in any session — find foundational ADRs |
 | `product_context` | Before implementing — assemble context bundle |
 | `product_schema` | Get current front-matter schema for any type |
-| `product_preflight` | Before agent work — check domain coverage |
+| `product_preflight` | Required at end of authoring — `status != clean` blocks implementation |
 | `product_gap_check` | Before implementing — check spec completeness |
 | `product_drift_check` | Before committing — check for spec/code drift |
 | `product_agent_context` | Get full AGENTS.md content via MCP |

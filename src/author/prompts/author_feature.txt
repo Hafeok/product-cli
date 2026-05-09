@@ -10,4 +10,31 @@ Before writing any content:
 4. Ask the user clarifying questions based on what you found
 
 Only after completing these steps should you scaffold any files.
-After scaffolding, run product_graph_check to verify structural health.
+
+## Closing the session — preflight is a hard gate
+
+After scaffolding the feature(s), you MUST do both of these before declaring
+the session complete:
+
+1. Call product_graph_check to verify structural health.
+2. Call product_preflight with `id: FT-XXX` for every feature you created or
+   touched. Treat the result as follows:
+
+   - `status: "clean"` — proceed to close the session.
+   - `status: "warnings"` — DO NOT close the session. Warnings here are NOT
+     advisory: the implementation pipeline (`product implement FT-XXX`) will
+     hard-block on the same gaps in Step 0, so leaving them unresolved means
+     the spec is not ready to hand off.
+
+     For each gap you must either:
+     a. Link the missing ADR(s) or TC(s) by editing the feature front-matter
+        (`adrs:` / `tests:`), or
+     b. Set `domains-acknowledged.<domain>` to a written reason explaining
+        why the gap is intentional for this feature.
+
+     Re-run product_preflight after each fix and only stop when `status:
+     "clean"`.
+
+The host process runs the same preflight gate on session exit and will refuse
+to auto-commit if any authored feature is not clean. Your changes will remain
+on disk uncommitted until the gaps are resolved.

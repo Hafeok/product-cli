@@ -5,6 +5,7 @@
 
 pub mod prompts;
 mod commit;
+mod preflight_gate;
 
 use crate::config::ProductConfig;
 use crate::error::{ProductError, Result};
@@ -66,7 +67,7 @@ impl std::fmt::Display for AgentCli {
 pub fn start_session(
     session_type: SessionType,
     cli: AgentCli,
-    _config: &ProductConfig,
+    config: &ProductConfig,
     root: &Path,
 ) -> Result<()> {
     let prompt_name = match session_type {
@@ -143,6 +144,9 @@ pub fn start_session(
         Ok(s) if s.success() => {
             println!();
             println!("Authoring session complete.");
+            if matches!(session_type, SessionType::Feature) {
+                preflight_gate::run_post_session_gate(config, root)?;
+            }
             commit::auto_commit(&session_type, root);
         }
         Ok(s) => {
