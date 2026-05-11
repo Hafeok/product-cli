@@ -20581,9 +20581,11 @@ fn tc_767_ft063_exit_criteria() {
 // is fully offline.
 
 /// FT-065 — repo owner used to derive the registry namespace
-/// `io.github.{owner}/product-cli`. Lower-cased to match the convention
-/// observed in the official registry's published entries.
-const FT065_EXPECTED_NAME: &str = "io.github.hafeok/product-cli";
+/// `io.github.{owner}/product-cli`. Case must match the GitHub OIDC
+/// claim's `sub` exactly — the registry rejects case-mismatched
+/// publishes with HTTP 403 (observed against `Hafeok` vs `hafeok` on
+/// the first real publish attempt for v0.1.3).
+const FT065_EXPECTED_NAME: &str = "io.github.Hafeok/product-cli";
 
 /// FT-065 — schema URL pinned by the committed `server.json`. The fixture
 /// at `tests/fixtures/server.schema.json` must be a verbatim copy of the

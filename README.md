@@ -70,12 +70,12 @@ product --version    # → product 0.1.0
 
 ### Install via the MCP Registry
 
-Product is published to the official [Model Context Protocol registry](https://registry.modelcontextprotocol.io/) under the namespace **`io.github.hafeok/product-cli`** (per ADR-020 / FT-065). Any MCP-capable client can discover and install it through standard registry tooling — no clone, no `cargo install`.
+Product is published to the official [Model Context Protocol registry](https://registry.modelcontextprotocol.io/) under the namespace **`io.github.Hafeok/product-cli`** (per ADR-020 / FT-065). Any MCP-capable client can discover and install it through standard registry tooling — no clone, no `cargo install`.
 
 **Claude Code:**
 
 ```bash
-claude mcp install io.github.hafeok/product-cli
+claude mcp install io.github.Hafeok/product-cli
 ```
 
 The CLI downloads the matching GitHub Release binary, places it on `$PATH`, and writes a `.mcp.json` entry that spawns `product mcp` over stdio in your repo. The server then discovers `.product/config.toml` (or the legacy fallback chain — see ADR-048) from the working directory.

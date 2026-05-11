@@ -99,8 +99,8 @@ jobs:
           TAG: ${{ steps.resolve.outputs.tag }}
         run: |
           if [ "$STATUS" = "success" ]; then
-            echo "::notice::Published io.github.hafeok/product-cli@${TAG} to registry.modelcontextprotocol.io"
-            echo "Published io.github.hafeok/product-cli@${TAG}" >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice::Published io.github.Hafeok/product-cli@${TAG} to registry.modelcontextprotocol.io"
+            echo "Published io.github.Hafeok/product-cli@${TAG}" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "::warning::Publish step failed for ${TAG} — release shipped, registry entry was not updated. Re-run this workflow or invoke mcp-publisher manually."
             echo "Publish FAILED for ${TAG} — release shipped, manual follow-up required." >> "$GITHUB_STEP_SUMMARY"

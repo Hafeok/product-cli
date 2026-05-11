@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
-  "name": "io.github.hafeok/product-cli",
+  "name": "io.github.Hafeok/product-cli",
   "description": "Knowledge graph CLI for managing features, ADRs, and test criteria as MCP-discoverable artifacts.",
   "repository": {
     "url": "https://github.com/Hafeok/product-cli",
