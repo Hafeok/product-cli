@@ -4,3 +4,8 @@ Cargo.lock
 *.product-tmp.*
 .proptest-regressions
 *:Zone.Identifier
+
+# Product CLI — generated files
+.product/graph/
+.product/sessions/
+.product/checklist.md

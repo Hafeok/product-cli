@@ -4,13 +4,19 @@ schema-version = "1"
 schema-version-warning = true
 checklist-in-gitignore = true
 
+[product]
+responsibility = "A knowledge graph for LLM-driven development."
+
 [paths]
-features = "docs/features"
-adrs = "docs/adrs"
-tests = "docs/tests"
-graph = "docs/graph"
-checklist = "docs/checklist.md"
-dependencies = "docs/dependencies"
+features = ".product/features"
+adrs = ".product/adrs"
+tests = ".product/tests"
+graph = ".product/graph"
+checklist = ".product/checklist.md"
+dependencies = ".product/dependencies"
+requests = ".product/requests.jsonl"
+prompts = ".product/prompts"
+gaps = ".product/gaps.json"
 
 [prefixes]
 feature = "FT"
@@ -24,11 +30,36 @@ custom = ["contract", "migration", "property", "session", "smoke"]
 [phases]
 1 = "Core CLI & Graph"
 
+[domains]
+"security" = "Authentication, authorisation, secrets, trust boundaries"
+"error-handling" = "Error model, diagnostics, exit codes, recovery"
+"storage" = "Persistence, durability, backup"
+"networking" = "DNS, mTLS, service discovery, port allocation"
+"api" = "CLI surface, MCP tools, event schema"
+"observability" = "Metrics, tracing, logging, telemetry"
+"data-model" = "RDF, SPARQL, ontology, event sourcing"
+"scheduling" = "Workload placement, resource limits, eviction, CPU/memory"
+"testing" = "Property, session, and LLM-benchmark test strategy (ADR-018)"
+
 [mcp]
 write = true
 port = 7777
 # token = ""
 cors-origins = []
+
+[author]
+cli = "claude"
+
+[verify.prerequisites]
+build = "cargo build --quiet"
+lint = "cargo clippy --quiet -- -D warnings -D clippy::unwrap_used"
+
+[agent-context]
+include-repo-state = true
+include-schemas = true
+include-domains = true
+include-tool-guide = true
+output-file = "AGENTS.md"
 
 [metrics.thresholds.spec_coverage]
 min = 0.8
@@ -66,32 +97,8 @@ severity = "warning"
 min = 1.0
 severity = "warning"
 
-[agent-context]
-include-repo-state = true
-include-schemas = true
-include-domains = true
-include-tool-guide = true
-output-file = "AGENTS.md"
-
-[verify.prerequisites]
-build = "cargo build --quiet"
-lint = "cargo clippy --quiet -- -D warnings -D clippy::unwrap_used"
-
-[domains]
-security        = "Authentication, authorisation, secrets, trust boundaries"
-storage         = "Persistence, durability, volume, block devices, backup"
-consensus       = "Raft, leader election, log replication, cluster membership"
-networking      = "mDNS, mTLS, DNS, service discovery, port allocation"
-error-handling  = "Error model, diagnostics, exit codes, panics, recovery"
-observability   = "OTel, metrics, tracing, logging, telemetry"
-iam             = "Identity, OIDC, tokens, RBAC, workload identity"
-scheduling      = "Workload placement, resource limits, eviction, CPU/memory"
-api             = "CLI surface, MCP tools, event schema, resource language"
-data-model      = "RDF, SPARQL, ontology, event sourcing, projections"
-testing         = "Property, session, and LLM-benchmark test strategy (ADR-018)"
-
 # FT-055 / ADR-047 — feature body completeness check (W030).
-# Defaults listed explicitly to future-proof against upstream changes.
+# Defaults are listed explicitly to future-proof against changes upstream.
 [features]
 required-sections = ["Description", "Functional Specification", "Out of scope"]
 functional-spec-subsections = ["Inputs", "Outputs", "State", "Behaviour", "Invariants", "Error handling", "Boundaries"]
