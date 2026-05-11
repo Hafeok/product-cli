@@ -143,6 +143,7 @@ If `publish-mcp.yml` fails at the "Verify server.json version matches the releas
 - **The `v0.1.0+<hash>` tags are nightlies, not releases.** Don't reuse that format for an intentional release — it'll match the cargo-dist regex but pollute the tag list. Plain `vX.Y.Z` only.
 - **Tag deletion is safe only if the workflow hasn't published a GitHub Release yet.** Once the Release is created, deleting the tag won't delete the Release — you'd have to delete that separately via `gh release delete`.
 - **No CHANGELOG.md to update.** This repo lets cargo-dist generate the release body from commit messages; there's no manual changelog step.
+- **Registry namespace is case-sensitive.** `server.json` `name` must be `io.github.Hafeok/product-cli` with the GitHub username's canonical case (`Hafeok`, not `hafeok`). The MCP registry binds publish permission to the OIDC `sub` claim, which carries the actual case. A case mismatch returns HTTP 403 at the publish step — observed on the v0.1.3 attempt. TC-776 pins the expected name; do not lower-case it.
 
 ## Skill output
 
