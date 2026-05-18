@@ -8,15 +8,15 @@ checklist-in-gitignore = true
 responsibility = "A knowledge graph for LLM-driven development."
 
 [paths]
-features = ".product/features"
-adrs = ".product/adrs"
-tests = ".product/tests"
-graph = ".product/graph"
-checklist = ".product/checklist.md"
-dependencies = ".product/dependencies"
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+graph = "docs/graph"
+checklist = "docs/checklist.md"
+dependencies = "docs/dependencies"
 requests = ".product/requests.jsonl"
-prompts = ".product/prompts"
-gaps = ".product/gaps.json"
+prompts = "docs/prompts"
+gaps = "docs/gaps.json"
 
 [prefixes]
 feature = "FT"
