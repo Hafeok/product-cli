@@ -157,3 +157,7 @@ mod ft_062_depends_on_and_strict_validation;
 // FT-064 — strict change-spec validation and artifact deletion surface
 #[path = "sessions/ft_064_strict_change_spec_and_deletion.rs"]
 mod ft_064_strict_change_spec_and_deletion;
+
+// FT-066 — MCP parity for feature/TC status writes and reciprocal linking
+#[path = "sessions/ft_066_mcp_status_and_link_parity.rs"]
+mod ft_066_mcp_status_and_link_parity;

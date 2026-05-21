@@ -98,7 +98,7 @@ fn basic_stem(word: &str) -> String {
 
 /// Extract keywords from feature title and first ~200 chars of body
 fn extract_keywords_from_feature(title: &str, body: &str) -> Vec<String> {
-    let preview = if body.len() > 200 { &body[..200] } else { body };
+    let preview: String = body.chars().take(200).collect();
     let combined = format!("{} {}", title, preview);
     extract_keywords(&combined)
 }
@@ -118,11 +118,7 @@ fn is_infrastructure_feature(title: &str, body: &str) -> bool {
         "implement", "orchestrat", "automat",
     ];
     let lower_title = title.to_lowercase();
-    let lower_body_preview = if body.len() > 200 {
-        body[..200].to_lowercase()
-    } else {
-        body.to_lowercase()
-    };
+    let lower_body_preview: String = body.chars().take(200).flat_map(char::to_lowercase).collect();
     infra_indicators.iter().any(|ind| {
         lower_title.contains(ind) || lower_body_preview.contains(ind)
     })

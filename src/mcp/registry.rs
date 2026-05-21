@@ -169,8 +169,11 @@ fn dispatch_tool(
         "product_feature_link" => write_handlers::handle_feature_link(args, graph),
         "product_feature_depends_on" => field_handlers::handle_feature_depends_on(args, graph),
         "product_adr_status" => adr_lifecycle::handle_adr_status_write(args, graph),
-        "product_feature_status" | "product_test_status" => {
-            write_handlers::handle_status_update(args)
+        "product_feature_status" => {
+            write_handlers::handle_feature_status_update(args, graph)
+        }
+        "product_test_status" => {
+            write_handlers::handle_test_status_update(args, graph)
         }
         "product_body_update" => write_handlers::handle_body_update(args, graph, repo_root),
         "product_adr_amend" => adr_lifecycle::handle_adr_amend(args, graph),

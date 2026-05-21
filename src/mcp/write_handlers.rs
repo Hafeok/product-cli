@@ -128,62 +128,143 @@ fn new_test_front(
     }
 }
 
+/// FT-066: `product_feature_link` writes the feature side **and** the
+/// reciprocal back-reference (TC's `validates.features` / ADR's
+/// `features`) in one atomic batch. The response carries a `writes`
+/// array enumerating every file touched and a `reciprocated` array
+/// naming each back-reference filled in. Unknown link targets return a
+/// `NotFound` error before any write.
 pub(crate) fn handle_feature_link(args: &Value, graph: &KnowledgeGraph) -> Result<Value, String> {
     let id = args.get("id").and_then(|v| v.as_str()).unwrap_or_default();
-    let f = graph.features.get(id).ok_or_else(|| format!("Feature {} not found", id))?;
 
-    let mut front = f.front.clone();
-    let mut changed = false;
+    apply_optional_depends_on(args, id, graph)?;
 
-    // FT-062 — accept an optional `feature` argument with the same semantics
-    // as `product_feature_depends_on` with a single-element `add`. Cycle
-    // detection and graph-existence validation use the same plan helper to
-    // keep the contract identical across the two MCP surfaces. Idempotent —
-    // already-present links don't fail or set `changed` for the feature
-    // axis but the response shape preserves the existing `linked` flag.
-    let mut dep_added = false;
-    if let Some(dep_id) = args.get("feature").and_then(|v| v.as_str()) {
-        let plan = crate::feature::plan_depends_on_edit(
-            graph,
-            id,
-            std::slice::from_ref(&dep_id.to_string()),
-            &[],
-        )
+    let adr = args.get("adr").and_then(|v| v.as_str());
+    let test = args.get("test").and_then(|v| v.as_str());
+
+    let plan = crate::feature::plan_link(graph, id, adr, test)
         .map_err(|e| format!("{}", e))?;
-        // Pull the planned final list onto our working front so any
-        // subsequent adr/test edits write the merged state, not just the
-        // adr/test slice.
-        front.depends_on = plan.final_depends_on.clone();
-        if plan.is_changed() {
-            dep_added = true;
-            changed = true;
-        }
-    }
+    crate::feature::apply_link(&plan).map_err(|e| format!("{}", e))?;
 
-    if let Some(adr_id) = args.get("adr").and_then(|v| v.as_str()) {
-        if !front.adrs.contains(&adr_id.to_string()) {
-            front.adrs.push(adr_id.to_string());
-            changed = true;
-        }
-    }
-    if let Some(test_id) = args.get("test").and_then(|v| v.as_str()) {
-        if !front.tests.contains(&test_id.to_string()) {
-            front.tests.push(test_id.to_string());
-            changed = true;
-        }
-    }
-    if changed {
-        let content = crate::parser::render_feature(&front, &f.body);
-        crate::fileops::write_file_atomic(&f.path, &content).map_err(|e| format!("{}", e))?;
-    }
-    let _ = dep_added; // kept for future structured-response extension
-    Ok(serde_json::json!({"id": id, "linked": changed}))
+    Ok(build_link_response(id, &plan))
 }
 
-pub(crate) fn handle_status_update(args: &Value) -> Result<Value, String> {
-    let id = args.get("id").and_then(|v| v.as_str()).unwrap_or_default();
-    let status = args.get("status").and_then(|v| v.as_str()).unwrap_or_default();
-    Ok(serde_json::json!({"id": id, "status": status, "note": "Use CLI for status updates with full side-effects"}))
+/// FT-062 — the optional `feature` argument adds a depends-on edge using the
+/// cycle-checked plan helper. Composes with the adr/test link plan below.
+fn apply_optional_depends_on(
+    args: &Value,
+    id: &str,
+    graph: &KnowledgeGraph,
+) -> Result<(), String> {
+    let Some(dep_id) = args.get("feature").and_then(|v| v.as_str()) else {
+        return Ok(());
+    };
+    let dep_plan = crate::feature::plan_depends_on_edit(
+        graph,
+        id,
+        std::slice::from_ref(&dep_id.to_string()),
+        &[],
+    )
+    .map_err(|e| format!("{}", e))?;
+    if dep_plan.is_changed() {
+        crate::feature::apply_depends_on_edit(&dep_plan)
+            .map_err(|e| format!("{}", e))?;
+    }
+    Ok(())
+}
+
+fn build_link_response(id: &str, plan: &crate::feature::LinkPlan) -> Value {
+    let writes_json: Vec<Value> = plan
+        .writes
+        .iter()
+        .map(|w| {
+            serde_json::json!({
+                "path": w.path.display().to_string(),
+                "kind": w.kind.as_str(),
+            })
+        })
+        .collect();
+    let reciprocated_json: Vec<Value> = plan
+        .reciprocated
+        .iter()
+        .map(|r| serde_json::json!({"id": r.id, "field": r.field}))
+        .collect();
+    serde_json::json!({
+        "id": id,
+        "writes": writes_json,
+        "reciprocated": reciprocated_json,
+    })
+}
+
+/// FT-066: `product_feature_status` writes the requested status to disk via
+/// `feature::plan_status_change` + `apply_status_change`. Propagates
+/// `NotFound`, parse errors, and FT-058 `TcRunnerMissing` from the slice
+/// layer. The success response is `{ id, status, orphaned-tests: [...] }`
+/// — `orphaned-tests` is empty for non-abandonment transitions.
+pub(crate) fn handle_feature_status_update(
+    args: &Value,
+    graph: &KnowledgeGraph,
+) -> Result<Value, String> {
+    let id = args
+        .get("id")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "id is required".to_string())?;
+    let status_str = args
+        .get("status")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "status is required".to_string())?;
+
+    let new_status: crate::types::FeatureStatus =
+        status_str.parse().map_err(|e: String| format!("E001: {}", e))?;
+
+    let plan = crate::feature::plan_status_change(graph, id, new_status)
+        .map_err(|e| format!("{}", e))?;
+    crate::feature::apply_status_change(&plan).map_err(|e| format!("{}", e))?;
+
+    let orphaned: Vec<Value> = plan
+        .orphaned_tests
+        .iter()
+        .map(|t| {
+            serde_json::json!({
+                "test_id": t.test_id,
+                "path": t.path.display().to_string(),
+            })
+        })
+        .collect();
+    Ok(serde_json::json!({
+        "id": id,
+        "status": new_status.to_string(),
+        "orphaned-tests": orphaned,
+    }))
+}
+
+/// FT-066: `product_test_status` writes the requested status to disk via
+/// `tc::plan_status_change` + `apply_status_change`. Propagates `NotFound`
+/// and parse errors from the slice layer.
+pub(crate) fn handle_test_status_update(
+    args: &Value,
+    graph: &KnowledgeGraph,
+) -> Result<Value, String> {
+    let id = args
+        .get("id")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "id is required".to_string())?;
+    let status_str = args
+        .get("status")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| "status is required".to_string())?;
+
+    let new_status: crate::types::TestStatus =
+        status_str.parse().map_err(|e: String| format!("E001: {}", e))?;
+
+    let plan = crate::tc::plan_status_change(graph, id, new_status)
+        .map_err(|e| format!("{}", e))?;
+    crate::tc::apply_status_change(&plan).map_err(|e| format!("{}", e))?;
+
+    Ok(serde_json::json!({
+        "id": id,
+        "status": new_status.to_string(),
+    }))
 }
 
 pub(crate) fn handle_body_update(
