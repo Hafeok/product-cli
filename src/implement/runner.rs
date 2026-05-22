@@ -179,8 +179,22 @@ struct TcUpdate<'a> {
     duration: Option<f64>,
 }
 
-struct RwState { last_run: bool, duration: bool, failure: bool }
-impl RwState { fn new() -> Self { Self { last_run: false, duration: false, failure: false } } }
+struct RwState {
+    last_run: bool,
+    duration: bool,
+    failure: bool,
+    /// When `Some(base)`, the previous mutable key declared a YAML block
+    /// scalar (`|`, `>`, etc.). Skip subsequent blank lines and lines
+    /// indented strictly more than `base` — they were continuation lines
+    /// of that block scalar's value and would otherwise be orphaned after
+    /// the key is dropped or replaced with a single-line scalar.
+    skip_indent: Option<usize>,
+}
+impl RwState {
+    fn new() -> Self {
+        Self { last_run: false, duration: false, failure: false, skip_indent: None }
+    }
+}
 
 fn rewrite_tc_frontmatter(
     content: &str, status: &str, timestamp: &str,
@@ -211,19 +225,127 @@ fn inject_missing(lines: &mut Vec<String>, u: &TcUpdate<'_>, st: &mut RwState) {
 }
 
 fn rewrite_line(lines: &mut Vec<String>, line: &str, u: &TcUpdate<'_>, st: &mut RwState) {
+    if let Some(base) = st.skip_indent {
+        if line.trim().is_empty() || indent_of(line) > base {
+            return;
+        }
+        st.skip_indent = None;
+    }
+
     let t = line.trim();
-    if t.starts_with("status:") {
+    if let Some(after) = t.strip_prefix("status:") {
         lines.push(format!("status: {}", u.status));
-    } else if t.starts_with("last-run-duration:") {
+        enter_skip_if_block_scalar(line, after, st);
+    } else if let Some(after) = t.strip_prefix("last-run-duration:") {
         if let Some(d) = u.duration { lines.push(format!("last-run-duration: {:.1}s", d)); }
         st.duration = true;
-    } else if t.starts_with("last-run:") {
+        enter_skip_if_block_scalar(line, after, st);
+    } else if let Some(after) = t.strip_prefix("last-run:") {
         lines.push(format!("last-run: {}", u.timestamp));
         st.last_run = true;
-    } else if t.starts_with("failure-message:") {
+        enter_skip_if_block_scalar(line, after, st);
+    } else if let Some(after) = t.strip_prefix("failure-message:") {
         if let Some(msg) = u.failure_msg { lines.push(format!("failure-message: \"{}\"", escape_yaml_double_quoted(msg))); }
         st.failure = true;
+        enter_skip_if_block_scalar(line, after, st);
     } else {
         lines.push(line.to_string());
+    }
+}
+
+fn indent_of(line: &str) -> usize {
+    line.bytes().take_while(|b| *b == b' ' || *b == b'\t').count()
+}
+
+/// If the value after a known key declares a YAML block scalar (`|`, `>`
+/// with optional chomping/keep indicators, and an optional trailing
+/// comment), enter skip mode so the next call drops its continuation lines.
+fn enter_skip_if_block_scalar(line: &str, value: &str, st: &mut RwState) {
+    let bare = value.split('#').next().unwrap_or("").trim();
+    if bare.starts_with('|') || bare.starts_with('>') {
+        st.skip_indent = Some(indent_of(line));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn rewrite(content: &str, status: &str, msg: Option<&str>, dur: Option<f64>) -> String {
+        rewrite_tc_frontmatter(content, status, "2026-05-22T12:00:00Z", msg, dur).join("\n")
+    }
+
+    /// Regression: when a previously failing TC becomes passing,
+    /// the `failure-message: |` block scalar must be removed in
+    /// full — header line *and* every indented continuation line.
+    /// Otherwise the orphaned continuation lines parse as a
+    /// malformed mapping value attached to `last-run:` and the
+    /// front-matter fails to load (E001).
+    #[test]
+    fn passing_run_strips_block_scalar_continuation_lines() {
+        let before = "---\nid: TC-001\nstatus: failing\nlast-run: 2026-05-21T00:00:00Z\nlast-run-duration: 0.5s\nfailure-message: |\n  ERROR: first line\n  ERROR: second line\n---\nbody\n";
+        let after = rewrite(before, "passing", None, Some(0.7));
+        assert!(after.contains("status: passing"), "after: {after}");
+        assert!(!after.contains("failure-message"), "should drop failure-message entirely; after: {after}");
+        assert!(!after.contains("ERROR: first line"), "orphan continuation line leaked; after: {after}");
+        assert!(!after.contains("ERROR: second line"), "orphan continuation line leaked; after: {after}");
+        // The result must round-trip through a real YAML parser.
+        let fm = extract_frontmatter(&after);
+        serde_yaml::from_str::<serde_yaml::Value>(&fm)
+            .unwrap_or_else(|e| panic!("rewritten front-matter is invalid YAML: {e}\n---\n{fm}"));
+    }
+
+    /// Replacing an existing `failure-message: |` block scalar with a
+    /// new single-line value must also drop the old continuation lines.
+    #[test]
+    fn failing_run_replaces_block_scalar_with_single_line() {
+        let before = "---\nid: TC-001\nstatus: failing\nlast-run: 2026-05-21T00:00:00Z\nlast-run-duration: 0.5s\nfailure-message: |\n  old error line 1\n  old error line 2\n---\nbody\n";
+        let after = rewrite(before, "failing", Some("new error"), Some(0.7));
+        assert!(after.contains("failure-message: \"new error\""), "after: {after}");
+        assert!(!after.contains("old error line 1"), "old continuation leaked; after: {after}");
+        assert!(!after.contains("old error line 2"), "old continuation leaked; after: {after}");
+        let fm = extract_frontmatter(&after);
+        serde_yaml::from_str::<serde_yaml::Value>(&fm)
+            .unwrap_or_else(|e| panic!("rewritten front-matter is invalid YAML: {e}\n---\n{fm}"));
+    }
+
+    /// Block scalar variants with chomping (`|-`) and folded (`>`)
+    /// indicators must also have their continuation lines stripped.
+    #[test]
+    fn passing_run_handles_block_scalar_variants() {
+        for header in &["|-", "|+", ">", ">-", ">+", "|  # leftover comment"] {
+            let before = format!(
+                "---\nid: TC-001\nstatus: failing\nlast-run: 2026-05-21T00:00:00Z\nfailure-message: {header}\n  continuation a\n  continuation b\n---\n"
+            );
+            let after = rewrite(&before, "passing", None, Some(0.1));
+            assert!(
+                !after.contains("continuation a") && !after.contains("continuation b"),
+                "variant `{header}` failed to strip continuations; after: {after}"
+            );
+        }
+    }
+
+    /// A blank line between top-level keys must be preserved when the
+    /// preceding key was a single-line scalar (not a block scalar).
+    /// This guards against an over-eager skip mode that would eat
+    /// blank lines after every mutable key replacement.
+    #[test]
+    fn single_line_scalars_preserve_following_blank_lines() {
+        let before = "---\nid: TC-001\nstatus: failing\nlast-run: 2026-05-21T00:00:00Z\n\nfailure-message: \"old\"\n---\n";
+        let after = rewrite(before, "passing", None, None);
+        // The blank line between `last-run:` and what follows survives.
+        assert!(after.contains("\n\n"), "blank line was eaten; after: {after:?}");
+    }
+
+    fn extract_frontmatter(s: &str) -> String {
+        let mut lines = s.lines();
+        assert_eq!(lines.next(), Some("---"));
+        let mut out = String::new();
+        for l in lines {
+            if l == "---" { break; }
+            out.push_str(l);
+            out.push('\n');
+        }
+        out
     }
 }
