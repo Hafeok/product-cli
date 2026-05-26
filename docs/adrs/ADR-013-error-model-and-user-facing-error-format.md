@@ -2,10 +2,13 @@
 id: ADR-013
 title: Error Model and User-Facing Error Format
 status: accepted
-features: []
+features:
+- FT-069
 supersedes: []
 superseded-by: []
-domains: [error-handling, api]
+domains:
+- error-handling
+- api
 scope: domain
 content-hash: sha256:871466eb005fd371a0fc05023afc6de14305df42f23a9f2faced5693a5360049
 ---

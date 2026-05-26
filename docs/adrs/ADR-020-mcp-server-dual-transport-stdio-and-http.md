@@ -2,12 +2,20 @@
 id: ADR-020
 title: MCP Server — Dual Transport (stdio and HTTP)
 status: accepted
-features: []
+features:
+- FT-069
 supersedes: []
 superseded-by: []
-domains: [api, networking, security]
+domains:
+- api
+- networking
+- security
 scope: domain
-content-hash: sha256:1d6e509ae91da775e31752d785d8a572438b863df502c6ec33b95fd848fe73a9
+content-hash: sha256:8fda1bfe6004dd0883093a83f9adc0a89f2e127c07c882094bb4fa3ee44e501f
+amendments:
+- date: 2026-05-26T12:57:00Z
+  reason: 'FT-069 — record CLI/MCP read-tool parity invariant. After five parity features (FT-046, FT-059, FT-062, FT-066, FT-069) closing the same class of bug, the principle is promoted from per-feature scope to a policy clause on the governing ADR: every tool surfaced over both CLI and MCP must route through a shared library function in `src/<slice>/`, never an inline re-implementation in the transport handler.'
+  previous-hash: sha256:1d6e509ae91da775e31752d785d8a572438b863df502c6ec33b95fd848fe73a9
 ---
 
 **Status:** Accepted
@@ -129,15 +137,66 @@ This ensures that a `product mcp --http` process running as a systemd service re
 
 ---
 
+### CLI/MCP Parity Invariant (added by FT-069)
+
+After five successive parity-correction features (FT-046, FT-059,
+FT-062, FT-066, FT-069) closing the same class of bug — the MCP
+handler quietly omits a validation layer or write effect the CLI
+performs — the parity guarantee is hereby promoted to policy on
+this governing ADR.
+
+**Rule.** Every tool that is surfaced over both `product <cmd>`
+(CLI) and `product_<cmd>` (MCP) **must** delegate to a single
+shared library function in `src/<slice>/`. Neither the CLI
+adapter (`src/commands/`) nor the MCP handler (`src/mcp/`) may
+contain inline logic that is invisible to the other side. The
+adapters are restricted to:
+
+1. Argument parsing / deserialisation.
+2. Acquiring the repo write lock when the tool requires writes.
+3. Rendering the shared function's structured return into the
+   transport-appropriate envelope (CLI text/JSON, MCP JSON).
+4. Transport-specific presentation (e.g. CLI exit codes,
+   `eprintln!` of stderr-only warnings).
+
+**Anti-pattern.** A handler that performs validation, mutation,
+filtering, or any business logic locally and does not call a
+shared library function. Concrete recent examples:
+
+- `product_graph_check` calling `graph.check()` directly while the
+  CLI called `check_with_config` plus four additional layers
+  (fixed by FT-069 via `graph::full_check::run`).
+- `product_feature_status` echoing the requested status without
+  writing it (fixed by FT-066 via `feature::plan_status_change`).
+- `product_drift_check` re-implementing the drift loop instead of
+  calling the shared drift helpers (fixed by FT-059).
+
+**Enforcement.** Each parity feature ships at least one parity
+invariant TC that asserts the CLI and MCP envelopes are
+byte-equal on a representative fixture (TC-810 is the FT-069
+exemplar). New parity gaps discovered in the future open a fresh
+feature in the FT-046 / FT-059 / FT-062 / FT-066 / FT-069 series
+and add their own invariant TC.
+
+**Read tools** are equally bound by this rule. The discovery that
+prompted this amendment was a read-only tool (`product_graph_check`),
+which proves that "read tools cannot drift" is false — they can,
+and have, when their composition pipeline is duplicated rather
+than shared.
+
+---
+
 **Rationale:**
 - Single binary, dual transport is the correct design. Two binaries would diverge on tool surface, error handling, and graph loading. The transport is genuinely a thin layer — the tool logic has no transport awareness.
 - MCP Streamable HTTP is the current MCP specification for remote servers. SSE-based (the older spec) is also supported by claude.ai but is being superseded. Implementing Streamable HTTP positions Product correctly for the current and future spec.
 - Bearer token auth is sufficient for this use case. OAuth would be more appropriate for a multi-user SaaS tool. Product is a personal developer tool — a static bearer token stored in a password manager or environment variable is the right complexity level.
 - TLS delegation to a reverse proxy is standard practice for application servers written in Rust. Implementing TLS in Product would add a dependency (rustls or openssl), a certificate management problem, and certificate renewal complexity. Cloudflare Tunnel eliminates all of this and provides a publicly accessible HTTPS endpoint in one command.
 - CORS is required for claude.ai access from a browser — the browser enforces CORS policy before any MCP request reaches the server. Configuring `cors-origins = ["https://claude.ai"]` in `product.toml` is the minimal configuration for phone access.
+- The parity invariant is the only durable defence against the recurring drift class. The Slice + Adapter pattern (ADR-043) already pushes most CLI handlers to call shared library code; FT-069 extends that discipline to the MCP transport with no exceptions.
 
 **Rejected alternatives:**
 - **Two separate binaries: `product-mcp-stdio` and `product-mcp-http`** — maintenance burden, inevitable divergence. Rejected.
 - **WebSocket transport** — supported by some MCP clients but not the primary transport for claude.ai. Streamable HTTP has broader client support and simpler server implementation.
 - **gRPC** — excellent for high-throughput service-to-service communication. Overkill for a developer tool handling tens of requests per session.
 - **Product-as-daemon with IPC** — one `product` daemon, CLI and MCP both talk to it via a Unix socket. Eliminates the cold-start cost of graph loading per invocation. Rejected for v1: the daemon lifecycle (start, stop, version skew between daemon and CLI) adds operational complexity that is not justified at the current scale.
+- **Code-generated handler dispatch from a single shared trait** — would mechanically enforce parity but require a procedural macro and significant refactor. The discipline + invariant TC approach is lighter weight and has now been proven across five features.

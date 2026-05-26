@@ -4,6 +4,7 @@ title: Slice + Adapter Architecture for Command Handlers
 status: accepted
 features:
 - FT-068
+- FT-069
 supersedes: []
 superseded-by: []
 domains:

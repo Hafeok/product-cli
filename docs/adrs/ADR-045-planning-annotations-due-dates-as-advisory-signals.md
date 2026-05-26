@@ -4,6 +4,7 @@ title: Planning Annotations — Due Dates as Advisory Signals and Started Tags a
 status: accepted
 features:
 - FT-053
+- FT-069
 supersedes: []
 superseded-by: []
 domains:

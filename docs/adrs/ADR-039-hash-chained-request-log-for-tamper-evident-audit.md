@@ -4,6 +4,7 @@ title: Hash-Chained Request Log for Tamper-Evident Audit
 status: accepted
 features:
 - FT-042
+- FT-069
 supersedes: []
 superseded-by: []
 domains:
