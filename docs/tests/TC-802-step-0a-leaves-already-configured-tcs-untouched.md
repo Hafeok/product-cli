@@ -2,7 +2,7 @@
 id: TC-802
 title: Step 0a leaves already-configured TCs untouched
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-068
@@ -11,6 +11,8 @@ phase: 5
 runner: cargo-test
 runner-args: tc_802_step_0a_skips_already_configured_tcs
 runner-timeout: 120
+last-run: 2026-05-26T12:31:19.240471574+00:00
+last-run-duration: 0.2s
 ---
 
 ## Scenario

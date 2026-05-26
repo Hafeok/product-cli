@@ -2,7 +2,7 @@
 id: FT-068
 title: Convention-Derived TC Runner Config in `product implement`
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-058
 adrs:

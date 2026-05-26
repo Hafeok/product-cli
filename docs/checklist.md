@@ -1319,3 +1319,19 @@
 - [x] TC-787: mcp_feature_link_returns_structured_writes_report (scenario) — passing
 - [x] TC-788: ft_066_exit_criteria_mcp_status_and_link_parity (exit-criteria) — passing
 
+### FT-068 — Convention-Derived TC Runner Config in `product implement` [x]
+
+- [x] ADR-018: Testing Strategy — Property-Based, Session-Based, and LLM Benchmark (accepted)
+- [x] ADR-021: Implementation Pipeline — `product verify` and the Knowledge Boundary (accepted)
+- [x] ADR-040: Unified Verify Pipeline and the LLM Boundary (accepted)
+- [x] ADR-043: Slice + Adapter Architecture for Command Handlers (accepted)
+- [x] ADR-047: Functional Specification Lives in Feature Body, Not a Separate Artifact (accepted)
+- [x] ADR-048: Canonical Repository Layout — All Product State Under `.product/` (accepted)
+- [x] TC-799: Step 0a auto-fills missing runner config and Step 0 preflight passes (scenario) — passing
+- [x] TC-800: --no-auto-runners restores pre-FT-068 E022 behaviour (scenario) — passing
+- [x] TC-801: --dry-run prints the auto-fill plan without writing TC front-matter (scenario) — passing
+- [x] TC-802: Step 0a leaves already-configured TCs untouched (scenario) — passing
+- [x] TC-803: feature status in-progress still fires E022 directly (scenario) — passing
+- [x] TC-804: graph check still fires E022 after manual runner-line delete (scenario) — passing
+- [x] TC-805: FT-068 consolidated build test lint exit criteria (exit-criteria) — passing
+

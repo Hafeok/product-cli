@@ -9,11 +9,14 @@ superseded-by: []
 domains:
 - api
 scope: domain
-content-hash: sha256:a689b9847e258be36a4a530771db27d8661b70f4a30627833c4121064b90ca95
+content-hash: sha256:90f609ad711daabd3843fb125f23f94c5f1ea5d8cab425047a18ec4456662e97
 amendments:
 - date: 2026-04-28T19:33:32Z
   reason: 'FT-058: invert the no-runner clause from soft-skip to hard E022 fail when the linked feature is in-progress or complete. The original "TCs without a runner field are always unrunnable, do not block feature completion" rule let features stay perpetually in-progress because the missing-runner TC was never noticed. The requires-fails-prerequisite branch of unrunnable is preserved unchanged. Adds a rejected-alternative entry documenting the historical soft-skip behaviour.'
   previous-hash: sha256:904c6499db4d261b4407b93a8d257113789815e1c4c14c71dea41ec7e01285ce
+- date: 2026-05-26T12:28:30Z
+  reason: FT-068 — Add convention-derived runner config auto-fill amendment
+  previous-hash: sha256:a689b9847e258be36a4a530771db27d8661b70f4a30627833c4121064b90ca95
 ---
 
 **Status:** Accepted
@@ -243,6 +246,29 @@ echo "When complete, run: product graph check && product gap check --changed"
 ```
 
 These scripts make the composition explicit and learnable without Product owning the composition.
+
+---
+
+### Amendment 2026-05-26 — Convention-Derived Runner Config Auto-Fill (FT-068)
+
+`product implement FT-XXX` ships a Step 0a auto-fill that runs
+immediately before the existing Step 0 preflight. For every TC linked
+to the target feature that lacks `runner` or `runner-args`, Step 0a
+derives `tc_<NNN>_<slug>` from the TC filename and writes
+`runner: cargo-test`, `runner-args: <derived>`,
+`runner-timeout: 120s` via the existing `tc::runner_config` slice
+(preserving FT-042 request-log hash chain semantics). The `--no-auto-runners`
+flag disables Step 0a entirely; `--dry-run` prints the plan without
+writing.
+
+The amendment is narrow: it does **not** weaken any of the five
+enforcement gates. The auto-fill is local to `product implement` —
+the only command where the agent must be invoked before the runner
+config exists. `product preflight`, `product graph check`,
+`product feature status …in-progress`, `product request apply`, and
+`product verify` remain strict and fire E022 directly. Step 0a runs
+before the gate evaluates; once it has, the runner fields are
+present and the gate passes naturally.
 
 ---
 

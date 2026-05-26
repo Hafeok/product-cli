@@ -2,7 +2,7 @@
 id: TC-805
 title: FT-068 consolidated build test lint exit criteria
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-068
@@ -11,6 +11,8 @@ phase: 5
 runner: cargo-test
 runner-args: tc_805_ft_068_consolidated_exit_criteria
 runner-timeout: 600
+last-run: 2026-05-26T12:31:19.240471574+00:00
+last-run-duration: 0.2s
 ---
 
 ## Exit criteria

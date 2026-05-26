@@ -97,7 +97,7 @@ Use the `product` CLI (or MCP tools) to stay in sync with the knowledge graph.
 
 **Always, regardless of path:**
 
-- **Configure TC runners** — before verifying, ensure every TC linked to the feature has `runner: cargo-test` and `runner-args: "tc_XXX_snake_case_name"` in its front-matter (see "TC Runner Configuration" below). Without these fields, `product verify` silently skips the TC.
+- **Configure TC runners** — before verifying, ensure every TC linked to the feature has `runner: cargo-test` and `runner-args: "tc_XXX_snake_case_name"` in its front-matter (see "TC Runner Configuration" below). Without these fields, `product verify` (and four other gates) fail with E022; `product implement` auto-fills them from the TC filename unless `--no-auto-runners` is set.
 - **Verify work** — run `product verify FT-XXX` after implementation to execute TC runners and update test status in front-matter
 - **Mark done** — when all TCs pass, `product verify` auto-updates feature status to complete and regenerates `CHECKLIST.md`
 - **Check health** — run `product gap check` and `product drift check` to catch specification issues before committing

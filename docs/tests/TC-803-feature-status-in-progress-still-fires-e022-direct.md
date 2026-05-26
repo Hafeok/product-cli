@@ -2,7 +2,7 @@
 id: TC-803
 title: feature status in-progress still fires E022 directly
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-068
@@ -11,6 +11,8 @@ phase: 5
 runner: cargo-test
 runner-args: tc_803_feature_status_in_progress_still_fires_e022
 runner-timeout: 120
+last-run: 2026-05-26T12:31:19.240471574+00:00
+last-run-duration: 0.2s
 ---
 
 ## Scenario

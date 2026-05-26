@@ -6,9 +6,24 @@ use std::process;
 
 use super::{acquire_write_lock, load_graph, BoxResult};
 
-pub(crate) fn handle_implement(id: &str, dry_run: bool, no_verify: bool, headless: bool) -> BoxResult {
+pub(crate) fn handle_implement(
+    id: &str,
+    dry_run: bool,
+    no_verify: bool,
+    headless: bool,
+    no_auto_runners: bool,
+) -> BoxResult {
     let (config, root, graph) = load_graph()?;
-    implement::run_implement(id, &config, &root, &graph, dry_run, no_verify, headless)?;
+    implement::run_implement(
+        id,
+        &config,
+        &root,
+        &graph,
+        dry_run,
+        no_verify,
+        headless,
+        no_auto_runners,
+    )?;
     Ok(())
 }
 

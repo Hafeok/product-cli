@@ -2,6 +2,7 @@
 
 pub mod pipeline;
 mod runner;
+pub mod runner_autofill;
 pub mod verify;
 
 // Re-export public API

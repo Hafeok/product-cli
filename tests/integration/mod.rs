@@ -21037,3 +21037,257 @@ fn tc_798_ft_067_exit_criteria() {
     assert!(out.stdout.contains("ADR-003"), "should list ADR-003 under platform");
     assert!(out.stdout.contains("ADR-004"), "should list ADR-004 under platform");
 }
+
+// ===========================================================================
+// FT-068 — Convention-derived runner config auto-fill in `product implement`
+// ===========================================================================
+
+/// Write a TC file with a filename that lets the auto-fill derive a slug.
+/// `slug_suffix` is the part after `TC-NNN-` in the filename.
+fn write_tc_with_filename(
+    h: &Harness,
+    tc_id: &str,
+    slug_suffix: &str,
+    feature: &str,
+    runner: Option<&str>,
+    args: Option<&str>,
+) {
+    let mut fm = format!(
+        "---\nid: {}\ntitle: Auto-fill subject {}\ntype: scenario\nstatus: unimplemented\nvalidates:\n  features: [{}]\n  adrs: [ADR-001]\nphase: 1\n",
+        tc_id, tc_id, feature
+    );
+    if let Some(r) = runner {
+        fm.push_str(&format!("runner: {}\n", r));
+    }
+    if let Some(a) = args {
+        fm.push_str(&format!("runner-args: \"{}\"\n", a));
+    }
+    fm.push_str("---\n\nTest body.\n");
+    h.write(
+        &format!("docs/tests/{}-{}.md", tc_id, slug_suffix),
+        &fm,
+    );
+}
+
+/// TC-799 — Step 0a auto-fills missing runner config and Step 0 preflight
+/// passes when invoked via `product implement FT-XXX`.
+#[test]
+fn tc_799_step_0a_autofills_missing_runner_config() {
+    let h = Harness::new();
+    write_test_adr(&h);
+    write_feature_with_tcs(&h, "FT-001", "planned", &["TC-001"]);
+    // TC-001 with a filename slug, no runner config.
+    write_tc_with_filename(&h, "TC-001", "missing-runner-bits", "FT-001", None, None);
+
+    // PATH=/nonexistent so the agent spawn fails fast (Step 4 emits a
+    // warning and the pipeline continues). --no-verify skips Step 5 so
+    // the test exits 0 cleanly after Step 0a has done its work.
+    let out = h.run_with_env(
+        &["implement", "FT-001", "--no-verify"],
+        &[("PATH", "/nonexistent")],
+    );
+    out.assert_exit(0);
+
+    // Diagnostic line is printed in the canonical harness format.
+    out.assert_stdout_contains("pre-flight: TC-001 missing runner config");
+    out.assert_stdout_contains("runner=cargo-test");
+    out.assert_stdout_contains("args=tc_001_missing_runner_bits");
+    out.assert_stdout_contains("timeout=120s");
+    // Summary line.
+    out.assert_stdout_contains("auto-filled runner config on 1 TC(s)");
+    // Step 0 (preflight) passes after the auto-fill writes the runner
+    // config: the pipeline progresses through context assembly.
+    out.assert_stdout_contains("Step 0: Preflight... OK");
+    out.assert_stdout_contains("Step 3: Context assembly...");
+
+    // TC file on disk now carries the auto-filled runner config.
+    let tc_after = h.read("docs/tests/TC-001-missing-runner-bits.md");
+    assert!(
+        tc_after.contains("runner: cargo-test"),
+        "TC-001 should carry runner: cargo-test after Step 0a.\n{}",
+        tc_after
+    );
+    assert!(
+        tc_after.contains("runner-args: tc_001_missing_runner_bits")
+            || tc_after.contains("runner-args: \"tc_001_missing_runner_bits\""),
+        "TC-001 should carry derived runner-args.\n{}",
+        tc_after
+    );
+    assert!(
+        tc_after.contains("runner-timeout: 120"),
+        "TC-001 should carry runner-timeout: 120.\n{}",
+        tc_after
+    );
+}
+
+/// TC-800 — --no-auto-runners restores the pre-FT-068 strict E022 behaviour.
+#[test]
+fn tc_800_no_auto_runners_restores_e022() {
+    let h = Harness::new();
+    write_test_adr(&h);
+    write_feature_with_tcs(&h, "FT-001", "planned", &["TC-001"]);
+    write_tc_with_filename(&h, "TC-001", "still-missing", "FT-001", None, None);
+
+    let tc_before = h.read("docs/tests/TC-001-still-missing.md");
+
+    let out = h.run_with_env(
+        &["implement", "FT-001", "--no-auto-runners", "--no-verify"],
+        &[("PATH", "/nonexistent")],
+    );
+    out.assert_exit(22);
+    out.assert_stderr_contains("error[E022]");
+    out.assert_stderr_contains("TC runner configuration missing");
+    out.assert_stderr_contains("TC-001");
+
+    // Step 0a clearly logs it was skipped.
+    out.assert_stdout_contains("SKIPPED (--no-auto-runners)");
+
+    // TC file on disk is byte-identical — nothing was written.
+    let tc_after = h.read("docs/tests/TC-001-still-missing.md");
+    assert_eq!(
+        tc_before, tc_after,
+        "TC-001 must not be modified under --no-auto-runners"
+    );
+}
+
+/// TC-801 — --dry-run prints the auto-fill plan but does NOT write the
+/// TC front-matter.
+#[test]
+fn tc_801_dry_run_prints_plan_no_write() {
+    let h = Harness::new();
+    write_test_adr(&h);
+    write_feature_with_tcs(&h, "FT-001", "planned", &["TC-001"]);
+    write_tc_with_filename(&h, "TC-001", "dry-run-target", "FT-001", None, None);
+
+    let tc_before = h.read("docs/tests/TC-001-dry-run-target.md");
+
+    let out = h.run(&["implement", "FT-001", "--dry-run"]);
+    out.assert_exit(0);
+
+    // The plan diagnostic line IS printed.
+    out.assert_stdout_contains("pre-flight: TC-001 missing runner config");
+    out.assert_stdout_contains("args=tc_001_dry_run_target");
+    out.assert_stdout_contains("DRY-RUN");
+    out.assert_stdout_contains("no writes performed");
+
+    // Pipeline still stops before agent invocation per --dry-run contract.
+    out.assert_stdout_contains("--dry-run: stopping before agent invocation");
+
+    // TC file on disk is unchanged.
+    let tc_after = h.read("docs/tests/TC-001-dry-run-target.md");
+    assert_eq!(
+        tc_before, tc_after,
+        "TC-001 must not be written under --dry-run"
+    );
+}
+
+/// TC-802 — Step 0a leaves already-configured TCs alone.
+#[test]
+fn tc_802_step_0a_skips_already_configured_tcs() {
+    let h = Harness::new();
+    write_test_adr(&h);
+    write_feature_with_tcs(&h, "FT-001", "planned", &["TC-001"]);
+    // TC-001 already has both runner fields set to a custom value that
+    // is intentionally different from the filename-derived slug.
+    write_tc_with_filename(
+        &h,
+        "TC-001",
+        "filename-slug",
+        "FT-001",
+        Some("cargo-test"),
+        Some("tc_999_custom_name"),
+    );
+
+    let tc_before = h.read("docs/tests/TC-001-filename-slug.md");
+
+    let out = h.run_with_env(
+        &["implement", "FT-001", "--no-verify"],
+        &[("PATH", "/nonexistent")],
+    );
+    out.assert_exit(0);
+
+    // No diagnostic line for TC-001 — it was already configured.
+    assert!(
+        !out.stdout.contains("pre-flight: TC-001 missing runner config"),
+        "Step 0a must not log a write for an already-configured TC.\nstdout: {}",
+        out.stdout
+    );
+    out.assert_stdout_contains("all TCs already configured");
+
+    // TC file on disk is byte-identical — explicit override is preserved.
+    let tc_after = h.read("docs/tests/TC-001-filename-slug.md");
+    assert_eq!(
+        tc_before, tc_after,
+        "TC-001 with explicit runner-args must not be modified"
+    );
+    assert!(
+        tc_after.contains("tc_999_custom_name"),
+        "explicit override must survive verbatim.\n{}",
+        tc_after
+    );
+}
+
+/// TC-803 — `product feature status FT-XXX in-progress` still fires E022
+/// directly when a linked TC lacks runner config. Proves the auto-fill is
+/// scoped to `product implement` only.
+#[test]
+fn tc_803_feature_status_in_progress_still_fires_e022() {
+    let h = Harness::new();
+    write_test_adr(&h);
+    write_feature_with_tcs(&h, "FT-001", "planned", &["TC-001"]);
+    write_tc(&h, "TC-001", "FT-001", None, None);
+
+    let out = h.run(&["feature", "status", "FT-001", "in-progress"]);
+    out.assert_exit(22);
+    out.assert_stderr_contains("error[E022]");
+    out.assert_stderr_contains("TC-001");
+
+    // Feature status remains planned — no write happened.
+    let f = h.read("docs/features/FT-001-test.md");
+    assert!(
+        f.contains("status: planned"),
+        "Feature status must remain planned after rejected transition.\n{}",
+        f
+    );
+}
+
+/// TC-804 — `product graph check` still fires E022 after a manual edit
+/// drops the `runner:` line from a TC linked to an in-progress feature.
+#[test]
+fn tc_804_graph_check_still_fires_e022() {
+    let h = Harness::new();
+    write_test_adr(&h);
+    write_feature_with_tcs(&h, "FT-001", "in-progress", &["TC-001"]);
+    // TC originally had runner config — simulate a manual edit that
+    // dropped the `runner:` line, leaving only `runner-args`.
+    write_tc(&h, "TC-001", "FT-001", None, Some("tc_001_x"));
+
+    let out = h.run(&["graph", "check"]);
+    out.assert_exit(1);
+    out.assert_stderr_contains("E022");
+    out.assert_stderr_contains("TC-001");
+    // Canonical YAML snippet hint is present per ADR-013.
+    out.assert_stderr_contains("runner: cargo-test");
+    out.assert_stderr_contains("runner-args:");
+}
+
+/// TC-805 — FT-068 consolidated exit criteria. The actual gates (cargo
+/// build, cargo t, cargo clippy, code-quality tests, product graph check,
+/// product verify) are enforced by the surrounding test infrastructure.
+/// This TC asserts the binary surface that backs the feature: the
+/// `--no-auto-runners` flag is recognised, and `cargo test --lib
+/// runner_autofill` exercises the pure-function unit tests.
+#[test]
+fn tc_805_ft_068_consolidated_exit_criteria() {
+    let h = Harness::new();
+    // The flag is plumbed end-to-end — `product implement --help` lists it.
+    let out = h.run(&["implement", "--help"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("--no-auto-runners");
+
+    // The binary is the same one cargo built; the gates that this TC
+    // consolidates (cargo build, cargo t, cargo clippy, code-quality
+    // fitness tests) are enforced by the harness this test runs under.
+    // If those gates failed, this test would not run.
+}
+

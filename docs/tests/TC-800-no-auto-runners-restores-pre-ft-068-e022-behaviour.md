@@ -2,7 +2,7 @@
 id: TC-800
 title: --no-auto-runners restores pre-FT-068 E022 behaviour
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-068
@@ -11,6 +11,8 @@ phase: 5
 runner: cargo-test
 runner-args: tc_800_no_auto_runners_restores_e022
 runner-timeout: 120
+last-run: 2026-05-26T12:31:19.240471574+00:00
+last-run-duration: 0.2s
 ---
 
 ## Scenario

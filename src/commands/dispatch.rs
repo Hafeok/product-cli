@@ -101,10 +101,10 @@ fn dispatch_forecast(command: Commands, fmt: &str) -> BoxResult {
 }
 
 fn dispatch_implement(command: Commands) -> BoxResult {
-    let Commands::Implement { id, dry_run, no_verify, headless } = command else {
+    let Commands::Implement { id, dry_run, no_verify, headless, no_auto_runners } = command else {
         unreachable!("dispatch_implement called with non-Implement variant")
     };
-    implement::handle_implement(&id, dry_run, no_verify, headless)
+    implement::handle_implement(&id, dry_run, no_verify, headless, no_auto_runners)
 }
 
 fn dispatch_init(command: Commands) -> BoxResult {

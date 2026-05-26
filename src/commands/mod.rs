@@ -206,6 +206,9 @@ pub enum Commands {
         /// Run non-interactively via claude -p (no human in the loop)
         #[arg(long)]
         headless: bool,
+        /// Disable Step 0a auto-fill of TC runner config (FT-068)
+        #[arg(long = "no-auto-runners")]
+        no_auto_runners: bool,
     },
     /// Initialize a new Product repository (ADR-033, ADR-048)
     Init {
