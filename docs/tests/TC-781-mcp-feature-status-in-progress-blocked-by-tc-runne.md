@@ -11,8 +11,8 @@ validates:
 phase: 5
 runner: cargo-test
 runner-args: tc_781_mcp_feature_status_in_progress_blocked_by_tc_runner_gate
-last-run: 2026-05-21T09:23:25.149052432+00:00
-last-run-duration: 0.2s
+last-run: 2026-05-22T07:23:52.891705159+00:00
+last-run-duration: 0.1s
 ---
 
 ## Description
