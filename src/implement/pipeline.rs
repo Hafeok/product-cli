@@ -185,53 +185,63 @@ pub fn run_implement(
     }
 
     // Step 4 — Agent invocation
-    if headless {
-        println!("  Step 4: Invoking agent (headless)...");
-        let agent_result = Command::new("claude")
-            .args([
-                "-p",
-                "--dangerously-skip-permissions",
-                "--system-prompt-file",
-                &tmp_path.display().to_string(),
-                "Implement the feature described in the system prompt. Follow all constraints and run product verify when done.",
-            ])
-            .current_dir(root)
-            .status();
+    //
+    // The depth-2 context bundle for non-trivial features can exceed Linux's
+    // MAX_ARG_STRLEN (128 KB per argv entry), so we can't pass it via
+    // `--system-prompt <content>` or as the positional `[prompt]` argument.
+    // `--system-prompt-file` only works under `--bare`, which disables
+    // OAuth/keychain auth (requires ANTHROPIC_API_KEY) and is not viable.
+    //
+    // Solution: the bundle is already on disk at `tmp_path`. Spawn claude
+    // interactively with a short positional prompt (~200 chars) that tells
+    // the agent to Read the bundle file as its first turn. The bundle then
+    // arrives as a Read tool-result in the context window, identical effect
+    // to delivering it as system prompt, but with no argv pressure.
+    //
+    // Interactive TUI is preserved end-to-end — drivers (tmux-orchestrator
+    // etc.) can attach, capture-pane, send-keys, etc. The agent exits
+    // naturally after `product verify` reports passing TCs.
+    let kickoff = format!(
+        "Read {} — that file is your complete implementation specification \
+         (system framing, hard constraints, depth-2 context bundle of the \
+         feature plus its linked ADRs and TCs). Follow it to implement {}. \
+         When the test suite passes, run `product verify {}`, then exit.",
+        tmp_path.display(),
+        feature_id,
+        feature_id,
+    );
 
-        match agent_result {
-            Ok(status) => {
-                if status.success() {
-                    println!("  Agent completed successfully.");
-                } else {
-                    println!("  Agent exited with status: {}", status);
-                }
-            }
-            Err(e) => {
-                eprintln!("  Warning: could not invoke agent: {}", e);
-                eprintln!("  (Is 'claude' in PATH? Or configure a custom agent in product.toml)");
+    println!(
+        "  Step 4: Invoking agent ({})...",
+        if headless { "headless" } else { "interactive" }
+    );
+
+    let mut args: Vec<&str> = Vec::new();
+    if headless {
+        args.push("-p");
+    }
+    args.push("--dangerously-skip-permissions");
+    args.push(&kickoff);
+
+    let agent_result = Command::new("claude")
+        .args(&args)
+        .current_dir(root)
+        .status();
+
+    match agent_result {
+        Ok(status) => {
+            if status.success() {
+                println!("  Agent completed successfully.");
+            } else {
+                println!("  Agent exited with status: {}", status);
             }
         }
-    } else {
-        println!("  Step 4: Invoking agent (interactive)...");
-        let agent_result = Command::new("claude")
-            .args(["--dangerously-skip-permissions", "--system-prompt-file", &tmp_path.display().to_string()])
-            .current_dir(root)
-            .status();
-
-        match agent_result {
-            Ok(status) => {
-                if status.success() {
-                    println!("  Agent completed successfully.");
-                } else {
-                    println!("  Agent exited with status: {}", status);
-                }
-            }
-            Err(e) => {
-                eprintln!("  Warning: could not invoke agent: {}", e);
-                eprintln!("  (Is 'claude' in PATH? Or configure a custom agent in product.toml)");
-            }
+        Err(e) => {
+            eprintln!("  Warning: could not invoke agent: {}", e);
+            eprintln!("  (Is 'claude' in PATH? Or configure a custom agent in product.toml)");
         }
     }
+    let _ = impl_prompt; // bundle stays on disk at tmp_path for the agent to Read
 
     // Step 5 — Auto-verify
     if !no_verify {
