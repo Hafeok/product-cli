@@ -2,7 +2,7 @@
 id: TC-811
 title: ft_069_exit_criteria
 type: exit-criteria
-status: failing
+status: passing
 validates:
   features:
   - FT-069
@@ -10,9 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_811_ft_069_exit_criteria
-last-run: 2026-05-27T10:31:00.349226795+00:00
-last-run-duration: 0.3s
-failure-message: "No #[test] fn matching 'tc_811_ft_069_exit_criteria' found in tests/*.rs — did you forget to add the integration test?"
+last-run: 2026-05-27T11:04:45.120555493+00:00
+last-run-duration: 0.2s
 ---
 
 ## Exit Criteria

@@ -2,6 +2,7 @@
 
 mod algorithms;
 mod dep_validation;
+pub mod full_check;
 pub mod functional_spec_validation;
 mod lifecycle_validation;
 pub mod inference;

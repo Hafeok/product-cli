@@ -2,7 +2,7 @@
 id: TC-809
 title: mcp_graph_check_surfaces_log_verification_finding
 type: scenario
-status: failing
+status: passing
 validates:
   features:
   - FT-069
@@ -10,9 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_809_mcp_graph_check_surfaces_log_verification_finding
-last-run: 2026-05-27T10:31:00.349226795+00:00
-last-run-duration: 0.3s
-failure-message: "No #[test] fn matching 'tc_809_mcp_graph_check_surfaces_log_verification_finding' found in tests/*.rs — did you forget to add the integration test?"
+last-run: 2026-05-27T11:04:45.120555493+00:00
+last-run-duration: 0.2s
 ---
 
 ## Scenario

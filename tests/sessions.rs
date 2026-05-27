@@ -161,3 +161,7 @@ mod ft_064_strict_change_spec_and_deletion;
 // FT-066 — MCP parity for feature/TC status writes and reciprocal linking
 #[path = "sessions/ft_066_mcp_status_and_link_parity.rs"]
 mod ft_066_mcp_status_and_link_parity;
+
+// FT-069 — MCP parity for `product_graph_check`
+#[path = "sessions/ft_069_mcp_graph_check_parity.rs"]
+mod ft_069_mcp_graph_check_parity;

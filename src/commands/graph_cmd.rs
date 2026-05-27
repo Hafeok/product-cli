@@ -1,7 +1,7 @@
 //! Graph operations: check, rebuild, query, stats, centrality, autolink, coverage, infer.
 
 use clap::Subcommand;
-use product_lib::{context::summary as bundle_summary, domains, graph::{inference, responsibility}, rdf};
+use product_lib::{context::summary as bundle_summary, domains, graph::inference, rdf};
 use std::process;
 
 use super::graph_autolink::graph_autolink;
@@ -77,20 +77,11 @@ pub(crate) fn handle_graph(cmd: GraphCommands, global_format: &str) -> BoxResult
 
 fn graph_check(format: Option<String>, global_format: &str) -> BoxResult {
     let (config, root, graph) = load_graph()?;
-    let mut result = graph.check_with_config(Some(&config));
-    domains::validate_domains(&graph, &config.domains, &mut result.errors, &mut result.warnings);
-    responsibility::check_responsibility(&graph, config.responsibility(), &mut result);
-    // FT-053 / ADR-045 — W028 (due-date passed) and W029 (approaching).
-    let today = chrono::Local::now().date_naive();
-    product_lib::graph::planning_validation::check_due_dates(
-        &graph, &config.planning, today, &mut result,
-    );
+    // FT-069: route all validation through the shared `full_check::run`
+    // so the MCP `product_graph_check` tool produces a byte-identical
+    // envelope on the same fixture (ADR-020 parity invariant).
+    let result = product_lib::graph::full_check::run(&graph, &config, &root);
     for w in config.validate_product_section() { eprintln!("{}", w); }
-
-    // FT-042, ADR-039 decision 10: wire log verification into graph check.
-    if config.log.verify_on_check {
-        append_log_findings_to_check(&config, &root, &mut result);
-    }
 
     let fmt = format.as_deref().unwrap_or(global_format);
 
@@ -110,39 +101,6 @@ fn graph_check(format: Option<String>, global_format: &str) -> BoxResult {
         process::exit(code);
     }
     Ok(())
-}
-
-/// FT-042: append log-verification findings to the graph check result.
-fn append_log_findings_to_check(
-    config: &product_lib::config::ProductConfig,
-    root: &std::path::Path,
-    result: &mut product_lib::error::CheckResult,
-) {
-    use product_lib::error::Diagnostic;
-    use product_lib::request_log::{log_path, verify::{verify_log, Severity, VerifyOptions}};
-
-    let lp = log_path(root, Some(&config.paths.requests));
-    if !lp.exists() {
-        return;
-    }
-    let outcome = verify_log(&lp, root, &VerifyOptions::default());
-    for f in outcome.findings {
-        let mut diag = match f.severity {
-            Severity::Error => Diagnostic::error(&f.code, &f.message),
-            Severity::Warning => Diagnostic::warning(&f.code, &f.message),
-        };
-        diag = diag.with_file(lp.clone());
-        if let Some(line) = f.line {
-            diag = diag.with_line(line);
-        }
-        if let Some(detail) = f.detail {
-            diag = diag.with_detail(&detail);
-        }
-        match f.severity {
-            Severity::Error => result.errors.push(diag),
-            Severity::Warning => result.warnings.push(diag),
-        }
-    }
 }
 
 fn graph_rebuild() -> BoxResult {

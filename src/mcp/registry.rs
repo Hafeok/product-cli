@@ -143,15 +143,15 @@ fn dispatch_tool(
         "product_adr_show" => read_handlers::handle_adr_show(args, graph),
         "product_test_show" => read_handlers::handle_test_show(args, graph),
         "product_graph_check" => {
-            let mut result = graph.check();
-            // W019: feature outside product responsibility (FT-039)
+            // FT-069: route through the shared `graph::full_check::run` to
+            // guarantee byte-identical parity with `product graph check
+            // --format json`. The MCP handler used to call `graph.check()`
+            // plus a single responsibility pass, silently omitting
+            // domain (E011/E012), structural-with-config (E006/W030),
+            // planning (W028/W029), and log-verification findings.
             let config = crate::config::ProductConfig::load_from_root(repo_root)
                 .map_err(|e| format!("{}", e))?;
-            crate::graph::responsibility::check_responsibility(
-                graph,
-                config.responsibility(),
-                &mut result,
-            );
+            let result = crate::graph::full_check::run(graph, &config, repo_root);
             Ok(result.to_json())
         }
         "product_graph_central" => read_handlers::handle_graph_central(args, graph),

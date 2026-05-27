@@ -1335,7 +1335,7 @@
 - [x] TC-804: graph check still fires E022 after manual runner-line delete (scenario) — passing
 - [x] TC-805: FT-068 consolidated build test lint exit criteria (exit-criteria) — passing
 
-### FT-069 — MCP Parity for product_graph_check — config-aware checks, domain validation, due-dates, log findings [ ]
+### FT-069 — MCP Parity for product_graph_check — config-aware checks, domain validation, due-dates, log findings [x]
 
 - [x] ADR-020: MCP Server — Dual Transport (stdio and HTTP) (accepted)
 - [x] ADR-013: Error Model and User-Facing Error Format (accepted)
@@ -1345,10 +1345,157 @@
 - [x] ADR-043: Slice + Adapter Architecture for Command Handlers (accepted)
 - [x] ADR-018: Testing Strategy — Property-Based, Session-Based, and LLM Benchmark (accepted)
 - [x] ADR-042: TC Type System — Reserved Structural Types and Open Descriptive Types (accepted)
-- [!] TC-806: mcp_graph_check_surfaces_w030_functional_spec_finding (scenario) — failing
-- [!] TC-807: mcp_graph_check_surfaces_e011_domain_acknowledgement_finding (scenario) — failing
-- [!] TC-808: mcp_graph_check_surfaces_w028_due_date_finding (scenario) — failing
-- [!] TC-809: mcp_graph_check_surfaces_log_verification_finding (scenario) — failing
-- [!] TC-810: mcp_graph_check_json_equals_cli_graph_check_json (invariant) — failing
-- [!] TC-811: ft_069_exit_criteria (exit-criteria) — failing
+- [x] TC-806: mcp_graph_check_surfaces_w030_functional_spec_finding (scenario) — passing
+- [x] TC-807: mcp_graph_check_surfaces_e011_domain_acknowledgement_finding (scenario) — passing
+- [x] TC-808: mcp_graph_check_surfaces_w028_due_date_finding (scenario) — passing
+- [x] TC-809: mcp_graph_check_surfaces_log_verification_finding (scenario) — passing
+- [x] TC-810: mcp_graph_check_json_equals_cli_graph_check_json (invariant) — passing
+- [x] TC-811: ft_069_exit_criteria (exit-criteria) — passing
+
+### FT-070 — Pattern Artifact — Parse, Schema, CRUD [ ]
+
+- [ ] ADR-050: Introduce Pattern (PAT) Artifact Type for Implementation Knowledge (proposed)
+- [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
+- [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
+- [x] ADR-043: Slice + Adapter Architecture for Command Handlers (accepted)
+- [x] ADR-020: MCP Server — Dual Transport (stdio and HTTP) (accepted)
+- [x] ADR-013: Error Model and User-Facing Error Format (accepted)
+- [x] ADR-015: File Write Safety — Atomic Writes and Advisory Locking (accepted)
+- [x] ADR-018: Testing Strategy — Property-Based, Session-Based, and LLM Benchmark (accepted)
+- [x] ADR-047: Functional Specification Lives in Feature Body, Not a Separate Artifact (accepted)
+- [x] ADR-048: Canonical Repository Layout — All Product State Under `.product/` (accepted)
+- [ ] ADR-051: TC Observability Requirement — Causation Over Transaction (proposed)
+- [x] ADR-040: Unified Verify Pipeline and the LLM Boundary (accepted)
+- [x] ADR-041: Removal & Deprecation Verification — Absence TCs and ADR `removes`/`deprecates` Fields (accepted)
+- [x] ADR-042: TC Type System — Reserved Structural Types and Open Descriptive Types (accepted)
+- [x] ADR-049: Per-Model Context Bundle Templates as Data Files (accepted)
+- [ ] TC-812: pattern_new_writes_file_with_required_sections (scenario) — unimplemented
+- [ ] TC-813: pattern_link_requires_cycle_returns_e003 (scenario) — unimplemented
+- [ ] TC-814: pattern_link_example_materialises_feature_patterns (scenario) — unimplemented
+- [ ] TC-815: request_apply_pattern_creates_file_and_back_link (scenario) — unimplemented
+- [ ] TC-816: mcp_pattern_new_writes_to_disk (scenario) — unimplemented
+- [ ] TC-817: mcp_pattern_status_writes_status_field (scenario) — unimplemented
+- [ ] TC-818: pattern_status_to_live_clears_deprecated_by (scenario) — unimplemented
+- [ ] TC-819: ft_070_exit_criteria_pattern_crud_parity (exit-criteria) — unimplemented
+
+### FT-071 — Pattern Participation in Graph Algorithms — Context, Impact, Centrality, Validation [ ]
+
+- [ ] ADR-050: Introduce Pattern (PAT) Artifact Type for Implementation Knowledge (proposed)
+- [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
+- [x] ADR-006: Context Bundle as the Primary LLM Interface (accepted)
+- [x] ADR-020: MCP Server — Dual Transport (stdio and HTTP) (accepted)
+- [x] ADR-013: Error Model and User-Facing Error Format (accepted)
+- [x] ADR-043: Slice + Adapter Architecture for Command Handlers (accepted)
+- [x] ADR-018: Testing Strategy — Property-Based, Session-Based, and LLM Benchmark (accepted)
+- [x] ADR-049: Per-Model Context Bundle Templates as Data Files (accepted)
+- [x] ADR-048: Canonical Repository Layout — All Product State Under `.product/` (accepted)
+- [x] ADR-042: TC Type System — Reserved Structural Types and Open Descriptive Types (accepted)
+- [x] ADR-040: Unified Verify Pipeline and the LLM Boundary (accepted)
+- [x] ADR-047: Functional Specification Lives in Feature Body, Not a Separate Artifact (accepted)
+- [ ] ADR-051: TC Observability Requirement — Causation Over Transaction (proposed)
+- [x] ADR-041: Removal & Deprecation Verification — Absence TCs and ADR `removes`/`deprecates` Fields (accepted)
+- [ ] TC-820: context_bundle_includes_patterns_in_topo_order (scenario) — unimplemented
+- [ ] TC-821: context_bundle_measure_writes_patterns_count (scenario) — unimplemented
+- [ ] TC-822: impact_pat_lists_features_patterns_adrs (scenario) — unimplemented
+- [ ] TC-823: graph_check_requires_cycle_emits_error (scenario) — unimplemented
+- [ ] TC-824: graph_check_deprecated_pattern_cited_by_live_feature_emits_warning (scenario) — unimplemented
+- [ ] TC-825: graph_check_pattern_body_missing_section_emits_warning (scenario) — unimplemented
+- [ ] TC-826: graph_central_with_include_patterns_surfaces_pat_ids (scenario) — unimplemented
+- [ ] TC-827: graph_central_without_flag_excludes_pats (scenario) — unimplemented
+- [ ] TC-828: mcp_graph_check_pattern_findings_match_cli_json (scenario) — unimplemented
+- [ ] TC-829: ft_071_exit_criteria_pattern_graph_integration (exit-criteria) — unimplemented
+
+### FT-072 — TC Observability Requirement — observes Field and graph check Validation [ ]
+
+- [ ] ADR-051: TC Observability Requirement — Causation Over Transaction (proposed)
+- [ ] ADR-050: Introduce Pattern (PAT) Artifact Type for Implementation Knowledge (proposed)
+- [x] ADR-002: YAML Front-Matter as the Graph Source of Truth (accepted)
+- [x] ADR-013: Error Model and User-Facing Error Format (accepted)
+- [x] ADR-018: Testing Strategy — Property-Based, Session-Based, and LLM Benchmark (accepted)
+- [x] ADR-020: MCP Server — Dual Transport (stdio and HTTP) (accepted)
+- [x] ADR-042: TC Type System — Reserved Structural Types and Open Descriptive Types (accepted)
+- [x] ADR-043: Slice + Adapter Architecture for Command Handlers (accepted)
+- [x] ADR-047: Functional Specification Lives in Feature Body, Not a Separate Artifact (accepted)
+- [x] ADR-049: Per-Model Context Bundle Templates as Data Files (accepted)
+- [x] ADR-040: Unified Verify Pipeline and the LLM Boundary (accepted)
+- [x] ADR-048: Canonical Repository Layout — All Product State Under `.product/` (accepted)
+- [x] ADR-041: Removal & Deprecation Verification — Absence TCs and ADR `removes`/`deprecates` Fields (accepted)
+- [ ] TC-830: tc_observes_field_parses_as_flat_list (scenario) — unimplemented
+- [ ] TC-831: tc_observes_missing_on_required_type_emits_error (scenario) — unimplemented
+- [ ] TC-832: tc_observes_missing_on_optional_type_passes (scenario) — unimplemented
+- [ ] TC-833: tc_observes_body_lacking_reference_emits_warning (scenario) — unimplemented
+- [ ] TC-834: tc_observes_unknown_surface_rejected_by_request_apply (scenario) — unimplemented
+- [ ] TC-835: tc_observes_custom_surface_accepted_via_config (scenario) — unimplemented
+- [ ] TC-836: tc_observes_grandfathering_threshold_works (scenario) — unimplemented
+- [ ] TC-837: mcp_graph_check_observes_findings_match_cli_json (scenario) — unimplemented
+- [ ] TC-838: ft_072_exit_criteria_observes_field (exit-criteria) — unimplemented
+
+### FT-073 — Pattern Authoring — author pattern Session and Feature-Aware Pattern Suggestions [ ]
+
+- [ ] ADR-050: Introduce Pattern (PAT) Artifact Type for Implementation Knowledge (proposed)
+- [x] ADR-022: Authoring Resources — System Prompts and Pre-Commit Review (accepted)
+- [x] ADR-020: MCP Server — Dual Transport (stdio and HTTP) (accepted)
+- [x] ADR-043: Slice + Adapter Architecture for Command Handlers (accepted)
+- [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
+- [x] ADR-013: Error Model and User-Facing Error Format (accepted)
+- [x] ADR-018: Testing Strategy — Property-Based, Session-Based, and LLM Benchmark (accepted)
+- [x] ADR-042: TC Type System — Reserved Structural Types and Open Descriptive Types (accepted)
+- [x] ADR-040: Unified Verify Pipeline and the LLM Boundary (accepted)
+- [x] ADR-049: Per-Model Context Bundle Templates as Data Files (accepted)
+- [x] ADR-048: Canonical Repository Layout — All Product State Under `.product/` (accepted)
+- [x] ADR-047: Functional Specification Lives in Feature Body, Not a Separate Artifact (accepted)
+- [x] ADR-041: Removal & Deprecation Verification — Absence TCs and ADR `removes`/`deprecates` Fields (accepted)
+- [ ] ADR-051: TC Observability Requirement — Causation Over Transaction (proposed)
+- [ ] TC-839: author_pattern_session_creates_valid_pat (scenario) — unimplemented
+- [ ] TC-840: author_feature_surfaces_matching_patterns_by_domain (scenario) — unimplemented
+- [ ] TC-841: feature_link_pattern_writes_bidirectional (scenario) — unimplemented
+- [ ] TC-842: mcp_feature_link_with_pattern_arg_writes_to_disk (scenario) — unimplemented
+- [ ] TC-843: mcp_pattern_new_in_authoring_session_writes_to_disk (scenario) — unimplemented
+- [ ] TC-844: graph_check_advisory_for_feature_with_no_patterns_when_enabled (scenario) — unimplemented
+- [ ] TC-845: feature_link_pattern_against_deprecated_pat_warns_but_writes (scenario) — unimplemented
+- [ ] TC-846: ft_073_exit_criteria_pattern_authoring (exit-criteria) — unimplemented
+
+### FT-074 — product implement Loads Patterns and Surfaces TC observes in the Executor Bundle [ ]
+
+- [ ] ADR-050: Introduce Pattern (PAT) Artifact Type for Implementation Knowledge (proposed)
+- [ ] ADR-051: TC Observability Requirement — Causation Over Transaction (proposed)
+- [x] ADR-006: Context Bundle as the Primary LLM Interface (accepted)
+- [x] ADR-021: Implementation Pipeline — `product verify` and the Knowledge Boundary (accepted)
+- [x] ADR-022: Authoring Resources — System Prompts and Pre-Commit Review (accepted)
+- [x] ADR-049: Per-Model Context Bundle Templates as Data Files (accepted)
+- [x] ADR-043: Slice + Adapter Architecture for Command Handlers (accepted)
+- [x] ADR-018: Testing Strategy — Property-Based, Session-Based, and LLM Benchmark (accepted)
+- [x] ADR-041: Removal & Deprecation Verification — Absence TCs and ADR `removes`/`deprecates` Fields (accepted)
+- [x] ADR-040: Unified Verify Pipeline and the LLM Boundary (accepted)
+- [x] ADR-042: TC Type System — Reserved Structural Types and Open Descriptive Types (accepted)
+- [x] ADR-047: Functional Specification Lives in Feature Body, Not a Separate Artifact (accepted)
+- [x] ADR-048: Canonical Repository Layout — All Product State Under `.product/` (accepted)
+- [ ] TC-847: implement_bundle_includes_patterns_in_topo_order (scenario) — unimplemented
+- [ ] TC-848: implement_bundle_renders_tc_observes_inline_with_tc_body (scenario) — unimplemented
+- [ ] TC-849: implement_bundle_contains_adr_051_hard_constraint_line (scenario) — unimplemented
+- [ ] TC-850: implement_pipeline_works_with_template_lacking_new_variables (scenario) — unimplemented
+- [ ] TC-851: implement_default_template_renders_all_new_sections (scenario) — unimplemented
+- [ ] TC-852: implement_skips_pattern_section_when_feature_has_none (scenario) — unimplemented
+- [ ] TC-853: ft_074_exit_criteria_implement_patterns_and_observes (exit-criteria) — unimplemented
+
+### FT-075 — Seed Pattern Catalog — PAT-001 Slice + Adapter, PAT-002 MCP Tool With Disk Side-Effect, PAT-003 TC Observability [ ]
+
+- [ ] ADR-050: Introduce Pattern (PAT) Artifact Type for Implementation Knowledge (proposed)
+- [ ] ADR-051: TC Observability Requirement — Causation Over Transaction (proposed)
+- [x] ADR-043: Slice + Adapter Architecture for Command Handlers (accepted)
+- [x] ADR-020: MCP Server — Dual Transport (stdio and HTTP) (accepted)
+- [x] ADR-038: Product Request — Unified Atomic Write Interface (accepted)
+- [x] ADR-018: Testing Strategy — Property-Based, Session-Based, and LLM Benchmark (accepted)
+- [x] ADR-048: Canonical Repository Layout — All Product State Under `.product/` (accepted)
+- [x] ADR-049: Per-Model Context Bundle Templates as Data Files (accepted)
+- [x] ADR-042: TC Type System — Reserved Structural Types and Open Descriptive Types (accepted)
+- [x] ADR-041: Removal & Deprecation Verification — Absence TCs and ADR `removes`/`deprecates` Fields (accepted)
+- [x] ADR-047: Functional Specification Lives in Feature Body, Not a Separate Artifact (accepted)
+- [x] ADR-040: Unified Verify Pipeline and the LLM Boundary (accepted)
+- [ ] TC-854: seed_catalog_three_patterns_parse_and_validate (scenario) — unimplemented
+- [ ] TC-855: seed_pat_002_requires_pat_001_topo_visible_in_context (scenario) — unimplemented
+- [ ] TC-856: seed_examples_reciprocated_to_feature_patterns_arrays (scenario) — unimplemented
+- [ ] TC-857: seed_catalog_dogfoods_every_adr_050_field (invariant) — unimplemented
+- [ ] TC-858: seed_pat_003_body_demonstrates_observe_assertion_shape (scenario) — unimplemented
+- [ ] TC-859: ft_075_exit_criteria_seed_pattern_catalog (exit-criteria) — unimplemented
 

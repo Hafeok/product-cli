@@ -2,7 +2,7 @@
 id: FT-069
 title: MCP Parity for product_graph_check — config-aware checks, domain validation, due-dates, log findings
 phase: 5
-status: in-progress
+status: complete
 depends-on:
 - FT-021
 - FT-042
@@ -28,12 +28,12 @@ tests:
 - TC-811
 domains: []
 domains-acknowledged:
-  ADR-048: ADR-048 defines the canonical .product/ repository layout. FT-069 is layout-agnostic — graph::full_check::run consumes a KnowledgeGraph, ProductConfig, and repo_root that have already been resolved through the standard config loader, which honours ADR-048 transparently. No new paths, no new directories, no layout assumptions.
-  ADR-049: ADR-049 governs per-model context bundle templates (data-file driven). FT-069 touches the graph-check tool surface, not the context-bundle assembly path. Bundle templates are unaffected; no template files are added, modified, or referenced.
-  ADR-040: ADR-040 governs the unified product verify pipeline. FT-069 only fixes parity in the read-only product_graph_check tool surface — it does not alter the verify pipeline, the LLM boundary, or any pipeline stage. The verify pipeline does invoke graph check internally as stage 1, and will transparently benefit from the additional findings, but there is no behavioural change to the pipeline contract itself.
-  ADR-041: ADR-041 covers removal/deprecation absence-TCs and ADR removes/deprecates fields. FT-069 introduces no removal or deprecation tracking — it surfaces existing validation layers that were already running on the CLI. No absence TCs are needed because nothing is being removed.
   ADR-050: ADR-050 introduces the PAT artifact type and explicitly targets the FT-070–FT-075 wave. FT-069 predates that wave and authors no pattern artifacts; it follows the pre-existing slice + adapter shape already established by FT-046 and FT-059. No PAT files are created, linked, or referenced.
+  ADR-049: ADR-049 governs per-model context bundle templates (data-file driven). FT-069 touches the graph-check tool surface, not the context-bundle assembly path. Bundle templates are unaffected; no template files are added, modified, or referenced.
   ADR-051: ADR-051 requires TCs for side-effectful operations to assert on observed state (causation) rather than only the response envelope. FT-069's `product_graph_check` is strictly read-only — there is no on-disk state transition to observe. The TCs assert MCP/CLI JSON envelope parity for fixtures whose findings are themselves derived from disk, which is the appropriate observation surface for a read-only check.
+  ADR-040: ADR-040 governs the unified product verify pipeline. FT-069 only fixes parity in the read-only product_graph_check tool surface — it does not alter the verify pipeline, the LLM boundary, or any pipeline stage. The verify pipeline does invoke graph check internally as stage 1, and will transparently benefit from the additional findings, but there is no behavioural change to the pipeline contract itself.
+  ADR-048: ADR-048 defines the canonical .product/ repository layout. FT-069 is layout-agnostic — graph::full_check::run consumes a KnowledgeGraph, ProductConfig, and repo_root that have already been resolved through the standard config loader, which honours ADR-048 transparently. No new paths, no new directories, no layout assumptions.
+  ADR-041: ADR-041 covers removal/deprecation absence-TCs and ADR removes/deprecates fields. FT-069 introduces no removal or deprecation tracking — it surfaces existing validation layers that were already running on the CLI. No absence TCs are needed because nothing is being removed.
 ---
 
 ## Description
