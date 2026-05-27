@@ -4,6 +4,9 @@ title: Product Request — Unified Atomic Write Interface
 status: accepted
 features:
 - FT-041
+- FT-070
+- FT-073
+- FT-075
 supersedes: []
 superseded-by: []
 domains:

@@ -4,6 +4,7 @@ title: Graph Theory Foundations for Navigation, Context, and Impact Analysis
 status: accepted
 features:
 - FT-048
+- FT-071
 supersedes: []
 superseded-by: []
 domains:

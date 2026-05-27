@@ -2,7 +2,13 @@
 id: ADR-049
 title: Per-Model Context Bundle Templates as Data Files
 status: accepted
-features: []
+features:
+- FT-070
+- FT-071
+- FT-072
+- FT-073
+- FT-074
+- FT-075
 supersedes: []
 superseded-by: []
 domains:

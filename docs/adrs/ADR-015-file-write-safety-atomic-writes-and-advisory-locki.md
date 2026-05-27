@@ -2,10 +2,12 @@
 id: ADR-015
 title: File Write Safety — Atomic Writes and Advisory Locking
 status: accepted
-features: []
+features:
+- FT-070
 supersedes: []
 superseded-by: []
-domains: [storage]
+domains:
+- storage
 scope: domain
 content-hash: sha256:0fbe0d71baab6fcbae5ec8f9f0a4b768a0202503fdae91dbba4cc1c9b1f70605
 ---

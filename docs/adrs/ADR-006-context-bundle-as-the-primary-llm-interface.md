@@ -2,10 +2,13 @@
 id: ADR-006
 title: Context Bundle as the Primary LLM Interface
 status: accepted
-features: []
+features:
+- FT-071
+- FT-074
 supersedes: []
 superseded-by: []
-domains: [api]
+domains:
+- api
 scope: domain
 content-hash: sha256:19eb8d491a6f34877f83eb33b34755b47cf7a9c41fa58254458613c600ac3747
 ---

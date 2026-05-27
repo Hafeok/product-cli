@@ -2,7 +2,7 @@
 id: TC-807
 title: mcp_graph_check_surfaces_e011_domain_acknowledgement_finding
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-069
@@ -10,6 +10,9 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_807_mcp_graph_check_surfaces_e011_domain_acknowledgement_finding
+last-run: 2026-05-27T10:31:00.349226795+00:00
+last-run-duration: 0.3s
+failure-message: "No #[test] fn matching 'tc_807_mcp_graph_check_surfaces_e011_domain_acknowledgement_finding' found in tests/*.rs — did you forget to add the integration test?"
 ---
 
 ## Scenario

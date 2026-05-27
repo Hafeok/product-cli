@@ -5,6 +5,12 @@ status: accepted
 features:
 - FT-047
 - FT-048
+- FT-070
+- FT-071
+- FT-072
+- FT-073
+- FT-074
+- FT-075
 supersedes: []
 superseded-by: []
 domains:

@@ -4,6 +4,11 @@ title: MCP Server — Dual Transport (stdio and HTTP)
 status: accepted
 features:
 - FT-069
+- FT-070
+- FT-071
+- FT-072
+- FT-073
+- FT-075
 supersedes: []
 superseded-by: []
 domains:

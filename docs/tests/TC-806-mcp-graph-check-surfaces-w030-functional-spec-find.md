@@ -2,7 +2,7 @@
 id: TC-806
 title: mcp_graph_check_surfaces_w030_functional_spec_finding
 type: scenario
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-069
@@ -10,6 +10,9 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_806_mcp_graph_check_surfaces_w030_functional_spec_finding
+last-run: 2026-05-27T10:31:00.349226795+00:00
+last-run-duration: 11.0s
+failure-message: "No #[test] fn matching 'tc_806_mcp_graph_check_surfaces_w030_functional_spec_finding' found in tests/*.rs — did you forget to add the integration test?"
 ---
 
 ## Scenario

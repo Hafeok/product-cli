@@ -2,7 +2,7 @@
 id: TC-810
 title: mcp_graph_check_json_equals_cli_graph_check_json
 type: invariant
-status: unimplemented
+status: failing
 validates:
   features:
   - FT-069
@@ -10,6 +10,9 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_810_mcp_graph_check_json_equals_cli_graph_check_json
+last-run: 2026-05-27T10:31:00.349226795+00:00
+last-run-duration: 0.3s
+failure-message: "No #[test] fn matching 'tc_810_mcp_graph_check_json_equals_cli_graph_check_json' found in tests/*.rs — did you forget to add the integration test?"
 ---
 
 ## Invariant

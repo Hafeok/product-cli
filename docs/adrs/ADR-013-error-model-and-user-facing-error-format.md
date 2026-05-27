@@ -4,6 +4,10 @@ title: Error Model and User-Facing Error Format
 status: accepted
 features:
 - FT-069
+- FT-070
+- FT-071
+- FT-072
+- FT-073
 supersedes: []
 superseded-by: []
 domains:

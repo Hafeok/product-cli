@@ -4,6 +4,7 @@ title: Implementation Pipeline — `product verify` and the Knowledge Boundary
 status: accepted
 features:
 - FT-068
+- FT-074
 supersedes: []
 superseded-by: []
 domains:
