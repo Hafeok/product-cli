@@ -2,7 +2,7 @@
 id: TC-824
 title: graph_check_deprecated_pattern_cited_by_live_feature_emits_warning
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-071
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_824_graph_check_deprecated_pattern_cited_by_live_feature_emits_warning
+last-run: 2026-05-27T13:37:22.762619987+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

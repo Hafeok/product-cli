@@ -21664,3 +21664,390 @@ fn tc_819_ft_070_exit_criteria_pattern_crud_parity() {
         h.run(&["pattern", sub, "--help"]).assert_exit(0);
     }
 }
+
+// FT-071 — Pattern Participation in Graph Algorithms.
+
+/// Helper: write a pattern file with the five required H2 sections so the
+/// fixture passes W033 by default. The body is intentionally minimal but
+/// well-formed; tests that want a missing section override the body.
+fn write_pattern(
+    h: &Harness,
+    id: &str,
+    slug: &str,
+    status: &str,
+    requires: &[&str],
+    adrs: &[&str],
+    examples: &[&str],
+    extra_body: Option<&str>,
+) {
+    let mut front = String::from("---\n");
+    front.push_str(&format!("id: {}\n", id));
+    front.push_str(&format!("title: {}\n", id));
+    front.push_str(&format!("status: {}\n", status));
+    if !requires.is_empty() {
+        front.push_str("requires:\n");
+        for r in requires {
+            front.push_str(&format!("  - {}\n", r));
+        }
+    }
+    if !adrs.is_empty() {
+        front.push_str("adrs:\n");
+        for r in adrs {
+            front.push_str(&format!("  - {}\n", r));
+        }
+    }
+    if !examples.is_empty() {
+        front.push_str("examples:\n");
+        for r in examples {
+            front.push_str(&format!("  - {}\n", r));
+        }
+    }
+    front.push_str("---\n\n");
+    let body = extra_body.unwrap_or(
+        "## When to use\n\nx\n\n## Prerequisites\n\nx\n\n## The pattern\n\nx\n\n## Anti-patterns\n\nx\n\n## Worked example\n\nx\n",
+    );
+    front.push_str(body);
+    h.write(&format!("docs/patterns/{}-{}.md", id, slug), &front);
+}
+
+/// Helper: write a feature file linking patterns. Returns nothing — caller
+/// inspects on-disk state via the harness as usual.
+fn write_feature_with_patterns(
+    h: &Harness,
+    id: &str,
+    slug: &str,
+    status: &str,
+    patterns: &[&str],
+) {
+    let mut front = String::from("---\n");
+    front.push_str(&format!("id: {}\n", id));
+    front.push_str(&format!("title: {}\n", id));
+    front.push_str("phase: 1\n");
+    front.push_str(&format!("status: {}\n", status));
+    if !patterns.is_empty() {
+        front.push_str("patterns:\n");
+        for p in patterns {
+            front.push_str(&format!("  - {}\n", p));
+        }
+    }
+    front.push_str("---\n\n## Description\n\nSample feature.\n");
+    h.write(&format!("docs/features/{}-{}.md", id, slug), &front);
+}
+
+/// TC-820 — `product context FT-XXX --depth 1` includes a `## Patterns`
+/// section with every cited PAT (and transitive prerequisites) in topo
+/// order — PAT-A before PAT-B before PAT-C.
+#[test]
+fn tc_820_context_bundle_includes_patterns_in_topo_order() {
+    let h = Harness::new();
+    write_pattern(&h, "PAT-001", "pat-a", "live", &[], &[], &[], None);
+    write_pattern(&h, "PAT-002", "pat-b", "live", &["PAT-001"], &[], &[], None);
+    write_pattern(
+        &h,
+        "PAT-003",
+        "pat-c",
+        "live",
+        &["PAT-001", "PAT-002"],
+        &[],
+        &[],
+        None,
+    );
+    write_feature_with_patterns(&h, "FT-100", "ft100", "planned", &["PAT-003"]);
+
+    let out = h.run(&["context", "FT-100", "--depth", "1"]);
+    out.assert_exit(0);
+    let body = &out.stdout;
+    assert!(body.contains("## Patterns"), "missing ## Patterns:\n{}", body);
+    let p1 = body.find("PAT-001").expect("PAT-001 in bundle");
+    let p2 = body.find("PAT-002").expect("PAT-002 in bundle");
+    let p3 = body.find("PAT-003").expect("PAT-003 in bundle");
+    assert!(p1 < p2, "PAT-001 must appear before PAT-002\n{}", body);
+    assert!(p2 < p3, "PAT-002 must appear before PAT-003\n{}", body);
+}
+
+/// TC-821 — `product context FT-XXX --depth 1 --measure` writes the
+/// `bundle.patterns` field with the correct count to the feature
+/// front-matter and is idempotent.
+#[test]
+fn tc_821_context_bundle_measure_writes_patterns_count() {
+    let h = Harness::new();
+    write_pattern(&h, "PAT-001", "pat-a", "live", &[], &[], &[], None);
+    write_pattern(&h, "PAT-002", "pat-b", "live", &[], &[], &[], None);
+    write_feature_with_patterns(
+        &h,
+        "FT-100",
+        "ft100",
+        "planned",
+        &["PAT-001", "PAT-002"],
+    );
+
+    let out = h.run(&["context", "FT-100", "--depth", "1", "--measure"]);
+    out.assert_exit(0);
+    let feat = h.read("docs/features/FT-100-ft100.md");
+    assert!(feat.contains("patterns: 2"), "expected `patterns: 2` in bundle block:\n{}", feat);
+
+    // Idempotent — re-running gives the same count.
+    let out2 = h.run(&["context", "FT-100", "--depth", "1", "--measure"]);
+    out2.assert_exit(0);
+    let feat2 = h.read("docs/features/FT-100-ft100.md");
+    let occurrences = feat2.matches("patterns: 2").count();
+    assert!(occurrences >= 1, "bundle.patterns lost after second --measure:\n{}", feat2);
+}
+
+/// TC-822 — `product impact PAT-A` enumerates every feature, pattern, and
+/// ADR linked to PAT-A. JSON shape includes a `direct_patterns` array.
+#[test]
+fn tc_822_impact_pat_lists_features_patterns_adrs() {
+    let h = Harness::new();
+    // Seed an ADR file by hand so it is part of the graph.
+    h.write(
+        "docs/adrs/ADR-050-pattern-artifact.md",
+        "---\nid: ADR-050\ntitle: Pattern Artifact\nstatus: accepted\n---\n\nADR body.\n",
+    );
+    write_pattern(&h, "PAT-001", "pat-a", "live", &[], &["ADR-050"], &[], None);
+    write_pattern(&h, "PAT-002", "pat-b", "live", &["PAT-001"], &[], &[], None);
+    write_feature_with_patterns(&h, "FT-100", "ft100", "planned", &["PAT-001"]);
+
+    let out = h.run(&["impact", "PAT-001"]);
+    out.assert_exit(0);
+    let body = &out.stdout;
+    assert!(body.contains("FT-100"), "missing FT-100 in impact:\n{}", body);
+    assert!(body.contains("PAT-002"), "missing PAT-002 in impact:\n{}", body);
+    assert!(body.contains("ADR-050"), "missing ADR-050 in impact:\n{}", body);
+
+    let json = h.run(&["--format", "json", "impact", "PAT-001"]);
+    json.assert_exit(0);
+    let parsed: serde_json::Value =
+        serde_json::from_str(&json.stdout).expect("valid JSON");
+    assert!(parsed["direct_patterns"].is_array());
+}
+
+/// TC-823 — `product graph check` reports the requires-cycle error
+/// (E031) when two patterns require each other, naming both nodes.
+#[test]
+fn tc_823_graph_check_requires_cycle_emits_error() {
+    let h = Harness::new();
+    // Write the cycle directly — `product pattern link` would refuse.
+    write_pattern(&h, "PAT-001", "pat-a", "live", &["PAT-002"], &[], &[], None);
+    write_pattern(&h, "PAT-002", "pat-b", "live", &["PAT-001"], &[], &[], None);
+
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        out.exit_code != 0,
+        "expected non-zero exit for requires cycle. stdout: {}\nstderr: {}",
+        out.stdout, out.stderr
+    );
+    let combined = format!("{}{}", out.stdout, out.stderr);
+    assert!(combined.contains("E031"), "missing E031 in output:\n{}", combined);
+    assert!(combined.contains("cycle"), "missing 'cycle' in output:\n{}", combined);
+    assert!(combined.contains("PAT-001"));
+    assert!(combined.contains("PAT-002"));
+}
+
+/// TC-824 — `product graph check` emits the deprecated-pattern-cited
+/// warning when a live feature cites a deprecated pattern, and the
+/// warning is suppressed when the feature is complete or abandoned.
+#[test]
+fn tc_824_graph_check_deprecated_pattern_cited_by_live_feature_emits_warning() {
+    let h = Harness::new();
+    h.write(
+        "docs/patterns/PAT-001-deprecated.md",
+        "---\nid: PAT-001\ntitle: Old\nstatus: deprecated\ndeprecated-by: PAT-002\n---\n\n## When to use\n\nx\n\n## Prerequisites\n\nx\n\n## The pattern\n\nx\n\n## Anti-patterns\n\nx\n\n## Worked example\n\nx\n",
+    );
+    write_pattern(&h, "PAT-002", "pat-replacement", "live", &[], &[], &[], None);
+    write_feature_with_patterns(&h, "FT-100", "planned-feat", "planned", &["PAT-001"]);
+
+    let out = h.run(&["graph", "check"]);
+    let combined = format!("{}{}", out.stdout, out.stderr);
+    assert!(combined.contains("W032"), "missing W032 in output:\n{}", combined);
+    assert!(combined.contains("PAT-001"));
+
+    // Complete feature should NOT emit W032.
+    write_feature_with_patterns(&h, "FT-100", "planned-feat", "complete", &["PAT-001"]);
+    // Need at least one runnable TC for a `complete` feature to not trip
+    // other checks — but the test only cares whether W032 specifically
+    // appears, so just look at the second run.
+    let out2 = h.run(&["graph", "check"]);
+    let combined2 = format!("{}{}", out2.stdout, out2.stderr);
+    assert!(
+        !combined2.contains("W032"),
+        "W032 should not fire for complete feature:\n{}",
+        combined2
+    );
+}
+
+/// TC-825 — `product graph check` emits a pattern-body-missing-section
+/// warning (W033) when a live pattern lacks a configured H2 heading. The
+/// finding escalates to error tier when `[patterns].body-severity = "error"`.
+#[test]
+fn tc_825_graph_check_pattern_body_missing_section_emits_warning() {
+    let h = Harness::new();
+    // Pattern body is missing every required section.
+    h.write(
+        "docs/patterns/PAT-001-incomplete.md",
+        "---\nid: PAT-001\ntitle: Incomplete\nstatus: live\n---\n\n## When to use\n\nx\n",
+    );
+
+    let out = h.run(&["graph", "check"]);
+    let combined = format!("{}{}", out.stdout, out.stderr);
+    assert!(combined.contains("W033"), "missing W033 in output:\n{}", combined);
+    assert!(combined.contains("Anti-patterns"));
+
+    // Promote to error tier and re-run.
+    let cfg = std::fs::read_to_string(h.dir.path().join("product.toml")).expect("read toml");
+    h.write(
+        "product.toml",
+        &format!("{}\n[patterns]\nbody-severity = \"error\"\n", cfg),
+    );
+    let out2 = h.run(&["graph", "check"]);
+    assert!(
+        out2.exit_code != 0,
+        "expected non-zero exit when body-severity = error.\nstdout: {}\nstderr: {}",
+        out2.stdout, out2.stderr
+    );
+}
+
+/// TC-826 — `product graph central --include patterns` includes PAT ids
+/// in the centrality ranking. JSON shape includes a `kind: "PAT"` entry.
+#[test]
+fn tc_826_graph_central_with_include_patterns_surfaces_pat_ids() {
+    let h = Harness::new();
+    // Build a topology where PAT-001 sits on the path between
+    // ADR-050 and FT-100, so betweenness will rank it non-zero.
+    h.write(
+        "docs/adrs/ADR-050-pattern-artifact.md",
+        "---\nid: ADR-050\ntitle: Pattern Artifact\nstatus: accepted\n---\n\nbody.\n",
+    );
+    write_pattern(&h, "PAT-001", "pat-a", "live", &[], &["ADR-050"], &["FT-100"], None);
+    write_feature_with_patterns(&h, "FT-100", "ft100", "planned", &["PAT-001"]);
+
+    let out = h.run(&["graph", "central", "--include", "patterns"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("PAT-001"), "expected PAT-001 in ranking:\n{}", out.stdout);
+}
+
+/// TC-827 — `product graph central` without `--include patterns` does
+/// **not** include PAT ids, preserving the legacy ranking shape.
+#[test]
+fn tc_827_graph_central_without_flag_excludes_pats() {
+    let h = Harness::new();
+    h.write(
+        "docs/adrs/ADR-050-pattern-artifact.md",
+        "---\nid: ADR-050\ntitle: Pattern Artifact\nstatus: accepted\n---\n\nbody.\n",
+    );
+    write_pattern(&h, "PAT-001", "pat-a", "live", &[], &["ADR-050"], &["FT-100"], None);
+    write_feature_with_patterns(&h, "FT-100", "ft100", "planned", &["PAT-001"]);
+
+    let out = h.run(&["graph", "central"]);
+    out.assert_exit(0);
+    assert!(
+        !out.stdout.contains("PAT-001"),
+        "PAT-001 must not appear without --include patterns:\n{}",
+        out.stdout
+    );
+}
+
+/// TC-828 — MCP `product_graph_check` envelope equals the CLI
+/// `graph check --format json` envelope on a fixture triggering every new
+/// diagnostic (E031, W032, W033).
+#[test]
+fn tc_828_mcp_graph_check_pattern_findings_match_cli_json() {
+    let h = Harness::new();
+    // Compose: a requires cycle, a deprecated-cited warning, and a
+    // missing-body-section warning in the same fixture.
+    write_pattern(&h, "PAT-001", "cycle-a", "live", &["PAT-002"], &[], &[], None);
+    write_pattern(&h, "PAT-002", "cycle-b", "live", &["PAT-001"], &[], &[], None);
+    h.write(
+        "docs/patterns/PAT-003-incomplete.md",
+        "---\nid: PAT-003\ntitle: Incomplete\nstatus: live\n---\n\n## When to use\n\nx\n",
+    );
+    h.write(
+        "docs/patterns/PAT-004-deprecated.md",
+        "---\nid: PAT-004\ntitle: Old\nstatus: deprecated\n---\n\n## When to use\n\nx\n\n## Prerequisites\n\nx\n\n## The pattern\n\nx\n\n## Anti-patterns\n\nx\n\n## Worked example\n\nx\n",
+    );
+    write_feature_with_patterns(&h, "FT-100", "ft100", "planned", &["PAT-004"]);
+
+    let cli = h.run(&["--format", "json", "graph", "check"]);
+    let cli_parsed: serde_json::Value =
+        serde_json::from_str(&cli.stdout).expect("CLI JSON valid");
+
+    // MCP — drive `tools/call` over stdio to the same binary.
+    let req = serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {
+            "name": "product_graph_check",
+            "arguments": {},
+        }
+    });
+    let stdin = format!("{}\n", req);
+    let mcp_out = h.run_with_stdin(&["mcp"], &stdin);
+    // The response is JSON-RPC; parse line containing the response.
+    let resp_line = mcp_out
+        .stdout
+        .lines()
+        .find(|l| l.contains("\"result\""))
+        .unwrap_or("");
+    if resp_line.is_empty() {
+        panic!(
+            "no MCP response line. stdout:\n{}\nstderr:\n{}",
+            mcp_out.stdout, mcp_out.stderr
+        );
+    }
+    let mcp_parsed: serde_json::Value =
+        serde_json::from_str(resp_line).expect("MCP JSON valid");
+    let mcp_content = mcp_parsed
+        .pointer("/result/content/0/text")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    let mcp_envelope: serde_json::Value = if mcp_content.is_empty() {
+        // Some transport modes return structured content directly.
+        mcp_parsed.pointer("/result").cloned().unwrap_or(serde_json::Value::Null)
+    } else {
+        serde_json::from_str(mcp_content).unwrap_or(serde_json::Value::Null)
+    };
+
+    // Compare the union of (error, warning) codes — order-insensitive,
+    // since both renders sort findings the same way internally but a
+    // strict byte-equality is brittle to surrounding metadata.
+    let collect_codes = |v: &serde_json::Value| -> Vec<String> {
+        let mut out: Vec<String> = Vec::new();
+        for key in ["errors", "warnings"] {
+            if let Some(arr) = v.get(key).and_then(|x| x.as_array()) {
+                for entry in arr {
+                    if let Some(code) = entry.get("code").and_then(|c| c.as_str()) {
+                        out.push(code.to_string());
+                    }
+                }
+            }
+        }
+        out.sort();
+        out
+    };
+    let cli_codes = collect_codes(&cli_parsed);
+    let mcp_codes = collect_codes(&mcp_envelope);
+    assert_eq!(
+        cli_codes, mcp_codes,
+        "MCP and CLI code sets diverged.\nCLI: {:?}\nMCP: {:?}\nCLI raw: {}\nMCP raw: {}",
+        cli_codes, mcp_codes, cli.stdout, resp_line
+    );
+
+    assert!(cli_codes.iter().any(|c| c == "E031"), "missing E031: {:?}", cli_codes);
+    assert!(cli_codes.iter().any(|c| c == "W032"), "missing W032: {:?}", cli_codes);
+    assert!(cli_codes.iter().any(|c| c == "W033"), "missing W033: {:?}", cli_codes);
+}
+
+/// TC-829 — exit criteria aggregator: ensures every TC-820..TC-828 is in
+/// place and the suite is green. This TC has no runner-specific logic.
+/// Its `runner-args` points to this function and `cargo t` covers the rest.
+#[test]
+fn tc_829_ft_071_exit_criteria_pattern_graph_integration() {
+    // Aggregator — just spot-check that the binary builds and the new
+    // pattern subcommand surface is wired (sibling TCs cover semantics).
+    let h = Harness::new();
+    h.run(&["pattern", "--help"]).assert_exit(0);
+    h.run(&["graph", "central", "--help"]).assert_exit(0);
+    h.run(&["graph", "check", "--help"]).assert_exit(0);
+    h.run(&["impact", "--help"]).assert_exit(0);
+}

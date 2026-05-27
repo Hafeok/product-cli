@@ -52,6 +52,8 @@ pub struct ImpactResult {
     pub direct_tests: Vec<String>,
     pub direct_adrs: Vec<String>,
     pub direct_deps: Vec<String>,
+    /// Patterns directly affected (FT-071, ADR-050).
+    pub direct_patterns: Vec<String>,
     pub transitive_features: Vec<String>,
     pub transitive_tests: Vec<String>,
 }
@@ -83,6 +85,7 @@ impl ImpactResult {
     fn print_direct_dependents(&self, graph: &KnowledgeGraph) {
         if self.direct_features.is_empty() && self.direct_tests.is_empty()
             && self.direct_adrs.is_empty() && self.direct_deps.is_empty()
+            && self.direct_patterns.is_empty()
         {
             return;
         }
@@ -98,6 +101,9 @@ impl ImpactResult {
                     format!("{}{}", id, label)
                 })
                 .collect::<Vec<_>>().join(", "));
+        }
+        if !self.direct_patterns.is_empty() {
+            println!("  Patterns:  {}", self.direct_patterns.join(", "));
         }
         if !self.direct_deps.is_empty() {
             println!("  Dependencies: {}", self.direct_deps.join(", "));

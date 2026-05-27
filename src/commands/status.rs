@@ -21,6 +21,7 @@ pub(crate) fn handle_impact(id: &str, _fmt: &str) -> CmdResult {
         "direct_tests": impact.direct_tests,
         "direct_adrs": impact.direct_adrs,
         "direct_deps": impact.direct_deps,
+        "direct_patterns": impact.direct_patterns,
         "transitive_features": impact.transitive_features,
         "transitive_tests": impact.transitive_tests,
     });

@@ -2,7 +2,7 @@
 id: TC-821
 title: context_bundle_measure_writes_patterns_count
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-071
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_821_context_bundle_measure_writes_patterns_count
+last-run: 2026-05-27T13:37:22.762619987+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

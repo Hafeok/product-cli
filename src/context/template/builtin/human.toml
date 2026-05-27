@@ -17,6 +17,7 @@ table_format = "github"
 [ordering]
 sections = [
   "feature",
+  "patterns",
   "governing_adrs",
   "dependencies",
   "test_criteria",

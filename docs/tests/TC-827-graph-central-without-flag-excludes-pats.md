@@ -2,7 +2,7 @@
 id: TC-827
 title: graph_central_without_flag_excludes_pats
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-071
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_827_graph_central_without_flag_excludes_pats
+last-run: 2026-05-27T13:37:22.762619987+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

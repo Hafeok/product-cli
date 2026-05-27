@@ -48,6 +48,7 @@ bundle:              # Optional. Written by `product context --measure`
   depth-1-adrs: Integer
   tcs: Integer
   domains: [String]
+  patterns: Integer    # FT-071: count of patterns included in the bundle
   tokens-approx: Integer
   measured-at: String  # ISO 8601 timestamp
 ```"#,

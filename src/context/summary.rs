@@ -279,6 +279,7 @@ mod tests {
             depth_1_adrs: 0,
             tcs: 0,
             domains: vec![],
+            patterns: 0,
             tokens_approx: 0,
             measured_at: "2026-01-01T00:00:00Z".into(),
         });

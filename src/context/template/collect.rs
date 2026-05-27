@@ -12,6 +12,9 @@ pub struct Collected<'a> {
     pub adrs: Vec<&'a Adr>,
     pub tests: Vec<&'a TestCriterion>,
     pub deps: Vec<&'a Dependency>,
+    /// Patterns linked to the feature in topological order over `requires:`
+    /// (FT-071, ADR-050). Prerequisite patterns precede their dependants.
+    pub patterns: Vec<&'a Pattern>,
 }
 
 pub fn collect<'a>(
@@ -62,10 +65,18 @@ pub fn collect<'a>(
         .filter_map(|id| graph.dependencies.get(id.as_str()))
         .collect();
 
+    // FT-071: patterns in topological order over `requires:`.
+    let pattern_ids = crate::context::collect_patterns_topo(graph, &feature.front.id);
+    let patterns: Vec<&Pattern> = pattern_ids
+        .iter()
+        .filter_map(|id| graph.patterns.get(id.as_str()))
+        .collect();
+
     Collected {
         feature,
         adrs,
         tests,
         deps,
+        patterns,
     }
 }

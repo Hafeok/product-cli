@@ -2,7 +2,7 @@
 id: FT-071
 title: Pattern Participation in Graph Algorithms — Context, Impact, Centrality, Validation
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-070
 - FT-006

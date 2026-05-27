@@ -2,7 +2,7 @@
 id: TC-820
 title: context_bundle_includes_patterns_in_topo_order
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-071
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_820_context_bundle_includes_patterns_in_topo_order
+last-run: 2026-05-27T13:37:22.762619987+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description

@@ -2,7 +2,7 @@
 id: TC-823
 title: graph_check_requires_cycle_emits_error
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-071
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_823_graph_check_requires_cycle_emits_error
+last-run: 2026-05-27T13:37:22.762619987+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

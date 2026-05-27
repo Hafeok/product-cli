@@ -193,6 +193,12 @@ fn render_with_template(
             rendered.token_count_approx,
         );
     }
+    if measure {
+        // FT-040 / FT-071: --measure should also work under the template
+        // path so `bundle.patterns` lands in front-matter regardless of
+        // which renderer produced the bytes.
+        measure_and_write(feature_id, graph, &rendered.content, root)?;
+    }
     print!("{}", rendered.content);
     Ok(())
 }
@@ -247,10 +253,13 @@ fn measure_and_write(
     let domains = feature.front.domains.clone();
     let tokens_approx = bundle.len() / 4;
     let measured_at = chrono::Utc::now().to_rfc3339();
+    // FT-071 / ADR-050: count patterns participating in the bundle.
+    let patterns = product_lib::context::collect_patterns_topo(graph, id).len();
     let bundle_metrics = types::BundleMetrics {
         depth_1_adrs,
         tcs,
         domains: domains.clone(),
+        patterns,
         tokens_approx,
         measured_at: measured_at.clone(),
     };
@@ -265,6 +274,7 @@ fn measure_and_write(
         "depth-1-adrs": bundle_metrics.depth_1_adrs,
         "tcs": bundle_metrics.tcs,
         "domains": bundle_metrics.domains,
+        "patterns": bundle_metrics.patterns,
         "tokens-approx": bundle_metrics.tokens_approx,
         "measured-at": bundle_metrics.measured_at,
     });

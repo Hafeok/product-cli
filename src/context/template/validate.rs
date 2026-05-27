@@ -6,6 +6,7 @@ use super::loader::Template;
 pub const ALLOWED_STRUCTURES: &[&str] = &["xml", "markdown", "yaml", "json", "plain"];
 
 /// Closed-allowlist of section names the renderer recognises (FT-063).
+/// FT-071 adds `patterns` for the pattern context section.
 pub const ALLOWED_SECTIONS: &[&str] = &[
     "task",
     "feature",
@@ -16,6 +17,7 @@ pub const ALLOWED_SECTIONS: &[&str] = &[
     "linked_documentation",
     "constraints",
     "bundle_metrics",
+    "patterns",
 ];
 
 pub const ALLOWED_ADRS_ORDERED_BY: &[&str] = &["centrality", "id"];

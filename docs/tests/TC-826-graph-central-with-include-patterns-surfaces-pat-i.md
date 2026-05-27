@@ -2,7 +2,7 @@
 id: TC-826
 title: graph_central_with_include_patterns_surfaces_pat_ids
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-071
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_826_graph_central_with_include_patterns_surfaces_pat_ids
+last-run: 2026-05-27T13:37:22.762619987+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

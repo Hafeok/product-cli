@@ -8,6 +8,8 @@ mod lifecycle_validation;
 pub mod inference;
 mod model;
 mod ordering;
+pub mod pattern_topo;
+pub mod pattern_validation;
 pub mod planning_validation;
 mod removal_validation;
 pub mod responsibility;

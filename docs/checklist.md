@@ -1378,7 +1378,7 @@
 - [x] TC-818: pattern_status_to_live_clears_deprecated_by (scenario) — passing
 - [x] TC-819: ft_070_exit_criteria_pattern_crud_parity (exit-criteria) — passing
 
-### FT-071 — Pattern Participation in Graph Algorithms — Context, Impact, Centrality, Validation [ ]
+### FT-071 — Pattern Participation in Graph Algorithms — Context, Impact, Centrality, Validation [x]
 
 - [x] ADR-050: Introduce Pattern (PAT) Artifact Type for Implementation Knowledge (accepted)
 - [x] ADR-012: Graph Theory Foundations for Navigation, Context, and Impact Analysis (accepted)
@@ -1394,16 +1394,16 @@
 - [x] ADR-047: Functional Specification Lives in Feature Body, Not a Separate Artifact (accepted)
 - [x] ADR-051: TC Observability Requirement — Causation Over Transaction (accepted)
 - [x] ADR-041: Removal & Deprecation Verification — Absence TCs and ADR `removes`/`deprecates` Fields (accepted)
-- [ ] TC-820: context_bundle_includes_patterns_in_topo_order (scenario) — unimplemented
-- [ ] TC-821: context_bundle_measure_writes_patterns_count (scenario) — unimplemented
-- [ ] TC-822: impact_pat_lists_features_patterns_adrs (scenario) — unimplemented
-- [ ] TC-823: graph_check_requires_cycle_emits_error (scenario) — unimplemented
-- [ ] TC-824: graph_check_deprecated_pattern_cited_by_live_feature_emits_warning (scenario) — unimplemented
-- [ ] TC-825: graph_check_pattern_body_missing_section_emits_warning (scenario) — unimplemented
-- [ ] TC-826: graph_central_with_include_patterns_surfaces_pat_ids (scenario) — unimplemented
-- [ ] TC-827: graph_central_without_flag_excludes_pats (scenario) — unimplemented
-- [ ] TC-828: mcp_graph_check_pattern_findings_match_cli_json (scenario) — unimplemented
-- [ ] TC-829: ft_071_exit_criteria_pattern_graph_integration (exit-criteria) — unimplemented
+- [x] TC-820: context_bundle_includes_patterns_in_topo_order (scenario) — passing
+- [x] TC-821: context_bundle_measure_writes_patterns_count (scenario) — passing
+- [x] TC-822: impact_pat_lists_features_patterns_adrs (scenario) — passing
+- [x] TC-823: graph_check_requires_cycle_emits_error (scenario) — passing
+- [x] TC-824: graph_check_deprecated_pattern_cited_by_live_feature_emits_warning (scenario) — passing
+- [x] TC-825: graph_check_pattern_body_missing_section_emits_warning (scenario) — passing
+- [x] TC-826: graph_central_with_include_patterns_surfaces_pat_ids (scenario) — passing
+- [x] TC-827: graph_central_without_flag_excludes_pats (scenario) — passing
+- [x] TC-828: mcp_graph_check_pattern_findings_match_cli_json (scenario) — passing
+- [x] TC-829: ft_071_exit_criteria_pattern_graph_integration (exit-criteria) — passing
 
 ### FT-072 — TC Observability Requirement — observes Field and graph check Validation [ ]
 

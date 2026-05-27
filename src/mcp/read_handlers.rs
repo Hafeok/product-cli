@@ -181,14 +181,29 @@ pub(crate) fn handle_test_show(args: &Value, graph: &KnowledgeGraph) -> Result<V
 
 pub(crate) fn handle_graph_central(args: &Value, graph: &KnowledgeGraph) -> Result<Value, String> {
     let top = args.get("top").and_then(|v| v.as_u64()).unwrap_or(10) as usize;
-    let centrality = graph.betweenness_centrality();
+    // FT-071: accept an `include` parameter — `"patterns"` opts PAT nodes
+    // into the ranking. The default preserves the legacy ADR-only result.
+    let include = args.get("include").and_then(|v| v.as_str()).unwrap_or("");
+    let include_patterns = include == "patterns";
+    let centrality = graph.betweenness_centrality_with(include_patterns);
     let mut ranked: Vec<_> = graph.adrs.keys()
         .map(|id| {
             let c = centrality.get(id).copied().unwrap_or(0.0);
             let title = graph.adrs.get(id).map(|a| a.front.title.as_str()).unwrap_or("");
-            serde_json::json!({"id": id, "centrality": c, "title": title})
+            serde_json::json!({"id": id, "centrality": c, "title": title, "kind": "ADR"})
         })
         .collect();
+    if include_patterns {
+        for p in graph.patterns.values() {
+            let c = centrality.get(&p.front.id).copied().unwrap_or(0.0);
+            ranked.push(serde_json::json!({
+                "id": p.front.id,
+                "centrality": c,
+                "title": p.front.title,
+                "kind": "PAT",
+            }));
+        }
+    }
     ranked.sort_by(|a, b| {
         b["centrality"].as_f64().unwrap_or(0.0)
             .partial_cmp(&a["centrality"].as_f64().unwrap_or(0.0))
@@ -205,6 +220,9 @@ pub(crate) fn handle_impact(args: &Value, graph: &KnowledgeGraph) -> Result<Valu
         "seed": impact.seed,
         "direct_features": impact.direct_features,
         "direct_tests": impact.direct_tests,
+        "direct_adrs": impact.direct_adrs,
+        "direct_deps": impact.direct_deps,
+        "direct_patterns": impact.direct_patterns,
         "transitive_features": impact.transitive_features,
         "transitive_tests": impact.transitive_tests,
     }))

@@ -122,9 +122,35 @@ pub fn section_constraints(_c: &Collected) -> Option<String> {
 pub fn section_bundle_metrics(c: &Collected) -> Option<String> {
     let bm = c.feature.front.bundle.as_ref()?;
     Some(format!(
-        "tokens-approx: {}\ndepth-1-adrs: {}\ntcs: {}\nmeasured-at: {}",
-        bm.tokens_approx, bm.depth_1_adrs, bm.tcs, bm.measured_at,
+        "tokens-approx: {}\ndepth-1-adrs: {}\ntcs: {}\npatterns: {}\nmeasured-at: {}",
+        bm.tokens_approx, bm.depth_1_adrs, bm.tcs, bm.patterns, bm.measured_at,
     ))
+}
+
+/// FT-071: render the `## Patterns` section. Patterns appear in topological
+/// order over `requires:`; deprecated patterns carry a status banner.
+pub fn section_patterns(c: &Collected) -> Option<String> {
+    if c.patterns.is_empty() {
+        return None;
+    }
+    let mut out = String::new();
+    for pat in &c.patterns {
+        out.push_str(&format!(
+            "### {} — {}\n\n",
+            pat.front.id, pat.front.title,
+        ));
+        if pat.front.status == crate::types::PatternStatus::Deprecated {
+            let by = pat
+                .front
+                .deprecated_by
+                .as_deref()
+                .map(|r| format!(" (replaced by {})", r))
+                .unwrap_or_default();
+            out.push_str(&format!("**Status:** Deprecated{}\n\n", by));
+        }
+        out.push_str(&format!("{}\n\n", pat.body.trim()));
+    }
+    Some(out.trim_end().to_string())
 }
 
 pub fn build_section(name: &str, c: &Collected) -> Option<String> {
@@ -138,6 +164,7 @@ pub fn build_section(name: &str, c: &Collected) -> Option<String> {
         "linked_documentation" => None,
         "constraints" => section_constraints(c),
         "bundle_metrics" => section_bundle_metrics(c),
+        "patterns" => section_patterns(c),
         _ => None,
     }
 }
@@ -178,6 +205,7 @@ pub fn section_title(name: &str) -> &'static str {
         "linked_documentation" => "Linked Documentation",
         "constraints" => "Constraints",
         "bundle_metrics" => "Bundle Metrics",
+        "patterns" => "Patterns",
         _ => "Section",
     }
 }

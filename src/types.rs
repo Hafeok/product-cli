@@ -52,6 +52,10 @@ pub struct BundleMetrics {
     pub depth_1_adrs: usize,
     pub tcs: usize,
     pub domains: Vec<String>,
+    /// Number of patterns included in the bundle (FT-071, ADR-050).
+    /// Defaults to 0 for backward compatibility with pre-FT-071 metrics.
+    #[serde(default)]
+    pub patterns: usize,
     #[serde(rename = "tokens-approx")]
     pub tokens_approx: usize,
     #[serde(rename = "measured-at")]

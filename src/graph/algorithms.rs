@@ -49,9 +49,26 @@ impl KnowledgeGraph {
     // Betweenness centrality (Brandes' algorithm) (ADR-012)
     // -----------------------------------------------------------------------
 
-    /// Compute betweenness centrality for all ADR nodes
+    /// Compute betweenness centrality over the legacy node set
+    /// (FT / ADR / TC / DEP). Patterns are excluded so pre-FT-071 output
+    /// remains byte-identical for `product graph central` without
+    /// `--include patterns` (ADR-050 backwards-compat invariant).
     pub fn betweenness_centrality(&self) -> HashMap<String, f64> {
-        let all_ids: Vec<String> = self.all_ids().into_iter().collect();
+        self.betweenness_centrality_with(false)
+    }
+
+    /// Compute betweenness centrality. When `include_patterns` is `true`,
+    /// PAT nodes and their `Requires` / `Exemplifies` / `OperationalisedBy`
+    /// / `UsesPattern` edges participate in the algorithm (FT-071).
+    pub fn betweenness_centrality_with(&self, include_patterns: bool) -> HashMap<String, f64> {
+        let all_ids: Vec<String> = if include_patterns {
+            self.all_ids().into_iter().collect()
+        } else {
+            self.all_ids()
+                .into_iter()
+                .filter(|id| !self.patterns.contains_key(id))
+                .collect()
+        };
         let n = all_ids.len();
         let mut centrality: HashMap<String, f64> = HashMap::new();
 
@@ -63,7 +80,7 @@ impl KnowledgeGraph {
             return centrality;
         }
 
-        let adj = self.build_undirected_adjacency();
+        let adj = self.build_undirected_adjacency_filtered(include_patterns);
 
         for s in &all_ids {
             brandes_accumulate(s, &all_ids, &adj, &mut centrality);
@@ -79,53 +96,89 @@ impl KnowledgeGraph {
 
     /// Compute all nodes affected if `seed` changes
     pub fn impact(&self, seed: &str) -> ImpactResult {
+        let mut buckets = ImpactBuckets::default();
         let mut visited = HashSet::new();
-        let mut direct_features = Vec::new();
-        let mut direct_tests = Vec::new();
-        let mut direct_adrs = Vec::new();
-        let mut direct_deps = Vec::new();
         let mut queue = VecDeque::new();
-
         visited.insert(seed.to_string());
-
-        // Direct dependents (depth 1 via reverse edges)
-        if let Some(neighbors) = self.reverse.get(seed) {
-            for (id, _) in neighbors {
-                if !visited.contains(id) {
-                    visited.insert(id.clone());
-                    if self.features.contains_key(id) {
-                        direct_features.push(id.clone());
-                    } else if self.tests.contains_key(id) {
-                        direct_tests.push(id.clone());
-                    } else if self.adrs.contains_key(id) {
-                        direct_adrs.push(id.clone());
-                    } else if self.dependencies.contains_key(id) {
-                        direct_deps.push(id.clone());
-                    }
-                    queue.push_back(id.clone());
-                }
-            }
+        self.impact_direct_reverse(seed, &mut visited, &mut queue, &mut buckets);
+        if self.patterns.contains_key(seed) {
+            self.impact_pattern_extras(seed, &mut visited, &mut buckets);
         }
-
-        // Transitive dependents (depth 2+)
         let (transitive_features, transitive_tests) =
             self.collect_transitive_dependents(&mut visited, &mut queue);
-
         ImpactResult {
             seed: seed.to_string(),
-            direct_features,
-            direct_tests,
-            direct_adrs,
-            direct_deps,
+            direct_features: buckets.features,
+            direct_tests: buckets.tests,
+            direct_adrs: buckets.adrs,
+            direct_deps: buckets.deps,
+            direct_patterns: buckets.patterns,
             transitive_features,
             transitive_tests,
         }
     }
 
-    /// Build undirected adjacency list from graph edges
-    fn build_undirected_adjacency(&self) -> HashMap<String, Vec<String>> {
+    fn impact_direct_reverse(
+        &self,
+        seed: &str,
+        visited: &mut HashSet<String>,
+        queue: &mut VecDeque<String>,
+        b: &mut ImpactBuckets,
+    ) {
+        if let Some(neighbors) = self.reverse.get(seed) {
+            for (id, _) in neighbors {
+                if !visited.contains(id) {
+                    visited.insert(id.clone());
+                    classify_neighbour(self, id, b);
+                    queue.push_back(id.clone());
+                }
+            }
+        }
+    }
+
+    /// FT-071 extra hop: when the seed is a PAT, also walk to the ADRs the
+    /// pattern operationalises (forward edges + the front-matter `adrs`
+    /// array, so the impact tree shows every ADR cited by the pattern even
+    /// when the back-edge from the ADR has not been materialised yet).
+    fn impact_pattern_extras(
+        &self,
+        seed: &str,
+        visited: &mut HashSet<String>,
+        b: &mut ImpactBuckets,
+    ) {
+        if let Some(forward) = self.forward.get(seed) {
+            for (id, _) in forward {
+                if !visited.contains(id) && self.adrs.contains_key(id) {
+                    visited.insert(id.clone());
+                    b.adrs.push(id.clone());
+                }
+            }
+        }
+        if let Some(pat) = self.patterns.get(seed) {
+            for adr_id in &pat.front.adrs {
+                if visited.insert(adr_id.clone()) && self.adrs.contains_key(adr_id) {
+                    b.adrs.push(adr_id.clone());
+                }
+            }
+        }
+    }
+
+    /// Build undirected adjacency list from graph edges. Optionally
+    /// drops every edge touching a PAT node so that
+    /// `betweenness_centrality_with(false)` reproduces the pre-FT-071
+    /// ranking byte-for-byte (ADR-050 backwards-compat invariant).
+    fn build_undirected_adjacency_filtered(
+        &self,
+        include_patterns: bool,
+    ) -> HashMap<String, Vec<String>> {
         let mut adj: HashMap<String, Vec<String>> = HashMap::new();
         for edge in &self.edges {
+            if !include_patterns
+                && (self.patterns.contains_key(&edge.from)
+                    || self.patterns.contains_key(&edge.to))
+            {
+                continue;
+            }
             adj.entry(edge.from.clone())
                 .or_default()
                 .push(edge.to.clone());
@@ -160,6 +213,31 @@ impl KnowledgeGraph {
             }
         }
         (transitive_features, transitive_tests)
+    }
+}
+
+/// Direct-impact buckets, one vector per artifact kind (FT-071).
+#[derive(Debug, Default)]
+struct ImpactBuckets {
+    features: Vec<String>,
+    tests: Vec<String>,
+    adrs: Vec<String>,
+    deps: Vec<String>,
+    patterns: Vec<String>,
+}
+
+/// Classify a neighbour ID into one of the impact buckets (FT-071).
+fn classify_neighbour(graph: &KnowledgeGraph, id: &str, b: &mut ImpactBuckets) {
+    if graph.features.contains_key(id) {
+        b.features.push(id.to_string());
+    } else if graph.tests.contains_key(id) {
+        b.tests.push(id.to_string());
+    } else if graph.adrs.contains_key(id) {
+        b.adrs.push(id.to_string());
+    } else if graph.dependencies.contains_key(id) {
+        b.deps.push(id.to_string());
+    } else if graph.patterns.contains_key(id) {
+        b.patterns.push(id.to_string());
     }
 }
 

@@ -2,7 +2,7 @@
 id: TC-829
 title: ft_071_exit_criteria_pattern_graph_integration
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-071
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_829_ft_071_exit_criteria_pattern_graph_integration
+last-run: 2026-05-27T13:37:22.762619987+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
