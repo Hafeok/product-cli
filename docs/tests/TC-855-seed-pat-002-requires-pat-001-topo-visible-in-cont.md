@@ -2,7 +2,7 @@
 id: TC-855
 title: seed_pat_002_requires_pat_001_topo_visible_in_context
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-075
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_855_seed_pat_002_requires_pat_001_topo_visible_in_context
+last-run: 2026-05-27T15:36:27.790359954+00:00
+last-run-duration: 8.4s
 ---
 
 ## Description

@@ -2,7 +2,7 @@
 id: FT-075
 title: Seed Pattern Catalog — PAT-001 Slice + Adapter, PAT-002 MCP Tool With Disk Side-Effect, PAT-003 TC Observability
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-070
 - FT-071

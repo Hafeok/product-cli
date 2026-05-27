@@ -36,6 +36,8 @@ tests:
 domains:
 - data-model
 - testing
+patterns:
+- PAT-003
 domains-acknowledged: {}
 ---
 

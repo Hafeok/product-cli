@@ -2,7 +2,7 @@
 id: TC-856
 title: seed_examples_reciprocated_to_feature_patterns_arrays
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-075
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_856_seed_examples_reciprocated_to_feature_patterns_arrays
+last-run: 2026-05-27T15:36:27.790359954+00:00
+last-run-duration: 2.6s
 ---
 
 ## Description

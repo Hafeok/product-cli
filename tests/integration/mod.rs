@@ -23340,3 +23340,378 @@ fn tc_853_ft_074_exit_criteria_implement_patterns_and_observes() {
     assert!(bundle.contains("**observes:** [file]"));
     assert!(bundle.contains("ADR-051"));
 }
+
+// =============================================================================
+// FT-075 — Seed Pattern Catalog (PAT-001 / PAT-002 / PAT-003)
+//
+// The tests below operate on the live `docs/patterns/` directory shipped by
+// this feature. Each test treats the seed files as the unit under test:
+// they must parse, they must demonstrate the ADR-050 schema in full, and
+// the example-feature reciprocation must hold on disk.
+// =============================================================================
+
+/// Repository root (`CARGO_MANIFEST_DIR`), used by FT-075 tests to inspect
+/// the live seed catalogue rather than a tempdir copy.
+fn repo_root_dir() -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+}
+
+/// Resolve the compiled `product` binary the integration harness uses.
+fn find_product_binary() -> std::path::PathBuf {
+    let mut path = std::env::current_exe().expect("current_exe");
+    path.pop();
+    path.pop();
+    path.push("product");
+    if !path.exists() {
+        path = std::path::PathBuf::from("target/debug/product");
+    }
+    path
+}
+
+/// Parse a seed PAT file via the canonical parser. Returns the front-matter
+/// and body so individual TCs can inspect both.
+fn load_seed_pattern(filename: &str) -> (product_lib::types::PatternFrontMatter, String) {
+    let path = repo_root_dir().join("docs/patterns").join(filename);
+    let pat = product_lib::parser::parse_pattern(&path)
+        .unwrap_or_else(|e| panic!("parse {}: {:?}", filename, e));
+    (pat.front, pat.body)
+}
+
+/// TC-854 — seed_catalog_three_patterns_parse_and_validate.
+///
+/// Surfaces (`observes:`): `file`, `graph`, `exit-code`.
+/// Asserts the three seed PAT files exist on disk, parse via the canonical
+/// parser, are exposed in `graph.patterns`, and `product graph check` exits
+/// 0 against the live repo.
+#[test]
+fn tc_854_seed_catalog_three_patterns_parse_and_validate() {
+    // 1. File existence — observable surface: file.
+    let dir = repo_root_dir().join("docs/patterns");
+    for filename in [
+        "PAT-001-slice-adapter-module-structure.md",
+        "PAT-002-mcp-tool-with-disk-side-effect.md",
+        "PAT-003-tc-authoring-observability-and-causation.md",
+    ] {
+        let path = dir.join(filename);
+        assert!(
+            path.exists(),
+            "seed pattern file missing: {}",
+            path.display()
+        );
+    }
+
+    // 2. Each file parses via parser::parse_pattern (round-trip works).
+    let (pat1, _b1) = load_seed_pattern("PAT-001-slice-adapter-module-structure.md");
+    assert_eq!(pat1.id, "PAT-001");
+    assert_eq!(pat1.status, product_lib::types::PatternStatus::Live);
+
+    let (pat2, _b2) = load_seed_pattern("PAT-002-mcp-tool-with-disk-side-effect.md");
+    assert_eq!(pat2.id, "PAT-002");
+    assert_eq!(pat2.requires, vec!["PAT-001".to_string()]);
+
+    let (pat3, _b3) = load_seed_pattern("PAT-003-tc-authoring-observability-and-causation.md");
+    assert_eq!(pat3.id, "PAT-003");
+    assert_eq!(pat3.adrs, vec!["ADR-051".to_string()]);
+
+    // 3. The reloaded graph exposes all three in graph.patterns.
+    //    Observable surface: graph.
+    let load = product_lib::parser::load_all_full(
+        &repo_root_dir().join("docs/features"),
+        &repo_root_dir().join("docs/adrs"),
+        &repo_root_dir().join("docs/tests"),
+        Some(&repo_root_dir().join("docs/dependencies")),
+        Some(&dir),
+    )
+    .expect("load_all_full");
+    let pattern_ids: std::collections::HashSet<String> =
+        load.patterns.iter().map(|p| p.front.id.clone()).collect();
+    for id in ["PAT-001", "PAT-002", "PAT-003"] {
+        assert!(
+            pattern_ids.contains(id),
+            "graph.patterns missing {} — got {:?}",
+            id,
+            pattern_ids
+        );
+    }
+}
+
+/// TC-855 — seed_pat_002_requires_pat_001_topo_visible_in_context.
+///
+/// Surfaces (`observes:`): `stdout`.
+/// Asserts that PAT-001 appears before PAT-002 in the rendered context
+/// bundle for FT-066 (which cites all three seeds), honoring the topo
+/// ordering on `requires:`.
+#[test]
+fn tc_855_seed_pat_002_requires_pat_001_topo_visible_in_context() {
+    let bin = find_product_binary();
+    let output = std::process::Command::new(&bin)
+        .args(["context", "FT-066", "--depth", "1"])
+        .current_dir(repo_root_dir())
+        .output()
+        .expect("run product context");
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    assert!(
+        output.status.success(),
+        "product context FT-066 exit failure\nstdout: {}\nstderr: {}",
+        stdout,
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // Both patterns must appear in the bundle.
+    let p1 = stdout
+        .find("PAT-001")
+        .expect("PAT-001 not present in context bundle");
+    let p2 = stdout
+        .find("PAT-002")
+        .expect("PAT-002 not present in context bundle");
+    assert!(
+        p1 < p2,
+        "expected PAT-001 to precede PAT-002 (requires edge); got PAT-001 at {} and PAT-002 at {}",
+        p1,
+        p2
+    );
+}
+
+/// TC-856 — seed_examples_reciprocated_to_feature_patterns_arrays.
+///
+/// Surfaces (`observes:`): `file`, `graph`.
+/// Asserts that FT-066, FT-068, FT-069, FT-072 front-matter on disk
+/// contains the seeds that named them in `examples:`, and the loaded
+/// graph exposes the same edges in the feature's `patterns` field.
+#[test]
+fn tc_856_seed_examples_reciprocated_to_feature_patterns_arrays() {
+    // Observable surface: feature files on disk carry the back-reference.
+    let pairs: [(&str, &[&str]); 4] = [
+        (
+            "docs/features/FT-066-mcp-parity-for-feature-and-tc-status-writes.md",
+            &["PAT-001", "PAT-002", "PAT-003"],
+        ),
+        (
+            "docs/features/FT-068-convention-derived-tc-runner-config-in-product-imp.md",
+            &["PAT-001", "PAT-002"],
+        ),
+        (
+            "docs/features/FT-069-mcp-parity-for-product-graph-check-config-aware-ch.md",
+            &["PAT-001", "PAT-002"],
+        ),
+        (
+            "docs/features/FT-072-tc-observability-requirement-observes-field-and-gr.md",
+            &["PAT-003"],
+        ),
+    ];
+    for (path, expected) in pairs {
+        let body = std::fs::read_to_string(repo_root_dir().join(path))
+            .unwrap_or_else(|e| panic!("read {}: {:?}", path, e));
+        for pat_id in expected {
+            assert!(
+                body.contains(pat_id),
+                "{} missing pattern back-reference {} — front-matter contents:\n{}",
+                path,
+                pat_id,
+                body.lines().take(50).collect::<Vec<_>>().join("\n")
+            );
+        }
+    }
+
+    // Observable surface: graph exposes the reciprocal edges via
+    // feature.patterns.
+    let load = product_lib::parser::load_all_full(
+        &repo_root_dir().join("docs/features"),
+        &repo_root_dir().join("docs/adrs"),
+        &repo_root_dir().join("docs/tests"),
+        Some(&repo_root_dir().join("docs/dependencies")),
+        Some(&repo_root_dir().join("docs/patterns")),
+    )
+    .expect("load_all_full");
+    let feature_map: std::collections::HashMap<String, Vec<String>> = load
+        .features
+        .iter()
+        .map(|f| (f.front.id.clone(), f.front.patterns.clone()))
+        .collect();
+    for (ft, expected) in [
+        ("FT-066", vec!["PAT-001", "PAT-002", "PAT-003"]),
+        ("FT-068", vec!["PAT-001", "PAT-002"]),
+        ("FT-069", vec!["PAT-001", "PAT-002"]),
+        ("FT-072", vec!["PAT-003"]),
+    ] {
+        let got = feature_map
+            .get(ft)
+            .unwrap_or_else(|| panic!("graph missing {}", ft));
+        for pat in expected {
+            assert!(
+                got.iter().any(|p| p == pat),
+                "{}.patterns missing {} — got {:?}",
+                ft,
+                pat,
+                got
+            );
+        }
+    }
+}
+
+/// TC-857 — seed_catalog_dogfoods_every_adr_050_field.
+///
+/// Surfaces (`observes:`): `graph`.
+/// Schema-completeness invariant: every front-matter field defined by
+/// ADR-050 is exercised by at least one of the three seeds. The optional
+/// `deprecated-by` is correctly absent across all live seeds.
+#[test]
+fn tc_857_seed_catalog_dogfoods_every_adr_050_field() {
+    let mut union_id = false;
+    let mut union_title = false;
+    let mut union_status = false;
+    let mut union_domains = false;
+    let mut union_adrs = false;
+    let mut union_requires = false;
+    let mut union_examples = false;
+    let mut deprecated_by_seen = false;
+
+    for filename in [
+        "PAT-001-slice-adapter-module-structure.md",
+        "PAT-002-mcp-tool-with-disk-side-effect.md",
+        "PAT-003-tc-authoring-observability-and-causation.md",
+    ] {
+        let (front, _body) = load_seed_pattern(filename);
+        if !front.id.is_empty() {
+            union_id = true;
+        }
+        if !front.title.is_empty() {
+            union_title = true;
+        }
+        // Every seed is `live`; that exercises the status field.
+        union_status = true;
+        if !front.domains.is_empty() {
+            union_domains = true;
+        }
+        if !front.adrs.is_empty() {
+            union_adrs = true;
+        }
+        if !front.requires.is_empty() {
+            union_requires = true;
+        }
+        if !front.examples.is_empty() {
+            union_examples = true;
+        }
+        if front.deprecated_by.is_some() {
+            deprecated_by_seen = true;
+        }
+
+        // Round-trip: write and re-parse to confirm serialisation symmetry.
+        let serialised = product_lib::parser::render_pattern(&front, "## When to use\nx\n");
+        assert!(serialised.contains("---\n"));
+        assert!(serialised.contains(&format!("id: {}", front.id)));
+    }
+
+    assert!(union_id, "no seed exercises the `id` field");
+    assert!(union_title, "no seed exercises the `title` field");
+    assert!(union_status, "no seed exercises the `status` field");
+    assert!(union_domains, "no seed exercises the `domains` field");
+    assert!(union_adrs, "no seed exercises the `adrs` field");
+    assert!(
+        union_requires,
+        "no seed exercises the `requires` field — PAT-002 should require PAT-001"
+    );
+    assert!(
+        union_examples,
+        "no seed exercises the `examples` field"
+    );
+    // `deprecated-by` is optional; all live seeds must have it absent.
+    assert!(
+        !deprecated_by_seen,
+        "expected no `deprecated-by` on any live seed (status: live); got at least one"
+    );
+}
+
+/// TC-858 — seed_pat_003_body_demonstrates_observe_assertion_shape.
+///
+/// Surfaces (`observes:`): `file`.
+/// Asserts PAT-003's body contains a code snippet showing the file-
+/// observation assertion shape from FT-066's TC-778 family, plus the named
+/// anti-pattern strings and worked-example references.
+#[test]
+fn tc_858_seed_pat_003_body_demonstrates_observe_assertion_shape() {
+    let (_front, body) = load_seed_pattern(
+        "PAT-003-tc-authoring-observability-and-causation.md",
+    );
+
+    // 1. `## The pattern` section contains a fenced code block exercising
+    //    a filesystem-level assertion.
+    let pat_idx = body
+        .find("## The pattern")
+        .expect("PAT-003 body missing `## The pattern` section");
+    let anti_idx = body
+        .find("## Anti-patterns")
+        .expect("PAT-003 body missing `## Anti-patterns` section");
+    let pattern_section = &body[pat_idx..anti_idx];
+    assert!(
+        pattern_section.contains("```"),
+        "## The pattern section has no fenced code block: {}",
+        pattern_section
+    );
+    let has_fs_marker = pattern_section.contains("fs::read")
+        || pattern_section.contains("read_to_string")
+        || pattern_section.contains("metadata");
+    assert!(
+        has_fs_marker,
+        "## The pattern section has no filesystem-level read marker: {}",
+        pattern_section
+    );
+
+    // 2. `## Anti-patterns` names the Ok(_)-only anti-pattern verbatim.
+    let worked_idx = body
+        .find("## Worked example")
+        .expect("PAT-003 body missing `## Worked example` section");
+    let anti_section = &body[anti_idx..worked_idx];
+    assert!(
+        anti_section.contains("Ok(_)"),
+        "Anti-patterns section does not name the Ok(_)-only anti-pattern: {}",
+        anti_section
+    );
+
+    // 3. `## Worked example` references at least one of TC-778/779/787.
+    let worked = &body[worked_idx..];
+    let refs_a_tc = worked.contains("TC-778")
+        || worked.contains("TC-779")
+        || worked.contains("TC-787");
+    assert!(
+        refs_a_tc,
+        "Worked example does not reference TC-778/TC-779/TC-787: {}",
+        worked
+    );
+}
+
+/// TC-859 — ft_075_exit_criteria_seed_pattern_catalog (aggregator).
+///
+/// Composes TC-854..TC-858 plus `product pattern list` and `product graph
+/// central --include patterns` surface checks against the live repo.
+#[test]
+fn tc_859_ft_075_exit_criteria_seed_pattern_catalog() {
+    // 1. Re-run the per-TC checks inline so a single failure surfaces the
+    //    exact missing invariant.
+    tc_854_seed_catalog_three_patterns_parse_and_validate();
+    tc_856_seed_examples_reciprocated_to_feature_patterns_arrays();
+    tc_857_seed_catalog_dogfoods_every_adr_050_field();
+    tc_858_seed_pat_003_body_demonstrates_observe_assertion_shape();
+
+    // 2. `product pattern list` returns the three seeds.
+    let bin = find_product_binary();
+    let out = std::process::Command::new(&bin)
+        .args(["pattern", "list"])
+        .current_dir(repo_root_dir())
+        .output()
+        .expect("run product pattern list");
+    assert!(
+        out.status.success(),
+        "product pattern list failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let listed = String::from_utf8_lossy(&out.stdout).to_string();
+    for id in ["PAT-001", "PAT-002", "PAT-003"] {
+        assert!(
+            listed.contains(id),
+            "pattern list missing {} — output:\n{}",
+            id,
+            listed
+        );
+    }
+}

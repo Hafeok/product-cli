@@ -1478,7 +1478,7 @@
 - [x] TC-852: implement_skips_pattern_section_when_feature_has_none (scenario) — passing
 - [x] TC-853: ft_074_exit_criteria_implement_patterns_and_observes (exit-criteria) — passing
 
-### FT-075 — Seed Pattern Catalog — PAT-001 Slice + Adapter, PAT-002 MCP Tool With Disk Side-Effect, PAT-003 TC Observability [ ]
+### FT-075 — Seed Pattern Catalog — PAT-001 Slice + Adapter, PAT-002 MCP Tool With Disk Side-Effect, PAT-003 TC Observability [x]
 
 - [x] ADR-050: Introduce Pattern (PAT) Artifact Type for Implementation Knowledge (accepted)
 - [x] ADR-051: TC Observability Requirement — Causation Over Transaction (accepted)
@@ -1492,10 +1492,10 @@
 - [x] ADR-041: Removal & Deprecation Verification — Absence TCs and ADR `removes`/`deprecates` Fields (accepted)
 - [x] ADR-047: Functional Specification Lives in Feature Body, Not a Separate Artifact (accepted)
 - [x] ADR-040: Unified Verify Pipeline and the LLM Boundary (accepted)
-- [ ] TC-854: seed_catalog_three_patterns_parse_and_validate (scenario) — unimplemented
-- [ ] TC-855: seed_pat_002_requires_pat_001_topo_visible_in_context (scenario) — unimplemented
-- [ ] TC-856: seed_examples_reciprocated_to_feature_patterns_arrays (scenario) — unimplemented
-- [ ] TC-857: seed_catalog_dogfoods_every_adr_050_field (invariant) — unimplemented
-- [ ] TC-858: seed_pat_003_body_demonstrates_observe_assertion_shape (scenario) — unimplemented
-- [ ] TC-859: ft_075_exit_criteria_seed_pattern_catalog (exit-criteria) — unimplemented
+- [x] TC-854: seed_catalog_three_patterns_parse_and_validate (scenario) — passing
+- [x] TC-855: seed_pat_002_requires_pat_001_topo_visible_in_context (scenario) — passing
+- [x] TC-856: seed_examples_reciprocated_to_feature_patterns_arrays (scenario) — passing
+- [x] TC-857: seed_catalog_dogfoods_every_adr_050_field (invariant) — passing
+- [x] TC-858: seed_pat_003_body_demonstrates_observe_assertion_shape (scenario) — passing
+- [x] TC-859: ft_075_exit_criteria_seed_pattern_catalog (exit-criteria) — passing
 

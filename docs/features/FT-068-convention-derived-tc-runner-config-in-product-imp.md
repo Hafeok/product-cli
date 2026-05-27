@@ -21,6 +21,9 @@ tests:
 - TC-804
 - TC-805
 domains: []
+patterns:
+- PAT-001
+- PAT-002
 domains-acknowledged:
   ADR-041: Removal & deprecation absence TCs are unrelated. FT-068 does not remove or deprecate any artifact, NuGet/cargo dependency, CLI command, configuration key, or front-matter field. It adds a new pipeline step (Step 0a) and a new flag (`--no-auto-runners`) — pure additions. The existing E022 runner-required gate and the strict invariants from FT-058 stay in place; the auto-fill writes the runner fields the gate demands, it does not remove the gate.
   ADR-049: Per-model context bundle templates are unrelated to this feature. FT-068 modifies the `implement` system prompt (governed by ADR-022) to add a one-line reminder about runner-args; it does not touch context bundle rendering, the `--target` flag, the `[context].default-target` config, or template resolution. The auto-fill operates on TC front-matter directly via the `product test runner` slice, not through any bundle assembly path.

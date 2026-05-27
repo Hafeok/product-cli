@@ -2,7 +2,7 @@
 id: TC-854
 title: seed_catalog_three_patterns_parse_and_validate
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-075
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_854_seed_catalog_three_patterns_parse_and_validate
+last-run: 2026-05-27T15:36:27.790359954+00:00
+last-run-duration: 2.5s
 ---
 
 ## Description

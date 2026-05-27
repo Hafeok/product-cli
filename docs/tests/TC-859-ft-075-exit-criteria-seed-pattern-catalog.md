@@ -2,7 +2,7 @@
 id: TC-859
 title: ft_075_exit_criteria_seed_pattern_catalog
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-075
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_859_ft_075_exit_criteria_seed_pattern_catalog
+last-run: 2026-05-27T15:36:27.790359954+00:00
+last-run-duration: 7.2s
 ---
 
 ## Description

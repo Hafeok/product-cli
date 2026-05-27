@@ -2,7 +2,7 @@
 id: TC-858
 title: seed_pat_003_body_demonstrates_observe_assertion_shape
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-075
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_858_seed_pat_003_body_demonstrates_observe_assertion_shape
+last-run: 2026-05-27T15:36:27.790359954+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

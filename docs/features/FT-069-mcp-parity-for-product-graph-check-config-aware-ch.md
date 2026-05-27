@@ -27,6 +27,9 @@ tests:
 - TC-810
 - TC-811
 domains: []
+patterns:
+- PAT-001
+- PAT-002
 domains-acknowledged:
   ADR-050: ADR-050 introduces the PAT artifact type and explicitly targets the FT-070–FT-075 wave. FT-069 predates that wave and authors no pattern artifacts; it follows the pre-existing slice + adapter shape already established by FT-046 and FT-059. No PAT files are created, linked, or referenced.
   ADR-049: ADR-049 governs per-model context bundle templates (data-file driven). FT-069 touches the graph-check tool surface, not the context-bundle assembly path. Bundle templates are unaffected; no template files are added, modified, or referenced.

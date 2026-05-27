@@ -2,7 +2,7 @@
 id: TC-857
 title: seed_catalog_dogfoods_every_adr_050_field
 type: invariant
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-075
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_857_seed_catalog_dogfoods_every_adr_050_field
+last-run: 2026-05-27T15:36:27.790359954+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

@@ -27,6 +27,10 @@ tests:
 domains:
 - api
 - testing
+patterns:
+- PAT-001
+- PAT-002
+- PAT-003
 domains-acknowledged:
   ADR-048: No file-layout changes. New code reads and writes through the existing `KnowledgeGraph` + `fileops::write_batch_atomic` paths; the canonical `.product/` layout is orthogonal to this feature.
   ADR-049: This feature does not introduce or modify observability hooks. The MCP write path already emits the same tool-call logs as before; status-write success/failure flows through the existing JSON-RPC envelope without new instrumentation.
