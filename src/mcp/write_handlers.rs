@@ -90,15 +90,33 @@ pub(crate) fn handle_test_new(
 ) -> Result<Value, String> {
     let title = args.get("title").and_then(|v| v.as_str()).unwrap_or_default();
     let test_type = args.get("test_type").and_then(|v| v.as_str()).unwrap_or("scenario");
+    // FT-072: accept `observes` as an array of strings.
+    let observes: Vec<String> = match args.get("observes") {
+        Some(Value::Array(arr)) => arr
+            .iter()
+            .filter_map(|v| v.as_str().map(String::from))
+            .collect(),
+        _ => Vec::new(),
+    };
     let existing: Vec<String> = graph.tests.keys().cloned().collect();
     let config = ProductConfig::load_from_root(repo_root)
         .map_err(|e| format!("{}", e))?;
+    for s in &observes {
+        if !crate::tc::is_known_surface(s, &config.tc_observability) {
+            return Err(format!(
+                "E026: unknown observes surface '{}' (allowed: {})",
+                s,
+                crate::tc::surface_hint(&config.tc_observability),
+            ));
+        }
+    }
     let id = crate::parser::next_id(&config.prefixes.test, &existing);
     let filename = crate::parser::id_to_filename(&id, title);
     let dir = config.resolve_path(repo_root, &config.paths.tests);
     std::fs::create_dir_all(&dir).map_err(|e| format!("{}", e))?;
     let path = dir.join(&filename);
-    let front = new_test_front(id.clone(), title, test_type);
+    let mut front = new_test_front(id.clone(), title, test_type);
+    front.observes = observes;
     let body = "## Description\n\n[Describe test here.]\n".to_string();
     let content = crate::parser::render_test(&front, &body);
     crate::fileops::write_file_atomic(&path, &content).map_err(|e| format!("{}", e))?;
@@ -123,6 +141,7 @@ fn new_test_front(
         runner_args: None,
         runner_timeout: None,
         requires: vec![],
+        observes: vec![],
         last_run: None,
         failure_message: None,
         last_run_duration: None,

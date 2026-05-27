@@ -7,6 +7,7 @@ pub mod functional_spec_validation;
 mod lifecycle_validation;
 pub mod inference;
 mod model;
+pub mod observability_validation;
 mod ordering;
 pub mod pattern_topo;
 pub mod pattern_validation;

@@ -2,7 +2,7 @@
 id: TC-831
 title: tc_observes_missing_on_required_type_emits_error
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-072
@@ -10,6 +10,11 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_831_tc_observes_missing_on_required_type_emits_error
+observes:
+- stdout
+- exit-code
+last-run: 2026-05-27T14:11:07.133454142+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

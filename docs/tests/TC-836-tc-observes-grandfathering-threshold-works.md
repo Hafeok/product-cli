@@ -2,7 +2,7 @@
 id: TC-836
 title: tc_observes_grandfathering_threshold_works
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-072
@@ -10,14 +10,19 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_836_tc_observes_grandfathering_threshold_works
+observes:
+- stdout
+last-run: 2026-05-27T14:11:07.133454142+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
 
 Compose a temp repo with a phase-5 scenario TC lacking
 `observes:`. Verify the default config (`required-from-phase =
-5`) flags it. Edit `product.toml` to set `required-from-phase =
-99` and re-run `product graph check`.
+5`) flags it via stdout output. Edit `product.toml` to set
+`required-from-phase = 99` and re-run `product graph check`,
+capturing stdout each time.
 
 Assert:
 

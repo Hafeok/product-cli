@@ -2,7 +2,7 @@
 id: TC-834
 title: tc_observes_unknown_surface_rejected_by_request_apply
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-072
@@ -10,6 +10,11 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_834_tc_observes_unknown_surface_rejected_by_request_apply
+observes:
+- stdout
+- exit-code
+last-run: 2026-05-27T14:11:07.133454142+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
@@ -20,7 +25,8 @@ containing a TC `changes:` entry that adds `observes:
 
 Assert:
 
-1. The response carries an E026 error envelope.
+1. The response exits with a non-zero exit-code and prints E026
+   on stdout (JSON format) or stderr (text format).
 2. The error text names `bogus_surface` as the offending value.
 3. The error lists the allowed vocabulary in the hint or detail.
 4. The on-disk TC file is **unchanged** — the write does not

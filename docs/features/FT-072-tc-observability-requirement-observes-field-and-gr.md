@@ -2,7 +2,7 @@
 id: FT-072
 title: TC Observability Requirement — observes Field and graph check Validation
 phase: 5
-status: planned
+status: complete
 depends-on:
 - FT-003
 - FT-018

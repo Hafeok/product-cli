@@ -227,6 +227,28 @@ fn validate_tc(
             ));
         }
     }
+
+    // FT-072 / ADR-051 — every observes value must be in the allowed
+    // vocabulary (built-in or [tc-observability].custom).
+    if let Some(Value::Sequence(seq)) = a.fields.get(Value::String("observes".into())) {
+        for (i, item) in seq.iter().enumerate() {
+            if let Value::String(s) = item {
+                if !crate::tc::is_known_surface(s, &ctx.config.tc_observability) {
+                    findings.push(
+                        Finding::error(
+                            "E026",
+                            format!("unknown observes surface '{}'", s),
+                            format!("$.artifacts[{}].observes[{}]", a.index, i),
+                        )
+                        .with_hint(format!(
+                            "allowed surfaces: {} — add to [tc-observability].custom to accept it",
+                            crate::tc::surface_hint(&ctx.config.tc_observability),
+                        )),
+                    );
+                }
+            }
+        }
+    }
 }
 
 fn validate_dep(

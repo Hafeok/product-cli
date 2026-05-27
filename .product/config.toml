@@ -104,3 +104,13 @@ required-sections = ["Description", "Functional Specification", "Out of scope"]
 functional-spec-subsections = ["Inputs", "Outputs", "State", "Behaviour", "Invariants", "Error handling", "Boundaries"]
 required-from-phase = 1
 completeness-severity = "warning"
+
+# FT-072 / ADR-051 — TC observability requirement (`observes:` field).
+# `required-from-phase = 99` grandfathers the existing corpus. New TCs
+# authored within FT-072 already dogfood the field; future TCs in phases
+# beyond 99 (none today) will be required to declare it.
+[tc-observability]
+required-from-phase = 99
+required-for-types = ["scenario", "session", "smoke", "contract"]
+custom = []
+body-reference-severity = "warning"

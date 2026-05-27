@@ -99,6 +99,7 @@ fn schema_prompt_covers_tc_fields() {
         runner_args: None,
         runner_timeout: None,
         requires: vec![],
+        observes: vec![],
         last_run: None,
         failure_message: None,
         last_run_duration: None,

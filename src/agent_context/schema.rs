@@ -149,6 +149,8 @@ runner: String       # Optional. Test runner name (e.g. cargo-test)
 runner-args: String  # Optional. Arguments for the test runner
 runner-timeout: Integer # Optional. Timeout in seconds
 requires: [String]   # Default: []. TC IDs that must pass before this TC
+observes: [String]   # Default: []. Asserted surfaces (ADR-051). Required for
+                     # scenario/session/smoke/contract at phase >= threshold.
 last-run: String     # Optional. ISO 8601 timestamp of last run
 failure-message: String # Optional. Last failure message
 last-run-duration: Float # Optional. Last run duration in seconds

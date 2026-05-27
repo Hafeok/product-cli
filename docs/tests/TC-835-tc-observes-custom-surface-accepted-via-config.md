@@ -2,7 +2,7 @@
 id: TC-835
 title: tc_observes_custom_surface_accepted_via_config
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-072
@@ -10,15 +10,19 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_835_tc_observes_custom_surface_accepted_via_config
+observes:
+- file
+last-run: 2026-05-27T14:11:07.133454142+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description
 
-Compose a temp repo whose `product.toml` declares
+Compose a temp repo whose `product.toml` file declares
 `[tc-observability].custom = ["my_custom_surface"]`. Author a
-scenario TC at phase 5 declaring `observes: [my_custom_surface]`
-with body text referencing the surface name. Run
-`product graph check`.
+scenario TC file at phase 5 declaring `observes:
+[my_custom_surface]` with body text referencing the surface
+name. Run `product graph check` against the on-disk file.
 
 Assert:
 

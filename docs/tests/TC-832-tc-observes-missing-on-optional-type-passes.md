@@ -2,7 +2,7 @@
 id: TC-832
 title: tc_observes_missing_on_optional_type_passes
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-072
@@ -10,6 +10,10 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_832_tc_observes_missing_on_optional_type_passes
+observes:
+- exit-code
+last-run: 2026-05-27T14:11:07.133454142+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

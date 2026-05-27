@@ -59,6 +59,7 @@ pub const TC_FIELDS: &[&str] = &[
     "runner-args",
     "runner-timeout",
     "requires",
+    "observes",
     "last-run",
     "failure-message",
     "last-run-duration",

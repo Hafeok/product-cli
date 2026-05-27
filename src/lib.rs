@@ -12,6 +12,7 @@ pub mod config_author;
 pub mod config_cycle_times;
 pub mod config_features;
 pub mod config_migrate;
+pub mod config_observability;
 pub mod config_paths;
 pub mod config_patterns;
 pub mod config_planning;

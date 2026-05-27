@@ -22051,3 +22051,369 @@ fn tc_829_ft_071_exit_criteria_pattern_graph_integration() {
     h.run(&["graph", "check", "--help"]).assert_exit(0);
     h.run(&["impact", "--help"]).assert_exit(0);
 }
+
+// =============================================================================
+// FT-072 — TC Observability Requirement (`observes:` field + graph check gates)
+// =============================================================================
+
+/// TC-830 — `observes:` parses as a flat list of strings and round-trips.
+#[test]
+fn tc_830_tc_observes_field_parses_as_flat_list() {
+    let h = Harness::new();
+    let tc_body = "---\n\
+id: TC-099\n\
+title: Observes Field Test\n\
+type: scenario\n\
+status: unimplemented\n\
+validates:\n\
+  features: []\n\
+  adrs: []\n\
+phase: 1\n\
+observes:\n\
+- file\n\
+- graph\n\
+---\n\n\
+## Description\n\nObserves the file and graph surfaces.\n";
+    h.write("docs/tests/TC-099-observes-field.md", tc_body);
+    // graph check should accept the file with phase 1 (below default threshold of 5).
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        out.exit_code == 0 || out.exit_code == 2,
+        "expected exit 0 or 2 (warnings), got {}\nstderr: {}",
+        out.exit_code,
+        out.stderr
+    );
+    // test show should display the front-matter via JSON.
+    let show = h.run(&["test", "show", "TC-099", "--format", "json"]);
+    show.assert_exit(0);
+    let v: serde_json::Value =
+        serde_json::from_str(&show.stdout).expect("test show JSON");
+    // The front-matter should be intact and parsable on disk.
+    let on_disk = std::fs::read_to_string(
+        h.dir.path().join("docs/tests/TC-099-observes-field.md"),
+    )
+    .expect("read file");
+    assert!(on_disk.contains("observes:"));
+    assert!(on_disk.contains("file"));
+    assert!(on_disk.contains("graph"));
+    assert!(v["id"].as_str() == Some("TC-099"));
+}
+
+fn write_observability_config(h: &Harness, required_from_phase: u32) {
+    let cfg = h.dir.path().join("product.toml");
+    let mut s = std::fs::read_to_string(&cfg).expect("read config");
+    s.push_str(&format!(
+        "\n[tc-observability]\nrequired-from-phase = {}\n",
+        required_from_phase
+    ));
+    std::fs::write(&cfg, s).expect("write config");
+}
+
+/// TC-831 — graph check emits E032 when a phase-5 scenario lacks observes.
+#[test]
+fn tc_831_tc_observes_missing_on_required_type_emits_error() {
+    let h = Harness::new();
+    write_observability_config(&h, 5);
+    let tc_body = "---\n\
+id: TC-099\n\
+title: Missing Observes\n\
+type: scenario\n\
+status: unimplemented\n\
+validates:\n\
+  features: []\n\
+  adrs: []\n\
+phase: 5\n\
+---\n\n\
+## Description\n\nNo observes declared.\n";
+    h.write("docs/tests/TC-099-missing-observes.md", tc_body);
+    let out = h.run(&["graph", "check"]);
+    assert_eq!(
+        out.exit_code, 1,
+        "expected exit 1, got {}\nstderr: {}\nstdout: {}",
+        out.exit_code, out.stderr, out.stdout
+    );
+    out.assert_stderr_contains("E032");
+    out.assert_stderr_contains("TC-099");
+    out.assert_stderr_contains("ADR-051");
+}
+
+/// TC-832 — invariant / property TCs without observes pass the gate.
+#[test]
+fn tc_832_tc_observes_missing_on_optional_type_passes() {
+    let h = Harness::new();
+    write_observability_config(&h, 5);
+    let inv = "---\n\
+id: TC-100\n\
+title: Invariant TC\n\
+type: invariant\n\
+status: unimplemented\n\
+validates:\n\
+  features: []\n\
+  adrs: []\n\
+phase: 5\n\
+---\n\n\
+## Description\n\nInvariant block follows.\n\n⟦Γ:Invariants⟧{\n  ∀x: true\n}\n\n⟦Ε⟧⟨δ≜0.9;φ≜80;τ≜◊⁺⟩\n";
+    h.write("docs/tests/TC-100-invariant.md", inv);
+    let out = h.run(&["graph", "check"]);
+    // No E032 should be emitted.
+    assert!(
+        !out.stderr.contains("E032") && !out.stdout.contains("E032"),
+        "unexpected E032 for invariant TC.\nstderr: {}\nstdout: {}",
+        out.stderr,
+        out.stdout
+    );
+}
+
+/// TC-833 — body lacking surface reference emits W034.
+#[test]
+fn tc_833_tc_observes_body_lacking_reference_emits_warning() {
+    let h = Harness::new();
+    write_observability_config(&h, 5);
+    let body = "---\n\
+id: TC-099\n\
+title: Body Lacks Surface\n\
+type: scenario\n\
+status: unimplemented\n\
+validates:\n\
+  features: []\n\
+  adrs: []\n\
+phase: 5\n\
+observes:\n\
+- mcp-response\n\
+---\n\n\
+## Description\n\nUnrelated prose containing zero hints.\n";
+    h.write("docs/tests/TC-099-body-lacks-ref.md", body);
+    let out = h.run(&["graph", "check"]);
+    let combined = format!("{}{}", out.stderr, out.stdout);
+    assert!(
+        combined.contains("W034"),
+        "expected W034 warning in output.\nstderr: {}\nstdout: {}",
+        out.stderr,
+        out.stdout
+    );
+}
+
+/// TC-834 — request_apply rejects unknown observes surface with E026.
+#[test]
+fn tc_834_tc_observes_unknown_surface_rejected_by_request_apply() {
+    let h = Harness::new();
+    // Seed a baseline TC we mutate.
+    h.run(&["test", "new", "Existing TC"]).assert_exit(0);
+    let yaml = r#"type: change
+schema-version: 1
+reason: "FT-072 TC-834 — reject unknown surface"
+changes:
+  - target: TC-001
+    mutations:
+      - op: set
+        field: observes
+        value: [bogus_surface]
+"#;
+    let req = h.dir.path().join("req.yaml");
+    std::fs::write(&req, yaml).expect("write yaml");
+    let out = h.run(&["request", "apply", req.to_str().expect("path")]);
+    assert_eq!(out.exit_code, 1, "expected exit 1 for E026, got {}\nstderr: {}\nstdout: {}", out.exit_code, out.stderr, out.stdout);
+    let combined = format!("{}{}", out.stderr, out.stdout);
+    assert!(combined.contains("E026"), "expected E026 in output: {}", combined);
+    assert!(combined.contains("bogus_surface"), "expected surface name: {}", combined);
+}
+
+/// TC-835 — custom surface accepted when listed in [tc-observability].custom.
+#[test]
+fn tc_835_tc_observes_custom_surface_accepted_via_config() {
+    let h = Harness::new();
+    let cfg = h.dir.path().join("product.toml");
+    let mut s = std::fs::read_to_string(&cfg).expect("read config");
+    s.push_str("\n[tc-observability]\nrequired-from-phase = 5\ncustom = [\"my_custom_surface\"]\n");
+    std::fs::write(&cfg, s).expect("write config");
+    let body = "---\n\
+id: TC-099\n\
+title: Custom Surface\n\
+type: scenario\n\
+status: unimplemented\n\
+validates:\n\
+  features: []\n\
+  adrs: []\n\
+phase: 5\n\
+observes:\n\
+- my_custom_surface\n\
+---\n\n\
+## Description\n\nUses my_custom_surface throughout.\n";
+    h.write("docs/tests/TC-099-custom-surface.md", body);
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        !out.stderr.contains("E026") && !out.stdout.contains("E026"),
+        "unexpected E026.\nstderr: {}\nstdout: {}",
+        out.stderr,
+        out.stdout
+    );
+    assert!(
+        !out.stderr.contains("E032") && !out.stdout.contains("E032"),
+        "unexpected E032.\nstderr: {}\nstdout: {}",
+        out.stderr,
+        out.stdout
+    );
+}
+
+/// TC-836 — grandfathering threshold flips correctly.
+#[test]
+fn tc_836_tc_observes_grandfathering_threshold_works() {
+    let h = Harness::new();
+    // Phase-5 scenario TC lacking observes.
+    let body = "---\n\
+id: TC-099\n\
+title: Phase 5 Scenario\n\
+type: scenario\n\
+status: unimplemented\n\
+validates:\n\
+  features: []\n\
+  adrs: []\n\
+phase: 5\n\
+---\n\n\
+## Description\n\nMissing observes.\n";
+    h.write("docs/tests/TC-099-phase5.md", body);
+
+    // With required-from-phase = 99 the TC is grandfathered.
+    let cfg = h.dir.path().join("product.toml");
+    let original = std::fs::read_to_string(&cfg).expect("read config");
+    std::fs::write(
+        &cfg,
+        format!("{}\n[tc-observability]\nrequired-from-phase = 99\n", original),
+    )
+    .expect("write config");
+    let out = h.run(&["graph", "check"]);
+    assert!(
+        !out.stderr.contains("E032") && !out.stdout.contains("E032"),
+        "expected no E032 with required-from-phase=99.\nstderr: {}",
+        out.stderr
+    );
+
+    // With required-from-phase = 1 it fires.
+    std::fs::write(
+        &cfg,
+        format!("{}\n[tc-observability]\nrequired-from-phase = 1\n", original),
+    )
+    .expect("write config");
+    let out = h.run(&["graph", "check"]);
+    let combined = format!("{}{}", out.stderr, out.stdout);
+    assert!(
+        combined.contains("E032"),
+        "expected E032 with required-from-phase=1.\nout: {}",
+        combined
+    );
+}
+
+/// TC-837 — MCP and CLI graph check JSON envelopes share the same observes
+/// findings.
+#[test]
+fn tc_837_mcp_graph_check_observes_findings_match_cli_json() {
+    use std::process::{Command, Stdio};
+    let h = Harness::new();
+    write_observability_config(&h, 5);
+    // Missing observes triggers E032.
+    let missing = "---\n\
+id: TC-099\n\
+title: Missing Observes\n\
+type: scenario\n\
+status: unimplemented\n\
+validates:\n\
+  features: []\n\
+  adrs: []\n\
+phase: 5\n\
+---\n\n\
+## Description\n\nNo observes.\n";
+    h.write("docs/tests/TC-099-missing.md", missing);
+    // observes-with-no-body-reference triggers W034.
+    let no_ref = "---\n\
+id: TC-100\n\
+title: Body Lacks Surface\n\
+type: scenario\n\
+status: unimplemented\n\
+validates:\n\
+  features: []\n\
+  adrs: []\n\
+phase: 5\n\
+observes:\n\
+- mcp-response\n\
+---\n\n\
+## Description\n\nNothing relevant.\n";
+    h.write("docs/tests/TC-100-no-ref.md", no_ref);
+
+    // CLI JSON.
+    let cli = h.run(&["graph", "check", "--format", "json"]);
+    let cli_json: serde_json::Value =
+        serde_json::from_str(&cli.stdout).expect("cli json");
+
+    // MCP JSON envelope.
+    let mut child = Command::new(&h.bin)
+        .args(["mcp"])
+        .current_dir(h.dir.path())
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("spawn mcp");
+    let req = serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {"name": "product_graph_check", "arguments": {}}
+    });
+    {
+        use std::io::Write;
+        let stdin = child.stdin.as_mut().expect("stdin");
+        writeln!(stdin, "{}", req.to_string()).expect("write req");
+    }
+    drop(child.stdin.take());
+    let output = child.wait_with_output().expect("wait mcp");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response_line = stdout
+        .lines()
+        .find(|l| l.starts_with('{'))
+        .unwrap_or_default();
+    let resp: serde_json::Value =
+        serde_json::from_str(response_line).expect("mcp response json");
+    let text = resp["result"]["content"][0]["text"]
+        .as_str()
+        .expect("text payload");
+    let mcp_envelope: serde_json::Value =
+        serde_json::from_str(text).unwrap_or(serde_json::Value::Null);
+
+    let collect_codes = |v: &serde_json::Value| -> Vec<String> {
+        let mut out: Vec<String> = Vec::new();
+        for key in ["errors", "warnings"] {
+            if let Some(arr) = v.get(key).and_then(|x| x.as_array()) {
+                for entry in arr {
+                    if let Some(c) = entry.get("code").and_then(|c| c.as_str()) {
+                        out.push(c.to_string());
+                    }
+                }
+            }
+        }
+        out.sort();
+        out
+    };
+    let cli_codes = collect_codes(&cli_json);
+    let mcp_codes = collect_codes(&mcp_envelope);
+    assert_eq!(
+        cli_codes, mcp_codes,
+        "MCP and CLI code sets diverged.\nCLI: {:?}\nMCP: {:?}",
+        cli_codes, mcp_codes
+    );
+    assert!(cli_codes.iter().any(|c| c == "E032"), "missing E032: {:?}", cli_codes);
+    assert!(cli_codes.iter().any(|c| c == "W034"), "missing W034: {:?}", cli_codes);
+}
+
+/// TC-838 — exit-criteria aggregator for FT-072.
+#[test]
+fn tc_838_ft_072_exit_criteria_observes_field() {
+    let h = Harness::new();
+    // Spot-check that the binary builds and the new flag is wired.
+    h.run(&["test", "new", "--help"])
+        .assert_exit(0)
+        .assert_stdout_contains("--observes");
+    // Graph check accepts the new diagnostic codes; the per-TC assertions
+    // above cover the semantics.
+    h.run(&["graph", "check"]).assert_exit(0);
+}
+

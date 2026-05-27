@@ -108,6 +108,7 @@ mod tests {
                 runner_args: args.map(|s| s.to_string()),
                 runner_timeout: None,
                 requires: vec![],
+                observes: vec![],
                 last_run: None,
                 failure_message: None,
                 last_run_duration: None,

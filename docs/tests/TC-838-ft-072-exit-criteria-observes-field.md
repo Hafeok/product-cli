@@ -2,7 +2,7 @@
 id: TC-838
 title: ft_072_exit_criteria_observes_field
 type: exit-criteria
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-072
@@ -10,6 +10,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_838_ft_072_exit_criteria_observes_field
+last-run: 2026-05-27T14:11:07.133454142+00:00
+last-run-duration: 0.2s
 ---
 
 ## Description

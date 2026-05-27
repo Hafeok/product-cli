@@ -2,7 +2,7 @@
 id: TC-833
 title: tc_observes_body_lacking_reference_emits_warning
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-072
@@ -10,6 +10,10 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_833_tc_observes_body_lacking_reference_emits_warning
+observes:
+- stdout
+last-run: 2026-05-27T14:11:07.133454142+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

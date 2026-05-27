@@ -100,9 +100,21 @@ fn adr_new_tool() -> ToolDef {
 fn test_new_tool() -> ToolDef {
     ToolDef {
         name: "product_test_new".to_string(),
-        description: "Create a new test criterion file".to_string(),
+        description: "Create a new test criterion file. The optional `observes` array names the surface(s) the TC asserts against (FT-072, ADR-051).".to_string(),
         requires_write: true,
-        input_schema: serde_json::json!({"type": "object", "properties": {"title": {"type": "string"}, "test_type": {"type": "string", "default": "scenario"}}, "required": ["title"]}),
+        input_schema: serde_json::json!({
+            "type": "object",
+            "properties": {
+                "title": {"type": "string"},
+                "test_type": {"type": "string", "default": "scenario"},
+                "observes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Observed surfaces (FT-072). Allowed: file, graph, exit-code, tag, stdout, stderr, disk-state, mcp-response (extensible via [tc-observability].custom)."
+                }
+            },
+            "required": ["title"]
+        }),
     }
 }
 

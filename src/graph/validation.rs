@@ -55,6 +55,13 @@ impl KnowledgeGraph {
             // FT-071 / ADR-050 — E031 requires-cycle, W032 deprecated-cited,
             // W033 pattern body missing section.
             super::pattern_validation::check_all(self, &cfg.patterns, &mut result);
+            // FT-072 / ADR-051 — E032 missing observes, W034 body lacks
+            // reference, E026 unknown surface.
+            super::observability_validation::check(
+                self.tests.values(),
+                &cfg.tc_observability,
+                &mut result,
+            );
         }
         result
     }

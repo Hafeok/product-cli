@@ -109,6 +109,62 @@ pub fn validate_change(
                 }
             }
         }
+
+        // FT-072 / ADR-051: when mutating a TC's `observes:` field, validate
+        // every supplied surface against the configured vocabulary.
+        if let Some(ArtifactType::Tc) = target_artifact_type {
+            if m.field.split('.').next() == Some("observes") {
+                validate_observes_mutation(c.index, m, ctx, findings);
+            }
+        }
+    }
+}
+
+fn validate_observes_mutation(
+    change_index: usize,
+    m: &super::super::types::Mutation,
+    ctx: &ValidationContext<'_>,
+    findings: &mut Vec<Finding>,
+) {
+    let cfg = &ctx.config.tc_observability;
+    let candidates: Vec<(String, String)> = match &m.value {
+        Some(Value::String(s)) => vec![(s.clone(), format!(
+            "$.changes[{}].mutations[{}].value",
+            change_index, m.index
+        ))],
+        Some(Value::Sequence(seq)) => seq
+            .iter()
+            .enumerate()
+            .filter_map(|(i, v)| match v {
+                Value::String(s) => Some((
+                    s.clone(),
+                    format!(
+                        "$.changes[{}].mutations[{}].value[{}]",
+                        change_index, m.index, i
+                    ),
+                )),
+                _ => None,
+            })
+            .collect(),
+        _ => Vec::new(),
+    };
+    for (s, loc) in candidates {
+        if crate::request::validate::helpers::strip_ref_prefix(&s).is_some() {
+            continue;
+        }
+        if !crate::tc::is_known_surface(&s, cfg) {
+            findings.push(
+                Finding::error(
+                    "E026",
+                    format!("unknown observes surface '{}'", s),
+                    loc,
+                )
+                .with_hint(format!(
+                    "allowed surfaces: {} — add to [tc-observability].custom to accept it",
+                    crate::tc::surface_hint(cfg),
+                )),
+            );
+        }
     }
 }
 

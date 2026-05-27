@@ -2,7 +2,7 @@
 id: TC-830
 title: tc_observes_field_parses_as_flat_list
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-072
@@ -10,6 +10,11 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_830_tc_observes_field_parses_as_flat_list
+observes:
+- file
+- graph
+last-run: 2026-05-27T14:11:07.133454142+00:00
+last-run-duration: 0.4s
 ---
 
 ## Description

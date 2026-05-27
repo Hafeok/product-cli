@@ -126,6 +126,7 @@ pub fn execute_plan(
             runner_args: None,
             runner_timeout: None,
             requires: vec![],
+            observes: vec![],
             last_run: None,
             failure_message: None,
             last_run_duration: None,

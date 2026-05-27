@@ -69,11 +69,15 @@ pub struct ProductConfig {
     /// Pattern artifact body checks — `[patterns]` (FT-070, ADR-050).
     #[serde(default)]
     pub patterns: PatternsConfig,
+    /// TC observability requirement — `[tc-observability]` (FT-072, ADR-051).
+    #[serde(rename = "tc-observability", default)]
+    pub tc_observability: TcObservabilityConfig,
 }
 
 pub use crate::config_author::AuthorConfig;
 pub use crate::config_cycle_times::CycleTimesConfig;
 pub use crate::config_features::{CompletenessSeverity, FeaturesConfig};
+pub use crate::config_observability::{BodyReferenceSeverity, TcObservabilityConfig};
 pub use crate::config_paths::PathsConfig;
 pub use crate::config_patterns::{PatternBodySeverity, PatternsConfig};
 pub use crate::config_planning::PlanningConfig;

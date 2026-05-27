@@ -160,6 +160,8 @@ fn normalize_tc(t: &mut TestFrontMatter) {
     t.validates.adrs.dedup();
     t.requires.sort();
     t.requires.dedup();
+    t.observes.sort();
+    t.observes.dedup();
 }
 
 fn normalize_dep(d: &mut DependencyFrontMatter) {

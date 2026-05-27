@@ -1405,7 +1405,7 @@
 - [x] TC-828: mcp_graph_check_pattern_findings_match_cli_json (scenario) — passing
 - [x] TC-829: ft_071_exit_criteria_pattern_graph_integration (exit-criteria) — passing
 
-### FT-072 — TC Observability Requirement — observes Field and graph check Validation [ ]
+### FT-072 — TC Observability Requirement — observes Field and graph check Validation [x]
 
 - [x] ADR-051: TC Observability Requirement — Causation Over Transaction (accepted)
 - [x] ADR-050: Introduce Pattern (PAT) Artifact Type for Implementation Knowledge (accepted)
@@ -1420,15 +1420,15 @@
 - [x] ADR-040: Unified Verify Pipeline and the LLM Boundary (accepted)
 - [x] ADR-048: Canonical Repository Layout — All Product State Under `.product/` (accepted)
 - [x] ADR-041: Removal & Deprecation Verification — Absence TCs and ADR `removes`/`deprecates` Fields (accepted)
-- [ ] TC-830: tc_observes_field_parses_as_flat_list (scenario) — unimplemented
-- [ ] TC-831: tc_observes_missing_on_required_type_emits_error (scenario) — unimplemented
-- [ ] TC-832: tc_observes_missing_on_optional_type_passes (scenario) — unimplemented
-- [ ] TC-833: tc_observes_body_lacking_reference_emits_warning (scenario) — unimplemented
-- [ ] TC-834: tc_observes_unknown_surface_rejected_by_request_apply (scenario) — unimplemented
-- [ ] TC-835: tc_observes_custom_surface_accepted_via_config (scenario) — unimplemented
-- [ ] TC-836: tc_observes_grandfathering_threshold_works (scenario) — unimplemented
-- [ ] TC-837: mcp_graph_check_observes_findings_match_cli_json (scenario) — unimplemented
-- [ ] TC-838: ft_072_exit_criteria_observes_field (exit-criteria) — unimplemented
+- [x] TC-830: tc_observes_field_parses_as_flat_list (scenario) — passing
+- [x] TC-831: tc_observes_missing_on_required_type_emits_error (scenario) — passing
+- [x] TC-832: tc_observes_missing_on_optional_type_passes (scenario) — passing
+- [x] TC-833: tc_observes_body_lacking_reference_emits_warning (scenario) — passing
+- [x] TC-834: tc_observes_unknown_surface_rejected_by_request_apply (scenario) — passing
+- [x] TC-835: tc_observes_custom_surface_accepted_via_config (scenario) — passing
+- [x] TC-836: tc_observes_grandfathering_threshold_works (scenario) — passing
+- [x] TC-837: mcp_graph_check_observes_findings_match_cli_json (scenario) — passing
+- [x] TC-838: ft_072_exit_criteria_observes_field (exit-criteria) — passing
 
 ### FT-073 — Pattern Authoring — author pattern Session and Feature-Aware Pattern Suggestions [ ]
 

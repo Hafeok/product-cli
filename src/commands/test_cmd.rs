@@ -26,6 +26,11 @@ pub enum TestCommands {
         /// Test type: scenario, invariant, chaos, exit-criteria
         #[arg(long = "type", default_value = "scenario")]
         test_type: String,
+        /// Observed surfaces (FT-072, ADR-051) — repeat or comma-separate.
+        /// Allowed: file, graph, exit-code, tag, stdout, stderr,
+        /// disk-state, mcp-response (extensible via [tc-observability].custom).
+        #[arg(long = "observes", value_delimiter = ',')]
+        observes: Vec<String>,
     },
     /// Configure test runner (runner, args, timeout, requires)
     Runner {
@@ -68,7 +73,11 @@ pub(crate) fn handle_test(cmd: TestCommands, fmt: &str) -> BoxResult {
             status,
             failing,
         } => super::render(test_list(phase, test_type, status, failing), fmt),
-        TestCommands::New { title, test_type } => super::render(test_new(&title, &test_type), fmt),
+        TestCommands::New {
+            title,
+            test_type,
+            observes,
+        } => super::render(test_new(&title, &test_type, &observes), fmt),
         TestCommands::Runner {
             id,
             runner,
@@ -192,12 +201,24 @@ fn test_untested() -> CmdResult {
     Ok(Output::both(text, json))
 }
 
-fn test_new(title: &str, test_type: &str) -> CmdResult {
+fn test_new(title: &str, test_type: &str, observes: &[String]) -> CmdResult {
     let _lock = acquire_write_lock_typed()?;
     let (config, root, graph) = load_graph_typed()?;
     let tt: types::TestType = test_type.parse().map_err(ProductError::ConfigError)?;
+    // FT-072: validate every supplied surface against the configured
+    // vocabulary before allocating an ID. Bad input never produces a file.
+    for s in observes {
+        if !tc::is_known_surface(s, &config.tc_observability) {
+            return Err(ProductError::ConfigError(format!(
+                "error[E026]: unknown observes surface '{}'\n   = allowed: {}\n   = add to [tc-observability].custom to accept it",
+                s,
+                tc::surface_hint(&config.tc_observability),
+            )));
+        }
+    }
     let existing: Vec<String> = graph.tests.keys().cloned().collect();
-    let plan = tc::plan_create(title, tt, &existing, &config.prefixes.test)?;
+    let mut plan = tc::plan_create(title, tt, &existing, &config.prefixes.test)?;
+    plan.front.observes = observes.to_vec();
     let target_dir = config.resolve_path(&root, &config.paths.tests);
     let path = tc::apply_create(&plan, &target_dir)?;
     Ok(Output::text(format!("Created: {} at {}", plan.id, path.display())))

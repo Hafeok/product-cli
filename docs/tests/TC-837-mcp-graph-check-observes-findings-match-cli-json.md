@@ -2,7 +2,7 @@
 id: TC-837
 title: mcp_graph_check_observes_findings_match_cli_json
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-072
@@ -10,6 +10,11 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_837_mcp_graph_check_observes_findings_match_cli_json
+observes:
+- mcp-response
+- stdout
+last-run: 2026-05-27T14:11:07.133454142+00:00
+last-run-duration: 0.3s
 ---
 
 ## Description

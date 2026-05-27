@@ -276,6 +276,11 @@ pub struct TestFrontMatter {
     /// TC prerequisites
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub requires: Vec<String>,
+    /// Observed surfaces this TC asserts against (FT-072, ADR-051).
+    /// Flat list of surface names; required for `scenario | session | smoke
+    /// | contract` TCs at `phase >= [tc-observability].required-from-phase`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub observes: Vec<String>,
     /// Last run timestamp
     #[serde(rename = "last-run", default, skip_serializing_if = "Option::is_none")]
     pub last_run: Option<String>,

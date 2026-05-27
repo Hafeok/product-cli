@@ -11,6 +11,15 @@ Before writing any content:
 
 Only after completing these steps should you scaffold any files.
 
+When scaffolding TCs for the feature, declare `observes:` per
+ADR-051. The allowed surfaces are `file`, `graph`, `exit-code`,
+`tag`, `stdout`, `stderr`, `disk-state`, `mcp-response`. A
+scenario/session/smoke/contract TC at phase ≥ the configured
+threshold (`[tc-observability].required-from-phase`) without
+`observes:` is rejected by `product graph check` with E032 —
+prefer asserting against the underlying causation rather than a
+response envelope alone (the FT-046 → FT-066 lesson).
+
 ## Closing the session — preflight is a hard gate
 
 After scaffolding the feature(s), you MUST do both of these before declaring
