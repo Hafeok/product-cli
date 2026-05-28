@@ -6,6 +6,7 @@
 pub mod preflight;
 pub mod coverage;
 pub mod validation;
+pub mod ft104_drift;
 
 // Re-export public API
 pub use coverage::{

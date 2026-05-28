@@ -222,6 +222,7 @@ mod tests {
                 patterns: patterns.into_iter().map(String::from).collect(),
                 due_date: None,
                 bundle: None,
+                adrs_rejected: vec![],
             },
             body: String::new(),
             path: PathBuf::from(format!("docs/features/{}.md", id)),

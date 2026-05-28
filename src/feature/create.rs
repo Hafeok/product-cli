@@ -54,6 +54,7 @@ pub fn plan_create(
         patterns: vec![],
         due_date: None,
         bundle: None,
+        adrs_rejected: vec![],
     };
     let body = format!("## Description\n\n[Describe {} here.]\n", title);
     Ok(CreatePlan {

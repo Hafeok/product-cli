@@ -29,6 +29,7 @@ fn feature(id: &str, title: &str, phase: u32, status: FeatureStatus, tests: Vec<
             patterns: vec![],
             due_date: None,
             bundle: None,
+            adrs_rejected: vec![],
         },
         body: String::new(),
         path: PathBuf::from(format!("{}.md", id)),

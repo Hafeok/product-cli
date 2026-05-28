@@ -53,6 +53,8 @@ pub struct DomainGap {
 pub enum CoverageStatus {
     Linked,
     Acknowledged(String), // reason
+    DefaultAcknowledged,  // FT-104: from config default-acknowledged-cross-cutting
+    Rejected(String),     // FT-104: from feature adrs-rejected with reason
     Gap,
 }
 
@@ -61,6 +63,8 @@ impl std::fmt::Display for CoverageStatus {
         match self {
             Self::Linked => write!(f, "linked"),
             Self::Acknowledged(r) => write!(f, "acknowledged: {}", r),
+            Self::DefaultAcknowledged => write!(f, "default-acknowledged"),
+            Self::Rejected(r) => write!(f, "intentional: {}", r),
             Self::Gap => write!(f, "gap"),
         }
     }
@@ -71,6 +75,7 @@ pub fn preflight(
     graph: &KnowledgeGraph,
     feature_id: &str,
     _domain_vocab: &HashMap<String, String>,
+    default_acknowledged: &[String],
 ) -> std::result::Result<PreflightResult, ProductError> {
     let feature = graph.features.get(feature_id).ok_or_else(|| {
         ProductError::NotFound(format!("feature {}", feature_id))
@@ -87,6 +92,12 @@ pub fn preflight(
             AdrScope::CrossCutting => {
                 let status = if feature.front.adrs.contains(&adr.front.id) {
                     CoverageStatus::Linked
+                } else if let Some(rejection) = feature.front.adrs_rejected.iter().find(|r| r.id == adr.front.id) {
+                    // FT-104: explicit rejection with reason
+                    CoverageStatus::Rejected(rejection.reason.clone())
+                } else if default_acknowledged.contains(&adr.front.id) {
+                    // FT-104: default-acknowledged from config
+                    CoverageStatus::DefaultAcknowledged
                 } else if let Some(reason) =
                     find_acknowledgement(feature, &adr.front.id, &adr.front.domains)
                 {
@@ -152,8 +163,8 @@ pub fn preflight(
         });
     }
 
-    let is_clean = cross_cutting_gaps.iter().all(|g| g.status != CoverageStatus::Gap)
-        && domain_gaps.iter().all(|g| g.status != CoverageStatus::Gap);
+    let is_clean = cross_cutting_gaps.iter().all(|g| !matches!(g.status, CoverageStatus::Gap | CoverageStatus::Rejected(_)))
+        && domain_gaps.iter().all(|g| !matches!(g.status, CoverageStatus::Gap));
 
     // Platform invariants are stable ordering for deterministic output.
     platform_invariants.sort_by(|a, b| a.adr_id.cmp(&b.adr_id));
@@ -259,11 +270,15 @@ fn render_cross_cutting_section(out: &mut String, gaps: &[CrossCuttingGap]) {
         let symbol = match &gap.status {
             CoverageStatus::Linked => "\u{2713}",
             CoverageStatus::Acknowledged(_) => "~",
+            CoverageStatus::DefaultAcknowledged => "\u{2713}",
+            CoverageStatus::Rejected(_) => "\u{2717}",
             CoverageStatus::Gap => "\u{2717}",
         };
         let label = match &gap.status {
             CoverageStatus::Linked => "linked".to_string(),
             CoverageStatus::Acknowledged(r) => format!("acknowledged: {}", r.chars().take(30).collect::<String>()),
+            CoverageStatus::DefaultAcknowledged => "default-acknowledged".to_string(),
+            CoverageStatus::Rejected(r) => format!("INTENTIONAL: {}", r.chars().take(30).collect::<String>()),
             CoverageStatus::Gap => "NOT COVERED".to_string(),
         };
         out.push_str(&format!("  {}  {:<10} {:<40} [{}]\n", symbol, gap.adr_id, gap.adr_title, label));
@@ -281,6 +296,8 @@ fn render_domain_section(out: &mut String, gaps: &[DomainGap]) {
         let symbol = match &gap.status {
             CoverageStatus::Linked => "\u{2713}",
             CoverageStatus::Acknowledged(_) => "~",
+            CoverageStatus::DefaultAcknowledged => "\u{2713}",
+            CoverageStatus::Rejected(_) => "\u{2717}",
             CoverageStatus::Gap => "\u{2717}",
         };
         let adrs_str = gap.top_adrs.iter()
@@ -297,7 +314,7 @@ fn render_summary_line(out: &mut String, result: &PreflightResult) {
     if result.is_clean {
         out.push_str("Pre-flight: CLEAN\n");
     } else {
-        let cc_gaps = result.cross_cutting_gaps.iter().filter(|g| g.status == CoverageStatus::Gap).count();
+        let cc_gaps = result.cross_cutting_gaps.iter().filter(|g| matches!(g.status, CoverageStatus::Gap | CoverageStatus::Rejected(_))).count();
         let d_gaps = result.domain_gaps.iter().filter(|g| g.status == CoverageStatus::Gap).count();
         out.push_str(&format!("Pre-flight: {} cross-cutting gap(s), {} domain gap(s)\n", cc_gaps, d_gaps));
     }

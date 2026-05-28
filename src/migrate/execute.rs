@@ -49,6 +49,7 @@ pub fn execute_plan(
             patterns: vec![],
             due_date: None,
             bundle: None,
+            adrs_rejected: vec![],
         };
         let content = crate::parser::render_feature(&front, &f.body);
         crate::fileops::write_file_atomic(&path, &content)?;

@@ -27,6 +27,7 @@ fn empty_front(id: &str, title: &str) -> FeatureFrontMatter {
         patterns: vec![],
         due_date: None,
         bundle: None,
+        adrs_rejected: vec![],
     }
 }
 

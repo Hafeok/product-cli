@@ -46,6 +46,7 @@ proptest! {
             patterns: vec![],
             due_date: None,
             bundle: None,
+        adrs_rejected: vec![],
         };
         let body = "Test body content.\n";
         let rendered = parser::render_feature(&front, body);

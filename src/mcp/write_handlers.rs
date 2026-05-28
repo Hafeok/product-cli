@@ -41,6 +41,7 @@ fn new_feature_front(id: String, title: &str, phase: u32) -> crate::types::Featu
         patterns: vec![],
         due_date: None,
         bundle: None,
+        adrs_rejected: vec![],
     }
 }
 

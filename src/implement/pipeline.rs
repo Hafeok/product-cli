@@ -66,7 +66,7 @@ pub fn run_implement(
     // Step 0 — Preflight (domain + cross-cutting coverage)
     print!("  Step 0: Preflight... ");
     let preflight_result =
-        crate::domains::preflight(working_graph, feature_id, &config.domains)?;
+        crate::domains::preflight(working_graph, feature_id, &config.domains, &config.features.default_acknowledged_cross_cutting)?;
     if !preflight_result.is_clean {
         println!("BLOCKED");
         eprintln!();

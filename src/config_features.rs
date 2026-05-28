@@ -23,6 +23,10 @@ pub struct FeaturesConfig {
     /// citation set this to `warning` or `error`.
     #[serde(rename = "patterns-required-severity", default)]
     pub patterns_required_severity: PatternsRequiredSeverity,
+    /// FT-104: cross-cutting ADRs every feature acknowledges by default.
+    /// Per-feature opt-out is via `adrs-rejected:` frontmatter.
+    #[serde(rename = "default-acknowledged-cross-cutting", default)]
+    pub default_acknowledged_cross_cutting: Vec<String>,
 }
 
 impl Default for FeaturesConfig {
@@ -33,6 +37,7 @@ impl Default for FeaturesConfig {
             required_from_phase: default_required_from_phase(),
             completeness_severity: CompletenessSeverity::default(),
             patterns_required_severity: PatternsRequiredSeverity::default(),
+            default_acknowledged_cross_cutting: Vec::new(),
         }
     }
 }

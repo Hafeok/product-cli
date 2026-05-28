@@ -334,6 +334,46 @@ pub(crate) fn feature_status(id: &str, new_status: &str) -> CmdResult {
     Ok(Output::text(lines.join("\n")))
 }
 
+/// FT-104: reject a default-acknowledged cross-cutting ADR for a feature
+pub(crate) fn feature_reject(adr_id: &str, feature_id: &str, reason: &str) -> BoxResult {
+    let _lock = acquire_write_lock()?;
+    let (_config, _root, graph) = load_graph()?;
+
+    if reason.trim().is_empty() {
+        return Err(ProductError::ConfigError(
+            "E011: rejection requires a non-empty reason".to_string(),
+        )
+        .into());
+    }
+
+    let feature = graph
+        .features
+        .get(feature_id)
+        .ok_or_else(|| ProductError::NotFound(format!("feature {}", feature_id)))?;
+
+    let mut front = feature.front.clone();
+
+    // Check if already rejected
+    if let Some(existing) = front.adrs_rejected.iter_mut().find(|r| r.id == adr_id) {
+        // Update reason (idempotent)
+        existing.reason = reason.to_string();
+        println!("Updated rejection reason for {} on {}", adr_id, feature_id);
+    } else {
+        // Add new rejection
+        front.adrs_rejected.push(types::AdrRejection {
+            id: adr_id.to_string(),
+            reason: reason.to_string(),
+        });
+        println!("Added rejection of {} to {}", adr_id, feature_id);
+    }
+
+    // Write the updated frontmatter
+    let content = parser::render_feature(&front, &feature.body);
+    fileops::write_file_atomic(&feature.path, &content)?;
+
+    Ok(())
+}
+
 pub(crate) use super::feature_fields::{
     feature_acknowledge, feature_depends_on, feature_domain,
 };

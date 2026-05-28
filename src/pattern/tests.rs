@@ -41,6 +41,7 @@ fn feat(id: &str) -> Feature {
             patterns: vec![],
             due_date: None,
             bundle: None,
+            adrs_rejected: vec![],
         },
         body: String::new(),
         path: PathBuf::from(format!("docs/features/{}.md", id)),

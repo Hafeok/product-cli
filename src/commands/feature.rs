@@ -96,6 +96,17 @@ pub enum FeatureCommands {
         #[arg(long)]
         ignore_phase_gate: bool,
     },
+    /// Reject a default-acknowledged cross-cutting ADR for this feature (FT-104)
+    Reject {
+        /// ADR ID to reject
+        adr_id: String,
+        /// Feature ID
+        #[arg(long)]
+        feature: String,
+        /// Reason for rejection (required)
+        #[arg(long)]
+        reason: String,
+    },
     /// Show a feature's details
     Show { id: String },
     /// Set feature status
@@ -133,6 +144,9 @@ pub(crate) fn handle_feature(cmd: FeatureCommands, fmt: &str) -> BoxResult {
             super::render(feature_write_ops::feature_new(&title, phase), fmt)
         }
         FeatureCommands::Next { ignore_phase_gate } => feature_next(ignore_phase_gate),
+        FeatureCommands::Reject { adr_id, feature, reason } => {
+            feature_write_ops::feature_reject(&adr_id, &feature, &reason)
+        }
         FeatureCommands::Show { id } => super::render(feature_show(&id), fmt),
         FeatureCommands::Status { id, new_status } => {
             super::render(feature_write_ops::feature_status(&id, &new_status), fmt)

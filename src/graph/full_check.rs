@@ -58,6 +58,13 @@ pub fn run(graph: &KnowledgeGraph, config: &ProductConfig, root: &Path) -> Check
         &mut result,
     );
 
+    // FT-104 — W036, W037, W038 (default-acknowledged-cross-cutting drift).
+    crate::domains::ft104_drift::check_default_ack_drift(
+        graph,
+        &config.features,
+        &mut result.warnings,
+    );
+
     // FT-042, ADR-039 decision 10: wire log verification into graph check.
     if config.log.verify_on_check {
         append_log_findings(config, root, &mut result);

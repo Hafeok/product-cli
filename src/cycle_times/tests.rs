@@ -25,6 +25,7 @@ fn make_feature(id: &str, phase: u32, status: FeatureStatus) -> Feature {
             patterns: vec![],
             due_date: None,
             bundle: None,
+            adrs_rejected: vec![],
         },
     }
 }

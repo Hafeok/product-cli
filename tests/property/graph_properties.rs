@@ -21,6 +21,7 @@ fn make_feature(id: &str, deps: Vec<String>) -> Feature {
             patterns: vec![],
             due_date: None,
             bundle: None,
+        adrs_rejected: vec![],
         },
         body: String::new(),
         path: PathBuf::from(format!("{}.md", id)),

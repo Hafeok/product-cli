@@ -53,7 +53,7 @@ pub(crate) fn handle_preflight(
 
     let config = ProductConfig::load_from_root(repo_root)
         .map_err(|e| format!("{}", e))?;
-    let result = domains::preflight(graph, id, &config.domains).map_err(|e| format!("{}", e))?;
+    let result = domains::preflight(graph, id, &config.domains, &config.features.default_acknowledged_cross_cutting).map_err(|e| format!("{}", e))?;
 
     let cross_cutting = render_cross_cutting(&result);
     let domain_gaps_value = render_domain_gaps(&result);
@@ -62,7 +62,7 @@ pub(crate) fn handle_preflight(
     let cross_cutting_gap_count = result
         .cross_cutting_gaps
         .iter()
-        .filter(|g| g.status == domains::CoverageStatus::Gap)
+        .filter(|g| matches!(g.status, domains::CoverageStatus::Gap | domains::CoverageStatus::Rejected(_)))
         .count();
     let domain_gap_count = result
         .domain_gaps
@@ -99,6 +99,8 @@ fn render_cross_cutting(result: &domains::PreflightResult) -> Vec<Value> {
             let (status_str, reason) = match &gap.status {
                 domains::CoverageStatus::Linked => ("linked", None),
                 domains::CoverageStatus::Acknowledged(r) => ("acknowledged", Some(r.clone())),
+                domains::CoverageStatus::DefaultAcknowledged => ("default-acknowledged", None),
+                domains::CoverageStatus::Rejected(r) => ("intentional", Some(r.clone())),
                 domains::CoverageStatus::Gap => ("gap", None),
             };
             let mut obj = json!({
@@ -125,6 +127,8 @@ fn render_domain_gaps(result: &domains::PreflightResult) -> Vec<Value> {
             let (status_str, reason) = match &gap.status {
                 domains::CoverageStatus::Linked => ("linked", None),
                 domains::CoverageStatus::Acknowledged(r) => ("acknowledged", Some(r.clone())),
+                domains::CoverageStatus::DefaultAcknowledged => ("default-acknowledged", None),
+                domains::CoverageStatus::Rejected(r) => ("intentional", Some(r.clone())),
                 domains::CoverageStatus::Gap => ("gap", None),
             };
             let top_adrs: Vec<Value> = gap

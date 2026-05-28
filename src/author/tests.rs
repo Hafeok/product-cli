@@ -57,6 +57,7 @@ fn schema_prompt_covers_feature_fields() {
         patterns: vec![],
         due_date: None,
         bundle: None,
+        adrs_rejected: vec![],
     };
     let yaml = serde_yaml::to_string(&feature).unwrap();
     assert_yaml_keys_in_doc(&yaml, &doc, "feature");

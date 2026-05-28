@@ -34,7 +34,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Migrate { command } => migrate::handle_migrate(command),
         Commands::Onboard { command } => onboard::handle_onboard(command),
         Commands::Pattern { command } => pattern::handle_pattern(command, fmt),
-        Commands::Preflight { id } => preflight::handle_preflight(&id),
+        Commands::Preflight { id } => preflight::handle_preflight(&id, fmt),
         Commands::Prompts { command } => prompts_cmd::handle_prompts(command),
         Commands::Request { command } => request_cmd::handle_request(command, fmt),
         Commands::Schema { artifact_type, type_flag, all } => {

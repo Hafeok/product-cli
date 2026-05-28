@@ -134,6 +134,7 @@ mod tests {
                 patterns: vec![],
                 due_date: None,
                 bundle: None,
+                adrs_rejected: vec![],
             },
             body: String::new(),
             path: PathBuf::from(format!("docs/features/{}-x.md", id)),

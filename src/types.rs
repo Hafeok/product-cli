@@ -43,6 +43,17 @@ pub struct FeatureFrontMatter {
     /// Bundle measurement metrics (written by `product context --measure`)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bundle: Option<BundleMetrics>,
+    /// FT-104: per-feature opt-out from default-acknowledged cross-cutting ADRs.
+    /// Each entry MUST carry a reason.
+    #[serde(rename = "adrs-rejected", default, skip_serializing_if = "Vec::is_empty")]
+    pub adrs_rejected: Vec<AdrRejection>,
+}
+
+/// FT-104: per-feature rejection of a default-acknowledged cross-cutting ADR.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AdrRejection {
+    pub id: String,
+    pub reason: String,
 }
 
 /// Metrics captured by `product context --measure`

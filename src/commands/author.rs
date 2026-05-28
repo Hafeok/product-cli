@@ -87,7 +87,7 @@ pub(crate) fn handle_author(cmd: AuthorCommands) -> BoxResult {
 
     // ADR-026: if authoring a feature, run preflight first
     if let AuthorCommands::Feature { feature: Some(ref fid), .. } = cmd {
-        let result = domains::preflight(&graph, fid, &config.domains)?;
+        let result = domains::preflight(&graph, fid, &config.domains, &config.features.default_acknowledged_cross_cutting)?;
         if !result.is_clean {
             eprintln!("{}", domains::render_preflight(&result));
             eprintln!("  Resolve preflight gaps before starting author session.");

@@ -9,3 +9,4 @@ Cargo.lock
 .product/graph/
 .product/sessions/
 .product/checklist.md
+tests/__pycache__/

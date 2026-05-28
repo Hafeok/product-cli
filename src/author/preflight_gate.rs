@@ -88,7 +88,7 @@ fn collect_preflight_failures(
         if !graph.features.contains_key(fid.as_str()) {
             continue;
         }
-        let result = domains::preflight(graph, fid, &config.domains)?;
+        let result = domains::preflight(graph, fid, &config.domains, &config.features.default_acknowledged_cross_cutting)?;
         if !result.is_clean {
             failures.push((fid.clone(), result));
         }

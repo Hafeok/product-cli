@@ -204,6 +204,7 @@ fn render_feature_stub(feature: &ProposedFeatureStub) -> String {
         patterns: vec![],
         due_date: None,
         bundle: None,
+        adrs_rejected: vec![],
     };
 
     let body = format!(
