@@ -56,7 +56,7 @@ fn preflight_clean_when_all_covered() {
     let a = make_adr("ADR-001", AdrScope::CrossCutting, vec!["error-handling"]);
     let graph = KnowledgeGraph::build(vec![f], vec![a], vec![]);
     let vocab = HashMap::new();
-    let result = preflight(&graph, "FT-001", &vocab).expect("preflight");
+    let result = preflight(&graph, "FT-001", &vocab, &[]).expect("preflight");
     assert!(result.is_clean);
 }
 
@@ -66,7 +66,7 @@ fn preflight_detects_cross_cutting_gap() {
     let a = make_adr("ADR-001", AdrScope::CrossCutting, vec!["error-handling"]);
     let graph = KnowledgeGraph::build(vec![f], vec![a], vec![]);
     let vocab = HashMap::new();
-    let result = preflight(&graph, "FT-001", &vocab).expect("preflight");
+    let result = preflight(&graph, "FT-001", &vocab, &[]).expect("preflight");
     assert!(!result.is_clean);
     assert!(result.cross_cutting_gaps.iter().any(|g| g.status == CoverageStatus::Gap));
 }
@@ -78,7 +78,7 @@ fn preflight_detects_domain_gap() {
     let graph = KnowledgeGraph::build(vec![f], vec![a], vec![]);
     let mut vocab = HashMap::new();
     vocab.insert("security".to_string(), "Security concerns".to_string());
-    let result = preflight(&graph, "FT-001", &vocab).expect("preflight");
+    let result = preflight(&graph, "FT-001", &vocab, &[]).expect("preflight");
     assert!(!result.is_clean);
     assert!(result.domain_gaps.iter().any(|g| g.domain == "security" && g.status == CoverageStatus::Gap));
 }
@@ -91,7 +91,7 @@ fn acknowledgement_closes_gap() {
     let graph = KnowledgeGraph::build(vec![f], vec![a], vec![]);
     let mut vocab = HashMap::new();
     vocab.insert("security".to_string(), "Security concerns".to_string());
-    let result = preflight(&graph, "FT-001", &vocab).expect("preflight");
+    let result = preflight(&graph, "FT-001", &vocab, &[]).expect("preflight");
     assert!(result.is_clean);
 }
 

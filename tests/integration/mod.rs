@@ -23715,3 +23715,267 @@ fn tc_859_ft_075_exit_criteria_seed_pattern_catalog() {
         );
     }
 }
+
+// =============================================================================
+// FT-104 — default-acknowledged-cross-cutting + adrs-rejected
+//
+// Three TCs exercise the FT-104 surface end-to-end via the CLI:
+//   TC-860 — [features].default-acknowledged-cross-cutting clears preflight gaps
+//   TC-861 — adrs-rejected re-introduces the gap with status "intentional"
+//   TC-862 — graph check warns (W036/W037/W038) when the default-ack list drifts
+//
+// All three operate against a Harness tempdir using the legacy layout so the
+// product.toml is editable in-place. (The Python prototypes used the canonical
+// `.product/config.toml` layout — same behaviour, different on-disk location.)
+// =============================================================================
+
+/// FT-104 fixture: a feature `FT-001` (no link) + a feature `FT-002`
+/// (linked to a cross-cutting ADR `ADR-001`).
+fn ft_104_repo() -> Harness {
+    let h = Harness::new();
+    h.write(
+        "docs/adrs/ADR-001-cross-cutting.md",
+        "---\nid: ADR-001\ntitle: Cross-cutting ADR\nstatus: accepted\n\
+         features: []\nsupersedes: []\nsuperseded-by: []\ndomains: []\n\
+         scope: cross-cutting\n---\n\nCross-cutting concern.\n",
+    );
+    h.write(
+        "docs/features/FT-001-unlinked.md",
+        "---\nid: FT-001\ntitle: Unlinked feature\nphase: 1\nstatus: planned\n\
+         depends-on: []\nadrs: []\ntests: []\ndomains: []\n\
+         domains-acknowledged: {}\n---\n\nUnlinked feature body.\n",
+    );
+    h.write(
+        "docs/features/FT-002-linked.md",
+        "---\nid: FT-002\ntitle: Linked feature\nphase: 1\nstatus: planned\n\
+         depends-on: []\nadrs:\n- ADR-001\ntests: []\ndomains: []\n\
+         domains-acknowledged: {}\n---\n\nLinked feature body.\n",
+    );
+    h
+}
+
+/// Rewrite product.toml's `[features]` section to add (or clear) the
+/// `default-acknowledged-cross-cutting` list. Idempotent.
+fn set_default_ack(h: &Harness, adrs: &[&str]) {
+    let cfg = h.read("product.toml");
+    let entry = if adrs.is_empty() {
+        "default-acknowledged-cross-cutting = []".to_string()
+    } else {
+        format!(
+            "default-acknowledged-cross-cutting = [{}]",
+            adrs.iter()
+                .map(|a| format!("\"{}\"", a))
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
+    };
+    let new_cfg = if cfg.contains("default-acknowledged-cross-cutting") {
+        cfg.lines()
+            .map(|l| {
+                if l.trim_start().starts_with("default-acknowledged-cross-cutting") {
+                    entry.clone()
+                } else {
+                    l.to_string()
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+            + "\n"
+    } else {
+        cfg.replace("[features]", &format!("[features]\n{}", entry))
+    };
+    h.write("product.toml", &new_cfg);
+}
+
+/// TC-860 — `[features].default-acknowledged-cross-cutting` clears a feature's
+/// preflight gap for the listed cross-cutting ADRs.
+#[test]
+fn tc_860_default_acknowledge_clears_preflight_gap() {
+    let h = ft_104_repo();
+
+    // Baseline: FT-001 has a gap (not linked), FT-002 is clean (linked).
+    let pre_001 = h.run(&["preflight", "FT-001"]);
+    assert_eq!(pre_001.exit_code, 1, "FT-001 should have a gap baseline");
+    assert!(
+        pre_001.stdout.contains("NOT COVERED") || pre_001.stdout.contains("gap"),
+        "FT-001 stdout missing gap marker:\n{}",
+        pre_001.stdout
+    );
+    h.run(&["preflight", "FT-002"]).assert_exit(0);
+
+    // Enable default-acknowledge for ADR-001.
+    set_default_ack(&h, &["ADR-001"]);
+
+    // FT-001 is now clean; the annotation shows "default-acknowledged".
+    let pre_001b = h.run(&["preflight", "FT-001"]);
+    pre_001b.assert_exit(0);
+    assert!(
+        pre_001b.stdout.contains("default-acknowledged"),
+        "FT-001 stdout missing default-acknowledged label:\n{}",
+        pre_001b.stdout
+    );
+
+    // FT-001's frontmatter is untouched (no implicit write).
+    let ft_body = h.read("docs/features/FT-001-unlinked.md");
+    assert!(
+        !ft_body.contains("ADR-001"),
+        "FT-001 frontmatter should not be modified by default-ack:\n{}",
+        ft_body
+    );
+
+    // Removing the entry restores the gap.
+    set_default_ack(&h, &[]);
+    h.run(&["preflight", "FT-001"]).assert_exit(1);
+}
+
+/// TC-861 — `adrs-rejected` re-introduces a gap with status "intentional",
+/// surfaces in JSON and text, and is wired through `product feature reject`.
+#[test]
+fn tc_861_adrs_rejected_reintroduces_gap_as_intentional() {
+    let h = ft_104_repo();
+    set_default_ack(&h, &["ADR-001"]);
+
+    // Scenario A — `feature reject` writes adrs-rejected on disk.
+    h.run(&[
+        "feature", "reject", "ADR-001",
+        "--feature", "FT-001",
+        "--reason", "Alternative pattern used because of test rationale.",
+    ])
+    .assert_exit(0);
+    let ft_body = h.read("docs/features/FT-001-unlinked.md");
+    assert!(
+        ft_body.contains("adrs-rejected:") && ft_body.contains("ADR-001")
+            && ft_body.contains("test rationale"),
+        "FT-001 missing adrs-rejected frontmatter:\n{}",
+        ft_body
+    );
+
+    // Scenario B — JSON preflight reports status=intentional with reason.
+    let pre_json = h.run(&["preflight", "FT-001", "--format", "json"]);
+    pre_json.assert_exit(1);
+    let parsed: serde_json::Value =
+        serde_json::from_str(&pre_json.stdout).expect("preflight json parse");
+    let gaps = parsed["cross_cutting_gaps"]
+        .as_array()
+        .expect("cross_cutting_gaps array");
+    let gap = gaps
+        .iter()
+        .find(|g| g["adr_id"] == "ADR-001")
+        .expect("ADR-001 entry in cross_cutting_gaps");
+    assert_eq!(gap["status"], "intentional");
+    assert!(
+        gap["reason"].as_str().unwrap_or("").contains("test rationale"),
+        "missing rationale in reason: {:?}",
+        gap["reason"]
+    );
+
+    // Scenario C — text format prints INTENTIONAL.
+    let pre_text = h.run(&["preflight", "FT-001"]);
+    assert_eq!(pre_text.exit_code, 1);
+    assert!(
+        pre_text.stdout.to_uppercase().contains("INTENTIONAL"),
+        "preflight text missing INTENTIONAL marker:\n{}",
+        pre_text.stdout
+    );
+
+    // Scenario D — empty reason is rejected at the CLI (E011 / non-zero exit).
+    let bad = h.run(&[
+        "feature", "reject", "ADR-001",
+        "--feature", "FT-001",
+        "--reason", "",
+    ]);
+    assert_ne!(bad.exit_code, 0, "empty reason should fail");
+
+    // Scenario E — idempotent: re-issuing reject overwrites the reason.
+    h.run(&[
+        "feature", "reject", "ADR-001",
+        "--feature", "FT-001",
+        "--reason", "Updated rationale.",
+    ])
+    .assert_exit(0);
+    let ft_body2 = h.read("docs/features/FT-001-unlinked.md");
+    assert_eq!(
+        ft_body2.matches("adrs-rejected:").count(),
+        1,
+        "adrs-rejected field duplicated"
+    );
+    assert!(ft_body2.contains("Updated rationale."));
+}
+
+/// TC-862 — `graph check` emits W036 (missing ADR), W037 (scope drift), and
+/// W038 (rejection without default-ack) when the catalog drifts.
+#[test]
+fn tc_862_default_ack_drift_emits_warnings() {
+    let h = Harness::new();
+    // Seed three cross-cutting ADRs + a feature with one valid + one stray
+    // rejection.
+    for (i, slug) in [(1u32, "alive"), (2, "gone"), (3, "rescoped")].iter() {
+        h.write(
+            &format!("docs/adrs/ADR-00{}-{}.md", i, slug),
+            &format!(
+                "---\nid: ADR-00{}\ntitle: {}\nstatus: accepted\n\
+                 features: []\nsupersedes: []\nsuperseded-by: []\ndomains: []\n\
+                 scope: cross-cutting\n---\n\nADR body.\n",
+                i, slug
+            ),
+        );
+    }
+    h.write(
+        "docs/features/FT-001-optout.md",
+        "---\nid: FT-001\ntitle: OptOut feature\nphase: 1\nstatus: planned\n\
+         depends-on: []\nadrs: []\ntests: []\ndomains: []\n\
+         domains-acknowledged: {}\n\
+         adrs-rejected:\n\
+         - id: ADR-001\n  reason: \"Valid rejection — in default-ack list\"\n\
+         - id: ADR-STRAY\n  reason: \"Invalid — not in default-ack list\"\n\
+         ---\n\nFeature body.\n",
+    );
+    set_default_ack(&h, &["ADR-001", "ADR-002", "ADR-003"]);
+
+    // Drift form 1: delete ADR-002 → W036.
+    std::fs::remove_file(h.dir.path().join("docs/adrs/ADR-002-gone.md"))
+        .expect("rm ADR-002");
+
+    // Drift form 2: rescope ADR-003 away from cross-cutting → W037.
+    let adr3 = h.read("docs/adrs/ADR-003-rescoped.md");
+    h.write(
+        "docs/adrs/ADR-003-rescoped.md",
+        &adr3.replace("scope: cross-cutting", "scope: domain"),
+    );
+
+    // Drift form 3: FT-001 already rejects ADR-STRAY (set above) → W038.
+
+    let out = h.run(&["graph", "check"]);
+    // Warnings only — exit must not be the error code (1).
+    assert_ne!(
+        out.exit_code, 1,
+        "graph check should warn, not error:\nstdout:\n{}\nstderr:\n{}",
+        out.stdout, out.stderr
+    );
+
+    let combined = format!("{}\n{}", out.stdout, out.stderr);
+    assert!(
+        combined.contains("W036") && combined.contains("ADR-002"),
+        "missing W036 for deleted ADR-002:\n{}",
+        combined
+    );
+    assert!(
+        combined.contains("W037") && combined.contains("ADR-003"),
+        "missing W037 for rescoped ADR-003:\n{}",
+        combined
+    );
+    assert!(
+        combined.contains("W038") && combined.contains("ADR-STRAY"),
+        "missing W038 for stray rejection:\n{}",
+        combined
+    );
+}
+
+/// TC-863 — FT-104 exit-criteria aggregator. Re-runs the three scenario TCs
+/// inline so a single failure surfaces the exact missing contract.
+#[test]
+fn tc_863_ft_104_exit_criteria() {
+    tc_860_default_acknowledge_clears_preflight_gap();
+    tc_861_adrs_rejected_reintroduces_gap_as_intentional();
+    tc_862_default_ack_drift_emits_warnings();
+}
