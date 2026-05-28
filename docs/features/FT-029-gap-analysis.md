@@ -159,40 +159,66 @@ The cost of running twice is justified for high-severity findings — a false G0
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+Gap analysis is the continuous LLM-driven process of identifying specification incompleteness, inconsistency, and missing coverage in the repository's ADRs. `product gap check ADR-XXX` (or `--changed` for CI) sends each ADR's depth-2 context bundle to an LLM with a fixed, versioned prompt that checks for exactly seven gap types (G001–G007). Findings are structured JSON written to stdout. A `gaps.json` baseline file tracks suppressions and resolved findings, giving gap analysis the same CI lifecycle as static analysis tools. Three determinism mechanisms — temperature=0, structured-output-only prompts, and run-twice intersection for high-severity findings — make gap analysis stable enough for CI (ADR-019).
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product gap check [ADR-XXX | --changed | --all] [--severity LEVEL] [--format json]`**: target ADR or scope flag; severity threshold filters which findings are reported; `--changed` scopes to changed ADRs in CI
+- **`product gap suppress GAP-ID --reason "..."`**: gap ID and mandatory reason; mutates `gaps.json`
+- **`product.toml` `[gap-analysis]`**: `prompt-version`, `model`, `max-findings-per-adr`, `severity-threshold`
+- **Context bundle for each ADR**: assembled via `product context ADR-XXX --depth 2` — the ADR, its linked features, all linked TCs, and all related ADRs within 2 hops
+- **`gaps.json`**: existing suppression and resolved records; read at analysis time to classify findings as new, suppressed, or resolved
+- **`benchmarks/prompts/gap-analysis-v{N}.md`**: the versioned prompt file; version configured in `product.toml`
+- **`git diff --name-only HEAD~1`**: used by `--changed` to identify ADR files changed in the current commit/PR
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Structured JSON to stdout**: findings object with `adr`, `run_date`, `product_version`, `findings` array (each with `id`, `code`, `severity`, `description`, `affected_artifacts`, `suggested_action`, `suppressed`), and `summary` counts
+- **Exit codes**: 0 (clean or all findings suppressed), 1 (new unsuppressed findings), 2 (model error or analysis warning)
+- **`gaps.json` mutations** (via `product gap suppress`): suppression records written atomically (ADR-015) with gap ID, reason, suppressing commit SHA, and timestamp
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`gaps.json`**: committed to the repository. Records suppressions and resolved findings. Shared baseline across all team members — a suppression added by one developer is respected by all CI runs.
+- Gap analysis itself is stateless between runs — each invocation rebuilds the context bundle and calls the LLM fresh. The finding IDs are deterministic (sha256-derived), so the same logical gap produces the same ID across runs and across prompt versions.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Context assembly**: for each target ADR, `product context ADR-XXX --depth 2` produces the bundle. Gap analysis validates specification completeness from the same perspective as an implementation agent — if the agent cannot find the information it needs in this bundle, that is a gap.
+2. **Prompt dispatch**: the gap analysis prompt instructs the model to check only the seven defined gap types (not general quality issues), respond only in the specified JSON schema with no prose preamble, and assign deterministic gap IDs. Temperature=0 for all calls.
+3. **Run-twice intersection for high severity**: G001, G002, and G005 findings are detected by running the analysis twice. Only findings present in both runs (by exact ID match) are reported. This eliminates hallucinated gaps. Medium (G003, G004, G006) and low (G007) findings are single-run.
+4. **Baseline classification**: each finding's ID is checked against `gaps.json`. New findings (not in any record) → reported, may trigger exit 1. Suppressed findings → reported as suppressed, do not trigger exit 1. Resolved findings (were previously suppressed, now not detected) → logged, moved to `resolved` array.
+5. **`--changed` scoping**: changed ADR files are identified via `git diff --name-only HEAD~1`, filtered to the `adrs/` directory. For each changed ADR, the reverse graph finds its linked features; the forward graph finds all other ADRs linked to those features. The analysis set = changed ADRs ∪ their 1-hop ADR neighbours. This ensures G005 (cross-ADR contradiction) is caught when a change to ADR-002 creates a new inconsistency with ADR-005.
+6. **Prompt version upgrade**: when `prompt-version` is incremented in `product.toml`, existing suppressions are tagged with the version they were created under. On the first run with the new version, suppressions from the old version emit W-class warnings prompting re-confirmation.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Gap IDs are deterministic: `sha256(adr_id + code + sorted(affected_artifact_ids) + description)[0:4]`. The same logical finding on two runs produces the same ID. This is the prerequisite for stable suppression.
+- Gap findings are written to stdout, not stderr — they are results, not errors (ADR-009 convention).
+- High-severity findings require two-run intersection before being reported. A finding detected in one run but not a second run is discarded without logging.
+- Model errors exit 2 (warning), not 1 (new gaps found). A transient API error never causes a CI failure as if new specification gaps were found.
+- The prompt is fixed and versioned. The same repository state produces comparable findings across runs of the same prompt version. An open-ended quality review prompt would produce incomparable results.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Model error** (network, timeout, API error): exits 2 with a warning on stderr. Valid findings from a partial response are retained; the incomplete analysis is noted.
+- **Malformed JSON in model response**: individual malformed findings are discarded with a stderr log line. Valid findings from the same response are retained. The run continues.
+- **`gaps.json` write failure** (during `product gap suppress`): exits 1; the file is not partially written (atomic write per ADR-015).
+- **Unknown gap ID in `product gap suppress`**: exits 1 with an error — cannot suppress a finding that has not been detected. Run `product gap check` first.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Gap analysis analyses specification documents (ADRs and their linked artifacts). It does not analyse source code — that is drift detection's domain (ADR-023).
+- The seven gap types are fixed. Gap analysis is not a general LLM quality review; the fixed type set is essential for CI reliability.
+- `gaps.json` suppressions require an explicit reason. Blanket suppression without reasoning is not supported by design — the reasoning is part of the audit trail.
+- Analysis cost is proportional to the number of ADRs analysed. Full-repository analysis (`--all`) on large repositories is expensive; `--changed` is the recommended CI mode.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- General LLM quality review of ADR prose (the seven gap types are the complete scope)
+- Source code analysis or drift detection (separate feature, ADR-023)
+- Automatic gap resolution or spec-writing based on findings
+- Fuzzy matching for gap ID suppression across prompt versions (exact hash matching only)
+- Per-commit full-repository analysis in CI (use `--changed` for cost-proportional scoping)

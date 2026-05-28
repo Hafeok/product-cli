@@ -64,40 +64,81 @@ The source document is never modified. Migration can be re-run safely.
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+FT-020 covers the full migration path: importing legacy monolithic PRD and ADR documents into the Product artifact structure (`product migrate from-prd`, `product migrate from-adrs`), and upgrading the front-matter schema between Product binary versions (`product migrate schema`). Migration is a two-phase extract-then-confirm process per ADR-017 — no files are written until the developer explicitly passes `--execute` or `--interactive`. Schema versioning is governed by ADR-014.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `product migrate from-prd SOURCE.md [--validate|--execute|--interactive|--overwrite] [--yes]`
+- `product migrate from-adrs SOURCE.md [--validate|--execute|--interactive|--overwrite] [--yes]`
+- `product migrate schema [--dry-run] [--from N]`
+- Source PRD or ADR document: unstructured markdown with heading-delimited sections
+- `product.toml` `schema-version` field (integer)
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `--validate` (default safe mode): prints a migration plan (artifact count, filenames, extracted types, warnings, conflicts) to stdout; writes nothing
+- `--execute`: writes all proposed artifact files atomically, skipping files that already exist; reports skipped files
+- `--overwrite`: as `--execute` but overwrites existing files (requires explicit confirmation unless `--yes`)
+- `--interactive`: for each proposed artifact, prints proposed front-matter + first 200 chars of body, prompts `[a]ccept / [e]dit / [s]kip / [q]uit`; `edit` opens `$EDITOR`
+- `product migrate schema`: updates front-matter fields in-place across all artifact files; writes `schema-version` in `product.toml` last; reports N files updated / M unchanged
+- W008 warning: ADR `status` field not found, defaulted to `proposed`
+- W009 warning: no test subsection found in ADR, no TC files extracted
+- E008 error (startup): `schema-version` in `product.toml` exceeds the binary's supported version (TC-060); W007 warning when the repo is behind current schema (TC-061)
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Migration is stateless between runs: re-running `product migrate` is idempotent — existing files are skipped (not overwritten unless `--overwrite`).
+- `product migrate schema` is also idempotent: applying the same migration step twice leaves files byte-identical to the first run.
+- The source PRD/ADR document is never modified — it is a read-only input.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+**PRD → Features (`from-prd`):**
+1. Scan for H2 headings; exclude known non-feature headings (`Vision`, `Goals`, `Non-Goals`, `Overview`, etc.).
+2. For each candidate feature: extract title (strip leading numbers/punctuation), infer `phase` from nearest preceding `### Phase N` heading (default 1), set `status: planned`.
+3. Checklist inference: checked items (`- [x]`) in a checklist section → `status: complete`.
+4. Feature body = section content until the next H2.
+5. `depends-on`, `adrs`, and `tests` are left empty — these require human review.
+
+**ADRs → ADR files + TCs (`from-adrs`):**
+1. Scan for H2 headings matching `ADR-NNN:` or `## ADR-NNN`.
+2. Extract `id`, `title`, `status` (from `**Status:**` line), `supersedes`/`superseded-by`.
+3. Within each ADR body, extract test criteria from subsections matching `### Test coverage`, `### Test criteria`, `### Tests`, `### Exit criteria`, `### Scenarios`; produce one TC file per bullet; infer type from bullet content keywords (`chaos`, `invariant`, `exit-criteria`, else `scenario`).
+
+**Schema migration (`migrate schema`):**
+1. Read `schema-version` from `product.toml`.
+2. Apply each migration step in sequence (1→2, 2→3, etc.) using the stored migration functions.
+3. Write updated artifact files atomically (ADR-015).
+4. Update `schema-version` in `product.toml` last.
+5. If any write fails mid-migration, stop and report; leave `schema-version` unchanged; re-running is safe.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- The source document is never modified — `product migrate` is always a read-only operation on the source (TC-162 asserts this).
+- `--validate` never writes any files — zero new files after a validate run (ADR-017).
+- Migration is idempotent: re-running `product migrate from-prd --execute` on the same repo skips all existing files.
+- `product migrate schema` never rolls back partially-written files — each file is written atomically; re-running is the recovery path.
+- Unknown front-matter fields are preserved on write; migration never strips fields it does not recognise (ADR-014).
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- E008: `schema-version` in `product.toml` exceeds supported version → hard error on startup; all commands blocked until binary is upgraded (TC-060).
+- W007: repo `schema-version` is older than current → advisory warning on startup; commands still execute (TC-061).
+- Conflict on `--execute`: existing file → skip and report skip; no content is overwritten without `--overwrite`.
+- Write failure mid-migration: error is reported, remaining files not written, `product.toml` schema version unchanged.
+- W008/W009: ADR missing status or test subsection → emit warning, continue migration.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `product migrate` does not infer `depends-on` edges or feature→ADR links from prose content; those require human review via `product feature link` after migration.
+- `product migrate` does not modify `product.toml` (other than `schema-version` in `migrate schema`) or `CHECKLIST.md`.
+- LLM-assisted migration (`--ai`) is not implemented in this feature (possible future extension per ADR-017).
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Inferring `depends-on` edges or feature→ADR links automatically during migration.
+- Modifying the source PRD or ADR document.
+- Providing an undo command (`--validate` → `--execute` is the safety model; no undo log is maintained).
+- LLM-assisted migration (reserved for a future `product migrate --ai` variant).

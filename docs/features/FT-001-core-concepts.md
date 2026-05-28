@@ -64,40 +64,61 @@ A context bundle is a single markdown document containing a feature, all its lin
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+Product's knowledge graph is built from three first-class artifact types — Features (`FT-XXX`), Architectural Decision Records (`ADR-XXX`), and Test Criteria (`TC-XXX`) — expressed as CommonMark markdown files with YAML front-matter. Each artifact file is self-describing: its identity, relationships, and graph position are all declared in its own front-matter (ADR-002). The graph is derived on every invocation by reading all front-matter; there is no persistent store (ADR-003). The primary output consumed by LLM agents is a context bundle: a single deterministically ordered markdown document containing a feature, all its linked ADRs, and all its linked test criteria (ADR-006). This feature defines the three artifact types, their relationship model, the derived-graph invariant, and the context-bundle concept.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- A directory tree of `.md` files conforming to the repository layout (see FT-002). Each file's YAML front-matter declares artifact type (inferred from `id` prefix), ID, status, and outgoing edges.
+- CLI invocation specifying a command and optional artifact ID as target.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- An in-memory graph built from all front-matter, available to all commands for the lifetime of the invocation.
+- For context-assembly commands: a markdown context bundle containing the target feature, its linked ADRs ordered by betweenness centrality, and its linked test criteria (ADR-012).
+- For list and show commands: text or JSON representation of one or more graph nodes.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+Stateless between invocations. The in-memory graph is rebuilt from files on every command invocation (ADR-003). The only persisted artefact is `index.ttl`, written by `product graph rebuild` for external tooling consumption; it is never read by Product itself.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. On every invocation, Product scans the configured directories (`docs/features/`, `docs/adrs/`, `docs/tests/` by default) and parses YAML front-matter from every `.md` file.
+2. Each file is classified by its `id` prefix: `FT-` → Feature, `ADR-` → Architectural Decision Record, `TC-` → Test Criterion.
+3. Edges are extracted from `adrs`, `tests`, `features`, `supersedes`, `superseded-by`, and `depends-on` front-matter fields and added to the in-memory graph. Every declared edge is traversable in both directions.
+4. The assembled graph is handed to the requested command. Navigation commands (`feature list`, `feature show`) query the graph directly. Context commands assemble bundles via BFS traversal (ADR-012). Impact commands traverse the reverse graph (ADR-012).
+5. When `product graph rebuild` is called, the in-memory graph is serialised to `index.ttl` as an RDF/Turtle snapshot.
+6. Front-matter is stripped before any file content is injected into a context bundle (ADR-004). Code blocks, tables, and headings are preserved verbatim (TC-011, TC-012).
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Every `id` field must be unique across all artifact files of the same prefix type (E005 on duplicate detection).
+- Every edge declared in front-matter references an artifact that exists in the repository; unresolvable references are reported as E002 (broken link).
+- The `depends-on` edges between Feature nodes must form a directed acyclic graph; cycles are reported as E003.
+- Betweenness centrality values for all ADR nodes lie in [0.0, 1.0] (ADR-012, TC-007 in FT-007's formal block).
+- The context bundle output contains no YAML front-matter delimiters (`---`) or raw front-matter fields — only the stripped markdown body (TC-011).
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Malformed YAML front-matter → E001 (parse error), reported on stderr with file path and line number; the file is skipped and remaining files continue to parse (ADR-013).
+- Missing required `id` field → E006, structured error with field name and file path.
+- Broken link to a non-existent artifact → E002, reported by `product graph check` with exit code 1 (ADR-009).
+- Dependency cycle in `depends-on` DAG → E003, exit code 1.
+- All errors go to stderr; stdout is reserved for command output so that `product context FT-001 > bundle.md` produces a clean file even when warnings are present (ADR-013).
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- The three artifact types (Feature, ADR, Test Criterion) are the only first-class graph nodes. Free-form markdown outside these three types is not parsed or tracked.
+- The formal block notation inside TC files (ADR-011) is a separate parsing concern; this feature covers only the structural graph model and front-matter schema for the three types.
+- Context bundle assembly depth is 1 by default (direct edges only); transitive BFS at greater depth is enabled by `--depth N` (ADR-012) and is part of FT-006/FT-010.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Persistent graph storage: the graph is always derived from files; no SQLite, RDF store, or daemon is in scope (ADR-003).
+- Authoring commands (`product feature new`, `product adr new`, `product test new`) — covered by FT-004.
+- Schema versioning and migration of front-matter fields — covered by FT-008.
+- The formal block notation (`⟦Γ:Invariants⟧`, `⟦Λ:Scenario⟧`, etc.) inside TC files — covered by FT-005 and FT-007.
+- Impact analysis traversal and betweenness centrality commands — covered by FT-006.
+- CI exit-code conventions for graph health commands — covered by FT-010.

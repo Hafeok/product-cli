@@ -147,40 +147,61 @@ drift_density           = { max = 0.20, severity = "warning" }
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+FT-009 covers two foundational specification concerns. First, the numeric artifact ID scheme (ADR-005): prefixed zero-padded integers (`FT-XXX`, `ADR-XXX`, `TC-XXX`) auto-incremented by `product feature/adr/test new`, permanently assigned on creation, and never reused when an artifact is retired. The sub-namespace extension (`TC-CQ-001`, `TC-PLT-001`) is supported for cross-cutting TCs without displacing feature-specific TC IDs. Second, the `⟦Λ:Benchmark⟧` formal block type from ADR-011: its syntax, required fields (`baseline`, `target`, `scorer`, `pass`), and the `scorer` sub-expression grammar (`rubric_llm(temperature:0)`). The file body above also provides the complete canonical `product.toml` with all sections, keys, and their defaults — this is the reference configuration that governs Product's behaviour across all commands.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `product feature new "<title>"` / `product adr new "<title>"` / `product test new "<title>" --type TYPE` — scaffold commands that trigger ID auto-increment.
+- The existing artifact files in the configured directories, scanned to determine the current maximum numeric suffix for each prefix type.
+- For benchmark TCs: a `⟦Λ:Benchmark⟧{…}` block in the TC file body containing `baseline`, `target`, `scorer`, and `pass` fields.
+- `product.toml` at the repository root, parsed according to the canonical schema shown in the file body above.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **ID assignment**: a new artifact file whose `id` field is set to `PREFIX-NNN` where `NNN` is zero-padded to at least three digits and equals `max(existing numeric suffixes for this prefix) + 1`. If no existing artifacts exist for the prefix, `NNN = 001`.
+- **Benchmark block AST**: a `FormalBlock::Benchmark(BenchmarkBlock)` value with `baseline`, `target`, `scorer` (kind + params), and `pass` (raw expression string) fields, stored on the `TestCriterion` struct.
+- **product.toml configuration**: all config values (paths, phases, prefixes, domains, MCP settings, agent settings, gap analysis, drift, metrics, thresholds) resolved from `product.toml` with documented defaults applied for absent optional keys.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+Stateless between invocations. The maximum existing ID for each prefix type is determined by scanning the configured directories on every `feature/adr/test new` invocation; no ID counter is persisted outside the artifact files themselves.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **ID auto-increment (ADR-005)**: `product feature/adr/test new` scans the configured directory, parses the `id` field from every artifact file's front-matter, extracts the numeric suffix, finds the maximum, and assigns `max + 1` to the new artifact. Gaps in the numeric sequence (retired artifacts with `status: abandoned`) are not filled — the new ID is always `max + 1`, not the first unused number (TC-014).
+2. **ID conflict prevention**: before writing the new file, Product checks that the computed ID does not already exist in the graph. If it does (e.g., two concurrent `new` commands), the command exits with E005 and does not overwrite the existing file (TC-015).
+3. **Sub-namespace IDs**: `TC-CQ-NNN` and `TC-PLT-NNN` are treated identically to plain `TC-NNN` by the parser and graph engine. The sub-namespace prefix is a human-readable classifier only; it does not affect ID uniqueness checks (which compare the full `id` string) or graph traversal logic (ADR-005).
+4. **Benchmark block parsing (ADR-011, ADR-016)**: a `⟦Λ:Benchmark⟧` block is parsed by the formal parser. Required fields (`baseline`, `target`, `scorer`, `pass`) are extracted into the `BenchmarkBlock` struct. The `pass` expression is stored as a raw string for verbatim context bundle output. The `scorer` field is parsed into `ScorerConfig` with `kind` and `params` (list of key-value pairs).
+5. **product.toml parsing**: on every invocation, `product.toml` is read and all sections are deserialized using `toml` crate. Optional sections use documented defaults when absent. The `[domains]` vocabulary table governs domain validation for feature and ADR front-matter (E012). The `[phases]` table provides human-readable phase names for status and checklist output.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Every `id` in the repository is unique within its prefix type. Duplicate IDs are reported as E005 at graph build time.
+- ID numeric suffixes are monotonically increasing relative to the existing maximum at the time of creation; gaps are never filled.
+- Retired artifacts (status `abandoned`) retain their IDs permanently — IDs are never renumbered or reused (ADR-005).
+- `product.toml` `schema-version` is an integer string; any non-integer value is a parse error.
+- All `[domains]` keys in `product.toml` must be referenced by at least one ADR or Feature before their domain string is considered defined; domain strings not present in `[domains]` used in front-matter are reported as E012.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- No artifacts of a prefix type exist yet → first ID is `PREFIX-001`.
+- Computed ID already exists in graph (concurrent creation race) → E005, command exits without writing; the existing file is unchanged (TC-015).
+- `⟦Λ:Benchmark⟧` block missing a required field (`baseline`, `target`, `scorer`, `pass`) → E001 with field name and line; the block is stored as raw text for the bundle.
+- `product.toml` absent → hard error on startup with hint to run `product init`.
+- `product.toml` has unrecognised top-level keys → they are silently ignored (forward compatibility).
+- Domain string in front-matter not present in `product.toml` `[domains]` table → E012.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- ID assignment is per-prefix-type; `FT-XXX`, `ADR-XXX`, and `TC-XXX` counters are independent. Adding a new Feature does not affect the ADR counter.
+- The prefix strings (`FT`, `ADR`, `TC`) are configurable in `product.toml` `[prefixes]`; the binary uses whatever prefix is declared there, not hardcoded strings.
+- The full `product.toml` schema shown in the file body above is the canonical reference; no section other than `[paths]`, `[phases]`, and `[prefixes]` is required for Product to start.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Semantic versioning of artifact IDs — IDs are opaque numeric references, not version identifiers (ADR-005).
+- Renumbering or compacting the ID space after artifact retirement.
+- The full `product.toml` configuration section for authoring sessions, implementation prompts, and LLM model selection — those are consumed by the agent orchestration pipeline (FT-030) and gap analysis (FT-019), not by the core ID and schema machinery covered here.
+- Execution of benchmark TCs against external rubric files — the `⟦Λ:Benchmark⟧` block is parsed and preserved; benchmark execution is external to Product.

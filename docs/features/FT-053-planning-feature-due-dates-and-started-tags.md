@@ -246,36 +246,70 @@ See the exit-criteria TC for the consolidated check-list.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product request apply` with a `change` mutation** — a `{ op: set, field: due-date, value: "YYYY-MM-DD" }` mutation sets the due date on a feature. A `{ op: delete, field: due-date }` mutation removes it. The value must be an ISO 8601 date in `YYYY-MM-DD` form; any other shape raises E006.
+- **`product request apply` with a `status` change** — when any applied mutation transitions a feature's `status` from `planned` to `in-progress` (or creates a feature with `status: in-progress`), the apply hook calls `tags::create_started_tag(feature_id)`. This is the only path that creates the started tag.
+- **`product.toml` `[planning]` section** — `due-date-warning-days: u32` (default 3). Validated at load time as a non-negative integer. Setting to 0 disables W029 entirely.
+- **`product verify FT-XXX`** and **`product status`** — read `feature.due_date` and `chrono::Local::now().date_naive()` to compute W028/W029.
+- **`product tags list --type started`** — reads git refs matching `refs/tags/product/FT-XXX/started` via the shared `git for-each-ref` helper.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Feature front-matter** — the `due-date: YYYY-MM-DD` field is written or removed on the target feature file via the existing atomic write pipeline.
+- **`product/FT-XXX/started` annotated git tag** — created at most once per feature, on the first `planned → in-progress` transition. Tag message: `FT-XXX started: status changed to in-progress`. Never overwritten on replan.
+- **W028 diagnostic** — emitted by `product verify` stage 2 and by `product status` when `due-date < today AND status != complete`. Exit 2.
+- **W029 diagnostic** — emitted when `due-date` is within `due-date-warning-days` of today and `status != complete`. Exit 2. Suppressed when `due-date-warning-days = 0`.
+- **`product status` due-date column** — features with `due-date` render their date; overdue features carry a visible marker. Features without `due-date` render no date column entry.
+- **`product tags list` output** — includes `product/FT-XXX/started` tags in the default table and when `--type started` is given.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Feature front-matter** — `due-date` is written to the feature's YAML file and persists across invocations. Removing it requires a delete mutation via `product request apply`.
+- **Git tags** — `product/FT-XXX/started` is a persistent git annotated tag. Once created, it is never overwritten: subsequent `in-progress → planned → in-progress` replans leave the original tag in place (ADR-045 decision 5). The tag timestamp is the authority for `started-at`; no new YAML field stores this value.
+- **`[planning]` config** — `due-date-warning-days` is read from `product.toml` at every invocation of `product verify` and `product status`; no separate state.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Due-date field parsing.** The feature front-matter parser (`src/parser.rs`) accepts `due-date` as an optional `NaiveDate`. It parses with `NaiveDate::parse_from_str(s, "%Y-%m-%d")` and raises E006 with an "expected YYYY-MM-DD" hint on any other format. Fields are set or deleted via `product request apply` change mutations — there is no dedicated CLI shortcut.
+2. **W028 — due-date-passed.** `product verify` stage 2 and `product status` compare `feature.due_date` to `chrono::Local::now().date_naive()`. If `due_date < today` and `status != complete`, W028 fires. Exit 2. The feature's status is unchanged.
+3. **W029 — due-date-approaching.** If `due_date` is within `[planning].due-date-warning-days` of today and `status != complete`, W029 fires alongside W028 (if both conditions hold). Exit 2. Setting `due-date-warning-days = 0` disables W029 for all features.
+4. **Started-tag creation.** On every `product request apply` call that transitions a feature from `planned` to `in-progress` (or creates a feature with `status: in-progress`), `tags::create_started_tag(feature_id)` is called. The helper checks for a pre-existing `product/FT-XXX/started` tag and skips creation if it already exists. Skipped with a W-class warning when git is unavailable — the apply operation completes regardless (ADR-045 decision 7).
+5. **Tag listing.** `product tags list` and `product tags list --type started` resolve started tags from git refs. The default listing includes started tags in the table. `product tags list --feature FT-XXX` surfaces both started and complete tags for the specified feature.
+6. **`product status` rendering.** The feature table gains a `due-date` column when any feature in the workspace has `due-date` set. Overdue features are marked with a visible glyph. Features without `due-date` render an empty cell.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `product/FT-XXX/started` is created at most once per feature. A replan (`in-progress → planned → in-progress`) does not overwrite the original tag (ADR-045 decision 5, TC-640).
+- `due-date` has no effect on `product verify` exit code beyond W028/W029 (W-class, exit 2). It never causes exit 1 and never blocks phase-gate evaluation or feature completion (ADR-045 decision 2, TC-637).
+- Parsing `due-date: "not-a-date"` raises E006 and writes nothing to disk (TC-636).
+- A feature without `due-date` set never triggers W028 or W029, regardless of any clock value (TC-641 complementary case).
+- Setting `[planning].due-date-warning-days = 0` suppresses W029 regardless of the feature's `due-date` value (TC-638).
+- Tag creation failure (git unavailable) never causes `product request apply` to exit non-zero — it emits a W-class warning and continues (ADR-045 decision 7).
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **E006 — invalid `due-date` format.** Fired when the `due-date` value cannot be parsed as `YYYY-MM-DD`. Includes an "expected YYYY-MM-DD" hint. No write occurs.
+- **W028 — due-date-passed.** Exit 2. Emitted by `product verify` stage 2 and `product status`. No remediation is automatic — the user must either complete the feature or update the due date.
+- **W029 — due-date-approaching.** Exit 2. Emitted alongside W028 when both conditions hold. Suppressed by `due-date-warning-days = 0`.
+- **Git unavailable at tag creation.** `create_started_tag` catches the error, emits a W-class warning (not an E-class error), and returns `Ok(())`. The `product request apply` pipeline continues and the graph write succeeds. The started tag is simply absent until git becomes available and the user manually runs the tag command.
+- **Pre-existing started tag.** `create_started_tag` checks for the tag and returns without action. Not an error.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **In scope:** the `due-date` field on feature artifacts, W028 and W029 warnings, the `product/FT-XXX/started` tag namespace, and the `product status` due-date column.
+- **Out of scope:** a dedicated CLI shortcut for setting `due-date` (e.g. `product feature due-date FT-XXX DATE`). All planning fields are set via requests.
+- **Out of scope:** `started-at` or `completed-at` stored in YAML front-matter. Tag timestamps are the authority (ADR-045 decision 8).
+- **Out of scope:** the forecasting model itself. This feature emits the anchors (started tag, due-date field); a separate feature consumes them for cycle-time and projection (FT-054).
+- **Out of scope:** `due-date` on ADRs, TCs, or DEPs. Commitment dates apply to features only.
+- **Out of scope:** blocking behaviour on missed dates. W028/W029 are W-class only; no E-class code and no phase-gate integration.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- **CLI shortcut `product feature due-date FT-XXX DATE`.** Setting `due-date` requires a change request through the unified write interface. A shortcut would expand the granular-tool surface without adding capability. Deferred until usage data justifies it.
+- **Stored `started-at` / `completed-at` in YAML.** The tag timestamp is the authority (ADR-045 decision 8). Writing these to YAML would duplicate the tag, create a source-of-truth question, and introduce stale-value bugs on rebases.
+- **The forecasting model.** This feature emits the raw anchors (started tag, due-date field); the forecasting model (FT-054) consumes them. Separate feature scope.
+- **Due dates on ADRs, TCs, or DEPs.** Commitment dates apply to features (the unit of scope stakeholders care about). Other artifact types do not gain the field.
+- **Blocking behaviour on missed dates.** W028/W029 are W-class only. A gating due date would turn scheduling signals into build failures and punish honest recording (ADR-045 rejected alternatives).
+- **`due-date` on phases.** A phase-level commitment date would feed forecasting's "will phase N ship on time?" question. Separate feature.
+- **Burndown rendering in `product status`.** Extended output showing per-phase due-date distribution and overdue count. Pure surface change — deferred.

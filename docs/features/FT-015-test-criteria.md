@@ -73,40 +73,60 @@ YAML front-matter is stripped from all sections. Formal blocks in test criteria 
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+Test criteria (TC-XXX) are first-class artifacts in the knowledge graph, stored as individual markdown files with YAML front-matter in `docs/tests/`. They use a hybrid format: YAML front-matter for graph metadata, AISP-influenced formal blocks for constraints and invariants (ADR-011), and plain prose for human-readable description. The formal block notation eliminates LLM interpretation variance in constraint definitions. Formal blocks are mandatory for `invariant` and `chaos` type criteria; optional but encouraged for `scenario` and `exit-criteria`.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- TC file body containing:
+  - YAML front-matter: `id`, `title`, `type`, `status`, `validates.features`, `validates.adrs`, `phase`, `runner`, `runner-args`
+  - Prose description (`## Description` section)
+  - Formal blocks: `⟦Σ:Types⟧`, `⟦Γ:Invariants⟧`, `⟦Λ:Scenario⟧`, `⟦Λ:ExitCriteria⟧`, `⟦Λ:Benchmark⟧`, `⟦Ε⟧` (evidence block)
+- TC type vocabulary: `scenario`, `invariant`, `chaos`, `exit-criteria`, `benchmark` (ADR-011); custom types may be declared in `product.toml` (ADR-042)
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- TC nodes in the in-memory knowledge graph with edges: `validates` Feature(s), `validates` ADR(s)
+- Formal blocks parsed into a typed AST (`FormalBlock` enum) for validation; raw text preserved for context bundle output (ADR-016)
+- Evidence block fields (`δ`, `φ`, `τ`) surfaced in context bundle aggregate metrics
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+TC status (`unimplemented`, `passing`, `failing`) is stored in front-matter and updated by `product verify`. Formal blocks and graph links are stable specification data; `status` and `last-run` fields are mutable by the verify pipeline.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. Parser reads TC front-matter and body; formal blocks are extracted using the hand-written recursive descent parser defined in ADR-016.
+2. Graph builder adds a TC node and `validates` edges to all referenced features and ADRs.
+3. `product graph check` validates: mandatory formal blocks present for `invariant`/`chaos` types (W004 if absent), evidence block `δ` in [0.0, 1.0] and `φ` in [0, 100] (E001 if out of range), TC type in the declared vocabulary (E006 for unknown custom type).
+4. `product test new` scaffolds a new TC file with formal block stubs; `runner` and `runner-args` fields are required before `product verify` will execute the TC.
+5. When a feature is abandoned, the feature's ID is auto-removed from all linked TCs' `validates.features` lists (ADR-010); TCs with empty `validates.features` become orphaned warnings (W001).
+6. Formal blocks are preserved verbatim in context bundles (raw text round-trip); the AST is used only for validation, not for reformatting output.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Every TC ID is unique across the repository (E-series duplicate check).
+- `δ` must be in [0.0, 1.0]; `φ` must be in [0, 100] — parser enforces this as E001 (ADR-016).
+- `invariant` and `chaos` type TCs without formal blocks produce W004 warnings (ADR-011).
+- TC front-matter fields not recognised by the current schema are preserved on write (forward-compatible unknown-field handling, ADR-014).
+- Formal block raw text is round-tripped byte-for-byte through the context bundle — no re-formatting (ADR-016).
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- E001: malformed formal block delimiter or invalid expression; reported with file path and line number. Subsequent blocks in the same file are still parsed.
+- W004: empty formal block body (`⟦Γ:Invariants⟧{}`); syntactically valid but semantically meaningless.
+- W001: orphaned TC (empty `validates.features`); surfaced by `product graph check` after feature abandonment.
+- E006: unknown TC type not in `product.toml` custom vocabulary; blocks context assembly for that TC.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- TC files are authored by humans or `product test new`; the CLI does not generate TC content from feature prose.
+- Full semantic verification of formal expressions is not performed — the parser validates structure and field ranges, not logical correctness (ADR-016).
+- TC execution (running tests) is out of scope for this feature; that is handled by `product verify`.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Generating TC content from feature descriptions (LLM-assisted TC authoring is a separate concern).
+- Executing TCs or interpreting their pass/fail result (that is `product verify` / FT-007).
+- Defining the runner infrastructure (runner configuration is specified in front-matter; execution is delegated to cargo or the configured test runner).

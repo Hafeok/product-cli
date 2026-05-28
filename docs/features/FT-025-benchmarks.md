@@ -55,40 +55,59 @@ TC-030, TC-031, TC-032 each pass: `score(product) >= 0.80` and `delta_vs_naive >
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+The benchmark suite validates Product's core value proposition empirically: that LLM context assembled from the knowledge graph produces better implementation results than naive approaches. It also validates timing invariants for graph algorithms. The suite runs via `cargo bench` and consists of four benchmarks in `benches/graph_bench.rs` covering graph construction, BFS, centrality, and file parsing. Task-based LLM benchmarks (TC-030, TC-031, TC-032) score agent outputs against rubric files to measure the quality delta between Product context bundles and naive approaches (ADR-018).
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`cargo bench`**: runs all four benchmark harnesses in `benches/graph_bench.rs`
+- **Benchmark task fixtures**: rubric files and golden result baselines in `benchmarks/`; each task has a fixed prompt and a structured rubric
+- **Task descriptions** (TC-030, TC-031, TC-032): Raft leader election implementation, front-matter parser implementation, context bundle assembly
+- **LLM benchmark runner** (`benchmarks/runner/`): executable that runs tasks against a configured model and scores outputs
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`cargo bench` output**: timing results per benchmark in Criterion format to stdout; failures if any benchmark panics
+- **Score reports**: per-task scores in the form `score(product)` and `delta_vs_naive`; written to stdout by the benchmark runner
+- **Pass/fail determination**: each LLM task passes when `score(product) >= 0.80` and `delta_vs_naive >= 0.15`
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Rubric files and golden baselines in `benchmarks/` are committed to the repository and are the stable reference for scoring.
+- Timing invariant thresholds are encoded directly in benchmark assertions, not in `product.toml`.
+- Benchmark results are not automatically committed to `metrics.jsonl` — they are run and interpreted manually or in CI.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Timing benchmarks** (`cargo bench`): four Criterion benchmarks exercise the graph algorithms on representative data sizes (200 files, 200 nodes, 500 edges). Each benchmark measures mean wall-clock time and asserts it is within the target:
+   - Parse 200 files: < 200ms
+   - Betweenness centrality on 200 nodes: < 100ms
+   - BFS at depth 2 on 500 edges: < 50ms
+2. **LLM task benchmarks**: the runner in `benchmarks/runner/` sends each task's context bundle (product-assembled) and a naive context (raw file dump) to a configured model. It scores each response against the rubric and computes `delta_vs_naive`.
+3. **Scoring**: rubric files define weighted criteria for each task. The runner evaluates model output against each criterion and sums the weighted scores. `score(product)` is the mean across three rubric criteria; `delta_vs_naive` is the score difference.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- All timing benchmarks must complete within their target on a Raspberry Pi 5 (the reference hardware for performance validation).
+- TC-030, TC-031, and TC-032 each require `score(product) >= 0.80` and `delta_vs_naive >= 0.15` to pass.
+- The rubric files and golden baselines are never auto-modified by the benchmark runner — they are stable references.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- If any timing benchmark panics or exceeds its time limit, `cargo bench` exits non-zero. TC-180 treats this as a failure.
+- If the LLM runner cannot reach the model API (network error, timeout), it exits non-zero with an error message; the task score is not recorded.
+- Malformed rubric files cause the runner to exit 1 with a schema validation error.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- The benchmark suite validates algorithmic performance and context quality. It does not validate CLI command correctness (that is the integration test suite's responsibility).
+- LLM benchmark results depend on the configured model and its temperature. Results are not deterministic across model versions.
+- The timing benchmarks use Criterion's statistical harness; wall-clock variance across runs is expected and Criterion reports confidence intervals accordingly.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Continuous benchmark recording in CI on every commit (benchmarks are run explicitly, not on every push)
+- A/B testing across multiple models (the runner is configured for one model at a time)
+- LLM benchmark results stored in `metrics.jsonl` (metrics tracks graph health metrics; benchmark scores are separate)
+- Benchmarking CLI startup time or I/O throughput (only graph algorithm performance is benchmarked)

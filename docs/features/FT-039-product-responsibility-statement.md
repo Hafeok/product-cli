@@ -127,44 +127,64 @@ The current product.toml has `name = "product-cli"` at the top level. The `[prod
 
 ---
 
----
-
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+Adds a `[product]` section to `product.toml` with a `responsibility` field — a single statement declaring what the product is and is not. The field is surfaced in context bundle headers (`product context FT-XXX`), in the MCP `product_responsibility` read tool, and in `AGENTS.md` generation. `product graph check` gains warning W019 for features whose title or description appears outside the declared responsibility.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `product.toml` `[product]` section — `name` and `responsibility` fields. `responsibility` is a multi-line string. The field is optional; when absent, responsibility-dependent behaviour is suppressed rather than erroring.
+- `product graph check` — reads `responsibility` from config; emits W019 for features that cannot be traced back to the declared scope.
+- `product context FT-XXX` — reads `responsibility` from config to populate the ⟦Ω:Bundle⟧ header.
+- `product agent-init` — reads `responsibility` to include in the generated `AGENTS.md`.
+- MCP tool call `product_responsibility` (no parameters).
+- Existing top-level `name` field in `product.toml` — falls back to this when `[product]` section is absent; backward compatible.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product context FT-XXX` bundle header** — when `responsibility` is set, the ⟦Ω:Bundle⟧ header includes `product≜NAME:Product` and `responsibility≜"..."` lines. When absent, these lines are omitted and existing bundle output is unchanged.
+- **MCP `product_responsibility`** — JSON object `{"name": "...", "responsibility": "..."}`. Returns an error if `responsibility` is not configured.
+- **`product graph check` — W019** — warning when a feature's title or description appears outside the declared product responsibility. Exit code 2 (warning-only). Suppressed entirely when `responsibility` is not set.
+- **`product agent-init` — AGENTS.md** — responsibility statement included in the generated file when configured.
+- **`product init`** — scaffolds the `[product]` section in new repositories with empty `responsibility` value and a comment prompt.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+The `responsibility` field is persisted in `product.toml` as a TOML multi-line string under the `[product]` section. It is read on every invocation of the commands listed above; no cache is maintained. The field is optional; its absence is a valid configuration state that silently disables W019 and omits the field from bundle headers.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Config parsing** — `ProductConfig` reads `[product].name` and `[product].responsibility`. When `[product]` is absent, `config.responsibility()` returns `None`. The top-level `name` key remains valid as an alias for backward compatibility; `[product].name` takes precedence when both are present.
+2. **Bundle header injection** — `product context FT-XXX` calls `config.responsibility()`. If `Some`, it prepends `product` and `responsibility` lines to the ⟦Ω:Bundle⟧ header block. If `None`, the header is identical to pre-feature output.
+3. **W019 check** — `graph::responsibility::check_responsibility` is called by `product graph check` after structural validation. It is a loose check: features should be derivable from the responsibility through a chain of reasoning. Infrastructure and enablement features are expected and pass. The check is deliberately not a hard gate — W019 is always exit code 2.
+4. **MCP `product_responsibility`** — a read tool that returns the name and responsibility as a JSON object. It is the recommended first call in any authoring session before reading the feature list or ADRs.
+5. **Single-statement invariant** — the responsibility field should be one statement without "and" at the top level (same SRP constraint as ADR-029's module doc-comment rule). This is documented guidance, not mechanically enforced by the tool.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- W019 is never emitted when `responsibility` is not configured — the check does not activate.
+- W019 is always a warning (exit 2), never a hard error — some scaffolding and tooling features may legitimately lie outside the declared scope.
+- The bundle header change is additive and backward-compatible — repositories without `responsibility` produce identical bundle output to pre-feature behaviour.
+- MCP `product_responsibility` returns an error (not a silent empty result) when `responsibility` is absent, so agents can distinguish "not configured" from "configured but empty".
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product_responsibility` with no `responsibility` field** — returns a tool error naming the missing field and hinting to add `[product] responsibility = "..."` to `product.toml`.
+- **W019** — feature title or description appears outside declared responsibility. Exit code 2. Message names the feature and the responsibility statement. Never blocks any operation.
+- **`product.toml` parse error in `[product]` section** — propagates as `ProductError::ConfigError` via the standard config loading path; all commands that load config will fail with the same error.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- No new CLI command is added. The responsibility field is read by existing commands (`product context`, `product graph check`, `product agent-init`) and the new MCP read tool.
+- W019 is informational and advisory. It does not gate `product verify`, `product feature status`, or any other workflow transition.
+- The `responsibility` constraint (single statement, no "and") is documented guidance only — the tool accepts any non-empty string.
+- `product init` scaffolds the section in new repositories but does not enforce migration of existing repositories. W019 is simply never emitted for repos without the field.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Automatic enforcement of the single-statement constraint via syntax analysis — this is a stylistic guideline, not a parse-time rule.
+- Machine-learning-based scope classification for W019 — the check is intentionally loose and LLM-driven rather than deterministic.
+- Per-feature responsibility overrides — every feature is evaluated against the single product-level responsibility statement.
+- Responsibility versioning or changelog — the field is a mutable config value; changes are tracked via git history of `product.toml`, not by Product itself.

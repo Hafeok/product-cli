@@ -151,36 +151,59 @@ See TC-622 (exit criteria) for the consolidated check-list.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product_body_update` MCP tool:** `id` (required — a `DEP-NNN` identifier, or any of the existing `FT-`, `ADR-`, `TC-` prefixes), `body` (required — the new prose text to replace the artifact's body below the front-matter delimiter).
+- The dep file on disk identified by `id` — resolved via `graph.deps` to its file path, then read and written via `fileops::write_file_atomic`.
+- The knowledge graph — read to resolve the dep and confirm it exists.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Success:** the dep file on disk has its body (the content below the `---` delimiter) replaced with the new text. Front-matter is preserved byte-for-byte. The MCP response mirrors the shape returned for feature, ADR, and TC body updates.
+- **`DEP-NNN` not found:** structured error naming the missing dep (`"Dep not found: DEP-NNN"`), mirroring the wording of `"Feature not found"` / `"ADR not found"` / `"TC not found"`.
+- **Unknown prefix:** the existing `"Unknown artifact ID prefix"` error, unchanged. The new dep branch is additive; the existing error path for unrecognised prefixes is not modified.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Dep file on disk** — body text replaced atomically via `fileops::write_file_atomic` (ADR-015). Front-matter is preserved; only the prose below the `---` delimiter changes.
+- **Advisory lock (ADR-015)** — acquired before the write, released after. Serialises concurrent MCP calls targeting the same file.
+- No new persistent state. `requests.jsonl` is not appended to by `product_body_update` (audit log integration for body updates is a separate future feature).
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Prefix dispatch.** `handle_body_update` checks the `id` prefix. The existing three branches (`config.prefixes.feature`, `config.prefixes.adr`, `config.prefixes.test`) are unchanged. A new fourth branch matches `config.prefixes.dependency`; it resolves the dep via `graph.deps`, calls `update_dep_body(id, body, graph)`, and returns the result.
+2. **`update_dep_body` helper.** A new function mirroring `update_feature_body` / `update_adr_body` / `update_test_body` — under 15 lines. It looks up the dep, calls `parser::render_dependency(&d.front, body)` to produce the updated file content, and writes it via `fileops::write_file_atomic`. Returns a success or error result.
+3. **Error on unknown dep ID.** If the dep prefix is matched but the ID does not exist in `graph.deps`, returns `"Dep not found: DEP-NNN"`. No file is written.
+4. **Error on unknown prefix.** If the prefix matches none of the four known prefixes, the existing `"Unknown artifact ID prefix"` error path is taken, unchanged. No file is written.
+5. **Tool schema update.** The `product_body_update` tool description in `src/mcp/tools.rs` is updated to list `DEP-NNN` alongside `FT-`, `ADR-`, `TC-` in the `id` parameter description, so MCP discovery surfaces the new capability.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Front-matter is always preserved byte-for-byte on a successful body update; only the prose body changes.
+- A successful `product_body_update` with a `DEP-NNN` id produces the same file content as a direct file edit followed by `fileops::write_file_atomic` with the same body text.
+- The existing behaviour for `FT-`, `ADR-`, and `TC-` prefixes is unchanged; the dep branch is purely additive.
+- `product_body_update` for any unknown prefix — including `DEP-` IDs that do not exist — returns an error and writes nothing to disk.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+| Condition | Error |
+|---|---|
+| `id` has the dep prefix and the dep exists | Success; body replaced atomically |
+| `id` has the dep prefix but the dep does not exist in the graph | `"Dep not found: DEP-NNN"` error; no write |
+| `id` has an unknown prefix (not FT-, ADR-, TC-, or DEP-) | Existing `"Unknown artifact ID prefix"` error; no write |
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Content-hash enforcement for deps is not implemented: deps do not currently carry `content-hash` (that field is ADR-specific per ADR-032). This feature does not add content-hash to deps.
+- Amend semantics for deps are not introduced: unlike ADRs, deps have no "accepted" gate; body is editable at any status. No `product dep amend` analogue is added.
+- A new `product_dep_body_update` MCP endpoint is not created: the existing `product_body_update` is prefix-dispatched and covers all four types after this feature.
+- `requests.jsonl` audit log integration for body updates is out of scope: extending `product_body_update` to append log entries for all four artifact types is a separate future feature.
+- CLI `product dep body` is not added: the feature closes an MCP gap; direct file edits plus `product request` cover CLI body editing for deps.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Content-hash enforcement for deps: deps do not carry `content-hash`; this feature does not change that.
+- Amend semantics for deps: no "accepted" gate exists on deps; no `product dep amend` analogue is needed.
+- A separate `product_dep_body_update` MCP endpoint: the existing `product_body_update` prefix dispatcher is extended instead.
+- Audit log (`requests.jsonl`) integration for body updates: extending `product_body_update` to append log entries covers all four types uniformly and is a separate future feature.
+- CLI `product dep body` subcommand: the MCP gap is the scope; CLI body editing for deps is covered by direct file edits and `product request`.

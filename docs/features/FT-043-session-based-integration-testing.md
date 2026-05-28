@@ -192,40 +192,70 @@ Once the Phase 1 session library ships under this feature:
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+Session-based integration testing is the primary mechanism for validating end-to-end `product` command correctness. A session is a Rust test function that drives a temporary repository through one or more `product request apply` calls and asserts on the resulting graph state, file content, and command output using a fluent `Session` / `ApplyResult` API. Sessions build fixtures through the same interface real users and agents use — there is no separate fixture layer. This feature delivers the harness infrastructure (`tests/sessions/`), the core Phase 1 session library (create, atomicity, and validation families), and property-test coverage for three request-model invariants (TC-P012, TC-P013, TC-P014).
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Rust test functions in `tests/sessions/` that call `Session::new()`, `Session::apply(request_yaml)`, and assertion methods.
+- Inline YAML strings (or files via `Session::apply_file`) representing `product request` documents passed to the compiled `product` binary during each session step.
+- The compiled `product` binary resolved via `env!("CARGO_BIN_EXE_product")` — no environment variable configuration required.
+- `product.toml` and the standard directory tree written to a `TempDir` by `Session::new()` at harness bootstrap.
+- For property tests: `proptest`-generated request YAML inputs exercising the three invariants (TC-P012: any E-class finding → zero disk changes; TC-P013: idempotent `append`; TC-P014: deterministic ref-to-ID ordering).
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`cargo test --test sessions`** — runs every session test function, prints a per-session pass/fail result with clear failure messages naming the offending path, field, expected value, and actual value when an assertion breaks.
+- **`ApplyResult`** — returned by `Session::apply`; carries `applied` (bool), `created` (vec of `AssignedArtifact` with `ref_name`, `id`, `file`), `changed` (vec of `ChangedArtifact`), and `findings` (vec of `Finding` with `code`, `severity`, `message`, `location`).
+- **`Session` assertions** — fluent methods (`assert_file_exists`, `assert_frontmatter`, `assert_array_contains`, `assert_graph_clean`, `assert_graph_error`, `assert_graph_warning`, `assert_tag_exists`, `assert_no_tag`, `sparql`) return `&Self` for chaining; panic with a descriptive message on failure.
+- **`ApplyResult::id_for(ref_name)`** — resolves a declared `ref:` name to the assigned ID (e.g. `"FT-044"`); the test never hardcodes IDs.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`TempDir`** managed by each `Session` instance — contains a minimal `product.toml`, empty `docs/features/`, `docs/adrs/`, `docs/tests/`, `docs/deps/` directories, and `requests.jsonl` (created on first apply). Cleaned up when the `Session` is dropped.
+- No persistent state outside the `TempDir`; sessions are fully isolated from one another and from the working tree.
+- The compiled `product` binary on disk — the session harness invokes it as a subprocess; it is not modified by session tests.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. `Session::new()` creates a `TempDir`, writes a minimal `product.toml`, and creates the required directory tree. It does not call `product init` to keep bootstrap fast; tests that need `product init` behaviour call it explicitly as a step.
+2. `Session::apply(request_yaml)` writes the YAML to a temp file, invokes `product request apply <tmpfile> --format json` via the compiled binary, parses the JSON response, and returns an `ApplyResult`. The `--format json` flag is required so `created` / `changed` / `findings` are structured.
+3. `Session::run(args)` invokes the compiled binary with arbitrary arguments and returns the raw `Output`. Used for non-apply commands (`product graph check`, `product context FT-XXX`, etc.).
+4. Assertion methods on `Session` and `ApplyResult` panic with descriptive messages on failure, including the offending path, field, expected, and actual values.
+5. `ApplyResult::id_for(ref_name)` looks up the assigned ID in the `created` array; panics if the ref name is not present (catches accidental ref-name typos at test time).
+6. Fluent chaining: `s.assert_file_exists(&a).assert_array_contains(&b, "adrs", &adr_id).assert_graph_clean()` — each method returns `&Self`.
+7. Property tests in `tests/property.rs` use `proptest` to generate thousands of inputs per test run: TC-P012 pre/post checksums every file under `docs/`; TC-P013 applies the same request twice and diffs graph state; TC-P014 applies the same request to two identical repos and compares assigned-ID ordering.
+8. Sessions in `tests/sessions/` are discovered as `#[test]` functions by `cargo test --test sessions`; each session is self-contained in its own file.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- A session test is fully isolated: it never reads from or writes to the working repository; all I/O goes through the `TempDir`.
+- `ApplyResult::id_for(ref_name)` always returns a real assigned ID — never a placeholder or the ref name itself.
+- `Session::new()` always produces a repository that `product request apply` can write to without preconditions.
+- Every TC added for this feature has `runner: cargo-test` and `runner-args: "tc_XXX_snake_case"` in its front-matter at the same time the test is written (CLAUDE.md TC Runner Configuration policy).
+- Property tests generate at least 1000 cases per run (proptest default); they must not panic under any generated input.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Assertion failures in `Session` and `ApplyResult` methods panic immediately with a descriptive message; the panic propagates as a test failure.
+- If `product request apply` returns a non-zero exit code when `assert_applied` is called, the method panics with the stdout and stderr from the subprocess.
+- If `env!("CARGO_BIN_EXE_product")` resolves to a binary that does not exist (e.g. the binary was not compiled), the test panics at binary invocation with a clear "binary not found" message from `assert_cmd`.
+- `ApplyResult::id_for` panics if the `ref_name` is not in the `created` array, surfacing ref-name typos immediately rather than propagating a wrong ID.
+- No error codes are emitted by the harness itself; errors surface as test panics reported by the `cargo test` runner.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- The `Session` harness invokes the compiled `product` binary as a subprocess; it does not call library functions directly. This is intentional: it validates the full binary surface including argument parsing and exit codes.
+- `Session::new()` does not call `product init`; it writes a minimal fixture. Tests that need `product init` semantics (e.g. hook installation) call it explicitly.
+- Session tests do not use golden files for output; assertions are explicit conditions. Golden files churn when IDs change and are rejected for sessions by the testing spec.
+- Property tests live in `tests/property.rs`, not in `tests/sessions/`; they share the same compiled binary but use proptest rather than the `Session` harness.
+- The harness does not mock the filesystem, the graph, or the `product` binary internals — it is a black-box integration layer.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Later session families (ST-010–ST-015 change operations, ST-040–ST-042 phase gate, ST-050–ST-056 verify/drift, ST-060–ST-062 context bundles, ST-070–ST-072 domain coverage, ST-080–ST-083 full workflows) are scoped to follow-on features once their underlying Product features ship observable surface area.
+- LLM benchmark tasks (TC-030, TC-031, TC-032) — already scoped under FT-025 "Benchmarks".
+- Graph-algorithm properties (TC-P005–TC-P009) — already scoped under earlier phase-2 feature work.
+- Migration of the existing `tests/integration.rs` into sessions — the existing tests continue to run unchanged; session tests are additive. A future cleanup feature may migrate once equivalent session coverage exists.
+- Golden-file tests for session output — rejected by the testing spec; assertions are explicit conditions.

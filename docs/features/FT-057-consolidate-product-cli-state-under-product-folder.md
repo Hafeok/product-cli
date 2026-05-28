@@ -287,36 +287,79 @@ A developer can:
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product migrate consolidate`** — new subcommand. In dry-run mode (default), reads the existing `product.toml` (or `[paths]` config) to compute the migration plan and prints it without writing anything. In apply mode (`--apply`), performs the migration. `--force-uncommitted` overrides the dirty-tree guard.
+- **`product init`** — changed to scaffold the `.product/` skeleton by default; `--legacy-layout` opts into the pre-FT-057 root-based layout.
+- **Config discovery at every command invocation** — `ProductConfig::discover` now walks `.product/config.toml`, then `.product/product.toml`, then `product.toml`. First match wins.
+- **`src/author/prompts.rs::get`** — reads the `prompts` dir from `config.paths.prompts`. Falls back to `benchmarks/prompts` with a W-class warning if the new key is missing and the legacy directory exists.
+- **`src/implement/pipeline.rs`** — reads `config.paths.gaps` for the gap baseline instead of the hardcoded `gaps.json` root path.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product migrate consolidate --dry-run` (default)** — a printed plan listing every file/directory move, every `[paths]` rewrite, and every `.gitignore` line that would be added. Exit 0. No filesystem writes.
+- **`product migrate consolidate --apply`** — physically moves legacy paths to `.product/`, rewrites `[paths]` in the config, appends `.product/graph/` and `.product/sessions/` to `.gitignore`, and appends one `migrate` entry to `requests.jsonl` with sentinel `consolidate-paths`. Skips paths already at the canonical location (idempotent).
+- **`product init` output** — creates `.product/config.toml` plus the canonical skeleton (`.product/features/`, `.product/adrs/`, `.product/tests/`, `.product/prompts/`, etc.). With `--legacy-layout`, creates `product.toml` at the repo root and the legacy directory structure.
+- **`migrate` log entry** — one new entry of type `migrate` with `sentinel: "consolidate-paths"` appended to `requests.jsonl` (later `.product/requests.jsonl`) via the existing hash-chain machinery (ADR-039 decision 4).
+- **AGENTS.md** — regenerated via `agent_context::generate` to reflect the canonical path table after migration.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+The primary persistent state change is the directory layout of the repository:
+
+- `product.toml` at root → `.product/config.toml`
+- `docs/features/`, `docs/adrs/`, `docs/tests/`, `docs/dependencies/`, `docs/graph/` → `.product/{features,adrs,tests,dependencies,graph}/`
+- `benchmarks/prompts/*` → `.product/prompts/`
+- `gaps.json` → `.product/gaps.json`
+- `requests.jsonl` → `.product/requests.jsonl`
+
+The `[paths]` section of the config is rewritten to the new defaults. `.gitignore` is updated to reference `.product/graph/` and `.product/sessions/` rather than `docs/graph/`. The migration is recorded as a `migrate` log entry so the hash chain remains valid.
+
+For existing repos that have not run `product migrate consolidate`, the legacy layout continues to work via the discovery fallback — no automatic migration occurs (ADR-048 Rule of explicit migration).
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Discovery fallback.** `ProductConfig::discover` walks up from cwd checking, in order: (a) `.product/config.toml`, (b) `.product/product.toml`, (c) `product.toml`. The first match wins. This is performed on every command invocation. Repos that have not migrated continue to resolve via (c) transparently.
+2. **`product migrate consolidate` dry-run.** Computes the full `ConsolidationPlan` (file moves, config rewrites, gitignore additions) from the current config. Prints the plan in human-readable form. Exits 0. No writes.
+3. **`product migrate consolidate --apply`.** Acquires write lock. Checks for uncommitted git changes in any of the paths to be moved; refuses unless `--force-uncommitted` is given. Performs each move atomically using `fileops::write_batch_atomic` semantics (write new, fsync, rename old to backup, rename new to target, drop backup on success). Rewrites `[paths]` in the config. Updates `.gitignore`. Appends the `consolidate-paths` migrate entry to the request log. Skips any path already at the canonical location.
+4. **Path consumer updates.** `src/author/prompts.rs` reads `config.paths.prompts`; if the configured dir does not exist but `benchmarks/prompts` does, it reads from the legacy path and emits a W-class warning once per process via `OnceLock`. `src/implement/pipeline.rs` reads `config.paths.gaps` instead of the hardcoded `gaps.json`.
+5. **`product init` scaffolding.** Creates `.product/config.toml` and the canonical directory skeleton. With `--legacy-layout`, creates `product.toml` at root and the pre-FT-057 layout. The generated `.gitignore` includes `.product/graph/` and `.product/sessions/`.
+6. **Verifier rule.** `request_log::MIGRATE_LOG_SENTINEL_CONSOLIDATE = "consolidate-paths"` is added. The verifier accepts pre-migration entries referencing legacy paths (entries before the sentinel) and requires canonical paths after.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `ProductConfig::discover` resolves a legacy `product.toml` at root when `.product/config.toml` is absent, and prefers `.product/config.toml` when both exist (TC-701).
+- After `product migrate consolidate --apply`, `product graph check` exits 0 and `product feature list` / `product context` work identically to before the migration (TC-700).
+- `product migrate consolidate --apply` is idempotent: running it a second time on an already-migrated repo skips all moves and writes no additional migrate log entry.
+- The migration refuses to run when uncommitted changes exist in any path to be moved, unless `--force-uncommitted` is given.
+- No existing command performs an implicit auto-migration. Files move only when `product migrate consolidate --apply` is explicitly invoked (ADR-048 Rule of explicit migration).
+- `product init` on a fresh directory creates `.product/config.toml` and the canonical skeleton; it never creates `product.toml` at root unless `--legacy-layout` is given (TC-703).
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Uncommitted changes in a path to be moved.** `product migrate consolidate --apply` refuses with an E-class error listing the affected paths. Exit 1. Use `--force-uncommitted` to override.
+- **Target path already exists.** The move for that path is skipped (idempotent). A notice is printed; no error.
+- **Write failure during migration.** `apply_consolidate` propagates the I/O error. Any moves that completed before the failure are left in place (not rolled back automatically); the migrate log entry is not appended. The operator must inspect and complete the migration manually, then re-run.
+- **Legacy prompts fallback.** `src/author/prompts.rs` emits a W-class warning (exit 2) once per process when it falls back from `config.paths.prompts` to `benchmarks/prompts`. Not an error — the command continues and prompts load correctly from the legacy path.
+- **`product.toml` not found at root and no `.product/` config.** `ProductConfig::discover` returns a `ProductError::ConfigNotFound`. Exit 1 with guidance to run `product init`.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **In scope:** the three-step discovery fallback, `product migrate consolidate` (dry-run and apply), the `[paths]` default changes, `product init` canonical scaffolding, `src/author/prompts.rs` and `src/implement/pipeline.rs` path-consumer updates, `.gitignore` management, and the `consolidate-paths` migrate log sentinel.
+- **Out of scope:** auto-migration on upgrade. Explicitly excluded per ADR-048 Rule of explicit migration.
+- **Out of scope:** symlinks from legacy to canonical paths. Rejected in ADR-048.
+- **Out of scope:** moving `AGENTS.md`, `.mcp.json`, or `CLAUDE.md`. These are external conventions; their location is governed by the consuming tools, not Product (ADR-048 Rule of external conventions).
+- **Out of scope:** cross-repo path templates or mono-repo support with multiple `.product/` roots per workspace.
+- **Out of scope:** migration of historical `requests.jsonl` path values. FT-051 already made log paths repo-root-relative; moving the log file does not require rewriting its contents.
+- **Out of scope:** renaming `product.toml` → `config.toml` at the repo root. Inside `.product/`, the canonical name is `config.toml`. At the root (legacy), the file remains `product.toml` for back-compat.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- **Auto-migration on upgrade.** Silent file moves can break CI, hooks, and contributors' working trees. The opt-in `product migrate consolidate` command is safer and auditable (ADR-048 Rule of explicit migration).
+- **Symlinks from legacy to canonical paths.** Symlinks are fragile across platforms and search/archive tooling often follows them, defeating the consolidation goal. Rejected in ADR-048.
+- **Moving `AGENTS.md` / `.mcp.json` / `CLAUDE.md`.** Out of scope per the ADR's Rule of external conventions. Their location is dictated by the consuming tools; teams that want to relocate them use `[agent-context].output-file`.
+- **Cross-repo path templates.** A mono-repo with `.product/` per sub-package is a different problem. This feature targets one `.product/` per repo.
+- **Migration of historical `requests.jsonl` path values.** FT-051 already made the log paths relative; moving the log file does not require touching its contents.
+- **Renaming `product.toml` → `config.toml` at the repo root.** Inside `.product/`, the new canonical name is `config.toml`. At the root, the file remains `product.toml` for back-compat.
+- **Diátaxis guide relocation.** `docs/guide/` is currently outside Product's scan paths. Whether to move guides under `.product/guide/` or formalise their place in `docs/` is deferred.
+- **Mono-repo support.** Multiple `.product/` roots under a workspace with discovery picking the nearest one is deferred as a distinct feature.

@@ -118,40 +118,66 @@ Betweenness centrality scores are written into the TTL export on `graph rebuild`
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+Product builds an in-memory directed knowledge graph from YAML front-matter on every invocation (ADR-003). The graph is never persisted — it is always correct by construction. Four graph-theoretic algorithms are layered on top (ADR-012): topological sort (Kahn's) for feature ordering, BFS to configurable depth for context assembly, Brandes' betweenness centrality for ADR importance ranking, and reverse-graph BFS for impact analysis. The graph is also exportable as RDF Turtle via `product graph rebuild`.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- All artifact files scanned from paths configured in `product.toml` (`docs/features/`, `docs/adrs/`, `docs/tests/`)
+- Front-matter fields that declare edges: `adrs`, `tests` (Feature→ADR, Feature→TC), `validates.features`, `validates.adrs` (TC→Feature, TC→ADR), `supersedes` / `superseded-by` (ADR→ADR), `depends-on` (Feature→Feature)
+- Command-specific arguments: `--depth N` for BFS, `--top N` for centrality, artifact ID for impact analysis
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- In-memory `KnowledgeGraph` struct (nodes: `HashMap<id, Feature|Adr|TestCriterion|Dependency|Pattern>`, edges: `Vec<Edge>`, forward/reverse adjacency lists)
+- `product graph rebuild`: RDF Turtle file at `index.ttl` with betweenness centrality scores written into the TTL export
+- `product graph central`: ranked ADR list by betweenness centrality score
+- `product impact ADR-XXX`: impact set report — direct and transitive dependents, summary of passing tests at risk
+- `product context FT-XXX --depth N`: context bundle assembled via BFS to depth N
+- `product feature next`: next feature in topological order respecting phase gates
+- SPARQL query results via `product graph query` (embedded Oxigraph, ADR-008)
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+Stateless between invocations. The graph is rebuilt from files on every command (ADR-003). `index.ttl` is an export snapshot — Product never reads it as input. If `index.ttl` is stale, `product graph rebuild` regenerates it.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. Scan artifact directories, parse YAML front-matter for all files; collect parse errors.
+2. Build `KnowledgeGraph`: insert nodes, materialise directed edges from declared IDs, build forward and reverse adjacency lists.
+3. Topological sort (Kahn's): validates the `depends-on` DAG; a cycle is E003 (hard error). Used by `product feature next` to determine correct implementation ordering and by `product checklist generate` for feature ordering.
+4. BFS (depth N): traverses forward and reverse edges from a seed node up to depth N, deduplicating by first-encounter. Default depth is 1 (direct links only); `--depth 2` includes transitive context.
+5. Betweenness centrality (Brandes' algorithm, O(V·E)): computed over ADR and Feature nodes; scores are included in `index.ttl` exports and used to order ADRs within context bundles.
+6. Reverse-graph BFS: starting from any node, traverses reversed edges to compute the full reachable impact set. Used by `product impact`.
+7. SPARQL queries: the in-memory graph is loaded into an embedded Oxigraph store on `graph query` invocations (ADR-008); SPARQL 1.1 SELECT/CONSTRUCT/ASK/DESCRIBE are supported.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- The graph is always rebuilt from files; it cannot be stale with respect to the current file state (ADR-003).
+- A `depends-on` cycle is a hard error E003 — cycles cannot be resolved automatically (ADR-012).
+- A `supersedes` cycle is a hard error E004.
+- Phase label disagreement with topological order produces W005 (warning, not error).
+- Depth ≥ 3 with > 50 nodes in the bundle emits a warning to stderr; the bundle is still produced (ADR-012).
+- `index.ttl` is never read as a graph source by the CLI; it is write-only export (ADR-003).
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- E001: malformed front-matter in any artifact file; reported with file path and line.
+- E002: referenced artifact ID does not exist in the graph (broken link).
+- E003: cycle in `depends-on` DAG.
+- E004: cycle in ADR `supersedes` chain.
+- E008: `schema-version` in `product.toml` exceeds the binary's supported version.
+- SPARQL query errors from Oxigraph are surfaced with the query text and the error message.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- The graph covers only artifacts in the configured scan paths; files outside those paths are not nodes.
+- Betweenness centrality excludes Pattern nodes by default for backward-compatible output of `product graph central` (opt-in via `--include-patterns`).
+- SPARQL is available via `product graph query` only; other commands use the typed in-memory model, not SPARQL.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Persistent graph storage (never implemented; ADR-003 explicitly rejects this).
+- Graph mutation (the graph is read-only; mutations happen via artifact file writes through the command adapters).
+- Full RDF reasoning or OWL inference (only SPARQL 1.1 query over asserted triples).

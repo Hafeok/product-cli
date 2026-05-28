@@ -69,40 +69,57 @@ This is used by:
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+FT-006 implements reverse-graph reachability analysis via the `product impact` command (ADR-012, Capability 4). Given any artifact — an ADR, Feature, or Test Criterion — the command traverses the reverse of the knowledge graph to compute the full set of artifacts that depend on the target, grouped by hop distance. This gives developers and agents precise change-blast-radius information before modifying a shared architectural decision, superseding an ADR, or retiring a feature. Impact analysis is also triggered automatically when `product adr status ADR-XXX superseded` is called, printing the impact report before the status write is committed. The implementation operates on the same in-memory graph built from front-matter on every invocation; no separate index is needed.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- CLI invocation: `product impact <ARTIFACT-ID>` where `ARTIFACT-ID` is a valid Feature, ADR, or Test Criterion ID present in the graph.
+- Optional flag `--format json` to request machine-readable output.
+- The in-memory knowledge graph derived from all front-matter on the current invocation.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Text output (default)**: a grouped report listing direct dependents (features, ADRs, tests reachable at hop-distance 1 in the reverse graph) and transitive dependents (hop-distance ≥ 2), with each artifact's current status. The summary line highlights any passing tests in the affected set — these are the highest-urgency items when superseding a decision.
+- **JSON output (`--format json`)**: a structured object with `direct` and `transitive` arrays, each containing artifact ID, type, title, and status. Suitable for CI annotation.
+- **Exit code**: 0 on success regardless of whether dependents are found; 1 on error (e.g. artifact ID not found).
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+Stateless. The reverse graph is derived on the fly from the forward graph that is built from front-matter on every invocation. No impact cache or persistent impact index is maintained.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. Product builds the in-memory knowledge graph from all front-matter in the configured directories.
+2. Product constructs the reverse graph by inverting every edge: for each forward edge A → B, the reverse graph contains B → A.
+3. Product performs a BFS from the target artifact node in the reverse graph, collecting all reachable nodes grouped by hop depth.
+4. The output is split into direct dependents (depth 1) and transitive dependents (depth ≥ 2). Within each group, artifacts are further grouped by type (Features, ADRs, Test Criteria).
+5. Passing tests that appear in the affected set are flagged in the summary line, indicating that currently passing tests may be invalidated by the change to the target artifact.
+6. When invoked automatically from `product adr status ADR-XXX superseded`, the impact report is printed to stdout before the status write is performed. The write proceeds regardless of the impact report content — the report is informational, not a gate.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Every artifact reachable from the target in the reverse graph appears exactly once in the output, regardless of the number of paths connecting them (deduplication by artifact ID).
+- The hop-distance grouping is accurate: a node at hop distance 1 is a direct dependent, a node at hop distance ≥ 2 is a transitive dependent.
+- Betweenness centrality is not recomputed for impact analysis; impact analysis uses only reverse-graph BFS (ADR-012, Capability 4).
+- The impact command is read-only; it never modifies any artifact file.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Target artifact ID not found in the graph → error E002 on stderr, exit code 1.
+- Target artifact ID is syntactically invalid → error E005 on stderr, exit code 1.
+- Graph build errors (malformed front-matter) → E001 on stderr for the affected files; the graph is built from the remaining valid files and impact analysis proceeds on the partial graph (consistent with ADR-013 error recovery behaviour).
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Impact analysis traverses all five edge types in reverse (`implementedBy`, `validatedBy`, `testedBy`, `supersedes`, `depends-on`) — not a subset. A node reachable via any edge type is included in the affected set.
+- The command reports the affected set but does not suggest or perform remediation. Deciding how to respond to a large impact set is left to the developer or agent.
+- Impact analysis does not filter by artifact status. A `planned` feature is included in the affected set even if it has not yet been implemented.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Automatic remediation or bulk status updates for affected artifacts — impact analysis is read-only.
+- Betweenness centrality ranking (`product graph central`) — a separate capability defined in ADR-012 (Capability 3) and surfaced by FT-010 / FT-016.
+- Context bundle assembly for the affected set — use `product context` on individual affected features if context is needed.
+- Filtering the impact set by status, phase, or domain — the full reachable set is always reported; post-processing is the caller's responsibility.

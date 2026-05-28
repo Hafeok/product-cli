@@ -82,40 +82,69 @@ The bundle opens with an AISP-influenced formal header block (see ADR-011) that 
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+`product context FT-XXX` assembles a deterministic markdown bundle containing a feature, its linked ADRs, and its linked test criteria. The bundle is the primary input to LLM implementation agents (ADR-006). It opens with an AISP-influenced formal header block (`⟦Ω:Bundle⟧`) that declares the bundle's identity and aggregate evidence metrics, allowing an agent to assess specification quality before reading full content. YAML front-matter is stripped from all included sections; formal blocks in test criteria are preserved verbatim.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Feature ID (e.g. `FT-001`) — required positional argument to `product context`
+- `--depth N` — optional BFS traversal depth (default 1); depth 2 includes transitive ADRs and dependencies (ADR-012)
+- `--order id` — optional flag to override centrality-based ADR ordering and sort by ID ascending
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+A single markdown document on stdout with this fixed structure:
+1. Bundle header: `# Context Bundle: FT-XXX — Title`
+2. AISP formal block `⟦Ω:Bundle⟧{...}` listing feature ID, phase, status, generated timestamp, all ADR IDs (`implementedBy`), all TC IDs (`validatedBy`)
+3. Aggregate evidence line `⟦Ε⟧⟨δ≜N;φ≜N;τ≜◊⁺⟩` (mean confidence across linked TCs, formal-block coverage percentage)
+4. `---` separator
+5. Feature content (front-matter stripped)
+6. ADRs in three-tier order: cross-cutting ADRs (by betweenness centrality) → domain ADRs (top-2 per declared domain by centrality) → feature-linked ADRs; superseded ADRs annotated `[SUPERSEDED by ADR-XXX]`
+7. Dependency artifacts if any linked
+8. Test criteria ordered by phase then type: exit-criteria → invariant → chaos → absence → scenario → benchmark
+
+If `--depth N ≥ 3` and the resulting bundle exceeds 50 nodes, a warning is emitted to stderr; the bundle is still produced.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+Stateless. No data is retained between invocations. The graph is rebuilt from YAML front-matter on each call (ADR-003). The `⟦Ε⟧` aggregate metrics are computed fresh each time from the linked TCs' evidence blocks.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. Parse all artifact files to build the in-memory knowledge graph.
+2. Locate the requested feature node; return an error if not found.
+3. BFS from the feature node to the configured depth, collecting all reachable ADR and TC IDs.
+4. Apply three-tier ADR ordering: all cross-cutting ADRs first (by centrality), then domain ADRs (top-2 per feature domain by centrality), then directly linked feature ADRs.
+5. Sort TCs by phase ascending then by type sort key (exit-criteria first, benchmark last).
+6. Compute `δ` (mean of all evidence block `δ` values) and `φ` (percentage of TCs with any formal block).
+7. Render the bundle: strip front-matter from each section, preserve formal blocks verbatim.
+8. Deduplication: any node reachable via multiple paths appears once, at its first-encountered position.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Bundle output is deterministic: two invocations of `product context FT-XXX` on the same repository produce identical output (barring clock-only differences in the `generated` timestamp field).
+- YAML front-matter is never present in bundle output (TC-017).
+- The `⟦Ω:Bundle⟧` header lists every ADR ID and TC ID that appears in the bundle body (TC-018).
+- Superseded ADRs appear with `[SUPERSEDED by ADR-XXX]` annotation, never silently dropped (TC-019).
+- Cross-cutting ADRs are always included regardless of explicit feature links (ADR-025).
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Unknown feature ID: exits with a non-zero status and a message indicating the feature was not found.
+- Malformed front-matter in any artifact: reported as E001 via the graph build phase; the bundle command inherits the graph's parse-error collection and may report diagnostics to stderr before producing (possibly partial) output.
+- Depth ≥ 3 with > 50 nodes: warning to stderr, bundle produced (not blocked).
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Does not invoke any LLM or network service; purely a local file-reading and rendering operation.
+- Does not write any files; output is stdout only.
+- Does not infer `depends-on` edges or additional links beyond what front-matter declares.
+- Token budget management is the caller's responsibility — Product assembles a complete bundle; truncation is not performed (ADR-006).
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Streaming or incremental context delivery (the bundle is assembled in full before output).
+- Per-model token budget trimming or context window management.
+- Rendering formats other than markdown (JSON output of the bundle content is not provided by this feature).
+- Authoring or mutating any artifact; this is a read-only assembly command.

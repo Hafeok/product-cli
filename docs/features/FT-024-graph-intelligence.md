@@ -86,40 +86,66 @@ product graph stats                # artifact counts, link density, centrality s
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+Graph Intelligence provides structural analysis of the knowledge graph beyond basic navigation: betweenness centrality ranking of ADRs (Brandes' algorithm), SPARQL 1.1 queries via embedded Oxigraph (ADR-008), impact analysis via reverse-graph reachability, and graph statistics including `phi` (formal block coverage). These capabilities surface latent structural information — which decisions are foundational, what is affected by a change, how connected the graph is — without requiring manual curation (ADR-012).
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product graph central [--top N] [--all]`**: no required arguments; `--top` configures the count (default 10); `--all` returns the full ranked list
+- **`product graph query "SELECT ..."`**: SPARQL 1.1 query string; executed against the TTL-exported in-memory graph
+- **`product graph stats`**: no arguments
+- **`product impact ADR-XXX | FT-XXX | TC-XXX`**: artifact ID to analyse
+- **`product graph rebuild`**: no arguments; exports the graph to TTL and recomputes centrality scores for embedding in the export
+- **Context bundle requests** (`product context FT-XXX --depth N`): depth flag controls BFS traversal; default depth 1, opt-in depth 2 for transitive context
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product graph central`**: ranked table of ADRs with betweenness centrality scores (Rank / ID / Centrality / Title)
+- **`product graph query`**: SPARQL result set in tabular or JSON format
+- **`product graph stats`**: artifact counts, link density, centrality summary (mean, max, min, structural hubs), `phi` across TCs
+- **`product impact ADR-XXX`**: direct dependents (features, tests) and transitive dependents (features depending on linked features, their tests); summary line counts passing tests that may be invalidated
+- **`product context FT-XXX --depth 2`**: context bundle with transitive ADRs and tests reachable within N hops via BFS; ADRs ordered by centrality descending within the bundle
+- **TTL export** (via `product graph rebuild`): RDF serialisation of the graph including centrality scores as literals
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+The graph is rebuilt from YAML front-matter on every invocation (ADR-003). Centrality scores, SPARQL query results, and impact sets are computed on-demand from the in-memory graph. No persistent graph store exists. Centrality scores written into the TTL export are recomputed fresh on each `product graph rebuild`.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Betweenness centrality**: Brandes' algorithm runs over the bipartite graph of features, ADRs, and TCs. ADR nodes are ranked by betweenness — the fraction of shortest paths between all node pairs that pass through them. High betweenness indicates structural bridging: the ADR connects otherwise loosely linked subgraphs.
+2. **SPARQL queries**: the in-memory graph is loaded into an Oxigraph in-memory store and the user's SPARQL 1.1 query is executed. All query forms (SELECT, CONSTRUCT, ASK, DESCRIBE) are supported.
+3. **BFS context assembly**: `product context FT-XXX --depth N` performs BFS from the seed feature, following all edge types (implementedBy, validatedBy, testedBy, supersedes, depends-on). Each node is included once (first-encountered deduplication). At depth ≥ 3, a warning is emitted to stderr if the bundle exceeds 50 nodes.
+4. **Impact analysis**: the reverse graph (all edges inverted) is constructed in memory. BFS from the target artifact returns all nodes that have a path to it in the forward graph — the full affected set.
+5. **ADR supersession integration**: when `product adr status ADR-XXX superseded --by ADR-YYY` is run, impact analysis runs automatically and prints the impact summary before completing the status change.
+6. **Context bundle ordering**: ADRs in a depth-1 bundle are ordered by betweenness centrality descending. Override with `--order id` for ascending ID order.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `product graph central` on the Product repository returns ADR-001 as rank 1 (or the most structurally linked ADR as determined by the graph at the time of invocation).
+- Centrality computation completes in < 100ms on a graph of 200 nodes (O(V·E) Brandes' algorithm).
+- BFS deduplication is exact — a node appearing via multiple traversal paths is included exactly once in the bundle.
+- Impact analysis uses the reverse of the same graph used for forward traversal. There is no separate reverse-graph construction step that could diverge.
+- `product graph query` never touches disk during query execution — Oxigraph operates in in-memory mode only (ADR-008).
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Cycle in `depends-on` DAG**: hard error (exit 1) — cycles represent contradictory dependency claims and are reported by `product graph check`.
+- **Invalid SPARQL**: Oxigraph returns a parse error; `product graph query` prints it and exits 1.
+- **Depth ≥ 3 bundle warning**: warning on stderr, bundle produced without blocking.
+- **Empty impact set**: `product impact` exits 0 and prints "No dependents found" — not an error.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Graph Intelligence operates on the in-memory graph derived from YAML front-matter. It does not analyse source code, git history, or any files outside the Product-managed document directories.
+- SPARQL queries execute read-only against the in-memory graph. `product graph query` provides no mutation capability.
+- Centrality and impact scores are computed, not declared. They reflect the graph topology at invocation time and may change as the graph evolves.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Persistent graph storage (the graph is always rebuilt from front-matter per ADR-003)
+- External SPARQL endpoints (Oxigraph is embedded, not a service)
+- Graph visualisation (terminal output only; no web UI or graph rendering)
+- PageRank or other centrality measures (betweenness centrality is the correct model for structural bridging)
+- LLM-assisted graph analysis (graph algorithms are deterministic; LLM analysis is the domain of gap analysis and drift detection)

@@ -103,40 +103,65 @@ The phone conversation is the authoring session. The desktop is the implementati
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+Authoring sessions are structured interactions between a developer and an LLM agent (typically Claude Code or claude.ai) in which the agent has access to the Product MCP tool surface and is guided by a versioned system prompt. Product owns the system prompts (stored in `benchmarks/prompts/`) and the pre-commit review command (`product adr review --staged`). Product does not invoke agents — it provides the knowledge resources agents need (ADR-022). Three session types are supported: `feature` (adding new capability), `adr` (adding an architectural decision), and `review` (spec gardening). The phone workflow — authoring via claude.ai connected to a running `product mcp --http` server — is a first-class supported path.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Session type**: one of `feature`, `adr`, `review` — determines which versioned system prompt is loaded
+- **System prompt files**: stored at `benchmarks/prompts/author-{type}-v{N}.md`; version configured per type in `product.toml` under `[author]`
+- **`product prompts init`**: scaffolds default prompt files if absent
+- **`product prompts get TYPE`**: prints prompt content to stdout for piping to any agent
+- **`product install-hooks`**: writes `.git/hooks/pre-commit` to run `product adr review --staged` before each commit
+- **Staged ADR files**: read by `product adr review --staged` via `git diff --cached --name-only`
+- **`product.toml` `[author]` section**: configures prompt versions and agent name
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`benchmarks/prompts/` files**: versioned markdown prompt files readable by any agent platform
+- **`.git/hooks/pre-commit`**: executable hook script installed by `product install-hooks`
+- **`product adr review --staged` output**: rustc-style diagnostic messages (ADR-013) on stdout for structural findings and LLM-assisted consistency findings; advisory only (exits 0 regardless of findings)
+- **`product prompts list`**: table of available prompts and their versions
+- **`product prompts get TYPE`**: prompt content to stdout (for piping)
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Versioned prompt files in `benchmarks/prompts/` are the persistent state for authoring sessions. They are version-controlled alongside the graph.
+- The pre-commit hook is a file in `.git/hooks/pre-commit`. Its presence is checked by `product install-hooks` before overwriting.
+- No session state is maintained between invocations — each `product adr review --staged` call reads staged files fresh.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. `product prompts init` creates default prompt files if they do not exist. It does not overwrite existing files.
+2. `product prompts get TYPE` prints the configured version of the prompt to stdout. Piping to an agent (`product prompts get author-feature | my-agent`) is the intended composition.
+3. `product install-hooks` writes `.git/hooks/pre-commit`. The hook runs `product adr review --staged` for any staged ADR files. It always exits 0 — the hook is advisory.
+4. `product adr review --staged` performs two passes: (a) structural checks (local, instant, no LLM) — required sections, status field, at least one linked feature and TC, evidence blocks on invariant blocks; (b) LLM review (single call, ~3s) — internal consistency, contradiction with linked ADRs, missing test suggestions.
+5. In a claude.ai Project configured with the `author-feature-v1.md` content as project instructions and the Product HTTP MCP server as a connector, every new conversation is automatically a graph-aware authoring session — no CLI command required.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Product does not invoke agents. It provides prompts and review commands; agent invocation is the harness's responsibility (ADR-022).
+- System prompts are user-modifiable files, not embedded in the binary. A Product upgrade never silently changes an authoring session's behaviour.
+- `product adr review --staged` always exits 0. It never blocks a commit — the CI gap analysis gate is the enforcement point.
+- Prompt versions are independent per session type. Incrementing `feature-prompt-version` does not affect `adr-prompt-version`.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- If a prompt file referenced by `product.toml` does not exist, `product prompts get TYPE` exits 1 with an E-class message suggesting `product prompts init`.
+- If the LLM call in `product adr review --staged` fails (network error, timeout), structural findings are still printed and the hook exits 0. The LLM failure is noted on stderr as advisory.
+- `product prompts update TYPE` bumps to the latest built-in version; if the file has local modifications, the command warns and requires `--force` to overwrite.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Product owns the prompt files and the pre-commit review command. It does not own agent lifecycle, agent invocation, or what happens between prompt delivery and the agent producing output.
+- The pre-commit hook is advisory. Enforcement of specification quality is via CI gap analysis (`product gap check --changed`), not the hook.
+- `product adr review --staged` reviews only staged ADR files. It does not review feature files, TC files, or unstaged changes.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Agent invocation (`product author feature` as a CLI command that starts Claude Code — rejected, see ADR-022)
+- Prompts embedded in the binary (user-modifiable files in the repo are the correct design)
+- Blocking pre-commit hooks that prevent commits on spec quality grounds
+- Session state or conversational history between `product adr review` invocations
+- LLM-driven auto-fix of structural ADR issues (review is read-only and advisory)

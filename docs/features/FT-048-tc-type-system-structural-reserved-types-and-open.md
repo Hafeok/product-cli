@@ -232,36 +232,70 @@ See TC-616 (exit criteria) for the consolidated check-list.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `product.toml` — `[tc-types]` section with a `custom: [String]` array; default is empty. Read at config-load time before any subcommand executes.
+- TC YAML front-matter with a `type:` field — validated against the union of built-in types and configured custom types.
+- `product graph check` — reads the graph and config; evaluates E006 (unknown type) and E017 (reserved name in custom list).
+- `product request {validate,apply}` — validates TC `tc-type` fields in the request document against the same type set.
+- `product context` / `product agent-context` — reads the graph, config, and TC type metadata for bundle ordering and schema rendering.
+- `product_schema` — reads config for the custom type list; renders the grouped schema.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Config load (startup):** E017 if `[tc-types].custom` contains any reserved structural type name (`exit-criteria`, `invariant`, `chaos`, `absence`); Product refuses to start and lists the offending names.
+- **`product graph check`:** E006 for any TC whose `type` value is not in the valid set (built-in + configured custom); the E006 hint enumerates both the built-in types and the configured custom types.
+- **`product request validate` / `product request apply`:** E006 with the same hint for TC artifacts with an unknown type in the request document.
+- **`product context FT-XXX`:** TCs ordered in the bundle by the six-position built-in sequence (`exit-criteria` → `invariant` → `chaos` → `absence` → `scenario` → `benchmark`) followed by alphabetical custom-type order.
+- **`product agent-context` / `product_schema`:** schema grouped as structural (4 types with mechanics documented) / built-in descriptive (2 types) / custom (list sourced from `product.toml`). TC schema includes a cross-reference line after the `type:` field pointing at formal block requirements.
+- **Mechanics (unchanged):** `exit-criteria` enables phase gate; `invariant` and `chaos` require formal blocks (W004 when absent); `absence` enforces `validates.features` empty + `validates.adrs` non-empty (FT-047). Custom types carry no Product mechanics.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product.toml`** — `[tc-types].custom` list is read-only from Product's perspective; the user edits it. Validated at startup; startup fails on reserved-name collision (E017).
+- **TC front-matter `type:` field** — the `TcType` enum in `src/types.rs` carries four structural variants (`ExitCriteria`, `Invariant`, `Chaos`, `Absence`), two built-in descriptive variants (`Scenario`, `Benchmark`), and a `Custom(String)` variant. Custom values are validated against the configured list at parse time and graph-check time.
+- No persistent state beyond front-matter and config. The type vocabulary is an in-memory union of built-ins and the `product.toml` custom list, rebuilt on every invocation.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Config-load validation.** On every Product invocation, before any subcommand executes, `product.toml` is parsed. If `[tc-types].custom` contains any of `["exit-criteria", "invariant", "chaos", "absence"]`, Product exits 1 with E017 listing the offending names. The subcommand does not run.
+2. **Type validation at parse time.** When the parser reads a TC front-matter `type:` value, it looks it up in the union of built-in types and `[tc-types].custom`. Unknown values produce an E006 finding; the artifact is still included in the graph but marked with an error.
+3. **Type validation in `product graph check`.** The `check_unknown_tc_types` rule iterates every TC and emits E006 for any type not in the valid set. The E006 message enumerates both built-in types and the configured custom list.
+4. **Type validation in `product request validate` / `product request apply`.** The request validator runs the same type lookup on every TC artifact in the request. E006 with the same hint structure as graph check.
+5. **Bundle ordering.** `product context` sorts TCs using a comparator keyed on `(category, position, name)` where `category=0` for built-ins (ordered by the six-position fixed sequence) and `category=1` for custom types (sorted alphabetically by type name). The sort key is implemented in `TcType::bundle_sort_key()` in `src/types.rs`.
+6. **Schema rendering.** `product agent-context` / `product_schema` render the TC schema with three groups: structural types (with their mechanics documented), built-in descriptive types, and custom types (sourced from `product.toml`). A cross-reference line after `type:` in the TC schema points at formal block requirements for `invariant` / `chaos` / `exit-criteria`.
+7. **Custom types carry no mechanics.** A TC with a custom type participates in bundles, runner execution, and status tracking identically to a `scenario` TC. No Product-level mechanic is triggered by custom type names.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- A reserved structural type name in `[tc-types].custom` always causes E017 at startup; Product never starts with a colliding custom type.
+- The four structural type names are immutable identifiers in the codebase; they cannot be renamed without a separate ADR.
+- Custom types carry no Product mechanics; all mechanics (phase gate, formal block requirement, absence validation) are triggered only by the four structural type names.
+- Bundle ordering is deterministic: the six-position built-in sequence followed by alphabetical custom types, with a stable secondary sort by TC id within each type bucket.
+- `product request apply` and `product graph check` use the same type validation logic (same code path or same function call); they produce identical E006 findings for the same invalid type value.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+| Code | Condition |
+|---|---|
+| E017 | Reserved structural type name in `[tc-types].custom` — Product refuses to start; lists offending names |
+| E006 | TC `type` value not in the valid set (built-in + configured custom); hint enumerates both sets |
+| W004 | `invariant` or `chaos` TC without a `⟦Γ:Invariants⟧` or equivalent formal block in its body |
+
+E017 fires before any subcommand executes, ensuring the invalid config never reaches runtime validation.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Per-custom-type mechanics (e.g. "make `smoke` skip in CI") are not supported; custom types carry no Product mechanics.
+- Migration of existing TCs to new type names is not performed by this feature; teams adopt custom types for new TCs.
+- A curated catalogue of "blessed" custom types is not shipped; the spec lists worked examples and teams choose what fits their project.
+- The `level:` field (`level: integration`, `level: unit`, etc.) referenced in spec illustrations is not introduced or specified by this feature.
+- Renaming any of the four reserved structural types is not in scope; they are immutable identifiers by design.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Per-custom-type mechanics: custom types are descriptive metadata only; no Product behaviour is attached to them.
+- Migration of existing TCs to new type names: teams adopt custom types for new TCs at their own pace.
+- A curated "blessed" custom-type catalogue shipped with Product: the spec provides worked examples; the choice of custom types is project-specific.
+- The `level:` field referenced in spec examples: not implemented here; a separate ADR is needed if pursued.
+- Renaming any of the four reserved structural types: they are immutable identifiers in the codebase.

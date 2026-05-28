@@ -204,36 +204,86 @@ See TC-576 (exit criteria) for the consolidated check-list.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `product gap bundle ADR-XXX` — one ADR ID; assembles the gap-analysis input bundle for that ADR.
+- `product gap bundle --all` — every ADR in the repository.
+- `product gap bundle --changed` — ADRs modified since the last run window.
+- `product gap bundle [target] --format json` — machine-readable JSON output.
+- `product drift diff FT-XXX` — one feature ID; assembles the drift-check input bundle for that feature.
+- `product drift diff --all-complete` — every feature with a completion tag.
+- `product drift diff --changed` — features touched by recent commits.
+- `product drift diff [target] --format json` — machine-readable output.
+- `product adr conflict-bundle ADR-XXX` — one proposed ADR; assembles the conflict-check bundle.
+- `product gap check` — structural-only; reads the knowledge graph.
+- `product drift check FT-XXX` — structural-only; reads git tags and the implementation file tree.
+- `product adr check-conflicts ADR-XXX` — structural-only; reads the graph for supersedes cycles, symmetry, domain overlap, scope consistency.
+- `product adr review --staged` — structural-only; reads the staged ADR file.
+- Prompt resource files in `benchmarks/prompts/` (`gap-analysis-v1.md`, `drift-analysis-v1.md`, `conflict-check-v1.md`) — read by the bundle commands when constructing the Instructions section.
+- `product.toml` — reads `source-roots` and `ignore` under `[drift]`; the `[gap-analysis]` section and `max-files-per-adr` under `[drift]` are removed and emit W022 if still present.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product gap bundle`** — a self-contained markdown document on stdout with an `## Instructions` section (listing G001–G008 gap types with required output format) and a `## Context Bundle` section (depth-2 context bundle for the ADR). Suitable for piping directly to an LLM.
+- **`product drift diff`** — a markdown document on stdout with an `## Implementation Anchor` section (feature, tag, file count), a `## Changes Since Completion` section (bounded git diff), and a `## Governing ADRs` section (depth-2 context bundle).
+- **`product adr conflict-bundle`** — a markdown document on stdout with the proposed ADR plus the set of related ADRs (cross-cutting + same-domain + top-N by centrality) in the `## Existing ADRs` section.
+- **`product gap check`** (structural) — findings G002, G003, G008, and optionally G001 (advisory heuristic keyword scan) in the existing structural gap-check stream. G004/G005/G006/G007 are removed (require semantic understanding; moved to `gap bundle` instructions).
+- **`product drift check FT-XXX`** (structural) — lists implementation files changed since the completion tag; exits 0 (no changes) or 2 (changes detected). W020 if the completion tag does not exist.
+- **`product adr check-conflicts ADR-XXX`** (structural) — cycle detection, symmetry check, domain-overlap, scope-consistency findings.
+- **`product adr review --staged`** (structural) — checks five required sections present, `status` valid, ≥1 feature linked, ≥1 TC linked, evidence blocks on any `⟦Γ:Invariants⟧`.
+- **`product prompts list/get/update`** — exposes the three new prompt files alongside existing authoring prompts.
+- **W022** — emitted at config-load time when the deprecated `[gap-analysis]` section or `max-files-per-adr` key is present in `product.toml`.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Stateless. Bundle commands are deterministic functions of graph state and git history; they regenerate on every call with no caching.
+- `gaps.json` and `drift.json` — structural-only findings continue to write to these files using the same ID scheme as before. LLM-detected findings (from bundles piped externally) are outside Product's scope.
+- Prompt resource files in `benchmarks/prompts/` — versioned files on disk (`-v{N}.md` naming); not mutated by the bundle commands.
+- `product.toml` — `[gap-analysis]` section and `max-files-per-adr` are removed from the schema; existing configs with these keys emit W022 on first load.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Bundle commands write nothing to disk.** `product gap bundle`, `product drift diff`, and `product adr conflict-bundle` write exclusively to stdout. They make zero network calls, zero LLM calls, and zero filesystem writes.
+2. **`product gap bundle ADR-XXX`** loads the gap-analysis prompt from `benchmarks/prompts/gap-analysis-v1.md`, prepends it as the `## Instructions` section, then assembles the depth-2 context bundle for the ADR via `context::assemble_bundle` and appends it as `## Context Bundle`.
+3. **`product drift diff FT-XXX`** checks for the completion tag via `tags::check_drift_since_tag`, writes a `## Changes Since Completion` section with the bounded git diff (implementation files only since the tag), then appends the governing ADR depth-2 bundle. If the tag does not exist, emits W020 and produces an empty Changes section.
+4. **`product adr conflict-bundle ADR-XXX`** assembles the proposed ADR plus every cross-cutting ADR, same-domain ADR, and top-5 ADRs by centrality into the `## Existing ADRs` section.
+5. **`product gap check` (structural)** checks G002 (invariant block with no TC), G003 (no rejected-alternatives section), G008 (DEP with no governing ADR). G001 is an advisory heuristic keyword scan. G004/G005/G006/G007 are removed; they require semantic understanding and are captured only in the bundle's Instructions section.
+6. **`product drift check FT-XXX` (structural)** confirms the completion tag exists (W020 otherwise), lists implementation files changed since the tag, and exits 0 or 2. No LLM call, no semantic judgment.
+7. **`product adr review --staged` (structural)** checks the five required sections, `status`, links, and evidence blocks. No LLM.
+8. **`product adr check-conflicts ADR-XXX` (structural)** checks supersedes cycles, symmetry, domain overlap, and scope consistency. No LLM.
+9. **W022 on deprecated config.** If `product.toml` contains `[gap-analysis]` or `max-files-per-adr` under `[drift]`, W022 is emitted at config-load time on every invocation. The keys are ignored; the graph builds normally.
+10. **Prompt versioning.** Prompt files follow the `-v{N}.md` naming convention; `product prompts list/get/update` manages them alongside authoring prompts. W-class warning on `product prompts list` if suppressions were created under an older prompt version.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Bundle commands make zero network calls and zero LLM calls. Verified by TC-566 (asserts no network activity and sub-second completion).
+- Structural commands (`product gap check`, `product drift check`, `product adr check-conflicts`, `product adr review --staged`) make zero network calls.
+- The `product verify` pipeline (FT-044) retains only structural `product gap check` and `product drift check` in its stages, never the LLM-dependent bundle variants.
+- `gaps.json` suppression IDs created under the old LLM-dependent analysis regime remain valid; they are emitted as W-class warnings (not errors) on the first structural-only run.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+| Code | Condition |
+|---|---|
+| W020 | Completion tag does not exist for the feature; `product drift diff` still emits a well-formed bundle with an empty Changes section |
+| W022 | Deprecated `[gap-analysis]` config key or `max-files-per-adr` under `[drift]` present in `product.toml` |
+| G002 | ADR has a formal `⟦Γ:Invariants⟧` block but no linked scenario/chaos TC |
+| G003 | ADR is missing a rejected-alternatives section |
+| G008 | Feature uses a DEP with no governing ADR (equivalent to E013 in graph check) |
+| G001 | Advisory heuristic: testable-sounding language without a linked TC (keyword scan; non-blocking) |
+| (exit code) | `product drift check FT-XXX` exits 2 when changes are detected; exits 0 when clean |
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- User-side LLM orchestration is out of scope: Product emits the bundle; the user pipes it to their LLM of choice. No built-in `product gap bundle | run-llm` helper.
+- Caching of bundle output is not implemented; bundles are regenerated on every call.
+- Embedding-based similarity for gap finding is excluded (rejected in ADR-019).
+- Migration of existing `gaps.json` suppressions is not performed; suppressions remain valid and are preserved, but may emit W-class warnings on the first structural run.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- User-side LLM orchestration: Product emits bundles; piping to an LLM is the user's responsibility. No built-in `product gap bundle | run-llm` helper is provided.
+- Caching of bundle output: bundles are deterministic functions of graph state and are regenerated on every call.
+- Migration of existing `gaps.json` suppressions created under the old LLM-dependent analysis: suppressions remain valid; they may surface as W-class warnings on first structural run.
+- Embedding-based similarity for finding matching: rejected in ADR-019 and not reintroduced.
+- G004/G005/G006/G007 gap types in `product gap check`: these require semantic understanding and are only documented in the bundle's Instructions section for the user's LLM to check.

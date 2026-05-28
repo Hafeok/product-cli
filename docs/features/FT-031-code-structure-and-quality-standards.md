@@ -40,36 +40,60 @@ Enforce structural quality rules with measurable thresholds (ADR-029): file size
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Source files in `src/**/*.rs` (the 400-line and 300-line file length checks and single-responsibility doc comment rule apply to this tree; `tests/` and `benches/` are exempt).
+- Environment variables `FILE_LENGTH_HARD` (default 400) and `FILE_LENGTH_WARN` (default 300) and `FN_LENGTH_HARD` (default 40) and `FN_LENGTH_WARN` (default 30) may override defaults.
+- Invocation of `product verify --platform`, which triggers the bash enforcement scripts.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Exit 0** from each script when all files pass their respective check.
+- **Exit 2** (warning) when files exceed the warning threshold but not the hard limit (file-length only).
+- **Exit 1** (error) when any file violates the hard limit, when a function exceeds 40 statement lines, or when a file lacks a valid single-responsibility doc comment.
+- Human-readable diagnostic lines on stdout identifying the offending file, line count, and limit that was breached.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+Stateless. The scripts re-scan `src/` on every invocation; no results are cached or persisted between runs.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+Four quality rules are checked by separate shell scripts in `scripts/checks/`:
+
+1. **File length (`scripts/checks/file-length.sh`)** — `find src -name "*.rs" | xargs wc -l` compares line counts against `FILE_LENGTH_HARD` (400) and `FILE_LENGTH_WARN` (300). Hard violations exit 1; warning-only violations exit 2; clean pass exits 0.
+
+2. **Function length (`scripts/checks/function-length.sh`)** — uses `awk` to track brace depth and count non-blank statement lines within each `fn` block in every `.rs` file. Functions exceeding `FN_LENGTH_HARD` (40) are errors; those exceeding `FN_LENGTH_WARN` (30) are warnings.
+
+3. **Module structure (`scripts/checks/module-structure.sh`)** — verifies that the required top-level module directories exist under `src/` (e.g. `graph/`, `context/`, `commands/`, `verify/`, `mcp/`, `io/`, `parse/`) and that `src/main.rs` does not exceed 80 lines.
+
+4. **Single-responsibility doc comments (`scripts/checks/single-responsibility.sh`)** — every `.rs` file except `mod.rs` and `main.rs` must begin with a `//!` line that does not contain the word "and". Violation exits 1.
+
+All four scripts are invoked by `product verify --platform` through TCs with `runner: bash`. The file-length warning threshold is tested separately (TC-370) by setting `FILE_LENGTH_HARD=99999` to disable the hard limit while keeping `FILE_LENGTH_WARN=300` active, exploiting the three-tier exit code model.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- No Rust source file in `src/` may exceed 400 lines (including blank lines and comments).
+- No function body in `src/` may exceed 40 statement lines (blank lines excluded from count).
+- Every `src/**/*.rs` file except `mod.rs` and `main.rs` must have a `//!` doc comment as its first line, and that comment must not contain the word "and".
+- `src/main.rs` must not exceed 80 lines.
+- Required top-level module directories must exist.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Each script writes a human-readable error or warning line to stdout naming the offending file, the actual value, and the limit.
+- Exit codes follow the ADR-009 three-tier model: 0 (pass), 2 (warning), 1 (error/hard violation).
+- When `FILE_LENGTH_HARD` or `FILE_LENGTH_WARN` environment variables are absent, the scripts use their built-in defaults — they never fail due to missing environment variables.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Applies only to `src/**/*.rs`. Integration test files (`tests/`), benchmarks (`benches/`), and non-Rust files are not checked.
+- Does not check logical correctness, API design, or Rust idiom adherence — those are covered by `cargo clippy` (ADR-001).
+- Does not modify source files; read-only analysis only.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Rust compilation quality and `clippy::unwrap_used` enforcement — governed by ADR-001, enforced by `cargo clippy`.
+- Test file length limits — `tests/` and `benches/` are explicitly exempt.
+- Automatic refactoring or code splitting — the scripts report violations; fixing them is the developer's responsibility.
+- Runtime or dynamic code quality checks — all checks are static analysis of source text.

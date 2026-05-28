@@ -214,40 +214,69 @@ product verify FT-001 --tc TC-002         # run a single TC only
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+FT-010 defines the complete CLI surface of the Product tool: the full set of subcommands, their flags, their output formats, and the exit code contract used for CI integration (ADR-009, ADR-013). The commands documented in the prose above span navigation (`feature list/show`, `adr list/show`, `test list/show`), context assembly (`product context`), graph operations (`product graph check/rebuild/query/stats/central/coverage`), impact analysis (`product impact`), status and checklist (`product status`, `product checklist generate`), pre-flight and domain coverage (`product preflight`, `product feature acknowledge`), authoring (`product feature/adr/test new`, `product feature link`, status updates), migration (`product migrate`), gap analysis (`product gap`), drift detection (`product drift`), metrics and fitness functions (`product metrics`), MCP server (`product mcp`), authoring sessions (`product author`), and agent orchestration (`product implement`, `product verify`). All commands support `--format json` for machine-readable output. Graph health commands use a three-tier exit code scheme (0 = clean, 1 = errors, 2 = warnings).
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- CLI invocation: subcommand name, positional arguments (artifact IDs, titles), and flags (`--phase N`, `--status STATUS`, `--format json`, `--depth N`, `--order id`, `--top N`, `--changed`, `--severity LEVEL`, `--dry-run`, `--reason REASON`, etc.).
+- The in-memory knowledge graph rebuilt from all front-matter on every invocation.
+- `product.toml` for path, phase, prefix, domain, agent, and threshold configuration.
+- Optional `--config PATH` to override the default `product.toml` location.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Stdout**: command results — lists, show output, context bundles, graph stats, impact reports, gap findings, drift reports, metric snapshots. All results go to stdout so that output can be piped or redirected cleanly (e.g. `product context FT-001 > bundle.md`).
+- **Stderr**: all errors and warnings formatted as rustc-style diagnostics (error code, file path, line, context, hint) for interactive use, or as JSON when `--format json` is set (ADR-013). Errors and warnings never appear on stdout.
+- **Exit codes** (ADR-009):
+  - `0` — clean result; no errors or warnings for graph health commands.
+  - `1` — errors (broken links, cycles, malformed front-matter, E-codes).
+  - `2` — warnings only (orphaned artifacts, missing exit criteria, W-codes) for `product graph check`, `product dep check`, `product preflight`.
+  - `3` — internal Product error (Tier 4, bug in Product itself).
+- **Files**: write commands produce modified artifact files (atomic writes); generation commands produce `checklist.md` or `index.ttl`.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+The CLI layer is stateless between invocations. Each invocation rebuilds the in-memory graph from scratch. The only persistent state is the artifact files themselves and `product.toml`. MCP server mode (`product mcp`) is the one long-lived process; it holds the in-memory graph and rebuilds it on each tool call.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Navigation commands** (`feature list`, `adr list`, `test list`, `feature show`, `adr show`, `test show`, `feature adrs`, `feature tests`, `feature deps`, `adr features`, `adr tests`, `test untested`): query the in-memory graph and print results to stdout. Accept `--phase N`, `--status STATUS`, `--type TYPE` filters. `feature next` applies topological sort plus phase gate (ADR-012, Capability 1).
+2. **Context assembly** (`product context`): accepts a Feature, ADR, or phase filter as seed; assembles a context bundle via BFS to the specified depth (default 1); orders ADRs by betweenness centrality (overridable with `--order id`). Prints the bundle to stdout (ADR-012, Capabilities 2 and 3).
+3. **Graph operations** (`product graph check`, `rebuild`, `query`, `stats`, `central`, `coverage`): `check` validates all links, DAG cycles, phase/dep ordering, acknowledgements, and domain vocabulary — exits 0/1/2 per the three-tier scheme. `rebuild` writes `index.ttl`. `query` runs SPARQL over the graph. `central` lists ADRs by betweenness centrality. `coverage` shows the feature × domain matrix.
+4. **Impact analysis** (`product impact`): reverse-graph BFS from the target artifact; see FT-006 for full behaviour. Auto-triggered during `product adr status ADR-XXX superseded`.
+5. **Error model** (ADR-013): all errors go to stderr using the four-tier taxonomy (Parse, Graph, Validation, Internal). `--format json` switches all error and warning output to structured JSON on stderr. No user action produces a Rust panic (enforced by `#![deny(clippy::unwrap_used)]`).
+6. **Gap, drift, metrics, MCP, author, implement, verify**: these subcommand families are documented in the prose above; each delegates to its domain slice module. Long-running commands (`implement`, `author`, `mcp`) remain on `BoxResult` and may print continuous progress; other commands return `CmdResult` through the `render()` adapter.
+7. **Pre-flight** (`product preflight FT-XXX`): checks domain coverage for a feature before implementation — must be clean before `product implement` proceeds. Gaps are resolved by linking an ADR or adding an acknowledged entry with explicit reasoning (E011 for empty reasoning).
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- All results go to stdout; all errors and warnings go to stderr. This separation is enforced at the `render()` layer and verified by TC-059 (`product context FT-001 > bundle.md` produces a clean file even with warnings present).
+- `product graph check` exits 0 on a fully consistent repository (TC-027), exits 1 on a broken link (TC-028), and exits 2 on warnings-only (TC-029, e.g. an orphaned artifact).
+- The `--format json` flag is global to all commands; when set, errors, warnings, and results are all serialised as JSON (TC-056).
+- No command produces a Rust panic or exposes a Rust backtrace to the user for an input-caused failure (TC-057).
+- Broken-link error messages include file path, line number, offending content, and a remediation hint (TC-055).
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Unknown subcommand or missing required argument → clap error printed to stderr with usage hint; exit code 1.
+- Artifact ID not found → E002 on stderr; command exits with code 1 (not 2, because a missing ID is an error, not a warning).
+- Malformed front-matter in any file → E001 on stderr with file path and line; the file is skipped; the command continues with remaining valid files (ADR-013 graceful recovery).
+- Internal error (unexpected None, assertion failure) → Tier 4 diagnostic with source location and Product version on stderr; exit code 3.
+- All errors are structured: error code, tier, message, file path, line, context, detail, hint (ADR-013).
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- The CLI surface described in the prose above is the complete command set for this feature's scope. Commands added by later features (FT-019 gap analysis, FT-023 drift detection, FT-024 metrics, FT-030 implement/verify, FT-021 MCP) are wired into the same `dispatch()` match in `commands/mod.rs` but are specified by those features.
+- `product graph check` validates structural graph health only; it does not execute TC runners. TC execution is `product verify`.
+- The `--format json` flag controls output format for the current invocation only; it does not change the format of files written to disk.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Implementation of the agent orchestration pipeline (`product implement`, `product verify`) beyond the CLI surface definition — covered by FT-030 and FT-021.
+- MCP tool definitions and server behaviour — covered by FT-021.
+- Gap analysis LLM integration (`product gap check`) — covered by FT-019.
+- Drift detection source scanning (`product drift check`) — covered by FT-023.
+- Authoring session prompts and pre-commit hook integration (`product author`, `product install-hooks`) — covered by FT-022.
+- Shell completion generation (`product completions`) — a thin wrapper with no domain logic.

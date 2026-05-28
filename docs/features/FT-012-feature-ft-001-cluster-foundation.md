@@ -31,40 +31,51 @@ domains-acknowledged:
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+FT-012 represents the cluster-foundation baseline: the Product binary compiles and ships as a single self-contained executable for both ARM64 (aarch64-unknown-linux-gnu) and x86_64 (x86_64-unknown-linux-musl) targets, with no dynamic dependencies beyond `libc`. This validates the deployment constraint from ADR-001 (Rust as Implementation Language) — a single binary, no runtime, no installer.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Source tree at the repository root
+- Target architecture spec (`aarch64-unknown-linux-gnu` or `x86_64-unknown-linux-musl`)
+- `cargo build --release` invocation
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- A compiled release binary (`product`) at `target/<triple>/release/product`
+- Exit code 0 on success; non-zero (with compiler diagnostics to stderr) on failure
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+Stateless at runtime. The build process produces a binary artefact on disk; the feature itself describes a compilation and deployment property, not runtime state.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. `cargo build --release --target aarch64-unknown-linux-gnu` completes with zero errors and zero warnings (TC-001).
+2. `cargo build --release --target x86_64-unknown-linux-musl` completes with zero errors and zero warnings (TC-002).
+3. `ldd product` on the Linux binary reports no dynamic dependencies beyond `libc` — any additional shared library dependency is a test failure (TC-003).
+4. `cargo build --release` (default host target) succeeds (TC-004).
+5. All TC-163 exit criteria pass: the binary meets the single-binary, no-runtime deployment constraint across all targets.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- The compiled binary must link only against `libc`; no other shared libraries are permitted (ADR-001).
+- `cargo build --release` must produce zero compiler errors and zero clippy warnings (`-D warnings -D clippy::unwrap_used`).
+- Both ARM64 and x86_64 targets must compile successfully from the same source tree.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Compilation errors surface as non-zero `cargo` exit codes with rustc diagnostics to stderr; no Product-specific error handling applies at this level.
+- If a new dependency introduces a dynamic link beyond libc, TC-003 fails and the CI gate blocks the commit.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- This feature governs the binary compilation and deployment constraint only; it does not specify runtime behaviour.
+- Cross-compilation toolchain availability (e.g. `cross`, linker configuration) is a CI infrastructure concern, not part of this feature.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Runtime feature behaviour (covered by other FT entries).
+- Windows or macOS binary artefacts (not currently targeted).
+- `cargo install` packaging or release distribution (covered by the release workflow).

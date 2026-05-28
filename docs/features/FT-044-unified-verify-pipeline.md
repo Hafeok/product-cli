@@ -194,36 +194,75 @@ See TC-562 (exit criteria) for the consolidated check-list.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `product verify` — no positional argument; runs all six stages across all phases.
+- `product verify --phase N` — scopes stage 5 to features in phase N; all other stages still run.
+- `product verify FT-XXX` — per-feature invocation (existing behaviour, unchanged); runs that feature's TCs only.
+- `product verify --ci` — switches output formatter from pretty to structured JSON.
+- `product verify --ci --phase N` — combined scope and CI-mode flags.
+- Reads `product.toml` for schema version, metrics thresholds (`[metrics.thresholds]`), and path configuration.
+- Reads the knowledge graph (derived from YAML front-matter in `docs/features/`, `docs/adrs/`, `docs/tests/`) for all six stages.
+- Reads `requests.jsonl` for stage 1 (log integrity).
+- Reads git tags for stage 1 (W021 cross-reference) and stage 5 (locked-phase detection).
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Pretty mode (default):** one progress line per stage prefixed with `✓` / `⚠` / `✗`, aggregated finding counts, a summary block listing exit code, failing TCs, and features needing attention by W-code.
+- **`--ci` mode:** a single structured JSON document on stdout matching the documented schema (`passed`, `exit`, `stages` array with per-stage `stage`, `name`, `status`, `findings`). No colour, no TTY formatting.
+- **Exit codes:** 0 (all stages pass), 1 (any E-class error in any stage), 2 (warnings only across all stages). The worst result across all stages determines the exit code; stages do not short-circuit.
+- **Per-feature `product verify FT-XXX`** — unchanged output; exits per the existing per-feature verify contract.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Stateless between invocations. Every `product verify` re-runs all six stages from scratch with no caching.
+- Does not write to `requests.jsonl` (the verify log entry is written by the per-feature verify called in stage 5, not by the pipeline runner itself).
+- Does not mutate any artifact file; the pipeline is read-only except for the side-effect of per-feature `product verify FT-XXX` calls (which update TC `status` front-matter and append log entries).
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Stage 1 — Log integrity.** Wraps `product request log verify`. Exits with E015 (hash mismatch) or E016 (chain break) findings if the log is tampered; W021 if a git tag has no matching `verify` entry.
+2. **Stage 2 — Graph structure.** Wraps `product graph check`. Any E-class finding from graph check becomes a stage-2 E-class finding; W-class findings pass through as warnings.
+3. **Stage 3 — Schema validation.** Compares `schema-version` in `product.toml` against the binary's supported schema version. E008 on version mismatch; W007 on advisory mismatch.
+4. **Stage 4 — Metrics thresholds.** Wraps `product metrics threshold`. Threshold breaches classified as error or warning per the `[metrics.thresholds]` severity config in `product.toml`.
+5. **Stage 5 — Feature TCs.** For each feature reachable from the current phase gate (or scoped by `--phase N`): skip if `status: planned`; skip with a named reason if in a locked phase (a phase older than the current open phase). Otherwise run `product verify FT-XXX`. Records per-TC outcome: pass / fail / unrunnable. Features from locked phases appear in the output under a "skipped" section.
+6. **Stage 6 — Platform TCs.** Wraps `product verify --platform` — TCs whose `validates.features` is empty and `validates.adrs` is non-empty (cross-cutting ADR-linked TCs, including `absence` TCs from FT-047).
+7. **Stage independence.** Each stage runs inside a panic-catch wrapper (`std::panic::catch_unwind`) so a stage panic does not abort the pipeline; the panicking stage is marked `fail` with a diagnostic and the pipeline continues.
+8. **Locked phase detection.** A phase is locked if the next-higher phase contains at least one feature with `status: complete` (the phase gate per ADR-034). Features in phases strictly older than the current phase are skipped with reason `"phase-N-locked"`.
+9. **Exit code unification.** The `PipelineResult` type exposes `.exit_code()` returning 0 / 1 / 2 directly; the command handler propagates this without going through `ProductError`.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- All six stages always execute; the pipeline never short-circuits on stage failure.
+- Exit code is the worst across all six stages: 0 only if every stage passes, 1 if any stage has an E-class finding, 2 if the worst finding is W-class.
+- `product verify FT-XXX` (per-feature) behaviour is unchanged when called with a positional argument; the pipeline does not alter the existing per-feature verify contract.
+- LLM calls are never made by any pipeline stage; the pipeline is strictly deterministic (ADR-040).
+- A stage panic does not propagate; it is caught, reported as a `fail` with a diagnostic message, and the remaining stages execute.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+| Code | Stage | Condition |
+|---|---|---|
+| E015 | 1 | Hash mismatch in `requests.jsonl` entry (from log verify) |
+| E016 | 1 | Chain break in `requests.jsonl` (from log verify) |
+| W021 | 1 | Git tag without corresponding `verify` log entry |
+| Any E-code | 2 | Graph check finding of E-class severity |
+| E008 | 3 | Schema version mismatch between `product.toml` and binary |
+| W007 | 3 | Advisory schema version delta |
+| (threshold) | 4 | Metrics threshold breach; severity (error/warning) per `product.toml` config |
+| (TC result) | 5–6 | Failing or unrunnable TC; contributes to exit 1; named in output |
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- LLM-dependent checks (gap analysis, drift detection, semantic ADR review) are deliberately excluded from the pipeline; `product verify` is strictly deterministic (ADR-040). Use `product gap bundle` / `product drift diff` / `product adr conflict-bundle` for LLM-ready bundles.
+- Parallel stage execution is not implemented; stages run sequentially. Parallelism is a future optimisation.
+- Stage caching is not implemented; every invocation re-runs all stages from scratch.
+- The per-feature `product verify FT-XXX` command itself was delivered by an earlier feature (ADR-021, FT-037); this feature only invokes it as stage 5 and does not alter its internals.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- LLM-dependent pipeline stages (gap analysis, drift, semantic review) — these are intentionally separated into `product gap bundle` / `product drift diff` / `product adr conflict-bundle` (FT-045) to keep the verify pipeline deterministic.
+- Parallel stage execution — future optimisation if stage-5 wall time becomes a bottleneck.
+- Incremental verify with stage-level caching — future optimisation if needed; every run is a full sweep.
+- Pipeline hooks (`product.toml`-declared pre/post-stage shell commands) — the current escape hatch is to call shell commands after `product verify` completes.
+- The per-feature `product verify FT-XXX` command — already delivered; this feature only orchestrates it as stage 5.

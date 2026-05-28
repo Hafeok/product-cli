@@ -98,36 +98,63 @@ port = 7777
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `product init [OPTIONS]` — CLI invocation from any directory.
+- Flags: `-y` / `--yes` (non-interactive), `--force` (overwrite existing config), `--name NAME`, `--domain K=V` (repeatable), `--port PORT`, `--write-tools`, `--path DIR`.
+- Interactive stdin prompts in default mode: project name, concern domains (multi-select from a suggested vocabulary), MCP write-tools flag, HTTP port.
+- The current working directory name is used as the default project name when `--name` is not supplied.
+- Presence or absence of an existing `product.toml` (or `.product/config.toml` for canonical layout) in the target directory.
+- Presence or absence of an existing `.gitignore` in the target directory.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product.toml`** (or `.product/config.toml` for canonical layout) — generated configuration file containing `name`, `schema-version`, `[paths]`, `[prefixes]`, `[phases]`, `[domains]`, and `[mcp]` sections.
+- **Directories** — `docs/features/`, `docs/adrs/`, `docs/tests/`, `docs/graph/` created via `create_dir_all` (safe if already present).
+- **`.gitignore`** — entry `docs/graph/` appended if not already present; file created if absent.
+- **Console output** — a list of created files and a "Run `product feature new`..." next-step hint.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+`product init` is a bootstrapping command; it has no pre-existing Product state to read (no `product.toml` is required). After successful execution, the target directory contains a valid configuration file that every other Product command can discover via `ProductConfig::discover()`. The command is not idempotent by default: re-running without `--force` on an already-initialised directory produces a hard error (see Error handling).
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Interactive mode (default)** — presents prompts for project name, domain selection from a suggested vocabulary, MCP write-tools, and HTTP port. All prompts have defaults; the user can press Enter through every question to accept them. Custom domains can be added at the domain-selection step.
+2. **Non-interactive mode (`--yes`)** — skips all prompts. Flags override individual defaults; unspecified flags use built-in defaults (`mcp.write = false`, `port = 7777`, empty `[domains]` section).
+3. **Directory scaffolding** — all directories declared in `[paths]` are created with `create_dir_all`. This is safe to call even if directories already exist and does not touch existing artifact files.
+4. **`.gitignore` management** — `docs/graph/` is appended if the file exists and does not already contain the entry; if `.gitignore` is absent, it is created. The entry is not duplicated on repeated runs with `--force`.
+5. **`--force`** — overwrites the configuration file but does not delete existing artifact directories or their contents. All existing features, ADRs, and TCs are preserved.
+6. **`--path DIR`** — targets a directory other than the current working directory. Useful for scripted multi-repo setups.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- If `product.toml` exists and `--force` is not passed, the command exits with code 1 and a diagnostic hint to use `--force`.
+- The generated `product.toml` must be parseable by `ProductConfig::load()` — verified by TC-438 (property test).
+- Directory creation (`create_dir_all`) never fails because directories already exist — it is always safe to re-create.
+- `.gitignore` entries are never duplicated; idempotent detection checks for the entry before appending.
+- Project name defaults to the directory name when `--name` is not supplied and the user accepts the default in interactive mode.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Existing config without `--force`** — exits with code 1; diagnostic message names the existing file and hints to use `--force` or edit directly.
+- **Target directory does not exist** — `--path` to a non-existent directory exits with `ProductError::IoError` naming the missing path.
+- **`create_dir_all` failure** — I/O errors during directory creation propagate as `ProductError::IoError`.
+- **`.gitignore` write failure** — I/O errors are reported and the command exits with code 1.
+- **Invalid `--domain` format** — `K=V` parsing failures produce `ProductError::ConfigError` naming the malformed argument.
+- **Invalid `--port`** — clap validates the port argument as a `u16`; out-of-range values are rejected before `handle_init` is called.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `product init` creates configuration and scaffolding only. It does not create any artifact files (`FT-XXX`, `ADR-XXX`, `TC-XXX`).
+- It does not install git hooks — that is `product install-hooks`. The init output message mentions `install-hooks` as a recommended next step.
+- It does not run `product graph check` or any validation on existing artifacts in the target directory.
+- Interactive domain selection presents a curated suggestion list; no network call or registry lookup is performed.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Template-based initialization with pre-populated features or ADRs — `product init` scaffolds an empty repository.
+- Merging into an existing `product.toml` (e.g. adding missing sections) — use direct editing or `product migrate schema` for schema upgrades.
+- Automatic `git init` — `product init` does not initialise a git repository; it assumes the target directory may already be a git repo.
+- Multi-repository batch initialization — `product init` operates on one target directory per invocation.
+- Removing or renaming directories — `product init --force` replaces only the configuration file.

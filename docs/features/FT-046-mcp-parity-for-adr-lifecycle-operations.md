@@ -169,36 +169,69 @@ See TC-585 (exit criteria) for the consolidated check-list.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product_adr_amend`** MCP tool: `id` (required), `reason` (required), `body` (optional string — when present, the new body text to replace the ADR's prose below the front-matter delimiter).
+- **`product_adr_status`** MCP tool: `id` (required), `new_status` (required — one of `proposed`, `accepted`, `superseded`, `abandoned`), `by` (optional — target ADR ID for supersession).
+- The ADR file on disk identified by `id` — read and written via `fileops::write_file_atomic` (ADR-015 atomic writes).
+- The knowledge graph — read to resolve the target ADR and any supersession target.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product_adr_amend` success:** JSON envelope `{ id, status, content-hash, amendments: [...] }` where `amendments` is the updated array including the new entry `{ date, reason, previous-hash }`.
+- **`product_adr_amend` error:** structured error with the appropriate E-code and message; ADR file unchanged.
+- **`product_adr_status` success (non-`accepted`):** JSON envelope `{ id, status, content-hash }` plus `superseded-by` when the transition is supersession. Both the target ADR and the `by` target (if provided) are updated in the same atomic write batch.
+- **`product_adr_status` error:** structured error with E-code and message; ADR file(s) unchanged.
+- All success responses share the same envelope shape — no `{ note: "Use CLI..." }` advisory divergence.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **ADR front-matter on disk** — `product_adr_amend` updates `content-hash` and appends to the `amendments` array; the body text below the front-matter delimiter is replaced when `body` is provided.
+- **Supersession target's front-matter on disk** — when `product_adr_status` performs a supersession with `by: ADR-YYY`, the target ADR's `supersedes` array is updated in the same atomic batch.
+- **Advisory lock (ADR-015)** — acquired before any write, released after. Serialises concurrent MCP calls.
+- No new persistent state is introduced. The existing `content-hash` + `amendments` front-matter shape (from FT-034) is written to; this feature does not add new fields.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **`product_adr_amend` with `body`:** (a) acquires advisory lock; (b) writes the new body to disk via `fileops::write_file_atomic`; (c) computes the new content-hash over the updated body; (d) appends `{ date, reason, previous-hash }` to the `amendments` array; (e) writes the updated front-matter; (f) releases lock; (g) returns the success envelope. The "body changed → new hash differs from stored → amendment valid" check is satisfied automatically because the write precedes the hash computation.
+2. **`product_adr_amend` without `body` (legacy path):** records an amendment against whatever body is already on disk. Returns E017 if the on-disk body already matches the stored content-hash (nothing changed to amend).
+3. **`product_adr_status` — non-`accepted` transitions:** validates the transition is legal (see error table), acquires the lock, writes the `status` field (and `superseded-by` / `supersedes` for supersession), releases the lock, returns the success envelope. When supersession involves `by: ADR-YYY`, the `by` target's `supersedes` array is updated in the same atomic batch.
+4. **`product_adr_status accepted` over MCP:** returns E020 immediately; the ADR file is not modified. The error message names the CLI command to run.
+5. **`product_adr_status accepted → proposed` demotion:** returns E021; the ADR file is not modified. Sealed ADRs cannot be unsealed.
+6. **Parity contract:** each lifecycle tool produces the same on-disk result as the equivalent CLI command. Session tests (TC-577–TC-584) run both paths against identical temp repos and assert byte-identical file output.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- A successful `product_adr_amend` always results in `content-hash` reflecting the body that is currently on disk.
+- `product_adr_amend` never changes the `status` field; any attempt to pass `status` in the request returns E019 before any write.
+- `product_adr_status accepted` over MCP never modifies the ADR file; it always returns E020.
+- `product_adr_status` with a demotion from `accepted` to `proposed` never modifies the ADR file; it always returns E021.
+- `product graph check` exits 0 after every successful lifecycle transition (verified by session tests).
+- MCP and CLI produce byte-identical ADR files for the same lifecycle transition (parity contract).
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+| Code | Tool | Condition |
+|---|---|---|
+| E017 | `product_adr_amend` | `body` omitted and the on-disk body already matches the stored content-hash (nothing changed) |
+| E018 | `product_adr_amend` | The ADR is not in `accepted` status (amendment is for accepted ADRs only) |
+| E019 | `product_adr_amend` | The request attempts to change the `status` field via amend |
+| E020 | `product_adr_status` | `new_status` is `accepted`; accepting an ADR requires the CLI |
+| E021 | `product_adr_status` | Demotion from `accepted` to `proposed` is forbidden |
+
+All error responses leave the ADR file(s) unchanged. Error messages for E020 name the specific CLI command to run.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `accepted` over MCP is deliberately excluded (ADR-032 governance: a sealing action deserves a human-in-the-loop via the local CLI that can print impact analysis and confirm the content hash). This is a permanent boundary, not a temporary gap.
+- Feature, TC, and DEP status transitions are already correct over MCP; this feature is scoped to ADRs because the gap is specific to content-hashed artifacts.
+- Bulk amendment across multiple ADRs in one call is not supported; one ADR per `product_adr_amend` call.
+- No new front-matter fields are introduced; the existing `content-hash` and `amendments` shape is written to unchanged.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- `accepted` over MCP: deliberately excluded per ADR-032 governance. A human-in-the-loop CLI step is required for the sealing action.
+- Feature, TC, and DEP status transitions: already work correctly over MCP; this feature is ADR-specific.
+- Bulk amendment across multiple ADRs in one call: one ADR per `product_adr_amend` invocation. Multi-ADR amendment is a follow-on if needed.
+- Changes to the on-disk front-matter schema: the existing `content-hash` and `amendments` shape is used as-is.
+- `product_adr_accept_preview` MCP tool (read-only impact preview before the manual CLI accept step): a possible follow-on, not part of this feature.

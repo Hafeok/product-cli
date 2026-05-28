@@ -169,36 +169,54 @@ A developer can:
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`benchmarks/prompts/implement-v1.md`** — optional per-repo override file. When present, `author::prompts::get(root, "implement")` reads it and returns its contents as the base prompt. When absent, `prompts::get` returns the embedded default from `src/author/prompts/implement.txt`.
+- **`product implement FT-XXX`** — the existing command. Its `run_implement` function calls `author::prompts::get` for the base prompt, then appends a dynamic suffix assembled from the live graph: feature header, TC status table, hard constraints, and the context bundle.
+- **`product implement FT-XXX --dry-run`** — same as above but exits before agent invocation. Writes the assembled prompt to a temp file and prints `Context file: <path>` to stdout, enabling test inspection of the composed prompt without spawning `claude`.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Assembled prompt file** — a temp file containing `base_prompt + "\n\n" + dynamic_suffix`. The `base_prompt` is the contents of `benchmarks/prompts/implement-v1.md` (if present) or the embedded `implement.txt` default. The dynamic suffix includes the feature header, TC status table, hard constraints, and the context bundle. The file path is printed to stdout as `Context file: <path>`.
+- **Spawned agent session** — when not in `--dry-run` mode, `run_implement` invokes `claude` with the assembled temp file as the system prompt. This is identical to the prior behaviour except the base prompt is now loaded from file rather than inlined.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+Stateless. No data is retained between invocations. The per-repo override file (`benchmarks/prompts/implement-v1.md`) is a static file in the repository; `run_implement` reads it at invocation time and does not cache it.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Base prompt loading.** `run_implement` calls `crate::author::prompts::get(root, "implement")` to obtain the base prompt. If `benchmarks/prompts/implement-v1.md` exists under `root`, its contents are returned. If it does not exist, `prompts::get` falls back to `default_content("implement")` — the embedded `src/author/prompts/implement.txt` — with no warning (the fallback is the happy path for repos that have not customised their prompt).
+2. **Dynamic suffix assembly.** `run_implement` continues to build the dynamic suffix in its own scope: feature header line, TC status table, hard constraints (e.g. `When done: product verify FT-XXX`), and the context bundle assembled from the graph. This content depends on the live graph and must not be moved into the embedded default.
+3. **Concatenation.** The assembled prompt is `base_prompt + "\n\n" + dynamic_suffix`. This matches the pattern already used by `src/author/mod.rs::start_session`.
+4. **`--dry-run` path.** Writes the assembled prompt to a temp file, prints `Context file: <path>`, and exits 0 without spawning `claude`. This is the test surface for TC-698.
+5. **Prompt file documentation.** The embedded `implement.txt` default includes a short leading section that makes the base+suffix seam explicit, so a user editing `benchmarks/prompts/implement-v1.md` understands what `product implement` appends below their content.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- When `benchmarks/prompts/implement-v1.md` exists, its content appears at the top of the assembled prompt file and the dynamic suffix follows below (TC-698).
+- When `benchmarks/prompts/implement-v1.md` is absent, the assembled prompt contains the embedded `implement.txt` fallback and the dynamic suffix (TC-698 fallback path).
+- The dynamic suffix (TC status table, `When done:` instruction, context bundle) always appears in the prompt regardless of whether the override file is present.
+- `product prompts get implement` and `product implement FT-XXX --dry-run` load the base prompt via the same `author::prompts::get` code path — both honour or ignore `benchmarks/prompts/implement-v1.md` identically.
+- No existing `product prompts get implement` or MCP `product_prompts_get` behaviour changes — those paths already used `author::prompts::get` and continue to do so.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`benchmarks/prompts/implement-v1.md` is empty.** `prompts::get` returns an empty string; concatenation produces only the dynamic suffix. The prompt file is written without error; `product implement` continues normally. Process exits 0 on `--dry-run`.
+- **`benchmarks/prompts/implement-v1.md` is absent.** `prompts::get` falls back to the embedded default without warning. No error.
+- **Read error on the override file.** `prompts::get` propagates the I/O error as a `ProductError`. `run_implement` surfaces it with a diagnostic message and exits 1.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **In scope:** the `src/implement/pipeline.rs::run_implement` function — specifically, replacing the inline `format!` base-prompt block with a call to `author::prompts::get`; and the `src/author/prompts/implement.txt` embedded default, which is modestly expanded to serve as a natural prefix.
+- **Out of scope:** templating syntax (e.g. `{feature_id}`, `{bundle}` placeholders) inside the prompt file. Simple base+suffix concatenation matches the pattern used by `start_session` and is sufficient for v1.
+- **Out of scope:** reopening the ADR-021 boundary debate about whether `product implement` should exist as an orchestration command. This feature makes the existing command consistent with ADR-022; it does not re-litigate ADR-021.
+- **Out of scope:** the `product author feature/adr/review` paths. Those already honour the per-repo override via `start_session`; no change needed.
+- **Out of scope:** prompt versioning beyond v1. The `implement-v1.md` naming scheme is preserved.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- **Templated placeholders** (`{feature_id}`, `{tc_table}`, `{bundle}` inside the prompt body). A simple base+suffix concatenation is sufficient and matches the `start_session` pattern. Templated prompts are a possible follow-on if user feedback shows the seam needs to move.
+- **Reopening the ADR-021 boundary debate.** ADR-021 rejected `product implement` as an orchestration command in principle, but the command exists in the codebase. This feature does not re-litigate that decision; it only makes the existing command consistent with ADR-022.
+- **`author-feature`/`author-adr`/`author-review` paths.** Those already honour the per-repo override via `start_session`; no change is needed.
+- **Prompt versioning beyond v1.** The current `implement-v1.md` scheme is preserved unchanged.

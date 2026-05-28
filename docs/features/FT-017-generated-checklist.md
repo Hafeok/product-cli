@@ -40,40 +40,58 @@ domains-acknowledged:
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+`product checklist generate` produces `CHECKLIST.md` (or `checklist.md` as configured) as a generated, human-readable view of implementation status for stakeholders and GitHub rendering. The file is never hand-edited — status is owned exclusively by feature and TC front-matter (ADR-007). `CHECKLIST.md` is listed in `.gitignore` by default; projects that want GitHub visibility can opt out via `checklist-in-gitignore = false` in `product.toml`.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Current in-memory knowledge graph (all feature and TC front-matter)
+- `product.toml` config: `checklist-in-gitignore` flag (default true), output file path
+- Invocation: `product checklist generate`
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- A markdown file (`CHECKLIST.md`) with:
+  - Header: `# Implementation Checklist` and generation timestamp
+  - Warning line: "Do not edit directly — update status in feature/test front-matter and run `product checklist generate`"
+  - Sections per phase, features sorted in topological order within each phase
+  - Per-feature entry: status marker (`[x]` complete, `[~]` in-progress, `[ ]` planned, `[-]` abandoned), linked ADR statuses, linked TC statuses
+- The file is written atomically (ADR-015)
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+`CHECKLIST.md` is a derived projection of front-matter state. It carries no canonical state of its own — re-running `product checklist generate` on an unchanged graph produces byte-identical output (TC-159). The checklist is not read by any Product command; agents use `product feature list`, `product status`, and `product feature next` instead (ADR-007).
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. Build the in-memory graph from all artifact files.
+2. Compute topological sort of features; fall back to alphabetical order if a cycle prevents topological sort.
+3. Group features by phase (ascending) and write one `## Phase N` section per distinct phase.
+4. For each feature, render: status marker derived from `FeatureStatus` enum, linked ADR statuses (accepted=`[x]`, proposed=`[ ]`), linked TC statuses (passing=`[x]`, failing=`[~]`, unimplemented=`[ ]`).
+5. Write the file atomically to the configured path.
+6. If `checklist-in-gitignore = true` (default), `product init` adds the file to `.gitignore`; existing `.gitignore` is not modified by `generate` alone (TC-209, TC-210).
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- The checklist is a pure function of the current graph state: same graph → same output, every time (TC-159 idempotency invariant).
+- No YAML front-matter appears in the output file.
+- Features appear in topological order within their phase, consistent with `product feature next` ordering.
+- The generation timestamp is the only non-deterministic field; all other content is derived from front-matter.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Cycle in `depends-on` DAG: topological sort falls back to alphabetical ordering; no error is raised by `generate` itself (the cycle is reported separately by `product graph check` as E003).
+- File write failure: reported as E009 (atomic write error) with the file path and OS error.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Does not modify any artifact front-matter files; read-only with respect to the graph.
+- Does not auto-regenerate on status changes — the developer must explicitly run `product checklist generate` or trigger it via `product verify`.
+- Does not validate the graph before generating — broken links or missing TCs appear as-is in the checklist.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Using `CHECKLIST.md` as a data source for any command (ADR-007 explicitly prohibits this).
+- Interactive checkbox editing — checked items in the rendered file have no effect.
+- Automatic commit or git staging of the generated file.

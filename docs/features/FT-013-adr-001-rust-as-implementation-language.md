@@ -31,40 +31,51 @@ domains-acknowledged:
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+FT-013 validates ADR-001 — the decision to implement Product in Rust. The feature ensures that the codebase compiles cleanly with `cargo build --release`, passes `cargo clippy -- -D warnings -D clippy::unwrap_used` with zero warnings, and uses the Rust 2021 edition or newer. It provides confidence that the Rust-as-implementation-language decision is actively exercised and the code quality bar enforced by the toolchain is maintained.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- The Product source tree (`src/`, `Cargo.toml`, `Cargo.lock`)
+- `cargo build --release` and `cargo clippy -- -D warnings -D clippy::unwrap_used` invocations
+- `Cargo.toml` edition field
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Zero-error, zero-warning release build
+- Zero clippy findings under `-D warnings -D clippy::unwrap_used`
+- `edition = "2021"` (or later) confirmed in `Cargo.toml`
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+Stateless. This feature describes a code quality and toolchain property of the repository, not runtime state.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. `cargo build --release` completes with zero errors and zero warnings (inherits from TC-001 through TC-004, confirmed by TC-164).
+2. `cargo clippy -- -D warnings -D clippy::unwrap_used` produces zero diagnostics — the zero-unwrap policy (`#![deny(clippy::unwrap_used)]`) is enforced at the compiler level.
+3. `Cargo.toml` declares `edition = "2021"` or a later Rust edition.
+4. The binary is a native Rust executable with no FFI runtime dependencies beyond `libc`.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `clippy::unwrap_used` is denied crate-wide; any `.unwrap()` call in production code is a compilation error.
+- `-D warnings` ensures no deprecated API usage, unused imports, or unreachable code reaches the main branch.
+- The pinned toolchain version in `rust-toolchain.toml` ensures consistent behaviour across local and CI environments.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Clippy violations surface as compiler errors (due to `-D warnings`), blocking the build.
+- Any new dependency that introduces `unsafe` or `unwrap()` calls must be addressed before the build succeeds.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- This feature describes language and toolchain requirements, not functional CLI behaviour.
+- It does not govern which Rust crates are chosen — that is covered by the specific ADRs that select individual libraries (e.g. ADR-008 for Oxigraph).
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- CI pipeline configuration details (covered by CI workflow files, not this feature).
+- Cross-compilation targets (covered by FT-012).
+- Runtime performance benchmarks (covered by FT-024 and the bench suite).

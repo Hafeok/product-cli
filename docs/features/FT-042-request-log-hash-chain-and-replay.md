@@ -265,40 +265,88 @@ A user can:
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+The request log is the committed, hash-chained, tamper-evident audit trail of every graph mutation performed by `product request apply`, `product verify`, `product migrate`, and `product request undo`. Each entry carries a `prev-hash` / `entry-hash` pair computed over canonical JSON, chaining entries into a sequence that makes any insertion, deletion, or in-place edit detectable. The log is replayable: the same sequence of entries deterministically reconstructs the knowledge-graph at any historical point. Seven entry types (`create`, `change`, `create-and-change`, `undo`, `migrate`, `schema-upgrade`, `verify`) share a common envelope and are distinguished by type-specific payload fields. ADR-039 pins the design decisions.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `product request apply FILE` — on successful apply, writes one `create`, `change`, or `create-and-change` entry to `requests.jsonl`.
+- `product verify FT-XXX` — on successful verification, appends one `verify` entry with the TC results and the tag name created.
+- `product request undo REQ-ID` — reads the target entry from the log and synthesises an `inverse-request`; appends one `undo` entry.
+- `product request log verify` — reads `requests.jsonl` in its entirety; no writes.
+- `product request log verify --against-tags` — additionally reads git tags (`product/*/complete`, `product/ADR-*/accepted`); no writes.
+- `product request replay` options: `--full`, `--to REQ-ID`, `--from REQ-ID`, `--output DIR` — reads `requests.jsonl`; writes to the output directory (never to the working tree).
+- `product request log [--type TYPE] [--feature FT-XXX] [--show REQ-ID]` — read-only filter and display.
+- `product graph check` — reads `requests.jsonl` when `[log] verify-on-check = true` (default); no writes.
+- `product.toml` — `[paths] requests = "requests.jsonl"` (path) and `[log] verify-on-check = true`, `hash-algorithm = "sha256"` (configuration).
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`requests.jsonl`** at the repository root — one JSONL line per entry; the file is the persistent log. On first run in a repo with the legacy `.product/request-log.jsonl`, the file is created by migrating and re-hashing the old entries, then appending a `migrate` entry.
+- **`product request log`** — tabular stdout: id, type, reason, one row per entry, with optional type and feature filters.
+- **`product request log --show REQ-ID`** — full JSONL entry pretty-printed to stdout.
+- **`product request log verify`** — stdout summary of entry-hash and chain check counts; exits 0 (clean) or 1 (any finding); E017/E018/W021 findings each include the line number, stored hash, and computed hash.
+- **`product request replay`** — writes artifact files to the specified output directory; prints a per-entry progress line showing id, type, and outcome.
+- **`product request undo REQ-ID`** — appends an `undo` entry and updates targeted artifacts to their pre-mutation state (marks created artifacts `abandoned`, reverses field mutations); prints a summary of what changed.
+- **`product graph check`** — when log verification is enabled, adds E017/E018/W021 findings to the check output stream.
+- **MCP**: no direct MCP tool for log operations; log verification runs as part of the standard graph-check flow.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`requests.jsonl`** — append-only on each successful `apply` / `verify` / `undo` / `migrate` call. The file grows at the pace of graph mutations. No compaction, no rotation, no server-side storage.
+- **`product.toml`** — `[paths] requests` and `[log]` settings are read on every invocation; they are not mutated by this feature.
+- The hash chain is fully self-contained in the log file; no external index or database is maintained.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Entry append on apply.** After the atomic commit point of `product request apply` (sidecars renamed to targets, lock released), one JSONL entry is appended to `requests.jsonl`. The entry records: `id` (`req-{YYYYMMDD}-{NNN}`, zero-padded, 1-indexed daily), `applied-at` (ISO 8601 UTC), `applied-by` (`git:{name} <{email}>` from `git config`), `commit` (short HEAD SHA), `type`, `reason`, `prev-hash` (the previous entry's `entry-hash`, or `"0000000000000000"` on genesis), and `entry-hash` (SHA-256 over the canonical JSON of the entry with `entry-hash: ""`).
+2. **Canonical JSON.** Keys sorted alphabetically at every nesting level, no trailing whitespace, UTF-8 without BOM, numbers without trailing zeros, booleans and null lowercase. The `entry-hash` computation: build entry with `entry-hash: ""`, serialise canonically, SHA-256 the bytes, write the hex back. The same input always produces the same bytes.
+3. **Chain verification.** `product request log verify` walks entries in order: recomputes each `entry-hash`, compares to stored; checks that each `prev-hash` matches the preceding entry's `entry-hash`. Reports all failures before exiting — does not short-circuit on first error.
+4. **Tag cross-reference.** With `--against-tags`, the command additionally checks that every `product/*/complete` and `product/ADR-*/accepted` git tag has a corresponding `verify` entry in the log. Missing entries surface as W021.
+5. **Undo.** `product request undo REQ-ID` looks up the target entry's `result`. For `created` artifacts: synthesises `set` mutations that mark each `abandoned` and strip its links from peers. For `changed` artifacts: walks each mutation backwards (`set` inverts to `set` with the prior value read from the git blob at `commit`, `append` inverts to `remove`, `remove` inverts to `append`, `delete` inverts to `set`). Appends an `undo` entry whose `inverse-request` is the synthesised change request; applies the inverse atomically. Undo of an undo is legal.
+6. **Replay.** Applies each entry's `request` (or `inverse-request` for undo entries) in order to a fresh directory skeleton via the same apply pipeline used by `product request apply`, with the target root redirected. Produces a graph byte-equivalent to the on-disk state at the matching point. `product graph check --repo <output>` should produce zero findings.
+7. **Log path migration.** On first run in a repo with `.product/request-log.jsonl` and no `requests.jsonl`: walk the old entries, compute `prev-hash` / `entry-hash` for each (they had none), write to `requests.jsonl`, append a final `migrate` entry. The old file is left untouched.
+8. **`applied-by` enforcement.** `product request apply` refuses with a clear error if `git config user.name` or `git config user.email` is unset. Product does not invent a parallel identity.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Every entry's `entry-hash` equals `sha256(canonical_json(entry with entry-hash: ""))`. Any deviation is E017.
+- Every entry's `prev-hash` equals the preceding entry's `entry-hash`. Deviation or deletion is E018.
+- Genesis entry has `prev-hash: "0000000000000000"`.
+- `product request log verify` reports all E017 and E018 findings before exiting; it never stops at the first error.
+- Replay of the full log against a fresh directory produces a graph that passes `product graph check --repo <output>` with zero findings.
+- The same canonical JSON serialisation of the same entry object always produces the same bytes (verified by TC-P015 property test).
+- Changing any field in an entry and recomputing the hash produces a different hash (TC-P016 property test).
+- Deleting any entry produces a chain-break finding at the following entry (TC-P017 property test).
+- Replay of the full log, followed by a diff of the replay graph against the on-disk graph, shows zero differences (TC-P018 property test — the integrity proof).
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+| Code | Tier | Condition |
+|---|---|---|
+| E017 | Integrity | `requests.jsonl` entry hash mismatch — entry at line N has been tampered with |
+| E018 | Integrity | `requests.jsonl` chain break — `prev-hash` at line N does not match `entry-hash` of line N-1 |
+| W021 | Integrity | Git completion tag has no corresponding `verify` entry — possible log truncation |
+| (config error) | Startup | `[log] hash-algorithm` set to any value other than `sha256` — Product refuses to start |
+| (apply error) | Apply | `git config user.name` or `git config user.email` unset — apply refused before any file is written |
+
+Findings from `product request log verify` carry line number, stored hash, and computed hash for each E017 occurrence, making the tampered entry identifiable without binary inspection.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Per-entry cryptographic signatures (Ed25519 or similar) are not implemented; the hash chain covers accidental and casual tampering. Signatures can be layered as a `signature:` field in a future schema version without redesigning the chain.
+- Hash algorithm is not pluggable in v1; the `hash-algorithm` config key exists for forward compatibility only. A second algorithm would require a `schema-upgrade` log entry.
+- The log is a committed file; no server-side storage, remote log shipping, or automatic compaction is provided.
+- Replay always writes to a separate output directory. Restoring the working tree from a replay output requires a manual copy step; this feature does not automate it.
+- Deletion of artifacts via undo marks them `abandoned` and strips their links; it does not delete files from disk. Hard deletion remains a manual operation outside the request model.
+- `product request log verify` and replay are read-only; they never modify `requests.jsonl` or any artifact file.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Per-entry signatures (Ed25519 or otherwise): hash chain covers the stated threat model; signature support is a future schema-version extension.
+- Hash algorithm pluggability beyond SHA-256: the config key reserves the namespace; a second algorithm requires a `schema-upgrade` entry and is not implemented in v1.
+- Server-side log storage or remote log shipping: the log is a committed file; the filesystem is its store.
+- Automatic log compaction or rotation: the log grows at human-mutation pace; rotation is a future feature if needed.
+- Reconstruction of the working tree from replay output: replay writes to a separate directory; syncing back to the working tree is a manual step.
+- Deletion of artifacts via undo: undo marks artifacts `abandoned` and strips links; files remain on disk.

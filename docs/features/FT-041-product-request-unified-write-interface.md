@@ -239,12 +239,12 @@ All remain supported in CLI and MCP. Internally they share the validation + atom
 
 ## Out of scope
 
-- Changing the content-hash immutability model for accepted ADRs (ADR-032). Body mutations on accepted ADRs apply successfully at the request layer and surface as E014 via the post-apply `graph check`; resolution remains `product adr accept --amend --reason`.
-- Removing any granular write command.
-- Server-side request storage, request IDs, or a request registry. Requests are YAML files on disk; the filesystem is their identity.
-- Deletion of artifacts via requests. Deletion remains a manual operation.
-- Partial rollback on post-apply `graph check` findings. Step 11 is a monitor; if it surfaces findings, the user resolves via follow-up requests. The invariant is that a successful apply produces only exit 0 or 2 from `graph check`.
-- Migration of existing authoring prompts (FT-022) and orchestration (FT-023) to use requests. Those updates are separate feature work once FT-041 ships.
+- Changing the content-hash immutability model for accepted ADRs (ADR-032): body mutations on accepted ADRs apply successfully at the request layer and surface as E014 via the post-apply `graph check`; resolution remains `product adr accept --amend --reason`.
+- Removing any granular write command: the request interface is additive; FT-004 and FT-038 tooling coexists unchanged.
+- Server-side request storage, request IDs, or a request registry: requests are YAML files on disk identified by path alone.
+- Deletion of artifacts via requests: deletion remains a manual operation outside the request model.
+- Partial rollback on post-apply `graph check` findings: step 11 is a health monitor; if it surfaces findings, the user resolves via follow-up requests.
+- Migration of existing authoring prompts (FT-022) and orchestration (FT-023) to use requests: those updates are separate feature work once FT-041 ships.
 
 ---
 
@@ -269,36 +269,83 @@ A user can:
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+The Product request is the single composable write interface to the knowledge graph. It replaces ad-hoc sequences of granular CLI commands with a structured, validatable YAML document that expresses multi-artifact intent atomically. Three operation types (`create`, `change`, `create-and-change`) share one validation pipeline, one advisory lock, one atomic-write commit point, and one audit log entry. The interface is additive: every granular write tool (FT-004, FT-038) remains available for single-field edits.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- A request YAML file (at any path; the `.product/requests/` directory is a convention, not a requirement) containing:
+  - `type:` — one of `create`, `change`, `create-and-change`
+  - `schema-version:` — integer (defaults to `1` if omitted)
+  - `reason:` — non-empty human-readable string; whitespace-only is rejected with E011
+  - `artifacts:` (for `create` and `create-and-change`) — array of artifact declarations with optional `ref:` names for forward references
+  - `changes:` (for `change` and `create-and-change`) — array of mutation objects with `target:` ID and one or more `op` / `field` / `value` triples (`set`, `append`, `remove`, `delete`)
+- For CLI: the path is a positional argument to `product request validate FILE` or `product request apply FILE`
+- For MCP: `product_request_validate` or `product_request_apply` receive the YAML text as a parameter
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product request validate`** — exits 0 with a findings report (empty on success) or exits 1 with all E-class findings listed; never writes to disk
+- **`product request apply`** (and `product_request_apply`) — on success: exits 0, prints (or returns as JSON) the list of assigned IDs in `created` and `changed` arrays, appends one entry to `.product/request-log.jsonl`, and runs `product graph check` as a post-apply monitor; on failure: exits 1 with all E-class findings, zero files changed
+- **`product request diff`** — prints a textual diff of what would change; writes nothing
+- **`product request log`** — tabular list of past requests; writes nothing
+- **MCP `product_request_validate`** — returns a `findings` array; no writes
+- **MCP `product_request_apply`** — returns `{ applied, created, changed, findings }`; writes atomically
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`.product/request-log.jsonl`** — append-only log of every successful apply; each line records `reason`, `timestamp`, `request content hash`, `created`, and `changed` arrays
+- **`docs/features/`, `docs/adrs/`, `docs/tests/`, `docs/deps/`** — artifact files created or mutated by `apply`; the advisory lock (ADR-015) serialises concurrent writes
+- No other persistent state. Pre-apply checksums of all touchable files are held in memory during apply and discarded after the rename commit point
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. Parse and structurally validate the request YAML (schema version, required fields, ref-name format)
+2. Validate full intent before any write: resolve `ref:` forward references, check cross-artifact rules (E002 unknown target, E003 dependency cycle, E004 supersedes cycle, E012 domain vocabulary, E013 DEP without governing ADR), report all findings at once (never stop at first)
+3. Acquire advisory lock (ADR-015)
+4. Topologically sort the artifact dependency graph; assign real IDs in order; rewrite every `ref:` occurrence to the assigned ID
+5. Write all new and mutated artifact files to `.product-tmp.<pid>` sidecars
+6. If any sidecar write fails: delete all sidecars, verify checksums show zero-files-changed, release lock, surface error
+7. Batch-rename all sidecars to target paths (the atomic commit point)
+8. Release lock; run `product graph check` as a health monitor; append log entry; print summary
+
+**Forward references:** `ref:local-name` values bind an artifact declared in the same request; `ref:` names must match `^[a-z][a-z0-9-]*$`. Cross-links are bidirectional on apply.
+
+**Body mutations on accepted ADRs:** succeed at the request layer and surface as E014 on the post-apply `graph check`; resolution is `product adr accept --amend --reason "..."`.
+
+**`append` / `remove` idempotency:** applying the same request twice produces the same end state; duplicates on `append` are silently deduplicated.
+
+**`--commit` flag on `product request apply`:** after a successful apply, performs a git commit using `reason:` as the message suffix.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- A failed apply leaves zero files changed (enforced by pre/post SHA-256 checksums of all touched files)
+- A successful apply never produces `product graph check` exit 1 (exit 1 after apply is a Product bug)
+- `product request validate` never writes to disk under any circumstance
+- `append` and `remove` mutations are idempotent across repeated applies
+- All E-class findings are reported together; validation never stops at the first error (ADR-038 decision 3)
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+| Code | Condition |
+|---|---|
+| E001 | Unknown `schema-version:` (includes upgrade hint) or `ref:` name not matching `^[a-z][a-z0-9-]*$` |
+| E002 | `ref:` not defined in request, or `target:` / `value:` ID does not exist |
+| E003 | `depends-on` creates a cycle |
+| E004 | `supersedes` creates a cycle |
+| E006 | `scope`, `tc-type`, `dep-type` value not in valid set |
+| E011 | `reason:` missing or whitespace-only |
+| E012 | Domain value not in `[domains]` vocabulary |
+| E013 | DEP with no governing ADR in request or existing graph |
+| W-class | Advisory: new-ADR conflicts (G005), `breaking-change-risk: high` on new DEPs — reported but do not block apply |
+
+Findings include a `location:` in JSONPath syntax (`$.artifacts[4]`, `$.changes[0].mutations[1].value`) so the author can locate the offending node in the request document.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Does not change the content-hash immutability model for accepted ADRs (ADR-032); body mutations on accepted ADRs are applied and surface as E014 post-apply
+- Does not deprecate or remove any granular write command (FT-004, FT-038); the request interface is purely additive (ADR-038 decision 14)
+- Does not support deletion of artifacts; deletion remains a manual operation
+- Does not store requests server-side or assign request IDs; requests are YAML files on disk identified by path
+- Does not support partial rollback after a successful apply; post-apply `graph check` findings are resolved via follow-up requests

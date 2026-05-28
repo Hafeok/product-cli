@@ -59,40 +59,60 @@ Example GitHub Actions workflow that gates PRs on:
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+CI Integration makes Product a first-class CI gate by providing machine-readable JSON output on all list and navigation commands, a structured three-tier exit code scheme (0 = clean, 1 = errors, 2 = warnings only per ADR-009), and shell completions for bash, zsh, and fish. The `--format json` flag on graph check, gap check, and list commands allows CI pipelines to parse results, annotate PRs, and enforce thresholds without text parsing. The exit code scheme allows a CI step to distinguish hard errors (broken links) from soft warnings (coverage gaps) and configure its tolerance accordingly.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`--format json`**: flag accepted by `product feature list`, `product graph check`, `product gap check`, `product adr list`, and other list/navigation commands
+- **`product completions bash|zsh|fish`**: shell name argument
+- **GitHub Actions workflow**: calls `product graph check --format json`, `product metrics threshold`, and `product gap check --changed --format json` as CI steps
+- **`product.toml` `[metrics.thresholds]`**: threshold configuration read by `product metrics threshold`
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **JSON to stdout**: structured output for all `--format json` commands; format is stable and versioned
+- **Exit codes**: 0 (clean), 1 (errors — broken links, malformed front-matter, E-class errors), 2 (warnings only — orphaned artifacts, coverage gaps, W-class warnings) per ADR-009
+- **Shell completion scripts**: to stdout, suitable for redirect to the appropriate completion directory
+- **`product graph check --format json`**: JSON object with `errors` and `warnings` arrays; exit 1 if any errors, exit 2 if warnings only
+- **`product gap check --format json`**: JSON finding objects (same schema as non-CI mode) to stdout; exit 1 on new unsuppressed high-severity findings
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+Stateless. No data is retained between invocations. The exit code and JSON output are derived fresh from the current graph state on each invocation.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. Any command with `--format json` writes valid JSON to stdout. Errors and informational messages continue to go to stderr. This separation allows CI to capture structured output via `>` while still seeing diagnostic messages.
+2. `product graph check` uses the three-tier exit code: exit 0 for a clean graph, exit 1 for hard errors (broken links, cycles, malformed front-matter), exit 2 for warnings only (orphaned artifacts, features without exit criteria). A CI pipeline can choose its tolerance: `product graph check` (fail on errors and warnings) or `product graph check || [ $? -eq 2 ]` (fail on errors only).
+3. `product completions bash` writes a Bash completion script to stdout. The operator redirects it to the system completion directory. The script is generated from the Clap definition and is always in sync with the current command surface.
+4. Example GitHub Actions workflow gates PRs on three checks: `product graph check --format json` (zero errors), `product metrics threshold` (fitness functions within bounds), `product gap check --changed --format json` (no new gaps).
+5. `product gap check --changed` identifies changed ADR files via `git diff --name-only HEAD~1`, expands to 1-hop graph neighbours, and runs analysis only on the affected ADR subgraph. CI cost is proportional to change scope, not repository size.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- All list and navigation commands that support `--format json` write valid, parseable JSON to stdout when the flag is present. Malformed JSON output is a bug.
+- Exit codes are stable and documented (ADR-009). A command that exits 1 on warnings instead of 2 is a bug.
+- `product graph check` exit 1 on a PR with a broken link — this is the primary CI gate invariant (TC-181).
+- stdout and stderr are always separated: structured results to stdout, diagnostics to stderr. This is required for CI pipeline JSON capture.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`--format json` with graph errors**: errors appear in the JSON `errors` array; exit code is 1. The JSON is always written even when there are errors — the CI step receives both the exit code and the structured data.
+- **Model errors in `product gap check`**: gap analysis exits 2 (warning) rather than 1 (error) on model API failures — a transient model error never fails CI as if new gaps were found.
+- **Invalid threshold configuration**: `product metrics threshold` exits 1 with a configuration error if `product.toml` contains unrecognised threshold keys.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Product does not write GitHub PR annotations or comments. The CI step reads JSON output and uses the GitHub Actions API to annotate if desired.
+- Product does not configure CI workflow files. The example GitHub Actions workflow in the docs is a reference; operators copy and adapt it.
+- Shell completions are generated from the Clap definition at compile time — they reflect the actual command surface and cannot drift independently.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- GitHub PR annotation or comment posting (CI harness responsibility)
+- CI workflow file generation or management
+- Test result reporting formats beyond exit codes and JSON (JUnit XML, TAP, etc.)
+- Parallel CI step execution coordination
+- CI caching of graph state between steps (the graph is rebuilt fresh each invocation per ADR-003)

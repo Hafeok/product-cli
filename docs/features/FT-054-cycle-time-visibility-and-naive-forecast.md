@@ -297,36 +297,72 @@ See the exit-criteria TC for the consolidated check-list.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product cycle-times`** — reads `product/FT-XXX/started` and `product/FT-XXX/complete` git tags for all features via a batched `git for-each-ref refs/tags/product/*` call. Accepts `--recent N`, `--phase N`, `--in-progress`, and `--format {text|json|csv}` flags.
+- **`product forecast FT-XXX --naive`** — single-feature mode; reads the same git tags and computes recent-N statistics for the projection. Accepts `--sample-size N` to override `[cycle-times].recent-window` for a single invocation.
+- **`product forecast --phase N --naive`** — phase mode; counts remaining (non-complete) features in phase N and applies sequential multiplication.
+- **`product status`** — reads the same tag data as `product cycle-times` to populate the cycle-time column; the column is omitted when fewer than `[cycle-times].min-features` complete features have both tags.
+- **`product.toml` `[cycle-times]` section** — three keys: `recent-window` (default 5), `min-features` (default 3), `trend-threshold` (default 0.25). Validated at load time: `trend-threshold` must be in `[0.0, 1.0]`; `min-features` and `recent-window` must be non-negative integers.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product cycle-times` text output** — a table of features with both `started` and `complete` tags, columns: feature, started (YYYY-MM-DD), completed (YYYY-MM-DD), cycle time (days, one decimal). Summary footer: count, recent-N stats (median / min / max), all-time stats (median / min / max), trend classifier (`accelerating` / `stable` / `slowing` or omitted below 6 complete features).
+- **`product cycle-times --format json`** — stable JSON schema with `features[]` array and `summary` object containing `count`, `recent_5`, `all`, and `trend` fields (ADR-046 §10, TC-651).
+- **`product cycle-times --format csv`** — stable CSV with header `feature_id,started,completed,cycle_time_days,phase` and ISO 8601 timestamps (ADR-046 §10, TC-650).
+- **`product cycle-times --in-progress`** — elapsed-so-far table for in-progress features plus a reference median line.
+- **`product forecast FT-XXX --naive` output** — likely, optimistic, and pessimistic completion dates, each labelled "rough estimate / not a probability forecast". Clamps to today when elapsed already exceeds the sample statistic (ADR-046 §9).
+- **`product forecast --phase N --naive` output** — sequential-multiplication projection for K remaining phase-N features; includes explicit "assumes no parallelism" callout and pointer to the CSV export.
+- **`product status` cycle-time column** — complete features: `Nd`; in-progress features: `elapsed Nd (recent median: Md)`; planned features: empty cell. Column omitted entirely when `complete_count < min-features`.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+Stateless. No data is retained between invocations. All values are derived from git tag timestamps (`git for-each-ref`, `git log -1 --format=%aI`) at read time, matching ADR-003's derived-graph posture and ADR-046 decision 11. No front-matter fields are added or modified; no request-log entries are written.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Tag resolution.** `src/git_tags/read_all_started_and_complete` issues one batched `git for-each-ref refs/tags/product/*` call and returns `HashMap<FeatureId, (Option<DateTime>, Option<DateTime>)>`. Features missing either tag are excluded from cycle-time output without error.
+2. **First-complete-tag rule.** When a feature has multiple complete tags (`complete`, `complete-v2`, …), the helper returns the earliest one by sorting matching tags lexicographically — `complete` sorts before `complete-v2`. This gives cycle time its stable meaning: "how long did the feature take to first pass verification" (ADR-046 decision 2).
+3. **Descriptive statistics.** `src/cycle_times/compute.rs` computes count, median, min, max over all complete features and over the most recent N (configurable via `recent-window`). No mean, stddev, percentiles beyond min/max/median (ADR-046 decision 3).
+4. **Trend classification.** The three-state classifier compares `(recent_median - all_median) / all_median` against `±trend-threshold`. Result is `accelerating` (ratio < −threshold), `stable` (within ±threshold), or `slowing` (ratio > +threshold). Below 6 complete features the trend is omitted (ADR-046 decision 4, TC-648).
+5. **Naive projection.** For single-feature mode: `likely = today + max(0, recent_median − elapsed)`, `optimistic = today + max(0, recent_min − elapsed)`, `pessimistic = today + max(0, recent_max − elapsed)`. The `max(0, …)` clamp ensures projections never show a past date (ADR-046 decision 9, TC-661).
+6. **Phase projection.** For phase mode: `likely = today + K × recent_median`, `optimistic = today + K × recent_min`, `pessimistic = today + K × recent_max`. K is the count of non-complete features in the specified phase. Output labels the "no parallelism" assumption explicitly.
+7. **Insufficient-data guard.** Below `min-features` complete features: `product cycle-times` returns an empty result (exit 0); `product forecast --naive` returns an explanatory message and exits 2 (ADR-046 decision 8, TC-660).
+8. **`product status` column.** The cycle-time column is rendered only when `complete_count >= min-features`. In-progress features without a `started` tag are skipped from the elapsed column with a warning (ADR-046 decision 13).
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `product cycle-times` is strictly read-only: no tag writes, no front-matter mutations, no request-log entries (ADR-046 decision 11).
+- The `--format json` and `--format csv` schemas do not change between Product versions without a documented schema bump (ADR-046 §10, TC-650, TC-651).
+- Cycle time for a feature always uses the first (earliest) `complete` tag, never `complete-vN` (ADR-046 decision 2).
+- `product forecast --naive` projections never produce a past date — all three estimates clamp to today when elapsed exceeds the sample statistic (ADR-046 decision 9, TC-661).
+- The `--naive` flag is mandatory for `product forecast`; there is no unlabelled forecast surface (ADR-046 decision 5).
+- Below `min-features` complete features, `forecast --naive` exits 2 with an explanatory message and emits no numeric projection (ADR-046 decision 8, TC-660).
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Insufficient data.** `product cycle-times`: empty result, exit 0, no error message. `product forecast --naive`: "insufficient data — need at least N complete features with both started and complete tags", exit 2.
+- **In-progress feature with no `started` tag.** Skipped from the `--in-progress` elapsed table with a per-feature warning. `product cycle-times` continues and renders all other features. Not an E-class error.
+- **Git unavailable.** `git for-each-ref` fails. `product cycle-times` exits with a diagnostic message referencing the git error. The feature does not attempt to fall back to stored front-matter timestamps.
+- **`--format` flag with an unrecognised value.** E-class error with a list of accepted values (`text`, `json`, `csv`). Exit 1.
+- **`--sample-size N` below `min-features`.** W-class warning that the sample size is below the minimum; the command proceeds with the requested N and may reach the insufficient-data guard.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **In scope:** `product cycle-times`, `product forecast --naive`, and the `product status` cycle-time column; `[cycle-times]` config section; JSON and CSV stable export schemas.
+- **Out of scope:** `product forecast` without the `--naive` flag. No unlabelled forecast surface exists (ADR-046 decision 5).
+- **Out of scope:** probabilistic forecasting — no Monte Carlo, no P50/P80/P95, no confidence intervals (ADR-046 rejected alternatives).
+- **Out of scope:** mean, stddev, IQR, or percentiles beyond min/max/median (ADR-046 decision 3).
+- **Out of scope:** stored cycle-time or velocity fields in feature front-matter. All values are derived at read time (ADR-046 rejected alternatives).
+- **Out of scope:** Parquet, SQLite, or direct BI export formats. CSV and JSON cover the external-tool handoff.
+- **Out of scope:** bucketing by feature size, complexity, team, or domain. The CSV export is the handoff for analytics stacks that need those dimensions.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- **Probabilistic forecasting.** No Monte Carlo, no P50/P80/P95, no regression or fitted distribution. ADR-046 pins this: at the scales where Product is most useful (<50 complete features), probabilistic intervals are wider than the point estimates and overstate precision. Teams that want a real model export the CSV and run their own analytics.
+- **Stored cycle time in front-matter.** Cycle time is derived from tag timestamps at read time. Storing it would duplicate the tag's data, create a source-of-truth question, and introduce stale values on rebases (ADR-046 rejected alternatives).
+- **Bucketing by size / complexity / team.** The CSV export is the hand-off for analytics stacks that need stratification by these dimensions.
+- **`product forecast` without `--naive`.** The flag is mandatory — the UX contract is that users must opt into a projection they know is rough. No unlabelled forecast surface exists (ADR-046 decision 5).
+- **Mean / stddev / IQR / percentiles beyond min/max/median.** Statistics that imply distribution precision the sample does not support are excluded (ADR-046 decision 3).
+- **Direct BI or SQLite export.** CSV and JSON cover the external-tool handoff; richer formats are deferred.
+- **Per-phase burndown chart.** Pure presentation over existing data; deferred until demand exists.

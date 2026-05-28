@@ -241,36 +241,75 @@ See the exit-criteria TC for the consolidated check-list.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product request new create|change`** — no arguments required; mode (`create` or `change`) determines which `add` subcommands are available in the session.
+- **`product request add <artifact> [FLAGS]`** — accepts all required artifact fields as flags (e.g. `--title`, `--phase`, `--scope`) or prompts for them interactively when stdin is a TTY. Flags and prompts produce byte-identical YAML (ADR-044 decision 4).
+- **`product request add target ID [FLAGS]`** — change mode only; targets an existing artifact by ID and opens an interactive mutation builder (append / set / remove / delete one field at a time).
+- **`product request add acknowledgement ID DOMAIN REASON`** — one-shot form for closing W010 domain-acknowledgement findings within a draft session.
+- **`product request submit [--force]`** — reads the current `.product/requests/draft.yaml`; applies it via the existing `product request apply` pipeline; archives on success.
+- **`product request continue`** — resumes an existing draft; prints its status summary.
+- **`product request discard [--force]`** — deletes the draft file; prompts for confirmation unless `--force` is given.
+- **`product request edit`** — opens `.product/requests/draft.yaml` in `$EDITOR`.
+- **`product.toml` `[request-builder]` section** — `interactive`, `warn-on-warnings`, and optional `editor` override.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`.product/requests/draft.yaml`** — the draft file, which is valid request YAML at every step. Opening it in `$EDITOR` or passing it directly to `product request apply` produces identical results to using the builder's `submit` command (ADR-044 decision 1).
+- **`product request status` / `show` / `validate` / `diff` output** — human-readable summary with status indicators (✓ / ⚠ / ✗) per artifact, warning/error counts, raw draft YAML, or a diff of what would change on submit.
+- **Archived draft** — on successful submit, the draft is moved to `.product/requests/archive/<timestamp>-draft.yaml`. The archive directory is gitignored (local history, not shared artifact).
+- **Committed graph writes** — `product request submit` delegates to the existing `product request apply` pipeline, which performs all graph writes atomically and appends one entry to `requests.jsonl`.
+- **Incremental validation feedback** — after each `add` command, structural validation runs against the draft plus the existing graph and prints any E-class or W-class findings immediately.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+The single persistent artifact is `.product/requests/draft.yaml`. Its existence is the lockfile for the "one active draft per working directory" rule (ADR-044 decision 2): `product request new` with a draft present surfaces status / submit / discard / continue options rather than overwriting. No server-side draft store, no sidecar state file, and no registry — the draft file IS the session state.
+
+The archive directory (`.product/requests/archive/`) accumulates timestamped copies of submitted drafts as local history. It is gitignored and carries no retention policy in v1.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Session open.** `product request new create` creates `.product/requests/draft.yaml` with a `type: create` header. `product request new change` creates one with `type: change`. If a draft already exists, the command prints its status and offers continue / submit / discard / new-session choices (ADR-044 decision 2).
+2. **Incremental artifact addition.** Each `add` command appends one artifact block (create mode) or one mutation target (change mode) to the draft YAML, then runs structural validation scoped to the newly-added content plus the existing graph. Validation must complete in under 100ms — no LLM, no git, no cross-apply simulation (ADR-044 decision 3).
+3. **`add dep` closes E013 in-step.** `product request add dep --adr new …` appends both the DEP and its governing ADR in one step, satisfying E013 before it can fire (ADR-044 decision 5).
+4. **Follow-up mutation suggestions.** When a mutation in change mode would newly trigger a W-class finding (e.g. adding a domain without an acknowledgement triggers W010), the builder prompts to add the follow-up in the same step. Suggestions are never automatic — the user confirms each mutation (ADR-044 decision 6).
+5. **Submit.** `product request submit` runs the full `product request validate` pass, refuses to apply on any E-class finding, and respects `warn-on-warnings` for W-class findings. On success, files are written atomically, the draft is archived, and assigned IDs are printed. On failure, the draft is left in place unchanged (ADR-044 decision 7).
+6. **Edit shortcut.** `product request edit` opens the draft in `$EDITOR` directly — the full YAML is exposed for users who prefer raw editing but still want the lifecycle management.
+7. **YAML equivalence.** Every `add` command invoked with all fields as flags produces the same draft YAML as the interactive prompt flow for the same field values (ADR-044 decision 4, TC-634).
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- The draft file is always valid request YAML that can be passed to `product request apply` at any point and produce the same result as `product request submit` (TC-634).
+- At most one draft exists per working directory at any time. `product request new` with an existing draft never overwrites it silently (ADR-044 decision 2, TC-632).
+- `product request submit` on a draft with an E-class finding writes zero files to disk and leaves the draft untouched (TC-631).
+- Flags-only invocation and interactive-prompt invocation of the same `add` command produce byte-identical YAML (ADR-044 decision 4).
+- Archive is gitignored; no draft archive entry ever appears in `git status` as an untracked file for commit (ADR-044 rationale).
+- Incremental validation uses the identical validator and schema as `product request validate` — there is no separate validation code path (ADR-044 decision 3).
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **E-class finding at submit.** Submit is refused; the draft is left in place; all E-class findings are printed with ADR-013-style diagnostics. Exit 1.
+- **W-class finding at submit.** Behaviour depends on `warn-on-warnings`: `always` submits through, `warn` prompts (default), `block` treats W-class as E-class. `--force` overrides without prompting.
+- **`product request new` with existing draft.** Not an error — the builder surfaces the existing draft's status and the available options (continue / submit / discard). No overwrite occurs.
+- **`product request add` with missing required field (no-TTY, no flag).** E-class finding; the partial artifact is not appended to the draft; the draft is left in its prior state.
+- **`product request discard` without `--force`.** Prompts for confirmation before deleting. If stdin is not a TTY, requires `--force`; without it, exits with an error.
+- **`$EDITOR` not set on `product request edit`.** Falls back to `vi`; emits a W-class warning suggesting the user configure `$EDITOR` or the `[request-builder].editor` override.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **In scope:** the draft lifecycle (new / continue / discard / edit), the `add` family of commands (feature, adr, tc, dep, doc, target, acknowledgement), the inspection surface (status / show / validate / diff), and the submit / archive flow.
+- **Out of scope:** multi-draft sessions per working directory. One draft at a time; named drafts are deferred.
+- **Out of scope:** server-side draft state or request IDs. The draft is purely a file on disk under `.product/requests/`.
+- **Out of scope:** cross-machine draft sync. The draft is gitignored and per-clone.
+- **Out of scope:** artifact deletion via the builder. ADR-038 decision 1 — the request model does not support deletion; this feature inherits that restriction.
+- **Out of scope:** LLM-assisted incremental validation. Incremental validation is structural-only; gap-class analysis runs only via `product request validate` at the full-submit gate.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- **Multi-draft workspaces.** Named drafts (`product request new create --name rate-limit`) for concurrent exploration. Deferred — the one-draft-at-a-time rule keeps the UX simple and the lockfile trivial.
+- **Server-side draft state.** No request IDs, no draft registry. The draft file IS the session; collaboration on a shared draft is out of scope (ADR-044 rejected alternatives).
+- **Cross-machine draft sync.** The archive is gitignored and per-clone. Shared draft state would require a registry that introduces its own consistency story.
+- **Teaching the request schema in prompts.** Prompts ask for field values; they do not explain why each field exists. The authoritative schema source is `product schema` and the request spec.
+- **Deleting artifacts via the builder.** ADR-038 decision 1: the request model does not support deletion; this feature inherits that restriction unchanged.
+- **Archive pruning in v1.** A `product request archive prune` command is deferred; no retention policy ships in this feature.
+- **Session transcript export beyond YAML.** Persisting each prompt + answer alongside the archived draft for auditability beyond the YAML is deferred — the YAML is sufficient for v1.

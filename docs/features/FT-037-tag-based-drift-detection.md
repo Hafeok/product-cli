@@ -114,36 +114,68 @@ implementation-depth = 20
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `product verify FT-XXX` — when a feature transitions to `complete`, tag creation is triggered automatically as a side-effect.
+- `product tags list [--feature FT-XXX] [--type complete] [--format json]` — filters for browsing the `product/` tag namespace.
+- `product tags show FT-XXX` — a feature ID for detailed tag inspection.
+- `product drift check FT-XXX [--all-complete]` — feature ID or `--all-complete` for batch drift analysis.
+- `product drift check ADR-XXX` — an ADR ID; drift is derived transitively through features linked to that ADR.
+- `[tags]` section in `product.toml` — `auto-push-tags` (bool, default false) and `implementation-depth` (int, default 20).
+- The git working directory — all tag operations call `git` as a subprocess via `src/tags.rs`.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **Tag creation** — when `product verify FT-XXX` completes a feature, an annotated git tag `product/FT-XXX/complete` is created. Tag message: `"FT-001 complete: 4/4 TCs passing (TC-001, TC-002, TC-003, TC-004)"`. Subsequent re-completions create `complete-v2`, `complete-v3`, etc.
+- **Console notice** — `✓ Tagged: product/FT-XXX/complete` and `Run git push --tags to share.`
+- **`product tags list`** — table with columns TAG, ARTIFACT, EVENT, DATE. `--format json` emits a JSON array.
+- **`product tags show FT-XXX`** — full tag detail including tag message (TC list) and timestamp.
+- **`product drift check FT-XXX`** — drift report for files changed since the completion tag. Falls back to source-files or pattern-based discovery when no tag exists.
+- **W018 warning** — printed to stderr when the working directory is not a git repo; verify still succeeds.
+- **W019 warning** — printed when no completion tag is found for a feature; drift falls back to pattern-based discovery.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+Implementation milestones are recorded entirely as annotated git tags in the `product/{artifact-id}/{event}` namespace. No front-matter fields are added to feature files. `completed-at` is derived on demand from the tag object timestamp via `git log -1 --format=%aI`. The `[tags]` configuration section in `product.toml` persists the `auto-push-tags` and `implementation-depth` settings across invocations.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Tag creation in verify** — `src/tags.rs::create_tag` is called with `(root, feature_id, event, message)`. If the base tag already exists, `next_event_version` finds the next available `complete-vN` name.
+2. **Graceful degradation** — `is_git_repo(root)` is checked before any tag operation. If not in a git repo, or if `git` is not available, tag creation is skipped with W018 and verify continues normally.
+3. **Tag namespace** — format is `product/{artifact-id}/{event}`. Tag names are unambiguous and do not collide with release tags (`v1.0.0`, `release-*`).
+4. **Drift detection** — `check_drift_since_tag` uses `git diff-tree` to find files touched in commits near the completion tag (up to `implementation-depth` commits), then runs `git log TAG..HEAD -- <files>` to find subsequent changes and `git diff TAG..HEAD -- <files>` to produce a diff for LLM context.
+5. **Fallback chain** — drift check priority: (1) completion tag if present → (2) `source-files` in ADR front-matter → (3) pattern-based discovery. Fallback is per-feature.
+6. **ADR-level drift** — `product drift check ADR-XXX` unions the implementation file sets of all features linked to that ADR, then computes changes since the earliest completion tag among them.
+7. **`product tags` commands** — `list`, `list --feature`, `list --type`, `show` are read-only commands implemented in `src/commands/tags.rs` using `src/tags.rs` functions. All filter and format logic is in the command adapter.
+8. **Auto-push** — when `auto-push-tags = true` in `[tags]`, verify runs `git push origin <tag>` after tag creation. Default is false (print-reminder only).
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Tags are created in the `product/{artifact-id}/{event}` namespace exclusively — never in other namespaces.
+- A completion tag is annotated (not lightweight) — it always carries a message, an author, and a timestamp.
+- Re-verification of a feature that is already complete creates a new version tag (`complete-v2`) rather than overwriting the existing tag.
+- Feature front-matter schema is unchanged — no new fields are written by tag creation.
+- Tag creation never blocks verify from completing — W018 and W019 are warnings, not errors.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **W018** — not a git repository; tag creation skipped. Verify continues and succeeds. Warning is printed to stderr.
+- **W019** — no completion tag found for feature; drift falls back to source-files or pattern discovery. Warning identifies the feature and states the fallback in use.
+- **`git tag` subprocess failure** — `create_tag` returns `ProductError::IoError` with the stderr from git. Verify treats this as a non-fatal warning (the tag operation is advisory).
+- **`product drift check FT-XXX` with no history** — if neither a tag nor source-files exist, drift check emits "no baseline available" and exits 0 (no drift detected, not an error).
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Feature front-matter is not modified by tag creation. The tag IS the record of completion; no `completed-at` or `implementation-commits` field is written to YAML.
+- `source-files` on ADR front-matter is retained for backward compatibility as a fallback; it is not deprecated from the schema.
+- `product drift scan <path>` (reverse lookup) and `product drift suppress/unsuppress` are unchanged.
+- `drift.json` baseline is unchanged.
+- Tags in the `product/` namespace are owned by the Product CLI. Manually created tags in this namespace may interfere with version numbering (e.g. `complete-v2` being unexpected).
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Recording git tags for artifacts other than features reaching `complete` (ADR acceptance tags, DEP activation tags) — the namespace supports these but they are not created automatically by this feature.
+- Automatic `git push --tags` by default — opt-in via `auto-push-tags = true` in config.
+- Renaming or deleting existing `product/` tags — no destructive tag operations are exposed.
+- Drift analysis for features with no linked completion tag and no source-files declared — pattern-based discovery (the last fallback) continues to handle this case.
+- Integration with remote git hosting APIs (GitHub, GitLab) — tag push uses standard `git` subprocess only.

@@ -220,36 +220,68 @@ See TC-600 (exit criteria) for the consolidated check-list.
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- TC documents with `tc-type: absence` in their YAML front-matter — created via `product request apply` or authored directly. An absence TC requires `validates.features` to be empty and `validates.adrs` to be non-empty.
+- ADR documents with `removes: [String]` and/or `deprecates: [String]` arrays in their YAML front-matter — new optional fields, defaulting to empty; round-tripped by the parser/serialiser without churn on existing ADRs that omit them.
+- `product gap check` — reads the knowledge graph; evaluates the structural G009 rule.
+- `product graph check` — reads the knowledge graph; evaluates the structural W022 and W023 rules.
+- `product verify --platform` — discovers TCs by `tc-type` (including `absence`) for stage-6 execution.
+- `product request {validate,apply}` — validates TC type and absence TC shape as part of the request validation pipeline.
+- `product agent-context` / `product_schema` — reads graph and config; renders the updated schema.
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product gap check`** — G009 finding (severity: high) for any ADR whose `removes` or `deprecates` is non-empty and whose linked TCs include no `tc-type: absence`.
+- **`product graph check`** — W022 finding for the same condition as G009; W023 finding for each artifact whose front-matter contains a key listed in the `deprecates:` array of any accepted ADR.
+- **`product verify --platform`** — runs `tc-type: absence` TCs alongside other platform TCs; per-TC result (pass / fail / unrunnable) contributed to the stage-6 result.
+- **`product request validate`** — E006 for absence TCs whose `validates.features` is non-empty (invalid shape); E006 for unknown `tc-type` values.
+- **`product agent-context` / `product_schema`** — updated schema documenting the `absence` TC type, `removes`, and `deprecates` ADR fields.
+- **W023 at parse time** — when the parser encounters a front-matter field that is listed in the `deprecates:` array of any accepted ADR; the field is still parsed and the graph builds normally.
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`src/types.rs` `TcType` enum** — extended with the `Absence` variant. The serialised spelling is `"absence"`. No migration of existing TCs is required; the parser default for unrecognised types is an E006 finding (unchanged).
+- **`Adr` struct** — extended with `removes: Vec<String>` and `deprecates: Vec<String>`, both defaulting to empty. Serialiser emits these fields only when non-empty (avoids churn in existing ADR files on round-trip).
+- No new files, no new graph store, no new persistent state beyond what is authored in existing YAML front-matter.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **`tc-type: absence` validation.** The parser and request validator both accept `"absence"` as a valid TC type. Structural validation additionally checks that `validates.features` is empty (E006 if non-empty) and `validates.adrs` is non-empty. The runner machinery in `product verify --platform` discovers absence TCs by the same selection rule as other platform TCs (`validates.features` empty, `validates.adrs` non-empty) and runs their configured runner.
+2. **`removes` and `deprecates` round-trip.** The parser accepts both fields on ADR front-matter; the serialiser emits them only when non-empty. Older ADR files without these fields parse without error (default empty).
+3. **G009 in `product gap check`.** For each accepted ADR: if `removes` or `deprecates` is non-empty and no linked TC has `tc-type: absence`, emit G009 (severity: high). G009 is structural — no LLM required.
+4. **W022 in `product graph check`.** Same condition as G009, emitted as a W-class warning through the graph-check stream.
+5. **W023 at parse time.** At graph-build time, the validator constructs the union of all `deprecates` string values across accepted ADRs. For each artifact, it checks whether any front-matter key appears in that union; matching keys emit W023 naming the deprecating ADR by ID. The artifact is still included in the graph; W023 is advisory.
+6. **Schema and agent-context updates.** The `absence` TC type, `removes`, and `deprecates` fields are documented in the schema rendered by `product agent-context` and `product_schema`, grouped appropriately (structural type for `absence`; optional array fields for `removes`/`deprecates`).
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- An absence TC with non-empty `validates.features` is rejected with E006 by both the request validator and `product graph check`. It is never written to disk via the request interface.
+- W023 does not prevent the graph from building; it is purely advisory. Any artifact with a deprecated field is still parsed and included.
+- G009 and W022 disappear when at least one `tc-type: absence` TC is linked to the ADR whose `removes` or `deprecates` triggered the finding. Verified by TC-593.
+- The `removes` and `deprecates` fields are emitted by the serialiser only when non-empty, so existing ADR files are not modified on round-trip.
+- `product verify --platform` (stage 6 of the unified verify pipeline) discovers absence TCs by the same selection rule as other platform TCs; no special case is needed.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+| Code | Tool | Condition |
+|---|---|---|
+| G009 | `product gap check` | ADR has non-empty `removes` or `deprecates` but no linked `tc-type: absence` TC; severity: high |
+| W022 | `product graph check` | Same condition as G009; emitted as a warning in the graph-check stream |
+| W023 | Parser / `product graph check` | Artifact front-matter contains a key listed in the `deprecates:` array of an accepted ADR; advisory, graph builds normally |
+| E006 | Request validator / `product graph check` | Absence TC with non-empty `validates.features`, or unknown `tc-type` value |
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Auto-generation of absence TC scaffolding from `removes` entries is not implemented; G009 drives the work and the user writes the runner.
+- No built-in runner library for ecosystem-specific absence patterns is shipped; the spec documents seven runner patterns but they remain the user's responsibility.
+- Product does not parse `removes` or `deprecates` strings as structured identifiers; they are freeform labels — not queries against DEPs, source files, or CLI command registries.
+- Auto-promotion of phase-1 deprecation TCs to `unrunnable` once the phase-2 absence TC passes is not implemented; manual transition with a documented reason is required.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Auto-generation of absence TC stubs from `removes` entries: G009 already drives the work; scaffolding is a future feature.
+- Built-in runner library for ecosystem-specific patterns (removed CLI, removed NuGet/npm/cargo, file absent): the spec documents seven runner patterns; shipping them as templates pulls ecosystem knowledge into Product.
+- Structured modelling of `removes` strings: the values are freeform labels, not queries against DEPs, source files, or CLI registries.
+- Deprecation of the `removes`/`deprecates` fields themselves: self-hosting via the `deprecates` field on a future ADR is well-defined but out of scope for this feature.
+- Auto-promotion of phase-1 deprecation TCs to `unrunnable` once the phase-2 absence TC passes: this conflates two distinct author decisions and is left as a manual step.

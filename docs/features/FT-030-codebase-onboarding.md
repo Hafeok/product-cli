@@ -131,40 +131,67 @@ Coverage gaps are expected — they're tracked in `gaps.json` and addressed over
 
 ## Description
 
-See existing prose above. This heading is a backfilled stub for ADR-047 structural compliance; the substantive description for this legacy feature lives in the prose preceding this section.
+Codebase onboarding discovers load-bearing architectural decisions implicit in an existing codebase (where no formal ADRs exist) and produces a minimum viable knowledge graph. It is a three-phase pipeline: scan (`product onboard scan`) asks an LLM to detect decision candidates from source code patterns; triage (`product onboard triage`) lets the team confirm, enrich, merge, or reject each candidate interactively; seed (`product onboard seed`) creates ADR files and feature stubs from confirmed candidates. The LLM detects; humans decide. No ADR enters the graph without human triage. Post-onboarding gap analysis (`product gap check --all`) drives incremental enrichment of the resulting graph (ADR-027 and ADR-022).
 
 ## Functional Specification
 
-This feature predates ADR-047. Subsections below are backfilled stubs to satisfy structural completeness; substantive behaviour is documented in the prose above and in the linked ADRs.
-
 ### Inputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`product onboard scan PATH [--output candidates.json]`**: source directory to scan; output path for the candidates JSON file
+- **`product onboard triage candidates.json [--interactive]`**: candidates file from scan phase; `--interactive` enables per-candidate prompt/confirm flow
+- **`product onboard seed triaged.json`**: triaged candidates file; seeds ADR and feature files
+- **`product.toml` `[onboard]`**: `prompt-version`, `model`, `max-candidates` (default 30), `confidence-threshold`, `chunk-strategy`, `evidence-validation` (default true)
+- **Source files in PATH**: read by the scan LLM; content is chunked per `chunk-strategy` (e.g. `import-graph` clusters by module)
+- **Existing product graph**: read during seed phase to avoid ID collisions with existing ADRs and features
 
 ### Outputs
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **`candidates.json`**: structured JSON array from the scan phase; each candidate has a signal type, a description, evidence (file path + line number citations), and a confidence score
+- **`triaged.json`**: candidates JSON with per-candidate disposition: `confirmed`, `merged`, `rejected`; confirmed candidates may have human-enriched rationale
+- **ADR files** (from seed): one `docs/adrs/ADR-XXX-*.md` per confirmed candidate with YAML front-matter and candidate content as body
+- **Feature stub files** (from seed): one `docs/features/FT-XXX-*.md` per confirmed candidate that maps to a feature boundary, with YAML front-matter and `status: planned`
+- **Post-validation report** (when `evidence-validation = true`): each cited file path and line number is checked to exist; invalid evidence is flagged before triage
 
 ### State
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- `candidates.json` and `triaged.json` are intermediate files written by scan and triage respectively; they are not committed to the repository unless the operator chooses to retain them.
+- Seeded ADR and feature files are written atomically (ADR-015) and become part of the knowledge graph immediately.
+- The existing graph is read (not modified) during scan and triage. The seed phase is the only phase that writes to the graph.
 
 ### Behaviour
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+1. **Scan**: the LLM receives source files (chunked by `chunk-strategy`) and a prompt instructing it to identify six signal types: Consistency, Boundary, Constraint, Convention, Absence, Dependency. It is instructed to produce at most `max-candidates` candidates, each with specific file + line evidence. Candidates with fabricated evidence paths are rejected by post-validation before triage.
+2. **Evidence validation**: when `evidence-validation = true`, each candidate's cited file paths and line numbers are checked to exist on disk after the scan completes. Candidates with invalid evidence are flagged in `candidates.json` with a `evidence-invalid` flag; the triage phase surfaces these prominently.
+3. **Triage**: the interactive triage command presents each candidate with its description, signal type, and evidence. The developer confirms (possibly adding rationale), merges into another candidate, or rejects. Confirmed candidates with empty rationale are valid — the "enrich later" principle applies.
+4. **Seed**: confirmed candidates are written as ADR files with the next available ADR-XXX ID and as feature stubs with the next available FT-XXX ID. The ADR body contains the candidate description and evidence as initial content. IDs are assigned atomically to avoid collisions with concurrent writes.
+5. **Exit criterion check**: onboarding is complete when `product gap check --all` produces no G005 (architectural contradiction) and `product graph check` exits 0 or 2. Coverage gaps are expected and tracked in `gaps.json`.
+6. **`max-candidates` cap**: the scan prompt is instructed to produce at most `max-candidates` candidates. This prevents the "archaeology dump" failure mode where the LLM generates 40 low-value candidates with superficial descriptions.
 
 ### Invariants
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Every seeded ADR must have at least one evidence entry. Candidates with no evidence are not seeded — they represent speculation, not detection.
+- Evidence-validation is enabled by default. Disabling it (`evidence-validation = false`) is an escape hatch for environments where the tool is run against a read-only copy of the source tree with different paths.
+- No ADR enters the graph without a human triage decision. The scan produces candidates; the seed produces ADRs; triage is the mandatory gate between them.
+- The scan never modifies source files. It is read-only.
 
 ### Error handling
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- **LLM returns more than `max-candidates`**: excess candidates are truncated and a warning is emitted. The hard cap enforces the design principle.
+- **Evidence validation failures**: candidates with invalid evidence are flagged (not rejected automatically) so the triage step can surface them. A candidate where all evidence is invalid may still be confirmed by a developer who knows the pattern is real — the evidence annotation is simply wrong.
+- **Seed ID collision**: if an ADR-XXX or FT-XXX ID would conflict with an existing file, the seed command exits 1 with an error listing the conflict. The developer resolves manually.
+- **Triage file not from current scan** (version mismatch): if `triaged.json` references candidates that do not match the current `candidates.json` (different hashes), the seed command warns but proceeds with the confirmed set.
 
 ### Boundaries
 
-Not separately enumerated — this feature predates ADR-047. See the prose above and linked ADRs for substantive content.
+- Onboarding converts existing code into structured artifacts. It does not convert existing prose documents — that is `product migrate`'s domain.
+- The LLM detects signal candidates from code patterns. Human triage is required before any candidate becomes a graph artifact. Fully automated onboarding (no triage) is not supported.
+- Onboarding finds load-bearing decisions, not comprehensive architecture documentation. Post-onboarding gap analysis drives incremental enrichment; complete coverage at onboarding time is neither expected nor required.
+- The scan produces at most `max-candidates` candidates per run. For large codebases, multiple scan runs with different source subsets may be needed.
 
 ## Out of scope
 
-Not separately enumerated for this legacy feature; scope boundaries are implicit in the prose above and in the linked ADRs.
+- Automatic ADR creation without human triage
+- Converting existing prose documentation to structured artifacts (that is `product migrate`)
+- Onboarding from compiled binaries, build artifacts, or non-source files
+- Continuous background scanning for new architectural decisions as the codebase evolves
+- Automatic linking of onboarded ADRs to existing features (post-seed graph inference via `product graph infer` is the recommended next step)
