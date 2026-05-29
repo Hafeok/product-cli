@@ -9,7 +9,6 @@ features:
 - FT-072
 - FT-073
 - FT-075
-- FT-105
 supersedes: []
 superseded-by: []
 domains:
