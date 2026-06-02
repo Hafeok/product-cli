@@ -1,27 +1,9 @@
-[package]
-name    = "product"
-version = "0.1.5"
-edition = "2021"
-authors = ["PiCloud Contributors"]
-license = "Apache-2.0"
-description = "Knowledge graph CLI for managing features, ADRs, and test criteria"
-repository = "https://github.com/Hafeok/product-cli"
-homepage = "https://github.com/Hafeok/product-cli"
-readme = "README.md"
-
-[lib]
-name = "product_lib"
-path = "src/lib.rs"
-
-[[bin]]
-name = "product"
-path = "src/main.rs"
-
-[lints]
-workspace = true
-
 [workspace]
-members = ["xtask"]
+members = ["product-core", "product-mcp", "product-cli", "xtask"]
+# FT-107 / TC-889: the external-consumer fixture is built on demand by the
+# TC-889 runner; it must NOT be treated as a workspace member, otherwise its
+# path dependency on `product-core` would loop the workspace into itself.
+exclude = ["product-cli/tests/fixtures/external-core-consumer"]
 resolver = "2"
 
 # Workspace-wide convention enforcement (Tier 3a).
@@ -30,38 +12,6 @@ resolver = "2"
 [workspace.lints.clippy]
 # CTX002 — No unwrap in production code paths.
 unwrap_used = "deny"
-
-[dependencies]
-clap       = { version = "4", features = ["derive", "env"] }
-clap_complete = "4"
-serde      = { version = "1", features = ["derive"] }
-serde_json = "1"
-serde_yaml = "0.9"
-toml       = "0.8"
-oxigraph   = { version = "0.4", default-features = false }
-uuid       = { version = "1", features = ["v4"] }
-chrono     = { version = "0.4", features = ["serde"] }
-regex      = "1"
-sha2       = "0.10"
-fd-lock    = "4"
-tokio      = { version = "1", features = ["full"] }
-axum       = { version = "0.7", features = ["macros"] }
-tower-http = { version = "0.5", features = ["cors"] }
-libc       = "0.2"
-notify     = { version = "6", default-features = false, features = ["macos_kqueue"] }
-
-[dev-dependencies]
-tempfile = "3"
-assert_cmd = "2"
-predicates = "3"
-proptest = "1"
-# FT-065 — validate the committed `server.json` MCP-registry manifest against
-# the offline schema fixture in `tests/fixtures/server.schema.json`. Test-only.
-jsonschema = { version = "0.46", default-features = false }
-
-[[bench]]
-name = "graph_bench"
-harness = false
 
 # The profile that 'dist' will build with
 [profile.dist]

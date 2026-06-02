@@ -46,43 +46,66 @@ value in `rust-toolchain.toml` — no workflow change needed.
 
 ## Project Structure
 
+This repo is a Cargo workspace with three publishable members and one
+internal `xtask` helper (FT-107).
+
 ```
-src/
-  main.rs             # Clap entry point — 42 lines, delegates to commands::run
-  lib.rs              # Module re-exports for tests and library consumers
-  commands/           # CLI adapter layer — one file per subcommand family
-    mod.rs            # Subcommand enum + dispatch match
-    shared.rs         # load_graph/acquire_write_lock helpers (typed + boxed)
-    output.rs         # Output enum, CmdResult, render_result bridge
-    feature.rs        # Feature navigation (list, show, next)
-    feature_write.rs  # Feature write adapters → call product_lib::feature
-    status.rs         # Status/impact adapters → call product_lib::status
+Cargo.toml           # Workspace manifest — [workspace.members] + clippy lints
+product-core/        # Pure library: graph, slices, parser, types, error,
+  Cargo.toml         #   fileops, request, RDF, agent_context, implement,
+  src/lib.rs         #   verify, etc. NO clap / axum / tower-http.
+  src/<slice>/       #   `[lib] name = "product_core"`
+  tests/             #   property_tests + harness for the lib
+  benches/           #   graph benchmarks
+product-mcp/         # MCP server (stdio + HTTP via axum). Depends on
+  Cargo.toml         #   product-core. Re-exports `ToolRegistry`,
+  src/lib.rs         #   `run_stdio`, `run_http`, `serve_http_blocking`.
+  src/...            #   `[lib] name = "product_mcp"`
+product-cli/         # The `product` binary. Depends on product-core +
+  Cargo.toml         #   product-mcp. Owns clap, clap_complete, the
+  src/main.rs        #   commands/ adapter layer, and integration tests
+  src/root.rs        #   that drive the binary via assert_cmd.
+  src/commands/      #   CLI adapter layer — one file per subcommand family
+    mod.rs           #     Subcommand enum + dispatch match
+    shared.rs        #     load_graph/acquire_write_lock helpers
+    output.rs        #     Output enum, CmdResult, render_result bridge
+    feature.rs       #     Feature navigation (list, show, next)
+    feature_write.rs #     Feature write adapters → call product_core::feature
+    status.rs        #     Status/impact adapters → call product_core::status
     ...
-  feature/            # Feature domain slice — pure plan_* + thin apply_*
-  status/             # Status domain slice — pure build_* + render_*
-  gap/                # Gap analysis
-  drift/              # Drift detection
-  request/            # Unified atomic write interface
-  implement/          # implement + verify pipeline orchestration
-  graph/              # Knowledge graph + algorithms (centrality, BFS, topo)
-  mcp/                # MCP server (stdio + HTTP via axum)
-  types.rs            # Core artifact types (Feature, Adr, TestCriterion)
-  parser.rs           # YAML front-matter parser
-  config.rs           # product.toml parsing
-  fileops.rs          # Atomic writes + advisory locking
-  error.rs            # Error model (ProductError enum, exit codes)
+  tests/
+    code_quality_tests.rs   # ADR-029 fitness gates (walks every member src/)
+    integration_tests.rs    # assert_cmd-driven CLI scenarios (~600 tests)
+    sessions.rs             # session-based integration (ADR-018 Design 2)
+    fixtures/               # Shared test fixtures, incl. external-core-consumer
+xtask/                # Workspace convention enforcement (`cargo xtask check`)
 docs/
   product-prd.md     # Full PRD
   product-adrs.md    # All ADRs in one file
-  adrs/              # Individual ADR files (26 ADRs)
+  adrs/              # Individual ADR files
   features/          # Individual feature files (FT-XXX-*.md)
-  tests/             # Individual TC files (100+)
+  tests/             # Individual TC files
   guide/             # Generated Diátaxis docs per feature (FT-XXX-*.md)
 scripts/
   generate-docs.sh   # Spawns claude -p per feature to generate docs/guide/ files
-product.toml         # Repo config (paths, prefixes, thresholds)
+  checks/            # Code-quality scripts (file-length, function-length, etc.)
+  harness/           # implement.sh and author.sh runner scripts
+.product/
+  config.toml        # Repo config (paths, prefixes, thresholds)
 CHECKLIST.md         # Auto-generated feature checklist (tracks [x]/[T]/[ ] status)
 ```
+
+**Downstream consumers** (e.g. `decision-cli`) should add only:
+
+```toml
+[dependencies]
+product-core = { path = "../product-cli/product-core" }   # or a git rev
+```
+
+This buys the graph, parser, slices, and `ProductError` without
+pulling in `clap`, `axum`, `tower-http`, or the `product` binary.
+TC-889 (`tests/fixtures/external-core-consumer/`) is a tiny live
+example.
 
 ## Implementation Workflow
 
@@ -118,11 +141,12 @@ Do not manually edit feature status or CHECKLIST.md — let the CLI manage that 
 ## Architecture Pattern — Slice + Adapter
 
 The codebase is organised as vertical slices, each with a pure domain module
-in the library and a thin CLI adapter in `src/commands/`. This separation
-keeps business logic unit-testable without tempdirs, print capture, or
-`cargo run`.
+in `product-core` and a thin CLI adapter in `product-cli/src/commands/`.
+This separation keeps business logic unit-testable without tempdirs, print
+capture, or `cargo run`, and lets sibling CLIs (`decision-cli`) reuse the
+slice library without inheriting the CLI surface (FT-107).
 
-**Slice modules (`src/<slice>/`)** — pure, testable:
+**Slice modules (`product-core/src/<slice>/`)** — pure, testable:
 - `plan_*` / `build_*` functions take current state + user input, return a
   struct describing the intended change. No I/O, no println, no exit.
 - `apply_*` functions take a plan struct and perform the minimal I/O
@@ -139,7 +163,7 @@ Reference slices:
 - `src/status/` — project summary, untested/failing feature lists
 - `src/request/` — the unified atomic-write pipeline (pre-existing)
 
-**Command adapters (`src/commands/<cmd>.rs`)** — thin:
+**Command adapters (`product-cli/src/commands/<cmd>.rs`)** — thin:
 - Return `CmdResult = Result<Output, ProductError>` (not `BoxResult`).
 - Load graph via `shared::load_graph_typed()`, acquire lock via
   `shared::acquire_write_lock_typed()` when writing.

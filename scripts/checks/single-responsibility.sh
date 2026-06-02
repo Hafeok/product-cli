@@ -21,7 +21,18 @@ while IFS= read -r file; do
     echo "  Found: $FIRST_LINE" >> "$RESULTS_FILE"
     FOUND_VIOLATION=1
   fi
-done < <(find src -name "*.rs" ! -name "mod.rs" ! -name "main.rs" | sort)
+done < <(
+  DIRS=()
+  for d in product-core/src product-mcp/src product-cli/src; do
+    [ -d "$d" ] && DIRS+=("$d")
+  done
+  if [ ${#DIRS[@]} -eq 0 ] && [ -d src ]; then
+    DIRS=(src)
+  fi
+  if [ ${#DIRS[@]} -gt 0 ]; then
+    find "${DIRS[@]}" -name "*.rs" ! -name "mod.rs" ! -name "main.rs" | sort
+  fi
+)
 
 if [ "$FOUND_VIOLATION" -eq 1 ]; then
   cat "$RESULTS_FILE"

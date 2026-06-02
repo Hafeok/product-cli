@@ -1,0 +1,18 @@
+[package]
+name = "external-core-consumer"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# Detach from the surrounding workspace — this fixture exists to prove that a
+# completely separate crate can depend on product-core via a path dep.
+[workspace]
+
+# FT-107 / TC-889 — fixture proving a sibling CLI can depend on `product-core`
+# alone, with no CLI / MCP / HTTP surface in the transitive dep tree.
+[dependencies]
+product-core = { path = "../../../../product-core" }
+
+[[bin]]
+name = "external-core-consumer"
+path = "src/main.rs"

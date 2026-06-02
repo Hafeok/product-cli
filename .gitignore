@@ -1,4 +1,6 @@
 /target
+# FT-107 — the TC-889 external-consumer fixture builds in its own sibling target/.
+product-cli/tests/fixtures/external-core-consumer/target/
 Cargo.lock
 .product.lock
 *.product-tmp.*

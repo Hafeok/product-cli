@@ -9,12 +9,27 @@ set -euo pipefail
 HARD_LIMIT=${FILE_LENGTH_HARD:-400}
 WARN_LIMIT=${FILE_LENGTH_WARN:-300}
 
-HARD_VIOLATIONS=$(find src -name "*.rs" \
+# Discover which src/ trees to walk: workspace members after FT-107, with a
+# `src/` fallback so the script also works inside tempdirs created by the
+# `code_quality_tests` suite (which fake a single-crate layout).
+DIRS=()
+for d in product-core/src product-mcp/src product-cli/src; do
+  [ -d "$d" ] && DIRS+=("$d")
+done
+if [ ${#DIRS[@]} -eq 0 ] && [ -d src ]; then
+  DIRS=(src)
+fi
+if [ ${#DIRS[@]} -eq 0 ]; then
+  echo "OK: no source directories to scan"
+  exit 0
+fi
+
+HARD_VIOLATIONS=$(find "${DIRS[@]}" -name "*.rs" \
   | xargs wc -l \
   | awk -v limit="$HARD_LIMIT" '$1 > limit && $2 != "total" {print $1, $2}' \
   | sort -rn) || true
 
-WARN_VIOLATIONS=$(find src -name "*.rs" \
+WARN_VIOLATIONS=$(find "${DIRS[@]}" -name "*.rs" \
   | xargs wc -l \
   | awk -v wl="$WARN_LIMIT" -v hl="$HARD_LIMIT" \
     '$1 > wl && $1 <= hl && $2 != "total" {print $1, $2}' \

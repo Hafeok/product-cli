@@ -12,7 +12,19 @@ WARN_LIMIT=${FN_LENGTH_WARN:-30}
 RESULTS_FILE=$(mktemp /tmp/fn-length-results.XXXXXX)
 trap "rm -f $RESULTS_FILE" EXIT
 
-find src -name "*.rs" | while read -r file; do
+DIRS=()
+for d in product-core/src product-mcp/src product-cli/src; do
+  [ -d "$d" ] && DIRS+=("$d")
+done
+if [ ${#DIRS[@]} -eq 0 ] && [ -d src ]; then
+  DIRS=(src)
+fi
+if [ ${#DIRS[@]} -eq 0 ]; then
+  echo "OK: no source directories to scan"
+  exit 0
+fi
+
+find "${DIRS[@]}" -name "*.rs" | while read -r file; do
   awk -v hard="$HARD_LIMIT" -v warn="$WARN_LIMIT" -v fname="$file" '
     /^[[:space:]]*(pub |pub\(.*\) |async |pub async |pub(crate) )*fn / {
       fn_name = $0
