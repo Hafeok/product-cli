@@ -1,9 +1,9 @@
 //! Dependency management commands (ADR-030) — thin read-only adapters.
 
 use clap::Subcommand;
-use product_lib::config::ProductConfig;
-use product_lib::error::ProductError;
-use product_lib::types::{Dependency, DependencyStatus, DependencyType};
+use product_core::config::ProductConfig;
+use product_core::error::ProductError;
+use product_core::types::{Dependency, DependencyStatus, DependencyType};
 
 use super::{load_graph_typed, BoxResult, CmdResult, Output};
 

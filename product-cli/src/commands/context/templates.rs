@@ -1,8 +1,8 @@
 //! `product context templates [--show NAME | --where | --reset NAME]` —
 //! template lifecycle commands. Defaults to listing all resolved templates.
 
-use product_lib::context::template::{self, TemplateSource};
-use product_lib::error::ProductError;
+use product_core::context::template::{self, TemplateSource};
+use product_core::error::ProductError;
 use std::path::PathBuf;
 use std::process;
 
@@ -26,7 +26,7 @@ pub(crate) fn dispatch(
     list_templates(&root, &config)
 }
 
-fn list_templates(root: &std::path::Path, config: &product_lib::config::ProductConfig) -> BoxResult {
+fn list_templates(root: &std::path::Path, config: &product_core::config::ProductConfig) -> BoxResult {
     let outcome = template::resolve_all(root);
     let mut names: Vec<String> = outcome.resolved.keys().cloned().collect();
     names.sort();

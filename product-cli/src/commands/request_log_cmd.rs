@@ -1,8 +1,8 @@
 //! `product request log` / `replay` / `undo` (FT-042, ADR-039).
 
 use clap::Subcommand;
-use product_lib::config::ProductConfig;
-use product_lib::fileops;
+use product_core::config::ProductConfig;
+use product_core::fileops;
 use std::path::PathBuf;
 
 use super::BoxResult;
@@ -33,7 +33,7 @@ pub enum LogCommands {
 }
 
 pub fn handle_log(cmd: LogCommands, _fmt: &str) -> BoxResult {
-    use product_lib::request_log::{append, entry, log_path, migrate_if_needed};
+    use product_core::request_log::{append, entry, log_path, migrate_if_needed};
 
     let (config, root) = ProductConfig::discover()?;
     let _ = migrate_if_needed(&root, Some(&config.paths.requests));
@@ -91,7 +91,7 @@ pub fn handle_log(cmd: LogCommands, _fmt: &str) -> BoxResult {
 }
 
 fn run_migrate_paths(root: &std::path::Path, requests_rel: &str) -> BoxResult {
-    use product_lib::request_log::migrate::rewrite_paths;
+    use product_core::request_log::migrate::rewrite_paths;
     let _lock = fileops::RepoLock::acquire(root)?;
     let outcome = rewrite_paths(root, Some(requests_rel))?;
     if outcome.is_noop() {
@@ -113,7 +113,7 @@ fn run_migrate_paths(root: &std::path::Path, requests_rel: &str) -> BoxResult {
 }
 
 fn run_log_verify(log_p: &std::path::Path, root: &std::path::Path, against_tags: bool) {
-    use product_lib::request_log::verify::{verify_log, Severity, VerifyOptions};
+    use product_core::request_log::verify::{verify_log, Severity, VerifyOptions};
     if !log_p.exists() {
         println!("No log at {} — nothing to verify.", log_p.display());
         return;
@@ -159,7 +159,7 @@ fn run_log_verify(log_p: &std::path::Path, root: &std::path::Path, against_tags:
 }
 
 pub fn handle_replay(full: bool, to: Option<String>, output: Option<PathBuf>) -> BoxResult {
-    use product_lib::request_log::{log_path, replay};
+    use product_core::request_log::{log_path, replay};
     let (config, root) = ProductConfig::discover()?;
 
     let out_dir = match output {
@@ -200,7 +200,7 @@ pub fn handle_replay(full: bool, to: Option<String>, output: Option<PathBuf>) ->
 }
 
 pub fn handle_undo(req_id: &str, reason: Option<&str>) -> BoxResult {
-    use product_lib::request_log::{append, entry::Entry, log_path};
+    use product_core::request_log::{append, entry::Entry, log_path};
     let (config, root) = ProductConfig::discover()?;
     let _lock = fileops::RepoLock::acquire(&root)?;
     let log_p = log_path(&root, Some(&config.paths.requests));
@@ -223,9 +223,9 @@ pub fn handle_undo(req_id: &str, reason: Option<&str>) -> BoxResult {
         }
     };
 
-    let applied_by = product_lib::request_log::git_identity::resolve_applied_by(&root)
+    let applied_by = product_core::request_log::git_identity::resolve_applied_by(&root)
         .unwrap_or_else(|_| "local:unknown".into());
-    let commit = product_lib::request_log::git_identity::resolve_commit(&root);
+    let commit = product_core::request_log::git_identity::resolve_commit(&root);
     let reason = reason
         .map(String::from)
         .unwrap_or_else(|| format!("Undo of {}", req_id));

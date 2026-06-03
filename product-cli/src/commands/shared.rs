@@ -5,7 +5,7 @@
 //! boxed variant returning `BoxResult` for legacy handlers still in
 //! transition. The boxed variants simply wrap the typed ones.
 
-use product_lib::{config::ProductConfig, error::ProductError, fileops, graph::KnowledgeGraph, parser};
+use product_core::{config::ProductConfig, error::ProductError, fileops, graph::KnowledgeGraph, parser};
 use std::path::PathBuf;
 
 use super::BoxResult;
@@ -71,7 +71,7 @@ pub(crate) fn run_startup_hooks() -> BoxResult {
 
 fn migrate_log_path_if_needed() {
     if let Ok((config, root)) = ProductConfig::discover() {
-        let _ = product_lib::request_log::migrate_if_needed(&root, Some(&config.paths.requests));
+        let _ = product_core::request_log::migrate_if_needed(&root, Some(&config.paths.requests));
     }
 }
 

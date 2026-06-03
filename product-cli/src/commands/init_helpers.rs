@@ -2,7 +2,7 @@
 //! management, and the interactive prompt loop. Extracted from
 //! `commands/init.rs` to keep both files under the 400-line fitness limit.
 
-use product_lib::{error::ProductError, fileops};
+use product_core::{error::ProductError, fileops};
 
 use super::BoxResult;
 

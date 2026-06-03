@@ -1,7 +1,7 @@
 //! `product schema` command — display front-matter schemas (ADR-031, ADR-042)
 
-use product_lib::agent_context::schema as sch;
-use product_lib::config::ProductConfig;
+use product_core::agent_context::schema as sch;
+use product_core::config::ProductConfig;
 
 use super::BoxResult;
 

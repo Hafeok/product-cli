@@ -1,11 +1,11 @@
 //! `product_preflight` MCP handler — read-only preflight envelope.
 
 use super::shared::health_error;
-use crate::config::ProductConfig;
-use crate::domains;
-use crate::graph::KnowledgeGraph;
-use crate::tc::runner_required;
-use crate::types::DependencyStatus;
+use product_core::config::ProductConfig;
+use product_core::domains;
+use product_core::graph::KnowledgeGraph;
+use product_core::tc::runner_required;
+use product_core::types::DependencyStatus;
 use serde_json::{json, Value};
 use std::path::Path;
 

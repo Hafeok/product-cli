@@ -1,6 +1,6 @@
 //! `product agent-init` command — generate AGENTS.md from repo state (ADR-031)
 
-use product_lib::{agent_context, config::ProductConfig, fileops, graph::KnowledgeGraph, parser};
+use product_core::{agent_context, config::ProductConfig, fileops, graph::KnowledgeGraph, parser};
 
 use super::BoxResult;
 

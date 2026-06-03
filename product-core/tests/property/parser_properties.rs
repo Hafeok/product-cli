@@ -1,8 +1,8 @@
 //! TC-P001–P004: Parser robustness property tests (ADR-018)
 
 use proptest::prelude::*;
-use product_lib::parser;
-use product_lib::types::*;
+use product_core::parser;
+use product_core::types::*;
 use std::path::PathBuf;
 
 /// TC-P001: No input causes a panic

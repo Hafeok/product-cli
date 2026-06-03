@@ -41,14 +41,14 @@ fn main() {
     // E017 (ADR-042): reject malformed `[tc-types].custom` before clap
     // parses anything — reserved TC-type names in the custom list must
     // pre-empt every subcommand, including `--help` and `--version`.
-    if let Err(e) = product_lib::root::early_check() {
+    if let Err(e) = product_core::root::early_check() {
         eprintln!("{e}");
         process::exit(1);
     }
 
     let cli = Cli::parse();
     if let Some(ref root) = cli.root {
-        product_lib::root::set_root_flag(root.clone());
+        product_core::root::set_root_flag(root.clone());
     }
     let mut cmd = Cli::command();
 
@@ -57,7 +57,7 @@ fn main() {
         // FT-058 / E022: route boxed errors through ProductError::exit_code
         // so TcRunnerMissing exits 22 even from a BoxResult handler.
         let exit = e
-            .downcast_ref::<product_lib::error::ProductError>()
+            .downcast_ref::<product_core::error::ProductError>()
             .map(|pe| pe.exit_code())
             .unwrap_or(1);
         eprintln!("{e}");

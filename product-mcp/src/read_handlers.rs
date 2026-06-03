@@ -1,12 +1,12 @@
 //! MCP read tool handlers — query-only tool implementations.
 
-use crate::gap;
-use crate::graph::KnowledgeGraph;
+use product_core::gap;
+use product_core::graph::KnowledgeGraph;
 use serde_json::Value;
 use std::path::Path;
 
 pub(crate) fn handle_responsibility(repo_root: &Path) -> Result<Value, String> {
-    let config = crate::config::ProductConfig::load_from_root(repo_root)
+    let config = product_core::config::ProductConfig::load_from_root(repo_root)
         .map_err(|e| format!("{}", e))?;
     match config.responsibility() {
         Some(responsibility) => Ok(serde_json::json!({
@@ -34,24 +34,24 @@ pub(crate) fn handle_context(
     // resolves to the `human` template. The synthetic `legacy` target
     // routes through the pre-FT-063 AISP-framed bundler.
     if graph.features.contains_key(id) {
-        let config = crate::config::ProductConfig::load_from_root(repo_root)
+        let config = product_core::config::ProductConfig::load_from_root(repo_root)
             .map_err(|e| format!("{}", e))?;
         let target_name: String = explicit_target
             .or_else(|| config.context.default_target.clone())
             .unwrap_or_else(|| "human".to_string());
         if target_name == "legacy" {
-            let pi = config.responsibility().map(|resp| crate::context::BundleProductInfo {
+            let pi = config.responsibility().map(|resp| product_core::context::BundleProductInfo {
                 product_name: config.product_name(),
                 responsibility: resp,
             });
-            let bundle = crate::context::bundle_feature_with_product(graph, id, depth, true, pi)
+            let bundle = product_core::context::bundle_feature_with_product(graph, id, depth, true, pi)
                 .ok_or_else(|| format!("Feature {} not found", id))?;
             return Ok(serde_json::json!({
                 "content": bundle,
                 "type": "text",
             }));
         }
-        let outcome = crate::context::template::resolve_all(repo_root);
+        let outcome = product_core::context::template::resolve_all(repo_root);
         let resolved = match outcome.resolved.get(&target_name) {
             Some(t) => t.clone(),
             None => {
@@ -64,11 +64,11 @@ pub(crate) fn handle_context(
                 ));
             }
         };
-        let pi = config.responsibility().map(|resp| crate::context::template::ProductInfo {
+        let pi = config.responsibility().map(|resp| product_core::context::template::ProductInfo {
             name: config.product_name(),
             responsibility: resp,
         });
-        let rendered = crate::context::template::render_feature(graph, id, depth, &resolved, pi)
+        let rendered = product_core::context::template::render_feature(graph, id, depth, &resolved, pi)
             .ok_or_else(|| format!("Feature {} not found", id))?;
         return Ok(serde_json::json!({
             "format": rendered.format,
@@ -82,7 +82,7 @@ pub(crate) fn handle_context(
     }
 
     // ADR fallback (legacy bundle).
-    let bundle = crate::context::bundle_adr(graph, id, depth);
+    let bundle = product_core::context::bundle_adr(graph, id, depth);
     Ok(serde_json::json!({
         "content": bundle.unwrap_or_default(),
         "type": "text",
@@ -235,9 +235,9 @@ pub(crate) fn handle_schema(args: &Value) -> Result<Value, String> {
         .unwrap_or("");
 
     let content = if artifact_type.is_empty() {
-        crate::agent_context::generate_all_schemas()
+        product_core::agent_context::generate_all_schemas()
     } else {
-        crate::agent_context::generate_schema(artifact_type)?
+        product_core::agent_context::generate_schema(artifact_type)?
     };
 
     // FT-062 — every response carries the canonical field allowlists so an
@@ -246,10 +246,10 @@ pub(crate) fn handle_schema(args: &Value) -> Result<Value, String> {
     // consults — they cannot diverge.
     let fields = if artifact_type.is_empty() {
         serde_json::json!({
-            "feature": crate::field_schema::FEATURE_FIELDS,
-            "adr": crate::field_schema::ADR_FIELDS,
-            "tc": crate::field_schema::TC_FIELDS,
-            "dep": crate::field_schema::DEP_FIELDS,
+            "feature": product_core::field_schema::FEATURE_FIELDS,
+            "adr": product_core::field_schema::ADR_FIELDS,
+            "tc": product_core::field_schema::TC_FIELDS,
+            "dep": product_core::field_schema::DEP_FIELDS,
         })
     } else {
         let key = match artifact_type {
@@ -258,7 +258,7 @@ pub(crate) fn handle_schema(args: &Value) -> Result<Value, String> {
             other => other,
         };
         serde_json::json!({
-            key: crate::field_schema::known_fields_for_label(key),
+            key: product_core::field_schema::known_fields_for_label(key),
         })
     };
 
@@ -273,9 +273,9 @@ pub(crate) fn handle_agent_context(
     graph: &KnowledgeGraph,
     repo_root: &Path,
 ) -> Result<Value, String> {
-    let config = crate::config::ProductConfig::load_from_root(repo_root)
+    let config = product_core::config::ProductConfig::load_from_root(repo_root)
         .map_err(|e| format!("{}", e))?;
-    let content = crate::agent_context::generate_agent_md(&config, graph, repo_root);
+    let content = product_core::agent_context::generate_agent_md(&config, graph, repo_root);
     Ok(serde_json::json!({
         "content": content,
         "type": "text"
@@ -283,11 +283,11 @@ pub(crate) fn handle_agent_context(
 }
 
 fn resolve_prompts_path(repo_root: &Path) -> String {
-    let cfg_path = match crate::config::find_config_in_dir(repo_root) {
+    let cfg_path = match product_core::config::find_config_in_dir(repo_root) {
         Some(p) => p,
         None => return "benchmarks/prompts".to_string(),
     };
-    match crate::config::ProductConfig::load(&cfg_path) {
+    match product_core::config::ProductConfig::load(&cfg_path) {
         Ok(c) => c.paths.prompts_resolved().to_string(),
         Err(_) => "benchmarks/prompts".to_string(),
     }
@@ -295,7 +295,7 @@ fn resolve_prompts_path(repo_root: &Path) -> String {
 
 pub(crate) fn handle_prompts_list(repo_root: &Path) -> Result<Value, String> {
     let prompts_path = resolve_prompts_path(repo_root);
-    let prompts = crate::author::prompts_list(repo_root, &prompts_path);
+    let prompts = product_core::author::prompts_list(repo_root, &prompts_path);
     let items: Vec<Value> = prompts
         .iter()
         .map(|p| {
@@ -316,7 +316,7 @@ pub(crate) fn handle_prompts_get(args: &Value, repo_root: &Path) -> Result<Value
         .and_then(|v| v.as_str())
         .unwrap_or_default();
     let prompts_path = resolve_prompts_path(repo_root);
-    let content = crate::author::prompts_get(repo_root, &prompts_path, name).map_err(|e| format!("{}", e))?;
+    let content = product_core::author::prompts_get(repo_root, &prompts_path, name).map_err(|e| format!("{}", e))?;
     Ok(serde_json::json!({
         "name": name,
         "content": content,

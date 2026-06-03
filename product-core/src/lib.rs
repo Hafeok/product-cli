@@ -32,7 +32,6 @@ pub mod gap;
 pub mod graph;
 pub mod hash;
 pub mod implement;
-pub mod mcp;
 pub mod metrics;
 pub mod migrate;
 pub mod onboard;

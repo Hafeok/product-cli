@@ -71,7 +71,7 @@ api = "CLI surface"
     // resolve correctly.
     let cwd = std::env::current_dir().expect("cwd");
     std::env::set_current_dir(dir.path()).expect("chdir");
-    let result = product_lib::config::ProductConfig::discover();
+    let result = product_core::config::ProductConfig::discover();
     let _ = std::env::set_current_dir(cwd);
     let (config, _root) = result.expect("discover canonical");
     assert_eq!(config.paths.features, ".product/features");

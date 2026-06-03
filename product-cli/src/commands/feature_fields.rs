@@ -2,10 +2,10 @@
 //!
 //! Extracted from `feature_write.rs` to keep that file under the 400-line
 //! fitness cap. Each adapter is a thin wrapper over the corresponding
-//! slice function in `product_lib::feature` (or `product_lib::domains`
+//! slice function in `product_core::feature` (or `product_core::domains`
 //! for acknowledgement).
 
-use product_lib::{domains, error::ProductError, feature as feat, fileops, parser};
+use product_core::{domains, error::ProductError, feature as feat, fileops, parser};
 
 use super::{acquire_write_lock, acquire_write_lock_typed, load_graph, load_graph_typed, BoxResult, CmdResult, Output};
 

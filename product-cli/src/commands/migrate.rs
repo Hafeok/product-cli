@@ -1,7 +1,7 @@
 //! Migration from monolithic PRD or ADR documents.
 
 use clap::Subcommand;
-use product_lib::{config, graph::inference, migrate};
+use product_core::{config, graph::inference, migrate};
 use std::path::PathBuf;
 
 use super::{acquire_write_lock, load_graph, BoxResult};
@@ -106,8 +106,8 @@ pub(crate) fn handle_migrate(cmd: MigrateCommands) -> BoxResult {
 
 fn migrate_consolidate(apply: bool, force_uncommitted: bool) -> BoxResult {
     let _lock = if apply { Some(acquire_write_lock()?) } else { None };
-    let (cfg, root) = product_lib::config::ProductConfig::discover()?;
-    let plan = product_lib::migrate::plan_consolidate(&root, &cfg);
+    let (cfg, root) = product_core::config::ProductConfig::discover()?;
+    let plan = product_core::migrate::plan_consolidate(&root, &cfg);
     print!("{}", plan.render());
     if plan.is_noop() {
         return Ok(());
@@ -116,7 +116,7 @@ fn migrate_consolidate(apply: bool, force_uncommitted: bool) -> BoxResult {
         println!("\nRun with --apply to perform the migration.");
         return Ok(());
     }
-    product_lib::migrate::apply_consolidate(&root, &plan, force_uncommitted)?;
+    product_core::migrate::apply_consolidate(&root, &plan, force_uncommitted)?;
     println!("\nConsolidation complete.");
     Ok(())
 }
@@ -184,17 +184,17 @@ fn migrate_from_adrs(
 }
 
 fn append_migrate_log_entry(
-    config: &product_lib::config::ProductConfig,
+    config: &product_core::config::ProductConfig,
     root: &std::path::Path,
     source: &str,
     reason: &str,
     written_count: usize,
 ) {
-    use product_lib::request_log::{append, log_path};
+    use product_core::request_log::{append, log_path};
     let log_p = log_path(root, Some(&config.paths.requests));
-    let applied_by = product_lib::request_log::git_identity::resolve_applied_by(root)
+    let applied_by = product_core::request_log::git_identity::resolve_applied_by(root)
         .unwrap_or_else(|_| "local:unknown".into());
-    let commit = product_lib::request_log::git_identity::resolve_commit(root);
+    let commit = product_core::request_log::git_identity::resolve_commit(root);
     let created = vec![format!("{} artifacts", written_count)];
     let _ = append::append_migrate_entry(
         &log_p,
@@ -219,14 +219,14 @@ fn migrate_schema(dry_run: bool) -> BoxResult {
             config::CURRENT_SCHEMA_VERSION,
             if dry_run { " (dry-run)" } else { "" }
         );
-        let (updated, unchanged) = product_lib::config_migrate::migrate_schema(&root, &cfg, dry_run)?;
+        let (updated, unchanged) = product_core::config_migrate::migrate_schema(&root, &cfg, dry_run)?;
         println!("{} files updated, {} unchanged", updated, unchanged);
         if !dry_run && updated > 0 {
-            use product_lib::request_log::{append, log_path};
+            use product_core::request_log::{append, log_path};
             let log_p = log_path(&root, Some(&cfg.paths.requests));
-            let applied_by = product_lib::request_log::git_identity::resolve_applied_by(&root)
+            let applied_by = product_core::request_log::git_identity::resolve_applied_by(&root)
                 .unwrap_or_else(|_| "local:unknown".into());
-            let commit = product_lib::request_log::git_identity::resolve_commit(&root);
+            let commit = product_core::request_log::git_identity::resolve_commit(&root);
             let _ = append::append_schema_upgrade_entry(
                 &log_p,
                 &applied_by,

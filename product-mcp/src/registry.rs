@@ -1,7 +1,7 @@
 //! MCP tool registry — call_tool dispatcher (ADR-020)
 
-use crate::config::ProductConfig;
-use crate::graph::KnowledgeGraph;
+use product_core::config::ProductConfig;
+use product_core::graph::KnowledgeGraph;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 
@@ -43,7 +43,7 @@ impl ToolRegistry {
             return Err("Write tools are disabled. Set mcp.write = true in product.toml".to_string());
         }
         let _lock = if tool.requires_write {
-            Some(crate::fileops::RepoLock::acquire(&self.repo_root)
+            Some(product_core::fileops::RepoLock::acquire(&self.repo_root)
                 .map_err(|e| format!("{}", e))?)
         } else {
             None
@@ -120,7 +120,7 @@ fn load_graph(repo_root: &Path) -> Result<KnowledgeGraph, String> {
     let tests_dir = config.resolve_path(repo_root, &config.paths.tests);
     let deps_dir = config.resolve_path(repo_root, &config.paths.dependencies);
     let patterns_dir = config.resolve_path(repo_root, &config.paths.patterns);
-    let loaded = crate::parser::load_all_full(
+    let loaded = product_core::parser::load_all_full(
         &features_dir,
         &adrs_dir,
         &tests_dir,
@@ -163,9 +163,9 @@ fn dispatch_tool(
             // plus a single responsibility pass, silently omitting
             // domain (E011/E012), structural-with-config (E006/W030),
             // planning (W028/W029), and log-verification findings.
-            let config = crate::config::ProductConfig::load_from_root(repo_root)
+            let config = product_core::config::ProductConfig::load_from_root(repo_root)
                 .map_err(|e| format!("{}", e))?;
-            let result = crate::graph::full_check::run(graph, &config, repo_root);
+            let result = product_core::graph::full_check::run(graph, &config, repo_root);
             Ok(result.to_json())
         }
         "product_graph_central" => read_handlers::handle_graph_central(args, graph),

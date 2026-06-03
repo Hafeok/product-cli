@@ -1,11 +1,11 @@
 //! `product_drift_check` MCP handler — read-only structural drift envelope.
 
 use super::shared::{drift_source_settings, health_error, status_for, summarize};
-use crate::config::ProductConfig;
-use crate::drift;
-use crate::graph::KnowledgeGraph;
-use crate::tags;
-use crate::types::FeatureStatus;
+use product_core::config::ProductConfig;
+use product_core::drift;
+use product_core::graph::KnowledgeGraph;
+use product_core::tags;
+use product_core::types::FeatureStatus;
 use serde_json::{json, Value};
 use std::path::Path;
 

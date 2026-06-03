@@ -1,8 +1,8 @@
 //! TC-P005–P009: Graph algorithm property tests (ADR-018)
 
 use proptest::prelude::*;
-use product_lib::graph::KnowledgeGraph;
-use product_lib::types::*;
+use product_core::graph::KnowledgeGraph;
+use product_core::types::*;
 use std::path::PathBuf;
 use std::collections::HashSet;
 
@@ -106,8 +106,8 @@ fn tc_p006_cycle_always_detected() {
 fn tc_p007_centrality_in_range() {
     for size in [3, 5, 10, 20, 50] {
         let features = arb_dag(size, 0.3);
-        let adrs: Vec<product_lib::types::Adr> = (0..size / 2)
-            .map(|i| product_lib::types::Adr {
+        let adrs: Vec<product_core::types::Adr> = (0..size / 2)
+            .map(|i| product_core::types::Adr {
                 front: AdrFrontMatter {
                     id: format!("ADR-{:03}", i + 1),
                     title: format!("ADR {}", i + 1),
@@ -116,7 +116,7 @@ fn tc_p007_centrality_in_range() {
                     supersedes: vec![],
                     superseded_by: vec![],
                     domains: vec![],
-                    scope: product_lib::types::AdrScope::FeatureSpecific,
+                    scope: product_core::types::AdrScope::FeatureSpecific,
                     content_hash: None,
                     amendments: vec![],
                     source_files: vec![],

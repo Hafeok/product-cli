@@ -1,7 +1,7 @@
 //! Feature navigation, creation, linking, status management.
 
 use clap::Subcommand;
-use product_lib::{error::ProductError, graph, types};
+use product_core::{error::ProductError, graph, types};
 
 use super::{load_graph, load_graph_typed, BoxResult, CmdResult, Output};
 mod feature_write_ops {

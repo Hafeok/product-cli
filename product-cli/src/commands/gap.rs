@@ -1,7 +1,7 @@
 //! Gap analysis between ADRs, features, test criteria.
 
 use clap::Subcommand;
-use product_lib::gap;
+use product_core::gap;
 use std::process;
 
 use super::{load_graph, BoxResult};
@@ -80,7 +80,7 @@ fn gap_bundle(
     all: bool,
     changed: bool,
     format: &str,
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     root: &std::path::Path,
 ) -> BoxResult {
     let markdown = if all {
@@ -113,7 +113,7 @@ fn gap_check(
     adr_id: Option<String>,
     changed: bool,
     format: &str,
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     baseline: &mut gap::GapBaseline,
     baseline_path: &std::path::Path,
     root: &std::path::Path,
@@ -155,7 +155,7 @@ fn gap_check(
 
 fn gap_check_changed(
     format: &str,
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     baseline: &mut gap::GapBaseline,
     baseline_path: &std::path::Path,
     root: &std::path::Path,
@@ -182,7 +182,7 @@ fn gap_check_changed(
 
 fn build_gap_reports(
     adr_ids: &[String],
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     baseline: &gap::GapBaseline,
 ) -> Vec<gap::GapReport> {
     let mut reports = Vec::new();
@@ -252,7 +252,7 @@ fn print_gap_reports(reports: &[gap::GapReport], format: &str) {
 }
 
 fn gap_report(
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     baseline: &gap::GapBaseline,
 ) -> BoxResult {
     let reports = gap::check_all(graph, baseline);
@@ -318,7 +318,7 @@ fn gap_unsuppress(
 }
 
 fn gap_stats(
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     baseline: &gap::GapBaseline,
 ) -> BoxResult {
     let reports = gap::check_all(graph, baseline);

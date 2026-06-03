@@ -3,8 +3,8 @@
 //! Handlers for domain, scope, supersession, source-files, runner,
 //! and acknowledgement mutations via the MCP server.
 
-use crate::config::ProductConfig;
-use crate::graph::KnowledgeGraph;
+use product_core::config::ProductConfig;
+use product_core::graph::KnowledgeGraph;
 use serde_json::Value;
 use std::path::Path;
 
@@ -42,8 +42,8 @@ pub(crate) fn handle_feature_domain(
     }
     front.domains.sort();
 
-    let content = crate::parser::render_feature(&front, &f.body);
-    crate::fileops::write_file_atomic(&f.path, &content).map_err(|e| format!("{}", e))?;
+    let content = product_core::parser::render_feature(&front, &f.body);
+    product_core::fileops::write_file_atomic(&f.path, &content).map_err(|e| format!("{}", e))?;
     Ok(serde_json::json!({"id": id, "domains": front.domains}))
 }
 
@@ -72,8 +72,8 @@ pub(crate) fn handle_feature_acknowledge(
         front.domains_acknowledged.insert(domain.to_string(), reason.to_string());
     }
 
-    let content = crate::parser::render_feature(&front, &f.body);
-    crate::fileops::write_file_atomic(&f.path, &content).map_err(|e| format!("{}", e))?;
+    let content = product_core::parser::render_feature(&front, &f.body);
+    product_core::fileops::write_file_atomic(&f.path, &content).map_err(|e| format!("{}", e))?;
     Ok(serde_json::json!({"id": id, "domain": domain, "removed": remove}))
 }
 
@@ -111,8 +111,8 @@ pub(crate) fn handle_adr_domain(
     }
     front.domains.sort();
 
-    let content = crate::parser::render_adr(&front, &a.body);
-    crate::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))?;
+    let content = product_core::parser::render_adr(&front, &a.body);
+    product_core::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))?;
     Ok(serde_json::json!({"id": id, "domains": front.domains}))
 }
 
@@ -128,14 +128,14 @@ pub(crate) fn handle_adr_scope(
     let scope_str = args.get("scope").and_then(|v| v.as_str()).unwrap_or_default();
 
     let a = graph.adrs.get(id).ok_or_else(|| format!("ADR {} not found", id))?;
-    let scope: crate::types::AdrScope = scope_str.parse()
+    let scope: product_core::types::AdrScope = scope_str.parse()
         .map_err(|e: String| format!("E001: {}", e))?;
 
     let mut front = a.front.clone();
     front.scope = scope;
 
-    let content = crate::parser::render_adr(&front, &a.body);
-    crate::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))?;
+    let content = product_core::parser::render_adr(&front, &a.body);
+    product_core::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))?;
     Ok(serde_json::json!({"id": id, "scope": scope.to_string()}))
 }
 
@@ -165,7 +165,7 @@ pub(crate) fn handle_adr_supersede(
 fn supersede_add_mcp(
     id: &str,
     target_id: &str,
-    a: &crate::types::Adr,
+    a: &product_core::types::Adr,
     graph: &KnowledgeGraph,
 ) -> Result<Value, String> {
     let target = graph.adrs.get(target_id)
@@ -182,12 +182,12 @@ fn supersede_add_mcp(
     }
 
     // Cycle detection
-    let mut test_adrs: Vec<crate::types::Adr> = graph.adrs.values().cloned().collect();
+    let mut test_adrs: Vec<product_core::types::Adr> = graph.adrs.values().cloned().collect();
     test_adrs.retain(|ai| ai.front.id != id && ai.front.id != target_id);
-    test_adrs.push(crate::types::Adr {
+    test_adrs.push(product_core::types::Adr {
         front: new_front.clone(), body: a.body.clone(), path: a.path.clone(),
     });
-    test_adrs.push(crate::types::Adr {
+    test_adrs.push(product_core::types::Adr {
         front: target_front.clone(), body: target.body.clone(), path: target.path.clone(),
     });
     let test_graph = KnowledgeGraph::build(vec![], test_adrs, vec![]);
@@ -195,17 +195,17 @@ fn supersede_add_mcp(
         return Err(format!("E004: supersession cycle detected: {}", cycle.join(" -> ")));
     }
 
-    if target_front.status == crate::types::AdrStatus::Accepted {
-        target_front.status = crate::types::AdrStatus::Superseded;
+    if target_front.status == product_core::types::AdrStatus::Accepted {
+        target_front.status = product_core::types::AdrStatus::Superseded;
     }
 
-    let content_a = crate::parser::render_adr(&new_front, &a.body);
-    let content_target = crate::parser::render_adr(&target_front, &target.body);
+    let content_a = product_core::parser::render_adr(&new_front, &a.body);
+    let content_target = product_core::parser::render_adr(&target_front, &target.body);
     let writes: Vec<(&std::path::Path, &str)> = vec![
         (&a.path, &content_a),
         (&target.path, &content_target),
     ];
-    crate::fileops::write_batch_atomic(&writes).map_err(|e| format!("{}", e))?;
+    product_core::fileops::write_batch_atomic(&writes).map_err(|e| format!("{}", e))?;
 
     Ok(serde_json::json!({"id": id, "supersedes": target_id, "action": "added"}))
 }
@@ -213,7 +213,7 @@ fn supersede_add_mcp(
 fn supersede_remove_mcp(
     id: &str,
     target_id: &str,
-    a: &crate::types::Adr,
+    a: &product_core::types::Adr,
     graph: &KnowledgeGraph,
 ) -> Result<Value, String> {
     let target = graph.adrs.get(target_id)
@@ -225,13 +225,13 @@ fn supersede_remove_mcp(
     let mut target_front = target.front.clone();
     target_front.superseded_by.retain(|s| s != id);
 
-    let content_a = crate::parser::render_adr(&new_front, &a.body);
-    let content_target = crate::parser::render_adr(&target_front, &target.body);
+    let content_a = product_core::parser::render_adr(&new_front, &a.body);
+    let content_target = product_core::parser::render_adr(&target_front, &target.body);
     let writes: Vec<(&std::path::Path, &str)> = vec![
         (&a.path, &content_a),
         (&target.path, &content_target),
     ];
-    crate::fileops::write_batch_atomic(&writes).map_err(|e| format!("{}", e))?;
+    product_core::fileops::write_batch_atomic(&writes).map_err(|e| format!("{}", e))?;
 
     Ok(serde_json::json!({"id": id, "remove": target_id, "action": "removed"}))
 }
@@ -270,8 +270,8 @@ pub(crate) fn handle_adr_source_files(
     }
     front.source_files.sort();
 
-    let content = crate::parser::render_adr(&front, &a.body);
-    crate::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))?;
+    let content = product_core::parser::render_adr(&front, &a.body);
+    product_core::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))?;
     Ok(serde_json::json!({
         "id": id,
         "source_files": front.source_files,
@@ -334,8 +334,8 @@ pub(crate) fn handle_test_runner(
         }
     }
 
-    let content = crate::parser::render_test(&front, &t.body);
-    crate::fileops::write_file_atomic(&t.path, &content).map_err(|e| format!("{}", e))?;
+    let content = product_core::parser::render_test(&front, &t.body);
+    product_core::fileops::write_file_atomic(&t.path, &content).map_err(|e| format!("{}", e))?;
     Ok(serde_json::json!({
         "id": id,
         "runner": front.runner,
@@ -362,10 +362,10 @@ pub(crate) fn handle_feature_depends_on(
     let add = extract_string_array(args, "add");
     let remove = extract_string_array(args, "remove");
 
-    let plan = crate::feature::plan_depends_on_edit(graph, id, &add, &remove)
+    let plan = product_core::feature::plan_depends_on_edit(graph, id, &add, &remove)
         .map_err(|e| format!("{}", e))?;
     if plan.is_changed() {
-        crate::feature::apply_depends_on_edit(&plan).map_err(|e| format!("{}", e))?;
+        product_core::feature::apply_depends_on_edit(&plan).map_err(|e| format!("{}", e))?;
     }
     Ok(serde_json::json!({
         "id": id,

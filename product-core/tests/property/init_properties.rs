@@ -89,7 +89,7 @@ proptest! {
 
         // 1. ProductConfig::load() succeeds (canonical layout per FT-057)
         let toml_path = dir.path().join(".product/config.toml");
-        let config = product_lib::config::ProductConfig::load(&toml_path);
+        let config = product_core::config::ProductConfig::load(&toml_path);
         prop_assert!(
             config.is_ok(),
             "ProductConfig::load() should succeed, got: {:?}\ntoml contents:\n{}",

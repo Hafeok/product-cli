@@ -1,11 +1,11 @@
 //! Feature write operations — creation, linking, status changes.
 //!
 //! Migrated handlers (`feature_new`, `feature_status`, `feature_domain`) are
-//! thin adapters over pure planning functions in `product_lib::feature`.
+//! thin adapters over pure planning functions in `product_core::feature`.
 //! Legacy handlers (`feature_link`, `feature_acknowledge`) still use BoxResult
 //! and print directly; migrate them when touching.
 
-use product_lib::{error::ProductError, feature as feat, fileops, graph, parser, types};
+use product_core::{error::ProductError, feature as feat, fileops, graph, parser, types};
 use std::io::{self, BufRead, IsTerminal, Write};
 
 use super::{acquire_write_lock, acquire_write_lock_typed, load_graph, load_graph_typed, BoxResult, CmdResult, Output};
@@ -298,11 +298,11 @@ pub(crate) fn feature_status(id: &str, new_status: &str) -> CmdResult {
     if status == types::FeatureStatus::InProgress
         && matches!(
             config.features.completeness_severity,
-            product_lib::config::CompletenessSeverity::Error
+            product_core::config::CompletenessSeverity::Error
         )
     {
         if let Some(feature) = graph.features.get(id) {
-            if let Some(diag) = product_lib::graph::functional_spec_validation::check_feature(
+            if let Some(diag) = product_core::graph::functional_spec_validation::check_feature(
                 feature,
                 &config.features,
             ) {

@@ -1,7 +1,7 @@
 //! `product drift diff` handler — LLM-ready drift bundle (FT-045, ADR-040).
 
-use product_lib::drift;
-use product_lib::types::FeatureStatus;
+use product_core::drift;
+use product_core::types::FeatureStatus;
 use std::process;
 
 use super::BoxResult;
@@ -11,9 +11,9 @@ pub fn drift_diff(
     all_complete: bool,
     changed: bool,
     format: &str,
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     root: &std::path::Path,
-    config: &product_lib::config::ProductConfig,
+    config: &product_core::config::ProductConfig,
 ) -> BoxResult {
     let depth = config.tags.implementation_depth;
     let mut had_w020 = false;
@@ -72,7 +72,7 @@ pub fn drift_diff(
 
 fn changed_feature_ids(
     root: &std::path::Path,
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
 ) -> Vec<String> {
     let output = std::process::Command::new("git")
         .args(["diff", "--name-only", "HEAD~1"])

@@ -9,7 +9,7 @@
 
 #![allow(clippy::unwrap_used)]
 
-use product_lib::mcp::ToolRegistry;
+use product_mcp::ToolRegistry;
 use std::path::Path;
 
 /// Build a canonical-layout repo at `root`. Mirrors the fixture

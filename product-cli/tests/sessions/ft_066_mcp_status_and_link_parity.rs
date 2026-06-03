@@ -8,7 +8,7 @@
 #![allow(clippy::unwrap_used)]
 
 use super::harness::Session;
-use product_lib::mcp::ToolRegistry;
+use product_mcp::ToolRegistry;
 
 // ---------------------------------------------------------------------------
 // Helpers — seed a session repo with raw feature / TC YAML.

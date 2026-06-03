@@ -1,7 +1,7 @@
 //! Shared helpers used by `request_cmd.rs` — finding rendering, draft-path
 //! fallback, JSON serialisation, git commit runner.
 
-use product_lib::request::{self, ApplyResult, Finding};
+use product_core::request::{self, ApplyResult, Finding};
 use std::path::{Path, PathBuf};
 
 /// If `file` is None, return the active draft path. Errors when no draft exists.
@@ -12,7 +12,7 @@ pub fn resolve_file_or_draft(
     match file {
         Some(p) => Ok(p.to_path_buf()),
         None => {
-            let draft = product_lib::request::builder::draft::draft_path(root);
+            let draft = product_core::request::builder::draft::draft_path(root);
             if !draft.exists() {
                 Err("no active draft — pass a file or run `product request new`".into())
             } else {

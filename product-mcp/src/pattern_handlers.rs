@@ -4,10 +4,10 @@
 //! MCP surface and the CLI surface produce byte-identical files (ADR-020
 //! parity invariant — see FT-066 lesson).
 
-use crate::config::ProductConfig;
-use crate::graph::KnowledgeGraph;
-use crate::pattern;
-use crate::types;
+use product_core::config::ProductConfig;
+use product_core::graph::KnowledgeGraph;
+use product_core::pattern;
+use product_core::types;
 use serde_json::Value;
 use std::path::Path;
 

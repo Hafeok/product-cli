@@ -1,7 +1,7 @@
 //! Tag lifecycle browsing — `product tags` command group (ADR-036)
 
 use clap::Subcommand;
-use product_lib::tags;
+use product_core::tags;
 
 use super::{load_graph, BoxResult};
 

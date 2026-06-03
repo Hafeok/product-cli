@@ -1,7 +1,7 @@
 //! MCP write tool handlers — mutation tool implementations.
 
-use crate::config::ProductConfig;
-use crate::graph::KnowledgeGraph;
+use product_core::config::ProductConfig;
+use product_core::graph::KnowledgeGraph;
 use serde_json::Value;
 use std::path::Path;
 
@@ -15,24 +15,24 @@ pub(crate) fn handle_feature_new(
     let existing: Vec<String> = graph.features.keys().cloned().collect();
     let config = ProductConfig::load_from_root(repo_root)
         .map_err(|e| format!("{}", e))?;
-    let id = crate::parser::next_id(&config.prefixes.feature, &existing);
-    let filename = crate::parser::id_to_filename(&id, title);
+    let id = product_core::parser::next_id(&config.prefixes.feature, &existing);
+    let filename = product_core::parser::id_to_filename(&id, title);
     let dir = config.resolve_path(repo_root, &config.paths.features);
     std::fs::create_dir_all(&dir).map_err(|e| format!("{}", e))?;
     let path = dir.join(&filename);
     let front = new_feature_front(id.clone(), title, phase);
     let body = format!("## Description\n\n[Describe {} here.]\n", title);
-    let content = crate::parser::render_feature(&front, &body);
-    crate::fileops::write_file_atomic(&path, &content).map_err(|e| format!("{}", e))?;
+    let content = product_core::parser::render_feature(&front, &body);
+    product_core::fileops::write_file_atomic(&path, &content).map_err(|e| format!("{}", e))?;
     Ok(serde_json::json!({"id": id, "path": path.display().to_string()}))
 }
 
-fn new_feature_front(id: String, title: &str, phase: u32) -> crate::types::FeatureFrontMatter {
-    crate::types::FeatureFrontMatter {
+fn new_feature_front(id: String, title: &str, phase: u32) -> product_core::types::FeatureFrontMatter {
+    product_core::types::FeatureFrontMatter {
         id,
         title: title.to_string(),
         phase,
-        status: crate::types::FeatureStatus::Planned,
+        status: product_core::types::FeatureStatus::Planned,
         depends_on: vec![],
         adrs: vec![],
         tests: vec![],
@@ -54,28 +54,28 @@ pub(crate) fn handle_adr_new(
     let existing: Vec<String> = graph.adrs.keys().cloned().collect();
     let config = ProductConfig::load_from_root(repo_root)
         .map_err(|e| format!("{}", e))?;
-    let id = crate::parser::next_id(&config.prefixes.adr, &existing);
-    let filename = crate::parser::id_to_filename(&id, title);
+    let id = product_core::parser::next_id(&config.prefixes.adr, &existing);
+    let filename = product_core::parser::id_to_filename(&id, title);
     let dir = config.resolve_path(repo_root, &config.paths.adrs);
     std::fs::create_dir_all(&dir).map_err(|e| format!("{}", e))?;
     let path = dir.join(&filename);
     let front = new_adr_front(id.clone(), title);
     let body = "**Status:** Proposed\n\n**Context:**\n\n**Decision:**\n\n**Rationale:**\n\n**Rejected alternatives:**\n".to_string();
-    let content = crate::parser::render_adr(&front, &body);
-    crate::fileops::write_file_atomic(&path, &content).map_err(|e| format!("{}", e))?;
+    let content = product_core::parser::render_adr(&front, &body);
+    product_core::fileops::write_file_atomic(&path, &content).map_err(|e| format!("{}", e))?;
     Ok(serde_json::json!({"id": id, "path": path.display().to_string()}))
 }
 
-fn new_adr_front(id: String, title: &str) -> crate::types::AdrFrontMatter {
-    crate::types::AdrFrontMatter {
+fn new_adr_front(id: String, title: &str) -> product_core::types::AdrFrontMatter {
+    product_core::types::AdrFrontMatter {
         id,
         title: title.to_string(),
-        status: crate::types::AdrStatus::Proposed,
+        status: product_core::types::AdrStatus::Proposed,
         features: vec![],
         supersedes: vec![],
         superseded_by: vec![],
         domains: vec![],
-        scope: crate::types::AdrScope::Domain,
+        scope: product_core::types::AdrScope::Domain,
         content_hash: None,
         amendments: vec![],
         source_files: vec![],
@@ -103,24 +103,24 @@ pub(crate) fn handle_test_new(
     let config = ProductConfig::load_from_root(repo_root)
         .map_err(|e| format!("{}", e))?;
     for s in &observes {
-        if !crate::tc::is_known_surface(s, &config.tc_observability) {
+        if !product_core::tc::is_known_surface(s, &config.tc_observability) {
             return Err(format!(
                 "E026: unknown observes surface '{}' (allowed: {})",
                 s,
-                crate::tc::surface_hint(&config.tc_observability),
+                product_core::tc::surface_hint(&config.tc_observability),
             ));
         }
     }
-    let id = crate::parser::next_id(&config.prefixes.test, &existing);
-    let filename = crate::parser::id_to_filename(&id, title);
+    let id = product_core::parser::next_id(&config.prefixes.test, &existing);
+    let filename = product_core::parser::id_to_filename(&id, title);
     let dir = config.resolve_path(repo_root, &config.paths.tests);
     std::fs::create_dir_all(&dir).map_err(|e| format!("{}", e))?;
     let path = dir.join(&filename);
     let mut front = new_test_front(id.clone(), title, test_type);
     front.observes = observes;
     let body = "## Description\n\n[Describe test here.]\n".to_string();
-    let content = crate::parser::render_test(&front, &body);
-    crate::fileops::write_file_atomic(&path, &content).map_err(|e| format!("{}", e))?;
+    let content = product_core::parser::render_test(&front, &body);
+    product_core::fileops::write_file_atomic(&path, &content).map_err(|e| format!("{}", e))?;
     Ok(serde_json::json!({"id": id, "path": path.display().to_string()}))
 }
 
@@ -128,14 +128,14 @@ fn new_test_front(
     id: String,
     title: &str,
     test_type: &str,
-) -> crate::types::TestFrontMatter {
-    let tt: crate::types::TestType = test_type.parse().unwrap_or(crate::types::TestType::Scenario);
-    crate::types::TestFrontMatter {
+) -> product_core::types::TestFrontMatter {
+    let tt: product_core::types::TestType = test_type.parse().unwrap_or(product_core::types::TestType::Scenario);
+    product_core::types::TestFrontMatter {
         id,
         title: title.to_string(),
         test_type: tt,
-        status: crate::types::TestStatus::Unimplemented,
-        validates: crate::types::ValidatesBlock { features: vec![], adrs: vec![] },
+        status: product_core::types::TestStatus::Unimplemented,
+        validates: product_core::types::ValidatesBlock { features: vec![], adrs: vec![] },
         phase: 1,
         content_hash: None,
         runner: None,
@@ -164,9 +164,9 @@ pub(crate) fn handle_feature_link(args: &Value, graph: &KnowledgeGraph) -> Resul
     let test = args.get("test").and_then(|v| v.as_str());
     let pattern = args.get("pattern").and_then(|v| v.as_str());
 
-    let plan = crate::feature::plan_link_with_pattern(graph, id, adr, test, pattern)
+    let plan = product_core::feature::plan_link_with_pattern(graph, id, adr, test, pattern)
         .map_err(|e| format!("{}", e))?;
-    crate::feature::apply_link(&plan).map_err(|e| format!("{}", e))?;
+    product_core::feature::apply_link(&plan).map_err(|e| format!("{}", e))?;
 
     Ok(build_link_response(id, &plan))
 }
@@ -181,7 +181,7 @@ fn apply_optional_depends_on(
     let Some(dep_id) = args.get("feature").and_then(|v| v.as_str()) else {
         return Ok(());
     };
-    let dep_plan = crate::feature::plan_depends_on_edit(
+    let dep_plan = product_core::feature::plan_depends_on_edit(
         graph,
         id,
         std::slice::from_ref(&dep_id.to_string()),
@@ -189,13 +189,13 @@ fn apply_optional_depends_on(
     )
     .map_err(|e| format!("{}", e))?;
     if dep_plan.is_changed() {
-        crate::feature::apply_depends_on_edit(&dep_plan)
+        product_core::feature::apply_depends_on_edit(&dep_plan)
             .map_err(|e| format!("{}", e))?;
     }
     Ok(())
 }
 
-fn build_link_response(id: &str, plan: &crate::feature::LinkPlan) -> Value {
+fn build_link_response(id: &str, plan: &product_core::feature::LinkPlan) -> Value {
     let writes_json: Vec<Value> = plan
         .writes
         .iter()
@@ -245,12 +245,12 @@ pub(crate) fn handle_feature_status_update(
         .and_then(|v| v.as_str())
         .ok_or_else(|| "status is required".to_string())?;
 
-    let new_status: crate::types::FeatureStatus =
+    let new_status: product_core::types::FeatureStatus =
         status_str.parse().map_err(|e: String| format!("E001: {}", e))?;
 
-    let plan = crate::feature::plan_status_change(graph, id, new_status)
+    let plan = product_core::feature::plan_status_change(graph, id, new_status)
         .map_err(|e| format!("{}", e))?;
-    crate::feature::apply_status_change(&plan).map_err(|e| format!("{}", e))?;
+    product_core::feature::apply_status_change(&plan).map_err(|e| format!("{}", e))?;
 
     let orphaned: Vec<Value> = plan
         .orphaned_tests
@@ -285,12 +285,12 @@ pub(crate) fn handle_test_status_update(
         .and_then(|v| v.as_str())
         .ok_or_else(|| "status is required".to_string())?;
 
-    let new_status: crate::types::TestStatus =
+    let new_status: product_core::types::TestStatus =
         status_str.parse().map_err(|e: String| format!("E001: {}", e))?;
 
-    let plan = crate::tc::plan_status_change(graph, id, new_status)
+    let plan = product_core::tc::plan_status_change(graph, id, new_status)
         .map_err(|e| format!("{}", e))?;
-    crate::tc::apply_status_change(&plan).map_err(|e| format!("{}", e))?;
+    product_core::tc::apply_status_change(&plan).map_err(|e| format!("{}", e))?;
 
     Ok(serde_json::json!({
         "id": id,
@@ -323,27 +323,27 @@ pub(crate) fn handle_body_update(
 
 fn update_feature_body(id: &str, body: &str, graph: &KnowledgeGraph) -> Result<(), String> {
     let f = graph.features.get(id).ok_or_else(|| format!("Feature {} not found", id))?;
-    let content = crate::parser::render_feature(&f.front, body);
-    crate::fileops::write_file_atomic(&f.path, &content).map_err(|e| format!("{}", e))
+    let content = product_core::parser::render_feature(&f.front, body);
+    product_core::fileops::write_file_atomic(&f.path, &content).map_err(|e| format!("{}", e))
 }
 
 fn update_adr_body(id: &str, body: &str, graph: &KnowledgeGraph) -> Result<(), String> {
     let a = graph.adrs.get(id).ok_or_else(|| format!("ADR {} not found", id))?;
     // ADR-032: Protect accepted ADR body from modification via MCP
-    if a.front.status == crate::types::AdrStatus::Accepted {
+    if a.front.status == product_core::types::AdrStatus::Accepted {
         return Err(format!(
             "Cannot modify body of accepted ADR {}. Use `product adr amend {} --reason \"...\"` instead.",
             id, id
         ));
     }
-    let content = crate::parser::render_adr(&a.front, body);
-    crate::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))
+    let content = product_core::parser::render_adr(&a.front, body);
+    product_core::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))
 }
 
 fn update_test_body(id: &str, body: &str, graph: &KnowledgeGraph) -> Result<(), String> {
     let t = graph.tests.get(id).ok_or_else(|| format!("TC {} not found", id))?;
-    let content = crate::parser::render_test(&t.front, body);
-    crate::fileops::write_file_atomic(&t.path, &content).map_err(|e| format!("{}", e))
+    let content = product_core::parser::render_test(&t.front, body);
+    product_core::fileops::write_file_atomic(&t.path, &content).map_err(|e| format!("{}", e))
 }
 
 fn update_dep_body(id: &str, body: &str, graph: &KnowledgeGraph) -> Result<(), String> {
@@ -351,8 +351,8 @@ fn update_dep_body(id: &str, body: &str, graph: &KnowledgeGraph) -> Result<(), S
         .dependencies
         .get(id)
         .ok_or_else(|| format!("Dep {} not found", id))?;
-    let content = crate::parser::render_dependency(&d.front, body);
-    crate::fileops::write_file_atomic(&d.path, &content).map_err(|e| format!("{}", e))
+    let content = product_core::parser::render_dependency(&d.front, body);
+    product_core::fileops::write_file_atomic(&d.path, &content).map_err(|e| format!("{}", e))
 }
 
 

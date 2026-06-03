@@ -1,6 +1,6 @@
 //! Thin adapters for ADR sealing — amend, rehash.
 
-use product_lib::{adr, error::ProductError};
+use product_core::{adr, error::ProductError};
 
 use super::{acquire_write_lock_typed, load_graph_typed, CmdResult, Output};
 
@@ -27,7 +27,7 @@ pub fn adr_rehash(id: Option<String>, all: bool) -> CmdResult {
             .adrs
             .values()
             .filter(|a| {
-                a.front.status == product_lib::types::AdrStatus::Accepted
+                a.front.status == product_core::types::AdrStatus::Accepted
                     && a.front.content_hash.is_some()
             })
             .count();

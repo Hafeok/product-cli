@@ -7,7 +7,7 @@
 //! Legacy handlers that still call `println!` directly should return
 //! `Output::Empty` — the renderer then prints nothing, preserving behaviour.
 
-use product_lib::error::ProductError;
+use product_core::error::ProductError;
 use std::io::{self, Write};
 
 use super::BoxResult;

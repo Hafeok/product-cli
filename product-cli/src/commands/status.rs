@@ -1,11 +1,11 @@
 //! Status summary, impact analysis — thin adapters over the `status` slice.
 //!
-//! Handlers here load the graph, call a pure builder in `product_lib::status`,
+//! Handlers here load the graph, call a pure builder in `product_core::status`,
 //! then return `Output::Both { text, json }` so the dispatcher renders per
 //! the `--format` flag. No println!, no format branching in the handler.
 
-use product_lib::cycle_times;
-use product_lib::{error::ProductError, status};
+use product_core::cycle_times;
+use product_core::{error::ProductError, status};
 
 use super::{load_graph_typed, CmdResult, Output};
 

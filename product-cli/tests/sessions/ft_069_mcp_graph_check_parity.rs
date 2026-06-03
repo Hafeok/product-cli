@@ -11,7 +11,7 @@
 #![allow(clippy::unwrap_used)]
 
 use super::harness::Session;
-use product_lib::mcp::ToolRegistry;
+use product_mcp::ToolRegistry;
 use serde_json::Value;
 
 // ---------------------------------------------------------------------------
@@ -472,7 +472,7 @@ fn tc_811_ft_069_exit_criteria() {
     }
 
     // 2. The shared library function exists at its canonical path and is
-    //    addressable as `product_lib::graph::full_check::run`.
+    //    addressable as `product_core::graph::full_check::run`.
     {
         let s = Session::new();
         // Smoke-call against an empty fixture — must not panic and must
@@ -518,8 +518,11 @@ fn tc_811_ft_069_exit_criteria() {
 
     // 5. The MCP handler no longer calls the bare graph.check() shortcut.
     {
-        let manifest = env!("CARGO_MANIFEST_DIR");
-        let path = std::path::Path::new(manifest).join("src/mcp/registry.rs");
+        let manifest = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("workspace root")
+            .to_path_buf();
+        let path = manifest.join("product-mcp/src/registry.rs");
         let body = std::fs::read_to_string(&path).expect("read registry.rs");
         // The handler must route through full_check::run.
         assert!(

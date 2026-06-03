@@ -1,7 +1,7 @@
 //! Architectural fitness functions: record, threshold, trend.
 
 use clap::Subcommand;
-use product_lib::{config::ProductConfig, graph::KnowledgeGraph, metrics};
+use product_core::{config::ProductConfig, graph::KnowledgeGraph, metrics};
 use std::path::Path;
 use std::process;
 

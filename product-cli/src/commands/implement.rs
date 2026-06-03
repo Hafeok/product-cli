@@ -1,7 +1,7 @@
 //! Implement pipeline, verify test criteria.
 
-use product_lib::error::ProductError;
-use product_lib::{implement, verify::pipeline};
+use product_core::error::ProductError;
+use product_core::{implement, verify::pipeline};
 use std::process;
 
 use super::{acquire_write_lock, load_graph, BoxResult};

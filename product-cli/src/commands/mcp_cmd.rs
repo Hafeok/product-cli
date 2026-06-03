@@ -1,6 +1,7 @@
 //! MCP server (stdio or HTTP transport).
 
-use product_lib::{config::ProductConfig, error::ProductError, mcp};
+use product_core::config::ProductConfig;
+use product_mcp::{run_stdio, serve_http_blocking};
 use std::path::PathBuf;
 
 use super::BoxResult;
@@ -34,19 +35,9 @@ pub(crate) fn handle_mcp(
         let cors_origins = mcp_cfg
             .map(|m| m.cors_origins.clone())
             .unwrap_or_default();
-        let rt = tokio::runtime::Runtime::new().map_err(|e| {
-            ProductError::IoError(format!("Failed to create tokio runtime: {}", e))
-        })?;
-        rt.block_on(mcp::run_http(
-            repo_root,
-            write_enabled,
-            port,
-            bind,
-            token,
-            cors_origins,
-        ))?;
+        serve_http_blocking(repo_root, write_enabled, port, bind, token, cors_origins)?;
     } else {
-        mcp::run_stdio(repo_root, write_enabled)?;
+        run_stdio(repo_root, write_enabled)?;
     }
 
     Ok(())

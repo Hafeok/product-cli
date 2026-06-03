@@ -1,7 +1,7 @@
 //! ADR navigation, creation, status, review, amendment, sealing.
 
 use clap::Subcommand;
-use product_lib::{adr as adr_slice, author, error::ProductError, types};
+use product_core::{adr as adr_slice, author, error::ProductError, types};
 
 use super::{acquire_write_lock_typed, load_graph, load_graph_typed, BoxResult, CmdResult, Output};
 mod adr_write_ops {

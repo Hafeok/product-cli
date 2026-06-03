@@ -1,6 +1,6 @@
 //! Thin adapters for ADR conflict-check + conflict-bundle commands (FT-045, ADR-040).
 
-use product_lib::{adr, error::ProductError};
+use product_core::{adr, error::ProductError};
 
 use super::{load_graph_typed, BoxResult, CmdResult, Output};
 
@@ -30,7 +30,7 @@ pub fn adr_check_conflicts(id: Option<String>, _fmt: &str) -> CmdResult {
 /// Left on `BoxResult` for this phase — no behaviour change from legacy.
 pub fn adr_conflict_bundle(id: &str, format: &str) -> BoxResult {
     let (_, root, graph) = super::load_graph()?;
-    let markdown = product_lib::gap::conflict::bundle_for_adr(id, &graph, &root)
+    let markdown = product_core::gap::conflict::bundle_for_adr(id, &graph, &root)
         .ok_or_else(|| ProductError::NotFound(format!("ADR {}", id)))?;
     if format == "json" {
         let v = serde_json::json!({ "bundle": markdown });

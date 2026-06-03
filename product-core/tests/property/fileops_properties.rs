@@ -1,7 +1,7 @@
 //! TC-P010–P011: File write safety property tests (ADR-018)
 
 use proptest::prelude::*;
-use product_lib::fileops;
+use product_core::fileops;
 
 /// TC-P011: Write + re-read is identity
 /// ∀content:String: read(atomic_write(path, content)) = content

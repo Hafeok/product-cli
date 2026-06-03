@@ -135,7 +135,7 @@ fn tc_701d_canonical_wins_over_legacy() {
     // Library-level assertion — discover() walks the canonical path first.
     let cwd = std::env::current_dir().expect("cwd");
     std::env::set_current_dir(dir.path()).expect("chdir");
-    let result = product_lib::config::ProductConfig::discover();
+    let result = product_core::config::ProductConfig::discover();
     let restored = std::env::set_current_dir(cwd);
     let _ = restored;
     let (config, root) = result.expect("discover should succeed");

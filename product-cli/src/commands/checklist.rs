@@ -1,7 +1,7 @@
 //! Checklist generation from feature files.
 
 use clap::Subcommand;
-use product_lib::{checklist, fileops};
+use product_core::{checklist, fileops};
 
 use super::{acquire_write_lock, load_graph, BoxResult};
 

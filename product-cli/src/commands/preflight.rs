@@ -1,10 +1,10 @@
 //! Pre-flight analysis: domain coverage, cross-cutting checks, dependency availability (ADR-030).
 
-use product_lib::domains;
-use product_lib::error::ProductError;
-use product_lib::graph::KnowledgeGraph;
-use product_lib::tc::runner_required;
-use product_lib::types::DependencyStatus;
+use product_core::domains;
+use product_core::error::ProductError;
+use product_core::graph::KnowledgeGraph;
+use product_core::tc::runner_required;
+use product_core::types::DependencyStatus;
 use std::process;
 
 use super::{load_graph, BoxResult};
@@ -120,7 +120,7 @@ fn print_preflight_json(result: &domains::PreflightResult, dep_warnings: bool) {
 /// ADR-030 dependency availability section. Returns true if any dep failed
 /// the availability probe or is deprecated/migrating.
 fn render_dep_availability(
-    feature_deps: &[&product_lib::types::Dependency],
+    feature_deps: &[&product_core::types::Dependency],
 ) -> bool {
     if feature_deps.is_empty() {
         return false;
@@ -150,7 +150,7 @@ fn render_dep_availability(
 
 /// Run a single dependency's availability probe; print one row.
 /// Returns true if the probe passed (or was skipped), false on failure.
-fn probe_dep(dep: &product_lib::types::Dependency) -> bool {
+fn probe_dep(dep: &product_core::types::Dependency) -> bool {
     match &dep.front.availability_check {
         None => {
             println!(

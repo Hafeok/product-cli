@@ -1,8 +1,8 @@
 //! MCP handlers for the request-based write surface (FT-041, ADR-038).
 
-use crate::config::ProductConfig;
-use crate::graph::KnowledgeGraph;
-use crate::request::{self, ApplyOptions};
+use product_core::config::ProductConfig;
+use product_core::graph::KnowledgeGraph;
+use product_core::request::{self, ApplyOptions};
 use serde_json::Value;
 use std::path::Path;
 

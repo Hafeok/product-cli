@@ -15,8 +15,8 @@ use super::harness::Session;
 /// validator's `is_known_field` query share a single source of truth.
 #[test]
 fn tc_732_product_schema_and_request_validator_share_field_allowlist() {
-    use product_lib::field_schema;
-    use product_lib::request::types::ArtifactType;
+    use product_core::field_schema;
+    use product_core::request::types::ArtifactType;
 
     // Every constant entry must round-trip through the lookup function.
     for &f in field_schema::FEATURE_FIELDS {

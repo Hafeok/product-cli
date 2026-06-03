@@ -1,6 +1,7 @@
 //! Git hook installation, MCP scaffolding.
 
-use product_lib::{config::ProductConfig, fileops, mcp};
+use product_core::{config::ProductConfig, fileops};
+use product_mcp as mcp;
 
 use super::{acquire_write_lock, BoxResult};
 

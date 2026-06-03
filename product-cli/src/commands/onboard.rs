@@ -1,7 +1,7 @@
 //! Codebase onboarding: scan, triage, seed (ADR-027).
 
 use clap::Subcommand;
-use product_lib::{error::ProductError, onboard, parser};
+use product_core::{error::ProductError, onboard, parser};
 use std::path::PathBuf;
 
 use super::{acquire_write_lock, load_graph, BoxResult};
@@ -204,7 +204,7 @@ fn read_triage_output(source: &str) -> Result<onboard::TriageOutput, Box<dyn std
 }
 
 fn plan_seed_from_graph(
-    config: &product_lib::config::ProductConfig,
+    config: &product_core::config::ProductConfig,
     root: &std::path::Path,
     triage_output: &onboard::TriageOutput,
 ) -> Result<onboard::SeedResult, Box<dyn std::error::Error>> {

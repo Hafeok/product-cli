@@ -1,7 +1,7 @@
 //! Graph operations: check, rebuild, query, stats, centrality, autolink, coverage, infer.
 
 use clap::Subcommand;
-use product_lib::{context::summary as bundle_summary, domains, graph::inference, rdf};
+use product_core::{context::summary as bundle_summary, domains, graph::inference, rdf};
 use std::process;
 
 use super::graph_autolink::graph_autolink;
@@ -87,7 +87,7 @@ fn graph_check(format: Option<String>, global_format: &str) -> BoxResult {
     // FT-069: route all validation through the shared `full_check::run`
     // so the MCP `product_graph_check` tool produces a byte-identical
     // envelope on the same fixture (ADR-020 parity invariant).
-    let result = product_lib::graph::full_check::run(&graph, &config, &root);
+    let result = product_core::graph::full_check::run(&graph, &config, &root);
     for w in config.validate_product_section() { eprintln!("{}", w); }
 
     let fmt = format.as_deref().unwrap_or(global_format);
@@ -154,7 +154,7 @@ fn graph_stats() -> BoxResult {
 
 /// Print the aggregate bundle-size summary section (FT-040).
 /// Emits W012 on stderr when any feature has no `bundle` block.
-fn print_bundle_summary(graph: &product_lib::graph::KnowledgeGraph, config: &product_lib::config::ProductConfig) {
+fn print_bundle_summary(graph: &product_core::graph::KnowledgeGraph, config: &product_core::config::ProductConfig) {
     let summary = bundle_summary::compute_summary(graph, config);
     println!();
     print!("{}", bundle_summary::render_summary(&summary));
@@ -167,7 +167,7 @@ fn print_bundle_summary(graph: &product_lib::graph::KnowledgeGraph, config: &pro
 }
 
 fn print_stats_summary(
-    stats: &product_lib::graph::GraphStats,
+    stats: &product_core::graph::GraphStats,
     link_density: f64,
     parse_time: std::time::Duration,
     centrality_time: std::time::Duration,
@@ -189,7 +189,7 @@ fn print_stats_summary(
     println!("    Total:      {:.1}ms", total_time.as_secs_f64() * 1000.0);
 }
 
-fn print_centrality_summary(stats: &product_lib::graph::GraphStats) {
+fn print_centrality_summary(stats: &product_core::graph::GraphStats) {
     if !stats.adr_centrality.is_empty() {
         let mut sorted: Vec<_> = stats.adr_centrality.clone();
         sorted.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
@@ -225,7 +225,7 @@ fn graph_central(top: usize, all: bool, include: Option<String>) -> BoxResult {
 }
 
 fn build_central_ranking<'a>(
-    graph: &'a product_lib::graph::KnowledgeGraph,
+    graph: &'a product_core::graph::KnowledgeGraph,
     centrality: &std::collections::HashMap<String, f64>,
     include_patterns: bool,
 ) -> Vec<(String, f64, &'a str, &'a str)> {

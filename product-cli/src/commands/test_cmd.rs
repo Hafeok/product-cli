@@ -1,7 +1,7 @@
 //! Test criterion navigation, creation, status management.
 
 use clap::Subcommand;
-use product_lib::{error::ProductError, tc, types};
+use product_core::{error::ProductError, tc, types};
 
 use super::{acquire_write_lock_typed, load_graph_typed, BoxResult, CmdResult, Output};
 
@@ -192,8 +192,8 @@ fn render_test_show_text(t: &types::TestCriterion) -> String {
 
 fn test_untested() -> CmdResult {
     let (_, _, graph) = load_graph_typed()?;
-    let list = product_lib::status::build_untested_list(&graph);
-    let text = product_lib::status::render_feature_list_text(
+    let list = product_core::status::build_untested_list(&graph);
+    let text = product_core::status::render_feature_list_text(
         "Features with no linked test criteria:",
         &list,
     );

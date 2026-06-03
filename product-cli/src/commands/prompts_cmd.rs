@@ -1,7 +1,7 @@
 //! Prompts management — init, list, get.
 
 use clap::Subcommand;
-use product_lib::{author, config::ProductConfig};
+use product_core::{author, config::ProductConfig};
 
 use super::BoxResult;
 

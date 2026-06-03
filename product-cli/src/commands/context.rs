@@ -1,7 +1,7 @@
 //! Context bundle assembly for LLM agents — `--target` selection (FT-063),
 //! template management, and the legacy measurement path.
 
-use product_lib::{
+use product_core::{
     context::{self, summary as bundle_summary, template},
     error::ProductError,
     fileops, parser, types,
@@ -81,8 +81,8 @@ fn is_templates_cmd(args: &ContextArgs<'_>) -> bool {
 /// that are not covered by feature-bundle templates.
 fn resolve_effective_target(
     args: &ContextArgs<'_>,
-    config: &product_lib::config::ProductConfig,
-    graph: &product_lib::graph::KnowledgeGraph,
+    config: &product_core::config::ProductConfig,
+    graph: &product_core::graph::KnowledgeGraph,
     id: &str,
 ) -> Option<String> {
     if args.for_llm {
@@ -107,9 +107,9 @@ fn resolve_effective_target(
 
 fn render_artifact(
     args: &ContextArgs<'_>,
-    config: &product_lib::config::ProductConfig,
+    config: &product_core::config::ProductConfig,
     root: &Path,
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     id: &str,
     order_by_centrality: bool,
     effective_target: Option<String>,
@@ -145,11 +145,11 @@ fn render_artifact(
 
 fn render_with_template(
     root: &Path,
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     feature_id: &str,
     depth: usize,
     target: &str,
-    config: &product_lib::config::ProductConfig,
+    config: &product_core::config::ProductConfig,
     measure: bool,
 ) -> BoxResult {
     if target == "legacy" {
@@ -211,10 +211,10 @@ fn render_with_template(
 /// header. Kept reachable so pre-FT-063 callers and integration tests that
 /// validate the AISP renderer continue to work.
 fn render_legacy_bundle(
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     feature_id: &str,
     depth: usize,
-    config: &product_lib::config::ProductConfig,
+    config: &product_core::config::ProductConfig,
     root: &Path,
     measure: bool,
 ) -> BoxResult {
@@ -240,7 +240,7 @@ fn render_legacy_bundle(
 /// Measure a single feature and update its front-matter + metrics.jsonl.
 fn measure_and_write(
     id: &str,
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     bundle: &str,
     root: &Path,
 ) -> BoxResult {
@@ -254,7 +254,7 @@ fn measure_and_write(
     let tokens_approx = bundle.len() / 4;
     let measured_at = chrono::Utc::now().to_rfc3339();
     // FT-071 / ADR-050: count patterns participating in the bundle.
-    let patterns = product_lib::context::collect_patterns_topo(graph, id).len();
+    let patterns = product_core::context::collect_patterns_topo(graph, id).len();
     let bundle_metrics = types::BundleMetrics {
         depth_1_adrs,
         tcs,
@@ -289,9 +289,9 @@ fn measure_and_write(
 }
 
 fn handle_measure_all(
-    config: &product_lib::config::ProductConfig,
+    config: &product_core::config::ProductConfig,
     root: &Path,
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     depth: usize,
     order_by_centrality: bool,
 ) -> BoxResult {

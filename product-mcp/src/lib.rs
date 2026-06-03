@@ -1,8 +1,10 @@
-//! MCP server — dual-transport protocol implementation (ADR-020)
+//! MCP server crate (dual transport — ADR-020).
 //!
 //! Implements the MCP (Model Context Protocol) tool surface for Product.
 //! stdio: spawned by Claude Code, communicates over stdin/stdout.
 //! HTTP: Streamable HTTP transport for remote access (phone, claude.ai).
+
+#![deny(clippy::unwrap_used)]
 
 pub mod registry;
 mod adr_lifecycle;
@@ -25,6 +27,25 @@ pub use registry::ToolRegistry;
 pub use stdio::run_stdio;
 pub use http::run_http;
 pub use scaffold::scaffold_mcp_json;
+
+use product_core::error::ProductError;
+use std::path::PathBuf;
+
+/// Run the HTTP MCP server, blocking on a fresh tokio runtime. Wraps
+/// `run_http` so the CLI adapter does not need its own `tokio` dependency.
+pub fn serve_http_blocking(
+    repo_root: PathBuf,
+    write_enabled: bool,
+    port: u16,
+    bind: &str,
+    token: Option<String>,
+    cors_origins: Vec<String>,
+) -> Result<(), ProductError> {
+    let rt = tokio::runtime::Runtime::new().map_err(|e| {
+        ProductError::IoError(format!("Failed to create tokio runtime: {}", e))
+    })?;
+    rt.block_on(run_http(repo_root, write_enabled, port, bind, token, cors_origins))
+}
 
 #[cfg(test)]
 mod tests;

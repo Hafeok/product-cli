@@ -1,6 +1,6 @@
 //! `product graph autolink` — auto-link TCs to features via shared ADRs.
 
-use product_lib::{fileops, parser};
+use product_core::{fileops, parser};
 use std::collections::HashMap;
 
 use super::{acquire_write_lock, load_graph, BoxResult};
@@ -38,7 +38,7 @@ pub(crate) fn graph_autolink(dry_run: bool) -> BoxResult {
 }
 
 fn compute_autolink_candidates(
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
 ) -> (HashMap<String, Vec<String>>, HashMap<String, Vec<String>>) {
     // Build a map: ADR ID -> list of feature IDs that link to it
     let mut adr_to_features: HashMap<String, Vec<String>> = HashMap::new();
@@ -73,9 +73,9 @@ fn compute_autolink_candidates(
 }
 
 fn collect_autolink_for_tc(
-    tc: &product_lib::types::TestCriterion,
+    tc: &product_core::types::TestCriterion,
     adr_to_features: &HashMap<String, Vec<String>>,
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     feature_adds: &mut HashMap<String, Vec<String>>,
     tc_adds: &mut HashMap<String, Vec<String>>,
 ) {
@@ -113,7 +113,7 @@ fn print_autolink_dry_run(feature_adds: &HashMap<String, Vec<String>>) {
 }
 
 fn write_autolink_files(
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     feature_adds: &HashMap<String, Vec<String>>,
     tc_adds: &HashMap<String, Vec<String>>,
 ) -> Result<(usize, usize), Box<dyn std::error::Error>> {

@@ -1,6 +1,6 @@
 //! Thin adapters for ADR field edits — domain, scope, supersede, source-files.
 
-use product_lib::{adr, error::ProductError, types};
+use product_core::{adr, error::ProductError, types};
 
 use super::{acquire_write_lock_typed, load_graph_typed, CmdResult, Output};
 

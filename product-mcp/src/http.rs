@@ -1,6 +1,6 @@
 //! MCP HTTP transport — Streamable HTTP via axum (ADR-020)
 
-use crate::error::{ProductError, Result};
+use product_core::error::{ProductError, Result};
 use std::path::PathBuf;
 
 use super::registry::ToolRegistry;

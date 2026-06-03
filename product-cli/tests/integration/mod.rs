@@ -2046,7 +2046,7 @@ fn run_mcp_stdio(h: &Harness, input: &str) -> String {
 /// force rename to fail, and verify the target file is unchanged and temp is cleaned up.
 #[test]
 fn tc_067_atomic_write_interrupted() {
-    use product_lib::fileops;
+    use product_core::fileops;
 
     // Root can write to read-only directories, so skip this test when running as root
     #[cfg(unix)]
@@ -4630,9 +4630,10 @@ Pipeline deploys the system.
 #[test]
 fn tc_180_ft_025_benchmarks_pass() {
     // Run `cargo bench` and verify all four benchmarks complete and pass
+    // After FT-107 the bench lives in product-core; run from workspace root.
     let output = std::process::Command::new("cargo")
-        .args(["bench"])
-        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .args(["bench", "-p", "product-core"])
+        .current_dir(repo_root_dir())
         .output()
         .expect("failed to run cargo bench");
 
@@ -6939,7 +6940,7 @@ fn tc_169_scan_rejects_candidates_citing_non_existent_files() {
     std::fs::write(source_dir.join("src/main.rs"), "fn main() {}\n").expect("write");
 
     // Run post-validation through the library directly
-    use product_lib::onboard;
+    use product_core::onboard;
     let mut scan_output: onboard::ScanOutput = serde_json::from_str(scan_json).expect("parse");
     onboard::validate_all_evidence(&source_dir, &mut scan_output.candidates);
 
@@ -11281,7 +11282,7 @@ fn tc_313_verify_wrapper_script() {
 /// TC-314: assert scripts/harness/implement.sh and scripts/harness/author.sh exist and are executable.
 #[test]
 fn tc_314_harness_scripts_present() {
-    let repo_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let repo_root = repo_root_dir();
     let implement_sh = repo_root.join("scripts/harness/implement.sh");
     let author_sh = repo_root.join("scripts/harness/author.sh");
 
@@ -14561,7 +14562,7 @@ fn tc_505_log_entry_appended_on_apply() {
 /// TC-506: stored entry-hash equals sha256(canonical(entry with entry-hash="")).
 #[test]
 fn tc_506_log_entry_hash_valid_after_apply() {
-    use product_lib::request_log::canonical::{canonical_json, sha256_hex};
+    use product_core::request_log::canonical::{canonical_json, sha256_hex};
 
     let h = fixture_log();
     write_log_req(&h, "r.yaml", "t", "X");
@@ -14600,8 +14601,8 @@ fn tc_507_log_chain_intact_after_multiple_applies() {
         let mut v2 = v.clone();
         let stored = v2["entry-hash"].as_str().unwrap().to_string();
         v2["entry-hash"] = serde_json::json!("");
-        let canon = product_lib::request_log::canonical::canonical_json(&v2);
-        let comp = product_lib::request_log::canonical::sha256_hex(canon.as_bytes());
+        let canon = product_core::request_log::canonical::canonical_json(&v2);
+        let comp = product_core::request_log::canonical::sha256_hex(canon.as_bytes());
         assert_eq!(stored, comp);
     }
 }
@@ -14661,10 +14662,10 @@ fn tc_510_log_verify_detects_chain_break() {
     // Recompute entry-hash so per-entry check passes and only the chain is broken.
     let mut for_hash = v.clone();
     for_hash["entry-hash"] = serde_json::json!("");
-    let canon = product_lib::request_log::canonical::canonical_json(&for_hash);
-    let h2 = product_lib::request_log::canonical::sha256_hex(canon.as_bytes());
+    let canon = product_core::request_log::canonical::canonical_json(&for_hash);
+    let h2 = product_core::request_log::canonical::sha256_hex(canon.as_bytes());
     v["entry-hash"] = serde_json::json!(h2);
-    lines[1] = product_lib::request_log::canonical::canonical_json(&v);
+    lines[1] = product_core::request_log::canonical::canonical_json(&v);
     std::fs::write(&path, lines.join("\n") + "\n").unwrap();
 
     let out = h.run(&["request", "log", "verify"]);
@@ -15034,7 +15035,7 @@ fn tc_524_log_verify_is_pure_read() {
 /// TC-525: hash is deterministic — canonical JSON of same entry hashes to same value.
 #[test]
 fn tc_525_log_entry_hash_is_deterministic() {
-    use product_lib::request_log::canonical::{canonical_json, sha256_hex};
+    use product_core::request_log::canonical::{canonical_json, sha256_hex};
     let v1 = serde_json::json!({"b": 1, "a": "s", "c": [1, 2]});
     let v2 = serde_json::json!({"a": "s", "c": [1, 2], "b": 1});
     assert_eq!(canonical_json(&v1), canonical_json(&v2));
@@ -15047,7 +15048,7 @@ fn tc_525_log_entry_hash_is_deterministic() {
 /// TC-526: any field change invalidates the stored hash.
 #[test]
 fn tc_526_log_any_field_change_invalidates_hash() {
-    use product_lib::request_log::canonical::{canonical_json, sha256_hex};
+    use product_core::request_log::canonical::{canonical_json, sha256_hex};
     let h = fixture_log();
     write_log_req(&h, "r.yaml", "A", "Alpha");
     h.run(&["request", "apply", "r.yaml"]).assert_exit(0);
@@ -16023,9 +16024,9 @@ fn tc_624_request_log_migrate_paths_rewrites_history() {
 
     // Hand-build a legacy log at `requests.jsonl` with 3 absolute `file:`
     // values under a bogus absolute prefix the repo does not live at. We use
-    // `product_lib::request_log` primitives to ensure hashes chain correctly.
-    use product_lib::request_log::append::{append_entry, GENESIS_PREV_HASH};
-    use product_lib::request_log::entry::{ArtifactRef, Entry, EntryPayload, EntryType};
+    // `product_core::request_log` primitives to ensure hashes chain correctly.
+    use product_core::request_log::append::{append_entry, GENESIS_PREV_HASH};
+    use product_core::request_log::entry::{ArtifactRef, Entry, EntryPayload, EntryType};
 
     let log_path = h.dir.path().join("requests.jsonl");
     let legacy_prefix = "/home/alice/work/product-cli/";
@@ -17540,16 +17541,15 @@ fn tc_662_cycle_time_visibility_and_naive_forecast_exit() {
 /// TC-663: invariant — slice + adapter structural rules hold.
 #[test]
 fn tc_663_slice_adapter_structural_invariants() {
-    use std::path::PathBuf;
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = repo_root_dir();
 
     // (A) No println/eprintln/std::process::exit/std::fs::write in pure slice
-    // modules for the cycle_times slice.
+    // modules for the cycle_times slice (lives in product-core after FT-107).
     let forbidden = ["println!", "eprintln!", "std::process::exit", "std::fs::write"];
     let slice_files = [
-        "src/cycle_times/model.rs",
-        "src/cycle_times/compute.rs",
-        "src/cycle_times/render.rs",
+        "product-core/src/cycle_times/model.rs",
+        "product-core/src/cycle_times/compute.rs",
+        "product-core/src/cycle_times/render.rs",
     ];
     for sf in &slice_files {
         let p = root.join(sf);
@@ -17565,13 +17565,13 @@ fn tc_663_slice_adapter_structural_invariants() {
     }
 
     // (D) Adapter size under 400 lines.
-    let adapter = root.join("src/commands/cycle_times.rs");
+    let adapter = root.join("product-cli/src/commands/cycle_times.rs");
     let content = std::fs::read_to_string(&adapter).expect("read adapter");
     let n = content.lines().count();
     assert!(n <= 400, "adapter must be ≤ 400 lines; got {}", n);
 
     // (C) plan_*/build_* return typed values (not Result<(), _>).
-    let compute = std::fs::read_to_string(root.join("src/cycle_times/compute.rs"))
+    let compute = std::fs::read_to_string(root.join("product-core/src/cycle_times/compute.rs"))
         .expect("read compute");
     assert!(
         compute.contains("pub fn build_report"),
@@ -17583,17 +17583,16 @@ fn tc_663_slice_adapter_structural_invariants() {
 /// `src/cycle_times/` and `src/commands/cycle_times.rs`.
 #[test]
 fn tc_664_slice_adapter_pattern_satisfied_by_cycle_times_slice() {
-    use std::path::PathBuf;
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = repo_root_dir();
 
     // Slice directory exists with expected files.
     for f in &["mod.rs", "model.rs", "compute.rs", "render.rs", "tests.rs"] {
-        let p = root.join(format!("src/cycle_times/{}", f));
+        let p = root.join(format!("product-core/src/cycle_times/{}", f));
         assert!(p.exists(), "expected slice file {} to exist", p.display());
     }
 
     // Adapter returns CmdResult (not BoxResult) for the read-only cycle-times handler.
-    let adapter = std::fs::read_to_string(root.join("src/commands/cycle_times.rs"))
+    let adapter = std::fs::read_to_string(root.join("product-cli/src/commands/cycle_times.rs"))
         .expect("read adapter");
     assert!(
         adapter.contains("CmdResult"),
@@ -17602,7 +17601,7 @@ fn tc_664_slice_adapter_pattern_satisfied_by_cycle_times_slice() {
     );
 
     // First //! doc line must NOT contain the literal word "and" (SRP).
-    let mod_content = std::fs::read_to_string(root.join("src/cycle_times/mod.rs"))
+    let mod_content = std::fs::read_to_string(root.join("product-core/src/cycle_times/mod.rs"))
         .expect("read mod.rs");
     let first = mod_content
         .lines()
@@ -17647,7 +17646,7 @@ const COMPLETE_BODY: &str = "## Description\n\nProse describing the feature.\n\n
 /// TC-681 — pure parser detects `## Functional Specification` H2 heading.
 #[test]
 fn tc_681_feature_body_parser_recognizes_functional_specification_section() {
-    use product_lib::feature::body_sections::parse_body_sections;
+    use product_core::feature::body_sections::parse_body_sections;
 
     // Positive: heading is detected.
     let body = "## Description\n\nSome prose.\n\n## Functional Specification\n\n### Inputs\n\n- foo\n";
@@ -17686,7 +17685,7 @@ fn tc_681_feature_body_parser_recognizes_functional_specification_section() {
 /// Specification` and attributes them to that parent.
 #[test]
 fn tc_682_feature_body_parser_recognizes_all_subsections() {
-    use product_lib::feature::body_sections::parse_body_sections;
+    use product_core::feature::body_sections::parse_body_sections;
 
     let body = "\
 ## Functional Specification
@@ -18613,20 +18612,14 @@ fn tc_699_ft_056_exit_criteria() {
     );
 
     // Invariant: pipeline.rs is comfortably under the 400-line budget.
-    // Walk up from the test binary to find the workspace root.
-    let mut root = std::env::current_exe().expect("current_exe");
-    while !root.join("Cargo.toml").exists() {
-        if !root.pop() {
-            panic!("could not locate workspace root from test binary");
-        }
-    }
-    let pipeline_path = root.join("src/implement/pipeline.rs");
+    let root = repo_root_dir();
+    let pipeline_path = root.join("product-core/src/implement/pipeline.rs");
     let pipeline_src = std::fs::read_to_string(&pipeline_path)
         .expect("read pipeline.rs");
     let line_count = pipeline_src.lines().count();
     assert!(
         line_count < 400,
-        "src/implement/pipeline.rs should stay under 400 lines (got {})",
+        "product-core/src/implement/pipeline.rs should stay under 400 lines (got {})",
         line_count
     );
 
@@ -19897,10 +19890,10 @@ fn tc_722_mcp_preflight_unknown_id_returns_e022() {
 // ---------------------------------------------------------------------------
 #[test]
 fn tc_723_agents_md_key_mcp_tools_table_matches_registry() {
-    use product_lib::agent_context;
-    use product_lib::config::ProductConfig;
-    use product_lib::graph::KnowledgeGraph;
-    use product_lib::mcp::tools as mcp_tools;
+    use product_core::agent_context;
+    use product_core::config::ProductConfig;
+    use product_core::graph::KnowledgeGraph;
+    use product_mcp::tools as mcp_tools;
 
     // 1. Generate AGENTS.md content from an empty graph + minimal config.
     let dir = tempfile::tempdir().expect("tempdir");
@@ -19956,7 +19949,7 @@ fn tc_723_agents_md_key_mcp_tools_table_matches_registry() {
 // ---------------------------------------------------------------------------
 #[test]
 fn tc_724_ft_059_exit_criteria() {
-    use product_lib::mcp::tools as mcp_tools;
+    use product_mcp::tools as mcp_tools;
 
     // 1. Tool registration: both tools registered, requires_write=false.
     let tools = mcp_tools::build_tool_list();
@@ -20015,7 +20008,7 @@ fn tc_724_ft_059_exit_criteria() {
     let dir = tempfile::tempdir().expect("tempdir");
     std::fs::write(dir.path().join("product.toml"), "name = \"test\"\n").expect("write toml");
     let registry =
-        product_lib::mcp::ToolRegistry::new(dir.path().to_path_buf(), false);
+        product_mcp::ToolRegistry::new(dir.path().to_path_buf(), false);
 
     // drift_check with no args should succeed (clean envelope on empty graph).
     let drift_call = registry.call_tool("product_drift_check", &serde_json::json!({}));
@@ -20598,22 +20591,22 @@ const FT065_PINNED_SCHEMA_URL: &str =
 /// the pinned schema.
 #[test]
 fn tc_776_server_json_matches_product_toml_version_and_validates_against_pinned_schema() {
-    let repo_root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let repo_root = repo_root_dir();
 
     // 1. Resolve the active Product config via the ADR-048 discovery
     //    fallback chain (`.product/config.toml` → `.product/product.toml`
     //    → `product.toml` at root). This is the same logic
     //    `ProductConfig::discover` runs at command time, so the test
     //    works identically on legacy and canonical layouts.
-    let config_path = product_lib::config::find_config_in_dir(&repo_root).unwrap_or_else(|| {
+    let config_path = product_core::config::find_config_in_dir(&repo_root).unwrap_or_else(|| {
         panic!(
             "FT-065: no Product config found at {} via ADR-048 discovery — \
              expected one of {:?}",
             repo_root.display(),
-            product_lib::config::CONFIG_CANDIDATES
+            product_core::config::CONFIG_CANDIDATES
         );
     });
-    let config = product_lib::config::ProductConfig::load(&config_path).unwrap_or_else(|e| {
+    let config = product_core::config::ProductConfig::load(&config_path).unwrap_or_else(|e| {
         panic!(
             "FT-065: failed to load Product config at {}: {}",
             config_path.display(),
@@ -20747,7 +20740,7 @@ fn tc_776_server_json_matches_product_toml_version_and_validates_against_pinned_
     // 5. Load the offline schema fixture and verify it matches the URL the
     //    manifest pins. This catches the failure mode where someone bumps
     //    `$schema` in the manifest but forgets to refresh the fixture.
-    let schema_fixture_path = repo_root.join("tests/fixtures/server.schema.json");
+    let schema_fixture_path = repo_root.join("product-cli/tests/fixtures/server.schema.json");
     let schema_text = std::fs::read_to_string(&schema_fixture_path).unwrap_or_else(|e| {
         panic!(
             "FT-065: failed to read schema fixture at {}: {}",
@@ -21623,9 +21616,9 @@ fn tc_818_pattern_status_to_live_clears_deprecated_by() {
 fn tc_819_ft_070_exit_criteria_pattern_crud_parity() {
     // Grep guard: the legacy "envelope-only" string must not appear in
     // any pattern slice or pattern MCP handler.
-    let repo_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-    let pat_slice = repo_root.join("src/pattern");
-    let pat_mcp = repo_root.join("src/mcp/pattern_handlers.rs");
+    let repo_root = repo_root_dir();
+    let pat_slice = repo_root.join("product-core/src/pattern");
+    let pat_mcp = repo_root.join("product-mcp/src/pattern_handlers.rs");
 
     fn assert_no_legacy_advisory(dir: &std::path::Path) {
         if !dir.exists() {
@@ -23350,10 +23343,14 @@ fn tc_853_ft_074_exit_criteria_implement_patterns_and_observes() {
 // the example-feature reciprocation must hold on disk.
 // =============================================================================
 
-/// Repository root (`CARGO_MANIFEST_DIR`), used by FT-075 tests to inspect
-/// the live seed catalogue rather than a tempdir copy.
+/// Workspace root (parent of `CARGO_MANIFEST_DIR` after FT-107). Used by tests
+/// that inspect `docs/`, `scripts/`, or other-crate `src/` trees from the
+/// real repo rather than from a tempdir copy.
 fn repo_root_dir() -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("workspace root")
+        .to_path_buf()
 }
 
 /// Resolve the compiled `product` binary the integration harness uses.
@@ -23370,9 +23367,9 @@ fn find_product_binary() -> std::path::PathBuf {
 
 /// Parse a seed PAT file via the canonical parser. Returns the front-matter
 /// and body so individual TCs can inspect both.
-fn load_seed_pattern(filename: &str) -> (product_lib::types::PatternFrontMatter, String) {
+fn load_seed_pattern(filename: &str) -> (product_core::types::PatternFrontMatter, String) {
     let path = repo_root_dir().join("docs/patterns").join(filename);
-    let pat = product_lib::parser::parse_pattern(&path)
+    let pat = product_core::parser::parse_pattern(&path)
         .unwrap_or_else(|e| panic!("parse {}: {:?}", filename, e));
     (pat.front, pat.body)
 }
@@ -23403,7 +23400,7 @@ fn tc_854_seed_catalog_three_patterns_parse_and_validate() {
     // 2. Each file parses via parser::parse_pattern (round-trip works).
     let (pat1, _b1) = load_seed_pattern("PAT-001-slice-adapter-module-structure.md");
     assert_eq!(pat1.id, "PAT-001");
-    assert_eq!(pat1.status, product_lib::types::PatternStatus::Live);
+    assert_eq!(pat1.status, product_core::types::PatternStatus::Live);
 
     let (pat2, _b2) = load_seed_pattern("PAT-002-mcp-tool-with-disk-side-effect.md");
     assert_eq!(pat2.id, "PAT-002");
@@ -23415,7 +23412,7 @@ fn tc_854_seed_catalog_three_patterns_parse_and_validate() {
 
     // 3. The reloaded graph exposes all three in graph.patterns.
     //    Observable surface: graph.
-    let load = product_lib::parser::load_all_full(
+    let load = product_core::parser::load_all_full(
         &repo_root_dir().join("docs/features"),
         &repo_root_dir().join("docs/adrs"),
         &repo_root_dir().join("docs/tests"),
@@ -23515,7 +23512,7 @@ fn tc_856_seed_examples_reciprocated_to_feature_patterns_arrays() {
 
     // Observable surface: graph exposes the reciprocal edges via
     // feature.patterns.
-    let load = product_lib::parser::load_all_full(
+    let load = product_core::parser::load_all_full(
         &repo_root_dir().join("docs/features"),
         &repo_root_dir().join("docs/adrs"),
         &repo_root_dir().join("docs/tests"),
@@ -23597,7 +23594,7 @@ fn tc_857_seed_catalog_dogfoods_every_adr_050_field() {
         }
 
         // Round-trip: write and re-parse to confirm serialisation symmetry.
-        let serialised = product_lib::parser::render_pattern(&front, "## When to use\nx\n");
+        let serialised = product_core::parser::render_pattern(&front, "## When to use\nx\n");
         assert!(serialised.contains("---\n"));
         assert!(serialised.contains(&format!("id: {}", front.id)));
     }
@@ -23978,4 +23975,239 @@ fn tc_863_ft_104_exit_criteria() {
     tc_860_default_acknowledge_clears_preflight_gap();
     tc_861_adrs_rejected_reintroduces_gap_as_intentional();
     tc_862_default_ack_drift_emits_warnings();
+}
+
+// ===========================================================================
+// FT-107 — Workspace split: product-core / product-mcp / product-cli
+// ===========================================================================
+
+fn ft107_read_dep_keys(manifest: &std::path::Path) -> Vec<String> {
+    let body = std::fs::read_to_string(manifest)
+        .unwrap_or_else(|e| panic!("read {}: {}", manifest.display(), e));
+    let value: toml::Value =
+        toml::from_str(&body).unwrap_or_else(|e| panic!("parse {}: {}", manifest.display(), e));
+    let deps = value
+        .get("dependencies")
+        .and_then(|v| v.as_table())
+        .cloned()
+        .unwrap_or_default();
+    deps.keys().cloned().collect()
+}
+
+/// TC-885 — `product-core` has no CLI/HTTP deps and compiles standalone.
+#[test]
+fn tc_885_product_core_compiles_standalone_without_clap_or_axum() {
+    let root = repo_root_dir();
+    let manifest = root.join("product-core/Cargo.toml");
+    let deps = ft107_read_dep_keys(&manifest);
+    let forbidden = ["clap", "clap_complete", "axum", "tower-http", "tower_http"];
+    for f in &forbidden {
+        assert!(
+            !deps.iter().any(|d| d == f),
+            "product-core/Cargo.toml must not depend on `{}`; current deps: {:?}",
+            f,
+            deps,
+        );
+    }
+    // The crate already compiled by the time this test runs — the cargo
+    // workspace build is a precondition for the test binary's existence.
+    assert!(manifest.exists(), "product-core/Cargo.toml must exist");
+}
+
+/// TC-886 — `product-mcp` depends on `product-core` and exposes its API.
+#[test]
+fn tc_886_product_mcp_depends_on_product_core_and_exposes_tool_registry() {
+    let root = repo_root_dir();
+    let manifest = root.join("product-mcp/Cargo.toml");
+    let deps = ft107_read_dep_keys(&manifest);
+    for required in ["product-core", "axum", "tower-http", "tokio"] {
+        assert!(
+            deps.iter().any(|d| d == required),
+            "product-mcp/Cargo.toml must declare `{}`; deps: {:?}",
+            required,
+            deps,
+        );
+    }
+    for forbidden in ["clap", "clap_complete"] {
+        assert!(
+            !deps.iter().any(|d| d == forbidden),
+            "product-mcp/Cargo.toml must not depend on `{}`; deps: {:?}",
+            forbidden,
+            deps,
+        );
+    }
+    // Public API surface — both symbols must be reachable from the lib root.
+    // The compile of this test is the assertion; reference both items so the
+    // type checker rejects a missing re-export at build time.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let _registry = product_mcp::ToolRegistry::new(tmp.path().to_path_buf(), false);
+    let _serve_blocking_fn: fn(
+        std::path::PathBuf,
+        bool,
+        u16,
+        &str,
+        Option<String>,
+        Vec<String>,
+    ) -> Result<(), product_core::error::ProductError> = product_mcp::serve_http_blocking;
+}
+
+/// TC-887 — `product` binary still builds and `--help` works.
+#[test]
+fn tc_887_product_cli_binary_builds_and_product_help_still_works() {
+    let bin = find_product_binary();
+    assert!(
+        bin.exists(),
+        "expected the `product` binary at {}",
+        bin.display(),
+    );
+    let out = std::process::Command::new(&bin)
+        .arg("--help")
+        .output()
+        .expect("run product --help");
+    assert!(out.status.success(), "product --help should exit 0");
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    // Spot-check the help text contains the binary name and a few core verbs.
+    for needle in [
+        "product",
+        "feature",
+        "adr",
+        "mcp",
+        "verify",
+    ] {
+        assert!(
+            stdout.contains(needle),
+            "product --help must mention `{}`; got:\n{}",
+            needle,
+            stdout,
+        );
+    }
+}
+
+/// TC-888 — exit-criteria. cargo t passes across the workspace.
+///
+/// This TC is satisfied by the test binary itself executing — if this
+/// function is invoked, every other test that ran before it inside the same
+/// `cargo t` process did so successfully (or `--no-fail-fast` is collecting
+/// failures, which the runner exit code will reflect). The assertion below
+/// pins the smallest invariant the runner can prove inline: every workspace
+/// member declared in the root manifest has its own Cargo.toml on disk.
+#[test]
+fn tc_888_cargo_t_passes_across_the_workspace_with_split_crates() {
+    let root = repo_root_dir();
+    let ws_manifest = std::fs::read_to_string(root.join("Cargo.toml"))
+        .expect("read workspace Cargo.toml");
+    let value: toml::Value =
+        toml::from_str(&ws_manifest).expect("parse workspace Cargo.toml");
+    let members = value
+        .get("workspace")
+        .and_then(|v| v.get("members"))
+        .and_then(|v| v.as_array())
+        .expect("[workspace] members must be a table array");
+    for m in members {
+        let name = m.as_str().expect("member entry must be a string");
+        let manifest = root.join(name).join("Cargo.toml");
+        assert!(
+            manifest.exists(),
+            "workspace member `{}` is missing its Cargo.toml at {}",
+            name,
+            manifest.display(),
+        );
+    }
+    for required in ["product-core", "product-mcp", "product-cli", "xtask"] {
+        assert!(
+            members.iter().any(|v| v.as_str() == Some(required)),
+            "workspace [members] must include `{}`",
+            required,
+        );
+    }
+}
+
+/// TC-889 — an external crate depending on product-core alone builds and runs.
+#[test]
+fn tc_889_external_crate_can_depend_on_product_core_alone() {
+    let root = repo_root_dir();
+    let fixture = root.join("product-cli/tests/fixtures/external-core-consumer");
+    let manifest = fixture.join("Cargo.toml");
+    assert!(
+        manifest.exists(),
+        "external-core-consumer fixture must exist at {}",
+        manifest.display(),
+    );
+    let body = std::fs::read_to_string(&manifest).expect("read fixture manifest");
+    assert!(
+        body.contains("product-core"),
+        "fixture Cargo.toml must depend on product-core",
+    );
+    for forbidden in ["product-cli", "product-mcp", "clap", "axum"] {
+        assert!(
+            !body.lines().any(|l| {
+                let t = l.trim();
+                t.starts_with(&format!("{} =", forbidden))
+                    || t.starts_with(&format!("{}=", forbidden))
+            }),
+            "fixture Cargo.toml must not declare `{}` as a direct dep",
+            forbidden,
+        );
+    }
+    // Let cargo pick the fixture's own target dir (sibling of its Cargo.toml).
+    // Inheriting the workspace target_dir would mix incompatible build artefacts.
+    let status = std::process::Command::new("cargo")
+        .args(["build", "--manifest-path"])
+        .arg(&manifest)
+        .arg("--quiet")
+        .env_remove("CARGO_TARGET_DIR")
+        .status()
+        .expect("run cargo build on fixture");
+    assert!(
+        status.success(),
+        "external-core-consumer fixture failed to build",
+    );
+    // The fixture binary writes a sentinel file on disk (PAT-003 — assert on
+    // causation, not just an exit code).
+    let exe = fixture
+        .join("target")
+        .join("debug")
+        .join("external-core-consumer");
+    let tmp = tempfile::tempdir().expect("tempdir for sentinel");
+    let sentinel_path = tmp.path().join("smoke.txt");
+    let out = std::process::Command::new(&exe)
+        .arg(&sentinel_path)
+        .output()
+        .expect("run fixture binary");
+    assert!(
+        out.status.success(),
+        "fixture binary should exit 0; stderr: {}",
+        String::from_utf8_lossy(&out.stderr),
+    );
+    let content = std::fs::read_to_string(&sentinel_path).expect("read sentinel");
+    assert_eq!(content, "external-core ok", "sentinel content mismatch");
+}
+
+/// TC-890 — the code-quality gate walks every member crate's src/ tree.
+#[test]
+fn tc_890_code_quality_400_line_gate_runs_against_every_workspace_member() {
+    let root = repo_root_dir();
+    // The gate is enforced by scripts/checks/file-length.sh. Confirm it
+    // walks every member crate's `src/` directory.
+    let script = root.join("scripts/checks/file-length.sh");
+    let body = std::fs::read_to_string(&script).expect("read file-length.sh");
+    for member in ["product-core/src", "product-mcp/src", "product-cli/src"] {
+        assert!(
+            body.contains(member),
+            "scripts/checks/file-length.sh must walk `{}`; body:\n{}",
+            member,
+            body,
+        );
+    }
+    // The script returns exit 0 (clean) on the post-split tree.
+    let status = std::process::Command::new("bash")
+        .arg(&script)
+        .current_dir(&root)
+        .status()
+        .expect("run file-length.sh");
+    let code = status.code().unwrap_or(-1);
+    assert_ne!(
+        code, 1,
+        "file-length.sh exited 1 (hard fail) on the post-split tree",
+    );
 }

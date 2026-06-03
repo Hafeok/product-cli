@@ -4,7 +4,7 @@
 //! `product_adr_status` that bring MCP to parity with the CLI for every
 //! lifecycle transition except `accepted` (ADR-032 sealing governance).
 
-use crate::graph::KnowledgeGraph;
+use product_core::graph::KnowledgeGraph;
 use serde_json::Value;
 
 // ---------------------------------------------------------------------------
@@ -32,7 +32,7 @@ pub(crate) fn handle_adr_amend(args: &Value, graph: &KnowledgeGraph) -> Result<V
         .adrs
         .get(id)
         .ok_or_else(|| format!("ADR {} not found", id))?;
-    if a.front.status != crate::types::AdrStatus::Accepted {
+    if a.front.status != product_core::types::AdrStatus::Accepted {
         return Err(format!(
             "E018: amendment-not-accepted \u{2014} {} has status '{}'; amendments only apply to accepted ADRs",
             id, a.front.status
@@ -40,7 +40,7 @@ pub(crate) fn handle_adr_amend(args: &Value, graph: &KnowledgeGraph) -> Result<V
     }
 
     let (effective_path, effective_body) = pick_effective_body(id, args, a)?;
-    let staged = crate::types::Adr {
+    let staged = product_core::types::Adr {
         front: a.front.clone(),
         body: effective_body.clone(),
         path: effective_path.clone(),
@@ -51,8 +51,8 @@ pub(crate) fn handle_adr_amend(args: &Value, graph: &KnowledgeGraph) -> Result<V
     front.content_hash = Some(new_hash.clone());
     front.amendments.push(amendment);
 
-    let content = crate::parser::render_adr(&front, &effective_body);
-    crate::fileops::write_file_atomic(&effective_path, &content)
+    let content = product_core::parser::render_adr(&front, &effective_body);
+    product_core::fileops::write_file_atomic(&effective_path, &content)
         .map_err(|e| format!("{}", e))?;
 
     Ok(build_amend_response(id, &front, &new_hash))
@@ -77,11 +77,11 @@ fn reject_forbidden_fields(args: &Value) -> Result<(), String> {
 fn pick_effective_body(
     id: &str,
     args: &Value,
-    a: &crate::types::Adr,
+    a: &product_core::types::Adr,
 ) -> Result<(std::path::PathBuf, String), String> {
     match args.get("body").and_then(|v| v.as_str()) {
         Some(new_body) => {
-            let candidate_hash = crate::hash::compute_adr_hash(&a.front.title, new_body);
+            let candidate_hash = product_core::hash::compute_adr_hash(&a.front.title, new_body);
             if let Some(ref stored) = a.front.content_hash {
                 if *stored == candidate_hash {
                     return Err(format!(
@@ -99,9 +99,9 @@ fn pick_effective_body(
 fn run_amend(
     id: &str,
     reason: &str,
-    staged: &crate::types::Adr,
-) -> Result<(String, crate::types::Amendment), String> {
-    match crate::hash::amend_adr(staged, reason) {
+    staged: &product_core::types::Adr,
+) -> Result<(String, product_core::types::Amendment), String> {
+    match product_core::hash::amend_adr(staged, reason) {
         Ok(t) => Ok(t),
         Err(e) => {
             let msg = format!("{}", e);
@@ -119,7 +119,7 @@ fn run_amend(
 
 fn build_amend_response(
     id: &str,
-    front: &crate::types::AdrFrontMatter,
+    front: &product_core::types::AdrFrontMatter,
     new_hash: &str,
 ) -> Value {
     let amendments_json: Vec<Value> = front
@@ -165,12 +165,12 @@ pub(crate) fn handle_adr_status_write(
         .get(id)
         .ok_or_else(|| format!("ADR {} not found", id))?;
 
-    let new_status: crate::types::AdrStatus = status_str
+    let new_status: product_core::types::AdrStatus = status_str
         .parse()
         .map_err(|e: String| format!("E001: {}", e))?;
 
     // E020: accepting an ADR is CLI-only.
-    if new_status == crate::types::AdrStatus::Accepted {
+    if new_status == product_core::types::AdrStatus::Accepted {
         return Err(format!(
             "E020: status-accepted-is-manual \u{2014} Accepting an ADR is a manual step. Run: product adr status {} accepted",
             id
@@ -178,8 +178,8 @@ pub(crate) fn handle_adr_status_write(
     }
 
     // E021: accepted ADRs cannot demote to proposed.
-    if a.front.status == crate::types::AdrStatus::Accepted
-        && new_status == crate::types::AdrStatus::Proposed
+    if a.front.status == product_core::types::AdrStatus::Accepted
+        && new_status == product_core::types::AdrStatus::Proposed
     {
         return Err(format!(
             "E021: status-cannot-demote-accepted \u{2014} {} is accepted and cannot return to 'proposed'. Use supersede or abandon.",
@@ -187,7 +187,7 @@ pub(crate) fn handle_adr_status_write(
         ));
     }
 
-    if new_status == crate::types::AdrStatus::Superseded {
+    if new_status == product_core::types::AdrStatus::Superseded {
         let target_id = by
             .ok_or_else(|| "superseded transition requires 'by' parameter".to_string())?;
         return do_supersede(id, target_id, graph);
@@ -197,8 +197,8 @@ pub(crate) fn handle_adr_status_write(
     let mut front = a.front.clone();
     front.status = new_status;
 
-    let content = crate::parser::render_adr(&front, &a.body);
-    crate::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))?;
+    let content = product_core::parser::render_adr(&front, &a.body);
+    product_core::fileops::write_file_atomic(&a.path, &content).map_err(|e| format!("{}", e))?;
 
     let mut result = serde_json::json!({
         "id": id,
@@ -224,7 +224,7 @@ fn do_supersede(id: &str, target_id: &str, graph: &KnowledgeGraph) -> Result<Val
         .ok_or_else(|| format!("E002: ADR {} not found", target_id))?;
 
     let mut old_front = old.front.clone();
-    old_front.status = crate::types::AdrStatus::Superseded;
+    old_front.status = product_core::types::AdrStatus::Superseded;
     if !old_front.superseded_by.contains(&target_id.to_string()) {
         old_front.superseded_by.push(target_id.to_string());
     }
@@ -236,13 +236,13 @@ fn do_supersede(id: &str, target_id: &str, graph: &KnowledgeGraph) -> Result<Val
 
     check_supersession_cycle(graph, id, target_id, old, new, &old_front, &new_front)?;
 
-    let content_old = crate::parser::render_adr(&old_front, &old.body);
-    let content_new = crate::parser::render_adr(&new_front, &new.body);
+    let content_old = product_core::parser::render_adr(&old_front, &old.body);
+    let content_new = product_core::parser::render_adr(&new_front, &new.body);
     let writes: Vec<(&std::path::Path, &str)> = vec![
         (&old.path, &content_old),
         (&new.path, &content_new),
     ];
-    crate::fileops::write_batch_atomic(&writes).map_err(|e| format!("{}", e))?;
+    product_core::fileops::write_batch_atomic(&writes).map_err(|e| format!("{}", e))?;
 
     let mut result = serde_json::json!({
         "id": id,
@@ -259,19 +259,19 @@ fn check_supersession_cycle(
     graph: &KnowledgeGraph,
     id: &str,
     target_id: &str,
-    old: &crate::types::Adr,
-    new: &crate::types::Adr,
-    old_front: &crate::types::AdrFrontMatter,
-    new_front: &crate::types::AdrFrontMatter,
+    old: &product_core::types::Adr,
+    new: &product_core::types::Adr,
+    old_front: &product_core::types::AdrFrontMatter,
+    new_front: &product_core::types::AdrFrontMatter,
 ) -> Result<(), String> {
-    let mut test_adrs: Vec<crate::types::Adr> = graph.adrs.values().cloned().collect();
+    let mut test_adrs: Vec<product_core::types::Adr> = graph.adrs.values().cloned().collect();
     test_adrs.retain(|ai| ai.front.id != id && ai.front.id != target_id);
-    test_adrs.push(crate::types::Adr {
+    test_adrs.push(product_core::types::Adr {
         front: old_front.clone(),
         body: old.body.clone(),
         path: old.path.clone(),
     });
-    test_adrs.push(crate::types::Adr {
+    test_adrs.push(product_core::types::Adr {
         front: new_front.clone(),
         body: new.body.clone(),
         path: new.path.clone(),

@@ -1,11 +1,11 @@
-//! Pattern subcommand surface — thin adapters over `product_lib::pattern`.
+//! Pattern subcommand surface — thin adapters over `product_core::pattern`.
 //!
 //! `new` / `show` / `list` / `status` / `link` all dispatch to the slice in
 //! `src/pattern/` (FT-070, ADR-050). MCP parity for these tools lives in
 //! `src/mcp/`.
 
 use clap::Subcommand;
-use product_lib::{error::ProductError, pattern as pat, types};
+use product_core::{error::ProductError, pattern as pat, types};
 
 use super::{
     acquire_write_lock_typed, load_graph_typed, render, BoxResult, CmdResult, Output,

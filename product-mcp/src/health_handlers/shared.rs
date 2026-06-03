@@ -1,6 +1,6 @@
 //! Shared envelope helpers for FT-059 health-check tools.
 
-use crate::drift;
+use product_core::drift;
 use serde_json::{json, Value};
 
 /// Default drift source roots and ignore lists (mirrors the CLI handler).

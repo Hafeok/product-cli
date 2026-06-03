@@ -1,9 +1,9 @@
 //! Spec-vs-code drift detection.
 
 use clap::Subcommand;
-use product_lib::drift;
-use product_lib::tags;
-use product_lib::types::FeatureStatus;
+use product_core::drift;
+use product_core::tags;
+use product_core::types::FeatureStatus;
 use std::process;
 
 use super::{load_graph, BoxResult};
@@ -92,7 +92,7 @@ pub(crate) fn handle_drift(cmd: DriftCommands, fmt: &str) -> BoxResult {
 fn drift_check(
     adr_id: Option<String>,
     files: Vec<String>,
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     root: &std::path::Path,
     baseline: &drift::DriftBaseline,
     source_roots: &[String],
@@ -128,12 +128,12 @@ fn drift_check(
 #[allow(clippy::too_many_arguments)]
 fn drift_check_feature(
     feature_id: &str,
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     root: &std::path::Path,
     baseline: &drift::DriftBaseline,
     source_roots: &[String],
     ignore: &[String],
-    config: &product_lib::config::ProductConfig,
+    config: &product_core::config::ProductConfig,
     fmt: &str,
 ) -> BoxResult {
     let depth = config.tags.implementation_depth;
@@ -238,12 +238,12 @@ fn drift_check_feature(
 /// Check drift for all complete features that have completion tags.
 #[allow(clippy::too_many_arguments)]
 fn drift_check_all_complete(
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     root: &std::path::Path,
     baseline: &drift::DriftBaseline,
     source_roots: &[String],
     ignore: &[String],
-    config: &product_lib::config::ProductConfig,
+    config: &product_core::config::ProductConfig,
     fmt: &str,
 ) -> BoxResult {
     let is_git = tags::is_git_repo(root);
@@ -325,7 +325,7 @@ fn print_findings(findings: &[drift::DriftFinding], fmt: &str) {
 
 fn drift_scan(
     path: &str,
-    graph: &product_lib::graph::KnowledgeGraph,
+    graph: &product_core::graph::KnowledgeGraph,
     fmt: &str,
 ) -> BoxResult {
     let source_path = std::path::Path::new(path);

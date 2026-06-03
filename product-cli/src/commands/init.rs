@@ -4,7 +4,7 @@
 //! `.product/{features,adrs,tests,graph}/`. `--legacy-layout` opts into the
 //! pre-FT-057 root-based scheme (`product.toml` + `docs/...`).
 
-use product_lib::{config::ProductConfig, error::ProductError, fileops};
+use product_core::{config::ProductConfig, error::ProductError, fileops};
 use std::path::{Path, PathBuf};
 
 use super::init_helpers::{

@@ -5,7 +5,13 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn project_root() -> PathBuf {
+    // After FT-107 (workspace split) CARGO_MANIFEST_DIR points at
+    // `product-cli/`; the scripts/ and the other crate src/ trees live one
+    // directory up at the workspace root.
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("workspace root")
+        .to_path_buf()
 }
 
 fn script_path(name: &str) -> PathBuf {
@@ -626,7 +632,7 @@ fn parse_command_name_override(attr: &str) -> Option<String> {
 
 #[test]
 fn cli_subcommands_are_sorted() {
-    let cmd_dir = project_root().join("src/commands");
+    let cmd_dir = project_root().join("product-cli/src/commands");
     let entries = std::fs::read_dir(&cmd_dir).expect("read src/commands");
 
     let mut files: Vec<std::path::PathBuf> = entries
@@ -679,7 +685,7 @@ fn assert_sorted_variants(file: &std::path::Path, parsed: &ParsedEnum) {
 #[test]
 fn ft_061_mcp_handlers_do_not_hardcode_product_toml_path() {
     let root = project_root();
-    let mcp_dir = root.join("src/mcp");
+    let mcp_dir = root.join("product-mcp/src");
     let mut offenders: Vec<String> = Vec::new();
 
     fn walk(dir: &std::path::Path, offenders: &mut Vec<String>) {
@@ -710,8 +716,8 @@ fn ft_061_mcp_handlers_do_not_hardcode_product_toml_path() {
 
     walk(&mcp_dir, &mut offenders);
 
-    // Also gate src/commands/mcp_cmd.rs, where the same regression bit us.
-    let mcp_cmd = root.join("src/commands/mcp_cmd.rs");
+    // Also gate the product-cli MCP adapter, where the same regression bit us.
+    let mcp_cmd = root.join("product-cli/src/commands/mcp_cmd.rs");
     if let Ok(source) = std::fs::read_to_string(&mcp_cmd) {
         for (lineno, line) in source.lines().enumerate() {
             if line.contains("repo_root.join(\"product.toml\")") {

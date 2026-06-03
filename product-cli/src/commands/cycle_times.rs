@@ -2,15 +2,15 @@
 
 use super::{load_graph_typed, CmdResult, Output};
 use chrono::{DateTime, FixedOffset};
-use product_lib::cycle_times::{
+use product_core::cycle_times::{
     self, build_in_progress_report, build_report, render_csv, render_in_progress_text, render_text,
     TagTimestamps,
 };
-use product_lib::error::ProductError;
-use product_lib::graph::KnowledgeGraph;
+use product_core::error::ProductError;
+use product_core::graph::KnowledgeGraph;
 #[allow(unused_imports)]
-use product_lib::types;
-use product_lib::tags;
+use product_core::types;
+use product_core::tags;
 use std::path::Path;
 use std::process::Command;
 
@@ -132,9 +132,9 @@ pub(crate) fn handle_cycle_times(
     // Below min-features: empty result, exit 0 (ADR-046 §8).
     if report.summary.count < min_features {
         if fmt == "json" {
-            let empty = product_lib::cycle_times::CycleTimeReport {
+            let empty = product_core::cycle_times::CycleTimeReport {
                 features: vec![],
-                summary: product_lib::cycle_times::Summary {
+                summary: product_core::cycle_times::Summary {
                     count: report.summary.count,
                     recent_5: None,
                     all: None,
@@ -278,7 +278,7 @@ fn forecast_phase(
     let mut remaining: Vec<String> = graph
         .features
         .values()
-        .filter(|f| f.front.phase == phase && f.front.status != product_lib::types::FeatureStatus::Complete)
+        .filter(|f| f.front.phase == phase && f.front.status != product_core::types::FeatureStatus::Complete)
         .map(|f| f.front.id.clone())
         .collect();
     remaining.sort();

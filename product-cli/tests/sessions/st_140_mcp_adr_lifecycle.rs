@@ -7,8 +7,8 @@
 #![allow(clippy::unwrap_used)]
 
 use super::harness::Session;
-use product_lib::hash as hashlib;
-use product_lib::mcp::ToolRegistry;
+use product_core::hash as hashlib;
+use product_mcp::ToolRegistry;
 
 /// Seal an accepted ADR on disk: writes a sealed accepted ADR with a valid
 /// content-hash computed over the body.

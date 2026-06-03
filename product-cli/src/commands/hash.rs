@@ -1,7 +1,7 @@
 //! Content hash operations (ADR-032, FT-034).
 
 use clap::Subcommand;
-use product_lib::{error::ProductError, fileops, graph::KnowledgeGraph, hash, parser, types};
+use product_core::{error::ProductError, fileops, graph::KnowledgeGraph, hash, parser, types};
 
 use super::{acquire_write_lock, load_graph, BoxResult};
 

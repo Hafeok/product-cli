@@ -6,10 +6,10 @@
 //! under the 400-line cap.
 
 use clap::Subcommand;
-use product_lib::config::ProductConfig;
-use product_lib::graph::KnowledgeGraph;
-use product_lib::parser;
-use product_lib::request::builder::{
+use product_core::config::ProductConfig;
+use product_core::graph::KnowledgeGraph;
+use product_core::parser;
+use product_core::request::builder::{
     self, draft::Draft, draft::DraftKind, render, submit,
 };
 
@@ -172,7 +172,7 @@ fn cmd_submit(force: bool) -> BoxResult {
     let graph = build_graph(&config, &root)?;
     let policy = submit::WarnPolicy::parse(&config.request_builder.warn_on_warnings)
         .unwrap_or(submit::WarnPolicy::Warn);
-    let _lock = product_lib::fileops::RepoLock::acquire(&root)?;
+    let _lock = product_core::fileops::RepoLock::acquire(&root)?;
     let outcome = submit::submit(
         &draft,
         &config,

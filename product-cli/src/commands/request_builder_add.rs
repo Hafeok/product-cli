@@ -1,11 +1,11 @@
 //! CLI adapter — `product request add …` subcommand dispatch.
 
 use clap::Subcommand;
-use product_lib::config::ProductConfig;
-use product_lib::graph::KnowledgeGraph;
-use product_lib::parser;
-use product_lib::request::builder::{add, draft::Draft, render};
-use product_lib::request::Finding;
+use product_core::config::ProductConfig;
+use product_core::graph::KnowledgeGraph;
+use product_core::parser;
+use product_core::request::builder::{add, draft::Draft, render};
+use product_core::request::Finding;
 
 use super::BoxResult;
 
@@ -77,7 +77,7 @@ pub(crate) fn handle_add(cmd: AddCommands) -> BoxResult {
 
 fn dispatch_add(
     cmd: AddCommands,
-    draft: &mut product_lib::request::builder::draft::Draft,
+    draft: &mut product_core::request::builder::draft::Draft,
     config: &ProductConfig,
     graph: &KnowledgeGraph,
 ) -> Result<add::AddedArtifact, Vec<Finding>> {
@@ -135,7 +135,7 @@ fn dispatch_add(
 
 fn finalize_add(
     outcome: Result<add::AddedArtifact, Vec<Finding>>,
-    draft: &product_lib::request::builder::draft::Draft,
+    draft: &product_core::request::builder::draft::Draft,
 ) -> BoxResult {
     match outcome {
         Ok(added) => {

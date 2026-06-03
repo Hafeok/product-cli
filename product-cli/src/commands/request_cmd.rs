@@ -1,9 +1,9 @@
 //! `product request` — unified atomic write interface (FT-041, ADR-038).
 
 use clap::Subcommand;
-use product_lib::config::ProductConfig;
-use product_lib::fileops;
-use product_lib::request::{self, ApplyOptions};
+use product_core::config::ProductConfig;
+use product_core::fileops;
+use product_core::request::{self, ApplyOptions};
 use std::path::{Path, PathBuf};
 
 use super::request_builder_add::AddCommands as BuilderAddCommands;
@@ -198,10 +198,10 @@ fn validate(file: Option<&Path>, fmt: &str) -> BoxResult {
     let adrs_dir = config.resolve_path(&root, &config.paths.adrs);
     let tests_dir = config.resolve_path(&root, &config.paths.tests);
     let deps_dir = config.resolve_path(&root, &config.paths.dependencies);
-    let loaded = product_lib::parser::load_all_with_deps(
+    let loaded = product_core::parser::load_all_with_deps(
         &features_dir, &adrs_dir, &tests_dir, Some(&deps_dir),
     )?;
-    let graph = product_lib::graph::KnowledgeGraph::build_with_deps(
+    let graph = product_core::graph::KnowledgeGraph::build_with_deps(
         loaded.features, loaded.adrs, loaded.tests, loaded.dependencies,
     );
 
@@ -239,7 +239,7 @@ fn validate(file: Option<&Path>, fmt: &str) -> BoxResult {
 /// apply`. The deletion lands in `requests.jsonl` exactly as if the user had
 /// written the YAML by hand.
 fn delete(ids: Vec<String>, reason: &str, fmt: &str) -> BoxResult {
-    use product_lib::request::{apply_request, parse_request_str};
+    use product_core::request::{apply_request, parse_request_str};
     let (config, root) = ProductConfig::discover()?;
     let _lock = fileops::RepoLock::acquire(&root)?;
 

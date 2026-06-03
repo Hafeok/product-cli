@@ -1,6 +1,6 @@
 //! MCP scaffold — .mcp.json generation for Claude Code integration (ADR-020)
 
-use crate::error::Result;
+use product_core::error::Result;
 use std::path::Path;
 
 /// Generate .mcp.json for Claude Code integration
@@ -16,6 +16,6 @@ pub fn scaffold_mcp_json(repo_root: &Path) -> Result<()> {
     });
     let json = serde_json::to_string_pretty(&content).unwrap_or_default();
     let path = repo_root.join(".mcp.json");
-    crate::fileops::write_file_atomic(&path, &json)?;
+    product_core::fileops::write_file_atomic(&path, &json)?;
     Ok(())
 }

@@ -1,7 +1,7 @@
 //! Graph-aware authoring sessions.
 
 use clap::Subcommand;
-use product_lib::{author, domains};
+use product_core::{author, domains};
 use std::process;
 
 use super::{load_graph, BoxResult};
