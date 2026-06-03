@@ -1,5 +1,5 @@
 name = "product-cli"
-version = "0.1.5"
+version = "0.1.6"
 schema-version = "1"
 schema-version-warning = true
 checklist-in-gitignore = true
