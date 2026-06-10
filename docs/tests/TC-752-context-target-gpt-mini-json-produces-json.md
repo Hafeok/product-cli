@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_752_context_target_gpt_mini_json_produces_json
-last-run: 2026-05-08T12:14:59.128626357+00:00
-last-run-duration: 0.4s
+last-run: 2026-06-10T19:41:51.052986067+00:00
+last-run-duration: 0.3s
 ---
 
 ## Scenario — `context-target-gpt-mini-json-produces-json`

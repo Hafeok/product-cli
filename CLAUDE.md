@@ -124,6 +124,7 @@ Use the `product` CLI (or MCP tools) to stay in sync with the knowledge graph.
 - **Verify work** — run `product verify FT-XXX` after implementation to execute TC runners and update test status in front-matter
 - **Mark done** — when all TCs pass, `product verify` auto-updates feature status to complete and regenerates `CHECKLIST.md`
 - **Check health** — run `product gap check` and `product drift check` to catch specification issues before committing
+- **Check spec conformance** — run `product conformance check` to evaluate the graph against the Two Pillars Level 3 clause set (clause mapping in `docs/two-pillars-conformance.md`); exit 1 means a MUST clause is violated
 
 Do not manually edit feature status or CHECKLIST.md — let the CLI manage that through `verify` and `checklist generate`.
 

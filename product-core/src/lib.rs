@@ -18,6 +18,7 @@ pub mod config_patterns;
 pub mod config_planning;
 pub mod config_request_builder;
 pub mod config_sections;
+pub mod conformance;
 pub mod context;
 pub mod cycle_times;
 pub mod dep_types;

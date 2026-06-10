@@ -3,10 +3,10 @@
 use clap::Command as ClapCommand;
 
 use super::{
-    adr, agent_init, author, checklist, completions, context, cycle_times, dep, drift, feature,
-    gap, graph_cmd, hash, hooks, implement, init, mcp_cmd, metrics_cmd, migrate, onboard,
-    pattern, preflight, prompts_cmd, render, request_cmd, schema, status, tags, test_cmd,
-    BoxResult, Commands,
+    adr, agent_init, author, checklist, completions, conformance, context, cycle_times, dep,
+    drift, feature, gap, graph_cmd, hash, hooks, implement, init, mcp_cmd, metrics_cmd, migrate,
+    onboard, pattern, preflight, prompts_cmd, render, request_cmd, schema, status, tags,
+    test_cmd, BoxResult, Commands,
 };
 
 pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapCommand) -> BoxResult {
@@ -16,6 +16,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Author { command } => author::handle_author(command),
         Commands::Checklist { command } => checklist::handle_checklist(command),
         Commands::Completions { shell } => completions::handle_completions(&shell, cli_command),
+        Commands::Conformance { command } => conformance::handle_conformance(command, fmt),
         Commands::Context { .. } => dispatch_context(command),
         Commands::CycleTimes { .. } => dispatch_cycle_times(command, fmt),
         Commands::Dep { command } => dep::handle_dep(command, fmt),

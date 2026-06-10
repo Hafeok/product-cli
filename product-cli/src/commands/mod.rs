@@ -8,6 +8,7 @@ mod agent_init;
 mod author;
 mod checklist;
 mod completions;
+mod conformance;
 mod context;
 mod cycle_times;
 mod dep;
@@ -53,6 +54,7 @@ use std::path::PathBuf;
 pub use self::adr::AdrCommands;
 pub use self::author::AuthorCommands;
 pub use self::checklist::ChecklistCommands;
+pub use self::conformance::ConformanceCommands;
 pub use self::dep::DepCommands;
 pub use self::drift::DriftCommands;
 pub use self::feature::FeatureCommands;
@@ -92,6 +94,11 @@ pub enum Commands {
     Completions {
         /// Shell: bash, zsh, fish
         shell: String,
+    },
+    /// Two Pillars conformance — check the graph against spec clauses
+    Conformance {
+        #[command(subcommand)]
+        command: ConformanceCommands,
     },
     /// Assemble context bundles for LLM agents
     Context {
