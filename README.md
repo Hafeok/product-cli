@@ -276,6 +276,7 @@ product gap check          # specification holes (features without tests, etc.)
 product drift check        # spec vs implementation divergence
 product preflight FT-007   # domain coverage check before implementing
 product impact ADR-012     # what does changing this decision affect?
+product conformance check  # Two Pillars spec conformance (Level 3 clause set)
 ```
 
 Wire them into pre-commit or CI and your specs stop rotting.

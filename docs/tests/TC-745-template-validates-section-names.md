@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_745_template_validates_section_names
-last-run: 2026-05-08T12:14:59.128626357+00:00
-last-run-duration: 0.4s
+last-run: 2026-06-10T19:41:51.052986067+00:00
+last-run-duration: 0.3s
 ---
 
 ## Scenario — `template-validates-section-names`

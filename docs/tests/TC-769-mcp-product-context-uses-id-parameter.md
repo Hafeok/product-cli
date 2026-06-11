@@ -2,7 +2,7 @@
 id: TC-769
 title: mcp-product-context-uses-id-parameter
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-063
@@ -11,6 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_769_mcp_product_context_uses_id_parameter
+last-run: 2026-06-10T19:41:51.052986067+00:00
+last-run-duration: 0.3s
 ---
 
 ## Scenario — `mcp-product-context-uses-id-parameter`

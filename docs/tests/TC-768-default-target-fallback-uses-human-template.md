@@ -2,7 +2,7 @@
 id: TC-768
 title: default-target-fallback-uses-human-template
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-063
@@ -11,6 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_768_default_target_fallback_uses_human_template
+last-run: 2026-06-10T19:41:51.052986067+00:00
+last-run-duration: 0.3s
 ---
 
 ## Scenario — `default-target-fallback-uses-human-template`

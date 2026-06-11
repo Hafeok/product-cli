@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_767_ft063_exit_criteria
-last-run: 2026-05-08T12:14:59.128626357+00:00
-last-run-duration: 0.5s
+last-run: 2026-06-10T19:41:51.052986067+00:00
+last-run-duration: 0.4s
 ---
 
 ## Exit criteria — FT-063 Per-Model Context Bundle Templates

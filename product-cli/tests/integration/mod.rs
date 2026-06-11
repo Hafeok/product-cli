@@ -24211,3 +24211,194 @@ fn tc_890_code_quality_400_line_gate_runs_against_every_workspace_member() {
         "file-length.sh exited 1 (hard fail) on the post-split tree",
     );
 }
+
+// =============================================================================
+// FT-108: Two Pillars conformance check (ADR-052)
+// TC-891 .. TC-895
+// =============================================================================
+
+/// Shared fixture: a repo whose graph conforms to the checkable Level 3
+/// clause subset — declared identity + responsibility, one feature with a
+/// full What body, a passing acceptance TC, and an anchored accepted ADR.
+fn ft108_conforming_harness() -> Harness {
+    let h = Harness::new();
+    h.write(
+        "product.toml",
+        r#"name = "conformant"
+schema-version = "1"
+[product]
+responsibility = "A single test system."
+[paths]
+features = "docs/features"
+adrs = "docs/adrs"
+tests = "docs/tests"
+[features]
+required-sections = []
+functional-spec-subsections = []
+"#,
+    );
+    h.write(
+        "docs/features/FT-001-thing.md",
+        r#"---
+id: FT-001
+title: Do the thing
+status: complete
+adrs:
+- ADR-001
+tests:
+- TC-001
+---
+
+## Description
+
+Does the thing.
+
+## Functional Specification
+
+### Behaviour
+
+Given input, produces output.
+
+### Error handling
+
+Bad input exits 1 with a diagnostic.
+
+## Out of scope
+
+- everything else
+"#,
+    );
+    h.write(
+        "docs/adrs/ADR-001-use-a-thing.md",
+        r#"---
+id: ADR-001
+title: Use a thing
+status: accepted
+features:
+- FT-001
+---
+
+## Decision
+
+Use the thing.
+
+## Rejected alternatives
+
+- Not using the thing: rejected because we need it.
+"#,
+    );
+    h.write(
+        "docs/tests/TC-001-thing-works.md",
+        r#"---
+id: TC-001
+title: thing works
+type: scenario
+status: passing
+validates:
+  features:
+  - FT-001
+  adrs:
+  - ADR-001
+---
+
+## Scenario
+
+The thing works.
+"#,
+    );
+    h
+}
+
+/// TC-891 — `product conformance check` exits 0 on a conforming repo,
+/// reporting every clause as passed plus the Level 3 verdict.
+#[test]
+fn tc_891_conformance_check_passes_on_conforming_repo() {
+    let h = ft108_conforming_harness();
+    let out = h.run(&["conformance", "check"]);
+    assert_eq!(out.exit_code, 0, "stdout: {}\nstderr: {}", out.stdout, out.stderr);
+    assert!(out.stdout.contains("conforms to Level 3"), "stdout: {}", out.stdout);
+    assert!(out.stdout.contains("SPEC-WHAT-5"), "stdout: {}", out.stdout);
+    assert!(!out.stdout.contains("[FAIL]"), "stdout: {}", out.stdout);
+}
+
+/// TC-892 — a feature with no out-of-scope declaration plus no linked TC
+/// violates SPEC-WHAT-5 / SPEC-WHAT-8 with exit 1.
+#[test]
+fn tc_892_conformance_check_flags_incomplete_what_specification() {
+    let h = ft108_conforming_harness();
+    h.write(
+        "docs/features/FT-002-bare.md",
+        "---\nid: FT-002\ntitle: Bare feature\nstatus: planned\n---\n\n## Description\n\nx\n",
+    );
+    let out = h.run(&["conformance", "check"]);
+    assert_eq!(out.exit_code, 1, "stdout: {}\nstderr: {}", out.stdout, out.stderr);
+    assert!(out.stdout.contains("SPEC-WHAT-5"), "stdout: {}", out.stdout);
+    assert!(out.stdout.contains("SPEC-WHAT-8"), "stdout: {}", out.stdout);
+    assert!(out.stdout.contains("FT-002"), "stdout: {}", out.stdout);
+    assert!(out.stdout.contains("does not conform to Level 3"), "stdout: {}", out.stdout);
+}
+
+/// TC-893 — an accepted feature-specific ADR anchored to no feature is an
+/// undeclared product decision (SPEC-DERIVE-3).
+#[test]
+fn tc_893_conformance_check_flags_undeclared_product_decision() {
+    let h = ft108_conforming_harness();
+    h.write(
+        "docs/adrs/ADR-002-orphan.md",
+        "---\nid: ADR-002\ntitle: Orphan decision\nstatus: accepted\n---\n\n## Decision\n\nx\n\n## Rejected alternatives\n\n- y\n",
+    );
+    let out = h.run(&["conformance", "check"]);
+    assert_eq!(out.exit_code, 1, "stdout: {}\nstderr: {}", out.stdout, out.stderr);
+    assert!(out.stdout.contains("SPEC-DERIVE-3"), "stdout: {}", out.stdout);
+    assert!(out.stdout.contains("ADR-002"), "stdout: {}", out.stdout);
+}
+
+/// TC-894 — a complete feature whose linked TC is failing violates
+/// EXEC-CLOSE-4; an acknowledged `unrunnable` verdict does not.
+#[test]
+fn tc_894_conformance_check_flags_unjudged_complete_feature() {
+    let h = ft108_conforming_harness();
+    h.write(
+        "docs/tests/TC-001-thing-works.md",
+        "---\nid: TC-001\ntitle: thing works\ntype: scenario\nstatus: failing\nvalidates:\n  features:\n  - FT-001\n---\n\n## Scenario\n\nx\n",
+    );
+    let out = h.run(&["conformance", "check"]);
+    assert_eq!(out.exit_code, 1, "stdout: {}\nstderr: {}", out.stdout, out.stderr);
+    assert!(out.stdout.contains("EXEC-CLOSE-4"), "stdout: {}", out.stdout);
+    assert!(out.stdout.contains("TC-001 (failing)"), "stdout: {}", out.stdout);
+
+    // The acknowledged platform-skip verdict is accepted for completion,
+    // matching `product verify` semantics.
+    h.write(
+        "docs/tests/TC-001-thing-works.md",
+        "---\nid: TC-001\ntitle: thing works\ntype: scenario\nstatus: unrunnable\nvalidates:\n  features:\n  - FT-001\n---\n\n## Scenario\n\nx\n",
+    );
+    let out = h.run(&["conformance", "check"]);
+    assert_eq!(out.exit_code, 0, "stdout: {}\nstderr: {}", out.stdout, out.stderr);
+}
+
+/// TC-895 — `--format json` emits a machine-readable report carrying the
+/// spec id, profile verdict, per-clause outcomes, and findings.
+#[test]
+fn tc_895_conformance_check_json_reports_clauses_and_profile() {
+    let h = ft108_conforming_harness();
+    let out = h.run(&["conformance", "check", "--format", "json"]);
+    assert_eq!(out.exit_code, 0, "stdout: {}\nstderr: {}", out.stdout, out.stderr);
+    let json: serde_json::Value = serde_json::from_str(&out.stdout).expect("valid JSON");
+    assert_eq!(json["spec"], "two-pillars/0.1");
+    assert_eq!(json["profile"], "level-3");
+    assert_eq!(json["summary"]["violations"], 0);
+    let clauses = json["clauses"].as_array().expect("clauses array");
+    assert!(clauses.iter().any(|c| c["clause"] == "SPEC-DERIVE-3"));
+
+    // A violating repo flips the profile in the same JSON shape.
+    h.write(
+        "docs/features/FT-002-bare.md",
+        "---\nid: FT-002\ntitle: Bare feature\nstatus: planned\n---\n",
+    );
+    let out = h.run(&["conformance", "check", "--format", "json"]);
+    assert_eq!(out.exit_code, 1, "stdout: {}\nstderr: {}", out.stdout, out.stderr);
+    let json: serde_json::Value = serde_json::from_str(&out.stdout).expect("valid JSON");
+    assert_eq!(json["profile"], "below-level-3");
+    assert!(json["findings"].as_array().map(|f| !f.is_empty()).unwrap_or(false));
+}

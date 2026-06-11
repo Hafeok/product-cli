@@ -11,8 +11,8 @@ validates:
 phase: 1
 runner: cargo-test
 runner-args: tc_753_context_target_human_produces_markdown_no_framing
-last-run: 2026-05-08T12:14:59.128626357+00:00
-last-run-duration: 0.6s
+last-run: 2026-06-10T19:41:51.052986067+00:00
+last-run-duration: 0.3s
 ---
 
 ## Scenario — `context-target-human-produces-markdown-no-framing`
