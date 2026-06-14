@@ -117,7 +117,7 @@ Authored first, before any How. The artifact kinds and their typed edges:
 - `BoundedContext` — a namespace within the What; terms have one meaning inside it.
 - `Entity` (has identity) / `ValueObject` (compared by value) / `Aggregate`.
 - `Relation` — carries cardinality **and** rationale.
-- `Invariant` — a machine-checkable constraint (SHACL or equivalent shape).
+- `Invariant` — a machine-checkable constraint, authored as a **SHACL** shape ([§10](#10-decided)).
 - `ContextMapping` — explicit cross-context correspondence (never assumed).
 
 **Behaviour (event model, §3.2)**
@@ -159,23 +159,26 @@ Realises the pinned What. Reuses the *strongest* part of `product-cli` (its How 
 **Rebuild:**
 - Taxonomy: `FT/ADR/TC/PAT/DEP` → **What** kinds ([§7](#7-the-what-metamodel-first-build-target)) then **How** kinds ([§8](#8-the-how-metamodel-second-build-target)).
 - Local string IDs → URIs ([§3](#3-identity-global-from-line-one)).
-- Constraint validation: hand-coded Rust → declarative shapes (SHACL or equivalent) for invariants.
+- Constraint validation: hand-coded Rust → **SHACL** shapes for invariants ([§10](#10-decided)).
 
 **Net-new — the riskiest piece:**
 - **The cross-repo resolver**: URI resolution, the `what.lock` pin format, cross-repo impact, and cross-repo verdict collection for `feature_done` / `release_done`. Everything else is reshaping what exists.
 
 ---
 
-## 10. Open decisions
+## 10. Decided
+
+- **Shape language — SHACL.** Invariants and all domain/event-model constraints are authored as SHACL shapes, matching the framework's reference encoding (§9) and reusing the same RDF substrate as identity ([§3](#3-identity-global-from-line-one)). This buys the W3C ecosystem (validators, generators, editors) and keeps one constraint language across structure and behaviour, rather than a bespoke DSL the tool would have to grow and document. Validation runs the shapes against the graph snapshot; a shape violation is a verification failure, not a warning.
+
+## 11. Open decisions
 
 1. **What-internal scaling** — bounded contexts as folders in one What repo (recommended) vs. eventual context-repos. Sets whether the resolver is `1↔N` or `M↔N`. *Recommend: folders; revisit only on proven scale limits.*
-2. **Shape language** — SHACL (framework reference) vs. a lighter embedded constraint DSL. SHACL buys ecosystem tooling; a DSL buys ergonomics.
-3. **Realisation manifest format** — where a How repo declares what it `realises`, and how the tool indexes the 1↔N mapping.
-4. **Pin transport** — vendored snapshot file vs. git submodule/subtree vs. a What registry. All satisfy the content-hash contract; they differ in workflow.
+2. **Realisation manifest format** — where a How repo declares what it `realises`, and how the tool indexes the 1↔N mapping.
+3. **Pin transport** — vendored snapshot file vs. git submodule/subtree vs. a What registry. All satisfy the content-hash contract; they differ in workflow.
 
 ---
 
-## 11. Build order
+## 12. Build order
 
 Meaning before mechanism, exactly as the framework prescribes:
 
