@@ -20,6 +20,21 @@ pub enum NodeKind {
     Flow,
 }
 
+/// Every node kind, in declaration order (for `list`/iteration).
+pub const ALL_KINDS: [NodeKind; 11] = [
+    NodeKind::BoundedContext,
+    NodeKind::Entity,
+    NodeKind::ValueObject,
+    NodeKind::Relation,
+    NodeKind::Invariant,
+    NodeKind::ContextMapping,
+    NodeKind::Command,
+    NodeKind::Event,
+    NodeKind::ReadModel,
+    NodeKind::WireframeStep,
+    NodeKind::Flow,
+];
+
 impl NodeKind {
     /// The `pf:` class local name as emitted in Turtle / the ontology.
     pub fn class_name(self) -> &'static str {
@@ -36,6 +51,40 @@ impl NodeKind {
             Self::WireframeStep => "WireframeStep",
             Self::Flow => "Flow",
         }
+    }
+
+    /// The kebab-case CLI name (e.g. `value-object`, `read-model`).
+    pub fn cli_name(self) -> &'static str {
+        match self {
+            Self::BoundedContext => "context",
+            Self::Entity => "entity",
+            Self::ValueObject => "value-object",
+            Self::Relation => "relation",
+            Self::Invariant => "invariant",
+            Self::ContextMapping => "mapping",
+            Self::Command => "command",
+            Self::Event => "event",
+            Self::ReadModel => "read-model",
+            Self::WireframeStep => "wireframe-step",
+            Self::Flow => "flow",
+        }
+    }
+
+    /// Parse a CLI kind name. Accepts the kebab CLI names plus the `pf:` class
+    /// names, case-insensitively.
+    pub fn parse(s: &str) -> Result<Self> {
+        let norm = s.trim().to_lowercase();
+        ALL_KINDS
+            .into_iter()
+            .find(|k| k.cli_name() == norm || k.class_name().to_lowercase() == norm)
+            .ok_or_else(|| {
+                let names: Vec<&str> = ALL_KINDS.iter().map(|k| k.cli_name()).collect();
+                ProductError::ConfigError(format!(
+                    "unknown kind {:?} — expected one of: {}",
+                    s,
+                    names.join(", ")
+                ))
+            })
     }
 }
 
@@ -105,6 +154,20 @@ mod tests {
     fn rejects_invalid_ids() {
         for id in ["", "1abc", "has space", "ns:Task", "-leading", "emoji😀"] {
             assert!(validate_id(id).is_err(), "{id} should be invalid");
+        }
+    }
+
+    #[test]
+    fn node_kind_parses_cli_and_class_names() {
+        assert_eq!(NodeKind::parse("entity").expect("e"), NodeKind::Entity);
+        assert_eq!(NodeKind::parse("value-object").expect("vo"), NodeKind::ValueObject);
+        assert_eq!(NodeKind::parse("context").expect("c"), NodeKind::BoundedContext);
+        assert_eq!(NodeKind::parse("BoundedContext").expect("cls"), NodeKind::BoundedContext);
+        assert_eq!(NodeKind::parse("read-model").expect("rm"), NodeKind::ReadModel);
+        assert!(NodeKind::parse("widget").is_err());
+        // cli_name round-trips through parse for every kind
+        for k in ALL_KINDS {
+            assert_eq!(NodeKind::parse(k.cli_name()).expect("rt"), k);
         }
     }
 

@@ -51,6 +51,29 @@ pub fn flows_in_context(graph: &DomainGraph, id: &str) -> Value {
     json!({ "context": id, "flows": flows })
 }
 
+/// The node's own fields, serialized, if it exists in the graph.
+pub fn node_value(graph: &DomainGraph, id: &str) -> Option<Value> {
+    macro_rules! find {
+        ($vec:expr) => {
+            if let Some(n) = $vec.iter().find(|n| n.id == id) {
+                return serde_json::to_value(n).ok();
+            }
+        };
+    }
+    find!(graph.contexts);
+    find!(graph.entities);
+    find!(graph.value_objects);
+    find!(graph.relations);
+    find!(graph.invariants);
+    find!(graph.context_mappings);
+    find!(graph.commands);
+    find!(graph.events);
+    find!(graph.read_models);
+    find!(graph.wireframe_steps);
+    find!(graph.flows);
+    None
+}
+
 /// Describe a node's links in and out (the `about` form).
 pub fn describe(graph: &DomainGraph, id: &str) -> Result<Value> {
     match graph.kind_of(id) {

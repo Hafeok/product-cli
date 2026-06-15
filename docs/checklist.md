@@ -1568,3 +1568,13 @@
 - [x] TC-899: author domain tools require session_start first (scenario) — passing
 - [x] TC-900: author domain defaults product to configured name (scenario) — passing
 
+### FT-110 — product domain — CLI list, show, and CRUD over the captured What graph [x]
+
+- [x] ADR-053: Domain authoring is a separate What graph with native in-loop conformance (accepted)
+- [x] TC-901: domain new list show roundtrip (scenario) — passing
+- [x] TC-902: domain new rejects non conformant fragment (scenario) — passing
+- [x] TC-903: domain edit reverts on rejection (scenario) — passing
+- [x] TC-904: domain rm warns and validate tracks conformance (scenario) — passing
+- [x] TC-905: domain export emits turtle (scenario) — passing
+- [x] TC-906: domain read without graph is a clear error (scenario) — passing
+

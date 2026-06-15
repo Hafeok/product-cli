@@ -61,6 +61,23 @@ pub(crate) fn load_graph_typed(
     Ok((config, root, graph))
 }
 
+/// The repo's configured product name, if a product.toml is discoverable and
+/// carries a non-empty `name`. Used to default the `<product>` argument of the
+/// domain-graph commands in single-product repos.
+pub(crate) fn default_product_name() -> Option<String> {
+    let (config, _) = ProductConfig::discover().ok()?;
+    let name = config.name.trim().to_string();
+    (!name.is_empty()).then_some(name)
+}
+
+/// Resolve the repo root for domain-graph commands: the discovered product
+/// root, else the current directory.
+pub(crate) fn domain_root() -> PathBuf {
+    ProductConfig::discover()
+        .map(|(_, root)| root)
+        .unwrap_or_else(|_| std::env::current_dir().unwrap_or_default())
+}
+
 /// Process-startup hooks that run before every command: one-shot log-path
 /// migration (FT-042) and stale tmp-file cleanup (ADR-015).
 pub(crate) fn run_startup_hooks() -> BoxResult {

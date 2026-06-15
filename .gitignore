@@ -12,3 +12,6 @@ Cargo.lock
 .product/sessions/
 .product/checklist.md
 tests/__pycache__/
+
+# product author/domain working session state (not source)
+.product/author-domain/

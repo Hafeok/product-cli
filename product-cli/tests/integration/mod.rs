@@ -24522,3 +24522,94 @@ fn tc_900_author_domain_defaults_product_to_config_name() {
         out.stdout
     );
 }
+
+// =============================================================================
+// FT-110 — `product domain` CRUD + inspection over a captured What graph.
+// The Harness product.toml declares name = "test", so the product defaults.
+// =============================================================================
+
+fn seed_domain_graph(h: &Harness) {
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "Order", "--label", "Order", "--context", "Sales", "--definition", "a customer order", "--aggregate-root", "true"]).assert_exit(0);
+    h.run(&["domain", "new", "event", "OrderPlaced", "--label", "OrderPlaced", "--context", "Sales", "--changes", "Order"]).assert_exit(0);
+    h.run(&["domain", "new", "command", "PlaceOrder", "--label", "PlaceOrder", "--context", "Sales", "--targets", "Order", "--emits", "OrderPlaced"]).assert_exit(0);
+}
+
+#[test]
+fn tc_901_domain_new_list_show_roundtrip() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    let list = h.run(&["domain", "list"]);
+    list.assert_exit(0);
+    assert!(list.stdout.contains("entity") && list.stdout.contains("Order"));
+    assert!(list.stdout.contains("command") && list.stdout.contains("PlaceOrder"));
+
+    let filtered = h.run(&["domain", "list", "entity"]);
+    assert!(filtered.stdout.contains("Order") && !filtered.stdout.contains("PlaceOrder"));
+
+    let show = h.run(&["domain", "show", "Order"]);
+    show.assert_exit(0);
+    assert!(show.stdout.contains("\"changedByEvents\""));
+    assert!(show.stdout.contains("OrderPlaced"));
+    assert!(show.stdout.contains("\"is_aggregate_root\": true"));
+}
+
+#[test]
+fn tc_902_domain_new_rejects_non_conformant_fragment() {
+    let h = Harness::new();
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    // event changing a non-existent entity → rejected, exit 1, §3.2 message
+    let out = h.run(&["domain", "new", "event", "Bad", "--label", "Bad", "--context", "Sales", "--changes", "Nope"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("§3.2") || out.stdout.contains("§3.2"), "stderr: {} stdout: {}", out.stderr, out.stdout);
+    // and it was not committed
+    let list = h.run(&["domain", "list", "event"]);
+    assert!(!list.stdout.contains("Bad"));
+}
+
+#[test]
+fn tc_903_domain_edit_reverts_on_rejection() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    // pointing the entity at a missing context is rejected and reverted
+    let out = h.run(&["domain", "edit", "Order", "--context", "Ghost"]);
+    out.assert_exit(1);
+    let show = h.run(&["domain", "show", "Order"]);
+    assert!(show.stdout.contains("\"context\": \"Sales\""), "edit must revert: {}", show.stdout);
+    // a valid edit succeeds
+    h.run(&["domain", "edit", "Order", "--definition", "a confirmed order"]).assert_exit(0);
+    assert!(h.run(&["domain", "show", "Order"]).stdout.contains("a confirmed order"));
+}
+
+#[test]
+fn tc_904_domain_rm_and_validate_exit_codes() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    // conformant initially
+    h.run(&["domain", "validate"]).assert_exit(0);
+    // remove the entity the event depends on → warns about the dangling ref
+    let rm = h.run(&["domain", "rm", "Order"]);
+    rm.assert_exit(0);
+    assert!(rm.stderr.contains("dangling"), "expected dangling warning: {}", rm.stderr);
+    // graph is now non-conformant → validate exits 1
+    h.run(&["domain", "validate"]).assert_exit(1);
+}
+
+#[test]
+fn tc_905_domain_export_emits_turtle() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    let out = h.run(&["domain", "export"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("@prefix pf:"));
+    assert!(out.stdout.contains("d:Order a pf:Entity"));
+    assert!(out.stdout.contains("pf:changes d:Order"));
+}
+
+#[test]
+fn tc_906_domain_read_without_graph_is_a_clear_error() {
+    let h = Harness::new();
+    let out = h.run(&["domain", "list"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("no domain graph"), "stderr: {}", out.stderr);
+}

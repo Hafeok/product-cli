@@ -176,7 +176,7 @@ fn handle_domain(cmd: AuthorCommands) -> BoxResult {
 /// Product-Framework id grammar (it keys the graph namespace).
 fn resolve_product(explicit: Option<String>, interactive: bool) -> Result<String, Box<dyn std::error::Error>> {
     let candidate = explicit
-        .or_else(default_product_name)
+        .or_else(super::shared::default_product_name)
         .map(Ok)
         .unwrap_or_else(|| {
             if interactive {
@@ -193,14 +193,6 @@ fn resolve_product(explicit: Option<String>, interactive: bool) -> Result<String
         )
     })?;
     Ok(product)
-}
-
-/// The repo's configured product name, if a product.toml is discoverable and
-/// carries a non-empty `name`.
-fn default_product_name() -> Option<String> {
-    let (config, _) = ProductConfig::discover().ok()?;
-    let name = config.name.trim().to_string();
-    (!name.is_empty()).then_some(name)
 }
 
 /// Prompt on stdin for a product name (no product configured).

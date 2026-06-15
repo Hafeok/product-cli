@@ -13,6 +13,8 @@ mod context;
 mod cycle_times;
 mod dep;
 mod dispatch;
+mod domain;
+mod domain_fields;
 mod drift;
 mod drift_diff;
 mod feature;
@@ -56,6 +58,7 @@ pub use self::author::AuthorCommands;
 pub use self::checklist::ChecklistCommands;
 pub use self::conformance::ConformanceCommands;
 pub use self::dep::DepCommands;
+pub use self::domain::DomainCommands;
 pub use self::drift::DriftCommands;
 pub use self::feature::FeatureCommands;
 pub use self::gap::GapCommands;
@@ -68,6 +71,9 @@ pub use self::pattern::PatternCommands;
 pub use self::prompts_cmd::PromptsCommands;
 
 #[derive(Subcommand)]
+// Subcommand enums vary widely in size (e.g. `domain new/edit` flatten the
+// full What-graph field set); the spread is inherent to a large clap CLI.
+#[allow(clippy::large_enum_variant)]
 pub enum Commands {
     /// ADR navigation and management
     Adr {
@@ -158,6 +164,11 @@ pub enum Commands {
     Dep {
         #[command(subcommand)]
         command: DepCommands,
+    },
+    /// Domain (What) graph — list, show, and CRUD over captured artifacts
+    Domain {
+        #[command(subcommand)]
+        command: DomainCommands,
     },
     /// Drift detection — spec vs implementation
     Drift {

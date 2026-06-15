@@ -4,8 +4,8 @@ use clap::Command as ClapCommand;
 
 use super::{
     adr, agent_init, author, checklist, completions, conformance, context, cycle_times, dep,
-    drift, feature, gap, graph_cmd, hash, hooks, implement, init, mcp_cmd, metrics_cmd, migrate,
-    onboard, pattern, preflight, prompts_cmd, render, request_cmd, schema, status, tags,
+    domain, drift, feature, gap, graph_cmd, hash, hooks, implement, init, mcp_cmd, metrics_cmd,
+    migrate, onboard, pattern, preflight, prompts_cmd, render, request_cmd, schema, status, tags,
     test_cmd, BoxResult, Commands,
 };
 
@@ -20,6 +20,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Context { .. } => dispatch_context(command),
         Commands::CycleTimes { .. } => dispatch_cycle_times(command, fmt),
         Commands::Dep { command } => dep::handle_dep(command, fmt),
+        Commands::Domain { command } => domain::handle_domain_cmd(command),
         Commands::Drift { command } => drift::handle_drift(command, fmt),
         Commands::Feature { command } => feature::handle_feature(command, fmt),
         Commands::Forecast { .. } => dispatch_forecast(command, fmt),
