@@ -1578,3 +1578,13 @@
 - [x] TC-905: domain export emits turtle (scenario) — passing
 - [x] TC-906: domain read without graph is a clear error (scenario) — passing
 
+### FT-111 — product how — validate, show, and project an archetype's How contract [x]
+
+- [x] ADR-054: How contracts are file-based YAML with a native checker mirroring how.shacl.ttl (accepted)
+- [x] TC-910: how validate passes on conformant contract (scenario) — passing
+- [x] TC-911: how validate flags broken trace (scenario) — passing
+- [x] TC-912: how show and list render the contract (scenario) — passing
+- [x] TC-913: how export emits turtle with synthesised links (scenario) — passing
+- [x] TC-914: how init scaffolds and validates (scenario) — passing
+- [x] TC-915: how validate without file is a clear error (scenario) — passing
+

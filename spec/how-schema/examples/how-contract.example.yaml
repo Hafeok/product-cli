@@ -1,0 +1,88 @@
+archetype: example-rest-api
+version: "1.0"
+
+top_decisions:
+  - id: aspire-apphost-in-root
+    decision: "The Aspire AppHost project lives at the solution root."
+    rationale: "It is the composition root; it must reference and orchestrate every service."
+    applies_when: "Any multi-service .NET solution in this archetype."
+    does_not_apply_when: "A single-service library with no orchestration."
+    licenses: [explicit-composition-root]
+    enforced_by: [layout-conformance]
+  - id: vertical-slices
+    decision: "Code is organised one folder per feature, not by layer."
+    rationale: "Feature cohesion over layer cohesion; change locality."
+    licenses: [feature-cohesion]
+    enforced_by: [layout-conformance]
+
+principles:
+  - id: dependency-inversion
+    statement: "Inner layers must not depend on outer layers; dependencies point inward."
+    licensed_by: [aspire-apphost-in-root]
+    realized_by: [repository-pattern]
+    enforced_by: [layering-audit]
+  - id: feature-cohesion
+    statement: "Code that changes together lives together, organised by feature not layer."
+    licensed_by: [vertical-slices]
+    realized_by: [slice-folder]
+    enforced_by: [layout-conformance]
+  - id: explicit-error-handling
+    statement: "Operations that can fail return a Result type rather than throwing for control flow."
+    realized_by: [result-type]
+    enforced_by: [result-type-audit]
+
+patterns:
+  - id: repository-pattern
+    shape: "Persistence is accessed through a repository interface defined in the inner layer."
+    realizes: [dependency-inversion]
+    enforced_by: [layering-audit]
+  - id: slice-folder
+    shape: "Each feature is a folder containing its endpoint, handler, and tests."
+    realizes: [feature-cohesion]
+    enforced_by: [layout-conformance]
+  - id: result-type
+    shape: "Fallible operations return Result<T>."
+    realizes: [explicit-error-handling]
+    applied_by: [add-crud-resource]
+    enforced_by: [result-type-audit]
+
+application_contract:
+  id: rest-api-app-contract
+  language: "C#"
+  runtime: ".NET"
+  layering: ["api", "application", "domain"]
+  feature_organization: "vertical slices"
+  persistence_model: "EF Core over SQL"
+  cross_cutting: ["auth via policy", "validation via FluentValidation", "structured logging"]
+  statements:
+    - id: deps-inward
+      statement: "The domain project may not reference the api or application projects."
+      enforced_by: layering-audit
+    - id: endpoint-contract-test
+      statement: "Every endpoint has a matching contract type and an integration test on the same route."
+      enforced_by: contract-conformance
+
+infrastructure_contract:
+  id: acme-instance-infra
+  satisfies: rest-api-app-contract
+  frozen: true
+  resources:
+    - id: compute
+      kind: compute
+      choice: "Azure Container Apps"
+    - id: data
+      kind: data-engine
+      choice: "Azure Database for PostgreSQL"
+      satisfies_statement: "SQL domain model"
+    - id: identity
+      kind: identity
+      choice: "Entra ID"
+      depends_on: [compute]
+
+layout_model: "layout-model.example.yaml"
+
+interface_contracts:
+  - id: tasks-rest
+    surface: rest
+    standard: OpenAPI
+    derived_from: ["domain:Task", "behaviour:CompleteTask"]

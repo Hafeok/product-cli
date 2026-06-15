@@ -7,6 +7,9 @@
 //! container that the domain MCP server drives. Pure library — no MCP, no CLI.
 
 pub mod edit;
+pub mod how;
+pub mod how_turtle;
+pub mod how_validate;
 pub mod ids;
 pub mod model;
 pub mod ops;
@@ -18,6 +21,7 @@ pub mod session;
 pub mod turtle;
 pub mod validate;
 
+pub use how::HowContract;
 pub use model::DomainGraph;
 pub use ops::OpResult;
 pub use session::{DomainSession, Finalized};

@@ -4,9 +4,9 @@ use clap::Command as ClapCommand;
 
 use super::{
     adr, agent_init, author, checklist, completions, conformance, context, cycle_times, dep,
-    domain, drift, feature, gap, graph_cmd, hash, hooks, implement, init, mcp_cmd, metrics_cmd,
-    migrate, onboard, pattern, preflight, prompts_cmd, render, request_cmd, schema, status, tags,
-    test_cmd, BoxResult, Commands,
+    domain, drift, feature, gap, graph_cmd, hash, hooks, how, implement, init, mcp_cmd,
+    metrics_cmd, migrate, onboard, pattern, preflight, prompts_cmd, render, request_cmd, schema,
+    status, tags, test_cmd, BoxResult, Commands,
 };
 
 pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapCommand) -> BoxResult {
@@ -27,6 +27,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Gap { command } => gap::handle_gap(command, fmt),
         Commands::Graph { command } => graph_cmd::handle_graph(command, fmt),
         Commands::Hash { command } => hash::handle_hash(command),
+        Commands::How { command } => how::handle_how(command),
         Commands::Impact { id } => render(status::handle_impact(&id, fmt), fmt),
         Commands::Implement { .. } => dispatch_implement(command),
         Commands::Init { .. } => dispatch_init(command),

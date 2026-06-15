@@ -24613,3 +24613,84 @@ fn tc_906_domain_read_without_graph_is_a_clear_error() {
     out.assert_exit(1);
     assert!(out.stderr.contains("no domain graph"), "stderr: {}", out.stderr);
 }
+
+// =============================================================================
+// FT-111 — `product how` validate/show/list/export/init over a How contract.
+// =============================================================================
+
+const HOW_EXAMPLE: &str = include_str!("../../../schema/examples/how-contract.example.yaml");
+
+fn write_how(h: &Harness, yaml: &str) {
+    std::fs::create_dir_all(h.dir.path().join(".product")).expect("mkdir");
+    std::fs::write(h.dir.path().join(".product/how-contract.yaml"), yaml).expect("write how");
+}
+
+#[test]
+fn tc_910_how_validate_passes_on_conformant_contract() {
+    let h = Harness::new();
+    write_how(&h, HOW_EXAMPLE);
+    let out = h.run(&["how", "validate"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("conformant"));
+    // the bundled example carries one soft warning (dangling license)
+    assert!(out.stderr.contains("warning"));
+}
+
+#[test]
+fn tc_911_how_validate_flags_broken_trace() {
+    let h = Harness::new();
+    // remove the enforcement of explicit-error-handling, which is applied by a
+    // pattern's applied_by → the crown trace-truth rule must fire.
+    let broken = HOW_EXAMPLE.replacen("    enforced_by: [result-type-audit]\n", "", 1);
+    write_how(&h, &broken);
+    let out = h.run(&["how", "validate"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("trace must be true"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_912_how_show_and_list() {
+    let h = Harness::new();
+    write_how(&h, HOW_EXAMPLE);
+    let show = h.run(&["how", "show"]);
+    show.assert_exit(0);
+    assert!(show.stdout.contains("archetype: example-rest-api"));
+    assert!(show.stdout.contains("principles:    3"));
+
+    let list = h.run(&["how", "list", "patterns"]);
+    list.assert_exit(0);
+    assert!(list.stdout.contains("repository-pattern"));
+    assert!(list.stdout.contains("result-type"));
+}
+
+#[test]
+fn tc_913_how_export_emits_turtle_with_synthesised_links() {
+    let h = Harness::new();
+    write_how(&h, HOW_EXAMPLE);
+    let out = h.run(&["how", "export"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("@prefix pf:"));
+    assert!(out.stdout.contains("a pf:TopDecision"));
+    assert!(out.stdout.contains("a pf:Verification")); // synthesised from enforced_by
+    assert!(out.stdout.contains("a pf:WorkUnit"));      // synthesised from applied_by
+}
+
+#[test]
+fn tc_914_how_init_scaffolds_and_validates() {
+    let h = Harness::new();
+    let init = h.run(&["how", "init", "--archetype", "rest-api"]);
+    init.assert_exit(0);
+    assert!(h.exists(".product/how-contract.yaml"));
+    // a second init without --force refuses
+    h.run(&["how", "init", "--archetype", "rest-api"]).assert_exit(1);
+    // the scaffold validates
+    h.run(&["how", "validate"]).assert_exit(0);
+}
+
+#[test]
+fn tc_915_how_validate_without_file_is_a_clear_error() {
+    let h = Harness::new();
+    let out = h.run(&["how", "validate"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("no how-contract"), "stderr: {}", out.stderr);
+}

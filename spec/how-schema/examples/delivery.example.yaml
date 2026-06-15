@@ -1,0 +1,13 @@
+features:
+  - id: complete-a-task
+    name: "Complete a task"
+    contains: ["Task", "CompleteTask", "TaskCompleted", "OpenTasksView"]
+    acceptance: ["a user can mark a task complete", "completed tasks leave the open view"]
+  - id: create-a-task
+    name: "Create a task"
+    contains: ["Task", "CreateTask", "TaskCreated", "OpenTasksView"]
+    acceptance: ["a user can add a task to a list"]
+releases:
+  - id: v1
+    name: "v1"
+    features: ["create-a-task", "complete-a-task"]

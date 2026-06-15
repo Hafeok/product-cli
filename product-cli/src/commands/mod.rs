@@ -25,6 +25,7 @@ mod graph_autolink;
 mod graph_cmd;
 mod hash;
 mod hooks;
+mod how;
 mod implement;
 mod init;
 mod init_helpers;
@@ -64,6 +65,7 @@ pub use self::feature::FeatureCommands;
 pub use self::gap::GapCommands;
 pub use self::graph_cmd::GraphCommands;
 pub use self::hash::HashCommands;
+pub use self::how::HowCommands;
 pub use self::metrics_cmd::MetricsCommands;
 pub use self::migrate::MigrateCommands;
 pub use self::onboard::OnboardCommands;
@@ -208,6 +210,11 @@ pub enum Commands {
     Hash {
         #[command(subcommand)]
         command: HashCommands,
+    },
+    /// How contract (§4 architecture) — validate, show, and project
+    How {
+        #[command(subcommand)]
+        command: HowCommands,
     },
     /// Impact analysis
     Impact {

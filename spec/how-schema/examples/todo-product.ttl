@@ -1,0 +1,99 @@
+@prefix pf:  <https://productframework.org/ns#> .
+@prefix ex:  <https://example.org/todo#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#> .
+
+#################################################################
+#  Example: a tiny "To-Do" product, modelled conformantly.
+#  Generic and non-proprietary — it demonstrates the schema and
+#  validates against ../shapes/shapes.shacl.ttl. It ships no
+#  real archetype or verification content.
+#################################################################
+
+#  --- WHAT: domain model (structure) ---
+ex:TasksContext a pf:BoundedContext ; rdfs:label "Tasks" .
+
+ex:Task a pf:Entity ;
+  rdfs:label "Task" ;
+  pf:definition "A unit of work the user intends to complete." ;
+  pf:isAggregateRoot "true" ;
+  pf:inContext ex:TasksContext .
+
+ex:List a pf:Entity ;
+  rdfs:label "List" ;
+  pf:definition "A named collection of tasks." ;
+  pf:inContext ex:TasksContext .
+
+ex:taskInList a pf:Relation ;
+  rdfs:label "task belongs to list" ;
+  pf:cardinality "many-to-one" ;
+  pf:rationale "A task lives in exactly one list; a list holds many tasks (simple ownership)." .
+
+ex:listNotEmpty a pf:Invariant ;
+  pf:statement "A List that is archived must contain zero open Tasks." .
+
+#  --- WHAT: event model (behaviour) ---
+ex:CompleteTask a pf:Command ;
+  rdfs:label "CompleteTask" ;
+  pf:targets ex:Task ;
+  pf:emits ex:TaskCompleted ;
+  pf:inContext ex:TasksContext .
+
+ex:TaskCompleted a pf:Event ;
+  rdfs:label "TaskCompleted" ;
+  pf:changes ex:Task ;
+  pf:inContext ex:TasksContext .
+
+ex:OpenTasksView a pf:ReadModel ;
+  rdfs:label "OpenTasksView" ;
+  pf:projects ex:Task .
+
+ex:CompleteTaskFlow a pf:Flow ;
+  rdfs:label "Complete a task" ;
+  pf:contains ex:CompleteTask , ex:TaskCompleted , ex:OpenTasksView .
+
+#  --- HOW: the Why ---
+ex:VerticalSlicesDecision a pf:TopDecision ;
+  rdfs:label "Vertical slices; one folder per feature" ;
+  pf:rationale "Feature cohesion over layer cohesion; change locality." ;
+  pf:licenses ex:FeatureCohesion .
+
+ex:FeatureCohesion a pf:Principle ;
+  pf:statement "Code that changes together lives together, organised by feature not by layer." .
+
+ex:SliceFolderPattern a pf:Pattern ;
+  rdfs:label "Slice folder layout" ;
+  pf:realizes ex:FeatureCohesion .
+
+#  --- HOW: contracts ---
+ex:AppContract a pf:ApplicationContract ;
+  rdfs:label "Toy app contract" .
+
+ex:InfraContract a pf:InfrastructureContract ;
+  rdfs:label "Toy infra contract" ;
+  pf:conformsTo ex:AppContract .
+
+ex:TasksApi a pf:InterfaceContract ;
+  rdfs:label "Tasks REST API (OpenAPI)" ;
+  pf:derivedFrom ex:Task , ex:CompleteTask .
+
+#  --- WORK UNITS ---
+ex:AddTaskHandlerUnit a pf:WorkUnit ;
+  rdfs:label "generate CompleteTask handler" ;
+  pf:derivedFrom ex:CompleteTask , ex:AppContract ;
+  pf:applies ex:SliceFolderPattern , ex:FeatureCohesion .
+
+#  --- VERIFICATION ---
+ex:FeatureCohesionAudit a pf:Verification ;
+  rdfs:label "slice-layout check" ;
+  pf:verificationKind pf:layoutConformance ;
+  pf:enforces ex:FeatureCohesion .
+
+#  --- DELIVERY ---
+ex:CompleteTaskFeature a pf:Feature ;
+  rdfs:label "Complete a task" ;
+  pf:contains ex:Task , ex:CompleteTask , ex:TaskCompleted , ex:OpenTasksView .
+
+ex:V1 a pf:Release ;
+  rdfs:label "v1" ;
+  pf:contains ex:CompleteTaskFeature .

@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://productframework.org/schema/how-contract.schema.json",
+  "title": "How Contract (an archetype's How)",
+  "description": "Framework §4. The file-based authoring surface for an archetype's How: the Why cascade (top decisions -> principles -> patterns), the application and infrastructure contracts, a reference to the repository layout model (§4.3), and the interface contracts (industry standards, §4.4). Mirrors the SHACL How shapes: a top decision requires rationale; a pattern must realise a principle; an infrastructure contract must satisfy the application contract; interface contracts are derived from the domain model.",
+  "type": "object",
+  "required": ["archetype", "application_contract"],
+  "additionalProperties": false,
+  "properties": {
+    "archetype": { "type": "string", "description": "The archetype this How belongs to (e.g. rest-api)." },
+    "version": { "type": "string" },
+
+    "top_decisions": {
+      "type": "array",
+      "description": "§4.1 Foundational choices, each carrying rationale. The most-upstream cell: expensive reasoning done once, inherited everywhere.",
+      "items": {
+        "type": "object",
+        "required": ["id", "decision", "rationale"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "decision": { "type": "string", "description": "What is decided (e.g. 'AppHost at the solution root')." },
+          "rationale": { "type": "string", "minLength": 1, "description": "Required (§4.1): what it buys." },
+          "applies_when": { "type": "string" },
+          "does_not_apply_when": { "type": "string" },
+          "licenses": { "type": "array", "items": { "type": "string" }, "description": "Principle ids this decision makes apply." },
+          "enforced_by": { "type": "array", "items": { "type": "string" }, "description": "Verification ids that check conformance to this decision." }
+        }
+      }
+    },
+
+    "principles": {
+      "type": "array",
+      "description": "§4.1 Rules a top decision licenses, stated checkably. Earn-their-place: a principle must be applied by a work unit or enforced by a verification.",
+      "items": {
+        "type": "object",
+        "required": ["id", "statement"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "statement": { "type": "string", "minLength": 1, "description": "The checkable rule (a vague principle cannot back a verification)." },
+          "licensed_by": { "type": "array", "items": { "type": "string" }, "description": "Top-decision ids that license this principle." },
+          "realized_by": { "type": "array", "items": { "type": "string" }, "description": "Pattern ids that implement it." },
+          "enforced_by": { "type": "array", "items": { "type": "string" }, "description": "Verification ids that prove it holds. Required for the trace to be true once any work unit applies it." }
+        }
+      }
+    },
+
+    "patterns": {
+      "type": "array",
+      "description": "§4.1 Concrete shapes that realise principles; what a work unit emits.",
+      "items": {
+        "type": "object",
+        "required": ["id", "shape", "realizes"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "shape": { "type": "string", "description": "The concrete shape (e.g. 'operations that can fail return Result<T>')." },
+          "realizes": { "type": "array", "items": { "type": "string" }, "minItems": 1, "description": "Principle ids this pattern implements (required, mirrors PatternShape)." },
+          "applied_by": { "type": "array", "items": { "type": "string" }, "description": "Cell/task-type ids that apply it." },
+          "enforced_by": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+
+    "application_contract": {
+      "type": "object",
+      "description": "§4.2 The invariant code-shaping decisions. Stable across instances of the archetype. Each statement must be checkable.",
+      "required": ["id", "language", "statements"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "language": { "type": "string", "description": "e.g. C# / TypeScript." },
+        "runtime": { "type": "string" },
+        "layering": { "type": "array", "items": { "type": "string" }, "description": "The layering rule, outermost to innermost (e.g. ['api','application','domain'])." },
+        "feature_organization": { "type": "string", "description": "e.g. vertical slices / by layer." },
+        "persistence_model": { "type": "string", "description": "e.g. EF Core over SQL, event-sourced." },
+        "cross_cutting": { "type": "array", "items": { "type": "string" }, "description": "Auth, logging, validation conventions." },
+        "statements": {
+          "type": "array",
+          "minItems": 1,
+          "description": "The contract as checkable statements. Each must be precise enough that a verification can confirm it (§4.2) — a convention that cannot be checked cannot be a contract.",
+          "items": {
+            "type": "object",
+            "required": ["id", "statement"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "statement": { "type": "string", "description": "A checkable assertion (e.g. 'dependencies point inward; api may not be referenced by domain')." },
+              "enforced_by": { "type": "string", "description": "The verification that checks this statement." }
+            }
+          }
+        }
+      }
+    },
+
+    "infrastructure_contract": {
+      "type": "object",
+      "description": "§4.2 Concrete runtime choices for an instance; frozen once chosen. Must satisfy the application contract.",
+      "required": ["id", "satisfies", "frozen", "resources"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "satisfies": { "type": "string", "description": "The application_contract id this satisfies (the conformsTo link)." },
+        "frozen": { "type": "boolean", "const": true, "description": "Must be true: chosen per instance and frozen at Discovery." },
+        "resources": {
+          "type": "array",
+          "minItems": 1,
+          "description": "The concrete resources (compute, data, identity, secrets, messaging).",
+          "items": {
+            "type": "object",
+            "required": ["id", "kind", "choice"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "kind": { "type": "string", "description": "e.g. compute / data-engine / identity / secrets / messaging." },
+              "choice": { "type": "string", "description": "The concrete selection (e.g. Azure Container Apps, PostgreSQL)." },
+              "satisfies_statement": { "type": "string", "description": "The application-contract statement this choice satisfies (e.g. 'SQL domain model')." },
+              "depends_on": { "type": "array", "items": { "type": "string" }, "description": "Provisioning order: resources this one depends on." }
+            }
+          }
+        }
+      }
+    },
+
+    "layout_model": {
+      "type": "string",
+      "description": "§4.3 Path/reference to the repository layout model file (validated by layout-model.schema.json)."
+    },
+
+    "interface_contracts": {
+      "type": "array",
+      "description": "§4.4 Published interfaces, each described in an industry standard and generated from the domain model.",
+      "items": {
+        "type": "object",
+        "required": ["id", "surface", "standard", "derived_from"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "surface": { "type": "string", "enum": ["rest", "async", "rpc", "graphql", "messages", "cloud-events", "auth", "db-schema"] },
+          "standard": { "type": "string", "enum": ["OpenAPI", "AsyncAPI", "Protobuf", "GraphQL-SDL", "JSON-Schema", "Avro", "CloudEvents", "OIDC", "DDL"] },
+          "derived_from": { "type": "array", "items": { "type": "string" }, "minItems": 1, "description": "Domain/event model elements this contract is generated from (never hand-written)." }
+        }
+      }
+    }
+  }
+}
