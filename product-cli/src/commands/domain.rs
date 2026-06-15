@@ -13,7 +13,7 @@ use product_core::pf::edit::{create, edit, remove};
 use product_core::pf::ids::{NodeKind, ALL_KINDS};
 use product_core::pf::ops::OpResult;
 use product_core::pf::session::DomainSession;
-use product_core::pf::{query, turtle, validate};
+use product_core::pf::{bundle, query, turtle, validate};
 use serde_json::json;
 use std::path::{Path, PathBuf};
 
@@ -27,6 +27,16 @@ type Resolved = Result<(String, PathBuf), Box<dyn std::error::Error>>;
 // read variants is expected for a clap subcommand enum.
 #[allow(clippy::large_enum_variant)]
 pub enum DomainCommands {
+    /// Assemble an LLM context bundle around a node (focus + neighbourhood)
+    Context {
+        /// The focus node id (entity, context, flow, …)
+        id: String,
+        /// Traversal depth in hops from the focus node
+        #[arg(long, default_value_t = 2)]
+        depth: usize,
+        #[arg(long)]
+        product: Option<String>,
+    },
     /// Edit fields of an existing node by id
     Edit {
         /// The node id to edit
@@ -83,6 +93,7 @@ pub enum DomainCommands {
 
 pub(crate) fn handle_domain_cmd(cmd: DomainCommands) -> BoxResult {
     match cmd {
+        DomainCommands::Context { id, depth, product } => context(id, depth, product),
         DomainCommands::List { kind, product } => list(kind, product),
         DomainCommands::Show { id, product } => show(id, product),
         DomainCommands::New { kind, id, fields, product } => new(kind, id, fields, product),
@@ -233,5 +244,14 @@ fn export(product: Option<String>) -> BoxResult {
     let (p, dir) = resolve(product)?;
     let session = load(&dir)?;
     print!("{}", turtle::to_turtle(&session.graph, &p));
+    Ok(())
+}
+
+fn context(id: String, depth: usize, product: Option<String>) -> BoxResult {
+    let (p, dir) = resolve(product)?;
+    let session = load(&dir)?;
+    let bundle = bundle::bundle(&session.graph, &id, depth, &p)
+        .ok_or_else(|| format!("no node with id {id:?} in the graph"))?;
+    print!("{bundle}");
     Ok(())
 }

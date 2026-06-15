@@ -1588,3 +1588,10 @@
 - [x] TC-914: how init scaffolds and validates (scenario) — passing
 - [x] TC-915: how validate without file is a clear error (scenario) — passing
 
+### FT-112 — product domain context — assemble an LLM context bundle from the What graph [x]
+
+- [x] ADR-053: Domain authoring is a separate What graph with native in-loop conformance (accepted)
+- [x] TC-920: domain context emits bundle with focus and neighbours (scenario) — passing
+- [x] TC-921: domain context depth controls reach (scenario) — passing
+- [x] TC-922: domain context unknown node is a clear error (scenario) — passing
+

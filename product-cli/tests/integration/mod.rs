@@ -24694,3 +24694,50 @@ fn tc_915_how_validate_without_file_is_a_clear_error() {
     out.assert_exit(1);
     assert!(out.stderr.contains("no how-contract"), "stderr: {}", out.stderr);
 }
+
+// =============================================================================
+// FT-112 — `product domain context`: assemble a context bundle from the What
+// graph (focus node + neighbourhood to a depth).
+// =============================================================================
+
+#[test]
+fn tc_920_domain_context_emits_bundle_with_focus_and_neighbours() {
+    let h = Harness::new();
+    seed_domain_graph(&h); // Sales/Order/OrderPlaced/PlaceOrder
+    let out = h.run(&["domain", "context", "Order", "--depth", "1"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("Domain Context Bundle: Order"));
+    assert!(out.stdout.contains("focus≜Order:Entity"));
+    assert!(out.stdout.contains("a customer order")); // focus definition
+    // direct neighbours of Order
+    assert!(out.stdout.contains("OrderPlaced"));
+    assert!(out.stdout.contains("PlaceOrder"));
+    assert!(out.stdout.contains("## Events"));
+}
+
+#[test]
+fn tc_921_domain_context_depth_controls_reach() {
+    let h = Harness::new();
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "context", "Billing", "--label", "Billing"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "Order", "--label", "Order", "--context", "Sales", "--definition", "an order"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "Invoice", "--label", "Invoice", "--context", "Billing", "--definition", "a bill"]).assert_exit(0);
+    h.run(&["domain", "new", "relation", "orderBilled", "--from", "Order", "--to", "Invoice", "--cardinality", "one-to-one", "--rationale", "one invoice per order"]).assert_exit(0);
+
+    let d1 = h.run(&["domain", "context", "Order", "--depth", "1"]);
+    d1.assert_exit(0);
+    assert!(!d1.stdout.contains("a bill"), "Invoice is 2 hops away; not at depth 1");
+
+    let d2 = h.run(&["domain", "context", "Order", "--depth", "2"]);
+    d2.assert_exit(0);
+    assert!(d2.stdout.contains("a bill"), "Invoice reachable at depth 2 via the relation");
+}
+
+#[test]
+fn tc_922_domain_context_unknown_node_is_a_clear_error() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    let out = h.run(&["domain", "context", "ghost"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("no node with id"), "stderr: {}", out.stderr);
+}
