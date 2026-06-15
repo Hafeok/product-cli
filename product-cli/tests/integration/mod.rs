@@ -24508,3 +24508,17 @@ fn tc_899_author_domain_serve_requires_session_start() {
     });
     assert!(has_err, "expected session_start error, got: {}", out.stdout);
 }
+
+#[test]
+fn tc_900_author_domain_defaults_product_to_config_name() {
+    // Harness writes product.toml with name = "test"; with no positional the
+    // domain session should default to that product.
+    let h = Harness::new();
+    let out = h.run(&["author", "domain", "--print-prompt"]);
+    out.assert_exit(0);
+    assert!(
+        out.stdout.contains("`test`"),
+        "expected prompt to default to configured product 'test', got:\n{}",
+        out.stdout
+    );
+}

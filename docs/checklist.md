@@ -1566,4 +1566,5 @@
 - [x] TC-897: author domain serve full session reaches conformant finalize (scenario) — passing
 - [x] TC-898: author domain rejects an event that changes a non-entity (scenario) — passing
 - [x] TC-899: author domain tools require session_start first (scenario) — passing
+- [x] TC-900: author domain defaults product to configured name (scenario) — passing
 

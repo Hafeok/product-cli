@@ -11,6 +11,7 @@ tests:
 - TC-897
 - TC-898
 - TC-899
+- TC-900
 domains:
 - api
 - data-model
@@ -54,7 +55,10 @@ graph, native conformance mirror, JSON session) is ADR-053.
 
 ### Inputs
 
-- A product identifier (positional) whose What is being captured.
+- A product identifier (optional positional) whose What is being captured. It
+  defaults to the repo's configured product `name`; if none is configured an
+  interactive prompt asks for one. The resolved id must match the
+  Product-Framework id grammar (it keys the graph namespace).
 - Optionally, a prior session's Turtle export to seed from (`--seed`).
 - The 17-tool MCP surface defined by `product-author-domain.tools.json`:
   session (`session_start`, `session_state`, `session_finalize`); structure
@@ -108,3 +112,4 @@ graph, native conformance mirror, JSON session) is ADR-053.
 - TC-898 — an event that changes a non-entity is rejected in-loop with the
   §3.2 framework message.
 - TC-899 — calling a tool before `session_start` is a clear error.
+- TC-900 — with no positional, the product defaults to the configured `name`.

@@ -18,8 +18,9 @@ pub enum AuthorCommands {
     },
     /// Start a domain (What-capture) authoring session
     Domain {
-        /// The product whose domain (What) is being captured
-        product: String,
+        /// The product whose domain (What) is being captured. Defaults to the
+        /// repo's configured product name; prompts if none is configured.
+        product: Option<String>,
         /// Seed the session from a prior session's Turtle export
         #[arg(long)]
         seed: Option<std::path::PathBuf>,
@@ -137,6 +138,9 @@ fn handle_domain(cmd: AuthorCommands) -> BoxResult {
     };
 
     if serve {
+        // `--serve` is driven by the agent over stdin (JSON-RPC), so never
+        // prompt here — resolve from the flag or config, else error.
+        let product = resolve_product(product, false)?;
         let root = std::env::current_dir()?;
         let dir = session_dir.unwrap_or_else(|| author::domain::session_dir(&root, &product));
         std::fs::create_dir_all(&dir)?;
@@ -146,6 +150,9 @@ fn handle_domain(cmd: AuthorCommands) -> BoxResult {
         product_mcp::run_domain_stdio(dir)?;
         return Ok(());
     }
+
+    // Interactive paths may prompt for a product name when none is configured.
+    let product = resolve_product(product, true)?;
 
     if print_prompt {
         println!("{}", author::domain::render_prompt(&product));
@@ -161,6 +168,53 @@ fn handle_domain(cmd: AuthorCommands) -> BoxResult {
     let root = std::env::current_dir()?;
     author::domain::start_session(&product, agent_cli, seed.as_deref(), &root)?;
     Ok(())
+}
+
+/// Resolve the product id for a domain session: an explicit positional wins;
+/// otherwise default to the repo's configured product name; otherwise (only
+/// when `interactive`) prompt on stdin. The resolved id must match the
+/// Product-Framework id grammar (it keys the graph namespace).
+fn resolve_product(explicit: Option<String>, interactive: bool) -> Result<String, Box<dyn std::error::Error>> {
+    let candidate = explicit
+        .or_else(default_product_name)
+        .map(Ok)
+        .unwrap_or_else(|| {
+            if interactive {
+                prompt_for_product_name()
+            } else {
+                Err("no product specified and none configured in product.toml".into())
+            }
+        })?;
+    let product = candidate.trim().to_string();
+    product_core::pf::ids::validate_id(&product).map_err(|e| {
+        format!(
+            "{e}\n  = the domain session keys its graph by this id; pass a valid \
+             name, e.g. `product author domain my-product`"
+        )
+    })?;
+    Ok(product)
+}
+
+/// The repo's configured product name, if a product.toml is discoverable and
+/// carries a non-empty `name`.
+fn default_product_name() -> Option<String> {
+    let (config, _) = ProductConfig::discover().ok()?;
+    let name = config.name.trim().to_string();
+    (!name.is_empty()).then_some(name)
+}
+
+/// Prompt on stdin for a product name (no product configured).
+fn prompt_for_product_name() -> Result<String, Box<dyn std::error::Error>> {
+    use std::io::Write;
+    eprint!("No product configured. Name the product whose domain you are capturing: ");
+    std::io::stderr().flush().ok();
+    let mut line = String::new();
+    let n = std::io::stdin().read_line(&mut line)?;
+    let name = line.trim().to_string();
+    if n == 0 || name.is_empty() {
+        return Err("a product name is required to start a domain authoring session".into());
+    }
+    Ok(name)
 }
 
 /// Pre-seed the active session file from a prior Turtle export so the served
