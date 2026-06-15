@@ -24741,3 +24741,90 @@ fn tc_922_domain_context_unknown_node_is_a_clear_error() {
     out.assert_exit(1);
     assert!(out.stderr.contains("no node with id"), "stderr: {}", out.stderr);
 }
+
+// =============================================================================
+// FT-113 — `product cell`: task-type validation cross-checked against What+How.
+// =============================================================================
+
+const CELL_EXAMPLE: &str = include_str!("../../../schema/examples/task-type-definition.example.yaml");
+const HOW_EXAMPLE_FOR_CELL: &str = include_str!("../../../schema/examples/how-contract.example.yaml");
+
+fn write_cell(h: &Harness, yaml: &str) {
+    std::fs::create_dir_all(h.dir.path().join(".product")).expect("mkdir");
+    std::fs::write(h.dir.path().join(".product/cell.yaml"), yaml).expect("write cell");
+}
+
+#[test]
+fn tc_930_cell_validate_conformant_example() {
+    let h = Harness::new();
+    write_cell(&h, CELL_EXAMPLE);
+    let out = h.run(&["cell", "validate"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("conformant"));
+    assert!(out.stdout.contains("5 slot(s), 4 cell(s), 3 audit(s)"));
+}
+
+#[test]
+fn tc_931_cell_validate_flags_slot_without_inline_audit() {
+    let h = Harness::new();
+    // blank out an inline slot audit → a blocking violation
+    let broken = CELL_EXAMPLE.replacen("    audit: \"entity exists in the domain model\"", "    audit: \"\"", 1);
+    write_cell(&h, &broken);
+    let out = h.run(&["cell", "validate"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("no slot without a backing audit"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_932_cell_validate_cross_checks_domain_pointers() {
+    let h = Harness::new();
+    // add a concrete domain pointer that does not exist in the What graph
+    let with_ghost = CELL_EXAMPLE.replacen(
+        "derived_from: [\"domain:entity\", \"app-contract:endpoint\"]",
+        "derived_from: [\"domain:entity\", \"domain:Ghost\", \"app-contract:endpoint\"]",
+        1,
+    );
+    write_cell(&h, &with_ghost);
+    // capture a What graph WITHOUT a Ghost entity
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "Order", "--label", "Order", "--context", "Sales", "--definition", "an order"]).assert_exit(0);
+    let out = h.run(&["cell", "validate"]);
+    out.assert_exit(0); // dangling domain pointer is a warning, not blocking
+    assert!(out.stderr.contains("domain:Ghost"), "stderr: {}", out.stderr);
+    assert!(out.stdout.contains("domain: cross-checked"));
+}
+
+#[test]
+fn tc_933_cell_validate_cross_checks_applies_against_how() {
+    let h = Harness::new();
+    write_cell(&h, CELL_EXAMPLE);
+    std::fs::write(h.dir.path().join(".product/how-contract.yaml"), HOW_EXAMPLE_FOR_CELL).expect("how");
+    let out = h.run(&["cell", "validate"]);
+    out.assert_exit(0);
+    // the example's handler applies "vertical-slice", which is not a How pattern
+    assert!(out.stderr.contains("vertical-slice"), "stderr: {}", out.stderr);
+    assert!(out.stdout.contains("how: cross-checked"));
+}
+
+#[test]
+fn tc_934_cell_show_list_and_init() {
+    let h = Harness::new();
+    let init = h.run(&["cell", "init", "add-crud-resource", "--archetype", "rest-api"]);
+    init.assert_exit(0);
+    assert!(h.exists(".product/cell.yaml"));
+    h.run(&["cell", "init", "x", "--archetype", "rest-api"]).assert_exit(1); // no --force
+    h.run(&["cell", "validate"]).assert_exit(0);
+
+    let show = h.run(&["cell", "show"]);
+    assert!(show.stdout.contains("task-type: add-crud-resource"));
+    let list = h.run(&["cell", "list", "slots"]);
+    assert!(list.stdout.contains("entity"));
+}
+
+#[test]
+fn tc_935_cell_validate_without_file_is_a_clear_error() {
+    let h = Harness::new();
+    let out = h.run(&["cell", "validate"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("no task type"), "stderr: {}", out.stderr);
+}

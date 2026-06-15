@@ -1595,3 +1595,13 @@
 - [x] TC-921: domain context depth controls reach (scenario) — passing
 - [x] TC-922: domain context unknown node is a clear error (scenario) — passing
 
+### FT-113 — product cell — validate task-types against the What graph and How contract [x]
+
+- [x] ADR-055: Task-types (cells) are cross-validated against the captured What graph and How contract (accepted)
+- [x] TC-930: cell validate passes on conformant example (scenario) — passing
+- [x] TC-931: cell validate flags slot without inline audit (scenario) — passing
+- [x] TC-932: cell validate cross-checks domain pointers (scenario) — passing
+- [x] TC-933: cell validate cross-checks applies against how (scenario) — passing
+- [x] TC-934: cell show list and init (scenario) — passing
+- [x] TC-935: cell validate without file is a clear error (scenario) — passing
+

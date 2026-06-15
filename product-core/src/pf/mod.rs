@@ -7,6 +7,8 @@
 //! container that the domain MCP server drives. Pure library — no MCP, no CLI.
 
 pub mod bundle;
+pub mod cell;
+pub mod cell_validate;
 pub mod edit;
 pub mod how;
 pub mod how_turtle;
