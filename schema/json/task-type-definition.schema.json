@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://productframework.org/schema/task-type-definition.schema.json",
+  "title": "Task-Type Definition",
+  "description": "Framework §5 / Discovery Records. One schema read three ways: dispatch input, capture form, and acceptance criteria. Each slot has all three readings. Promotion of a discovery record for a known type is review-and-accept because the record is already in this shape.",
+  "type": "object",
+  "required": ["id", "name", "applies_when", "slots", "cells", "audits"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "Stable identifier, e.g. add-crud-resource." },
+    "name": { "type": "string" },
+    "family": { "type": "string", "description": "Grouping, e.g. application / infrastructure / integration." },
+    "archetype": { "type": "string", "description": "Home archetype (first home; may be reusable)." },
+    "classification": {
+      "type": "string",
+      "description": "Tactical-DDD placement, drives event-model depth and dispatchability.",
+      "enum": ["core", "supporting", "generic", "supporting-or-generic"]
+    },
+    "applies_when": { "type": "string", "description": "When this task type applies." },
+    "does_not_apply_when": { "type": "string", "description": "Boundaries; when to route elsewhere (core task type or broad worker)." },
+
+    "slots": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The dual-read slots. Each is simultaneously a dispatch input, a capture question, and an acceptance check.",
+      "items": {
+        "type": "object",
+        "required": ["name", "dispatch", "capture", "audit"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "kind": { "type": "string", "enum": ["domain", "behaviour", "pattern", "infra"], "description": "Which framework layer the slot's delta belongs to." },
+          "dispatch": { "type": "string", "description": "What the generator needs this slot for." },
+          "capture": { "type": "string", "description": "The question the exploration answers." },
+          "audit": { "type": "string", "description": "What the verification checks for this slot." },
+          "required": { "type": "boolean", "default": true }
+        }
+      }
+    },
+
+    "cells": {
+      "type": "array",
+      "description": "The work units (SPMC) this task type dispatches.",
+      "items": {
+        "type": "object",
+        "required": ["id", "artifact", "derived_from"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "artifact": { "type": "string", "description": "What the cell produces." },
+          "model": { "type": "string", "description": "Model binding hint (e.g. code / reasoning)." },
+          "derived_from": { "type": "array", "items": { "type": "string" }, "minItems": 1, "description": "Frozen input pointers (domain concepts, contract conventions, other cells)." },
+          "applies": { "type": "array", "items": { "type": "string" }, "description": "Principles/patterns this cell applies (by pointer)." }
+        }
+      }
+    },
+
+    "audits": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The verifications that make the definition true. Each names the slot/principle it protects (no slot without a backing audit).",
+      "items": {
+        "type": "object",
+        "required": ["id", "checks", "protects"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "kind": {
+            "type": "string",
+            "enum": ["layout-conformance", "internal-coherence", "contract-conformance", "seam", "domain-conformance", "behavioural-conformance", "cross-archetype"]
+          },
+          "checks": { "type": "string", "description": "What the audit verifies." },
+          "protects": { "type": "string", "description": "The slot or principle this audit backs." }
+        }
+      }
+    },
+
+    "deltas": {
+      "type": "object",
+      "description": "The shape of the discovery-record diff a session of this type produces.",
+      "additionalProperties": false,
+      "properties": {
+        "domain": { "type": "string" },
+        "behaviour": { "type": "string" },
+        "pattern": { "type": "string" },
+        "infra": { "type": "string" }
+      }
+    }
+  }
+}

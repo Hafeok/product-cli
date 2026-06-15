@@ -1,0 +1,307 @@
+@prefix pf:   <https://productframework.org/ns#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix dct:  <http://purl.org/dc/terms/> .
+
+#################################################################
+#  The Product Framework — Core Ontology
+#
+#  Defines every artifact type in the framework and the typed
+#  links (the "derivation contract") that connect them into one
+#  graph. SHACL shapes that validate instances of these classes
+#  live in ../shapes/. The framework's reference encoding is RDF;
+#  this is that vocabulary.
+#
+#  Layer legend (rdfs:comment carries the framework §):
+#    WHAT  = §3   HOW = §4   WORK UNITS = §5
+#    VERIFY = §6  DELIVERY = §7  LINKS = §9
+#################################################################
+
+<https://productframework.org/ns>
+  a owl:Ontology ;
+  dct:title "The Product Framework — Core Ontology" ;
+  owl:versionInfo "1.0" ;
+  rdfs:comment "Vocabulary for the open Product Framework: artifact classes and the derivation-contract properties. A conformant instantiation of the Two Pillars Specification Framework." .
+
+#################################################################
+#  TOP-LEVEL GROUPINGS
+#################################################################
+
+pf:Artifact a owl:Class ;
+  rdfs:comment "Any node in the product graph. Abstract supertype." .
+
+pf:Product a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Product" ;
+  rdfs:comment "The top: a composition of archetype instances sharing one domain model (framework §Composition / Product layer)." .
+
+pf:Archetype a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Archetype" ;
+  rdfs:comment "A reusable, pre-filled How for a recurring system shape. A product realises one or more." .
+
+#################################################################
+#  WHAT — §3.1 Domain model (structure)
+#################################################################
+
+pf:BoundedContext a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Bounded Context" ;
+  rdfs:comment "A region within which a term has exactly one meaning (§3.1). The domain model is a set of these, never one flat model." .
+
+pf:Entity a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Entity" ;
+  rdfs:comment "A domain concept with identity. May be an aggregate root." .
+
+pf:ValueObject a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Value Object" ;
+  rdfs:comment "A domain concept without identity (e.g. Money, Address)." .
+
+pf:Relation a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Relation" ;
+  rdfs:comment "A typed connection between entities, carrying cardinality and rationale." .
+
+pf:Invariant a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Invariant" ;
+  rdfs:comment "A rule that must always hold; realised as a machine-checkable constraint." .
+
+pf:ContextMapping a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Context Mapping" ;
+  rdfs:comment "An explicit declared correspondence between concepts in two bounded contexts (§3.1)." .
+
+#################################################################
+#  WHAT — §3.2 Event model (behaviour)
+#################################################################
+
+pf:Event a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Event" ;
+  rdfs:comment "A thing that happened, past tense, immutable. Always changes a domain entity (§3.2)." .
+
+pf:Command a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Command" ;
+  rdfs:comment "An intent that causes events; targets an aggregate." .
+
+pf:ReadModel a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Read Model" ;
+  rdfs:comment "A view built to look at or decide on; projects entities/events." .
+
+pf:WireframeStep a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Wireframe Step" ;
+  rdfs:comment "What the user sees at a step; triggers a command or displays a read model." .
+
+pf:Flow a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Flow" ;
+  rdfs:comment "An ordered behaviour: a timeline of wireframe → command → event(s) → read model." .
+
+#################################################################
+#  HOW — §4.1 the Why (decisions, principles, patterns)
+#################################################################
+
+pf:TopDecision a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Top Decision" ;
+  rdfs:comment "A foundational choice (project shape, layout, layering) carrying rationale (§4.1)." .
+
+pf:Principle a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Principle" ;
+  rdfs:comment "A rule a top decision licenses; stated checkably." .
+
+pf:Pattern a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Pattern" ;
+  rdfs:comment "A concrete shape that realises a principle; what a work unit emits." .
+
+#################################################################
+#  HOW — §4.2/4.3/4.4 contracts
+#################################################################
+
+pf:ApplicationContract a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Application Contract" ;
+  rdfs:comment "Invariant code-shaping decisions (language, layering, organization, persistence)." .
+
+pf:InfrastructureContract a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Infrastructure Contract" ;
+  rdfs:comment "Concrete runtime choices for an instance; frozen once chosen; must satisfy the application contract." .
+
+pf:RepositoryLayoutModel a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Repository Layout Model" ;
+  rdfs:comment "A glob-based declaration of which files are legal where (§4.3). Authored as YAML; see layout-model.schema.json." .
+
+pf:InterfaceContract a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Interface Contract" ;
+  rdfs:comment "A published interface described in an industry-standard format (OpenAPI/AsyncAPI/Protobuf), generated from the domain model (§4.4)." .
+
+#################################################################
+#  WORK UNITS — §5
+#################################################################
+
+pf:WorkUnit a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Work Unit" ;
+  rdfs:comment "The smallest reproducible unit of realisation (SPMC): one bounded transformation, frozen input, one artifact (§5). Authored as YAML; see work-unit.schema.json." .
+
+pf:TaskTypeDefinition a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Task-Type Definition" ;
+  rdfs:comment "A dual-read schema: dispatch input = capture form = acceptance criteria. Authored as YAML; see task-type-definition.schema.json." .
+
+pf:DiscoveryRecord a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Discovery Record" ;
+  rdfs:comment "A type-aware capture of an exploratory session, as a diff against the framework layers." .
+
+pf:RationaleTrace a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Rationale Trace" ;
+  rdfs:comment "A generated record linking a produced artifact to the decisions that caused it; must be true (gated by verifications)." .
+
+#################################################################
+#  VERIFICATION — §6
+#################################################################
+
+pf:Verification a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Verification" ;
+  rdfs:comment "A deterministic gate with versioned criteria; enforces a principle/contract/model element and names what it protects (§6)." .
+
+pf:VerificationKind a owl:Class ;
+  rdfs:label "Verification Kind" ;
+  rdfs:comment "The category of a verification." .
+
+pf:layoutConformance      a pf:VerificationKind ; rdfs:label "layout-conformance" ; rdfs:comment "cheapest gate, run first" .
+pf:internalCoherence      a pf:VerificationKind ; rdfs:label "internal-coherence" .
+pf:contractConformance    a pf:VerificationKind ; rdfs:label "contract-conformance" .
+pf:seam                   a pf:VerificationKind ; rdfs:label "seam" .
+pf:domainConformance      a pf:VerificationKind ; rdfs:label "domain-conformance" .
+pf:behaviouralConformance a pf:VerificationKind ; rdfs:label "behavioural-conformance" .
+pf:crossArchetype         a pf:VerificationKind ; rdfs:label "cross-archetype" .
+
+pf:Verdict a owl:Class ;
+  rdfs:label "Verdict" ;
+  rdfs:comment "The outcome of a verification (or a composition of verifications, e.g. release_done)." .
+
+#################################################################
+#  DELIVERY — §7
+#################################################################
+
+pf:Feature a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Feature" ;
+  rdfs:comment "The smallest independently valuable and verifiable slice; a flow-shaped subgraph of the What (§7)." .
+
+pf:Release a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Release" ;
+  rdfs:comment "A chosen, coherent set of features; a subgraph whose cut must be closed (§7)." .
+
+#################################################################
+#  THE DERIVATION CONTRACT — §9 (the typed links)
+#################################################################
+
+pf:derivedFrom a owl:ObjectProperty ;
+  rdfs:label "derived_from" ;
+  rdfs:comment "This artifact/contract was produced from these upstream elements." ;
+  rdfs:range pf:Artifact .
+
+pf:conformsTo a owl:ObjectProperty ;
+  rdfs:label "conforms_to" ;
+  rdfs:comment "This element obeys this contract or convention." .
+
+pf:applies a owl:ObjectProperty ;
+  rdfs:label "applies" ;
+  rdfs:domain pf:WorkUnit ;
+  rdfs:comment "This work unit emits code shaped by this principle/pattern." .
+
+pf:realizes a owl:ObjectProperty ;
+  rdfs:label "realizes" ;
+  rdfs:domain pf:Pattern ;
+  rdfs:range pf:Principle ;
+  rdfs:comment "This pattern implements this principle." .
+
+pf:licenses a owl:ObjectProperty ;
+  rdfs:label "licenses" ;
+  rdfs:domain pf:TopDecision ;
+  rdfs:range pf:Principle ;
+  rdfs:comment "This top decision makes this principle apply." .
+
+pf:enforces a owl:ObjectProperty ;
+  rdfs:label "enforces" ;
+  rdfs:domain pf:Verification ;
+  rdfs:comment "This verification proves this principle/contract/model element holds." .
+
+pf:changes a owl:ObjectProperty ;
+  rdfs:label "changes" ;
+  rdfs:domain pf:Event ;
+  rdfs:range pf:Entity ;
+  rdfs:comment "This event changes this entity. Every event must have one (the load-bearing relation)." .
+
+pf:targets a owl:ObjectProperty ;
+  rdfs:label "targets" ;
+  rdfs:domain pf:Command ;
+  rdfs:range pf:Entity ;
+  rdfs:comment "This command operates on this aggregate." .
+
+pf:emits a owl:ObjectProperty ;
+  rdfs:label "emits" ;
+  rdfs:domain pf:Command ;
+  rdfs:range pf:Event ;
+  rdfs:comment "This command produces this event." .
+
+pf:projects a owl:ObjectProperty ;
+  rdfs:label "projects" ;
+  rdfs:domain pf:ReadModel ;
+  rdfs:comment "This read model is built from these entities/events." .
+
+pf:inContext a owl:ObjectProperty ;
+  rdfs:label "in_context" ;
+  rdfs:range pf:BoundedContext ;
+  rdfs:comment "This entity/event/command belongs to this bounded context." .
+
+pf:mapsTo a owl:ObjectProperty ;
+  rdfs:label "maps_to" ;
+  rdfs:domain pf:ContextMapping ;
+  rdfs:comment "One side of a cross-context correspondence." .
+
+pf:realisedBy a owl:ObjectProperty ;
+  rdfs:label "realised_by" ;
+  rdfs:domain pf:BoundedContext ;
+  rdfs:range pf:Archetype ;
+  rdfs:comment "Which archetype instance realises this context (composition)." .
+
+pf:contains a owl:ObjectProperty ;
+  rdfs:label "contains" ;
+  rdfs:comment "Membership: a feature/release contains these graph nodes; a context contains entities." .
+
+#################################################################
+#  COMMON DATATYPE PROPERTIES
+#################################################################
+
+pf:definition a owl:DatatypeProperty ; rdfs:label "definition" ;
+  rdfs:comment "A business-language definition." ; rdfs:range rdfs:Literal .
+pf:rationale a owl:DatatypeProperty ; rdfs:label "rationale" ;
+  rdfs:comment "Why this exists / was decided. Required on top decisions, relations, layout rules." ; rdfs:range rdfs:Literal .
+pf:cardinality a owl:DatatypeProperty ; rdfs:label "cardinality" ; rdfs:range rdfs:Literal .
+pf:isAggregateRoot a owl:DatatypeProperty ; rdfs:label "is_aggregate_root" ; rdfs:range rdfs:Literal .
+pf:ubiquitousTerm a owl:DatatypeProperty ; rdfs:label "ubiquitous_term" ; rdfs:range rdfs:Literal .
+pf:statement a owl:DatatypeProperty ; rdfs:label "statement" ;
+  rdfs:comment "The checkable statement of a principle or invariant." ; rdfs:range rdfs:Literal .
+pf:verificationKind a owl:ObjectProperty ; rdfs:label "verification_kind" ; rdfs:range pf:VerificationKind .
+pf:conformanceLevel a owl:DatatypeProperty ; rdfs:label "conformance_level" ;
+  rdfs:comment "Described | Realised | Verified | Delivered." ; rdfs:range rdfs:Literal .

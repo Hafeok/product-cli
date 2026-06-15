@@ -7,6 +7,7 @@
 #![deny(clippy::unwrap_used)]
 
 pub mod registry;
+pub mod domain;
 mod adr_lifecycle;
 mod field_handlers;
 mod health_handlers;
@@ -24,6 +25,7 @@ use serde_json::Value;
 
 // Re-export public API
 pub use registry::ToolRegistry;
+pub use domain::run_domain_stdio;
 pub use stdio::run_stdio;
 pub use http::run_http;
 pub use scaffold::scaffold_mcp_json;

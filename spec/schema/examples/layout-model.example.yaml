@@ -1,0 +1,38 @@
+version: "1.0"
+archetype: example-rest-api
+allowlist: true
+layout:
+  - id: apphost-required
+    must_exist: "*.AppHost/Program.cs"
+    cardinality: "exactly 1"
+    rationale: "the composition root; the solution is not runnable without it"
+    enforces: [explicit-composition-root]
+
+  - id: slice-has-tests
+    for_each: "src/*/Features/*/"
+    must_exist: "{dir}/*Tests.cs"
+    cardinality: "1 per scope"
+    rationale: "a slice is structurally incomplete without its tests"
+    enforces: [every-slice-tested]
+
+  - id: contracts-isolation
+    may_exist_here: "src/*.Contracts/**"
+    rationale: "consumers depend on shape, not implementation"
+    enforces: [contract-isolation]
+
+  - id: slice-completeness
+    must_co_exist:
+      when: "src/*/Features/*/"
+      require: ["*Endpoint.cs", "*Handler.cs"]
+    rationale: "a feature slice must expose an endpoint and a handler"
+    enforces: [feature-cohesion]
+
+  - id: no-secrets-in-source
+    must_not_exist: "**/appsettings.*.secrets.json"
+    rationale: "secrets never live in source control"
+    enforces: [secrets-out-of-repo]
+
+  - id: no-orphans
+    no_orphans: "src/**"
+    rationale: "every source file must have a declared, legal home"
+    enforces: [provable-layout]

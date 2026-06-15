@@ -24402,3 +24402,109 @@ fn tc_895_conformance_check_json_reports_clauses_and_profile() {
     assert_eq!(json["profile"], "below-level-3");
     assert!(json["findings"].as_array().map(|f| !f.is_empty()).unwrap_or(false));
 }
+
+// =============================================================================
+// FT — `product author domain` (What-capture MCP session). Drives the real
+// binary in --serve mode over stdin JSON-RPC, mirroring how the agent client
+// hosts the domain MCP server.
+// =============================================================================
+
+/// Parse the tool-call `content[0].text` payload for a given JSON-RPC id from
+/// a stream of newline-delimited responses.
+fn domain_rpc_result(stdout: &str, id: i64) -> Option<serde_json::Value> {
+    for line in stdout.lines() {
+        let v: serde_json::Value = match serde_json::from_str(line) {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        if v.get("id").and_then(|i| i.as_i64()) != Some(id) {
+            continue;
+        }
+        let text = v.get("result")?.get("content")?.get(0)?.get("text")?.as_str()?;
+        return serde_json::from_str(text).ok();
+    }
+    None
+}
+
+#[test]
+fn tc_896_author_domain_print_prompt() {
+    let h = Harness::new();
+    let out = h.run(&["author", "domain", "acme", "--print-prompt"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("What-capture"));
+    assert!(out.stdout.contains("acme"));
+    assert!(out.stdout.contains("session_finalize"));
+}
+
+#[test]
+fn tc_897_author_domain_serve_full_session() {
+    let h = Harness::new();
+    let dir = h.dir.path().join("domain-sess");
+    let dir_s = dir.display().to_string();
+    let rpc = [
+        r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#,
+        r#"{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}"#,
+        r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"session_start","arguments":{"product":"todo","participants":["PO"]}}}"#,
+        r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"add_bounded_context","arguments":{"id":"Tasks","label":"Tasks"}}}"#,
+        r#"{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"add_entity","arguments":{"id":"Task","label":"Task","context":"Tasks","definition":"a unit of work"}}}"#,
+        r#"{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"add_event","arguments":{"id":"Done","label":"Done","context":"Tasks","changes":"Task"}}}"#,
+        r#"{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"session_finalize","arguments":{}}}"#,
+    ].join("\n");
+    let out = h.run_with_stdin(&["author", "domain", "todo", "--serve", "--session-dir", &dir_s], &rpc);
+    out.assert_exit(0);
+    // tools/list returns the 17-tool surface
+    let tools = out.stdout.lines().find_map(|l| {
+        let v: serde_json::Value = serde_json::from_str(l).ok()?;
+        if v.get("id").and_then(|i| i.as_i64()) == Some(2) {
+            Some(v["result"]["tools"].as_array()?.len())
+        } else { None }
+    });
+    assert_eq!(tools, Some(17));
+    // every add succeeded
+    for id in [3, 4, 5, 6] {
+        let r = domain_rpc_result(&out.stdout, id).unwrap_or_else(|| panic!("no result for id {id}"));
+        assert_ne!(r.get("ok"), Some(&serde_json::json!(false)), "id {id} failed: {r}");
+    }
+    // finalize is conformant and wrote the Turtle + provenance
+    let fin = domain_rpc_result(&out.stdout, 7).expect("finalize result");
+    assert_eq!(fin["ok"], serde_json::json!(true), "finalize: {fin}");
+    assert!(fin["turtle"].as_str().unwrap().contains("d:Task a pf:Entity"));
+    assert_eq!(fin["provenance"]["participants"], serde_json::json!(["PO"]));
+    assert!(dir.join("todo.ttl").exists());
+    assert!(dir.join("todo.provenance.json").exists());
+}
+
+#[test]
+fn tc_898_author_domain_serve_rejects_invalid_event() {
+    let h = Harness::new();
+    let dir = h.dir.path().join("domain-sess");
+    let dir_s = dir.display().to_string();
+    let rpc = [
+        r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"session_start","arguments":{"product":"todo"}}}"#,
+        r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"add_bounded_context","arguments":{"id":"Tasks","label":"Tasks"}}}"#,
+        r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"add_event","arguments":{"id":"Ghost","label":"Ghost","context":"Tasks","changes":"Nope"}}}"#,
+    ].join("\n");
+    let out = h.run_with_stdin(&["author", "domain", "todo", "--serve", "--session-dir", &dir_s], &rpc);
+    out.assert_exit(0);
+    let r = domain_rpc_result(&out.stdout, 3).expect("event result");
+    assert_eq!(r["ok"], serde_json::json!(false));
+    assert!(r["violations"][0]["message"].as_str().unwrap().contains("§3.2"));
+}
+
+#[test]
+fn tc_899_author_domain_serve_requires_session_start() {
+    let h = Harness::new();
+    let dir = h.dir.path().join("domain-sess");
+    let dir_s = dir.display().to_string();
+    let rpc = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"add_entity","arguments":{"id":"X","label":"X","context":"C","definition":"d"}}}"#;
+    let out = h.run_with_stdin(&["author", "domain", "todo", "--serve", "--session-dir", &dir_s], rpc);
+    out.assert_exit(0);
+    // call_tool error surfaces as a JSON-RPC error mentioning session_start
+    let has_err = out.stdout.lines().any(|l| {
+        serde_json::from_str::<serde_json::Value>(l).ok()
+            .and_then(|v| v.get("error").cloned())
+            .map(|e| e["message"].as_str().unwrap_or("").contains("session_start"))
+            .unwrap_or(false)
+    });
+    assert!(has_err, "expected session_start error, got: {}", out.stdout);
+}

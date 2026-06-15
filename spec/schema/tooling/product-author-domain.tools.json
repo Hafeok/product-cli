@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://productframework.org/schema/product-author-domain.tools.json",
+  "title": "product author domain — MCP tool surface",
+  "description": "The complete tool contract for the What-capture session. Each tool constructs a valid graph fragment against the Product Framework ontology and validates it in-loop against shapes.shacl.ttl. Every mutating tool returns { ok, node, violations[] }; a violation carries the framework-section message so the model self-corrects. Tools are structured operations — the model never emits raw Turtle.",
+  "version": "1.0",
+  "produces": "A conformant domain+event graph (Product Framework Level 1: Described).",
+  "validates_against": ["ontology/product-framework.ttl", "shapes/shapes.shacl.ttl"],
+
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$", "description": "Stable node identifier, unique within the product graph." },
+    "label": { "type": "string", "minLength": 1, "description": "Human-readable name, in the ubiquitous language of its context." },
+    "cardinality": { "type": "string", "enum": ["one-to-one", "one-to-many", "many-to-one", "many-to-many"] },
+    "result": {
+      "type": "object",
+      "description": "The standard return of every mutating tool.",
+      "required": ["ok", "violations"],
+      "properties": {
+        "ok": { "type": "boolean", "description": "True if the fragment was accepted (no blocking violations)." },
+        "node": { "type": "string", "description": "The id of the created/updated node." },
+        "violations": {
+          "type": "array",
+          "description": "SHACL violations, each with the framework-section message. Non-empty + ok:false means rejected; the model must correct and retry.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "focus": { "type": "string" },
+              "path": { "type": "string" },
+              "message": { "type": "string", "description": "e.g. '§3.2 every event must change a real entity'." },
+              "severity": { "type": "string", "enum": ["violation", "warning"] }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "tools": [
+    {
+      "name": "session_start",
+      "description": "Open or create the domain graph for a product. Optionally seed from a prior session's graph. Call once at the start.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["product"],
+        "additionalProperties": false,
+        "properties": {
+          "product": { "$ref": "#/$defs/id", "description": "The product whose What is being captured." },
+          "title": { "type": "string" },
+          "seed_graph": { "type": "string", "description": "Optional Turtle to seed from (e.g. a partial model from a prior session)." },
+          "participants": { "type": "array", "items": { "type": "string" }, "description": "Names/roles in the room (recorded in provenance)." }
+        }
+      }
+    },
+    {
+      "name": "session_state",
+      "description": "Return a summary of the current graph (counts per class), the conformance status, and the current open questions. Read-only.",
+      "inputSchema": { "type": "object", "additionalProperties": false, "properties": {} }
+    },
+    {
+      "name": "session_finalize",
+      "description": "Run full SHACL validation; if conformant, export the graph as Turtle and return a provenance record (hash, participants, timestamp, tool-call count). If non-conformant, return the blocking violations and do not finalize.",
+      "inputSchema": { "type": "object", "additionalProperties": false, "properties": {} }
+    },
+
+    {
+      "name": "add_bounded_context",
+      "description": "Create a bounded context: a region within which every term has exactly one meaning (§3.1). The domain model is a set of these — never one flat model.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id", "label"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "label": { "$ref": "#/$defs/label" },
+          "purpose": { "type": "string", "description": "What this context is responsible for." },
+          "glossary": { "type": "array", "items": { "type": "string" }, "description": "Authoritative ubiquitous-language terms for this context." }
+        }
+      }
+    },
+    {
+      "name": "add_entity",
+      "description": "Create an entity: a domain concept with identity, placed in exactly one bounded context (§3.1). May be an aggregate root.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id", "label", "context", "definition"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "label": { "$ref": "#/$defs/label" },
+          "context": { "$ref": "#/$defs/id", "description": "The bounded context this entity belongs to (must exist)." },
+          "definition": { "type": "string", "minLength": 1, "description": "Business-language definition (required by §3.1)." },
+          "identity": { "type": "string", "description": "What makes one instance distinct (e.g. 'email is unique')." },
+          "is_aggregate_root": { "type": "boolean", "default": false },
+          "attributes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name"],
+              "properties": { "name": { "type": "string" }, "type": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "add_value_object",
+      "description": "Create a value object: a domain concept without identity (e.g. Money, Address), in a bounded context.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id", "label", "context"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "label": { "$ref": "#/$defs/label" },
+          "context": { "$ref": "#/$defs/id" },
+          "definition": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "add_relation",
+      "description": "Create a typed relation between two entities. Cardinality AND rationale are both required (§3.1) — the rationale is why the link and the cardinality are what they are.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id", "from", "to", "cardinality", "rationale"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "label": { "$ref": "#/$defs/label" },
+          "from": { "$ref": "#/$defs/id", "description": "Source entity (must exist)." },
+          "to": { "$ref": "#/$defs/id", "description": "Target entity (must exist)." },
+          "cardinality": { "$ref": "#/$defs/cardinality" },
+          "rationale": { "type": "string", "minLength": 1, "description": "Why this link and this cardinality (e.g. 'we bill the company, not the person')." }
+        }
+      }
+    },
+    {
+      "name": "add_invariant",
+      "description": "Create an invariant: a rule that must always hold, stated as a checkable constraint (§3.1). Becomes a SHACL constraint downstream.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id", "statement"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "statement": { "type": "string", "minLength": 1, "description": "e.g. 'a Subscription cannot be active without a PaymentMethod'." },
+          "context": { "$ref": "#/$defs/id" },
+          "applies_to": { "$ref": "#/$defs/id", "description": "The entity the invariant constrains." }
+        }
+      }
+    },
+    {
+      "name": "add_context_mapping",
+      "description": "Declare an explicit correspondence between concepts in two different bounded contexts (§3.1) — the resolver for 'is a User a Customer?'. Never assume; always declare.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id", "concept_a", "concept_b", "rationale"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "concept_a": { "$ref": "#/$defs/id", "description": "A concept in one context." },
+          "concept_b": { "$ref": "#/$defs/id", "description": "The corresponding concept in another context." },
+          "kind": { "type": "string", "enum": ["shared-kernel", "customer-supplier", "conformist", "anti-corruption-layer"], "description": "The DDD relationship type, if known." },
+          "rationale": { "type": "string", "minLength": 1, "description": "The correspondence (e.g. 'same person, linked by PersonId')." }
+        }
+      }
+    },
+
+    {
+      "name": "add_command",
+      "description": "Create a command: an intent that causes events (§3.2). Targets an aggregate (entity) and emits at least one event.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id", "label", "context", "targets", "emits"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "label": { "$ref": "#/$defs/label" },
+          "context": { "$ref": "#/$defs/id" },
+          "targets": { "$ref": "#/$defs/id", "description": "The aggregate (entity) this command operates on (must exist)." },
+          "emits": { "type": "array", "items": { "$ref": "#/$defs/id" }, "minItems": 1, "description": "The event(s) this command produces (must exist or be created alongside)." }
+        }
+      }
+    },
+    {
+      "name": "add_event",
+      "description": "Create an event: a past-tense, immutable fact (§3.2). MUST change a real domain entity — behaviour may not reference structure that does not exist (the load-bearing relation).",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id", "label", "context", "changes"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "label": { "$ref": "#/$defs/label" },
+          "context": { "$ref": "#/$defs/id" },
+          "changes": { "$ref": "#/$defs/id", "description": "The entity whose state this event changes (must exist). Enforced by §3.2." }
+        }
+      }
+    },
+    {
+      "name": "add_read_model",
+      "description": "Create a read model: a view built to look at or decide on (§3.2). Projects at least one entity/event — no ghost views (read-model provenance).",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id", "label", "projects"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "label": { "$ref": "#/$defs/label" },
+          "projects": { "type": "array", "items": { "$ref": "#/$defs/id" }, "minItems": 1, "description": "The entities/events this view is built from (must exist)." }
+        }
+      }
+    },
+    {
+      "name": "add_wireframe_step",
+      "description": "Create a UI step in a flow: what the user sees, which triggers a command or displays a read model. Uses ubiquitous-language terms.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id", "label"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "label": { "$ref": "#/$defs/label" },
+          "triggers": { "$ref": "#/$defs/id", "description": "The command this step issues (optional)." },
+          "displays": { "$ref": "#/$defs/id", "description": "The read model this step shows (optional)." }
+        }
+      }
+    },
+    {
+      "name": "add_flow",
+      "description": "Assemble an ordered behaviour: a timeline of wireframe → command → event(s) → read model (§3.2). Model the interesting (core) flows only; not trivial CRUD.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["id", "label", "steps"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "label": { "$ref": "#/$defs/label" },
+          "steps": { "type": "array", "items": { "$ref": "#/$defs/id" }, "minItems": 1, "description": "Ordered references to wireframe steps, commands, events, and read models." }
+        }
+      }
+    },
+
+    {
+      "name": "open_questions",
+      "description": "The facilitation driver. Return the current SHACL gaps as questions for the room — e.g. an entity with no context, an event that changes nothing, a relation with no rationale, a command with no events. Read-only.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "focus": { "type": "string", "enum": ["all", "structure", "behaviour"], "default": "all", "description": "Limit the questions to the domain (structure) or event (behaviour) half." }
+        }
+      }
+    },
+    {
+      "name": "query",
+      "description": "Read the graph. Either a convenience query ('what happens to X', 'contents of context C', 'relations of entity E') or a raw SPARQL SELECT. Read-only.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "about": { "$ref": "#/$defs/id", "description": "A node to describe (its links in and out)." },
+          "question": { "type": "string", "enum": ["whatHappensTo", "contextContents", "entityRelations", "flowsInContext"], "description": "A convenience query keyed by 'about'." },
+          "sparql": { "type": "string", "description": "A raw SPARQL SELECT (advanced)." }
+        }
+      }
+    },
+    {
+      "name": "validate",
+      "description": "Run all SHACL shapes over the whole graph and return conformance plus any violations (each with its framework-section message). Read-only; also run automatically inside every mutating tool for the affected node.",
+      "inputSchema": { "type": "object", "additionalProperties": false, "properties": {} }
+    }
+  ]
+}

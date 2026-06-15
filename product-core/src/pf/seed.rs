@@ -1,0 +1,200 @@
+//! Turtle seed parsing into the typed model.
+//!
+//! Reconstructs a [`DomainGraph`] from a prior session's exported Turtle so
+//! `session_start` can seed from it. Backed by Oxigraph; reads the `pf:`
+//! classes the What-capture session produces.
+
+use std::collections::HashMap;
+
+use oxigraph::io::RdfFormat;
+use oxigraph::model::Term;
+use oxigraph::sparql::QueryResults;
+use oxigraph::store::Store;
+
+use super::model::*;
+use crate::error::{ProductError, Result};
+
+const PF: &str = "https://productframework.org/ns#";
+
+/// Parse Turtle into a typed domain graph (best-effort over the What classes).
+pub fn from_turtle(turtle: &str) -> Result<DomainGraph> {
+    let store = Store::new().map_err(|e| ProductError::Internal(format!("oxigraph store: {}", e)))?;
+    store
+        .load_from_reader(RdfFormat::Turtle, turtle.as_bytes())
+        .map_err(|e| ProductError::ConfigError(format!("could not parse seed Turtle: {}", e)))?;
+
+    let mut g = DomainGraph::default();
+    for row in select(&store, "?s ?label ?purpose", "?s a pf:BoundedContext . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:purpose ?purpose }")? {
+        g.contexts.push(BoundedContext {
+            id: local(row.get("s")), label: lit(row.get("label")),
+            purpose: opt(row.get("purpose")), glossary: vec![],
+        });
+    }
+    parse_entities(&store, &mut g)?;
+    for row in select(&store, "?s ?label ?ctx ?def", "?s a pf:ValueObject . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:inContext ?ctx } OPTIONAL { ?s pf:definition ?def }")? {
+        g.value_objects.push(ValueObject { id: local(row.get("s")), label: lit(row.get("label")), context: local(row.get("ctx")), definition: opt(row.get("def")) });
+    }
+    parse_relations(&store, &mut g)?;
+    parse_invariants(&store, &mut g)?;
+    parse_mappings(&store, &mut g)?;
+    parse_commands(&store, &mut g)?;
+    for row in select(&store, "?s ?label ?ctx ?changes", "?s a pf:Event . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:inContext ?ctx } OPTIONAL { ?s pf:changes ?changes }")? {
+        g.events.push(Event { id: local(row.get("s")), label: lit(row.get("label")), context: local(row.get("ctx")), changes: local(row.get("changes")) });
+    }
+    parse_read_models(&store, &mut g)?;
+    parse_flows(&store, &mut g)?;
+    Ok(g)
+}
+
+fn parse_entities(store: &Store, g: &mut DomainGraph) -> Result<()> {
+    for row in select(store, "?s ?label ?def ?ctx ?agg ?identity",
+        "?s a pf:Entity . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:definition ?def } OPTIONAL { ?s pf:inContext ?ctx } OPTIONAL { ?s pf:isAggregateRoot ?agg } OPTIONAL { ?s pf:identity ?identity }")? {
+        g.entities.push(Entity {
+            id: local(row.get("s")), label: lit(row.get("label")), context: local(row.get("ctx")),
+            definition: lit(row.get("def")), identity: opt(row.get("identity")),
+            is_aggregate_root: lit(row.get("agg")) == "true", attributes: vec![],
+        });
+    }
+    Ok(())
+}
+
+fn parse_relations(store: &Store, g: &mut DomainGraph) -> Result<()> {
+    for row in select(store, "?s ?label ?from ?to ?card ?rat",
+        "?s a pf:Relation . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:from ?from } OPTIONAL { ?s pf:to ?to } OPTIONAL { ?s pf:cardinality ?card } OPTIONAL { ?s pf:rationale ?rat }")? {
+        g.relations.push(Relation {
+            id: local(row.get("s")), label: opt(row.get("label")), from: local(row.get("from")),
+            to: local(row.get("to")), cardinality: lit(row.get("card")), rationale: lit(row.get("rat")),
+        });
+    }
+    Ok(())
+}
+
+fn parse_invariants(store: &Store, g: &mut DomainGraph) -> Result<()> {
+    for row in select(store, "?s ?stmt ?ctx ?applies",
+        "?s a pf:Invariant . OPTIONAL { ?s pf:statement ?stmt } OPTIONAL { ?s pf:inContext ?ctx } OPTIONAL { ?s pf:appliesTo ?applies }")? {
+        g.invariants.push(Invariant {
+            id: local(row.get("s")), statement: lit(row.get("stmt")),
+            context: opt(row.get("ctx")).map(|_| local(row.get("ctx"))),
+            applies_to: opt(row.get("applies")).map(|_| local(row.get("applies"))),
+        });
+    }
+    Ok(())
+}
+
+fn parse_mappings(store: &Store, g: &mut DomainGraph) -> Result<()> {
+    let sides = multi(store, "pf:ContextMapping", "pf:mapsTo")?;
+    for row in select(store, "?s ?kind ?rat",
+        "?s a pf:ContextMapping . OPTIONAL { ?s pf:mappingKind ?kind } OPTIONAL { ?s pf:rationale ?rat }")? {
+        let id = local(row.get("s"));
+        let mapped = sides.get(&id).cloned().unwrap_or_default();
+        g.context_mappings.push(ContextMapping {
+            id: id.clone(),
+            concept_a: mapped.first().cloned().unwrap_or_default(),
+            concept_b: mapped.get(1).cloned().unwrap_or_default(),
+            kind: opt(row.get("kind")), rationale: lit(row.get("rat")),
+        });
+    }
+    Ok(())
+}
+
+fn parse_commands(store: &Store, g: &mut DomainGraph) -> Result<()> {
+    let emits = multi(store, "pf:Command", "pf:emits")?;
+    for row in select(store, "?s ?label ?ctx ?targets",
+        "?s a pf:Command . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:inContext ?ctx } OPTIONAL { ?s pf:targets ?targets }")? {
+        let id = local(row.get("s"));
+        g.commands.push(Command {
+            emits: emits.get(&id).cloned().unwrap_or_default(),
+            id: id.clone(), label: lit(row.get("label")), context: local(row.get("ctx")), targets: local(row.get("targets")),
+        });
+    }
+    Ok(())
+}
+
+fn parse_read_models(store: &Store, g: &mut DomainGraph) -> Result<()> {
+    let projects = multi(store, "pf:ReadModel", "pf:projects")?;
+    for row in select(store, "?s ?label", "?s a pf:ReadModel . OPTIONAL { ?s rdfs:label ?label }")? {
+        let id = local(row.get("s"));
+        g.read_models.push(ReadModel { projects: projects.get(&id).cloned().unwrap_or_default(), id: id.clone(), label: lit(row.get("label")) });
+    }
+    Ok(())
+}
+
+fn parse_flows(store: &Store, g: &mut DomainGraph) -> Result<()> {
+    let steps = multi(store, "pf:Flow", "pf:contains")?;
+    for row in select(store, "?s ?label", "?s a pf:Flow . OPTIONAL { ?s rdfs:label ?label }")? {
+        let id = local(row.get("s"));
+        g.flows.push(Flow { steps: steps.get(&id).cloned().unwrap_or_default(), id: id.clone(), label: lit(row.get("label")) });
+    }
+    Ok(())
+}
+
+// --- Oxigraph helpers -----------------------------------------------------
+
+type Row = HashMap<String, Term>;
+
+fn select(store: &Store, vars: &str, body: &str) -> Result<Vec<Row>> {
+    let q = format!("PREFIX pf: <{}> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> SELECT {} WHERE {{ {} }}", PF, vars, body);
+    run(store, &q)
+}
+
+fn run(store: &Store, q: &str) -> Result<Vec<Row>> {
+    let results = store.query(q).map_err(|e| ProductError::Internal(format!("seed query: {}", e)))?;
+    let mut rows = Vec::new();
+    if let QueryResults::Solutions(solutions) = results {
+        let vars: Vec<String> = solutions.variables().iter().map(|v| v.as_str().to_string()).collect();
+        for sol in solutions {
+            let sol = sol.map_err(|e| ProductError::Internal(format!("seed row: {}", e)))?;
+            let mut row = HashMap::new();
+            for var in &vars {
+                if let Some(term) = sol.get(var.as_str()) {
+                    row.insert(var.clone(), term.clone());
+                }
+            }
+            rows.push(row);
+        }
+    }
+    Ok(rows)
+}
+
+/// Collect multi-valued objects of `predicate` for each subject of `class`,
+/// keyed by the subject's local id.
+fn multi(store: &Store, class: &str, predicate: &str) -> Result<HashMap<String, Vec<String>>> {
+    let q = format!("PREFIX pf: <{}> SELECT ?s ?o WHERE {{ ?s a {} . ?s {} ?o }}", PF, class, predicate);
+    let mut map: HashMap<String, Vec<String>> = HashMap::new();
+    for row in run(store, &q)? {
+        let s = local(row.get("s"));
+        map.entry(s).or_default().push(local(row.get("o")));
+    }
+    Ok(map)
+}
+
+/// The local id of a term: the fragment after `#`, else the last path segment.
+fn local(term: Option<&Term>) -> String {
+    match term {
+        Some(Term::NamedNode(n)) => {
+            let s = n.as_str();
+            s.rsplit(['#', '/']).next().unwrap_or(s).to_string()
+        }
+        Some(Term::Literal(l)) => l.value().to_string(),
+        _ => String::new(),
+    }
+}
+
+/// The literal value of a term (empty string if absent).
+fn lit(term: Option<&Term>) -> String {
+    match term {
+        Some(Term::Literal(l)) => l.value().to_string(),
+        Some(Term::NamedNode(n)) => n.as_str().rsplit(['#', '/']).next().unwrap_or("").to_string(),
+        _ => String::new(),
+    }
+}
+
+/// `Some(value)` if the term is present and non-empty, else `None`.
+fn opt(term: Option<&Term>) -> Option<String> {
+    let v = lit(term);
+    if v.is_empty() { None } else { Some(v) }
+}
+
+#[cfg(test)]
+#[path = "seed_tests.rs"]
+mod tests;

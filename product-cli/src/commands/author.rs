@@ -1,6 +1,7 @@
 //! Graph-aware authoring sessions.
 
 use clap::Subcommand;
+use product_core::config::ProductConfig;
 use product_core::{author, domains};
 use std::process;
 
@@ -14,6 +15,27 @@ pub enum AuthorCommands {
         /// (overrides `[author].cli` in product.toml)
         #[arg(long)]
         cli: Option<String>,
+    },
+    /// Start a domain (What-capture) authoring session
+    Domain {
+        /// The product whose domain (What) is being captured
+        product: String,
+        /// Seed the session from a prior session's Turtle export
+        #[arg(long)]
+        seed: Option<std::path::PathBuf>,
+        /// Agent CLI to host the session: claude | copilot
+        /// (overrides `[author].cli` in product.toml)
+        #[arg(long)]
+        cli: Option<String>,
+        /// Print the facilitation prompt and exit (no agent launch)
+        #[arg(long = "print-prompt")]
+        print_prompt: bool,
+        /// Internal: host the domain MCP server over stdio for the agent
+        #[arg(long, hide = true)]
+        serve: bool,
+        /// Internal: session directory used by `--serve`
+        #[arg(long, hide = true)]
+        session_dir: Option<std::path::PathBuf>,
     },
     /// Start a feature authoring session
     Feature {
@@ -57,10 +79,17 @@ pub enum AuthorCommands {
 }
 
 pub(crate) fn handle_author(cmd: AuthorCommands) -> BoxResult {
+    // Domain (What-capture) is a separate graph and a separate MCP server, so
+    // it does not load the FT/ADR/TC knowledge graph. Handle it up front.
+    if let AuthorCommands::Domain { .. } = cmd {
+        return handle_domain(cmd);
+    }
+
     let (config, root, graph) = load_graph()?;
     let (session_type, cli_override) = match &cmd {
         AuthorCommands::Feature { cli, .. } => (author::SessionType::Feature, cli.clone()),
         AuthorCommands::Adr { cli } => (author::SessionType::Adr, cli.clone()),
+        AuthorCommands::Domain { .. } => unreachable!("Domain handled above"),
         AuthorCommands::Pattern { cli, .. } => (author::SessionType::Pattern, cli.clone()),
         AuthorCommands::Review { cli } => (author::SessionType::Review, cli.clone()),
     };
@@ -96,5 +125,54 @@ pub(crate) fn handle_author(cmd: AuthorCommands) -> BoxResult {
     }
 
     author::start_session(session_type, agent_cli, &config, &root)?;
+    Ok(())
+}
+
+/// Handle `product author domain`. Three paths: `--serve` hosts the domain MCP
+/// server over stdio (invoked by the agent's MCP config), `--print-prompt`
+/// emits the facilitation prompt, otherwise launch the agent session.
+fn handle_domain(cmd: AuthorCommands) -> BoxResult {
+    let AuthorCommands::Domain { product, seed, cli, print_prompt, serve, session_dir } = cmd else {
+        unreachable!("handle_domain called with non-Domain variant")
+    };
+
+    if serve {
+        let root = std::env::current_dir()?;
+        let dir = session_dir.unwrap_or_else(|| author::domain::session_dir(&root, &product));
+        std::fs::create_dir_all(&dir)?;
+        if let Some(seed_path) = &seed {
+            seed_session(&dir, &product, seed_path)?;
+        }
+        product_mcp::run_domain_stdio(dir)?;
+        return Ok(());
+    }
+
+    if print_prompt {
+        println!("{}", author::domain::render_prompt(&product));
+        return Ok(());
+    }
+
+    // Resolve the agent CLI from the flag or, if a product.toml is reachable,
+    // its `[author].cli`; otherwise default to claude.
+    let cli_str = cli
+        .or_else(|| ProductConfig::discover().ok().map(|(c, _)| c.author.cli))
+        .unwrap_or_else(|| "claude".to_string());
+    let agent_cli = author::AgentCli::parse(&cli_str)?;
+    let root = std::env::current_dir()?;
+    author::domain::start_session(&product, agent_cli, seed.as_deref(), &root)?;
+    Ok(())
+}
+
+/// Pre-seed the active session file from a prior Turtle export so the served
+/// server starts from it (used when `--serve --seed` is passed together).
+fn seed_session(dir: &std::path::Path, product: &str, seed_path: &std::path::Path) -> BoxResult {
+    use product_core::pf::session::DomainSession;
+    if DomainSession::load(dir).is_ok() {
+        return Ok(()); // a session already exists; don't clobber it
+    }
+    let turtle = std::fs::read_to_string(seed_path)?;
+    let now = chrono::Utc::now().to_rfc3339();
+    let session = DomainSession::start(product, None, vec![], Some(&turtle), now)?;
+    session.save(dir)?;
     Ok(())
 }
