@@ -105,6 +105,11 @@ pub enum Commands {
         #[arg(long = "format", value_name = "FMT")]
         format: Option<String>,
     },
+    /// Decider (§3.3) — derive an aggregate's executable signature, validate it
+    Decider {
+        #[command(subcommand)]
+        command: DeciderCommands,
+    },
     /// Dependency management (ADR-030)
     Dep {
         #[command(subcommand)]

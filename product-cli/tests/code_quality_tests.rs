@@ -813,7 +813,7 @@ const CLI_ONLY: &[&str] = &[
 /// debt this gate exists to drive down. Remove an entry when its tools land;
 /// the gate fails on a stale entry (one that already has a tool).
 const PENDING_MCP: &[&str] = &[
-    "archetype", "cell", "dep", "how", "work-unit",
+    "archetype", "cell", "decider", "dep", "how", "work-unit",
 ];
 
 fn mcp_tool_names() -> Vec<String> {

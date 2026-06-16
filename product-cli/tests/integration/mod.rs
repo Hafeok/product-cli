@@ -24933,6 +24933,39 @@ fn tc_945_archetype_check_layout_against_the_tree() {
 }
 
 // =============================================================================
+// FT-121 — `product decider`: derive an aggregate's signature, validate drift.
+// =============================================================================
+
+#[test]
+fn tc_946_decider_derive_and_validate() {
+    let h = Harness::new();
+    seed_domain_graph(&h); // Order aggregate; PlaceOrder targets it, emits OrderPlaced
+    let derived = h.run(&["decider", "derive", "Order"]);
+    derived.assert_exit(0);
+    assert!(derived.stdout.contains("Derived decider 'Order-decider'"), "{}", derived.stdout);
+    assert!(h.exists(".product/deciders/Order-decider.yaml"));
+    // the derived signature is conformant against the model by construction
+    let ok = h.run(&["decider", "validate", "Order-decider"]);
+    ok.assert_exit(0);
+    assert!(ok.stdout.contains("conformant"), "{}", ok.stdout);
+    assert!(h.run(&["decider", "show", "Order-decider"]).stdout.contains("decides-for: Order"));
+    assert!(h.run(&["decider", "list"]).stdout.contains("Order-decider"));
+}
+
+#[test]
+fn tc_947_decider_foreign_command_nonconformant() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    std::fs::create_dir_all(h.dir.path().join(".product/deciders")).expect("mkdir");
+    // author a decider that handles a command not targeting its aggregate
+    let yaml = "id: order-decider\ndecides_for: Order\nhandles:\n- PlaceOrder\n- ForeignCmd\nemits:\n- OrderPlaced\n";
+    std::fs::write(h.dir.path().join(".product/deciders/order-decider.yaml"), yaml).expect("w");
+    let out = h.run(&["decider", "validate", "order-decider"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("ForeignCmd"), "stderr: {}", out.stderr);
+}
+
+// =============================================================================
 // FT-115 — `product how add/set`: build the Why cascade + contracts granularly.
 // =============================================================================
 
