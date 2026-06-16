@@ -16,6 +16,15 @@ use super::BoxResult;
 
 #[derive(Subcommand)]
 pub enum DeciderCommands {
+    /// Check realised code (a runner) against the Decider's scenarios (§6.3)
+    Conform {
+        /// The decider id (filename stem)
+        name: String,
+        /// Shell command that reads a JSON array of {given,when} requests on
+        /// stdin and writes a JSON array of {emit|reject} outcomes on stdout
+        #[arg(long)]
+        runner: String,
+    },
     /// Derive a Decider's signature for an aggregate from the What graph
     Derive {
         /// The aggregate entity id to decide for
@@ -50,6 +59,7 @@ pub enum DeciderCommands {
 
 pub(crate) fn handle_decider(cmd: DeciderCommands) -> BoxResult {
     match cmd {
+        DeciderCommands::Conform { name, runner } => conform(&name, &runner),
         DeciderCommands::Derive { aggregate, product, force } => derive(&aggregate, product, force),
         DeciderCommands::List {} => list(),
         DeciderCommands::Show { name } => show(&name),
@@ -117,6 +127,48 @@ fn validate(name: &str, product: Option<String>) -> BoxResult {
         decider.id, decider.decides_for, decider.handles.len(), decider.emits.len(),
     );
     Ok(())
+}
+
+fn conform(name: &str, runner: &str) -> BoxResult {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+
+    let decider = load(name)?;
+    let requests = product_core::pf::decider_conform::requests(&decider);
+    let input = serde_json::to_vec(&requests)?;
+
+    let mut child = Command::new("sh")
+        .arg("-c")
+        .arg(runner)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("failed to start runner: {e}"))?;
+    {
+        let mut stdin = child.stdin.take().ok_or("runner has no stdin")?;
+        stdin.write_all(&input)?;
+    } // closing stdin lets the runner finish
+    let output = child.wait_with_output()?;
+    if !output.status.success() {
+        return Err(format!("runner failed ({}): {}", output.status, String::from_utf8_lossy(&output.stderr)).into());
+    }
+
+    let realised: Vec<product_core::pf::decider_logic::Expectation> = serde_json::from_slice(&output.stdout)
+        .map_err(|e| format!("runner output is not a JSON array of outcomes: {e}"))?;
+    let findings = product_core::pf::decider_conform::check_conformance(&decider, &realised);
+    if findings.is_empty() {
+        println!(
+            "behaviourally conformant — decider '{}': {} scenario(s) match the realised runner",
+            decider.id, decider.scenarios.len(),
+        );
+        return Ok(());
+    }
+    eprintln!("not conformant — {} finding(s):", findings.len());
+    for f in &findings {
+        eprintln!("  - [{}] {}: {}", f.focus, f.path, f.message);
+    }
+    Err(format!("{} conformance finding(s)", findings.len()).into())
 }
 
 fn simulate(name: &str) -> BoxResult {

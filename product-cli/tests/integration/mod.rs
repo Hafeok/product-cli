@@ -25051,6 +25051,30 @@ fn tc_949_decider_simulate_catches_wrong_behaviour() {
     assert!(out.stderr.contains("cannot pay unplaced"), "stderr: {}", out.stderr);
 }
 
+// FT-123 — `product decider conform`: realised code vs the oracle (§6.3).
+
+#[test]
+fn tc_956_decider_conform_matching_runner_passes() {
+    let h = Harness::new();
+    write_decider(&h, ORDER_DECIDER);
+    // a realised runner whose outputs match the Decider's simulated outcomes
+    let runner = r#"cat >/dev/null; printf '%s' '[{"emit":["OrderPlaced"]},{"reject":"pay-only-placed"},{"emit":["OrderPaid"]}]'"#;
+    let out = h.run(&["decider", "conform", "order-decider", "--runner", runner]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("behaviourally conformant"), "{}", out.stdout);
+}
+
+#[test]
+fn tc_957_decider_conform_divergent_runner_fails() {
+    let h = Harness::new();
+    write_decider(&h, ORDER_DECIDER);
+    // realised code that wrongly accepts paying an unplaced order (scenario 2)
+    let runner = r#"cat >/dev/null; printf '%s' '[{"emit":["OrderPlaced"]},{"emit":["OrderPaid"]},{"emit":["OrderPaid"]}]'"#;
+    let out = h.run(&["decider", "conform", "order-decider", "--runner", runner]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("cannot pay unplaced"), "stderr: {}", out.stderr);
+}
+
 #[test]
 fn tc_955_decider_simulate_cel_guard_and_payloads() {
     let h = Harness::new();
