@@ -1642,3 +1642,8 @@
 - [x] TC-973: dispatch requires all required slots (scenario) — passing
 - [x] TC-974: dispatch print does not write files (scenario) — passing
 
+### FT-118 — CLI↔MCP parity gate — every command exposes an MCP tool or is classified [x]
+
+- [x] ADR-060: CLI↔MCP parity is enforced by a fitness gate with a self-cleaning debt list (accepted)
+- [x] TC-980: every CLI command is MCP-exposed or explicitly classified (scenario) — passing
+

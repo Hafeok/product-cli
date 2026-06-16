@@ -36,6 +36,10 @@ principles:
   statement: MCP mutating tools build a typed fragment and validate it in-loop; never emit raw text
   enforced_by:
   - domain-mcp-registry-tests
+- id: cli-mcp-parity
+  statement: every CLI command family exposes the same functionality as an MCP tool, or is explicitly classified CLI-only
+  enforced_by:
+  - cli-mcp-parity-gate
 patterns:
 - id: slice-plus-adapter
   shape: a pure src/<slice>/ module plus a thin commands/<cmd>.rs adapter
