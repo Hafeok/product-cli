@@ -21,6 +21,11 @@ pub enum Commands {
         #[arg(long)]
         watch: bool,
     },
+    /// Archetype (How + layout + cells) — assemble and validate
+    Archetype {
+        #[command(subcommand)]
+        command: ArchetypeCommands,
+    },
     /// Start a graph-aware authoring session
     Author {
         #[command(subcommand)]

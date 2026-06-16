@@ -2,6 +2,7 @@
 
 mod adr;
 mod adr_conflicts;
+mod archetype;
 mod adr_seal;
 mod adr_write;
 mod agent_init;
@@ -53,6 +54,7 @@ pub(crate) use self::output::{render_result as render, CmdResult, Output};
 pub(crate) use self::shared::{acquire_write_lock, acquire_write_lock_typed, load_graph, load_graph_typed};
 
 pub use self::adr::AdrCommands;
+pub use self::archetype::ArchetypeCommands;
 pub use self::author::AuthorCommands;
 pub use self::cell::CellCommands;
 pub use self::checklist::ChecklistCommands;

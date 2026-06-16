@@ -1605,3 +1605,12 @@
 - [x] TC-934: cell show list and init (scenario) — passing
 - [x] TC-935: cell validate without file is a clear error (scenario) — passing
 
+### FT-114 — product archetype — assemble and validate How, layout, and cells as one [x]
+
+- [x] ADR-056: An archetype assembles How, layout, and cells from a directory and validates the whole (accepted)
+- [x] TC-940: archetype validate full assembly (scenario) — passing
+- [x] TC-941: archetype validate reports part-tagged violations (scenario) — passing
+- [x] TC-942: archetype missing how is nonconformant (scenario) — passing
+- [x] TC-943: archetype show list and init (scenario) — passing
+- [x] TC-944: archetype cells cross-check the domain (scenario) — passing
+

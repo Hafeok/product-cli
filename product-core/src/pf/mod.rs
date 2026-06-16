@@ -6,11 +6,13 @@
 //! export + seed, the open-questions facilitation driver, and the session
 //! container that the domain MCP server drives. Pure library — no MCP, no CLI.
 
+pub mod archetype;
 pub mod bundle;
 pub mod cell;
 pub mod cell_validate;
 pub mod edit;
 pub mod how;
+pub mod layout;
 pub mod how_turtle;
 pub mod how_validate;
 pub mod ids;

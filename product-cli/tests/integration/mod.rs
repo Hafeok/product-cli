@@ -24828,3 +24828,87 @@ fn tc_935_cell_validate_without_file_is_a_clear_error() {
     out.assert_exit(1);
     assert!(out.stderr.contains("no task type"), "stderr: {}", out.stderr);
 }
+
+// =============================================================================
+// FT-114 — `product archetype`: assemble + validate How + layout + cells.
+// =============================================================================
+
+const ARCH_HOW: &str = include_str!("../../../schema/examples/how-contract.example.yaml");
+const ARCH_LAYOUT: &str = include_str!("../../../schema/examples/layout-model.example.yaml");
+const ARCH_CELL: &str = include_str!("../../../schema/examples/task-type-definition.example.yaml");
+
+fn write_archetype(h: &Harness, name: &str) {
+    let base = h.dir.path().join(".product/archetypes").join(name);
+    std::fs::create_dir_all(base.join("cells")).expect("mkdir");
+    std::fs::write(base.join("how-contract.yaml"), ARCH_HOW).expect("how");
+    std::fs::write(base.join("layout.yaml"), ARCH_LAYOUT).expect("layout");
+    std::fs::write(base.join("cells/add-crud-resource.yaml"), ARCH_CELL).expect("cell");
+}
+
+#[test]
+fn tc_940_archetype_validate_full_assembly() {
+    let h = Harness::new();
+    write_archetype(&h, "example-rest-api");
+    let out = h.run(&["archetype", "validate", "example-rest-api"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("conformant"));
+    assert!(out.stdout.contains("how present, layout present, 1 cell(s)"));
+}
+
+#[test]
+fn tc_941_archetype_validate_reports_part_tagged_violations() {
+    let h = Harness::new();
+    write_archetype(&h, "a");
+    // break the layout: a rule loses its enforces (Guard 1 violation)
+    let broken = ARCH_LAYOUT.replacen("    enforces: [explicit-composition-root]\n", "", 1);
+    std::fs::write(h.dir.path().join(".product/archetypes/a/layout.yaml"), broken).expect("w");
+    let out = h.run(&["archetype", "validate", "a"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("layout/"), "violation should be tagged with its part: {}", out.stderr);
+    assert!(out.stderr.contains("Guard 1"));
+}
+
+#[test]
+fn tc_942_archetype_missing_how_is_nonconformant() {
+    let h = Harness::new();
+    std::fs::create_dir_all(h.dir.path().join(".product/archetypes/bare")).expect("mkdir");
+    let out = h.run(&["archetype", "validate", "bare"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("must declare a How contract"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_943_archetype_show_list_and_init() {
+    let h = Harness::new();
+    let init = h.run(&["archetype", "init", "rest-api"]);
+    init.assert_exit(0);
+    assert!(h.exists(".product/archetypes/rest-api/how-contract.yaml"));
+    assert!(h.exists(".product/archetypes/rest-api/layout.yaml"));
+    assert!(h.exists(".product/archetypes/rest-api/cells/example-task.yaml"));
+    h.run(&["archetype", "init", "rest-api"]).assert_exit(1); // no --force
+    // the scaffold validates, and list/show work
+    h.run(&["archetype", "validate", "rest-api"]).assert_exit(0);
+    assert!(h.run(&["archetype", "list"]).stdout.contains("rest-api"));
+    assert!(h.run(&["archetype", "show", "rest-api"]).stdout.contains("archetype: rest-api"));
+}
+
+#[test]
+fn tc_944_archetype_cells_cross_check_the_domain() {
+    let h = Harness::new();
+    write_archetype(&h, "example-rest-api");
+    // add a concrete dangling domain pointer to a cell
+    let p = h.dir.path().join(".product/archetypes/example-rest-api/cells/add-crud-resource.yaml");
+    let yaml = std::fs::read_to_string(&p).expect("read");
+    let with_ghost = yaml.replacen(
+        "derived_from: [\"domain:entity\", \"app-contract:endpoint\"]",
+        "derived_from: [\"domain:entity\", \"domain:Ghost\", \"app-contract:endpoint\"]",
+        1,
+    );
+    std::fs::write(&p, with_ghost).expect("write");
+    // capture a What graph (no Ghost) so domain cross-check engages
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    let out = h.run(&["archetype", "validate", "example-rest-api"]);
+    out.assert_exit(0); // dangling domain pointer is a warning
+    assert!(out.stdout.contains("domain: cross-checked"));
+    assert!(out.stderr.contains("domain:Ghost"), "stderr: {}", out.stderr);
+}
