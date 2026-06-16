@@ -32,6 +32,10 @@ principles:
   statement: no unwrap() in non-test code
   enforced_by:
   - clippy-unwrap-gate
+- id: structured-mcp-ops
+  statement: MCP mutating tools build a typed fragment and validate it in-loop; never emit raw text
+  enforced_by:
+  - domain-mcp-registry-tests
 patterns:
 - id: slice-plus-adapter
   shape: a pure src/<slice>/ module plus a thin commands/<cmd>.rs adapter
@@ -48,6 +52,14 @@ patterns:
   - conformance-fidelity
   enforced_by:
   - pyshacl-cross-check
+- id: mcp-tool-surface
+  shape: a ToolDef (name + JSON inputSchema) + a handler returning {ok,node,violations} + a registry dispatch arm + a call_tool test
+  realizes:
+  - structured-mcp-ops
+  applied_by:
+  - add-mcp-tool
+  enforced_by:
+  - domain-mcp-registry-tests
 application_contract:
   id: product-cli-app
   language: Rust
