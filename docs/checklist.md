@@ -1632,3 +1632,12 @@
 - [x] TC-963: work-unit show and init (scenario) — passing
 - [x] TC-964: work-unit validate without file is a clear error (scenario) — passing
 
+### FT-117 — product cell dispatch — instantiate a task type into frozen SPMC work units [x]
+
+- [x] ADR-059: Cell dispatch instantiates a task type into frozen work units bound to real entities (accepted)
+- [x] TC-970: dispatch instantiates work units (scenario) — passing
+- [x] TC-971: dispatched work units validate (scenario) — passing
+- [x] TC-972: dispatch rejects binding to non-entity (scenario) — passing
+- [x] TC-973: dispatch requires all required slots (scenario) — passing
+- [x] TC-974: dispatch print does not write files (scenario) — passing
+

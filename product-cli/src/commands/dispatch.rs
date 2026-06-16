@@ -13,23 +13,19 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
     match command {
         Commands::Adr { command } => adr::handle_adr(command, fmt),
         Commands::AgentInit { watch } => agent_init::handle_agent_init(watch),
-        Commands::Archetype { command } => archetype::handle_archetype(command),
         Commands::Author { command } => author::handle_author(command),
-        Commands::Cell { command } => cell::handle_cell(command),
         Commands::Checklist { command } => checklist::handle_checklist(command),
         Commands::Completions { shell } => completions::handle_completions(&shell, cli_command),
         Commands::Conformance { command } => conformance::handle_conformance(command, fmt),
         Commands::Context { .. } => dispatch_context(command),
         Commands::CycleTimes { .. } => dispatch_cycle_times(command, fmt),
         Commands::Dep { command } => dep::handle_dep(command, fmt),
-        Commands::Domain { command } => domain::handle_domain_cmd(command),
         Commands::Drift { command } => drift::handle_drift(command, fmt),
         Commands::Feature { command } => feature::handle_feature(command, fmt),
         Commands::Forecast { .. } => dispatch_forecast(command, fmt),
         Commands::Gap { command } => gap::handle_gap(command, fmt),
         Commands::Graph { command } => graph_cmd::handle_graph(command, fmt),
         Commands::Hash { command } => hash::handle_hash(command),
-        Commands::How { command } => how::handle_how(command),
         Commands::Impact { id } => render(status::handle_impact(&id, fmt), fmt),
         Commands::Implement { .. } => dispatch_implement(command),
         Commands::Init { .. } => dispatch_init(command),
@@ -51,7 +47,20 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Tags { command } => tags::handle_tags(command, fmt),
         Commands::Test { command } => test_cmd::handle_test(command, fmt),
         Commands::Verify { .. } => dispatch_verify(command, fmt),
+        // Product-Framework families route through a sub-dispatcher (keeps this match small).
+        c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::WorkUnit { .. }) => dispatch_pf(c),
+    }
+}
+
+/// Sub-dispatcher for the Product-Framework command families.
+fn dispatch_pf(command: Commands) -> BoxResult {
+    match command {
+        Commands::Archetype { command } => archetype::handle_archetype(command),
+        Commands::Cell { command } => cell::handle_cell(command),
+        Commands::Domain { command } => domain::handle_domain_cmd(command),
+        Commands::How { command } => how::handle_how(command),
         Commands::WorkUnit { command } => work_unit::handle_work_unit(command),
+        _ => unreachable!("dispatch_pf called with non-pf variant"),
     }
 }
 

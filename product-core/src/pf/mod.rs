@@ -10,6 +10,7 @@ pub mod archetype;
 pub mod bundle;
 pub mod cell;
 pub mod cell_validate;
+pub mod dispatch;
 pub mod edit;
 pub mod how;
 pub mod how_edit;

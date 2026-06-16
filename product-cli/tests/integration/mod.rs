@@ -25033,3 +25033,79 @@ fn tc_964_work_unit_validate_without_file_is_a_clear_error() {
     out.assert_exit(1);
     assert!(out.stderr.contains("no work unit"), "stderr: {}", out.stderr);
 }
+
+// =============================================================================
+// FT-117 — `product cell dispatch`: task type → concrete frozen work units.
+// =============================================================================
+
+fn setup_dispatch(h: &Harness) {
+    write_cell(h, CELL_EXAMPLE); // add-crud-resource at .product/cell.yaml
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "Order", "--label", "Order", "--context", "Sales", "--definition", "an order"]).assert_exit(0);
+}
+
+fn full_binds() -> Vec<&'static str> {
+    vec!["--bind", "entity=Order", "--bind", "fields=title", "--bind", "operations=CRUD", "--bind", "validation=nonempty", "--bind", "views=list"]
+}
+
+#[test]
+fn tc_970_dispatch_instantiates_work_units() {
+    let h = Harness::new();
+    setup_dispatch(&h);
+    let mut args = vec!["cell", "dispatch"];
+    args.extend(full_binds());
+    let out = h.run(&args);
+    out.assert_exit(0);
+    assert!(h.exists(".product/work-units/contract-order.yaml"));
+    assert!(h.exists(".product/work-units/handler-order.yaml"));
+    // the contract cell's domain:entity resolved to the bound entity Order
+    let wu = h.read(".product/work-units/contract-order.yaml");
+    assert!(wu.contains("domain:Order"), "{wu}");
+    assert!(wu.contains("frozen: true"));
+    assert!(wu.contains("hash: sha256:"));
+}
+
+#[test]
+fn tc_971_dispatched_work_units_validate() {
+    let h = Harness::new();
+    setup_dispatch(&h);
+    let mut args = vec!["cell", "dispatch"];
+    args.extend(full_binds());
+    h.run(&args).assert_exit(0);
+    // a produced work unit passes `product work-unit validate`
+    let out = h.run(&["work-unit", "validate", "--file", ".product/work-units/handler-order.yaml"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("domain: cross-checked"));
+}
+
+#[test]
+fn tc_972_dispatch_rejects_binding_to_non_entity() {
+    let h = Harness::new();
+    setup_dispatch(&h);
+    let out = h.run(&["cell", "dispatch", "--bind", "entity=Ghost", "--bind", "fields=f", "--bind", "operations=R", "--bind", "validation=v", "--bind", "views=l"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("not an entity in the What graph"), "stderr: {}", out.stderr);
+    assert!(!h.exists(".product/work-units/contract-ghost.yaml"));
+}
+
+#[test]
+fn tc_973_dispatch_requires_all_required_slots() {
+    let h = Harness::new();
+    setup_dispatch(&h);
+    let out = h.run(&["cell", "dispatch", "--bind", "entity=Order"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("required slot"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_974_dispatch_print_does_not_write_files() {
+    let h = Harness::new();
+    setup_dispatch(&h);
+    let mut args = vec!["cell", "dispatch", "--print"];
+    args.extend(full_binds());
+    let out = h.run(&args);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("# contract-order"));
+    assert!(out.stdout.contains("domain:Order"));
+    assert!(!h.exists(".product/work-units/contract-order.yaml"), "--print must not write files");
+}

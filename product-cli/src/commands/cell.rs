@@ -20,6 +20,23 @@ use super::BoxResult;
 
 #[derive(Subcommand)]
 pub enum CellCommands {
+    /// Dispatch a task type into concrete frozen work units (bind slots)
+    Dispatch {
+        #[arg(long)]
+        file: Option<PathBuf>,
+        /// Bind a slot to a value, repeatable: --bind entity=Order
+        #[arg(long = "bind", value_name = "SLOT=VALUE")]
+        binds: Vec<String>,
+        /// Product whose What graph to bind/verify against (defaults to config)
+        #[arg(long)]
+        product: Option<String>,
+        /// Directory to write the work units (default .product/work-units/)
+        #[arg(long)]
+        out: Option<PathBuf>,
+        /// Print the work units to stdout instead of writing files
+        #[arg(long)]
+        print: bool,
+    },
     /// Scaffold a starter task-type definition
     Init {
         /// The task-type id (e.g. add-crud-resource)
@@ -59,8 +76,52 @@ pub(crate) fn handle_cell(cmd: CellCommands) -> BoxResult {
         CellCommands::Validate { file, product } => validate(file, product),
         CellCommands::Show { file } => show(file),
         CellCommands::List { kind, file } => list(kind, file),
+        CellCommands::Dispatch { file, binds, product, out, print } => dispatch(file, binds, product, out, print),
         CellCommands::Init { id, archetype, file, force } => init(id, archetype, file, force),
     }
+}
+
+fn dispatch(file: Option<PathBuf>, binds: Vec<String>, product: Option<String>, out: Option<PathBuf>, print: bool) -> BoxResult {
+    use product_core::pf::dispatch as disp;
+    let task = load(file)?;
+    let domain = load_domain(product);
+    let mut bindings = Vec::new();
+    for b in &binds {
+        let (k, val) = b.split_once('=').ok_or_else(|| format!("--bind expects SLOT=VALUE, got {b:?}"))?;
+        bindings.push((k.trim().to_string(), val.trim().to_string()));
+    }
+    let result = disp::dispatch(&task, &bindings, domain.as_ref());
+
+    for w in result.violations.iter().filter(|r| r.severity == "warning") {
+        eprintln!("warning: [{}] {}: {}", w.focus, w.path, w.message);
+    }
+    if result.violations.iter().any(|r| r.severity == "violation") {
+        let violations: Vec<_> = result.violations.iter().filter(|r| r.severity == "violation").collect();
+        eprintln!("cannot dispatch — {} binding violation(s):", violations.len());
+        for v in &violations {
+            eprintln!("  - [{}] {}: {}", v.focus, v.path, v.message);
+        }
+        return Err(format!("{} dispatch binding violation(s)", violations.len()).into());
+    }
+    write_work_units(&result.work_units, out, print)
+}
+
+fn write_work_units(work_units: &[product_core::pf::work_unit::WorkUnit], out: Option<PathBuf>, print: bool) -> BoxResult {
+    if print {
+        for wu in work_units {
+            println!("# {}\n{}", wu.id, wu.to_yaml()?);
+        }
+        return Ok(());
+    }
+    let dir = out.unwrap_or_else(|| super::shared::domain_root().join(".product").join("work-units"));
+    std::fs::create_dir_all(&dir)?;
+    for wu in work_units {
+        let path = dir.join(format!("{}.yaml", wu.id));
+        std::fs::write(&path, wu.to_yaml()?)?;
+        println!("Dispatched {} -> {}", wu.id, path.display());
+    }
+    println!("{} work unit(s) written to {}", work_units.len(), dir.display());
+    Ok(())
 }
 
 fn path(file: Option<PathBuf>) -> PathBuf {
