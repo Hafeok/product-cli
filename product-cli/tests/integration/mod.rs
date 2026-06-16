@@ -24913,6 +24913,25 @@ fn tc_944_archetype_cells_cross_check_the_domain() {
     assert!(out.stderr.contains("domain:Ghost"), "stderr: {}", out.stderr);
 }
 
+#[test]
+fn tc_945_archetype_check_layout_against_the_tree() {
+    let h = Harness::new();
+    write_archetype(&h, "chk");
+    // a controlled layout checked against the harness tree (which has
+    // product.toml and, initially, no secrets)
+    let layout = "version: \"1\"\narchetype: chk\nlayout:\n  - id: manifest\n    must_exist: \"product.toml\"\n    cardinality: \"exactly 1\"\n    enforces: [provable-layout]\n  - id: nosec\n    must_not_exist: \"**/*.secrets.*\"\n    rationale: \"secrets belong in a vault\"\n    enforces: [secrets-out]\n";
+    std::fs::write(h.dir.path().join(".product/archetypes/chk/layout.yaml"), layout).expect("w");
+    // conformant: product.toml present, no secrets in the tree
+    let ok = h.run(&["archetype", "check", "chk"]);
+    ok.assert_exit(0);
+    assert!(ok.stdout.contains("layout-conformant"), "stdout: {}", ok.stdout);
+    // drop a secret file → the must_not_exist prohibition fires
+    std::fs::write(h.dir.path().join("config.secrets.json"), "x").expect("w");
+    let bad = h.run(&["archetype", "check", "chk"]);
+    bad.assert_exit(1);
+    assert!(bad.stderr.contains("must_not_exist"), "stderr: {}", bad.stderr);
+}
+
 // =============================================================================
 // FT-115 — `product how add/set`: build the Why cascade + contracts granularly.
 // =============================================================================

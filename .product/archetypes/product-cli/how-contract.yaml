@@ -40,6 +40,10 @@ principles:
   statement: every CLI command family exposes the same functionality as an MCP tool, or is explicitly classified CLI-only
   enforced_by:
   - cli-mcp-parity-gate
+- id: behavior-verified-end-to-end
+  statement: every CLI command family is exercised end-to-end through assert_cmd integration tests, each backed by a TC with runner config
+  enforced_by:
+  - integration-tests
 patterns:
 - id: slice-plus-adapter
   shape: a pure src/<slice>/ module plus a thin commands/<cmd>.rs adapter
@@ -64,6 +68,14 @@ patterns:
   - add-mcp-tool
   enforced_by:
   - domain-mcp-registry-tests
+- id: integration-test
+  shape: an assert_cmd-driven #[test] fn tc_XXX_* in tests/integration/mod.rs plus a TC-XXX doc with runner cargo-test wired to that fn name
+  realizes:
+  - behavior-verified-end-to-end
+  applied_by:
+  - implement-slice
+  enforced_by:
+  - integration-tests
 application_contract:
   id: product-cli-app
   language: Rust

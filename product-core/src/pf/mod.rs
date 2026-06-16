@@ -16,6 +16,7 @@ pub mod edit;
 pub mod how;
 pub mod how_edit;
 pub mod layout;
+pub mod layout_check;
 pub mod how_turtle;
 pub mod how_validate;
 pub mod ids;

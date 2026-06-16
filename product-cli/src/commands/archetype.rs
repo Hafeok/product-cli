@@ -21,6 +21,11 @@ use super::BoxResult;
 
 #[derive(Subcommand)]
 pub enum ArchetypeCommands {
+    /// Check the archetype's layout against the actual repository tree (§4.3)
+    Check {
+        /// The archetype name
+        name: String,
+    },
     /// Scaffold a new archetype (How + layout + an example cell)
     Init {
         /// The archetype name (e.g. rest-api)
@@ -48,10 +53,33 @@ pub enum ArchetypeCommands {
 pub(crate) fn handle_archetype(cmd: ArchetypeCommands) -> BoxResult {
     match cmd {
         ArchetypeCommands::Validate { name, product } => validate(&name, product),
+        ArchetypeCommands::Check { name } => check(&name),
         ArchetypeCommands::Show { name } => show(&name),
         ArchetypeCommands::List {} => list(),
         ArchetypeCommands::Init { name, force } => init(&name, force),
     }
+}
+
+/// Apply the archetype's layout model to the actual repository tree (§4.3
+/// layout-conformance — the cheapest gate). `validate` checks the model is
+/// well-formed; `check` checks the repo conforms to it.
+fn check(name: &str) -> BoxResult {
+    let root = super::shared::domain_root();
+    let arch = Archetype::load_from_dir(&archetypes_dir().join(name), name)?;
+    let Some(layout) = &arch.layout else {
+        println!("archetype '{name}': no layout model to check");
+        return Ok(());
+    };
+    let violations = product_core::pf::layout_check::check_layout(layout, &root);
+    if violations.is_empty() {
+        println!("layout-conformant — {} rule(s) over {} hold against the tree", layout.layout.len(), root.display());
+        return Ok(());
+    }
+    eprintln!("layout violations — {}:", violations.len());
+    for v in &violations {
+        eprintln!("  - [{}] {}: {}", v.focus, v.path, v.message);
+    }
+    Err(format!("{} layout violation(s)", violations.len()).into())
 }
 
 fn archetypes_dir() -> PathBuf {

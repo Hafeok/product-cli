@@ -87,7 +87,7 @@ rationale).
   future work).
 - It does not enforce the layout against an actual repository tree (the layout
   checker validates the model's well-formedness, not a filesystem); applying
-  layout rules to files is future work.
+  layout rules to files is FT-120 (`product archetype check`).
 - Standalone work-unit (SPMC) validation remains a separate increment.
 
 ## Acceptance

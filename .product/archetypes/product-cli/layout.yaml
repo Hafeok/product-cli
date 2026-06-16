@@ -2,6 +2,7 @@ version: "1.0"
 archetype: product-cli
 allowlist: true
 layout:
+  # --- allowlist: where each kind of thing legally lives (the skeleton) ---
   - id: core-slices-here
     may_exist_here: "product-core/src/pf/**"
     rationale: "pure domain slices live in product-core/src/pf"
@@ -10,11 +11,40 @@ layout:
     may_exist_here: "product-cli/src/commands/**"
     rationale: "thin CLI adapters live in product-cli/src/commands"
     enforces: [slice-cohesion]
-  - id: shapes-required
+
+  # --- must-exist: the spine an archetype needs (proactive, fires on absence) ---
+  - id: what-shapes-required
     must_exist: "schema/shapes/shapes.shacl.ttl"
     cardinality: "exactly 1"
-    rationale: "the vendored SHACL shapes are the conformance source of truth"
+    rationale: "the vendored What SHACL shapes are the conformance source of truth"
     enforces: [conformance-fidelity]
+  - id: how-shapes-required
+    must_exist: "schema/shapes/how.shacl.ttl"
+    cardinality: "exactly 1"
+    rationale: "the vendored How SHACL shapes back the How conformance checker"
+    enforces: [conformance-fidelity]
+  - id: member-has-manifest
+    for_each: "product-*"
+    must_exist: "{dir}/Cargo.toml"
+    cardinality: "1 per scope"
+    rationale: "every workspace member is a crate with its own manifest"
+    enforces: [pure-core]
+
+  # --- must-co-exist: completeness (the pf subsystem declares its module root) ---
+  - id: pf-has-module-root
+    must_co_exist:
+      when: "product-core/src/pf"
+      require: ["mod.rs"]
+    rationale: "the pf slice subsystem must declare its module root"
+    enforces: [slice-cohesion]
+
+  # --- must-not-exist: actively dangerous, deserves a named error (Guard 2) ---
+  - id: no-secrets-in-source
+    must_not_exist: "**/*.secrets.*"
+    rationale: "secrets never live in source control"
+    enforces: [pure-core]
+
+  # --- no-orphans: allowlist anchor over the architecturally meaningful skeleton ---
   - id: no-orphans-pf
     no_orphans: "product-core/src/pf/**"
     rationale: "every pf source file must have a declared, legal home"
