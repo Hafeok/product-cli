@@ -327,4 +327,9 @@ pub enum Commands {
         #[arg(long)]
         ci: bool,
     },
+    /// Work units (SPMC) — validate, show, and scaffold
+    WorkUnit {
+        #[command(subcommand)]
+        command: WorkUnitCommands,
+    },
 }

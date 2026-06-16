@@ -26,6 +26,8 @@ pub mod seed;
 pub mod session;
 pub mod turtle;
 pub mod validate;
+pub mod work_unit;
+pub mod work_unit_validate;
 
 pub use how::HowContract;
 pub use model::DomainGraph;

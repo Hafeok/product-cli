@@ -6,7 +6,7 @@ use super::{
     adr, agent_init, archetype, author, cell, checklist, completions, conformance, context, cycle_times, dep,
     domain, drift, feature, gap, graph_cmd, hash, hooks, how, implement, init, mcp_cmd,
     metrics_cmd, migrate, onboard, pattern, preflight, prompts_cmd, render, request_cmd, schema,
-    status, tags, test_cmd, BoxResult, Commands,
+    status, tags, test_cmd, work_unit, BoxResult, Commands,
 };
 
 pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapCommand) -> BoxResult {
@@ -51,6 +51,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Tags { command } => tags::handle_tags(command, fmt),
         Commands::Test { command } => test_cmd::handle_test(command, fmt),
         Commands::Verify { .. } => dispatch_verify(command, fmt),
+        Commands::WorkUnit { command } => work_unit::handle_work_unit(command),
     }
 }
 

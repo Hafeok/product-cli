@@ -1623,3 +1623,12 @@
 - [x] TC-953: how add unknown element is rejected (scenario) — passing
 - [x] TC-954: how set preserves added statements (scenario) — passing
 
+### FT-116 — product work-unit — validate an SPMC work unit against the What graph and How [x]
+
+- [x] ADR-058: Work units are validated as frozen SPMC manifests cross-checked against What and How (accepted)
+- [x] TC-960: work-unit validate conformant example (scenario) — passing
+- [x] TC-961: work-unit unfrozen context is a violation (scenario) — passing
+- [x] TC-962: work-unit domain pointer cross-checks the graph (scenario) — passing
+- [x] TC-963: work-unit show and init (scenario) — passing
+- [x] TC-964: work-unit validate without file is a clear error (scenario) — passing
+

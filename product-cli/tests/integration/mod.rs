@@ -24971,3 +24971,65 @@ fn tc_954_how_set_preserves_added_statements() {
     let show = h.run(&["how", "show"]);
     assert!(show.stdout.contains("statements: 1"), "statement must be preserved across re-set: {}", show.stdout);
 }
+
+// =============================================================================
+// FT-116 — `product work-unit`: SPMC work-unit validation cross-checked.
+// =============================================================================
+
+const WU_EXAMPLE: &str = include_str!("../../../schema/examples/work-unit.example.yaml");
+
+fn write_wu(h: &Harness, yaml: &str) {
+    std::fs::create_dir_all(h.dir.path().join(".product")).expect("mkdir");
+    std::fs::write(h.dir.path().join(".product/work-unit.yaml"), yaml).expect("write wu");
+}
+
+#[test]
+fn tc_960_work_unit_validate_conformant_example() {
+    let h = Harness::new();
+    write_wu(&h, WU_EXAMPLE);
+    let out = h.run(&["work-unit", "validate"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("conformant"));
+    assert!(out.stdout.contains("CompleteTaskHandler.cs"));
+}
+
+#[test]
+fn tc_961_work_unit_unfrozen_context_is_a_violation() {
+    let h = Harness::new();
+    write_wu(&h, &WU_EXAMPLE.replacen("frozen: true", "frozen: false", 1));
+    let out = h.run(&["work-unit", "validate"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("must be frozen"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_962_work_unit_domain_pointer_cross_checks_the_graph() {
+    let h = Harness::new();
+    // example derives from domain:Task; capture a graph without Task
+    write_wu(&h, WU_EXAMPLE);
+    h.run(&["domain", "new", "context", "Other", "--label", "Other"]).assert_exit(0);
+    let out = h.run(&["work-unit", "validate"]);
+    out.assert_exit(0); // dangling domain ref is a warning
+    assert!(out.stdout.contains("domain: cross-checked"));
+    assert!(out.stderr.contains("domain:Task"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_963_work_unit_show_and_init() {
+    let h = Harness::new();
+    let init = h.run(&["work-unit", "init", "my-unit"]);
+    init.assert_exit(0);
+    assert!(h.exists(".product/work-unit.yaml"));
+    h.run(&["work-unit", "init", "x"]).assert_exit(1); // no --force
+    let show = h.run(&["work-unit", "show"]);
+    assert!(show.stdout.contains("work-unit: my-unit"));
+    assert!(show.stdout.contains("frozen=true"));
+}
+
+#[test]
+fn tc_964_work_unit_validate_without_file_is_a_clear_error() {
+    let h = Harness::new();
+    let out = h.run(&["work-unit", "validate"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("no work unit"), "stderr: {}", out.stderr);
+}

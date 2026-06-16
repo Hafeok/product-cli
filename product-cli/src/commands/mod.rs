@@ -50,6 +50,7 @@ mod shared;
 mod status;
 mod tags;
 mod test_cmd;
+mod work_unit;
 
 pub(crate) use self::output::{render_result as render, CmdResult, Output};
 pub(crate) use self::shared::{acquire_write_lock, acquire_write_lock_typed, load_graph, load_graph_typed};
@@ -79,6 +80,7 @@ pub use root_enum::Commands;
 
 
 pub use self::test_cmd::TestCommands;
+pub use self::work_unit::WorkUnitCommands;
 
 type BoxResult = Result<(), Box<dyn std::error::Error>>;
 
