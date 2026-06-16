@@ -218,6 +218,23 @@ impl DomainGraph {
     pub fn node_count(&self) -> usize {
         self.counts().iter().map(|(_, n)| n).sum()
     }
+
+    /// Every node id paired with its kind, in canonical class order.
+    pub fn ids(&self) -> Vec<(String, NodeKind)> {
+        let mut out = Vec::new();
+        self.contexts.iter().for_each(|n| out.push((n.id.clone(), NodeKind::BoundedContext)));
+        self.entities.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Entity)));
+        self.value_objects.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ValueObject)));
+        self.relations.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Relation)));
+        self.invariants.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Invariant)));
+        self.context_mappings.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ContextMapping)));
+        self.commands.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Command)));
+        self.events.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Event)));
+        self.read_models.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ReadModel)));
+        self.wireframe_steps.iter().for_each(|n| out.push((n.id.clone(), NodeKind::WireframeStep)));
+        self.flows.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Flow)));
+        out
+    }
 }
 
 #[cfg(test)]

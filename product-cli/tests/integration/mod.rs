@@ -25128,3 +25128,40 @@ fn tc_965_work_unit_validate_discovers_archetype_how() {
     // p1 is a real pattern in that How → no "not a pattern" warning for it
     assert!(!out.stderr.contains("applies 'p1' — not a pattern"), "stderr: {}", out.stderr);
 }
+
+// =============================================================================
+// FT-119 — CLI↔MCP parity for `domain`: product_domain_* tools via the server.
+// =============================================================================
+
+#[test]
+fn tc_981_domain_mcp_tools_have_cli_parity() {
+    let h = Harness::new(); // product.toml name = "test"
+    let rpc = [
+        r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_domain_new","arguments":{"kind":"context","id":"Sales","label":"Sales"}}}"#,
+        r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_domain_new","arguments":{"kind":"entity","id":"Order","label":"Order","context":"Sales","definition":"an order"}}}"#,
+        r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"product_domain_validate","arguments":{}}}"#,
+        r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"product_domain_list","arguments":{}}}"#,
+    ].join("\n");
+    let out = h.run_with_stdin(&["mcp", "--write"], &rpc);
+    out.assert_exit(0);
+    // both creates succeeded
+    assert_eq!(domain_rpc_result(&out.stdout, 1).expect("ctx")["ok"], serde_json::json!(true));
+    assert_eq!(domain_rpc_result(&out.stdout, 2).expect("ent")["ok"], serde_json::json!(true));
+    // validate is conformant; list reflects both nodes — same result as the CLI
+    assert_eq!(domain_rpc_result(&out.stdout, 3).expect("val")["conformant"], serde_json::json!(true));
+    assert_eq!(domain_rpc_result(&out.stdout, 4).expect("list")["count"], serde_json::json!(2));
+}
+
+#[test]
+fn tc_982_domain_mcp_new_rejects_non_conformant() {
+    let h = Harness::new();
+    let rpc = [
+        r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_domain_new","arguments":{"kind":"context","id":"Sales","label":"Sales"}}}"#,
+        r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_domain_new","arguments":{"kind":"event","id":"Ghost","label":"Ghost","context":"Sales","changes":"Nope"}}}"#,
+    ].join("\n");
+    let out = h.run_with_stdin(&["mcp", "--write"], &rpc);
+    out.assert_exit(0);
+    let r = domain_rpc_result(&out.stdout, 2).expect("event");
+    assert_eq!(r["ok"], serde_json::json!(false));
+    assert!(r["violations"][0]["message"].as_str().unwrap().contains("§3.2"));
+}

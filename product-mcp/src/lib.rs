@@ -9,6 +9,7 @@
 pub mod registry;
 pub mod domain;
 mod adr_lifecycle;
+mod domain_handlers;
 mod field_handlers;
 mod health_handlers;
 mod pattern_handlers;

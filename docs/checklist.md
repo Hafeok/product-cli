@@ -1647,3 +1647,9 @@
 - [x] ADR-060: CLI↔MCP parity is enforced by a fitness gate with a self-cleaning debt list (accepted)
 - [x] TC-980: every CLI command is MCP-exposed or explicitly classified (scenario) — passing
 
+### FT-119 — product_domain_* MCP tools — CLI↔MCP parity for the What graph [x]
+
+- [x] ADR-061: The domain (What) graph is exposed as product_domain_* MCP tools (accepted)
+- [x] TC-981: domain MCP tools have CLI parity (scenario) — passing
+- [x] TC-982: domain MCP new rejects non-conformant (scenario) — passing
+

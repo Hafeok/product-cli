@@ -209,6 +209,15 @@ fn dispatch_tool(
         "product_request_validate" => super::request_handlers::handle_request_validate(args, repo_root),
         "product_request_apply" => super::request_handlers::handle_request_apply(args, repo_root),
         "product_request_delete" => super::request_handlers::handle_request_delete(args, repo_root),
+        // Domain (What) graph — CLI↔MCP parity (FT-119)
+        "product_domain_list" => super::domain_handlers::handle_domain_list(args, repo_root),
+        "product_domain_show" => super::domain_handlers::handle_domain_show(args, repo_root),
+        "product_domain_validate" => super::domain_handlers::handle_domain_validate(args, repo_root),
+        "product_domain_export" => super::domain_handlers::handle_domain_export(args, repo_root),
+        "product_domain_context" => super::domain_handlers::handle_domain_context(args, repo_root),
+        "product_domain_new" => super::domain_handlers::handle_domain_new(args, repo_root),
+        "product_domain_edit" => super::domain_handlers::handle_domain_edit(args, repo_root),
+        "product_domain_rm" => super::domain_handlers::handle_domain_rm(args, repo_root),
         _ => Err(format!("Tool handler not implemented: {}", name)),
     }
 }
