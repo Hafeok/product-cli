@@ -25109,3 +25109,22 @@ fn tc_974_dispatch_print_does_not_write_files() {
     assert!(out.stdout.contains("domain:Order"));
     assert!(!h.exists(".product/work-units/contract-order.yaml"), "--print must not write files");
 }
+
+#[test]
+fn tc_965_work_unit_validate_discovers_archetype_how() {
+    // A dispatched work unit lives under .product/archetypes/<name>/work-units/;
+    // validate must cross-check it against that archetype's how-contract, not
+    // only the top-level .product/how-contract.yaml.
+    let h = Harness::new();
+    let base = h.dir.path().join(".product/archetypes/demo");
+    std::fs::create_dir_all(base.join("work-units")).expect("mkdir");
+    std::fs::write(base.join("how-contract.yaml"),
+        "archetype: demo\napplication_contract:\n  id: app\n  language: Rust\npatterns:\n  - id: p1\n    shape: a shape\n    realizes: [pr1]\nprinciples:\n  - id: pr1\n    statement: s\n    enforced_by: [v1]\n").expect("how");
+    std::fs::write(base.join("work-units/wu.yaml"),
+        "id: wu\nschema: s\nprompt: p\ncontext:\n  derived_from: [\"app-contract:app\"]\n  frozen: true\nproduces:\n  artifact: a.rs\napplies: [p1]\n").expect("wu");
+    let out = h.run(&["work-unit", "validate", "--file", ".product/archetypes/demo/work-units/wu.yaml"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("how: cross-checked"), "should load the archetype How: {}", out.stdout);
+    // p1 is a real pattern in that How → no "not a pattern" warning for it
+    assert!(!out.stderr.contains("applies 'p1' — not a pattern"), "stderr: {}", out.stderr);
+}

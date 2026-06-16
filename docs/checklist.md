@@ -1631,6 +1631,7 @@
 - [x] TC-962: work-unit domain pointer cross-checks the graph (scenario) — passing
 - [x] TC-963: work-unit show and init (scenario) — passing
 - [x] TC-964: work-unit validate without file is a clear error (scenario) — passing
+- [x] TC-965: work-unit validate discovers the archetype's How contract (scenario) — passing
 
 ### FT-117 — product cell dispatch — instantiate a task type into frozen SPMC work units [x]
 

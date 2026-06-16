@@ -68,15 +68,28 @@ fn load_domain(product: Option<String>) -> Option<DomainGraph> {
     DomainSession::load(&session_dir(&super::shared::domain_root(), &p)).ok().map(|s| s.graph)
 }
 
-fn load_how() -> Option<HowContract> {
-    let p = super::shared::domain_root().join(".product").join("how-contract.yaml");
-    std::fs::read_to_string(p).ok().and_then(|t| HowContract::from_yaml(&t).ok())
+/// Discover the How contract to cross-check against. A dispatched unit lives
+/// under `.product/archetypes/<name>/work-units/`, so prefer its archetype's
+/// `how-contract.yaml`; otherwise fall back to `.product/how-contract.yaml`.
+fn load_how(file: &Option<PathBuf>) -> Option<HowContract> {
+    let mut candidates: Vec<PathBuf> = Vec::new();
+    if let Some(f) = file {
+        if f.parent().and_then(|p| p.file_name()) == Some(std::ffi::OsStr::new("work-units")) {
+            if let Some(arch) = f.parent().and_then(|p| p.parent()) {
+                candidates.push(arch.join("how-contract.yaml"));
+            }
+        }
+    }
+    candidates.push(super::shared::domain_root().join(".product").join("how-contract.yaml"));
+    candidates.into_iter()
+        .find_map(|p| std::fs::read_to_string(p).ok())
+        .and_then(|t| HowContract::from_yaml(&t).ok())
 }
 
 fn validate(file: Option<PathBuf>, product: Option<String>) -> BoxResult {
-    let wu = load(file)?;
+    let wu = load(file.clone())?;
     let domain = load_domain(product);
-    let how = load_how();
+    let how = load_how(&file);
     let results = validate_work_unit(&wu, domain.as_ref(), how.as_ref());
 
     for w in results.iter().filter(|r| r.severity == "warning") {

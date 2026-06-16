@@ -14,6 +14,7 @@ tests:
 - TC-962
 - TC-963
 - TC-964
+- TC-965
 domains:
 - api
 - data-model
@@ -49,7 +50,9 @@ contract (FT-111).
 - A work-unit YAML file, default `.product/work-unit.yaml`, overridable with
   `--file`.
 - Best-effort context: the default product's What graph (`--product` to
-  override) and the How contract (`.product/how-contract.yaml`).
+  override) and the How contract. A dispatched unit under
+  `.product/archetypes/<name>/work-units/` cross-checks against that
+  archetype's `how-contract.yaml`; otherwise `.product/how-contract.yaml`.
 
 ### Behaviour
 
