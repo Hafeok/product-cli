@@ -24912,3 +24912,62 @@ fn tc_944_archetype_cells_cross_check_the_domain() {
     assert!(out.stdout.contains("domain: cross-checked"));
     assert!(out.stderr.contains("domain:Ghost"), "stderr: {}", out.stderr);
 }
+
+// =============================================================================
+// FT-115 — `product how add/set`: build the Why cascade + contracts granularly.
+// =============================================================================
+
+#[test]
+fn tc_950_how_build_full_contract_from_scratch() {
+    let h = Harness::new(); // product.toml name = "test"
+    h.run(&["how", "add", "decision", "slices", "--decision", "one folder per feature", "--rationale", "change locality", "--licenses", "cohesion"]).assert_exit(0);
+    h.run(&["how", "add", "principle", "cohesion", "--statement", "code that changes together lives together", "--enforced-by", "layout-audit"]).assert_exit(0);
+    h.run(&["how", "add", "pattern", "slice-folder", "--shape", "one folder per feature", "--realizes", "cohesion"]).assert_exit(0);
+    h.run(&["how", "set", "app-contract", "--id", "app", "--language", "Rust", "--layering", "api,application,domain"]).assert_exit(0);
+    h.run(&["how", "add", "app-statement", "deps-inward", "--statement", "domain may not reference api", "--enforced-by", "layering-audit"]).assert_exit(0);
+    h.run(&["how", "set", "infra-contract", "--id", "infra", "--satisfies", "app"]).assert_exit(0);
+    h.run(&["how", "add", "resource", "compute", "--kind", "compute", "--choice", "Container Apps"]).assert_exit(0);
+    h.run(&["how", "add", "interface", "api", "--surface", "rest", "--standard", "OpenAPI", "--derived-from", "domain:Task"]).assert_exit(0);
+
+    let show = h.run(&["how", "show"]);
+    assert!(show.stdout.contains("top-decisions: 1"));
+    assert!(show.stdout.contains("infrastructure-contract: infra satisfies app (1 resource(s))"));
+    // the built-up How is conformant
+    h.run(&["how", "validate"]).assert_exit(0);
+}
+
+#[test]
+fn tc_951_how_add_duplicate_id_is_rejected() {
+    let h = Harness::new();
+    h.run(&["how", "add", "principle", "x", "--statement", "s"]).assert_exit(0);
+    let out = h.run(&["how", "add", "pattern", "x", "--shape", "s", "--realizes", "x"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("already exists"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_952_how_add_resource_requires_infra_contract() {
+    let h = Harness::new();
+    let out = h.run(&["how", "add", "resource", "db", "--kind", "data", "--choice", "pg"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("set the infrastructure contract first"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_953_how_add_unknown_element_is_rejected() {
+    let h = Harness::new();
+    let out = h.run(&["how", "add", "widget", "x"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("unknown element"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_954_how_set_preserves_added_statements() {
+    let h = Harness::new();
+    h.run(&["how", "set", "app-contract", "--id", "app", "--language", "Rust"]).assert_exit(0);
+    h.run(&["how", "add", "app-statement", "s1", "--statement", "x"]).assert_exit(0);
+    // re-set the contract metadata; the statement must survive
+    h.run(&["how", "set", "app-contract", "--id", "app", "--language", "Rust", "--runtime", "tokio"]).assert_exit(0);
+    let show = h.run(&["how", "show"]);
+    assert!(show.stdout.contains("statements: 1"), "statement must be preserved across re-set: {}", show.stdout);
+}

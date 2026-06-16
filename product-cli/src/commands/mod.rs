@@ -28,6 +28,7 @@ mod graph_cmd;
 mod hash;
 mod hooks;
 mod how;
+mod how_fields;
 mod implement;
 mod init;
 mod init_helpers;

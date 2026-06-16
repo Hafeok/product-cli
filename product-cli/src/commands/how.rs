@@ -15,7 +15,20 @@ use std::path::PathBuf;
 use super::BoxResult;
 
 #[derive(Subcommand)]
+#[allow(clippy::large_enum_variant)]
 pub enum HowCommands {
+    /// Add a Why-cascade element or contract part:
+    /// decision | principle | pattern | interface | app-statement | resource
+    Add {
+        /// The element kind to add
+        element: String,
+        /// The new element id
+        id: String,
+        #[command(flatten)]
+        fields: super::how_fields::HowFields,
+        #[arg(long)]
+        file: Option<PathBuf>,
+    },
     /// Project the How contract into the graph as Turtle
     Export {
         #[arg(long)]
@@ -39,6 +52,18 @@ pub enum HowCommands {
         #[arg(long)]
         file: Option<PathBuf>,
     },
+    /// Set a singleton contract: app-contract | infra-contract (with --id)
+    Set {
+        /// One of: app-contract, infra-contract
+        target: String,
+        /// The contract id
+        #[arg(long)]
+        id: String,
+        #[command(flatten)]
+        fields: super::how_fields::HowFields,
+        #[arg(long)]
+        file: Option<PathBuf>,
+    },
     /// Show a summary of the How contract
     Show {
         #[arg(long)]
@@ -53,6 +78,8 @@ pub enum HowCommands {
 
 pub(crate) fn handle_how(cmd: HowCommands) -> BoxResult {
     match cmd {
+        HowCommands::Add { element, id, fields, file } => add(element, id, fields, file),
+        HowCommands::Set { target, id, fields, file } => set(target, id, fields, file),
         HowCommands::Validate { file } => validate(file),
         HowCommands::Show { file } => show(file),
         HowCommands::List { kind, file } => list(kind, file),
@@ -75,6 +102,60 @@ fn load(file: Option<PathBuf>) -> Result<HowContract, Box<dyn std::error::Error>
         )
     })?;
     Ok(HowContract::from_yaml(&text)?)
+}
+
+/// Load the contract, or start a fresh one keyed to the repo product so the
+/// How can be built up element by element.
+fn load_or_init(file: &Option<PathBuf>) -> Result<HowContract, Box<dyn std::error::Error>> {
+    let p = path(file.clone());
+    match std::fs::read_to_string(&p) {
+        Ok(text) => Ok(HowContract::from_yaml(&text)?),
+        Err(_) => Ok(HowContract {
+            archetype: super::shared::default_product_name().unwrap_or_else(|| "archetype".to_string()),
+            ..Default::default()
+        }),
+    }
+}
+
+fn save(contract: &HowContract, file: &Option<PathBuf>) -> BoxResult {
+    let p = path(file.clone());
+    if let Some(parent) = p.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(&p, contract.to_yaml()?)?;
+    Ok(())
+}
+
+fn add(element: String, id: String, fields: super::how_fields::HowFields, file: Option<PathBuf>) -> BoxResult {
+    use product_core::pf::how_edit as edit;
+    let mut c = load_or_init(&file)?;
+    match element.as_str() {
+        "decision" => edit::add_decision(&mut c, fields.decision(&id))?,
+        "principle" => edit::add_principle(&mut c, fields.principle(&id))?,
+        "pattern" => edit::add_pattern(&mut c, fields.pattern(&id))?,
+        "interface" => edit::add_interface(&mut c, fields.interface(&id))?,
+        "app-statement" => edit::add_app_statement(&mut c, fields.app_statement(&id))?,
+        "resource" => edit::add_resource(&mut c, fields.resource(&id))?,
+        other => return Err(format!(
+            "unknown element {other:?} — use decision, principle, pattern, interface, app-statement, or resource"
+        ).into()),
+    }
+    save(&c, &file)?;
+    println!("Added {element} '{id}'");
+    Ok(())
+}
+
+fn set(target: String, id: String, fields: super::how_fields::HowFields, file: Option<PathBuf>) -> BoxResult {
+    use product_core::pf::how_edit as edit;
+    let mut c = load_or_init(&file)?;
+    match target.as_str() {
+        "app-contract" => edit::set_app_contract(&mut c, fields.app_contract(&id)),
+        "infra-contract" => edit::set_infra_contract(&mut c, fields.infra_contract(&id)),
+        other => return Err(format!("unknown target {other:?} — use app-contract or infra-contract").into()),
+    }
+    save(&c, &file)?;
+    println!("Set {target} '{id}'");
+    Ok(())
 }
 
 fn validate(file: Option<PathBuf>) -> BoxResult {

@@ -12,6 +12,7 @@ pub mod cell;
 pub mod cell_validate;
 pub mod edit;
 pub mod how;
+pub mod how_edit;
 pub mod layout;
 pub mod how_turtle;
 pub mod how_validate;
