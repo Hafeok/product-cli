@@ -7,9 +7,11 @@ depends-on:
 - FT-121
 adrs:
 - ADR-062
+- ADR-063
 tests:
 - TC-948
 - TC-949
+- TC-955
 domains:
 - api
 - data-model
@@ -68,13 +70,23 @@ Exits 0 with `sound + complete` when both hold; exits 1 listing each finding.
 The interpreter is total: a missing field makes a comparison false, an unknown
 command rejects — it never panics.
 
+### Expressions and payloads (ADR-063)
+
+Beyond the structured lifecycle predicates, a guard may be a **CEL** expression
+(`expr:`) over `state`/`command`/`event` maps, and events/commands carry
+**payloads** (`{event|command, with}`). Assignment values in `evolve.set` and an
+emitted event's `with` are literals, or CEL expressions marked by a leading `=`
+(e.g. `amount: "=command.amount"`). CEL is non-Turing-complete, so the gate stays
+total and deterministic.
+
 ## Out of scope
 
-- Command/event **payloads** and richer guard **expressions** (CEL) — FT-122 is
-  the lifecycle state machine; payloads arrive as a follow-on.
-- Checking realised code against the scenarios — that is FT-123 (§6.3).
+- Checking realised code against the scenarios — that is FT-123 (§6.3). The same
+  scenarios are the oracle there.
 
 ## Acceptance
 
 - TC-948 — a sound, complete Decider simulates clean (exit 0).
 - TC-949 — a scenario whose expectation contradicts the logic fails (exit 1).
+- TC-955 — a CEL guard over a payload, with a computed emitted payload, simulates
+  sound + complete.

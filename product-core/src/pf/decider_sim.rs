@@ -1,57 +1,95 @@
 //! Decider simulation — the pure interpreter plus the scenario oracle (§3.3).
 //!
-//! `evolve`/`replay` fold events into state; `decide` evaluates a command's
-//! guards (first failure rejects with its invariant) and otherwise emits the
-//! sanctioned events. Every function is total and deterministic — the property
-//! that lets a Decider be proven *sound and complete before any code exists*.
-//! `simulate` runs the authored scenarios as the oracle: soundness (every
-//! scenario's actual outcome matches its expectation) and completeness (every
-//! handled command is exercised).
+//! `evolve`/`replay` fold events (with payloads) into state; `decide` evaluates
+//! a command's guards (structured or CEL; first failure rejects with its
+//! invariant) and otherwise emits its events with computed payloads. Every
+//! function is total and deterministic — the property that lets a Decider be
+//! proven *sound and complete before any code exists*. `simulate` runs the
+//! authored scenarios as the oracle: soundness (every scenario's outcome matches
+//! its expectation) and completeness (every handled command is exercised).
 
 use super::decider::Decider;
-use super::decider_logic::{DeciderLogic, Predicate, Scenario, State};
+use super::decider_cel::{eval_bool, eval_value};
+use super::decider_logic::{
+    CommandRef, DeciderLogic, EventRef, Guard, Payload, Predicate, Scenario, State,
+};
 use super::validate::Violation;
+
+/// An emitted event with its computed payload.
+#[derive(Debug, Clone, PartialEq)]
+pub struct EmittedEvent {
+    pub event: String,
+    pub payload: Payload,
+}
 
 /// The result of running a command through `decide`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Outcome {
-    /// Accepted, emitting these event ids.
-    Accepted(Vec<String>),
+    /// Accepted, emitting these events.
+    Accepted(Vec<EmittedEvent>),
     /// Rejected for this reason (an invariant id, or a structural message).
     Rejected(String),
 }
 
-/// Fold a sequence of events into aggregate state from `initial`.
-pub fn replay(logic: &DeciderLogic, events: &[String]) -> State {
+/// Fold a sequence of events into aggregate state from `initial`. Each event's
+/// `set` values are evaluated against `{state, event}` (literal or `=` CEL).
+pub fn replay(logic: &DeciderLogic, given: &[EventRef]) -> Result<State, String> {
     let mut state = logic.initial.clone();
-    for ev in events {
-        if let Some(rule) = logic.evolve.iter().find(|r| &r.on == ev) {
-            for (k, v) in &rule.set {
-                state.insert(k.clone(), v.clone());
-            }
+    for ev in given {
+        let Some(rule) = logic.evolve.iter().find(|r| r.on == ev.id()) else {
+            continue;
+        };
+        let payload = ev.payload();
+        let bindings = [("state", &state), ("event", &payload)];
+        let mut next = state.clone();
+        for (field, value) in &rule.set {
+            next.insert(field.clone(), eval_value(value, &bindings)?);
         }
+        state = next;
     }
-    state
+    Ok(state)
 }
 
 /// Decide a command against the current state: the first failing guard rejects
-/// with its invariant; otherwise the command's events are emitted.
-pub fn decide(logic: &DeciderLogic, state: &State, command: &str) -> Outcome {
-    let Some(rule) = logic.decide.iter().find(|r| r.on == command) else {
-        return Outcome::Rejected(format!("no decide rule for command '{command}'"));
+/// with its invariant; otherwise the command's events are emitted with payloads.
+pub fn decide(logic: &DeciderLogic, state: &State, command: &CommandRef) -> Result<Outcome, String> {
+    let Some(rule) = logic.decide.iter().find(|r| r.on == command.id()) else {
+        return Ok(Outcome::Rejected(format!("no decide rule for command '{}'", command.id())));
     };
+    let cmd_payload = command.payload();
+    let bindings = [("state", state), ("command", &cmd_payload)];
     for g in &rule.guards {
-        if !eval(&g.when, state) {
-            return Outcome::Rejected(g.else_reject.clone());
+        if !guard_holds(g, &bindings) {
+            return Ok(Outcome::Rejected(g.else_reject.clone()));
         }
     }
-    Outcome::Accepted(rule.emit.clone())
+    let mut emitted = Vec::new();
+    for spec in &rule.emit {
+        let mut payload = Payload::new();
+        for (field, value) in spec.payload() {
+            payload.insert(field, eval_value(&value, &bindings)?);
+        }
+        emitted.push(EmittedEvent { event: spec.id().to_string(), payload });
+    }
+    Ok(Outcome::Accepted(emitted))
 }
 
-/// Evaluate a structured predicate against state. Total: a missing field makes
-/// every comparison false (except `exists: false`).
-fn eval(pred: &Predicate, state: &State) -> bool {
-    let actual = state.get(&pred.field);
+/// Evaluate a guard — a CEL expression if present, else a structured predicate.
+fn guard_holds(g: &Guard, bindings: &[(&str, &Payload)]) -> bool {
+    if let Some(expr) = &g.expr {
+        return eval_bool(expr, bindings);
+    }
+    match &g.when {
+        Some(pred) => eval_predicate(pred, bindings),
+        None => true,
+    }
+}
+
+/// Evaluate a structured predicate against the `state` binding. Total: a missing
+/// field makes every comparison false (except `exists: false`).
+fn eval_predicate(pred: &Predicate, bindings: &[(&str, &Payload)]) -> bool {
+    let state = bindings.iter().find(|(n, _)| *n == "state").map(|(_, m)| *m);
+    let actual = state.and_then(|s| s.get(&pred.field));
     if let Some(v) = &pred.eq {
         return actual == Some(v);
     }
@@ -77,9 +115,17 @@ pub struct ScenarioResult {
 
 /// Run one scenario through the interpreter and compare to its expectation.
 pub fn run_scenario(logic: &DeciderLogic, scenario: &Scenario) -> ScenarioResult {
-    let state = replay(logic, &scenario.given);
-    let outcome = decide(logic, &state, &scenario.when);
-    let (passed, detail) = match (&scenario.then.reject, &scenario.then.emit, &outcome) {
+    let outcome = replay(logic, &scenario.given)
+        .and_then(|state| decide(logic, &state, &scenario.when));
+    let (passed, detail) = match outcome {
+        Err(e) => (false, format!("logic error: {e}")),
+        Ok(outcome) => compare(scenario, &outcome),
+    };
+    ScenarioResult { name: scenario.name.clone(), passed, detail }
+}
+
+fn compare(scenario: &Scenario, outcome: &Outcome) -> (bool, String) {
+    match (&scenario.then.reject, &scenario.then.emit, outcome) {
         (Some(inv), _, Outcome::Rejected(actual)) => {
             (inv == actual, format!("expected reject '{inv}', got '{actual}'"))
         }
@@ -87,18 +133,20 @@ pub fn run_scenario(logic: &DeciderLogic, scenario: &Scenario) -> ScenarioResult
             (false, format!("expected reject '{inv}', but it accepted {a:?}"))
         }
         (None, Some(emit), Outcome::Accepted(actual)) => {
-            (emit == actual, format!("expected emit {emit:?}, got {actual:?}"))
+            let expected = expected_events(emit);
+            (expected == *actual, format!("expected emit {expected:?}, got {actual:?}"))
         }
         (None, Some(emit), Outcome::Rejected(r)) => {
-            (false, format!("expected emit {emit:?}, but it rejected '{r}'"))
+            (false, format!("expected emit {:?}, but it rejected '{r}'", expected_events(emit)))
         }
         (None, None, _) => (false, "scenario declares neither emit nor reject".to_string()),
-    };
-    ScenarioResult {
-        name: scenario.name.clone(),
-        passed,
-        detail: if passed { "ok".to_string() } else { detail },
     }
+}
+
+fn expected_events(refs: &[EventRef]) -> Vec<EmittedEvent> {
+    refs.iter()
+        .map(|r| EmittedEvent { event: r.id().to_string(), payload: r.payload() })
+        .collect()
 }
 
 /// Simulate a Decider against its scenarios: soundness (every scenario passes)
@@ -116,9 +164,9 @@ pub fn simulate(decider: &Decider) -> Vec<Violation> {
             "§3.3 A Decider needs at least one scenario to prove its behaviour."));
     }
     for s in &decider.scenarios {
-        if !decider.handles.contains(&s.when) {
+        if !decider.handles.iter().any(|h| h == s.when.id()) {
             out.push(v(&s.name, "scenario",
-                &format!("§3.3 scenario '{}' uses command '{}', which the Decider does not handle.", s.name, s.when)));
+                &format!("§3.3 scenario '{}' uses command '{}', which the Decider does not handle.", s.name, s.when.id())));
             continue;
         }
         let r = run_scenario(logic, s);
@@ -127,7 +175,7 @@ pub fn simulate(decider: &Decider) -> Vec<Violation> {
         }
     }
     for cmd in &decider.handles {
-        if !decider.scenarios.iter().any(|s| &s.when == cmd) {
+        if !decider.scenarios.iter().any(|s| s.when.id() == cmd) {
             out.push(v(&decider.id, "completeness",
                 &format!("§3.3 incomplete: command '{cmd}' has no scenario — behaviour is unspecified.")));
         }

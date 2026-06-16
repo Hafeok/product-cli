@@ -25051,6 +25051,65 @@ fn tc_949_decider_simulate_catches_wrong_behaviour() {
     assert!(out.stderr.contains("cannot pay unplaced"), "stderr: {}", out.stderr);
 }
 
+#[test]
+fn tc_955_decider_simulate_cel_guard_and_payloads() {
+    let h = Harness::new();
+    let yaml = r#"id: account-decider
+decides_for: Account
+handles:
+- Charge
+emits:
+- Charged
+logic:
+  initial: {}
+  evolve:
+  - on: Opened
+    set:
+      limit: "=event.limit"
+  decide:
+  - on: Charge
+    guards:
+    - expr: "command.amount <= state.limit"
+      else_reject: over-limit
+    emit:
+    - event: Charged
+      with:
+        amount: "=command.amount"
+scenarios:
+- name: within limit
+  given:
+  - event: Opened
+    with:
+      limit: 100
+  when:
+    command: Charge
+    with:
+      amount: 40
+  then:
+    emit:
+    - event: Charged
+      with:
+        amount: 40
+- name: over limit
+  given:
+  - event: Opened
+    with:
+      limit: 100
+  when:
+    command: Charge
+    with:
+      amount: 250
+  then:
+    reject: over-limit
+"#;
+    let dir = h.dir.path().join(".product/deciders");
+    std::fs::create_dir_all(&dir).expect("mkdir");
+    std::fs::write(dir.join("account-decider.yaml"), yaml).expect("write");
+    let out = h.run(&["decider", "simulate", "account-decider"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("sound + complete"), "{}", out.stdout);
+}
+
 // =============================================================================
 // FT-115 — `product how add/set`: build the Why cascade + contracts granularly.
 // =============================================================================
