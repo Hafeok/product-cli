@@ -10,7 +10,7 @@
 >
 > It is a conformant instantiation of the **Two Pillars Specification Framework** for software; every construct maps to a named Two Pillars concept ([§8](#8-conformance-to-the-two-pillars)).
 
-*Published under a permissive license. Contributions welcome. This document describes the format; it ships no proprietary catalog content.*
+*Published under a dual license: the specification text under CC BY 4.0, and accompanying shapes/code under Apache-2.0 ([License](#license)). This document describes the format; it ships no proprietary catalog content.*
 
 ---
 
@@ -122,7 +122,7 @@ Three conformance rules keep the authored Decider from drifting from the model i
 The Decider sits at the **boundary between the What and the How**: its signature is pure What (derived from the model), its logic is the executable behavioural specification, and it becomes the **oracle** the realised behaviour is later checked against (§6). It earns its place twice over —
 
 - **before realisation**, the Decider is *simulated* against scenarios drawn from the flows (a flow gives a *given* of prior events, a *when* command, and a *then* of expected events). This proves the behaviour is **sound and complete before any code exists** — invalid commands are rejected for the right reason, valid ones produce the right events, and no view needs a field no event carries. This is the first gate, and the cheapest, because it runs as pure function calls with no infrastructure.
-- **after realisation**, the same scenarios run against the realised code's behaviour, which must produce **identical** outputs (§6.2, behavioural conformance) — turning that check from "looks complete" into "computes the same thing."
+- **after realisation**, the same scenarios run against the realised code's behaviour, which must produce **identical** outputs (§6.3, behavioural conformance) — turning that check from "looks complete" into "computes the same thing."
 
 > **The realisation constraint this implies.** For the after-realisation check to be possible, the realised code must keep its decision logic in a pure core, separable from input/output. A conformant How therefore states this as a contract (§4.2): decision logic is pure and isolable. A What-side artifact (the Decider) thus imposes a How-side constraint — and that constraint is itself verified, not assumed.
 
@@ -266,7 +266,27 @@ The framework is built on verification, but it deliberately ships **no verificat
 - **Verifications are deterministic gates.** Conformance is established **by construction, not by instruction** — a check that fails the build, not a request to be careful.
 - **Every verification names what it protects.** A verification cites the principle, contract, or model element it enforces — which is what makes the rationale trace ([§5](#5-work-units-and-the-rationale-trace)) honest and impact analysis possible.
 
-### 6.2 The required verification kinds
+### 6.2 How a verification runs — the anatomy of a check
+
+The framework supplies no checks, but it does fix the **mechanism** every check obeys, so that a verdict means the same thing across instances and across kinds. A conformant verification is a function of declared inputs to a verdict, with no hidden state:
+
+```
+verify(artifact, oracle, criteria) -> Verdict { pass | fail, findings[] }
+```
+
+- **Inputs are frozen and declared.** A verification reads exactly three things: the **artifact** under test, the **oracle** it is judged against, and the **criteria** that define conformance. Each is a named element of the graph, pinned by version — nothing is fetched mid-run, exactly as a work unit's context is frozen (§5). The same inputs always produce the same verdict; this is what makes a verification a *deterministic gate* (§6.1) rather than an opinion.
+
+- **The oracle is derived, never authored in the check.** What a verification compares against comes from the spec, not from the check's own body: behavioural conformance is judged against the **Decider's** flow-derived scenarios (§3.3); domain conformance against the **domain model**; layout conformance against the **repository layout model** (§4.3); contract and seam conformance against the **contracts** (§4.2). A check that embeds its own expected answers instead of deriving them from the model is non-conformant — it can pass while the model and the code disagree.
+
+- **Criteria are explicit and versioned.** Each artifact kind carries its acceptance criteria as named, individually-evaluable conditions. A verification evaluates *each* criterion and records a **finding** per criterion — `pass`, `fail`, or `not-applicable` with the reason. A bare boolean is not a conformant verdict; the per-criterion findings are what make a failure diagnosable (which criterion, against which oracle element) and what let the rationale trace retract exactly the claims that failed (§5).
+
+- **The verdict is the conjunction, and it gates.** An artifact is **accepted only if every applicable criterion passes**; one failing finding fails the verdict, and a failed verdict stops the build (§6.1). There is no partial acceptance and no override-by-assertion — conformance is established by the check passing, not by anyone declaring it passed.
+
+- **Each verification names what it protects.** Every check cites the principle, contract, or model element it enforces (§6.1). This citation is not documentation: it is the edge (`enforces`, §9) that links a green verdict to the trace claim it justifies and to the impact-analysis graph. A check that protects nothing nameable should not exist (the earn-their-place rule, §4.1).
+
+> **Why the oracle-derivation rule matters most.** The single property that separates this from "we have tests" is that **the thing a check compares against is computed from the spec, not written into the check.** That is what makes a passing verdict mean "the realisation computes what the model says," and it is why behavioural conformance can reuse the *same* scenarios the Decider was simulated against before any code existed (§3.3) — the oracle is authored once, in the What, and consumed twice.
+
+### 6.3 The required verification kinds
 
 A conformant instance must have verifications covering, at minimum:
 
@@ -327,16 +347,16 @@ This framework is a conformant instantiation of the Two Pillars Specification Fr
 |---|---|---|
 | **What specification** | Domain model (structure) + event model (behaviour) + Decider (executable behaviour) | [§3](#3-the-what--structure-and-behaviour) |
 | **How specification** | Decisions/principles/patterns + contracts (incl. repository layout model) + interface standards | [§4](#4-the-how--realising-the-what) |
-| **Work unit (e.g. SPMC)** | Work unit: one bounded transformation, frozen input, one artifact | [§5](#5-work-units-and-the-rationale-trace) |
-| **Criteria + judge + verdict** | Verification — the required kinds and the coherence bar | [§6](#6-verification--the-conformance-bar) |
-| **Derivation contract** | The typed links: derived-from, conforms-to, applies, realizes, enforces | [§9](#9-encoding-and-the-derivation-contract) |
-| **Verdict (extended)** | `release_done` — a verdict over a composition | [§7](#7-delivery--bringing-the-what-to-a-verifiable-done) |
+| **SPMC (Schema, Prompt, Model, Context)** | Work unit: one bounded transformation, frozen input, one artifact | [§5](#5-work-units-and-the-rationale-trace) |
+| **Derivation contract** | The typed links of [§9](#9-encoding-and-the-derivation-contract) (e.g. `derived_from`, `conforms_to`, `applies`, `realizes`, `enforces`) | [§9](#9-encoding-and-the-derivation-contract) |
+| **Verification (criteria → judge → verdict)** | Verification — the required kinds and the coherence bar | [§6](#6-verification--the-conformance-bar) |
+| **Verdict (extended to a composition)** | `release_done` — a verdict over a composition | [§7](#7-delivery--bringing-the-what-to-a-verifiable-done) |
 
 ### 8.1 Conformance levels
 
 - **Level 1 — Described.** A conformant What (domain + event model) exists as a machine-readable graph with declared bounded contexts and mappings. Where behaviour is interesting, a Decider (§3.3) makes it executable and is simulated sound and complete before any realisation.
 - **Level 2 — Realised.** A conformant How exists (including a repository layout model); work units reference the What and How by pointer; interface contracts use standards and are generated from the domain model.
-- **Level 3 — Verified.** Verifications of all required kinds ([§6.2](#62-the-required-verification-kinds)) exist — including layout conformance — meet the coherence bar, gate acceptance, and back the rationale trace.
+- **Level 3 — Verified.** Verifications of all required kinds ([§6.3](#63-the-required-verification-kinds)) exist — including layout conformance — meet the coherence bar, gate acceptance, and back the rationale trace.
 - **Level 4 — Delivered.** Features and releases are graph partitions; "done" is computed by predicate; progress is the fraction passing verification.
 
 *Levels are cumulative. A claim of conformance states the highest level satisfied.*
@@ -371,7 +391,7 @@ These links are what make the framework **queryable**: impact analysis ("what de
 6. The How captures decisions/principles/patterns (declared once, referenced by pointer, each decision carrying rationale), contracts (stated checkably, including that decision logic is kept in a pure, isolable core), and interface contracts (industry standards, generated from the domain model).
 7. The How includes a glob-based **repository layout model** stating which files must exist (with cardinality), may exist where, must co-exist, and must not exist, with **allowlist semantics** (every file matches an allow rule or fails). Two guards are normative: every rule — especially every prohibition — cites the principle it enforces, and explicit prohibitions are reserved for actively-dangerous cases, the allowlist handling the rest. The layout model is dual-read (it scaffolds and it verifies) and checks tree shape only, layered below the content audits.
 8. A work unit is single-purpose with frozen input, references the What/How by pointer, and emits a rationale trace.
-9. No output is accepted without a verdict; verifications meet the coherence bar, are deterministic gates, and each names what it protects. Layout conformance is the cheapest verification and runs first; behavioural simulation runs before realisation; where a Decider exists, behavioural conformance checks the realised behaviour produces identical outputs to it.
+9. No output is accepted without a verdict. A verification is a deterministic function of frozen, declared inputs — the artifact, an oracle **derived from the model** (Decider, domain model, layout model, or contracts — never authored inside the check), and versioned criteria — producing a per-criterion finding and a verdict that is the conjunction of those findings; one failure fails the build, with no override-by-assertion. Verifications meet the coherence bar and each names what it protects. Layout conformance is the cheapest verification and runs first; behavioural simulation runs before realisation; where a Decider exists, behavioural conformance checks the realised behaviour produces identical outputs to it.
 10. The rationale trace must be true: every claimed principle is enforced by a passing verification or the claim is retracted.
 11. Delivery units (features, releases) are subgraphs; "done" is a verifiable predicate; a release cut must be closed.
 12. The delivery model is in scope; delivery practice (cadence, ceremonies) is not.
@@ -386,8 +406,10 @@ These links are what make the framework **queryable**: impact analysis ("what de
 
 ## License
 
-This specification is published under a permissive license (e.g. [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) for the text, or Apache-2.0 if you prefer a code-style license). Replace this section with the chosen license before publishing.
+The **specification text** in this repository is licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/) — see [`LICENSE-docs`](../LICENSE-docs).
+
+Accompanying **shapes, schemas, and code** (RDF vocabulary, SHACL shapes, examples, tooling) are licensed under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) — see [`LICENSE`](../LICENSE).
 
 ## Contributing
 
-Proposals, conformance reports, and reference tooling are welcome. See `CONTRIBUTING.md` (to be added). The specification is versioned; breaking changes follow a documented deprecation policy so that existing conformant instances are never silently invalidated.
+Proposals, conformance reports, and reference tooling are welcome. See [`CONTRIBUTING.md`](../CONTRIBUTING.md). The specification is versioned ([`CHANGELOG.md`](../CHANGELOG.md)); breaking changes follow a documented deprecation policy so that existing conformant instances are never silently invalidated.
