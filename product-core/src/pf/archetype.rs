@@ -11,12 +11,15 @@ use std::path::Path;
 
 use crate::error::{ProductError, Result};
 
+use super::archetype_turtle::archetype_to_turtle;
 use super::cell::TaskType;
 use super::cell_validate::validate_cell;
 use super::how::HowContract;
 use super::how_validate::validate_how;
 use super::layout::{validate_layout, LayoutModel};
 use super::model::DomainGraph;
+use super::rules_how::archetype_rules;
+use super::sparql_rules::run_rules;
 use super::validate::Violation;
 
 /// An assembled archetype.
@@ -65,6 +68,7 @@ impl Archetype {
         if let Some(layout) = &self.layout {
             tag("layout", validate_layout(layout), &mut out);
             self.check_layout_archetype(layout, &mut out);
+            self.check_enforces_resolve(&mut out);
         }
         for (src, cell) in &self.cells {
             tag(src, validate_cell(cell, domain, self.how.as_ref()), &mut out);
@@ -77,6 +81,20 @@ impl Archetype {
         if how.layout_model.is_some() && self.layout.is_none() {
             out.push(warning("how", "layout_model",
                 "the How references a layout_model but no layout.yaml was found in the archetype."));
+        }
+    }
+
+    /// §4.3 Guard 1 + §5 honesty: a layout rule's `enforces` must resolve to a
+    /// principle or decision the How actually defines — else the rationale it
+    /// claims is a dangling reference. Run as a SPARQL rule over the combined
+    /// How+layout projection (`sparql_rules::ENFORCES_RESOLVES`) rather than a
+    /// native field-walk, so the constraint lives in the graph.
+    fn check_enforces_resolve(&self, out: &mut Vec<Violation>) {
+        let Some(how) = &self.how else { return };
+        let ttl = archetype_to_turtle(how, self.layout.as_ref());
+        for mut v in run_rules(&ttl, archetype_rules()) {
+            v.focus = format!("layout/{}", v.focus);
+            out.push(v);
         }
     }
 

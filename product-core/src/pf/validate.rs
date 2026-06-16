@@ -1,15 +1,19 @@
 //! Conformance checker mirroring the framework SHACL shapes.
 //!
-//! Each rule here corresponds one-to-one to a shape in
-//! `schema/shapes/shapes.shacl.ttl` (the "What" half: §3.1 structure, §3.2
-//! behaviour), carrying the same framework-section message. "Passes this
-//! checker" therefore means "passes `shapes.shacl.ttl`" — the exported
-//! Turtle is verifiable against the real shapes with `pyshacl`.
+//! Splits along the §6 line: presence/cardinality checks (non-empty definition,
+//! cardinality, rationale, …) stay native here, while the load-bearing
+//! cross-references (§3.1/§3.2: an entity in a real context, an event changing a
+//! real entity, a command targeting an entity + emitting an event) are SPARQL
+//! rules in `rules_what`, run over the Turtle projection by `sparql_rules`. The
+//! exported Turtle remains verifiable against `shapes.shacl.ttl` with `pyshacl`.
 
 use serde::Serialize;
 
 use super::ids::NodeKind;
 use super::model::DomainGraph;
+use super::rules_what::what_rules;
+use super::sparql_rules::run_rules;
+use super::turtle::to_turtle;
 
 /// A single conformance violation, shaped like the SHACL report rows the MCP
 /// contract returns in `{ ok, node, violations[] }`.
@@ -44,7 +48,7 @@ pub fn validate_graph(graph: &DomainGraph) -> Vec<Violation> {
         check_context(c, &mut v);
     }
     for e in &graph.entities {
-        check_entity(graph, e, &mut v);
+        check_entity(e, &mut v);
     }
     for r in &graph.relations {
         check_relation(r, &mut v);
@@ -55,15 +59,10 @@ pub fn validate_graph(graph: &DomainGraph) -> Vec<Violation> {
     for i in &graph.invariants {
         check_invariant(i, &mut v);
     }
-    for ev in &graph.events {
-        check_event(graph, ev, &mut v);
-    }
-    for cmd in &graph.commands {
-        check_command(graph, cmd, &mut v);
-    }
     for rm in &graph.read_models {
         check_read_model(rm, &mut v);
     }
+    v.extend(run_rules(&to_turtle(graph, "validate"), what_rules()));
     v
 }
 
@@ -79,7 +78,7 @@ pub fn validate_node(graph: &DomainGraph, id: &str) -> Vec<Violation> {
         }
         Some(NodeKind::Entity) => {
             if let Some(e) = graph.entities.iter().find(|n| n.id == id) {
-                check_entity(graph, e, &mut v);
+                check_entity(e, &mut v);
             }
         }
         Some(NodeKind::Relation) => {
@@ -97,24 +96,20 @@ pub fn validate_node(graph: &DomainGraph, id: &str) -> Vec<Violation> {
                 check_invariant(i, &mut v);
             }
         }
-        Some(NodeKind::Event) => {
-            if let Some(ev) = graph.events.iter().find(|n| n.id == id) {
-                check_event(graph, ev, &mut v);
-            }
-        }
-        Some(NodeKind::Command) => {
-            if let Some(cmd) = graph.commands.iter().find(|n| n.id == id) {
-                check_command(graph, cmd, &mut v);
-            }
-        }
         Some(NodeKind::ReadModel) => {
             if let Some(rm) = graph.read_models.iter().find(|n| n.id == id) {
                 check_read_model(rm, &mut v);
             }
         }
-        // ValueObject, WireframeStep, Flow have no blocking shape.
+        // Event/Command cross-references are graph rules (below); ValueObject,
+        // WireframeStep, Flow have no blocking shape.
         _ => {}
     }
+    // §3.1/§3.2 cross-references run as SPARQL over the projection, scoped to
+    // the node just built (the ADR-053 in-loop path).
+    let mut graph_v = run_rules(&to_turtle(graph, "validate"), what_rules());
+    graph_v.retain(|x| x.focus == id);
+    v.extend(graph_v);
     v
 }
 
@@ -127,14 +122,10 @@ fn check_context(c: &super::model::BoundedContext, v: &mut Vec<Violation>) {
     }
 }
 
-fn check_entity(graph: &DomainGraph, e: &super::model::Entity, v: &mut Vec<Violation>) {
+fn check_entity(e: &super::model::Entity, v: &mut Vec<Violation>) {
     if e.definition.trim().is_empty() {
         v.push(Violation::new(&e.id, "definition",
             "§3.1 An entity must carry a business-language definition."));
-    }
-    if !graph.is_kind(&e.context, NodeKind::BoundedContext) {
-        v.push(Violation::new(&e.id, "inContext",
-            "§3.1 An entity must belong to exactly one bounded context (never a flat model)."));
     }
 }
 
@@ -168,28 +159,6 @@ fn check_invariant(i: &super::model::Invariant, v: &mut Vec<Violation>) {
 }
 
 // --- §3.2 behaviour -------------------------------------------------------
-
-fn check_event(graph: &DomainGraph, ev: &super::model::Event, v: &mut Vec<Violation>) {
-    if !graph.is_kind(&ev.changes, NodeKind::Entity) {
-        v.push(Violation::new(&ev.id, "changes",
-            "§3.2 Every event must change a real domain entity (the load-bearing relation; behaviour may not reference structure that does not exist)."));
-    }
-    if !graph.is_kind(&ev.context, NodeKind::BoundedContext) {
-        v.push(Violation::new(&ev.id, "inContext", "§3.2 An event must live in a bounded context."));
-    }
-}
-
-fn check_command(graph: &DomainGraph, cmd: &super::model::Command, v: &mut Vec<Violation>) {
-    if !graph.is_kind(&cmd.targets, NodeKind::Entity) {
-        v.push(Violation::new(&cmd.id, "targets",
-            "§3.2 A command must target a real aggregate (entity)."));
-    }
-    let emits_event = cmd.emits.iter().any(|id| graph.is_kind(id, NodeKind::Event));
-    if !emits_event {
-        v.push(Violation::new(&cmd.id, "emits",
-            "§3.2 A command must emit at least one event (command coverage)."));
-    }
-}
 
 fn check_read_model(rm: &super::model::ReadModel, v: &mut Vec<Violation>) {
     if rm.projects.iter().all(|s| s.trim().is_empty()) {

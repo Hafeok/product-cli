@@ -64,3 +64,16 @@ fn part_violations_are_tagged_with_their_source() {
 fn missing_dir_is_an_error() {
     assert!(Archetype::load_from_dir(std::path::Path::new("/no/such/archetype"), "x").is_err());
 }
+
+#[test]
+fn layout_rule_enforcing_a_ghost_principle_warns() {
+    let tmp = write_archetype("a");
+    let root = tmp.path().join("a");
+    // a layout rule that enforces a principle the How never defines
+    std::fs::write(root.join("layout.yaml"),
+        "version: \"1\"\narchetype: a\nlayout:\n  - id: r\n    may_exist_here: \"src/**\"\n    enforces: [ghost-principle]\n").expect("w");
+    let arch = Archetype::load_from_dir(&root, "a").expect("load");
+    let results = arch.validate(None);
+    assert!(results.iter().any(|v| v.severity == "warning" && v.path == "enforces" && v.message.contains("ghost-principle")),
+        "expected a dangling-enforces warning: {results:?}");
+}

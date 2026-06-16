@@ -16,21 +16,21 @@ const PF: &str = "https://productframework.org/ns#";
 pub fn how_to_turtle(c: &HowContract) -> String {
     let mut out = String::new();
     prefixes(&mut out, &c.archetype);
-    let principle_ids: BTreeSet<&str> = c.principles.iter().map(|p| p.id.as_str()).collect();
     for d in &c.top_decisions {
         out.push_str(&format!("d:{} a pf:TopDecision ;\n  pf:rationale {}", d.id, lit(&d.rationale)));
-        // Only emit licenses edges to principles that exist, so the projection
-        // stays SHACL-conformant (sh:class pf:Principle); dangling licenses are
-        // surfaced by the native checker as warnings instead.
+        // Emit every licenses edge as authored — dangling ones (target is no
+        // Principle) are caught by the `licenses-resolves` graph rule.
         for l in &d.licenses {
-            if principle_ids.contains(l.as_str()) {
-                out.push_str(&format!(" ;\n  pf:licenses d:{}", l));
-            }
+            out.push_str(&format!(" ;\n  pf:licenses d:{}", slug(l)));
         }
         out.push_str(" .\n\n");
     }
     for p in &c.principles {
-        out.push_str(&format!("d:{} a pf:Principle ;\n  pf:statement {} .\n\n", p.id, lit(&p.statement)));
+        out.push_str(&format!("d:{} a pf:Principle ;\n  pf:statement {}", p.id, lit(&p.statement)));
+        for r in &p.realized_by {
+            out.push_str(&format!(" ;\n  pf:realizedBy d:{}", slug(r)));
+        }
+        out.push_str(" .\n\n");
     }
     for p in &c.patterns {
         out.push_str(&format!("d:{} a pf:Pattern", p.id));
@@ -113,7 +113,7 @@ fn emit_work_units(out: &mut String, c: &HowContract) {
 }
 
 /// Sanitize a reference (e.g. `domain:Task`) into a Turtle local name.
-fn slug(s: &str) -> String {
+pub(super) fn slug(s: &str) -> String {
     let mut out: String = s.chars().map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '_' }).collect();
     if !out.chars().next().map(|c| c.is_ascii_alphabetic()).unwrap_or(false) {
         out.insert(0, 'x');
