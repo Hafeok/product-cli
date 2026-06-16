@@ -33,6 +33,11 @@ pub enum DeciderCommands {
         /// The decider id (filename stem)
         name: String,
     },
+    /// Simulate the Decider's scenarios — sound + complete before realisation
+    Simulate {
+        /// The decider id (filename stem)
+        name: String,
+    },
     /// Validate a Decider's signature against the event model
     Validate {
         /// The decider id (filename stem)
@@ -48,6 +53,7 @@ pub(crate) fn handle_decider(cmd: DeciderCommands) -> BoxResult {
         DeciderCommands::Derive { aggregate, product, force } => derive(&aggregate, product, force),
         DeciderCommands::List {} => list(),
         DeciderCommands::Show { name } => show(&name),
+        DeciderCommands::Simulate { name } => simulate(&name),
         DeciderCommands::Validate { name, product } => validate(&name, product),
     }
 }
@@ -111,6 +117,23 @@ fn validate(name: &str, product: Option<String>) -> BoxResult {
         decider.id, decider.decides_for, decider.handles.len(), decider.emits.len(),
     );
     Ok(())
+}
+
+fn simulate(name: &str) -> BoxResult {
+    let decider = load(name)?;
+    let results = product_core::pf::decider_sim::simulate(&decider);
+    if results.is_empty() {
+        println!(
+            "sound + complete — decider '{}': {} scenario(s) over {} command(s)",
+            decider.id, decider.scenarios.len(), decider.handles.len(),
+        );
+        return Ok(());
+    }
+    eprintln!("not sound/complete — {} finding(s):", results.len());
+    for r in &results {
+        eprintln!("  - [{}] {}: {}", r.focus, r.path, r.message);
+    }
+    Err(format!("{} simulation finding(s)", results.len()).into())
 }
 
 fn show(name: &str) -> BoxResult {

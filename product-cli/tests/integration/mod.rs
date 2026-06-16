@@ -24965,6 +24965,92 @@ fn tc_947_decider_foreign_command_nonconformant() {
     assert!(out.stderr.contains("ForeignCmd"), "stderr: {}", out.stderr);
 }
 
+// FT-122 — `product decider simulate`: prove a Decider sound + complete (§3.3).
+
+const ORDER_DECIDER: &str = r#"id: order-decider
+decides_for: Order
+handles:
+- PlaceOrder
+- PayOrder
+emits:
+- OrderPlaced
+- OrderPaid
+logic:
+  initial:
+    status: none
+  evolve:
+  - on: OrderPlaced
+    set:
+      status: placed
+  - on: OrderPaid
+    set:
+      status: paid
+  decide:
+  - on: PlaceOrder
+    guards:
+    - when:
+        field: status
+        eq: none
+      else_reject: no-double-place
+    emit:
+    - OrderPlaced
+  - on: PayOrder
+    guards:
+    - when:
+        field: status
+        eq: placed
+      else_reject: pay-only-placed
+    emit:
+    - OrderPaid
+scenarios:
+- name: place fresh
+  when: PlaceOrder
+  then:
+    emit:
+    - OrderPlaced
+- name: cannot pay unplaced
+  when: PayOrder
+  then:
+    reject: pay-only-placed
+- name: place then pay
+  given:
+  - OrderPlaced
+  when: PayOrder
+  then:
+    emit:
+    - OrderPaid
+"#;
+
+fn write_decider(h: &Harness, yaml: &str) {
+    let dir = h.dir.path().join(".product/deciders");
+    std::fs::create_dir_all(&dir).expect("mkdir");
+    std::fs::write(dir.join("order-decider.yaml"), yaml).expect("write decider");
+}
+
+#[test]
+fn tc_948_decider_simulate_sound_and_complete() {
+    let h = Harness::new();
+    write_decider(&h, ORDER_DECIDER);
+    let out = h.run(&["decider", "simulate", "order-decider"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("sound + complete"), "{}", out.stdout);
+    assert!(out.stdout.contains("3 scenario(s)"), "{}", out.stdout);
+}
+
+#[test]
+fn tc_949_decider_simulate_catches_wrong_behaviour() {
+    let h = Harness::new();
+    // claim that paying an unplaced order succeeds — the guard must reject it
+    let broken = ORDER_DECIDER.replace(
+        "- name: cannot pay unplaced\n  when: PayOrder\n  then:\n    reject: pay-only-placed",
+        "- name: cannot pay unplaced\n  when: PayOrder\n  then:\n    emit:\n    - OrderPaid",
+    );
+    write_decider(&h, &broken);
+    let out = h.run(&["decider", "simulate", "order-decider"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("cannot pay unplaced"), "stderr: {}", out.stderr);
+}
+
 // =============================================================================
 // FT-115 — `product how add/set`: build the Why cascade + contracts granularly.
 // =============================================================================

@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::{ProductError, Result};
 
+use super::decider_logic::{DeciderLogic, Scenario};
 use super::decider_turtle::decider_to_turtle;
 use super::ids::NodeKind;
 use super::model::DomainGraph;
@@ -32,6 +33,13 @@ pub struct Decider {
     pub evolves_from: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rejects: Vec<String>,
+    /// The one authored part (§3.3): the guarded state machine. Optional — a
+    /// freshly derived Decider has only its signature.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub logic: Option<DeciderLogic>,
+    /// Behavioural scenarios — the oracle simulated before realisation.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub scenarios: Vec<Scenario>,
 }
 
 impl Decider {
@@ -80,6 +88,8 @@ pub fn derive_decider(graph: &DomainGraph, aggregate: &str) -> Result<Decider> {
         emits,
         evolves_from,
         rejects,
+        logic: None,
+        scenarios: Vec::new(),
     })
 }
 

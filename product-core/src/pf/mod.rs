@@ -12,6 +12,8 @@ pub mod bundle;
 pub mod cell;
 pub mod cell_validate;
 pub mod decider;
+pub mod decider_logic;
+pub mod decider_sim;
 pub mod decider_turtle;
 pub mod dispatch;
 pub mod edit;
