@@ -1,0 +1,21 @@
+version: "1.0"
+archetype: product-cli
+allowlist: true
+layout:
+  - id: core-slices-here
+    may_exist_here: "product-core/src/pf/**"
+    rationale: "pure domain slices live in product-core/src/pf"
+    enforces: [pure-core]
+  - id: adapters-here
+    may_exist_here: "product-cli/src/commands/**"
+    rationale: "thin CLI adapters live in product-cli/src/commands"
+    enforces: [slice-cohesion]
+  - id: shapes-required
+    must_exist: "schema/shapes/shapes.shacl.ttl"
+    cardinality: "exactly 1"
+    rationale: "the vendored SHACL shapes are the conformance source of truth"
+    enforces: [conformance-fidelity]
+  - id: no-orphans-pf
+    no_orphans: "product-core/src/pf/**"
+    rationale: "every pf source file must have a declared, legal home"
+    enforces: [slice-cohesion]

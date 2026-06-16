@@ -1,0 +1,42 @@
+id: implement-slice
+name: "Implement a vertical slice"
+family: application
+archetype: product-cli
+classification: supporting
+applies_when: "adding a new pf domain concept with a CLI command over it"
+does_not_apply_when: "a change that does not introduce a new slice; edit in place"
+slots:
+  - name: concept
+    kind: domain
+    dispatch: "the domain concept to slice"
+    capture: "which concept?"
+    audit: "the concept exists in the What graph"
+  - name: operations
+    kind: behaviour
+    dispatch: "which subcommands to emit"
+    capture: "validate / show / list / ...?"
+    audit: "every operation has an adapter and an integration test"
+cells:
+  - id: core-slice
+    artifact: "product-core/src/pf/<concept>.rs (model + native validate)"
+    model: code
+    derived_from: ["domain:concept", "app-contract:product-cli-app"]
+    applies: ["slice-plus-adapter", "native-checker"]
+  - id: cli-adapter
+    artifact: "product-cli/src/commands/<concept>.rs"
+    model: code
+    derived_from: ["core-slice", "slot:operations"]
+    applies: ["slice-plus-adapter"]
+  - id: integration-tests
+    artifact: "assert_cmd integration tests per operation"
+    model: code
+    derived_from: ["cli-adapter", "slot:operations"]
+audits:
+  - id: slice-layout
+    kind: layout-conformance
+    checks: "pure slice in product-core/src/pf, adapter in product-cli/src/commands"
+    protects: "concept slot"
+  - id: operations-tested
+    kind: contract-conformance
+    checks: "every operation has an adapter and an integration test"
+    protects: "operations slot"

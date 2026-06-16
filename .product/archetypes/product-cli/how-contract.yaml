@@ -1,0 +1,73 @@
+archetype: product-cli
+top_decisions:
+- id: slice-adapter
+  decision: 'Pure pf:: domain slices in product-core; thin CLI adapters in product-cli/src/commands'
+  rationale: logic is unit-testable without tempdirs or print capture; sibling CLIs reuse the slice library (FT-107)
+  licenses:
+  - slice-cohesion
+  - pure-core
+  enforced_by:
+  - code-quality-tests
+- id: native-checkers
+  decision: Conformance checkers are native Rust mirroring the vendored SHACL/JSON schemas
+  rationale: no Python runtime in a Rust CLI; in-process typed violations; cross-checked against pyshacl
+  licenses:
+  - conformance-fidelity
+  enforced_by:
+  - pyshacl-cross-check
+principles:
+- id: slice-cohesion
+  statement: plan_/apply_/render_ functions are pure; I/O is isolated in apply_
+  enforced_by:
+  - code-quality-tests
+- id: pure-core
+  statement: product-core carries no clap/axum; CLI deps live only in product-cli
+  enforced_by:
+  - external-core-consumer
+- id: conformance-fidelity
+  statement: each native checker's verdict matches the vendored SHACL/JSON schema
+  enforced_by:
+  - pyshacl-cross-check
+- id: zero-unwrap
+  statement: no unwrap() in non-test code
+  enforced_by:
+  - clippy-unwrap-gate
+patterns:
+- id: slice-plus-adapter
+  shape: a pure src/<slice>/ module plus a thin commands/<cmd>.rs adapter
+  realizes:
+  - slice-cohesion
+  - pure-core
+  applied_by:
+  - implement-slice
+  enforced_by:
+  - code-quality-tests
+- id: native-checker
+  shape: validate_* functions returning Vec<Violation> mirroring the SHACL shapes
+  realizes:
+  - conformance-fidelity
+  enforced_by:
+  - pyshacl-cross-check
+application_contract:
+  id: product-cli-app
+  language: Rust
+  layering:
+  - core
+  - cli
+  feature_organization: vertical slices (slice + adapter)
+  statements:
+  - id: no-unwrap
+    statement: no unwrap() in non-test code
+    enforced_by: clippy-unwrap-gate
+  - id: files-under-400
+    statement: every src file is under 400 lines
+    enforced_by: file-length-fitness
+infrastructure_contract:
+  id: product-cli-dist
+  satisfies: product-cli-app
+  frozen: true
+  resources:
+  - id: binary
+    kind: release
+    choice: cargo-dist GitHub release
+interface_contracts: []
