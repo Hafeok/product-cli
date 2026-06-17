@@ -48,6 +48,7 @@ pub mod turtle;
 pub mod validate;
 pub mod work_unit;
 pub mod work_unit_validate;
+pub mod worker;
 
 pub use how::HowContract;
 pub use model::DomainGraph;

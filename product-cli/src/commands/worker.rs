@@ -7,6 +7,7 @@
 
 use clap::Subcommand;
 use product_core::pf::capability::{validate_catalog, Capability, Catalog};
+use product_core::pf::worker as fpw;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -30,6 +31,16 @@ pub enum WorkerCommands {
         #[arg(long = "trigger")]
         triggers: Vec<String>,
     },
+    /// Dispatch a prompt to a role's worker (first-party worker writes artifacts)
+    Run {
+        /// The role id to resolve
+        role: String,
+        /// The frozen SPMC context / prompt to hand the worker
+        #[arg(long)]
+        prompt: String,
+        #[arg(long = "trigger")]
+        triggers: Vec<String>,
+    },
 }
 
 pub(crate) fn handle_worker(cmd: WorkerCommands) -> BoxResult {
@@ -38,7 +49,14 @@ pub(crate) fn handle_worker(cmd: WorkerCommands) -> BoxResult {
         WorkerCommands::Init { force } => init(force),
         WorkerCommands::List {} => list(),
         WorkerCommands::Resolve { role, triggers } => resolve_cmd(&role, &triggers),
+        WorkerCommands::Run { role, prompt, triggers } => run_cmd(&role, &prompt, &triggers),
     }
+}
+
+fn run_cmd(role: &str, prompt: &str, triggers: &[String]) -> BoxResult {
+    let cap = resolve(&load_catalog(), role, triggers);
+    println!("role '{role}' → capability '{}' (endpoint {})", cap.id, cap.endpoint);
+    dispatch(&cap, prompt)
 }
 
 fn pdir() -> PathBuf {
@@ -83,8 +101,41 @@ pub(super) fn dispatch(cap: &Capability, prompt: &str) -> BoxResult {
     match cap.endpoint.as_str() {
         "claude" => run_claude(prompt),
         "litellm" | "anthropic" | "scaleway" => run_litellm(cap, prompt),
-        other => Err(format!("unknown capability endpoint '{other}' (expected claude | litellm)").into()),
+        "worker" => run_first_party(cap, prompt),
+        other => Err(format!("unknown capability endpoint '{other}' (expected claude | litellm | worker)").into()),
     }
+}
+
+/// The first-party worker: ask the model for structured file output (or, with no
+/// model configured, write a deterministic stub), then apply the files.
+fn run_first_party(cap: &Capability, prompt: &str) -> BoxResult {
+    let root = super::shared::domain_root();
+    let base = std::env::var("LITELLM_BASE_URL").ok().filter(|s| !s.is_empty());
+    let key = std::env::var("LITELLM_API_KEY").ok().filter(|s| !s.is_empty());
+    let files = match (base, key) {
+        (Some(base), Some(key)) => {
+            let model = if cap.model_identifier.is_empty() { cap.id.as_str() } else { cap.model_identifier.as_str() };
+            let url = format!("{}/chat/completions", base.trim_end_matches('/'));
+            let resp = ureq::post(&url)
+                .set("Authorization", &format!("Bearer {key}"))
+                .send_json(fpw::build_request(model, prompt))
+                .map_err(|e| format!("worker model call failed: {e}"))?;
+            let v: serde_json::Value = resp.into_json().map_err(|e| format!("worker response not JSON: {e}"))?;
+            let content = v["choices"][0]["message"]["content"].as_str().unwrap_or("");
+            let obj: serde_json::Value = serde_json::from_str(content).map_err(|e| format!("worker output not a JSON object: {e}"))?;
+            fpw::parse_files(&obj)?
+        }
+        _ => {
+            println!("  (no LITELLM_BASE_URL — first-party worker running offline; writing a stub)");
+            fpw::stub_files(prompt)
+        }
+    };
+    let written = fpw::apply_files(&files, &root)?;
+    println!("  first-party worker wrote {} file(s):", written.len());
+    for w in &written {
+        println!("    {}", w.display());
+    }
+    Ok(())
 }
 
 fn run_claude(prompt: &str) -> BoxResult {
@@ -163,6 +214,6 @@ fn write_seed(path: &Path, content: &str, force: bool) -> BoxResult {
     Ok(())
 }
 
-const CAPABILITIES_SEED: &str = "# Worker capability catalog (the SPMC Model layer).\ncapabilities:\n- id: claude-code\n  endpoint: claude\n  model_identifier: claude-opus-4-8\n  tier: 2\n- id: fast-cheap\n  endpoint: litellm\n  model_identifier: anthropic/claude-haiku-4-5\n  tier: 1\n- id: deep-reasoning\n  endpoint: litellm\n  model_identifier: anthropic/claude-opus-4-5\n  tier: 3\n";
+const CAPABILITIES_SEED: &str = "# Worker capability catalog (the SPMC Model layer).\ncapabilities:\n- id: claude-code\n  endpoint: claude\n  model_identifier: claude-opus-4-8\n  tier: 2\n- id: code-writer\n  endpoint: worker\n  model_identifier: fast-cheap\n  tier: 1\n- id: fast-cheap\n  endpoint: litellm\n  model_identifier: anthropic/claude-haiku-4-5\n  tier: 1\n- id: deep-reasoning\n  endpoint: litellm\n  model_identifier: anthropic/claude-opus-4-5\n  tier: 3\n";
 
-const ROLE_BINDINGS_SEED: &str = "# Role → capability bindings with escalation ladders.\nrole_bindings:\n- role_id: implementer\n  default_capability: claude-code\n  escalation_steps:\n  - capability: deep-reasoning\n    triggers:\n    - prior_attempts_ge_5\n    - stakes_foundational\n  active: true\n- role_id: verifier\n  default_capability: fast-cheap\n  escalation_steps:\n  - capability: deep-reasoning\n    triggers:\n    - confidence_below_0.5\n  active: true\n";
+const ROLE_BINDINGS_SEED: &str = "# Role → capability bindings with escalation ladders.\nrole_bindings:\n- role_id: implementer\n  default_capability: claude-code\n  escalation_steps:\n  - capability: deep-reasoning\n    triggers:\n    - prior_attempts_ge_5\n    - stakes_foundational\n  active: true\n- role_id: coder\n  default_capability: code-writer\n  active: true\n- role_id: verifier\n  default_capability: fast-cheap\n  escalation_steps:\n  - capability: deep-reasoning\n    triggers:\n    - confidence_below_0.5\n  active: true\n";

@@ -25308,6 +25308,23 @@ fn tc_986_build_resolves_worker_by_role() {
     assert!(out.stdout.contains("capability 'claude-code'"), "{}", out.stdout);
 }
 
+// FT-133 — first-party worker: a native SPMC executor (endpoint: worker).
+
+#[test]
+fn tc_988_first_party_worker_writes_artifact_offline() {
+    let h = Harness::new();
+    h.run(&["worker", "init"]).assert_exit(0);
+    // `coder` → code-writer (endpoint: worker); offline (no litellm) → stub artifact
+    let out = h.run_with_env(
+        &["worker", "run", "coder", "--prompt", "implement the order slice"],
+        &[("LITELLM_BASE_URL", ""), ("LITELLM_API_KEY", "")],
+    );
+    out.assert_exit(0);
+    assert!(out.stdout.contains("endpoint worker"), "{}", out.stdout);
+    assert!(out.stdout.contains("offline"), "{}", out.stdout);
+    assert!(out.stdout.contains("STUB-"), "{}", out.stdout);
+}
+
 // FT-132 — parallel work-unit execution: build fans units across workers.
 
 #[test]
