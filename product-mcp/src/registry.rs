@@ -218,6 +218,26 @@ fn dispatch_tool(
         "product_domain_new" => super::domain_handlers::handle_domain_new(args, repo_root),
         "product_domain_edit" => super::domain_handlers::handle_domain_edit(args, repo_root),
         "product_domain_rm" => super::domain_handlers::handle_domain_rm(args, repo_root),
+        // Decider — CLI↔MCP parity (§3.3)
+        "product_decider_list" => super::decider_handlers::handle_decider_list(args, repo_root),
+        "product_decider_show" => super::decider_handlers::handle_decider_show(args, repo_root),
+        "product_decider_validate" => super::decider_handlers::handle_decider_validate(args, repo_root),
+        "product_decider_simulate" => super::decider_handlers::handle_decider_simulate(args, repo_root),
+        "product_decider_derive" => super::decider_handlers::handle_decider_derive(args, repo_root),
+        // Delivery: slice / deliverable / release — CLI↔MCP parity (§7)
+        "product_slice_list" => super::delivery_handlers::handle_slice_list(args, repo_root),
+        "product_slice_show" => super::delivery_handlers::handle_slice_show(args, repo_root),
+        "product_slice_context" => super::delivery_handlers::handle_slice_context(args, repo_root),
+        "product_slice_new" => super::delivery_handlers::handle_slice_new(args, repo_root),
+        "product_deliverable_list" => super::delivery_handlers::handle_deliverable_list(args, repo_root),
+        "product_deliverable_show" => super::delivery_handlers::handle_deliverable_show(args, repo_root),
+        "product_deliverable_done" => super::delivery_handlers::handle_deliverable_done(args, repo_root),
+        "product_deliverable_new" => super::delivery_handlers::handle_deliverable_new(args, repo_root),
+        "product_deliverable_accept" => super::delivery_handlers::handle_deliverable_accept(args, repo_root),
+        "product_release_list" => super::delivery_handlers::handle_release_list(args, repo_root),
+        "product_release_show" => super::delivery_handlers::handle_release_show(args, repo_root),
+        "product_release_done" => super::delivery_handlers::handle_release_done(args, repo_root),
+        "product_release_new" => super::delivery_handlers::handle_release_new(args, repo_root),
         _ => Err(format!("Tool handler not implemented: {}", name)),
     }
 }

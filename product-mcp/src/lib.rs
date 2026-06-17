@@ -9,10 +9,13 @@
 pub mod registry;
 pub mod domain;
 mod adr_lifecycle;
+mod decider_handlers;
+mod delivery_handlers;
 mod domain_handlers;
 mod field_handlers;
 mod health_handlers;
 mod pattern_handlers;
+mod pf_mcp;
 mod read_handlers;
 mod request_handlers;
 mod write_handlers;

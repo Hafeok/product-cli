@@ -4,6 +4,8 @@
 //! - [`read`] — query-only tools.
 //! - [`write`] — mutating tools (gated by `mcp.write` config).
 
+mod decider;
+mod delivery;
 mod domain;
 mod read;
 mod write;
@@ -25,5 +27,7 @@ pub fn build_tool_list() -> Vec<ToolDef> {
     let mut tools = read::all();
     tools.extend(write::all());
     tools.extend(domain::all());
+    tools.extend(decider::all());
+    tools.extend(delivery::all());
     tools
 }
