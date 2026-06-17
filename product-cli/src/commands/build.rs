@@ -99,7 +99,46 @@ fn dispatch_live(deliverable: &str, context: &str, ladder: &[Capability], units:
     if gates.verify {
         super::build_verify::run(d, &written, ladder, context, &root);
     }
+    report_changes(&written, &root);
     Ok(())
+}
+
+/// Surface which repo files the worker created vs modified — the safety review
+/// surface when running a worker against a real tree.
+fn report_changes(written: &[PathBuf], root: &Path) {
+    let paths: std::collections::BTreeSet<&PathBuf> = written.iter().collect();
+    if paths.is_empty() {
+        return;
+    }
+    println!("\n--- Changes ---");
+    for p in paths {
+        let rel = p.strip_prefix(root).unwrap_or(p).to_string_lossy().to_string();
+        println!("  {:8} {rel}", git_status(root, &rel));
+    }
+}
+
+/// A file's git state, classified for the change summary.
+fn git_status(root: &Path, rel: &str) -> &'static str {
+    let Ok(out) = std::process::Command::new("git")
+        .arg("-C").arg(root)
+        .args(["status", "--porcelain", "--", rel])
+        .output()
+    else {
+        return "written";
+    };
+    let line = String::from_utf8_lossy(&out.stdout);
+    let code = line.lines().next().unwrap_or("").get(0..2).unwrap_or("");
+    if code.contains('?') {
+        "new"
+    } else if code.contains('A') {
+        "added"
+    } else if code.contains('M') {
+        "modified"
+    } else if code.trim().is_empty() {
+        "unchanged"
+    } else {
+        "changed"
+    }
 }
 
 /// Show the verify steps `build` will run (dry-run).
