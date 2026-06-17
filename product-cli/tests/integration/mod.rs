@@ -25163,6 +25163,22 @@ fn tc_959_slice_new_rejects_a_dangling_anchor() {
     assert!(!h.exists(".product/slices/bad.yaml"));
 }
 
+// FT-125 — `product status` surfaces the framework What/How/delivery graph.
+
+#[test]
+fn tc_966_status_shows_the_framework_graph() {
+    let h = Harness::new();
+    seed_domain_graph(&h); // 1 context, 1 entity, 1 event, 1 command
+    h.run(&["slice", "new", "s1", "--anchor", "Order"]).assert_exit(0);
+    let out = h.run(&["status"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("Framework graph"), "{}", out.stdout);
+    assert!(out.stdout.contains("1 contexts"), "{}", out.stdout);
+    assert!(out.stdout.contains("1 entities"), "{}", out.stdout);
+    assert!(out.stdout.contains("1 commands"), "{}", out.stdout);
+    assert!(out.stdout.contains("1 slices"), "{}", out.stdout);
+}
+
 // =============================================================================
 // FT-115 — `product how add/set`: build the Why cascade + contracts granularly.
 // =============================================================================
