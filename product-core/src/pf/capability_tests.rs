@@ -49,3 +49,10 @@ fn validate_flags_an_unknown_trigger() {
 fn a_conformant_catalog_validates_clean() {
     assert!(validate_catalog(&catalog()).is_empty());
 }
+
+#[test]
+fn validate_flags_an_unknown_endpoint() {
+    let mut c = catalog();
+    c.capabilities[0].endpoint = "bogus".into();
+    assert!(validate_catalog(&c).iter().any(|v| v.path == "endpoint" && v.message.contains("bogus")));
+}

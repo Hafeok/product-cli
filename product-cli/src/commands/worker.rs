@@ -150,8 +150,13 @@ fn run_claude(prompt: &str) -> BoxResult {
     Ok(())
 }
 
+/// Route a completion through the LiteLLM proxy. `LITELLM_BASE_URL` must be the
+/// *proxy* (which holds provider keys and maps the capability tag to a provider
+/// model); `cap.id` is the proxy `model_name`. Scaleway/Anthropic capabilities
+/// reach their providers via the proxy's model groups — there is no direct
+/// provider call here.
 fn run_litellm(cap: &Capability, prompt: &str) -> BoxResult {
-    let base = std::env::var("LITELLM_BASE_URL").map_err(|_| "LITELLM_BASE_URL is not set")?;
+    let base = std::env::var("LITELLM_BASE_URL").map_err(|_| "LITELLM_BASE_URL is not set (point it at the LiteLLM proxy)")?;
     let key = std::env::var("LITELLM_API_KEY").map_err(|_| "LITELLM_API_KEY is not set")?;
     let url = format!("{}/chat/completions", base.trim_end_matches('/'));
     let body = serde_json::json!({ "model": cap.id, "messages": [{ "role": "user", "content": prompt }] });
@@ -214,6 +219,6 @@ fn write_seed(path: &Path, content: &str, force: bool) -> BoxResult {
     Ok(())
 }
 
-const CAPABILITIES_SEED: &str = "# Worker capability catalog (the SPMC Model layer).\ncapabilities:\n- id: claude-code\n  endpoint: claude\n  model_identifier: claude-opus-4-8\n  tier: 2\n- id: code-writer\n  endpoint: worker\n  model_identifier: fast-cheap\n  tier: 1\n- id: fast-cheap\n  endpoint: litellm\n  model_identifier: anthropic/claude-haiku-4-5\n  tier: 1\n- id: deep-reasoning\n  endpoint: litellm\n  model_identifier: anthropic/claude-opus-4-5\n  tier: 3\n";
+const CAPABILITIES_SEED: &str = "# Worker capability catalog (the SPMC Model layer).\n# litellm/scaleway/anthropic capabilities route through the LiteLLM proxy at\n# LITELLM_BASE_URL (the proxy holds provider keys + maps the id to a provider\n# model). Scaleway is reached via a proxy model group, not a direct API call.\ncapabilities:\n- id: claude-code\n  endpoint: claude\n  model_identifier: claude-opus-4-8\n  tier: 2\n- id: code-writer\n  endpoint: worker\n  model_identifier: fast-cheap\n  tier: 1\n- id: fast-cheap\n  endpoint: litellm\n  model_identifier: anthropic/claude-haiku-4-5\n  tier: 1\n- id: deep-reasoning\n  endpoint: litellm\n  model_identifier: anthropic/claude-opus-4-5\n  tier: 3\n";
 
 const ROLE_BINDINGS_SEED: &str = "# Role → capability bindings with escalation ladders.\nrole_bindings:\n- role_id: implementer\n  default_capability: claude-code\n  escalation_steps:\n  - capability: deep-reasoning\n    triggers:\n    - prior_attempts_ge_5\n    - stakes_foundational\n  active: true\n- role_id: coder\n  default_capability: code-writer\n  active: true\n- role_id: verifier\n  default_capability: fast-cheap\n  escalation_steps:\n  - capability: deep-reasoning\n    triggers:\n    - confidence_below_0.5\n  active: true\n";

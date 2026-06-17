@@ -10,6 +10,7 @@ adrs:
 tests:
 - TC-985
 - TC-986
+- TC-989
 domains:
 - api
 - data-model
@@ -65,6 +66,17 @@ capability and dispatches via the runner: `claude -p` for `endpoint: claude`, or
 an HTTP POST to the LiteLLM proxy (`LITELLM_BASE_URL`/`LITELLM_API_KEY`,
 `model = capability id`) for `endpoint: litellm`. Without a catalog, `build`
 falls back to the built-in claude capability (unchanged behaviour).
+
+### Proxy routing
+
+`litellm` capabilities — and the `scaleway`/`anthropic` aliases — all route
+through the **LiteLLM proxy** at `LITELLM_BASE_URL`, sending the capability `id`
+as the proxy `model_name`. The proxy holds the provider keys and maps that tag to
+a provider model, so **Scaleway is reached via a proxy model group, not a direct
+API call** here. `worker check` validates that every capability's `endpoint` is
+one of the known runners (`claude`, `litellm`, `worker`, `scaleway`, `anthropic`)
+— catching the misconfiguration of pointing `LITELLM_BASE_URL` at a provider's
+own API instead of the proxy.
 
 ## Out of scope
 

@@ -25325,6 +25325,18 @@ fn tc_988_first_party_worker_writes_artifact_offline() {
     assert!(out.stdout.contains("STUB-"), "{}", out.stdout);
 }
 
+#[test]
+fn tc_989_worker_check_flags_unknown_endpoint() {
+    let h = Harness::new();
+    let p = h.dir.path().join(".product");
+    std::fs::create_dir_all(&p).expect("mkdir");
+    std::fs::write(p.join("capabilities.yaml"), "capabilities:\n- id: bad\n  endpoint: bogus\n  model_identifier: x\n").expect("w");
+    std::fs::write(p.join("role-bindings.yaml"), "role_bindings:\n- role_id: r\n  default_capability: bad\n  active: true\n").expect("w");
+    let out = h.run(&["worker", "check"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("endpoint") && out.stderr.contains("bogus"), "stderr: {}", out.stderr);
+}
+
 // FT-132 — parallel work-unit execution: build fans units across workers.
 
 #[test]

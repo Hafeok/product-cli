@@ -13,6 +13,12 @@ use crate::error::{ProductError, Result};
 
 use super::validate::Violation;
 
+/// Known runner endpoints. `litellm` (and the `scaleway`/`anthropic` aliases)
+/// all route through the LiteLLM proxy at `LITELLM_BASE_URL`, which holds the
+/// provider keys and maps the capability tag to a provider model — so Scaleway
+/// is reached via a proxy model group, not a direct API call here.
+pub const ENDPOINTS: &[&str] = &["claude", "litellm", "worker", "scaleway", "anthropic"];
+
 /// The escalation triggers a role binding may name (fixed vocabulary).
 pub const TRIGGERS: &[&str] = &[
     "audit_fail",
@@ -130,6 +136,12 @@ impl Catalog {
 /// triggers come from the fixed vocabulary.
 pub fn validate_catalog(catalog: &Catalog) -> Vec<Violation> {
     let mut out = Vec::new();
+    for c in &catalog.capabilities {
+        if !ENDPOINTS.contains(&c.endpoint.as_str()) {
+            out.push(v(&c.id, "endpoint",
+                &format!("unknown endpoint '{}' (expected one of: {})", c.endpoint, ENDPOINTS.join(", "))));
+        }
+    }
     let known: std::collections::BTreeSet<&str> = catalog.capabilities.iter().map(|c| c.id.as_str()).collect();
     for b in &catalog.role_bindings {
         if !known.contains(b.default_capability.as_str()) {
