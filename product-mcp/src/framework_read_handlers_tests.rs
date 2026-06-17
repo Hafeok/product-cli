@@ -51,6 +51,19 @@ fn archetype_list_show_validate() {
 }
 
 #[test]
+fn worker_list_and_resolve() {
+    let (d, reg) = registry();
+    let p = d.path().join(".product");
+    fs::write(p.join("capabilities.yaml"), "capabilities:\n- id: claude-code\n  endpoint: claude\n  model_identifier: claude-opus-4-8\n  tier: 2\n- id: deep-reasoning\n  endpoint: litellm\n  model_identifier: anthropic/claude-opus\n  tier: 3\n").expect("caps");
+    fs::write(p.join("role-bindings.yaml"), "role_bindings:\n- role_id: implementer\n  default_capability: claude-code\n  escalation_steps:\n  - capability: deep-reasoning\n    triggers:\n    - stakes_foundational\n  active: true\n").expect("bindings");
+    assert!(reg.call_tool("product_worker_list", &json!({})).expect("list")["capabilities"].as_array().unwrap().len() >= 2);
+    let def = reg.call_tool("product_worker_resolve", &json!({"role": "implementer"})).expect("resolve");
+    assert_eq!(def["id"], json!("claude-code"));
+    let esc = reg.call_tool("product_worker_resolve", &json!({"role": "implementer", "triggers": ["stakes_foundational"]})).expect("resolve2");
+    assert_eq!(esc["id"], json!("deep-reasoning"));
+}
+
+#[test]
 fn cell_and_work_unit_read() {
     let (_d, reg) = registry();
     assert!(reg.call_tool("product_cell_show", &json!({})).expect("cell show").get("name").is_some());

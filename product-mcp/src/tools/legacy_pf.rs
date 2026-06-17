@@ -33,8 +33,13 @@ pub(super) fn all() -> Vec<ToolDef> {
         read("product_work_unit_show", "Show the work unit (.product/work-unit.yaml).", none.clone(), serde_json::json!([])),
         read("product_work_unit_validate", "Validate the work unit against the What graph + How contract.", serde_json::json!({"product": {"type": "string"}}), serde_json::json!([])),
         // dep
-        read("product_dep_list", "List dependencies in the knowledge graph.", none, serde_json::json!([])),
+        read("product_dep_list", "List dependencies in the knowledge graph.", none.clone(), serde_json::json!([])),
         read("product_dep_show", "Show a dependency's front matter.", id.clone(), serde_json::json!(["id"])),
         read("product_dep_features", "List the features that use a dependency.", id, serde_json::json!(["id"])),
+        // worker (capability catalog)
+        read("product_worker_list", "List the worker capabilities + role bindings.", none, serde_json::json!([])),
+        read("product_worker_resolve", "Resolve a role to its capability, applying escalation triggers.",
+            serde_json::json!({"role": {"type": "string"}, "triggers": {"type": "array", "items": {"type": "string"}}}),
+            serde_json::json!(["role"])),
     ]
 }

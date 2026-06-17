@@ -31,11 +31,14 @@ pub enum Commands {
         #[command(subcommand)]
         command: AuthorCommands,
     },
-    /// Build a deliverable — assemble the SPMC context, spawn an agent, report done (§5)
+    /// Build a deliverable — assemble the SPMC context, dispatch a worker, report done (§5)
     Build {
         /// The deliverable id
         deliverable: String,
-        /// Assemble + show the context and gate status without spawning an agent
+        /// The worker role to resolve to a capability (default: implementer)
+        #[arg(long, default_value = "implementer")]
+        role: String,
+        /// Assemble + show the context, worker, and gate status without dispatching
         #[arg(long)]
         dry_run: bool,
         #[arg(long)]
@@ -361,5 +364,10 @@ pub enum Commands {
     WorkUnit {
         #[command(subcommand)]
         command: WorkUnitCommands,
+    },
+    /// Worker capability catalog — list, resolve a role, validate, scaffold
+    Worker {
+        #[command(subcommand)]
+        command: WorkerCommands,
     },
 }

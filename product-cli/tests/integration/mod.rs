@@ -25276,6 +25276,38 @@ fn tc_983_recording_conformance_flips_done() {
     assert!(after.stdout.contains("DONE"), "{}", after.stdout);
 }
 
+// FT-131 — worker capability catalog: role → capability with escalation.
+
+#[test]
+fn tc_985_worker_resolve_escalates_by_trigger() {
+    let h = Harness::new();
+    h.run(&["worker", "init"]).assert_exit(0);
+    assert!(h.exists(".product/capabilities.yaml"));
+    h.run(&["worker", "check"]).assert_exit(0);
+    // default capability
+    let def = h.run(&["worker", "resolve", "implementer"]);
+    def.assert_exit(0);
+    assert!(def.stdout.contains("claude-code"), "{}", def.stdout);
+    // a firing trigger escalates up the ladder
+    let esc = h.run(&["worker", "resolve", "implementer", "--trigger", "stakes_foundational"]);
+    esc.assert_exit(0);
+    assert!(esc.stdout.contains("deep-reasoning"), "{}", esc.stdout);
+    assert!(h.run(&["worker", "list"]).stdout.contains("implementer"));
+}
+
+#[test]
+fn tc_986_build_resolves_worker_by_role() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["worker", "init"]).assert_exit(0);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["deliverable", "new", "place-order", "--slice", "order-slice", "--accept", "a1:ok"]).assert_exit(0);
+    let out = h.run(&["build", "place-order", "--dry-run"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("--- Worker ---"), "{}", out.stdout);
+    assert!(out.stdout.contains("capability 'claude-code'"), "{}", out.stdout);
+}
+
 // FT-125 — `product status` surfaces the framework What/How/delivery graph.
 
 #[test]

@@ -10,6 +10,7 @@ pub mod archetype;
 pub mod archetype_turtle;
 pub mod build;
 pub mod bundle;
+pub mod capability;
 pub mod cell;
 pub mod cell_validate;
 pub mod decider;

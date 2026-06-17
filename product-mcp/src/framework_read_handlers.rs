@@ -4,6 +4,7 @@
 use std::path::{Path, PathBuf};
 
 use product_core::pf::archetype::Archetype;
+use product_core::pf::capability::Catalog;
 use product_core::pf::cell::TaskType;
 use product_core::pf::cell_validate::validate_cell;
 use product_core::pf::how::HowContract;
@@ -126,6 +127,34 @@ pub fn handle_work_unit_validate(args: &Value, repo_root: &Path) -> Result<Value
     let domain = graph_of(args, repo_root).ok();
     let how = load_how(repo_root).ok();
     Ok(verdict(&validate_work_unit(&w, domain.as_ref(), how.as_ref())))
+}
+
+// --- worker (capability catalog) -------------------------------------------
+
+fn load_catalog(repo_root: &Path) -> Catalog {
+    let p = pdir(repo_root);
+    let caps = std::fs::read_to_string(p.join("capabilities.yaml")).ok()
+        .and_then(|t| Catalog::capabilities_from_yaml(&t).ok()).unwrap_or_default();
+    let bindings = std::fs::read_to_string(p.join("role-bindings.yaml")).ok()
+        .and_then(|t| Catalog::role_bindings_from_yaml(&t).ok()).unwrap_or_default();
+    Catalog { capabilities: caps, role_bindings: bindings }
+}
+
+pub fn handle_worker_list(_args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let c = load_catalog(repo_root);
+    Ok(json!({ "capabilities": c.capabilities, "role_bindings": c.role_bindings }))
+}
+
+pub fn handle_worker_resolve(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let role = req_str(args, "role")?;
+    let triggers: Vec<String> = args.get("triggers").and_then(|v| v.as_array())
+        .map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect())
+        .unwrap_or_default();
+    let c = load_catalog(repo_root);
+    match c.resolve(&role, &triggers) {
+        Some(cap) => serde_json::to_value(cap).map_err(|e| format!("{e}")),
+        None => Ok(json!({ "error": format!("no active role binding for '{role}'") })),
+    }
 }
 
 #[cfg(test)]

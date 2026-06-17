@@ -254,6 +254,9 @@ fn dispatch_tool(
         "product_dep_list" => super::dep_handlers::handle_dep_list(args, graph),
         "product_dep_show" => super::dep_handlers::handle_dep_show(args, graph),
         "product_dep_features" => super::dep_handlers::handle_dep_features(args, graph),
+        // Worker capability catalog — CLI↔MCP parity
+        "product_worker_list" => super::framework_read_handlers::handle_worker_list(args, repo_root),
+        "product_worker_resolve" => super::framework_read_handlers::handle_worker_resolve(args, repo_root),
         _ => Err(format!("Tool handler not implemented: {}", name)),
     }
 }
