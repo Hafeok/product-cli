@@ -13,11 +13,19 @@ use crate::error::{ProductError, Result};
 
 use super::validate::Violation;
 
-/// One agreed acceptance criterion for a deliverable.
+/// One agreed acceptance criterion for a deliverable. `status` is the recorded
+/// verdict — `pending` until explicitly marked `passing`/`failing` (§7.2: done
+/// is a predicate over recorded verifications, not a judgement).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AcceptanceCriterion {
     pub id: String,
     pub statement: String,
+    #[serde(default = "pending")]
+    pub status: String,
+}
+
+fn pending() -> String {
+    "pending".to_string()
 }
 
 /// A delivery feature: a pointer to one slice plus its acceptance criteria.

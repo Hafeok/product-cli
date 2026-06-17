@@ -19,6 +19,7 @@ pub mod decider_sim;
 pub mod decider_turtle;
 pub mod deliverable;
 pub mod dispatch;
+pub mod done;
 pub mod edit;
 pub mod how;
 pub mod how_edit;

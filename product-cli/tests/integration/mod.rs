@@ -25199,6 +25199,39 @@ fn tc_968_delivery_rejects_dangling_references() {
     assert!(r.stderr.contains("ghost-feature"), "stderr: {}", r.stderr);
 }
 
+// FT-127 — `done` / `closed`: the §7.2 delivery predicates.
+
+#[test]
+fn tc_969_deliverable_done_lifecycle() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["deliverable", "new", "place-order", "--slice", "order-slice", "--accept", "a1:an order can be placed"]).assert_exit(0);
+    // pending acceptance → not done (the in-scope domain checks pass, acceptance fails)
+    let nd = h.run(&["deliverable", "done", "place-order"]);
+    nd.assert_exit(1);
+    assert!(nd.stdout.contains("not done"), "{}", nd.stdout);
+    // record the acceptance verdict → done
+    h.run(&["deliverable", "accept", "place-order", "a1", "--pass"]).assert_exit(0);
+    let d = h.run(&["deliverable", "done", "place-order"]);
+    d.assert_exit(0);
+    assert!(d.stdout.contains("DONE"), "{}", d.stdout);
+}
+
+#[test]
+fn tc_975_release_done_requires_members_done_and_closed() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["deliverable", "new", "place-order", "--slice", "order-slice", "--accept", "a1:ok"]).assert_exit(0);
+    h.run(&["deliverable", "accept", "place-order", "a1", "--pass"]).assert_exit(0);
+    h.run(&["release", "new", "R1", "--feature", "place-order"]).assert_exit(0);
+    let r = h.run(&["release", "done", "R1"]);
+    r.assert_exit(0);
+    assert!(r.stdout.contains("DONE"), "{}", r.stdout);
+    assert!(r.stdout.contains("cut closed"), "{}", r.stdout);
+}
+
 // FT-125 — `product status` surfaces the framework What/How/delivery graph.
 
 #[test]

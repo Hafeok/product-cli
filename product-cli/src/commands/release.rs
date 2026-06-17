@@ -5,6 +5,7 @@
 //! every member resolves to a real deliverable.
 
 use clap::Subcommand;
+use product_core::pf::done::release_done;
 use product_core::pf::release::{validate_release, Release};
 use std::path::PathBuf;
 
@@ -12,6 +13,13 @@ use super::BoxResult;
 
 #[derive(Subcommand)]
 pub enum ReleaseCommands {
+    /// Compute whether the release is done — members done + cut closed (§7.2)
+    Done {
+        /// The release id (filename stem)
+        name: String,
+        #[arg(long)]
+        product: Option<String>,
+    },
     /// List the releases under .product/releases/
     List {},
     /// Create a release grouping delivery features
@@ -33,9 +41,40 @@ pub enum ReleaseCommands {
 
 pub(crate) fn handle_release(cmd: ReleaseCommands) -> BoxResult {
     match cmd {
+        ReleaseCommands::Done { name, product } => done(&name, product),
         ReleaseCommands::List {} => list(),
         ReleaseCommands::New { id, features, force } => new(&id, features, force),
         ReleaseCommands::Show { name } => show(&name),
+    }
+}
+
+fn done(name: &str, product: Option<String>) -> BoxResult {
+    let release = load(name)?;
+    let graph = super::deliverable::load_graph(product)?;
+    let deciders = super::deliverable::load_deciders();
+    let mut members = Vec::new();
+    for f in &release.features {
+        let d = super::deliverable::load(f)?;
+        let s = super::deliverable::load_slice(&d.slice)?;
+        members.push((d, s));
+    }
+    let rd = release_done(&release.id, &members, &graph, &deciders);
+    println!(
+        "release '{}': {} — cut {}",
+        rd.id,
+        if rd.done { "DONE" } else { "not done" },
+        if rd.closed() { "closed" } else { "OPEN" },
+    );
+    for f in &rd.members {
+        super::deliverable::print_feature_done(f);
+    }
+    for (node, dep) in &rd.open_edges {
+        println!("  open edge: {node} depends on excluded {dep}");
+    }
+    if rd.done {
+        Ok(())
+    } else {
+        Err(format!("release '{name}' is not done").into())
     }
 }
 

@@ -12,7 +12,7 @@ fn yaml_round_trips() {
     let d = Deliverable {
         id: "place-order".into(),
         slice: "place-order".into(),
-        acceptance: vec![AcceptanceCriterion { id: "a1".into(), statement: "an order can be placed".into() }],
+        acceptance: vec![AcceptanceCriterion { id: "a1".into(), statement: "an order can be placed".into(), status: "pending".into() }],
     };
     assert_eq!(Deliverable::from_yaml(&d.to_yaml().expect("to")).expect("from"), d);
 }
@@ -40,7 +40,7 @@ fn an_empty_acceptance_statement_is_a_violation() {
     let d = Deliverable {
         id: "po".into(),
         slice: "place-order".into(),
-        acceptance: vec![AcceptanceCriterion { id: "a1".into(), statement: "".into() }],
+        acceptance: vec![AcceptanceCriterion { id: "a1".into(), statement: "".into(), status: "pending".into() }],
     };
     assert!(validate_deliverable(&d, &slices()).iter().any(|v| v.path == "acceptance"));
 }

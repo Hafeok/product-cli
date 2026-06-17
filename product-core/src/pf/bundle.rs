@@ -61,6 +61,39 @@ pub fn bundle_many(graph: &DomainGraph, anchors: &[String], depth: usize, produc
     Some(out)
 }
 
+/// The set of nodes covered by a slice — the union of each anchor's reachable
+/// set to `depth` hops. (§7 delivery: a slice's in-scope elements.)
+pub fn covered(graph: &DomainGraph, anchors: &[String], depth: usize) -> BTreeSet<String> {
+    let mut set = BTreeSet::new();
+    for a in anchors {
+        if graph.kind_of(a).is_some() {
+            set.extend(reachable(graph, a, depth));
+        }
+    }
+    set
+}
+
+/// The directed dependencies of a node — the other nodes it references (its
+/// context, targets, emitted events, …). Used by the §7.2 "cut is closed" check.
+pub fn dependencies(graph: &DomainGraph, id: &str) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    if let Some(e) = graph.entities.iter().find(|n| n.id == id) { out.push(e.context.clone()); }
+    if let Some(vo) = graph.value_objects.iter().find(|n| n.id == id) { out.push(vo.context.clone()); }
+    if let Some(r) = graph.relations.iter().find(|n| n.id == id) { out.push(r.from.clone()); out.push(r.to.clone()); }
+    if let Some(i) = graph.invariants.iter().find(|n| n.id == id) {
+        out.extend(i.context.clone());
+        out.extend(i.applies_to.clone());
+    }
+    if let Some(m) = graph.context_mappings.iter().find(|n| n.id == id) { out.push(m.concept_a.clone()); out.push(m.concept_b.clone()); }
+    if let Some(c) = graph.commands.iter().find(|n| n.id == id) { out.push(c.context.clone()); out.push(c.targets.clone()); out.extend(c.emits.clone()); }
+    if let Some(ev) = graph.events.iter().find(|n| n.id == id) { out.push(ev.context.clone()); out.push(ev.changes.clone()); }
+    if let Some(rm) = graph.read_models.iter().find(|n| n.id == id) { out.extend(rm.projects.clone()); }
+    if let Some(w) = graph.wireframe_steps.iter().find(|n| n.id == id) { out.extend(w.triggers.clone()); out.extend(w.displays.clone()); }
+    if let Some(f) = graph.flows.iter().find(|n| n.id == id) { out.extend(f.steps.clone()); }
+    out.retain(|s| !s.is_empty());
+    out
+}
+
 /// BFS the undirected What graph from `id`, returning reachable ids (incl. id)
 /// in discovery order, bounded by `depth` hops.
 fn reachable(graph: &DomainGraph, id: &str, depth: usize) -> Vec<String> {
