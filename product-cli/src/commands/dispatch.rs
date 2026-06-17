@@ -3,7 +3,7 @@
 use clap::Command as ClapCommand;
 
 use super::{
-    adr, agent_init, archetype, author, cell, checklist, completions, conformance, context, cycle_times, decider,
+    adr, agent_init, archetype, author, build, cell, checklist, completions, conformance, context, cycle_times, decider,
     deliverable, dep, domain, drift, feature, gap, graph_cmd, hash, hooks, how, implement, init, mcp_cmd,
     metrics_cmd, migrate, onboard, pattern, preflight, prompts_cmd, release, render, request_cmd, schema,
     slice, status, tags, test_cmd, work_unit, BoxResult, Commands,
@@ -14,6 +14,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Adr { command } => adr::handle_adr(command, fmt),
         Commands::AgentInit { watch } => agent_init::handle_agent_init(watch),
         Commands::Author { command } => author::handle_author(command),
+        Commands::Build { deliverable, dry_run, product } => build::handle_build(&deliverable, dry_run, product),
         Commands::Checklist { command } => checklist::handle_checklist(command),
         Commands::Completions { shell } => completions::handle_completions(&shell, cli_command),
         Commands::Conformance { command } => conformance::handle_conformance(command, fmt),

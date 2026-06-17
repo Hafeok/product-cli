@@ -25232,6 +25232,50 @@ fn tc_975_release_done_requires_members_done_and_closed() {
     assert!(r.stdout.contains("cut closed"), "{}", r.stdout);
 }
 
+// FT-130 — `product build`: assemble the SPMC context + record conformance into done.
+
+#[test]
+fn tc_984_build_dry_run_assembles_the_spmc_context() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["deliverable", "new", "place-order", "--slice", "order-slice", "--accept", "a1:an order can be placed"]).assert_exit(0);
+    let out = h.run(&["build", "place-order", "--dry-run"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("Build Context: place-order"), "{}", out.stdout);
+    assert!(out.stdout.contains("## What"), "{}", out.stdout);
+    assert!(out.stdout.contains("PlaceOrder"), "{}", out.stdout); // the slice subgraph
+    assert!(out.stdout.contains("## Acceptance"), "{}", out.stdout);
+    assert!(out.stdout.contains("Gate status"), "{}", out.stdout);
+    assert!(out.stdout.contains("not done"), "{}", out.stdout); // pending acceptance
+}
+
+#[test]
+fn tc_983_recording_conformance_flips_done() {
+    let h = Harness::new();
+    seed_domain_graph(&h); // Order aggregate; PlaceOrder targets it, emits OrderPlaced
+    // author a sound + complete decider over the in-scope aggregate
+    let decider = "id: Order-decider\ndecides_for: Order\nhandles:\n- PlaceOrder\nemits:\n- OrderPlaced\nlogic:\n  initial:\n    status: none\n  decide:\n  - on: PlaceOrder\n    guards:\n    - when:\n        field: status\n        eq: none\n      else_reject: no-double-place\n    emit:\n    - OrderPlaced\nscenarios:\n- name: place\n  when: PlaceOrder\n  then:\n    emit:\n    - OrderPlaced\n";
+    let dd = h.dir.path().join(".product/deciders");
+    std::fs::create_dir_all(&dd).expect("mkdir");
+    std::fs::write(dd.join("Order-decider.yaml"), decider).expect("decider");
+    // slice + deliverable with passing acceptance
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["deliverable", "new", "place-order", "--slice", "order-slice", "--accept", "a1:ok"]).assert_exit(0);
+    h.run(&["deliverable", "accept", "place-order", "a1", "--pass"]).assert_exit(0);
+    // not done yet — behavioural conformance is pending (no recorded verdict)
+    let before = h.run(&["deliverable", "done", "place-order"]);
+    before.assert_exit(1);
+    assert!(before.stdout.contains("behavioural-conform"), "{}", before.stdout);
+    // record a passing conformance verdict via a matching runner
+    let runner = r#"cat >/dev/null; printf '%s' '[{"emit":["OrderPlaced"]}]'"#;
+    h.run(&["decider", "conform", "Order-decider", "--runner", runner]).assert_exit(0);
+    // now done
+    let after = h.run(&["deliverable", "done", "place-order"]);
+    after.assert_exit(0);
+    assert!(after.stdout.contains("DONE"), "{}", after.stdout);
+}
+
 // FT-125 — `product status` surfaces the framework What/How/delivery graph.
 
 #[test]

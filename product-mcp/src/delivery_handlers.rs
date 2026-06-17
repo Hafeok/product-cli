@@ -29,6 +29,28 @@ fn load_deciders(repo_root: &Path) -> Vec<product_core::pf::decider::Decider> {
         .collect()
 }
 
+/// Decider ids with a recorded passing conformance verdict (`<id>.conform.json`).
+fn conformed_set(repo_root: &Path) -> BTreeSet<String> {
+    let dir = deciders_dir(repo_root);
+    let mut out = BTreeSet::new();
+    let Ok(entries) = std::fs::read_dir(&dir) else { return out };
+    for e in entries.flatten() {
+        let p = e.path();
+        if p.extension().and_then(|s| s.to_str()) != Some("json") {
+            continue;
+        }
+        let Some(stem) = p.file_stem().and_then(|s| s.to_str()) else { continue };
+        if std::fs::read_to_string(&p).ok()
+            .and_then(|t| serde_json::from_str::<Value>(&t).ok())
+            .and_then(|v| v.get("conformant").and_then(|c| c.as_bool()))
+            .unwrap_or(false)
+        {
+            out.insert(stem.trim_end_matches(".conform").to_string());
+        }
+    }
+    out
+}
+
 fn str_array(args: &Value, key: &str) -> Vec<String> {
     args.get(key)
         .and_then(|v| v.as_array())
@@ -127,7 +149,7 @@ pub fn handle_deliverable_accept(args: &Value, repo_root: &Path) -> Result<Value
 pub fn handle_deliverable_done(args: &Value, repo_root: &Path) -> Result<Value, String> {
     let d = load_yaml(&deliverables_dir(repo_root), &req_str(args, "name")?, Deliverable::from_yaml)?;
     let slice = load_yaml(&slices_dir(repo_root), &d.slice, Slice::from_yaml)?;
-    let fd = feature_done(&d, &slice, &graph_of(args, repo_root)?, &load_deciders(repo_root));
+    let fd = feature_done(&d, &slice, &graph_of(args, repo_root)?, &load_deciders(repo_root), &conformed_set(repo_root));
     Ok(json!({ "id": fd.id, "done": fd.done, "progress": fd.progress(),
         "checks": fd.checks.iter().map(|c| json!({"kind": c.kind, "subject": c.subject, "passing": c.passing, "detail": c.detail})).collect::<Vec<_>>() }))
 }
@@ -165,7 +187,7 @@ pub fn handle_release_done(args: &Value, repo_root: &Path) -> Result<Value, Stri
         let s = load_yaml(&slices_dir(repo_root), &d.slice, Slice::from_yaml)?;
         members.push((d, s));
     }
-    let rd = release_done(&r.id, &members, &graph, &deciders);
+    let rd = release_done(&r.id, &members, &graph, &deciders, &conformed_set(repo_root));
     Ok(json!({ "id": rd.id, "done": rd.done, "closed": rd.closed(),
         "members": rd.members.iter().map(|m| json!({"id": m.id, "done": m.done})).collect::<Vec<_>>(),
         "open_edges": rd.open_edges.iter().map(|(n, d)| json!({"node": n, "depends_on_excluded": d})).collect::<Vec<_>>() }))

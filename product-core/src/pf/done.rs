@@ -44,12 +44,20 @@ impl FeatureDone {
     }
 }
 
-/// Compute `feature_done` for a deliverable against the What graph + deciders.
-pub fn feature_done(d: &Deliverable, slice: &Slice, graph: &DomainGraph, deciders: &[Decider]) -> FeatureDone {
+/// Compute `feature_done` for a deliverable. `conformed` is the set of Decider
+/// ids with a recorded passing behavioural-conformance verdict (§6.3) — an
+/// in-scope Decider must both simulate sound+complete *and* be conformed.
+pub fn feature_done(
+    d: &Deliverable,
+    slice: &Slice,
+    graph: &DomainGraph,
+    deciders: &[Decider],
+    conformed: &BTreeSet<String>,
+) -> FeatureDone {
     let scope = covered(graph, &slice.anchors, slice.depth());
     let mut checks = Vec::new();
     domain_checks(graph, &scope, &mut checks);
-    behavioural_checks(deciders, &scope, &mut checks);
+    behavioural_checks(deciders, &scope, conformed, &mut checks);
     acceptance_checks(d, &mut checks);
     // A deliverable with no resolved scope (and so no checks) is not done.
     let done = !checks.is_empty() && checks.iter().all(|c| c.passing);
@@ -74,16 +82,24 @@ fn domain_checks(graph: &DomainGraph, scope: &BTreeSet<String>, out: &mut Vec<Ch
     }
 }
 
-/// Behavioural conformance: every Decider over an in-scope aggregate is sound +
-/// complete (the §3.3 simulation gate).
-fn behavioural_checks(deciders: &[Decider], scope: &BTreeSet<String>, out: &mut Vec<Check>) {
+/// Behavioural conformance for each Decider over an in-scope aggregate: it must
+/// simulate sound + complete (§3.3, before realisation) *and* have a recorded
+/// passing conformance verdict (§6.3, realised code == oracle).
+fn behavioural_checks(deciders: &[Decider], scope: &BTreeSet<String>, conformed: &BTreeSet<String>, out: &mut Vec<Check>) {
     for dec in deciders.iter().filter(|d| scope.contains(&d.decides_for)) {
         let findings = simulate(dec);
         out.push(Check {
-            kind: "behavioural".to_string(),
+            kind: "behavioural-sim".to_string(),
             subject: dec.id.clone(),
             passing: findings.is_empty(),
             detail: if findings.is_empty() { "sound + complete".to_string() } else { format!("{} finding(s)", findings.len()) },
+        });
+        let conformed_ok = conformed.contains(&dec.id);
+        out.push(Check {
+            kind: "behavioural-conform".to_string(),
+            subject: dec.id.clone(),
+            passing: conformed_ok,
+            detail: if conformed_ok { "realised behaviour matches the oracle".to_string() } else { "pending — run `decider conform`".to_string() },
         });
     }
 }
@@ -132,12 +148,12 @@ impl ReleaseDone {
 }
 
 /// Compute `release_done`: all member features done AND the cut is closed.
-pub fn release_done(id: &str, members: &[(Deliverable, Slice)], graph: &DomainGraph, deciders: &[Decider]) -> ReleaseDone {
+pub fn release_done(id: &str, members: &[(Deliverable, Slice)], graph: &DomainGraph, deciders: &[Decider], conformed: &BTreeSet<String>) -> ReleaseDone {
     let mut union = BTreeSet::new();
     let mut feature_results = Vec::new();
     for (d, s) in members {
         union.extend(covered(graph, &s.anchors, s.depth()));
-        feature_results.push(feature_done(d, s, graph, deciders));
+        feature_results.push(feature_done(d, s, graph, deciders, conformed));
     }
     let open_edges = cut_closed(graph, &union);
     let all_done = !feature_results.is_empty() && feature_results.iter().all(|f| f.done);

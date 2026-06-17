@@ -72,6 +72,38 @@ fn deciders_dir() -> PathBuf {
     super::shared::domain_root().join(".product").join("deciders")
 }
 
+/// Persist the §6.3 behavioural-conformance verdict so `deliverable done` can
+/// fold it in. Written next to the decider as `<name>.conform.json`.
+fn record_conform_verdict(name: &str, conformant: bool) -> Result<(), Box<dyn std::error::Error>> {
+    let path = deciders_dir().join(format!("{name}.conform.json"));
+    std::fs::write(&path, serde_json::json!({ "conformant": conformant }).to_string())?;
+    Ok(())
+}
+
+/// The set of decider ids with a recorded passing conformance verdict.
+pub(super) fn conformed_set() -> std::collections::BTreeSet<String> {
+    let dir = deciders_dir();
+    let mut out = std::collections::BTreeSet::new();
+    let Ok(entries) = std::fs::read_dir(&dir) else { return out };
+    for e in entries.flatten() {
+        let p = e.path();
+        if p.extension().and_then(|s| s.to_str()) != Some("json") {
+            continue;
+        }
+        let Some(stem) = p.file_stem().and_then(|s| s.to_str()) else { continue };
+        let id = stem.trim_end_matches(".conform");
+        if std::fs::read_to_string(&p)
+            .ok()
+            .and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok())
+            .and_then(|v| v.get("conformant").and_then(|c| c.as_bool()))
+            .unwrap_or(false)
+        {
+            out.insert(id.to_string());
+        }
+    }
+    out
+}
+
 fn load_domain(product: Option<String>) -> Option<DomainGraph> {
     let p = product.or_else(super::shared::default_product_name)?;
     DomainSession::load(&session_dir(&super::shared::domain_root(), &p)).ok().map(|s| s.graph)
@@ -157,6 +189,7 @@ fn conform(name: &str, runner: &str) -> BoxResult {
     let realised: Vec<product_core::pf::decider_logic::Expectation> = serde_json::from_slice(&output.stdout)
         .map_err(|e| format!("runner output is not a JSON array of outcomes: {e}"))?;
     let findings = product_core::pf::decider_conform::check_conformance(&decider, &realised);
+    record_conform_verdict(name, findings.is_empty())?;
     if findings.is_empty() {
         println!(
             "behaviourally conformant — decider '{}': {} scenario(s) match the realised runner",
@@ -214,6 +247,7 @@ fn list() -> BoxResult {
     };
     let mut names: Vec<String> = entries
         .flatten()
+        .filter(|e| e.path().extension().and_then(|s| s.to_str()) == Some("yaml"))
         .filter_map(|e| e.path().file_stem().and_then(|s| s.to_str()).map(String::from))
         .collect();
     names.sort();

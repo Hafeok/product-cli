@@ -118,7 +118,7 @@ fn done(name: &str, product: Option<String>) -> BoxResult {
     let d = load(name)?;
     let slice = load_slice(&d.slice)?;
     let graph = load_graph(product)?;
-    let fd = feature_done(&d, &slice, &graph, &load_deciders());
+    let fd = feature_done(&d, &slice, &graph, &load_deciders(), &super::decider::conformed_set());
     print_feature_done(&fd);
     if fd.done {
         Ok(())

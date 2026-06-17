@@ -31,6 +31,16 @@ pub enum Commands {
         #[command(subcommand)]
         command: AuthorCommands,
     },
+    /// Build a deliverable — assemble the SPMC context, spawn an agent, report done (§5)
+    Build {
+        /// The deliverable id
+        deliverable: String,
+        /// Assemble + show the context and gate status without spawning an agent
+        #[arg(long)]
+        dry_run: bool,
+        #[arg(long)]
+        product: Option<String>,
+    },
     /// Task types (cells) — validate, show, and list against What + How
     Cell {
         #[command(subcommand)]

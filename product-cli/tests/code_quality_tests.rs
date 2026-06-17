@@ -804,7 +804,7 @@ fn tc_402_all_source_files_under_400_lines_and_all_quality_checks_pass() {
 /// Commands that legitimately have no MCP tool: process/launch/meta surfaces
 /// (they drive a long operation, host the server, or render local output).
 const CLI_ONLY: &[&str] = &[
-    "agent-init", "author", "checklist", "completions", "conformance",
+    "agent-init", "author", "build", "checklist", "completions", "conformance",
     "cycle-times", "forecast", "hash", "implement", "init", "install-hooks",
     "mcp", "metrics", "migrate", "onboard", "status", "tags", "verify",
 ];

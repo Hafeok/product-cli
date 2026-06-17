@@ -7,6 +7,7 @@ mod adr_seal;
 mod adr_write;
 mod agent_init;
 mod author;
+mod build;
 mod cell;
 mod checklist;
 mod completions;
