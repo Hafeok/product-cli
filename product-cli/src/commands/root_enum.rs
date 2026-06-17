@@ -292,6 +292,11 @@ pub enum Commands {
         #[arg(long)]
         all: bool,
     },
+    /// Delivery slice — a saved pointer to a section of the event model
+    Slice {
+        #[command(subcommand)]
+        command: SliceCommands,
+    },
     /// Status summary
     Status {
         /// Filter to a specific phase

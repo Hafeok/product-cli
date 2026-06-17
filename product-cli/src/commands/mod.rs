@@ -48,6 +48,7 @@ mod request_cmd_helpers;
 mod request_log_cmd;
 mod schema;
 mod shared;
+mod slice;
 mod status;
 mod tags;
 mod test_cmd;
@@ -76,6 +77,7 @@ pub use self::migrate::MigrateCommands;
 pub use self::onboard::OnboardCommands;
 pub use self::pattern::PatternCommands;
 pub use self::prompts_cmd::PromptsCommands;
+pub use self::slice::SliceCommands;
 
 mod root_enum;
 pub use root_enum::Commands;

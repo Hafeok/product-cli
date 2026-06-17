@@ -36,6 +36,7 @@ pub mod rules_how;
 pub mod rules_what;
 pub mod seed;
 pub mod session;
+pub mod slice;
 pub mod sparql_rules;
 pub mod turtle;
 pub mod validate;

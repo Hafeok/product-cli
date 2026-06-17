@@ -13,24 +13,51 @@ use super::query;
 
 /// Assemble a context bundle for `id` to `depth` hops. `None` if `id` is absent.
 pub fn bundle(graph: &DomainGraph, id: &str, depth: usize, product: &str) -> Option<String> {
-    let kind = graph.kind_of(id)?;
-    let reachable = reachable(graph, id, depth);
+    bundle_many(graph, &[id.to_string()], depth, product)
+}
+
+/// Assemble one bundle over the union of several focus nodes — a saved slice of
+/// the event model (§7.1). Absent anchors are skipped; `None` if none resolve.
+pub fn bundle_many(graph: &DomainGraph, anchors: &[String], depth: usize, product: &str) -> Option<String> {
+    let present: Vec<&String> = anchors.iter().filter(|a| graph.kind_of(a).is_some()).collect();
+    if present.is_empty() {
+        return None;
+    }
+    // Union of each anchor's reachable set, in discovery order.
+    let mut seen: BTreeSet<String> = BTreeSet::new();
+    let mut nodes: Vec<String> = Vec::new();
+    for a in &present {
+        for id in reachable(graph, a, depth) {
+            if seen.insert(id.clone()) {
+                nodes.push(id);
+            }
+        }
+    }
+    let focus: BTreeSet<&str> = present.iter().map(|s| s.as_str()).collect();
 
     let mut out = String::new();
-    let label = label_of(graph, id).unwrap_or_default();
-    out.push_str(&format!("# Domain Context Bundle: {id} — {label}\n\n"));
+    let title = present.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ");
+    let focus_desc = present
+        .iter()
+        .map(|a| format!("{a}:{}", graph.kind_of(a).map(|k| k.class_name()).unwrap_or("?")))
+        .collect::<Vec<_>>()
+        .join(", ");
+    out.push_str(&format!("# Domain Context Bundle: {title}\n\n"));
     out.push_str("⟦Ω:WhatBundle⟧{\n");
     out.push_str(&format!("  product≜{product}:Product\n"));
-    out.push_str(&format!("  focus≜{id}:{}\n", kind.class_name()));
+    out.push_str(&format!("  focus≜{focus_desc}\n"));
     out.push_str(&format!("  depth≜{depth}\n"));
-    out.push_str(&format!("  nodes≜{}\n}}\n\n---\n\n", reachable.len()));
+    out.push_str(&format!("  nodes≜{}\n}}\n\n---\n\n", nodes.len()));
 
-    // Focus node, in full.
+    // Focus node(s), in full.
     out.push_str("## Focus\n\n");
-    out.push_str(&render_node(graph, id));
-    out.push_str("\n---\n\n");
+    for a in &present {
+        out.push_str(&render_node(graph, a));
+        out.push('\n');
+    }
+    out.push_str("---\n\n");
 
-    render_neighbourhood(graph, id, &reachable, &mut out);
+    render_neighbourhood(graph, &focus, &nodes, &mut out);
     Some(out)
 }
 
@@ -95,12 +122,12 @@ fn adjacency(graph: &DomainGraph) -> BTreeMap<String, BTreeSet<String>> {
     adj
 }
 
-/// Render the reachable nodes (minus the focus) grouped by kind.
-fn render_neighbourhood(graph: &DomainGraph, focus: &str, reachable: &[String], out: &mut String) {
+/// Render the reachable nodes (minus the focus set) grouped by kind.
+fn render_neighbourhood(graph: &DomainGraph, focus: &BTreeSet<&str>, reachable: &[String], out: &mut String) {
     for kind in super::ids::ALL_KINDS {
         let ids: Vec<&String> = reachable
             .iter()
-            .filter(|id| id.as_str() != focus && graph.kind_of(id) == Some(kind))
+            .filter(|id| !focus.contains(id.as_str()) && graph.kind_of(id) == Some(kind))
             .collect();
         if ids.is_empty() {
             continue;
@@ -128,11 +155,6 @@ fn section_title(kind: NodeKind) -> &'static str {
         NodeKind::WireframeStep => "Wireframe steps",
         NodeKind::Flow => "Flows",
     }
-}
-
-fn label_of(graph: &DomainGraph, id: &str) -> Option<String> {
-    let node = query::node_value(graph, id)?;
-    node.get("label").and_then(|l| l.as_str()).map(str::to_string)
 }
 
 /// Render a single node as a markdown block: a `### kind id — label` heading

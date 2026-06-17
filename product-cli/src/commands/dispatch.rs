@@ -6,7 +6,7 @@ use super::{
     adr, agent_init, archetype, author, cell, checklist, completions, conformance, context, cycle_times, decider, dep,
     domain, drift, feature, gap, graph_cmd, hash, hooks, how, implement, init, mcp_cmd,
     metrics_cmd, migrate, onboard, pattern, preflight, prompts_cmd, render, request_cmd, schema,
-    status, tags, test_cmd, work_unit, BoxResult, Commands,
+    slice, status, tags, test_cmd, work_unit, BoxResult, Commands,
 };
 
 pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapCommand) -> BoxResult {
@@ -48,7 +48,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Test { command } => test_cmd::handle_test(command, fmt),
         Commands::Verify { .. } => dispatch_verify(command, fmt),
         // Product-Framework families route through a sub-dispatcher (keeps this match small).
-        c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::WorkUnit { .. }) => dispatch_pf(c),
+        c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Slice { .. } | Commands::WorkUnit { .. }) => dispatch_pf(c),
     }
 }
 
@@ -60,6 +60,7 @@ fn dispatch_pf(command: Commands) -> BoxResult {
         Commands::Decider { command } => decider::handle_decider(command),
         Commands::Domain { command } => domain::handle_domain_cmd(command),
         Commands::How { command } => how::handle_how(command),
+        Commands::Slice { command } => slice::handle_slice(command),
         Commands::WorkUnit { command } => work_unit::handle_work_unit(command),
         _ => unreachable!("dispatch_pf called with non-pf variant"),
     }

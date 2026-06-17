@@ -25134,6 +25134,35 @@ scenarios:
     assert!(out.stdout.contains("sound + complete"), "{}", out.stdout);
 }
 
+// FT-124 — `product slice`: a saved pointer to a section of the event model (§7.1).
+
+#[test]
+fn tc_958_slice_new_and_context_assemble_the_subgraph() {
+    let h = Harness::new();
+    seed_domain_graph(&h); // Sales / Order / OrderPlaced / PlaceOrder
+    let created = h.run(&["slice", "new", "order-slice", "--anchor", "Order"]);
+    created.assert_exit(0);
+    assert!(h.exists(".product/slices/order-slice.yaml"));
+    // context restates nothing — it assembles the reachable What subgraph
+    let ctx = h.run(&["slice", "context", "order-slice"]);
+    ctx.assert_exit(0);
+    assert!(ctx.stdout.contains("Domain Context Bundle"), "{}", ctx.stdout);
+    assert!(ctx.stdout.contains("PlaceOrder"), "{}", ctx.stdout);
+    assert!(ctx.stdout.contains("OrderPlaced"), "{}", ctx.stdout);
+    assert!(h.run(&["slice", "show", "order-slice"]).stdout.contains("anchors: Order"));
+    assert!(h.run(&["slice", "list"]).stdout.contains("order-slice"));
+}
+
+#[test]
+fn tc_959_slice_new_rejects_a_dangling_anchor() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    let out = h.run(&["slice", "new", "bad", "--anchor", "Ghost"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("Ghost"), "stderr: {}", out.stderr);
+    assert!(!h.exists(".product/slices/bad.yaml"));
+}
+
 // =============================================================================
 // FT-115 — `product how add/set`: build the Why cascade + contracts granularly.
 // =============================================================================
