@@ -39,6 +39,7 @@ pub mod release;
 pub mod rules_decider;
 pub mod rules_how;
 pub mod rules_what;
+pub mod run;
 pub mod seed;
 pub mod session;
 pub mod slice;

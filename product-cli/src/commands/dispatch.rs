@@ -14,7 +14,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Adr { command } => adr::handle_adr(command, fmt),
         Commands::AgentInit { watch } => agent_init::handle_agent_init(watch),
         Commands::Author { command } => author::handle_author(command),
-        Commands::Build { deliverable, role, dry_run, product } => build::handle_build(&deliverable, &role, dry_run, product),
+        Commands::Build { deliverable, role, jobs, dry_run, product } => build::handle_build(&deliverable, &role, jobs, dry_run, product),
         Commands::Checklist { command } => checklist::handle_checklist(command),
         Commands::Completions { shell } => completions::handle_completions(&shell, cli_command),
         Commands::Conformance { command } => conformance::handle_conformance(command, fmt),

@@ -25308,6 +25308,28 @@ fn tc_986_build_resolves_worker_by_role() {
     assert!(out.stdout.contains("capability 'claude-code'"), "{}", out.stdout);
 }
 
+// FT-132 — parallel work-unit execution: build fans units across workers.
+
+#[test]
+fn tc_987_build_parallel_plan_lists_work_units() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["worker", "init"]).assert_exit(0);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["deliverable", "new", "place-order", "--slice", "order-slice", "--accept", "a1:ok"]).assert_exit(0);
+    // seed two work units (the §5 parallel unit)
+    let wud = h.dir.path().join(".product/work-units");
+    std::fs::create_dir_all(&wud).expect("mkdir");
+    let wu = |id: &str| format!("id: {id}\nschema: \"{{}}\"\nprompt: build {id}\ncontext:\n  frozen: true\n  derived_from:\n  - domain:Order\nproduces:\n  artifact: {id}.rs\n");
+    std::fs::write(wud.join("wu-a.yaml"), wu("wu-a")).expect("w");
+    std::fs::write(wud.join("wu-b.yaml"), wu("wu-b")).expect("w");
+    let out = h.run(&["build", "place-order", "--jobs", "4", "--dry-run"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("Parallel run plan"), "{}", out.stdout);
+    assert!(out.stdout.contains("4 job(s) over 2 work unit(s)"), "{}", out.stdout);
+    assert!(out.stdout.contains("wu-a") && out.stdout.contains("wu-b"), "{}", out.stdout);
+}
+
 // FT-125 — `product status` surfaces the framework What/How/delivery graph.
 
 #[test]

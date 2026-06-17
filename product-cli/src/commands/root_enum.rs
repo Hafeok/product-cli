@@ -38,6 +38,9 @@ pub enum Commands {
         /// The worker role to resolve to a capability (default: implementer)
         #[arg(long, default_value = "implementer")]
         role: String,
+        /// Max work units to dispatch concurrently (the §5 parallel unit)
+        #[arg(long, default_value_t = 1)]
+        jobs: usize,
         /// Assemble + show the context, worker, and gate status without dispatching
         #[arg(long)]
         dry_run: bool,
