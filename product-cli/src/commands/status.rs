@@ -128,12 +128,23 @@ fn framework_section() -> Option<(String, serde_json::Value)> {
         .map(|l| l.layout.len())
         .unwrap_or(0);
     let deciders = count_yaml(&pdir.join("deciders"));
-    let slices = count_yaml(&pdir.join("slices"));
+    let delivery = Delivery {
+        slices: count_yaml(&pdir.join("slices")),
+        deliverables: count_yaml(&pdir.join("deliverables")),
+        releases: count_yaml(&pdir.join("releases")),
+    };
 
-    if graph.is_none() && how.is_none() && deciders == 0 && slices == 0 {
+    if graph.is_none() && how.is_none() && deciders == 0 && delivery.slices == 0 && delivery.deliverables == 0 && delivery.releases == 0 {
         return None;
     }
-    Some(render_framework(graph.as_ref(), how.as_ref(), layout_rules, deciders, slices))
+    Some(render_framework(graph.as_ref(), how.as_ref(), layout_rules, deciders, delivery))
+}
+
+/// Delivery-layer counts (§7.1).
+struct Delivery {
+    slices: usize,
+    deliverables: usize,
+    releases: usize,
 }
 
 /// Render the framework summary as a text block plus a JSON object.
@@ -142,7 +153,7 @@ fn render_framework(
     how: Option<&HowContract>,
     layout_rules: usize,
     deciders: usize,
-    slices: usize,
+    delivery: Delivery,
 ) -> (String, serde_json::Value) {
     let counts = graph.map(|g| g.counts()).unwrap_or_default();
     let n = |k: &str| counts.iter().find(|(name, _)| *name == k).map(|(_, c)| *c).unwrap_or(0);
@@ -163,12 +174,13 @@ fn render_framework(
         "(none)".to_string()
     };
     let text = format!(
-        "── Framework graph ──\nWhat: {what}\nHow: {how_line}\nDelivery: {slices} slices\n"
+        "── Framework graph ──\nWhat: {what}\nHow: {how_line}\nDelivery: {} slices, {} deliverables, {} releases\n",
+        delivery.slices, delivery.deliverables, delivery.releases,
     );
     let json = serde_json::json!({
         "what": { "contexts": n("BoundedContext"), "entities": n("Entity"), "events": n("Event"), "commands": n("Command"), "deciders": deciders },
         "how": { "decisions": decisions, "principles": principles, "patterns": patterns, "contracts": contracts, "layout_rules": layout_rules },
-        "delivery": { "slices": slices },
+        "delivery": { "slices": delivery.slices, "deliverables": delivery.deliverables, "releases": delivery.releases },
     });
     (text, json)
 }

@@ -110,6 +110,11 @@ pub enum Commands {
         #[command(subcommand)]
         command: DeciderCommands,
     },
+    /// Delivery feature — one slice plus its acceptance (§7.1)
+    Deliverable {
+        #[command(subcommand)]
+        command: DeliverableCommands,
+    },
     /// Dependency management (ADR-030)
     Dep {
         #[command(subcommand)]
@@ -274,6 +279,11 @@ pub enum Commands {
     Prompts {
         #[command(subcommand)]
         command: PromptsCommands,
+    },
+    /// Release — a coherent set of delivery features (§7.1)
+    Release {
+        #[command(subcommand)]
+        command: ReleaseCommands,
     },
     /// Unified atomic write interface (FT-041, ADR-038)
     Request {

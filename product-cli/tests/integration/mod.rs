@@ -25163,6 +25163,42 @@ fn tc_959_slice_new_rejects_a_dangling_anchor() {
     assert!(!h.exists(".product/slices/bad.yaml"));
 }
 
+// FT-126 — `product deliverable` + `product release`: the delivery layer (§7.1).
+
+#[test]
+fn tc_967_delivery_chain_release_feature_slice() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    // a deliverable points at one slice + carries acceptance
+    let d = h.run(&["deliverable", "new", "place-order", "--slice", "order-slice", "--accept", "a1:an order can be placed"]);
+    d.assert_exit(0);
+    assert!(h.exists(".product/deliverables/place-order.yaml"));
+    // a release groups deliverables
+    let r = h.run(&["release", "new", "R1", "--feature", "place-order"]);
+    r.assert_exit(0);
+    assert!(h.exists(".product/releases/R1.yaml"));
+    // show + status reflect the chain
+    assert!(h.run(&["deliverable", "show", "place-order"]).stdout.contains("slice: order-slice"));
+    assert!(h.run(&["release", "show", "R1"]).stdout.contains("place-order"));
+    let status = h.run(&["status"]);
+    assert!(status.stdout.contains("1 slices, 1 deliverables, 1 releases"), "{}", status.stdout);
+}
+
+#[test]
+fn tc_968_delivery_rejects_dangling_references() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    // a deliverable pointing at a slice that does not exist
+    let d = h.run(&["deliverable", "new", "x", "--slice", "ghost-slice"]);
+    d.assert_exit(1);
+    assert!(d.stderr.contains("ghost-slice"), "stderr: {}", d.stderr);
+    // a release referencing a deliverable that does not exist
+    let r = h.run(&["release", "new", "R", "--feature", "ghost-feature"]);
+    r.assert_exit(1);
+    assert!(r.stderr.contains("ghost-feature"), "stderr: {}", r.stderr);
+}
+
 // FT-125 — `product status` surfaces the framework What/How/delivery graph.
 
 #[test]
