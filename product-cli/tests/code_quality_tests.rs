@@ -806,7 +806,7 @@ fn tc_402_all_source_files_under_400_lines_and_all_quality_checks_pass() {
 const CLI_ONLY: &[&str] = &[
     "agent-init", "author", "build", "checklist", "completions", "conformance",
     "cycle-times", "forecast", "hash", "implement", "init", "install-hooks",
-    "mcp", "metrics", "migrate", "onboard", "status", "tags", "verify",
+    "lsp", "mcp", "metrics", "migrate", "onboard", "status", "tags", "verify",
 ];
 
 /// Commands that SHOULD expose an MCP tool but do not yet — the documented

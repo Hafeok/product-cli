@@ -42,6 +42,12 @@ pub struct Cell {
     pub derived_from: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub applies: Vec<String>,
+    /// When set, this cell *edits* an existing file at this relative path (e.g.
+    /// wiring a `pub mod` declaration) rather than producing a new artifact. The
+    /// path flows to the work unit's `path_hint`, and `build` injects the file's
+    /// current content so the worker returns a precise edit (§5).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub edits: Option<String>,
 }
 
 /// A verification that makes the definition true; names what it protects.
@@ -123,6 +129,7 @@ impl TaskType {
                 model: Some("code".to_string()),
                 derived_from: vec!["domain:entity".to_string()],
                 applies: vec![],
+                edits: None,
             }],
             audits: vec![Audit {
                 id: "entity-exists".to_string(),

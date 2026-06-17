@@ -119,8 +119,8 @@ pub fn handle_deliverable_new(args: &Value, repo_root: &Path) -> Result<Value, S
     let acceptance = str_array(args, "acceptance")
         .into_iter()
         .map(|s| match s.split_once(':') {
-            Some((i, st)) => AcceptanceCriterion { id: i.trim().into(), statement: st.trim().into(), status: "pending".into() },
-            None => AcceptanceCriterion { id: s.trim().into(), statement: String::new(), status: "pending".into() },
+            Some((i, st)) => AcceptanceCriterion { id: i.trim().into(), statement: st.trim().into(), status: "pending".into(), runner: None, runner_args: None },
+            None => AcceptanceCriterion { id: s.trim().into(), statement: String::new(), status: "pending".into(), runner: None, runner_args: None },
         })
         .collect();
     let d = Deliverable { id: id.clone(), slice: req_str(args, "slice")?, acceptance };

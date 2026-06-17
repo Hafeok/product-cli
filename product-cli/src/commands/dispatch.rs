@@ -4,7 +4,7 @@ use clap::Command as ClapCommand;
 
 use super::{
     adr, agent_init, archetype, author, build, cell, checklist, completions, conformance, context, cycle_times, decider,
-    deliverable, dep, domain, drift, feature, gap, graph_cmd, hash, hooks, how, implement, init, mcp_cmd,
+    deliverable, dep, domain, drift, feature, gap, graph_cmd, hash, hooks, how, implement, init, lsp, mcp_cmd,
     metrics_cmd, migrate, onboard, pattern, preflight, prompts_cmd, release, render, request_cmd, schema,
     slice, status, tags, test_cmd, work_unit, worker, BoxResult, Commands,
 };
@@ -14,7 +14,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Adr { command } => adr::handle_adr(command, fmt),
         Commands::AgentInit { watch } => agent_init::handle_agent_init(watch),
         Commands::Author { command } => author::handle_author(command),
-        Commands::Build { deliverable, role, jobs, dry_run, product } => build::handle_build(&deliverable, &role, jobs, dry_run, product),
+        Commands::Build { .. } => dispatch_build(command),
         Commands::Checklist { command } => checklist::handle_checklist(command),
         Commands::Completions { shell } => completions::handle_completions(&shell, cli_command),
         Commands::Conformance { command } => conformance::handle_conformance(command, fmt),
@@ -31,6 +31,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Implement { .. } => dispatch_implement(command),
         Commands::Init { .. } => dispatch_init(command),
         Commands::InstallHooks => hooks::handle_install_hooks(),
+        Commands::Lsp { command } => lsp::handle_lsp(command),
         Commands::Mcp { .. } => dispatch_mcp(command),
         Commands::Metrics { command } => metrics_cmd::handle_metrics(command),
         Commands::Migrate { command } => migrate::handle_migrate(command),
@@ -120,6 +121,13 @@ fn dispatch_forecast(command: Commands, fmt: &str) -> BoxResult {
         unreachable!("dispatch_forecast called with non-Forecast variant")
     };
     cycle_times::handle_forecast(id.as_deref(), phase, naive, sample_size, fmt)
+}
+
+fn dispatch_build(command: Commands) -> BoxResult {
+    let Commands::Build { deliverable, role, jobs, dry_run, lsp, no_verify, product } = command else {
+        unreachable!("dispatch_build called with non-Build variant")
+    };
+    build::handle_build(&deliverable, &role, jobs, dry_run, build::Gates { lsp, verify: !no_verify }, product)
 }
 
 fn dispatch_implement(command: Commands) -> BoxResult {

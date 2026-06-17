@@ -22,6 +22,15 @@ pub struct AcceptanceCriterion {
     pub statement: String,
     #[serde(default = "pending")]
     pub status: String,
+    /// How to check this criterion: `cargo-test` (runs `cargo test <args>`) or
+    /// `shell` (runs `sh -c <args>`). Absent → the criterion is judged manually
+    /// and `build --verify` leaves its status untouched.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub runner: Option<String>,
+    /// Arguments for the runner — a test filter for `cargo-test`, a command line
+    /// for `shell`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub runner_args: Option<String>,
 }
 
 fn pending() -> String {

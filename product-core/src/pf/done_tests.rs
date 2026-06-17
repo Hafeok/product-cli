@@ -29,7 +29,7 @@ fn deliverable(status: &str) -> Deliverable {
     Deliverable {
         id: "place-order".into(),
         slice: "order-slice".into(),
-        acceptance: vec![AcceptanceCriterion { id: "a1".into(), statement: "an order can be placed".into(), status: status.into() }],
+        acceptance: vec![AcceptanceCriterion { id: "a1".into(), statement: "an order can be placed".into(), status: status.into(), runner: None, runner_args: None }],
     }
 }
 

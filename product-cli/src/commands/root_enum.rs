@@ -44,6 +44,12 @@ pub enum Commands {
         /// Assemble + show the context, worker, and gate status without dispatching
         #[arg(long)]
         dry_run: bool,
+        /// Diagnose + fix the worker's Rust output with rust-analyzer (clippy) before gating
+        #[arg(long)]
+        lsp: bool,
+        /// Skip the §6 verify step (running each acceptance criterion's runner)
+        #[arg(long)]
+        no_verify: bool,
         #[arg(long)]
         product: Option<String>,
     },
@@ -245,6 +251,11 @@ pub enum Commands {
     },
     /// Install git hooks and scaffolding
     InstallHooks,
+    /// rust-analyzer code intelligence — diagnostics, symbols, references
+    Lsp {
+        #[command(subcommand)]
+        command: LspCommands,
+    },
     /// MCP server (stdio or HTTP transport)
     Mcp {
         /// Use HTTP transport instead of stdio

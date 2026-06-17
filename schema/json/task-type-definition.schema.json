@@ -50,7 +50,8 @@
           "artifact": { "type": "string", "description": "What the cell produces." },
           "model": { "type": "string", "description": "Model binding hint (e.g. code / reasoning)." },
           "derived_from": { "type": "array", "items": { "type": "string" }, "minItems": 1, "description": "Frozen input pointers (domain concepts, contract conventions, other cells)." },
-          "applies": { "type": "array", "items": { "type": "string" }, "description": "Principles/patterns this cell applies (by pointer)." }
+          "applies": { "type": "array", "items": { "type": "string" }, "description": "Principles/patterns this cell applies (by pointer)." },
+          "edits": { "type": "string", "description": "Relative path of an existing file this cell edits (e.g. wiring a `pub mod` declaration) instead of producing a new artifact." }
         }
       }
     },

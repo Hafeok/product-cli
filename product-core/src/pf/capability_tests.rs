@@ -32,6 +32,17 @@ fn unknown_role_resolves_to_nothing() {
 }
 
 #[test]
+fn ladder_is_default_then_escalations_weakest_first() {
+    let ids: Vec<String> = catalog().ladder("implementer").into_iter().map(|c| c.id).collect();
+    assert_eq!(ids, vec!["code-writer", "deep-reasoning"]);
+}
+
+#[test]
+fn ladder_of_unknown_role_is_empty() {
+    assert!(catalog().ladder("ghost").is_empty());
+}
+
+#[test]
 fn validate_flags_a_dangling_capability() {
     let mut c = catalog();
     c.role_bindings[0].default_capability = "missing".into();

@@ -163,10 +163,15 @@ fn parse_acceptance(specs: Vec<String>) -> Vec<AcceptanceCriterion> {
     specs
         .into_iter()
         .map(|s| match s.split_once(':') {
-            Some((id, statement)) => AcceptanceCriterion { id: id.trim().to_string(), statement: statement.trim().to_string(), status: "pending".to_string() },
-            None => AcceptanceCriterion { id: s.trim().to_string(), statement: String::new(), status: "pending".to_string() },
+            Some((id, statement)) => AcceptanceCriterion { id: id.trim().to_string(), statement: statement.trim().to_string(), status: "pending".to_string(), runner: None, runner_args: None },
+            None => AcceptanceCriterion { id: s.trim().to_string(), statement: String::new(), status: "pending".to_string(), runner: None, runner_args: None },
         })
         .collect()
+}
+
+pub(super) fn save(d: &Deliverable) -> BoxResult {
+    std::fs::write(dir().join(format!("{}.yaml", d.id)), d.to_yaml()?)?;
+    Ok(())
 }
 
 pub(super) fn load(name: &str) -> Result<Deliverable, Box<dyn std::error::Error>> {

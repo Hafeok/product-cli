@@ -112,9 +112,12 @@ fn instantiate(task: &TaskType, cell: &super::cell::Cell, bound: &BTreeMap<&str,
         Some(p) => slug(&format!("{}-{}", cell.id, p)),
         None => slug(&format!("{}-{}", task.id, cell.id)),
     };
+    let action = match &cell.edits {
+        Some(path) => format!("Edit the existing file '{path}': {}", cell.artifact),
+        None => format!("Produce {}", cell.artifact),
+    };
     let prompt = format!(
-        "Produce {} for task type '{}'{}.{}",
-        cell.artifact,
+        "{action} for task type '{}'{}.{}",
         task.id,
         primary.map(|p| format!(" ({p})")).unwrap_or_default(),
         if cell.applies.is_empty() { String::new() } else { format!(" Apply: {}.", cell.applies.join(", ")) },
@@ -126,7 +129,7 @@ fn instantiate(task: &TaskType, cell: &super::cell::Cell, bound: &BTreeMap<&str,
         prompt,
         model: cell.model.clone(),
         context: Context { derived_from, frozen: true, hash: Some(format!("sha256:{hash}")) },
-        produces: Produces { artifact: cell.artifact.clone(), path_hint: None },
+        produces: Produces { artifact: cell.artifact.clone(), path_hint: cell.edits.clone() },
         applies: cell.applies.clone(),
         trace: Some(Trace {
             what: primary.map(str::to_string),

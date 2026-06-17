@@ -130,6 +130,26 @@ impl Catalog {
         }
         self.capability(chosen)
     }
+
+    /// A role's capability ladder, weakest first: the default capability followed
+    /// by each escalation rung, resolved to capabilities (unknown ids skipped,
+    /// duplicates removed). A fix loop climbs this rung by rung as rounds fail.
+    pub fn ladder(&self, role_id: &str) -> Vec<Capability> {
+        let Some(binding) = self.binding(role_id) else {
+            return Vec::new();
+        };
+        let mut ids = vec![binding.default_capability.clone()];
+        ids.extend(binding.escalation_steps.iter().map(|s| s.capability.clone()));
+        let mut out: Vec<Capability> = Vec::new();
+        for id in ids {
+            if let Some(c) = self.capability(&id) {
+                if !out.iter().any(|x| x.id == c.id) {
+                    out.push(c.clone());
+                }
+            }
+        }
+        out
+    }
 }
 
 /// Validate a catalog: every binding's default + step capabilities resolve, and

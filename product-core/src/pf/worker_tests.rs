@@ -46,3 +46,41 @@ fn apply_refuses_path_escape() {
     let files = vec![ArtifactFile { path: "../evil.rs".into(), content: "x".into() }];
     assert!(apply_files(&files, dir.path()).is_err());
 }
+
+#[test]
+fn parse_output_accepts_edits_only() {
+    let obj = json!({ "edits": [{ "path": "src/mod.rs", "find": "pub mod a;", "replace": "pub mod a;\npub mod b;" }] });
+    let (files, edits) = parse_output(&obj).expect("parse");
+    assert!(files.is_empty());
+    assert_eq!(edits, vec![EditOp { path: "src/mod.rs".into(), find: "pub mod a;".into(), replace: "pub mod a;\npub mod b;".into() }]);
+}
+
+#[test]
+fn parse_output_rejects_empty_response() {
+    assert!(parse_output(&json!({ "junk": 1 })).is_err());
+}
+
+#[test]
+fn apply_edits_wires_a_unique_span() {
+    let dir = tempfile::tempdir().expect("tmp");
+    std::fs::write(dir.path().join("mod.rs"), "pub mod a;\npub mod c;\n").expect("seed");
+    let edits = vec![EditOp { path: "mod.rs".into(), find: "pub mod a;".into(), replace: "pub mod a;\npub mod b;".into() }];
+    apply_edits(&edits, dir.path()).expect("apply");
+    assert_eq!(std::fs::read_to_string(dir.path().join("mod.rs")).expect("read"), "pub mod a;\npub mod b;\npub mod c;\n");
+}
+
+#[test]
+fn apply_edits_refuses_a_missing_target() {
+    let dir = tempfile::tempdir().expect("tmp");
+    std::fs::write(dir.path().join("mod.rs"), "pub mod a;\n").expect("seed");
+    let edits = vec![EditOp { path: "mod.rs".into(), find: "pub mod zzz;".into(), replace: "x".into() }];
+    assert!(apply_edits(&edits, dir.path()).is_err());
+}
+
+#[test]
+fn apply_edits_refuses_an_ambiguous_target() {
+    let dir = tempfile::tempdir().expect("tmp");
+    std::fs::write(dir.path().join("mod.rs"), "x\nx\n").expect("seed");
+    let edits = vec![EditOp { path: "mod.rs".into(), find: "x".into(), replace: "y".into() }];
+    assert!(apply_edits(&edits, dir.path()).is_err());
+}

@@ -13,6 +13,9 @@ use std::process::Command;
 
 use super::BoxResult;
 
+/// What a dispatch wrote — the paths a downstream gate (LSP, verify) can inspect.
+type DispatchResult = Result<Vec<PathBuf>, Box<dyn std::error::Error>>;
+
 #[derive(Subcommand)]
 pub enum WorkerCommands {
     /// Validate the capability catalog (bindings resolve; triggers known)
@@ -56,7 +59,8 @@ pub(crate) fn handle_worker(cmd: WorkerCommands) -> BoxResult {
 fn run_cmd(role: &str, prompt: &str, triggers: &[String]) -> BoxResult {
     let cap = resolve(&load_catalog(), role, triggers);
     println!("role '{role}' → capability '{}' (endpoint {})", cap.id, cap.endpoint);
-    dispatch(&cap, prompt)
+    dispatch(&cap, prompt)?;
+    Ok(())
 }
 
 fn pdir() -> PathBuf {
@@ -96,11 +100,23 @@ pub(super) fn resolve(catalog: &Catalog, role: &str, triggers: &[String]) -> Cap
     catalog.resolve(role, triggers).cloned().unwrap_or_else(default_claude)
 }
 
-/// Dispatch a prompt to a capability's runner.
-pub(super) fn dispatch(cap: &Capability, prompt: &str) -> BoxResult {
+/// A role's capability ladder (weakest first) for the fix loop to climb. Falls
+/// back to the single resolved default when the role has no ladder.
+pub(super) fn ladder(catalog: &Catalog, role: &str) -> Vec<Capability> {
+    let rungs = catalog.ladder(role);
+    if rungs.is_empty() {
+        vec![resolve(catalog, role, &[])]
+    } else {
+        rungs
+    }
+}
+
+/// Dispatch a prompt to a capability's runner; returns the files it wrote (empty
+/// for endpoints that stream to stdout rather than emit artifacts).
+pub(super) fn dispatch(cap: &Capability, prompt: &str) -> DispatchResult {
     match cap.endpoint.as_str() {
-        "claude" => run_claude(prompt),
-        "litellm" | "anthropic" | "scaleway" => run_litellm(cap, prompt),
+        "claude" => run_claude(prompt).map(|_| Vec::new()),
+        "litellm" | "anthropic" | "scaleway" => run_litellm(cap, prompt).map(|_| Vec::new()),
         "worker" => run_first_party(cap, prompt),
         other => Err(format!("unknown capability endpoint '{other}' (expected claude | litellm | worker)").into()),
     }
@@ -108,11 +124,11 @@ pub(super) fn dispatch(cap: &Capability, prompt: &str) -> BoxResult {
 
 /// The first-party worker: ask the model for structured file output (or, with no
 /// model configured, write a deterministic stub), then apply the files.
-fn run_first_party(cap: &Capability, prompt: &str) -> BoxResult {
+fn run_first_party(cap: &Capability, prompt: &str) -> DispatchResult {
     let root = super::shared::domain_root();
     let base = std::env::var("LITELLM_BASE_URL").ok().filter(|s| !s.is_empty());
     let key = std::env::var("LITELLM_API_KEY").ok().filter(|s| !s.is_empty());
-    let files = match (base, key) {
+    let (files, edits) = match (base, key) {
         (Some(base), Some(key)) => {
             let model = if cap.model_identifier.is_empty() { cap.id.as_str() } else { cap.model_identifier.as_str() };
             let url = format!("{}/chat/completions", base.trim_end_matches('/'));
@@ -123,19 +139,20 @@ fn run_first_party(cap: &Capability, prompt: &str) -> BoxResult {
             let v: serde_json::Value = resp.into_json().map_err(|e| format!("worker response not JSON: {e}"))?;
             let content = v["choices"][0]["message"]["content"].as_str().unwrap_or("");
             let obj: serde_json::Value = serde_json::from_str(content).map_err(|e| format!("worker output not a JSON object: {e}"))?;
-            fpw::parse_files(&obj)?
+            fpw::parse_output(&obj)?
         }
         _ => {
             println!("  (no LITELLM_BASE_URL — first-party worker running offline; writing a stub)");
-            fpw::stub_files(prompt)
+            (fpw::stub_files(prompt), Vec::new())
         }
     };
-    let written = fpw::apply_files(&files, &root)?;
+    let mut written = fpw::apply_files(&files, &root)?;
+    written.extend(fpw::apply_edits(&edits, &root)?);
     println!("  first-party worker wrote {} file(s):", written.len());
     for w in &written {
         println!("    {}", w.display());
     }
-    Ok(())
+    Ok(written)
 }
 
 fn run_claude(prompt: &str) -> BoxResult {

@@ -25251,6 +25251,38 @@ fn tc_984_build_dry_run_assembles_the_spmc_context() {
 }
 
 #[test]
+fn tc_990_build_verify_runs_acceptance_runners() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    // A deliverable whose acceptance carries runners — one that passes, one that
+    // fails. (`deliverable new` has no runner flag, so author the YAML directly.)
+    let dy = "id: place-order\nslice: order-slice\nacceptance:\n- id: a1\n  statement: passes\n  runner: shell\n  runner_args: \"true\"\n- id: a2\n  statement: fails\n  runner: shell\n  runner_args: \"false\"\n";
+    let dd = h.dir.path().join(".product/deliverables");
+    std::fs::create_dir_all(&dd).expect("mkdir");
+    std::fs::write(dd.join("place-order.yaml"), dy).expect("write deliverable");
+    // Build with the worker role offline (no LITELLM env → deterministic stub),
+    // so the only live behaviour under test is the §6 verify step.
+    let output = Command::new(&h.bin)
+        .args(["build", "place-order", "--role", "coder"])
+        .current_dir(h.dir.path())
+        .env_remove("LITELLM_BASE_URL")
+        .env_remove("LITELLM_API_KEY")
+        .output()
+        .expect("run build");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Verify + fix (§6)"), "{stdout}");
+    assert!(stdout.contains("[x] a1"), "{stdout}");
+    assert!(stdout.contains("[ ] a2"), "{stdout}");
+    // The verdicts are recorded back into the deliverable (consumed by `done`).
+    let saved = h.read(".product/deliverables/place-order.yaml");
+    assert!(saved.contains("status: passing"), "{saved}");
+    assert!(saved.contains("status: failing"), "{saved}");
+    // a2 failing → acceptance gate fails → not done.
+    assert!(stdout.contains("not done"), "{stdout}");
+}
+
+#[test]
 fn tc_983_recording_conformance_flips_done() {
     let h = Harness::new();
     seed_domain_graph(&h); // Order aggregate; PlaceOrder targets it, emits OrderPlaced

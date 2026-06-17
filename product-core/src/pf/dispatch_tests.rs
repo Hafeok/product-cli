@@ -66,6 +66,38 @@ fn missing_required_binding_is_rejected() {
 }
 
 #[test]
+fn edits_cell_becomes_an_edit_work_unit() {
+    use crate::pf::cell::{Cell, Slot};
+    let t = TaskType {
+        id: "wire".into(),
+        name: "wire".into(),
+        applies_when: "x".into(),
+        slots: vec![Slot {
+            name: "entity".into(),
+            kind: Some("domain".into()),
+            dispatch: "name it".into(),
+            capture: "which?".into(),
+            audit: "exists".into(),
+            required: true,
+        }],
+        cells: vec![Cell {
+            id: "wire-mod".into(),
+            artifact: "add `pub mod casing;` in sorted order".into(),
+            model: Some("code".into()),
+            derived_from: vec!["domain:entity".into()],
+            applies: vec![],
+            edits: Some("src/pf/mod.rs".into()),
+        }],
+        ..Default::default()
+    };
+    let d = dispatch(&t, &bind(&[("entity", "Order")]), Some(&graph_with_order()));
+    assert!(!d.violations.iter().any(|x| x.severity == "violation"), "{:?}", d.violations);
+    let wu = &d.work_units[0];
+    assert_eq!(wu.produces.path_hint.as_deref(), Some("src/pf/mod.rs"));
+    assert!(wu.prompt.starts_with("Edit the existing file 'src/pf/mod.rs'"), "{}", wu.prompt);
+}
+
+#[test]
 fn binding_unknown_slot_is_rejected() {
     let t = TaskType::from_yaml(EXAMPLE).expect("parse");
     let bindings = bind(&[("entity", "Order"), ("fields", "f"), ("operations", "R"), ("validation", "v"), ("views", "l"), ("nope", "x")]);

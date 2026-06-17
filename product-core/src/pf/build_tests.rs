@@ -18,7 +18,7 @@ fn assembles_the_spmc_sections() {
     let d = Deliverable {
         id: "place-order".into(),
         slice: "order-slice".into(),
-        acceptance: vec![AcceptanceCriterion { id: "a1".into(), statement: "an order can be placed".into(), status: "pending".into() }],
+        acceptance: vec![AcceptanceCriterion { id: "a1".into(), statement: "an order can be placed".into(), status: "pending".into(), runner: None, runner_args: None }],
     };
     let ctx = assemble(&d, &slice, &graph(), None, &[], "demo");
     assert!(ctx.contains("Build Context: place-order"));
