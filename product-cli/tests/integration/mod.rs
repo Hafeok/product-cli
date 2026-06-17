@@ -25283,6 +25283,39 @@ fn tc_990_build_verify_runs_acceptance_runners() {
 }
 
 #[test]
+fn tc_991_build_verify_fix_loop_converges() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["worker", "init"]).assert_exit(0); // coder → code-writer (worker endpoint)
+    // A deliverable whose shell runner fails on the first worker output, passes on the second.
+    let dy = "id: conv\nslice: order-slice\nacceptance:\n- id: a1\n  statement: out is good\n  runner: shell\n  runner_args: \"grep -q GOOD out.txt\"\n";
+    let dd = h.dir.path().join(".product/deliverables");
+    std::fs::create_dir_all(&dd).expect("mkdir");
+    std::fs::write(dd.join("conv.yaml"), dy).expect("write deliverable");
+    // Scripted worker: call 0 writes BAD, call 1 writes GOOD.
+    let md = h.dir.path().join("mock");
+    std::fs::create_dir_all(&md).expect("mkdir mock");
+    std::fs::write(md.join("response-0.json"), "{\"files\":[{\"path\":\"out.txt\",\"content\":\"BAD\\n\"}]}").expect("r0");
+    std::fs::write(md.join("response-1.json"), "{\"files\":[{\"path\":\"out.txt\",\"content\":\"GOOD\\n\"}]}").expect("r1");
+    let output = Command::new(&h.bin)
+        .args(["build", "conv", "--role", "coder"])
+        .current_dir(h.dir.path())
+        .env("PRODUCT_MOCK_DIR", md.to_str().expect("dir"))
+        .env_remove("LITELLM_BASE_URL")
+        .env_remove("LITELLM_API_KEY")
+        .output()
+        .expect("run build");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // The first verdict failed → the loop re-dispatched, escalating up the ladder.
+    assert!(stdout.contains("re-dispatching to 'code-writer-heavy'"), "{stdout}");
+    // The second response made the runner pass → converged to DONE.
+    assert!(stdout.contains("[x] a1"), "{stdout}");
+    assert!(stdout.contains("DONE"), "{stdout}");
+    assert_eq!(h.read("out.txt").trim(), "GOOD");
+}
+
+#[test]
 fn tc_983_recording_conformance_flips_done() {
     let h = Harness::new();
     seed_domain_graph(&h); // Order aggregate; PlaceOrder targets it, emits OrderPlaced

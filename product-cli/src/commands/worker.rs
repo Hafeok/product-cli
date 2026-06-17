@@ -10,11 +10,40 @@ use product_core::pf::capability::{validate_catalog, Capability, Catalog};
 use product_core::pf::worker as fpw;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::time::Duration;
 
 use super::BoxResult;
 
 /// What a dispatch wrote — the paths a downstream gate (LSP, verify) can inspect.
 type DispatchResult = Result<Vec<PathBuf>, Box<dyn std::error::Error>>;
+
+/// Per-request timeout for a model call (clippy over a cold workspace is slow,
+/// but a hung connection should not stall a build forever).
+const HTTP_TIMEOUT: Duration = Duration::from_secs(240);
+/// How many times to attempt a model call before giving up.
+const HTTP_ATTEMPTS: u32 = 3;
+
+/// POST a chat-completion body with a timeout, retrying transient failures
+/// (transport errors, 429, 5xx) with linear backoff. 4xx fails fast.
+fn post_json_retry(url: &str, key: &str, body: &serde_json::Value) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    let mut last = String::new();
+    for attempt in 1..=HTTP_ATTEMPTS {
+        let req = ureq::post(url).timeout(HTTP_TIMEOUT).set("Authorization", &format!("Bearer {key}"));
+        match req.send_json(body.clone()) {
+            Ok(resp) => return resp.into_json().map_err(|e| format!("response not JSON: {e}").into()),
+            Err(ureq::Error::Status(code, resp)) if code != 429 && code < 500 => {
+                return Err(format!("HTTP {code}: {}", resp.into_string().unwrap_or_default()).into());
+            }
+            Err(ureq::Error::Status(code, resp)) => last = format!("HTTP {code}: {}", resp.into_string().unwrap_or_default()),
+            Err(ureq::Error::Transport(t)) => last = format!("transport: {t}"),
+        }
+        if attempt < HTTP_ATTEMPTS {
+            eprintln!("  model call attempt {attempt}/{HTTP_ATTEMPTS} failed ({last}); retrying…");
+            std::thread::sleep(Duration::from_secs(2 * attempt as u64));
+        }
+    }
+    Err(format!("model call failed after {HTTP_ATTEMPTS} attempts: {last}").into())
+}
 
 #[derive(Subcommand)]
 pub enum WorkerCommands {
@@ -123,29 +152,12 @@ pub(super) fn dispatch(cap: &Capability, prompt: &str) -> DispatchResult {
 }
 
 /// The first-party worker: ask the model for structured file output (or, with no
-/// model configured, write a deterministic stub), then apply the files.
+/// model configured, write a deterministic stub), then apply the files. When
+/// `PRODUCT_MOCK_DIR` is set, consumes scripted responses instead of calling a
+/// model — so the fix loops are testable in CI without a live model.
 fn run_first_party(cap: &Capability, prompt: &str) -> DispatchResult {
     let root = super::shared::domain_root();
-    let base = std::env::var("LITELLM_BASE_URL").ok().filter(|s| !s.is_empty());
-    let key = std::env::var("LITELLM_API_KEY").ok().filter(|s| !s.is_empty());
-    let (files, edits) = match (base, key) {
-        (Some(base), Some(key)) => {
-            let model = if cap.model_identifier.is_empty() { cap.id.as_str() } else { cap.model_identifier.as_str() };
-            let url = format!("{}/chat/completions", base.trim_end_matches('/'));
-            let resp = ureq::post(&url)
-                .set("Authorization", &format!("Bearer {key}"))
-                .send_json(fpw::build_request(model, prompt))
-                .map_err(|e| format!("worker model call failed: {e}"))?;
-            let v: serde_json::Value = resp.into_json().map_err(|e| format!("worker response not JSON: {e}"))?;
-            let content = v["choices"][0]["message"]["content"].as_str().unwrap_or("");
-            let obj: serde_json::Value = serde_json::from_str(content).map_err(|e| format!("worker output not a JSON object: {e}"))?;
-            fpw::parse_output(&obj)?
-        }
-        _ => {
-            println!("  (no LITELLM_BASE_URL — first-party worker running offline; writing a stub)");
-            (fpw::stub_files(prompt), Vec::new())
-        }
-    };
+    let (files, edits) = worker_output(cap, prompt)?;
     let mut written = fpw::apply_files(&files, &root)?;
     written.extend(fpw::apply_edits(&edits, &root)?);
     println!("  first-party worker wrote {} file(s):", written.len());
@@ -153,6 +165,45 @@ fn run_first_party(cap: &Capability, prompt: &str) -> DispatchResult {
         println!("    {}", w.display());
     }
     Ok(written)
+}
+
+/// Resolve the worker's structured output: scripted (mock) → live model → stub.
+fn worker_output(cap: &Capability, prompt: &str) -> Result<(Vec<fpw::ArtifactFile>, Vec<fpw::EditOp>), Box<dyn std::error::Error>> {
+    if let Some(dir) = std::env::var("PRODUCT_MOCK_DIR").ok().filter(|s| !s.is_empty()) {
+        let obj = fpw::extract_json(&next_scripted_response(&dir)?)?;
+        return Ok(fpw::parse_output(&obj)?);
+    }
+    let base = std::env::var("LITELLM_BASE_URL").ok().filter(|s| !s.is_empty());
+    let key = std::env::var("LITELLM_API_KEY").ok().filter(|s| !s.is_empty());
+    match (base, key) {
+        (Some(base), Some(key)) => {
+            let model = if cap.model_identifier.is_empty() { cap.id.as_str() } else { cap.model_identifier.as_str() };
+            let url = format!("{}/chat/completions", base.trim_end_matches('/'));
+            let v = post_json_retry(&url, &key, &fpw::build_request(model, prompt))?;
+            let content = v["choices"][0]["message"]["content"].as_str().unwrap_or("");
+            Ok(fpw::parse_output(&fpw::extract_json(content)?)?)
+        }
+        _ => {
+            println!("  (no LITELLM_BASE_URL — first-party worker running offline; writing a stub)");
+            Ok((fpw::stub_files(prompt), Vec::new()))
+        }
+    }
+}
+
+/// The next scripted response from `PRODUCT_MOCK_DIR` (`response-<n>.json`),
+/// advancing a per-process counter; the last file repeats once scripts run out.
+fn next_scripted_response(dir: &str) -> Result<String, Box<dyn std::error::Error>> {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    static CALL: AtomicUsize = AtomicUsize::new(0);
+    let n = CALL.fetch_add(1, Ordering::SeqCst);
+    let base = Path::new(dir);
+    let mut path = base.join(format!("response-{n}.json"));
+    if !path.exists() {
+        // Repeat the highest-numbered scripted response once the list is exhausted.
+        let last = (0..n).rev().map(|i| base.join(format!("response-{i}.json"))).find(|p| p.exists());
+        path = last.ok_or_else(|| format!("no scripted responses in {dir}"))?;
+    }
+    Ok(std::fs::read_to_string(&path)?)
 }
 
 fn run_claude(prompt: &str) -> BoxResult {
@@ -177,11 +228,7 @@ fn run_litellm(cap: &Capability, prompt: &str) -> BoxResult {
     let key = std::env::var("LITELLM_API_KEY").map_err(|_| "LITELLM_API_KEY is not set")?;
     let url = format!("{}/chat/completions", base.trim_end_matches('/'));
     let body = serde_json::json!({ "model": cap.id, "messages": [{ "role": "user", "content": prompt }] });
-    let resp = ureq::post(&url)
-        .set("Authorization", &format!("Bearer {key}"))
-        .send_json(body)
-        .map_err(|e| format!("litellm call to {url} failed: {e}"))?;
-    let v: serde_json::Value = resp.into_json().map_err(|e| format!("litellm response not JSON: {e}"))?;
+    let v = post_json_retry(&url, &key, &body)?;
     println!("{}", v["choices"][0]["message"]["content"].as_str().unwrap_or(""));
     Ok(())
 }

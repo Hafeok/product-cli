@@ -78,6 +78,37 @@ fn apply_edits_refuses_a_missing_target() {
 }
 
 #[test]
+fn extract_json_reads_a_raw_object() {
+    let v = extract_json("{\"files\":[]}").expect("raw");
+    assert!(v.get("files").is_some());
+}
+
+#[test]
+fn extract_json_unwraps_a_json_fence() {
+    let content = "Here is the file:\n```json\n{\"files\":[{\"path\":\"a.rs\",\"content\":\"x\"}]}\n```\nDone.";
+    let v = extract_json(content).expect("fenced");
+    assert_eq!(v["files"][0]["path"], serde_json::json!("a.rs"));
+}
+
+#[test]
+fn extract_json_finds_a_prose_wrapped_object() {
+    let content = "Sure! The answer is {\"edits\":[{\"path\":\"m.rs\",\"find\":\"a\",\"replace\":\"b\"}]} — hope that helps.";
+    let v = extract_json(content).expect("prose");
+    assert_eq!(v["edits"][0]["find"], serde_json::json!("a"));
+}
+
+#[test]
+fn extract_json_ignores_braces_inside_strings() {
+    let v = extract_json("text {\"content\":\"fn f() { }\"} tail").expect("strings");
+    assert_eq!(v["content"], serde_json::json!("fn f() { }"));
+}
+
+#[test]
+fn extract_json_errors_on_no_object() {
+    assert!(extract_json("no json here at all").is_err());
+}
+
+#[test]
 fn apply_edits_refuses_an_ambiguous_target() {
     let dir = tempfile::tempdir().expect("tmp");
     std::fs::write(dir.path().join("mod.rs"), "x\nx\n").expect("seed");

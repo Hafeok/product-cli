@@ -78,6 +78,71 @@ pub fn parse_edits(obj: &Value) -> Result<Vec<EditOp>> {
     Ok(out)
 }
 
+/// Extract a JSON object from a model response that may be fenced or
+/// prose-wrapped. Open models routinely ignore `response_format` and emit
+/// ```` ```json … ``` ```` or a sentence before the object; we try a raw parse,
+/// then a fenced block, then the first balanced `{…}` span.
+pub fn extract_json(content: &str) -> Result<Value> {
+    let trimmed = content.trim();
+    if let Ok(v) = serde_json::from_str::<Value>(trimmed) {
+        return Ok(v);
+    }
+    if let Some(body) = fenced_block(trimmed) {
+        if let Ok(v) = serde_json::from_str::<Value>(body.trim()) {
+            return Ok(v);
+        }
+    }
+    if let Some(span) = balanced_object(trimmed) {
+        if let Ok(v) = serde_json::from_str::<Value>(span) {
+            return Ok(v);
+        }
+    }
+    Err(ProductError::ConfigError("worker response contained no parseable JSON object".to_string()))
+}
+
+/// The body of the first ```` ``` ```` fence, dropping an optional language tag.
+fn fenced_block(s: &str) -> Option<&str> {
+    let open = s.find("```")?;
+    let rest = &s[open + 3..];
+    let end = rest.find("```")?;
+    let block = &rest[..end];
+    match block.find('\n') {
+        Some(nl) if !block[..nl].contains('{') => Some(&block[nl + 1..]),
+        _ => Some(block),
+    }
+}
+
+/// The first balanced `{…}` span, respecting strings + escapes.
+fn balanced_object(s: &str) -> Option<&str> {
+    let start = s.find('{')?;
+    let mut depth = 0i32;
+    let mut in_str = false;
+    let mut escaped = false;
+    for (i, &b) in s.as_bytes().iter().enumerate().skip(start) {
+        if in_str {
+            match b {
+                _ if escaped => escaped = false,
+                b'\\' => escaped = true,
+                b'"' => in_str = false,
+                _ => {}
+            }
+        } else {
+            match b {
+                b'"' => in_str = true,
+                b'{' => depth += 1,
+                b'}' => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return Some(&s[start..=i]);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    None
+}
+
 /// Parse a worker response that may carry whole-file writes, targeted edits, or
 /// both. Errors only if neither is present.
 pub fn parse_output(obj: &Value) -> Result<(Vec<ArtifactFile>, Vec<EditOp>)> {
