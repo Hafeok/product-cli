@@ -238,6 +238,22 @@ fn dispatch_tool(
         "product_release_show" => super::delivery_handlers::handle_release_show(args, repo_root),
         "product_release_done" => super::delivery_handlers::handle_release_done(args, repo_root),
         "product_release_new" => super::delivery_handlers::handle_release_new(args, repo_root),
+        // Framework families reading .product/ — CLI↔MCP parity
+        "product_archetype_list" => super::framework_read_handlers::handle_archetype_list(args, repo_root),
+        "product_archetype_show" => super::framework_read_handlers::handle_archetype_show(args, repo_root),
+        "product_archetype_validate" => super::framework_read_handlers::handle_archetype_validate(args, repo_root),
+        "product_archetype_check" => super::framework_read_handlers::handle_archetype_check(args, repo_root),
+        "product_cell_show" => super::framework_read_handlers::handle_cell_show(args, repo_root),
+        "product_cell_validate" => super::framework_read_handlers::handle_cell_validate(args, repo_root),
+        "product_how_show" => super::framework_read_handlers::handle_how_show(args, repo_root),
+        "product_how_validate" => super::framework_read_handlers::handle_how_validate(args, repo_root),
+        "product_how_export" => super::framework_read_handlers::handle_how_export(args, repo_root),
+        "product_work_unit_show" => super::framework_read_handlers::handle_work_unit_show(args, repo_root),
+        "product_work_unit_validate" => super::framework_read_handlers::handle_work_unit_validate(args, repo_root),
+        // Dependencies (legacy graph) — CLI↔MCP parity
+        "product_dep_list" => super::dep_handlers::handle_dep_list(args, graph),
+        "product_dep_show" => super::dep_handlers::handle_dep_show(args, graph),
+        "product_dep_features" => super::dep_handlers::handle_dep_features(args, graph),
         _ => Err(format!("Tool handler not implemented: {}", name)),
     }
 }
