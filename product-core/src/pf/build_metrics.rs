@@ -6,7 +6,7 @@
 //! persists + summarizes it (`.product/build/<id>.session.json`), so a feature
 //! slice's implementation has an auditable cost + outcome record.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
@@ -93,6 +93,27 @@ impl BuildSession {
 
     pub fn to_json(&self) -> Result<String, crate::error::ProductError> {
         serde_json::to_string_pretty(self).map_err(|e| crate::error::ProductError::Internal(format!("serialize build session: {e}")))
+    }
+
+    /// Returns true exactly when the calls used more than one distinct capability.
+    pub fn escalated(&self) -> bool {
+        let mut caps = HashSet::new();
+        for c in &self.calls {
+            caps.insert(&c.capability);
+        }
+        caps.len() > 1
+    }
+
+    /// Returns the gate that occurs in the most calls, or None when there are no calls.
+    pub fn busiest_gate(&self) -> Option<String> {
+        if self.calls.is_empty() {
+            return None;
+        }
+        let mut counts = BTreeMap::new();
+        for c in &self.calls {
+            *counts.entry(c.gate.clone()).or_insert(0) += 1;
+        }
+        counts.into_iter().max_by_key(|(_, count)| *count).map(|(gate, _)| gate.clone())
     }
 }
 

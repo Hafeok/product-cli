@@ -63,3 +63,35 @@ fn tc_spec_depth_recorded_on_session() {
     assert_eq!(back.spec_depth.deciders, 3);
     assert_eq!(back.spec_depth.context_tokens, 1024);
 }
+
+#[test]
+fn tc_session_escalated() {
+    // (a) fresh BuildSession::new("x") with no calls -> escalated() is false
+    let s = BuildSession::new("x");
+    assert!(!s.escalated());
+
+    // (b) a session whose calls all share one capability -> false
+    let mut s = BuildSession::new("x");
+    s.calls.push(CallRecord { capability: "code-writer".into(), gate: "dispatch".into(), prompt_tokens: 100, completion_tokens: 40 });
+    assert!(!s.escalated());
+
+    // (c) a session with two calls of different capabilities -> true
+    let mut s = BuildSession::new("x");
+    s.calls.push(CallRecord { capability: "code-writer".into(), gate: "dispatch".into(), prompt_tokens: 100, completion_tokens: 40 });
+    s.calls.push(CallRecord { capability: "code-writer-heavy".into(), gate: "verify".into(), prompt_tokens: 200, completion_tokens: 60 });
+    assert!(s.escalated());
+}
+
+#[test]
+fn tc_busiest_gate() {
+    // (a) a fresh BuildSession::new("x") -> None
+    let s = BuildSession::new("x");
+    assert_eq!(s.busiest_gate(), None);
+
+    // (b) a session with one call on gate "dispatch" and two calls on gate "verify" -> Some("verify")
+    let mut s = BuildSession::new("x");
+    s.calls.push(CallRecord { capability: "cw".into(), gate: "dispatch".into(), prompt_tokens: 100, completion_tokens: 40 });
+    s.calls.push(CallRecord { capability: "cw".into(), gate: "verify".into(), prompt_tokens: 100, completion_tokens: 40 });
+    s.calls.push(CallRecord { capability: "cw".into(), gate: "verify".into(), prompt_tokens: 100, completion_tokens: 40 });
+    assert_eq!(s.busiest_gate(), Some("verify".to_string()));
+}
