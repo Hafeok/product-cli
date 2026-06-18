@@ -29,6 +29,17 @@ fn load_deciders(repo_root: &Path) -> Vec<product_core::pf::decider::Decider> {
         .collect()
 }
 
+fn projectors_dir(r: &Path) -> PathBuf {
+    pdir(r).join("projectors")
+}
+
+fn load_projectors(repo_root: &Path) -> Vec<product_core::pf::projector::Projector> {
+    ids_in(&projectors_dir(repo_root))
+        .iter()
+        .filter_map(|n| load_yaml(&projectors_dir(repo_root), n, product_core::pf::projector::Projector::from_yaml).ok())
+        .collect()
+}
+
 /// Decider ids with a recorded passing conformance verdict (`<id>.conform.json`).
 fn conformed_set(repo_root: &Path) -> BTreeSet<String> {
     let dir = deciders_dir(repo_root);
@@ -149,7 +160,7 @@ pub fn handle_deliverable_accept(args: &Value, repo_root: &Path) -> Result<Value
 pub fn handle_deliverable_done(args: &Value, repo_root: &Path) -> Result<Value, String> {
     let d = load_yaml(&deliverables_dir(repo_root), &req_str(args, "name")?, Deliverable::from_yaml)?;
     let slice = load_yaml(&slices_dir(repo_root), &d.slice, Slice::from_yaml)?;
-    let fd = feature_done(&d, &slice, &graph_of(args, repo_root)?, &load_deciders(repo_root), &conformed_set(repo_root));
+    let fd = feature_done(&d, &slice, &graph_of(args, repo_root)?, &load_deciders(repo_root), &conformed_set(repo_root), &load_projectors(repo_root));
     Ok(json!({ "id": fd.id, "done": fd.done, "progress": fd.progress(),
         "checks": fd.checks.iter().map(|c| json!({"kind": c.kind, "subject": c.subject, "passing": c.passing, "detail": c.detail})).collect::<Vec<_>>() }))
 }
@@ -187,7 +198,7 @@ pub fn handle_release_done(args: &Value, repo_root: &Path) -> Result<Value, Stri
         let s = load_yaml(&slices_dir(repo_root), &d.slice, Slice::from_yaml)?;
         members.push((d, s));
     }
-    let rd = release_done(&r.id, &members, &graph, &deciders, &conformed_set(repo_root));
+    let rd = release_done(&r.id, &members, &graph, &deciders, &conformed_set(repo_root), &load_projectors(repo_root));
     Ok(json!({ "id": rd.id, "done": rd.done, "closed": rd.closed(),
         "members": rd.members.iter().map(|m| json!({"id": m.id, "done": m.done})).collect::<Vec<_>>(),
         "open_edges": rd.open_edges.iter().map(|(n, d)| json!({"node": n, "depends_on_excluded": d})).collect::<Vec<_>>() }))

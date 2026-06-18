@@ -58,7 +58,7 @@ fn done(name: &str, product: Option<String>) -> BoxResult {
         let s = super::deliverable::load_slice(&d.slice)?;
         members.push((d, s));
     }
-    let rd = release_done(&release.id, &members, &graph, &deciders, &super::decider::conformed_set());
+    let rd = release_done(&release.id, &members, &graph, &deciders, &super::decider::conformed_set(), &super::deliverable::load_projectors());
     println!(
         "release '{}': {} — cut {}",
         rd.id,

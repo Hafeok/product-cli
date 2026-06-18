@@ -14,6 +14,8 @@ use super::decider::Decider;
 use super::decider_sim::simulate;
 use super::deliverable::Deliverable;
 use super::model::DomainGraph;
+use super::projector::Projector;
+use super::projector_sim;
 use super::slice::Slice;
 use super::validate::validate_graph;
 
@@ -53,11 +55,13 @@ pub fn feature_done(
     graph: &DomainGraph,
     deciders: &[Decider],
     conformed: &BTreeSet<String>,
+    projectors: &[Projector],
 ) -> FeatureDone {
     let scope = covered(graph, &slice.anchors, slice.depth());
     let mut checks = Vec::new();
     domain_checks(graph, &scope, &mut checks);
     behavioural_checks(deciders, &scope, conformed, &mut checks);
+    projection_checks(projectors, &scope, &mut checks);
     acceptance_checks(d, &mut checks);
     // A deliverable with no resolved scope (and so no checks) is not done.
     let done = !checks.is_empty() && checks.iter().all(|c| c.passing);
@@ -100,6 +104,21 @@ fn behavioural_checks(deciders: &[Decider], scope: &BTreeSet<String>, conformed:
             subject: dec.id.clone(),
             passing: conformed_ok,
             detail: if conformed_ok { "realised behaviour matches the oracle".to_string() } else { "pending — run `decider conform`".to_string() },
+        });
+    }
+}
+
+/// Projection conformance for each Projector over an in-scope read model: it must
+/// simulate sound + complete (§3.4, before realisation) — the read-model peer of
+/// `behavioural_checks`. A projection is `done` only if its fold is proven.
+fn projection_checks(projectors: &[Projector], scope: &BTreeSet<String>, out: &mut Vec<Check>) {
+    for p in projectors.iter().filter(|p| scope.contains(&p.projects_for)) {
+        let findings = projector_sim::simulate(p);
+        out.push(Check {
+            kind: "projection-sim".to_string(),
+            subject: p.id.clone(),
+            passing: findings.is_empty(),
+            detail: if findings.is_empty() { "sound + complete".to_string() } else { format!("{} finding(s)", findings.len()) },
         });
     }
 }
@@ -148,12 +167,12 @@ impl ReleaseDone {
 }
 
 /// Compute `release_done`: all member features done AND the cut is closed.
-pub fn release_done(id: &str, members: &[(Deliverable, Slice)], graph: &DomainGraph, deciders: &[Decider], conformed: &BTreeSet<String>) -> ReleaseDone {
+pub fn release_done(id: &str, members: &[(Deliverable, Slice)], graph: &DomainGraph, deciders: &[Decider], conformed: &BTreeSet<String>, projectors: &[Projector]) -> ReleaseDone {
     let mut union = BTreeSet::new();
     let mut feature_results = Vec::new();
     for (d, s) in members {
         union.extend(covered(graph, &s.anchors, s.depth()));
-        feature_results.push(feature_done(d, s, graph, deciders, conformed));
+        feature_results.push(feature_done(d, s, graph, deciders, conformed, projectors));
     }
     let open_edges = cut_closed(graph, &union);
     let all_done = !feature_results.is_empty() && feature_results.iter().all(|f| f.done);

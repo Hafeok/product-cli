@@ -99,6 +99,21 @@ pub(super) fn load_deciders() -> Vec<Decider> {
     }
 }
 
+/// Load every Projector under the sibling projectors/ dir (§3.4) — their
+/// soundness gates `done` the way deciders' does.
+pub(super) fn load_projectors() -> Vec<product_core::pf::projector::Projector> {
+    let dir = super::shared::domain_root().join(".product").join("projectors");
+    match std::fs::read_dir(&dir) {
+        Ok(it) => it
+            .flatten()
+            .filter(|e| e.path().extension().and_then(|s| s.to_str()) == Some("yaml"))
+            .filter_map(|e| std::fs::read_to_string(e.path()).ok())
+            .filter_map(|t| product_core::pf::projector::Projector::from_yaml(&t).ok())
+            .collect(),
+        Err(_) => Vec::new(),
+    }
+}
+
 fn accept(id: &str, criterion: &str, pass: bool, fail: bool) -> BoxResult {
     if pass == fail {
         return Err("record a verdict with exactly one of --pass / --fail".into());
@@ -118,7 +133,7 @@ fn done(name: &str, product: Option<String>) -> BoxResult {
     let d = load(name)?;
     let slice = load_slice(&d.slice)?;
     let graph = load_graph(product)?;
-    let fd = feature_done(&d, &slice, &graph, &load_deciders(), &super::decider::conformed_set());
+    let fd = feature_done(&d, &slice, &graph, &load_deciders(), &super::decider::conformed_set(), &load_projectors());
     print_feature_done(&fd);
     if fd.done {
         Ok(())

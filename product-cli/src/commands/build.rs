@@ -333,7 +333,7 @@ fn load_how() -> Option<HowContract> {
 }
 
 fn report_gates(d: &Deliverable, slice: &Slice, graph: &DomainGraph, deciders: &[Decider]) -> FeatureDone {
-    let fd = feature_done(d, slice, graph, deciders, &super::decider::conformed_set());
+    let fd = feature_done(d, slice, graph, deciders, &super::decider::conformed_set(), &super::deliverable::load_projectors());
     super::deliverable::print_feature_done(&fd);
     fd
 }
