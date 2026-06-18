@@ -18,3 +18,7 @@ tests/__pycache__/
 
 # dispatched work units are generated output (regenerable via `product cell dispatch`)
 .product/archetypes/*/work-units/
+.product/work-units/
+
+# build run I/O — frozen context, session metrics, logs (regenerable per `product build`)
+.product/build/
