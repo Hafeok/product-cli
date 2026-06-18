@@ -30,6 +30,7 @@ pub(super) fn run(d: &mut Deliverable, written: &[PathBuf], ladder: &[Capability
         return;
     }
     println!("\n--- Verify + fix (§6) ---");
+    super::build_session::set_gate("verify");
     let mut round = 0;
     loop {
         let outcomes: Vec<Outcome> = steps.iter().map(|s| run_step(s, root)).collect();

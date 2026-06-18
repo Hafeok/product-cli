@@ -9,6 +9,7 @@ mod agent_init;
 mod author;
 mod build;
 mod build_lsp;
+mod build_session;
 mod build_verify;
 mod cell;
 mod checklist;

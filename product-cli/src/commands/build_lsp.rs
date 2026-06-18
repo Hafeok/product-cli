@@ -24,6 +24,7 @@ pub(super) fn run(written: &[PathBuf], ladder: &[Capability], shared: &str, root
         return 0;
     }
     println!("\n--- LSP diagnose + fix (rust-analyzer + clippy) ---");
+    super::build_session::set_gate("lsp");
     let mut session = match LspSession::start(root) {
         Ok(s) => s,
         Err(e) => {

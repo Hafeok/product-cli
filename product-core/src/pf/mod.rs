@@ -9,6 +9,7 @@
 pub mod archetype;
 pub mod archetype_turtle;
 pub mod build;
+pub mod build_metrics;
 pub mod bundle;
 pub mod capability;
 pub mod cell;

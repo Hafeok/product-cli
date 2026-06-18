@@ -144,7 +144,10 @@ pub(super) fn ladder(catalog: &Catalog, role: &str) -> Vec<Capability> {
 /// for endpoints that stream to stdout rather than emit artifacts).
 pub(super) fn dispatch(cap: &Capability, prompt: &str) -> DispatchResult {
     match cap.endpoint.as_str() {
-        "claude" => run_claude(prompt).map(|_| Vec::new()),
+        "claude" => {
+            super::build_session::record_call(&cap.id, 0, 0);
+            run_claude(prompt).map(|_| Vec::new())
+        }
         "litellm" | "anthropic" | "scaleway" => run_litellm(cap, prompt).map(|_| Vec::new()),
         "worker" => run_first_party(cap, prompt),
         other => Err(format!("unknown capability endpoint '{other}' (expected claude | litellm | worker)").into()),
@@ -170,6 +173,7 @@ fn run_first_party(cap: &Capability, prompt: &str) -> DispatchResult {
 /// Resolve the worker's structured output: scripted (mock) → live model → stub.
 fn worker_output(cap: &Capability, prompt: &str) -> Result<(Vec<fpw::ArtifactFile>, Vec<fpw::EditOp>), Box<dyn std::error::Error>> {
     if let Some(dir) = std::env::var("PRODUCT_MOCK_DIR").ok().filter(|s| !s.is_empty()) {
+        super::build_session::record_call(&cap.id, 0, 0);
         let obj = fpw::extract_json(&next_scripted_response(&dir)?)?;
         return Ok(fpw::parse_output(&obj)?);
     }
@@ -180,11 +184,13 @@ fn worker_output(cap: &Capability, prompt: &str) -> Result<(Vec<fpw::ArtifactFil
             let model = if cap.model_identifier.is_empty() { cap.id.as_str() } else { cap.model_identifier.as_str() };
             let url = format!("{}/chat/completions", base.trim_end_matches('/'));
             let v = post_json_retry(&url, &key, &fpw::build_request(model, prompt))?;
+            super::build_session::record_usage(&cap.id, &v);
             let content = v["choices"][0]["message"]["content"].as_str().unwrap_or("");
             Ok(fpw::parse_output(&fpw::extract_json(content)?)?)
         }
         _ => {
             println!("  (no LITELLM_BASE_URL — first-party worker running offline; writing a stub)");
+            super::build_session::record_call(&cap.id, 0, 0);
             Ok((fpw::stub_files(prompt), Vec::new()))
         }
     }
@@ -229,6 +235,7 @@ fn run_litellm(cap: &Capability, prompt: &str) -> BoxResult {
     let url = format!("{}/chat/completions", base.trim_end_matches('/'));
     let body = serde_json::json!({ "model": cap.id, "messages": [{ "role": "user", "content": prompt }] });
     let v = post_json_retry(&url, &key, &body)?;
+    super::build_session::record_usage(&cap.id, &v);
     println!("{}", v["choices"][0]["message"]["content"].as_str().unwrap_or(""));
     Ok(())
 }

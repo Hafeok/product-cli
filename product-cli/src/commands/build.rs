@@ -6,10 +6,11 @@
 //! visible in one place.
 
 use product_core::pf::build::assemble;
+use product_core::pf::build_metrics::{BuildSession, FileChange, Verdict};
 use product_core::pf::capability::Capability;
 use product_core::pf::decider::Decider;
 use product_core::pf::deliverable::Deliverable;
-use product_core::pf::done::feature_done;
+use product_core::pf::done::{feature_done, FeatureDone};
 use product_core::pf::how::HowContract;
 use product_core::pf::model::DomainGraph;
 use product_core::pf::run::run_parallel;
@@ -48,11 +49,49 @@ pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: 
     if dry_run {
         print_dry_run(&context, role, &ladder, &units, jobs, gates, &d);
     } else {
+        super::build_session::begin(deliverable);
         dispatch_live(deliverable, &context, &ladder, &units, jobs, gates, &mut d)?;
     }
     println!("\n--- Gate status ---");
-    report_gates(&d, &slice, &graph, &deciders);
+    let fd = report_gates(&d, &slice, &graph, &deciders);
+    if !dry_run {
+        finish_session(&fd);
+    }
     Ok(())
+}
+
+/// Close the build session, persisting + summarizing its cost metrics.
+fn finish_session(fd: &FeatureDone) {
+    let verdict = Verdict {
+        done: fd.done,
+        passing: fd.checks.iter().filter(|c| c.passing).count(),
+        total: fd.checks.len(),
+    };
+    let Some(session) = super::build_session::finish(verdict) else {
+        return;
+    };
+    let dir = super::shared::domain_root().join(".product").join("build");
+    let _ = std::fs::create_dir_all(&dir);
+    if let Ok(json) = session.to_json() {
+        let _ = std::fs::write(dir.join(format!("{}.session.json", session.deliverable)), json);
+    }
+    summarize_session(&session);
+}
+
+/// Print the session's cost + outcome metrics for the feature slice.
+fn summarize_session(s: &BuildSession) {
+    println!("\n--- Session ---");
+    println!("  verdict: {} ({}/{} checks)", if s.verdict.done { "DONE" } else { "not done" }, s.verdict.passing, s.verdict.total);
+    println!("  tokens: {} ({} prompt + {} completion)", s.total_tokens(), s.prompt_tokens(), s.completion_tokens());
+    let rounds: Vec<String> = s.rounds().iter().map(|(g, n)| format!("{g}={n}")).collect();
+    println!("  calls by gate: {}", rounds.join(", "));
+    for (cap, t) in s.tokens_by_capability() {
+        if t > 0 {
+            println!("  {cap}: {t} tokens");
+        }
+    }
+    println!("  elapsed: {}s", s.elapsed_secs);
+    println!("  record: .product/build/{}.session.json", s.deliverable);
 }
 
 /// Show the assembled context, worker ladder, run plan, and verify plan — no dispatch.
@@ -111,10 +150,14 @@ fn report_changes(written: &[PathBuf], root: &Path) {
         return;
     }
     println!("\n--- Changes ---");
+    let mut changes = Vec::new();
     for p in paths {
         let rel = p.strip_prefix(root).unwrap_or(p).to_string_lossy().to_string();
-        println!("  {:8} {rel}", git_status(root, &rel));
+        let status = git_status(root, &rel);
+        println!("  {status:8} {rel}");
+        changes.push(FileChange { path: rel, status: status.to_string() });
     }
+    super::build_session::set_files(changes);
 }
 
 /// A file's git state, classified for the change summary.
@@ -223,7 +266,8 @@ fn load_how() -> Option<HowContract> {
         .find_map(|p| std::fs::read_to_string(p).ok().and_then(|t| HowContract::from_yaml(&t).ok()))
 }
 
-fn report_gates(d: &Deliverable, slice: &Slice, graph: &DomainGraph, deciders: &[Decider]) {
+fn report_gates(d: &Deliverable, slice: &Slice, graph: &DomainGraph, deciders: &[Decider]) -> FeatureDone {
     let fd = feature_done(d, slice, graph, deciders, &super::decider::conformed_set());
     super::deliverable::print_feature_done(&fd);
+    fd
 }

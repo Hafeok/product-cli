@@ -25313,6 +25313,13 @@ fn tc_991_build_verify_fix_loop_converges() {
     assert!(stdout.contains("[x] a1"), "{stdout}");
     assert!(stdout.contains("DONE"), "{stdout}");
     assert_eq!(h.read("out.txt").trim(), "GOOD");
+    // The session record captures rounds (calls by gate) + verdict, persisted.
+    assert!(stdout.contains("--- Session ---"), "{stdout}");
+    let session = h.read(".product/build/conv.session.json");
+    assert!(session.contains("\"deliverable\": \"conv\""), "{session}");
+    assert!(session.contains("\"gate\": \"dispatch\""), "{session}");
+    assert!(session.contains("\"gate\": \"verify\""), "{session}");
+    assert!(session.contains("\"done\": true"), "{session}");
 }
 
 #[test]
