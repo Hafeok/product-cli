@@ -7,6 +7,7 @@ depends-on:
 - FT-130
 adrs:
 - ADR-072
+- ADR-076
 tests:
 - TC-985
 - TC-986
@@ -15,16 +16,16 @@ domains:
 - api
 - data-model
 domains-acknowledged:
-  ADR-041: Additive — a new `worker` family + a runner abstraction in `build`; nothing removed.
-  ADR-047: The functional specification lives in this feature's body, not a separate artifact.
+  ADR-018: Two scenario TCs drive the binary via assert_cmd; `pf::capability` carries unit tests over resolution + validation.
+  ADR-051: Every TC declares `observes:` (exit-code, stdout) and asserts on those surfaces.
   ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
+  ADR-040: The catalog is the SPMC Model layer; it composes `build`, not the verify pipeline.
   ADR-050: PAT-001 (slice + adapter) is cited via `patterns:`; no new implementation pattern is introduced.
+  ADR-041: Additive — a new `worker` family + a runner abstraction in `build`; nothing removed.
   ADR-049: Not a context-bundle/template command; no template surface changes.
   ADR-043: The capability/role model + resolution live in pure `pf::capability`; the CLI owns catalog I/O + the runners.
+  ADR-047: The functional specification lives in this feature's body, not a separate artifact.
   ADR-048: Reads `.product/{capabilities,role-bindings}.yaml`; `init` writes the seeds; dispatch is live (claude subprocess / litellm HTTP).
-  ADR-051: Every TC declares `observes:` (exit-code, stdout) and asserts on those surfaces.
-  ADR-018: Two scenario TCs drive the binary via assert_cmd; `pf::capability` carries unit tests over resolution + validation.
-  ADR-040: The catalog is the SPMC Model layer; it composes `build`, not the verify pipeline.
 patterns:
 - PAT-001
 ---
