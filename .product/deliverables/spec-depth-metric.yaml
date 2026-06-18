@@ -1,0 +1,8 @@
+id: spec-depth-metric
+slice: spec-depth-metric
+acceptance:
+- id: spec-depth-struct
+  statement: BuildSession carries a SpecDepth{nodes,depth,acceptance,deciders,context_tokens} record that round-trips through JSON
+  status: passing
+  runner: cargo-test
+  runner_args: tc_spec_depth_recorded_on_session
