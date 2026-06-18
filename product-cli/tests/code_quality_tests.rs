@@ -812,7 +812,7 @@ const CLI_ONLY: &[&str] = &[
 /// Commands that SHOULD expose an MCP tool but do not yet — the documented
 /// debt this gate exists to drive down. Remove an entry when its tools land;
 /// the gate fails on a stale entry (one that already has a tool).
-const PENDING_MCP: &[&str] = &[];
+const PENDING_MCP: &[&str] = &["projector", "primitive"];
 
 fn mcp_tool_names() -> Vec<String> {
     let src = std::fs::read_to_string(project_root().join("product-mcp/src/registry.rs"))

@@ -6,7 +6,7 @@ use super::{
     adr, agent_init, archetype, author, build, cell, checklist, completions, conformance, context, cycle_times, decider,
     deliverable, dep, domain, drift, feature, gap, graph_cmd, hash, hooks, how, implement, init, lsp, mcp_cmd,
     metrics_cmd, migrate, onboard, pattern, preflight, prompts_cmd, release, render, request_cmd, schema,
-    projector, slice, status, tags, test_cmd, work_unit, worker, BoxResult, Commands,
+    primitive, projector, slice, status, tags, test_cmd, work_unit, worker, BoxResult, Commands,
 };
 
 pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapCommand) -> BoxResult {
@@ -50,7 +50,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Test { command } => test_cmd::handle_test(command, fmt),
         Commands::Verify { .. } => dispatch_verify(command, fmt),
         // Product-Framework families route through a sub-dispatcher (keeps this match small).
-        c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Deliverable { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Release { .. } | Commands::Slice { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
+        c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Primitive { .. } | Commands::Deliverable { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Release { .. } | Commands::Slice { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
     }
 }
 
@@ -61,6 +61,7 @@ fn dispatch_pf(command: Commands) -> BoxResult {
         Commands::Cell { command } => cell::handle_cell(command),
         Commands::Decider { command } => decider::handle_decider(command),
         Commands::Projector { command } => projector::handle_projector(command),
+        Commands::Primitive { command } => primitive::handle_primitive(command),
         Commands::Deliverable { command } => deliverable::handle_deliverable(command),
         Commands::Domain { command } => domain::handle_domain_cmd(command),
         Commands::How { command } => how::handle_how(command),

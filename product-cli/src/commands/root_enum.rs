@@ -6,8 +6,7 @@ use std::path::PathBuf;
 use super::*;
 
 #[derive(Subcommand)]
-// Subcommand enums vary widely in size (e.g. `domain new/edit` flatten the
-// full What-graph field set); the spread is inherent to a large clap CLI.
+// Subcommand enums vary widely in size (e.g. `domain new/edit`); inherent spread.
 #[allow(clippy::large_enum_variant)]
 pub enum Commands {
     /// ADR navigation and management
@@ -137,11 +136,6 @@ pub enum Commands {
     Decider {
         #[command(subcommand)]
         command: DeciderCommands,
-    },
-    /// Projector (§3.4) — derive a read model's executable fold, validate it
-    Projector {
-        #[command(subcommand)]
-        command: ProjectorCommands,
     },
     /// Delivery feature — one slice plus its acceptance (§7.1)
     Deliverable {
@@ -312,6 +306,14 @@ pub enum Commands {
     Preflight {
         /// Feature ID
         id: String,
+    },
+    Primitive {
+        #[command(subcommand)]
+        command: PrimitiveCommands,
+    },
+    Projector {
+        #[command(subcommand)]
+        command: ProjectorCommands,
     },
     /// Manage authoring session prompts (ADR-022)
     Prompts {
