@@ -27,3 +27,14 @@ role_bindings:
     triggers:
     - confidence_below_0.5
   active: true
+# Single-rung ablation roles — pin one tier as the only worker (no escalation),
+# so a build measures that tier alone across spec depths.
+- role_id: coder-t1
+  default_capability: fast-coder
+  active: true
+- role_id: coder-t2
+  default_capability: code-writer
+  active: true
+- role_id: coder-t3
+  default_capability: code-writer-heavy
+  active: true
