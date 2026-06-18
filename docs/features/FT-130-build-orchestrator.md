@@ -23,7 +23,7 @@ domains-acknowledged:
   ADR-048: Reads the deliverable/slice/How/deciders; writes the frozen context + the conformance verdict.
   ADR-051: Every TC declares `observes:` (exit-code, stdout) and asserts on those surfaces.
   ADR-018: Two scenario TCs drive the binary via assert_cmd (`--dry-run` for assembly; a runner for the conformance loop); `pf::build`/`pf::done` carry unit tests.
-  ADR-040: `build` composes existing slices + gates; the conformance verdict feeds the §7.2 predicate.
+  ADR-040: "`build` composes existing slices + gates; the conformance verdict feeds the §7.2 predicate."
 patterns:
 - PAT-001
 ---

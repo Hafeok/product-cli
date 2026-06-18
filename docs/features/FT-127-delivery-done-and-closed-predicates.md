@@ -23,7 +23,7 @@ domains-acknowledged:
   ADR-048: Read the What graph + slice/deliverable/decider artifacts; `accept` writes the deliverable's recorded verdict.
   ADR-051: Every TC declares `observes:` (exit-code, stdout) and asserts on those surfaces.
   ADR-018: Two scenario TCs drive the binary through assert_cmd; `pf::done` carries unit tests over feature_done/release_done/cut_closed. No property or session dimension.
-  ADR-040: `done` composes the existing verifications (domain conformance, Decider simulation) + acceptance; it adds no new verification kind.
+  ADR-040: "`done` composes the existing verifications (domain conformance, Decider simulation) + acceptance; it adds no new verification kind."
 patterns:
 - PAT-001
 ---

@@ -21,7 +21,7 @@ domains-acknowledged:
   ADR-048: Reads the catalog; writes the produced artifacts under the repo root.
   ADR-051: The TC declares `observes:` (exit-code, stdout) and asserts on those surfaces.
   ADR-018: One scenario TC drives the offline worker via assert_cmd; `pf::worker` carries unit tests over request/parse/stub/apply.
-  ADR-040: The worker is a capability (`endpoint: worker`); it composes the catalog + run primitives, not the verify pipeline.
+  ADR-040: "The worker is a capability (`endpoint: worker`); it composes the catalog + run primitives, not the verify pipeline."
 patterns:
 - PAT-001
 ---
