@@ -137,7 +137,14 @@ fn dispatch_live(deliverable: &str, context: &str, ladder: &[Capability], units:
     std::fs::write(dir.join(format!("{deliverable}.md")), context)?;
     let written = if units.is_empty() {
         println!("Dispatching to '{}' (endpoint {})…", cap.id, cap.endpoint);
-        super::worker::dispatch(cap, context)?
+        let paths = super::worker::dispatch(cap, context)?;
+        // No declared artifact in the single-unit case, so the worker may not
+        // touch the acceptance tests at all (oracle integrity, ADR-076).
+        let reverted = super::build_guard::enforce(&root, &[], &paths);
+        if !reverted.is_empty() {
+            println!("  ! oracle guard: reverted {} worker edit(s) to test files {reverted:?}", reverted.len());
+        }
+        paths.into_iter().filter(|p| !reverted.contains(p)).collect()
     } else {
         dispatch_parallel(units, cap, context, jobs)
     };

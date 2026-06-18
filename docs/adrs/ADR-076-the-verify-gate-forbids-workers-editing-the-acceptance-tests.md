@@ -9,7 +9,11 @@ superseded-by: []
 domains:
 - api
 scope: feature-specific
-content-hash: sha256:9fc12a7255ef141d3e9fa958bfde7d88378ed079162afdf253d3fd955c1441c2
+content-hash: sha256:da1501f542e63a94a8f4f42a2f7ed8047840a9444e8caddbfa0d77da6fbe3b71
+amendments:
+- date: 2026-06-18T10:24:48Z
+  reason: guard now also covers the single-unit dispatch path
+  previous-hash: sha256:9fc12a7255ef141d3e9fa958bfde7d88378ed079162afdf253d3fd955c1441c2
 source-files:
 - product-cli/src/commands/build_guard.rs
 - product-cli/src/commands/build_verify.rs
@@ -37,8 +41,10 @@ made it worthless.
   (`*_tests.rs`, `*_test.rs`, anything under a `tests/` directory) and (b) is not
   the worker's declared artifact is **reverted**: `git checkout` for a tracked
   file (restoring the committed/staged oracle), removal for a new file.
-- It is wired into the verify fix loop, the LSP fix loop, and the layered dispatch
-  (ADR-075). A reverted write is reported and does not count as a fix.
+- It is wired into the verify fix loop, the LSP fix loop, the layered dispatch
+  (ADR-075), and the single-unit dispatch (a deliverable with no work units, which
+  declares no artifact — so the worker may not touch the tests at all). A reverted
+  write is reported and does not count as a fix.
 - The acceptance tests are therefore frozen for the duration of a build: the
   worker may make them pass, never make them lenient.
 
