@@ -79,6 +79,14 @@ emitted event's `with` are literals, or CEL expressions marked by a leading `=`
 (e.g. `amount: "=command.amount"`). CEL is non-Turing-complete, so the gate stays
 total and deterministic.
 
+### Error handling
+
+- A non-total or non-deterministic `decide` (a command with no matching guard
+  branch, or guards that do not cover the state) is reported as an unsound
+  Decider with the offending command, not a panic.
+- A scenario whose simulated outcome differs from its authored `then` is a
+  failing finding (exit 1) naming the scenario and the divergence.
+
 ## Out of scope
 
 - Checking realised code against the scenarios — that is FT-123 (§6.3). The same

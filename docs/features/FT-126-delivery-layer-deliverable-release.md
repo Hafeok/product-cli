@@ -57,6 +57,13 @@ layer references the one below by id and restates nothing.
   with exit 1; nothing is written.
 - `product status` counts deliverables + releases in its Delivery line.
 
+### Error handling
+
+- `deliverable new` whose `--slice` does not resolve to a saved slice is rejected
+  (exit 1); `release new` whose member does not resolve to a saved deliverable is
+  likewise rejected. Nothing is written on rejection.
+- `show`/`done` on an unknown id fails with a clear not-found error.
+
 ## Out of scope
 
 - The §7.2 predicates — `feature_done` (every concept/flow realised + verified,

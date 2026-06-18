@@ -57,6 +57,20 @@ artifact id sets) lives in `pf_mcp`. Write tools set `requires_write` and are
 refused unless `mcp.write` is enabled. The four families are removed from
 `PENDING_MCP`; the parity gate (TC-980) confirms each now has a tool.
 
+### Behaviour
+
+Each `product_<family>_*` tool mirrors its CLI subcommand: it loads the same
+`.product/…` artifacts via `product_core::pf`, performs the read or write, and
+returns the same structured result. Read tools are always available; write tools
+set `requires_write` and run only when `mcp.write` is enabled.
+
+### Error handling
+
+- A tool call against a missing or malformed artifact returns a structured MCP
+  error mirroring the CLI's exit-code semantics, never crashing the server.
+- A write tool invoked while write tools are disabled is refused with a clear
+  capability error and makes no change.
+
 ## Out of scope
 
 - `decider conform` is not exposed over MCP (it spawns an arbitrary runner

@@ -73,6 +73,13 @@ events, events pull the entity they change, and the surrounding contexts,
 invariants, relations, and read models come in by graph adjacency to the
 configured depth.
 
+### Error handling
+
+- `new` whose anchor does not resolve to a node in the captured What graph is
+  rejected (exit 1) and nothing is written.
+- `context`/`show` on an unknown slice id fails with a clear "no such slice"
+  error; an empty closure yields an empty bundle rather than an error.
+
 ## Out of scope
 
 - Releases (§7.1's other delivery unit — a coherent set of slices) and the

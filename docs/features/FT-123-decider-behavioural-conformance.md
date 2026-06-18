@@ -65,6 +65,14 @@ Exits 0 with `behaviourally conformant` when every scenario matches; exits 1
 listing each divergence. A runner that fails, returns the wrong number of
 outcomes, or emits non-JSON is a clear error.
 
+### Error handling
+
+- A runner that exits non-zero, times out, or emits malformed or short JSON is a
+  conformance failure (exit 1) attributing the runner — never a panic.
+- Any scenario whose realised outcome differs from the simulated oracle is a
+  divergence showing both outcomes; a passing verdict is recorded only when
+  every scenario matches.
+
 ## Out of scope
 
 - Building the runner — that is the adopter's realised code; the framework

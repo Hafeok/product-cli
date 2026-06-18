@@ -50,6 +50,18 @@ The `archetype`/`cell`/`how`/`work-unit` handlers read `.product/` artifacts via
 loaded knowledge graph. `PENDING_MCP` is now empty; the parity gate (TC-980)
 holds with no documented debt.
 
+### Behaviour
+
+Each tool is read-only: it loads the relevant `.product/` artifact (or the
+legacy FT/ADR/TC graph, for `dep`) via `product_core::pf` and returns its
+structured view. No write surface is exposed for these families.
+
+### Error handling
+
+- A call against an absent artifact (no active cell, no how-contract, unknown id)
+  returns a structured not-found error rather than failing the server.
+- A malformed artifact surfaces a parse error naming the file.
+
 ## Out of scope
 
 - Write/scaffold/dispatch tools for these families (`how add/set`,

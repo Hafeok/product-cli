@@ -54,6 +54,20 @@ order in the results. Pure and reusable.
   worker (the cell's role → capability), then reports successes/failures and the
   `done` gates. The §6.1 coherence bar is the gate that makes the split safe.
 
+### Behaviour
+
+When work units are present, `build` fans them across at most `--jobs` workers
+via `run_parallel`, each unit dispatched to its resolved capability; results
+preserve input order and coherence is gated afterwards (§6.1). With no work units
+the deliverable is a single unit of work.
+
+### Error handling
+
+- A work unit whose dispatch fails is reported per-unit (which unit, why) and
+  does not abort its siblings; the run summarises how many of N succeeded.
+- `--jobs` is bounded to a sane minimum of one; the gate status reflects any
+  units that did not complete.
+
 ## Out of scope
 
 - Per-unit role/escalation (all units in one build currently share the role's

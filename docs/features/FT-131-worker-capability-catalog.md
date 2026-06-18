@@ -78,6 +78,22 @@ one of the known runners (`claude`, `litellm`, `worker`, `scaleway`, `anthropic`
 — catching the misconfiguration of pointing `LITELLM_BASE_URL` at a provider's
 own API instead of the proxy.
 
+### Behaviour
+
+`build` resolves the work's role to a capability through the catalog's escalation
+ladder, then dispatches by `endpoint` to the matching runner. `worker
+{init,list,resolve,check,run}` scaffold and inspect the catalog; resolution
+applies the active triggers, climbing rungs weakest-first.
+
+### Error handling
+
+- An unknown role or empty catalog falls back to the built-in default capability
+  rather than failing the build.
+- A capability naming an unknown endpoint, or a binding/step referencing a
+  missing capability, is reported by `worker check` (exit 1). A model or
+  transport failure during dispatch is retried, then surfaced without corrupting
+  state.
+
 ## Out of scope
 
 - Wiring escalation triggers from live signals (confidence, prior attempts) into

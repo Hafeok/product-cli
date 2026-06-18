@@ -55,12 +55,13 @@ Delivery: <n> slices
 - **Delivery** counts the slices in `.product/slices/`.
 - `--format json` adds a `framework` object mirroring the section.
 
-### Resilience
+### Error handling
 
 - If no framework artifacts exist, the section is omitted entirely — legacy
-  repos see no change.
+  repos see no change; its absence is not an error.
 - A missing What graph renders `What: (none captured)`; a missing How renders
-  `How: (none)`.
+  `How: (none)`. Malformed files are skipped with their counts treated as zero,
+  so `status` always renders the legacy summary.
 
 ## Out of scope
 
