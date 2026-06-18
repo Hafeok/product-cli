@@ -38,6 +38,7 @@ pub mod migrate;
 pub mod onboard;
 pub mod parser;
 pub mod pattern;
+pub mod pf;
 pub mod pattern_types;
 pub mod rdf;
 pub mod request;

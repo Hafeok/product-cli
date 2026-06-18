@@ -1,0 +1,65 @@
+//! Product-Framework What-capture subsystem — domain/event model (ADR-053).
+//!
+//! Implements the graph behind `product author domain` (FT-109): a typed model of the
+//! framework's "What" layer (§3.1 structure, §3.2 behaviour), an in-loop
+//! conformance checker mirroring `schema/shapes/shapes.shacl.ttl`, Turtle
+//! export + seed, the open-questions facilitation driver, and the session
+//! container that the domain MCP server drives. Pure library — no MCP, no CLI.
+
+pub mod archetype;
+pub mod archetype_turtle;
+pub mod build;
+pub mod build_metrics;
+pub mod bundle;
+pub mod capability;
+pub mod cell;
+pub mod cell_validate;
+pub mod decider;
+pub mod decider_cel;
+pub mod decider_conform;
+pub mod decider_logic;
+pub mod decider_sim;
+pub mod decider_turtle;
+pub mod deliverable;
+pub mod dispatch;
+pub mod done;
+pub mod edit;
+pub mod how;
+pub mod how_edit;
+pub mod layout;
+pub mod layout_check;
+pub mod lsp;
+pub mod how_turtle;
+pub mod how_validate;
+pub mod ids;
+pub mod model;
+pub mod ops;
+pub mod primitive;
+pub mod projector;
+pub mod projector_logic;
+pub mod projector_sim;
+pub mod provenance;
+pub mod query;
+pub mod questions;
+pub mod release;
+pub mod rules_decider;
+pub mod rules_how;
+pub mod rules_what;
+pub mod run;
+pub mod schedule;
+pub mod seed;
+pub mod session;
+pub mod slice;
+pub mod sparql_rules;
+pub mod turtle;
+pub mod validate;
+pub mod verify;
+pub mod work_unit;
+pub mod work_unit_validate;
+pub mod worker;
+
+pub use how::HowContract;
+pub use model::DomainGraph;
+pub use ops::OpResult;
+pub use session::{DomainSession, Finalized};
+pub use validate::Violation;

@@ -1,0 +1,40 @@
+# Role → capability bindings with escalation ladders.
+role_bindings:
+- role_id: implementer
+  default_capability: claude-code
+  escalation_steps:
+  - capability: deep-reasoning
+    triggers:
+    - prior_attempts_ge_5
+    - stakes_foundational
+  active: true
+- role_id: coder
+  default_capability: fast-coder
+  escalation_steps:
+  - capability: code-writer
+    triggers:
+    - prior_attempts_ge_5
+    - stakes_foundational
+  - capability: code-writer-heavy
+    triggers:
+    - prior_attempts_ge_5
+    - stakes_foundational
+  active: true
+- role_id: verifier
+  default_capability: fast-cheap
+  escalation_steps:
+  - capability: deep-reasoning
+    triggers:
+    - confidence_below_0.5
+  active: true
+# Single-rung ablation roles — pin one tier as the only worker (no escalation),
+# so a build measures that tier alone across spec depths.
+- role_id: coder-t1
+  default_capability: fast-coder
+  active: true
+- role_id: coder-t2
+  default_capability: code-writer
+  active: true
+- role_id: coder-t3
+  default_capability: code-writer-heavy
+  active: true

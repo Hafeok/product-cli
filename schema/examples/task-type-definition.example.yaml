@@ -1,0 +1,73 @@
+id: add-crud-resource
+name: "CRUD resource"
+family: application
+archetype: example-rest-api
+classification: supporting-or-generic
+applies_when: "create/read/update/delete over a single entity, with filter/sort/page reads and validated writes."
+does_not_apply_when: "needs domain computation beyond validation, full history, or multi-aggregate transactions — route to a core task type or the broad worker."
+slots:
+  - name: entity
+    kind: domain
+    dispatch: "name the aggregate, table, route"
+    capture: "which entity?"
+    audit: "entity exists in the domain model"
+  - name: fields
+    kind: domain
+    dispatch: "generate model, migration, DTO"
+    capture: "which fields, what types?"
+    audit: "code fields == model fields (no drift)"
+  - name: operations
+    kind: behaviour
+    dispatch: "which handlers/endpoints to emit"
+    capture: "which of C/R/U/D + list?"
+    audit: "every declared operation has handler + test + route"
+  - name: validation
+    kind: domain
+    dispatch: "the validator"
+    capture: "what rules?"
+    audit: "validator enforces declared rules + model invariants"
+  - name: views
+    kind: behaviour
+    dispatch: "read model + light event-model link"
+    capture: "what views show this?"
+    audit: "read-model provenance (no ghost views)"
+cells:
+  - id: contract
+    artifact: "request/response DTOs + endpoint contract"
+    path: "src/<entity>/Contracts.cs"
+    model: reasoning
+    derived_from: ["domain:entity", "app-contract:endpoint"]
+  - id: handler
+    artifact: "command/query handlers in the slice"
+    path: "src/<entity>/Handlers.cs"
+    model: code
+    derived_from: ["contract", "app-contract:slice"]
+    applies: ["vertical-slice", "result-type"]
+  - id: persistence
+    artifact: "EF config + migration"
+    path: "src/<entity>/Persistence.cs"
+    model: code
+    derived_from: ["domain:entity", "domain:relations"]
+  - id: tests
+    artifact: "integration tests per operation"
+    path: "tests/<entity>Tests.cs"
+    model: code
+    derived_from: ["contract", "slot:operations"]
+audits:
+  - id: endpoint-contract-test-alignment
+    kind: contract-conformance
+    checks: "endpoint path == contract == test path"
+    protects: "operations slot"
+  - id: migration-matches-model
+    kind: domain-conformance
+    checks: "migration columns == domain model fields"
+    protects: "fields slot"
+  - id: read-model-provenance
+    kind: behavioural-conformance
+    checks: "every view is fed by a declared projection"
+    protects: "views slot"
+deltas:
+  domain: "the entity, fields, identity, relations + cardinality, invariants"
+  behaviour: "operations as commands; list/detail views as read models (light)"
+  pattern: "usually applies existing patterns; none new"
+  infra: "usually none; a new resource is the exception worth flagging"

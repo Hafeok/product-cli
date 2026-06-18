@@ -12,3 +12,13 @@ Cargo.lock
 .product/sessions/
 .product/checklist.md
 tests/__pycache__/
+
+# product author/domain working session state (not source)
+.product/author-domain/
+
+# dispatched work units are generated output (regenerable via `product cell dispatch`)
+.product/archetypes/*/work-units/
+.product/work-units/
+
+# build run I/O — frozen context, session metrics, logs (regenerable per `product build`)
+.product/build/

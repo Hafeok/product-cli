@@ -1,0 +1,33 @@
+# Worker capability catalog (the SPMC Model layer).
+# litellm/scaleway/anthropic capabilities route through the LiteLLM proxy at
+# LITELLM_BASE_URL (the proxy holds provider keys + maps the id to a provider
+# model). With LITELLM_BASE_URL pointed straight at Scaleway's OpenAI endpoint,
+# the model_identifier (worker) / id (litellm) must be a real Scaleway model.
+capabilities:
+- id: claude-code
+  endpoint: claude
+  model_identifier: claude-opus-4-8
+  tier: 2
+- id: code-writer
+  endpoint: worker
+  model_identifier: devstral-2-123b-instruct-2512
+  tier: 2
+- id: code-writer-heavy
+  endpoint: worker
+  model_identifier: qwen3.5-397b-a17b
+  tier: 3
+- id: fast-cheap
+  endpoint: litellm
+  model_identifier: qwen3.6-35b-a3b
+  tier: 1
+- id: deep-reasoning
+  endpoint: litellm
+  model_identifier: qwen3.5-397b-a17b
+  tier: 3
+# The proof worker: qwen3.6-35b-a3b as a first-party *worker* (parses {files,edits}
+# and applies them) — the `litellm` endpoint only streams to stdout and writes
+# nothing, so the small model must route through `worker` to actually build.
+- id: fast-coder
+  endpoint: worker
+  model_identifier: qwen3.6-35b-a3b
+  tier: 1

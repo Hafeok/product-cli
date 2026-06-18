@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://productframework.org/schema/delivery.schema.json",
+  "title": "Delivery — Features and Releases",
+  "description": "Framework §7. Features and releases are subgraphs of the What. 'Done' is a verifiable predicate, not a judgement. A release cut must be closed (no included element depends on an excluded one).",
+  "type": "object",
+  "required": ["features"],
+  "additionalProperties": false,
+  "properties": {
+    "features": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/feature" }
+    },
+    "releases": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/release" }
+    }
+  },
+  "$defs": {
+    "feature": {
+      "type": "object",
+      "required": ["id", "name", "contains", "acceptance"],
+      "additionalProperties": false,
+      "description": "The smallest independently valuable and verifiable slice; typically one flow over its concepts.",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "name": { "type": "string" },
+        "contains": {
+          "type": "array", "items": { "type": "string" }, "minItems": 1,
+          "description": "The What-graph nodes (concepts, flows, read models) this feature is the subgraph of. A vertical (flow-shaped) cut, never a horizontal/layer cut."
+        },
+        "depends_on": {
+          "type": "array", "items": { "type": "string" },
+          "description": "Other features/elements this one requires. Used to compute build order (topological) and the closed-cut check."
+        },
+        "acceptance": {
+          "type": "array", "items": { "type": "string" }, "minItems": 1,
+          "description": "PO-signed acceptance criteria. Part of feature_done."
+        },
+        "done_predicate": {
+          "type": "string",
+          "default": "every concept realised & passes domain-conformance; every flow realised & passes behavioural-conformance; every slot filled; every verification citing an element green; acceptance passes",
+          "description": "feature_done(f). Verifiable, not asserted. Done is exactly as honest as the verifications are strong."
+        }
+      }
+    },
+    "release": {
+      "type": "object",
+      "required": ["id", "name", "features"],
+      "additionalProperties": false,
+      "description": "A chosen, coherent set of features that ship together; a subgraph whose cut must be closed.",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "name": { "type": "string" },
+        "features": {
+          "type": "array", "items": { "type": "string" }, "minItems": 1,
+          "description": "Member feature ids."
+        },
+        "cut_closed": {
+          "type": "boolean", "default": true,
+          "description": "release_done requires the cut be closed: no included element depends on an excluded one. Checked by query against feature depends_on."
+        },
+        "done_predicate": {
+          "type": "string",
+          "default": "all member features done AND release-level verifications green AND the cut is closed",
+          "description": "release_done(r). A verdict over a composition — the upward contribution to the Two Pillars."
+        }
+      }
+    }
+  }
+}

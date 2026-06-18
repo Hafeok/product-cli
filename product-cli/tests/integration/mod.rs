@@ -24402,3 +24402,1362 @@ fn tc_895_conformance_check_json_reports_clauses_and_profile() {
     assert_eq!(json["profile"], "below-level-3");
     assert!(json["findings"].as_array().map(|f| !f.is_empty()).unwrap_or(false));
 }
+
+// =============================================================================
+// FT — `product author domain` (What-capture MCP session). Drives the real
+// binary in --serve mode over stdin JSON-RPC, mirroring how the agent client
+// hosts the domain MCP server.
+// =============================================================================
+
+/// Parse the tool-call `content[0].text` payload for a given JSON-RPC id from
+/// a stream of newline-delimited responses.
+fn domain_rpc_result(stdout: &str, id: i64) -> Option<serde_json::Value> {
+    for line in stdout.lines() {
+        let v: serde_json::Value = match serde_json::from_str(line) {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        if v.get("id").and_then(|i| i.as_i64()) != Some(id) {
+            continue;
+        }
+        let text = v.get("result")?.get("content")?.get(0)?.get("text")?.as_str()?;
+        return serde_json::from_str(text).ok();
+    }
+    None
+}
+
+#[test]
+fn tc_896_author_domain_print_prompt() {
+    let h = Harness::new();
+    let out = h.run(&["author", "domain", "acme", "--print-prompt"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("What-capture"));
+    assert!(out.stdout.contains("acme"));
+    assert!(out.stdout.contains("session_finalize"));
+}
+
+#[test]
+fn tc_897_author_domain_serve_full_session() {
+    let h = Harness::new();
+    let dir = h.dir.path().join("domain-sess");
+    let dir_s = dir.display().to_string();
+    let rpc = [
+        r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#,
+        r#"{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}"#,
+        r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"session_start","arguments":{"product":"todo","participants":["PO"]}}}"#,
+        r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"add_bounded_context","arguments":{"id":"Tasks","label":"Tasks"}}}"#,
+        r#"{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"add_entity","arguments":{"id":"Task","label":"Task","context":"Tasks","definition":"a unit of work"}}}"#,
+        r#"{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"add_event","arguments":{"id":"Done","label":"Done","context":"Tasks","changes":"Task"}}}"#,
+        r#"{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"session_finalize","arguments":{}}}"#,
+    ].join("\n");
+    let out = h.run_with_stdin(&["author", "domain", "todo", "--serve", "--session-dir", &dir_s], &rpc);
+    out.assert_exit(0);
+    // tools/list returns the 17-tool surface
+    let tools = out.stdout.lines().find_map(|l| {
+        let v: serde_json::Value = serde_json::from_str(l).ok()?;
+        if v.get("id").and_then(|i| i.as_i64()) == Some(2) {
+            Some(v["result"]["tools"].as_array()?.len())
+        } else { None }
+    });
+    assert_eq!(tools, Some(17));
+    // every add succeeded
+    for id in [3, 4, 5, 6] {
+        let r = domain_rpc_result(&out.stdout, id).unwrap_or_else(|| panic!("no result for id {id}"));
+        assert_ne!(r.get("ok"), Some(&serde_json::json!(false)), "id {id} failed: {r}");
+    }
+    // finalize is conformant and wrote the Turtle + provenance
+    let fin = domain_rpc_result(&out.stdout, 7).expect("finalize result");
+    assert_eq!(fin["ok"], serde_json::json!(true), "finalize: {fin}");
+    assert!(fin["turtle"].as_str().unwrap().contains("d:Task a pf:Entity"));
+    assert_eq!(fin["provenance"]["participants"], serde_json::json!(["PO"]));
+    assert!(dir.join("todo.ttl").exists());
+    assert!(dir.join("todo.provenance.json").exists());
+}
+
+#[test]
+fn tc_898_author_domain_serve_rejects_invalid_event() {
+    let h = Harness::new();
+    let dir = h.dir.path().join("domain-sess");
+    let dir_s = dir.display().to_string();
+    let rpc = [
+        r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"session_start","arguments":{"product":"todo"}}}"#,
+        r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"add_bounded_context","arguments":{"id":"Tasks","label":"Tasks"}}}"#,
+        r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"add_event","arguments":{"id":"Ghost","label":"Ghost","context":"Tasks","changes":"Nope"}}}"#,
+    ].join("\n");
+    let out = h.run_with_stdin(&["author", "domain", "todo", "--serve", "--session-dir", &dir_s], &rpc);
+    out.assert_exit(0);
+    let r = domain_rpc_result(&out.stdout, 3).expect("event result");
+    assert_eq!(r["ok"], serde_json::json!(false));
+    assert!(r["violations"][0]["message"].as_str().unwrap().contains("§3.2"));
+}
+
+#[test]
+fn tc_899_author_domain_serve_requires_session_start() {
+    let h = Harness::new();
+    let dir = h.dir.path().join("domain-sess");
+    let dir_s = dir.display().to_string();
+    let rpc = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"add_entity","arguments":{"id":"X","label":"X","context":"C","definition":"d"}}}"#;
+    let out = h.run_with_stdin(&["author", "domain", "todo", "--serve", "--session-dir", &dir_s], rpc);
+    out.assert_exit(0);
+    // call_tool error surfaces as a JSON-RPC error mentioning session_start
+    let has_err = out.stdout.lines().any(|l| {
+        serde_json::from_str::<serde_json::Value>(l).ok()
+            .and_then(|v| v.get("error").cloned())
+            .map(|e| e["message"].as_str().unwrap_or("").contains("session_start"))
+            .unwrap_or(false)
+    });
+    assert!(has_err, "expected session_start error, got: {}", out.stdout);
+}
+
+#[test]
+fn tc_900_author_domain_defaults_product_to_config_name() {
+    // Harness writes product.toml with name = "test"; with no positional the
+    // domain session should default to that product.
+    let h = Harness::new();
+    let out = h.run(&["author", "domain", "--print-prompt"]);
+    out.assert_exit(0);
+    assert!(
+        out.stdout.contains("`test`"),
+        "expected prompt to default to configured product 'test', got:\n{}",
+        out.stdout
+    );
+}
+
+// =============================================================================
+// FT-110 — `product domain` CRUD + inspection over a captured What graph.
+// The Harness product.toml declares name = "test", so the product defaults.
+// =============================================================================
+
+fn seed_domain_graph(h: &Harness) {
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "Order", "--label", "Order", "--context", "Sales", "--definition", "a customer order", "--aggregate-root", "true"]).assert_exit(0);
+    h.run(&["domain", "new", "event", "OrderPlaced", "--label", "OrderPlaced", "--context", "Sales", "--changes", "Order"]).assert_exit(0);
+    h.run(&["domain", "new", "command", "PlaceOrder", "--label", "PlaceOrder", "--context", "Sales", "--targets", "Order", "--emits", "OrderPlaced"]).assert_exit(0);
+}
+
+#[test]
+fn tc_901_domain_new_list_show_roundtrip() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    let list = h.run(&["domain", "list"]);
+    list.assert_exit(0);
+    assert!(list.stdout.contains("entity") && list.stdout.contains("Order"));
+    assert!(list.stdout.contains("command") && list.stdout.contains("PlaceOrder"));
+
+    let filtered = h.run(&["domain", "list", "entity"]);
+    assert!(filtered.stdout.contains("Order") && !filtered.stdout.contains("PlaceOrder"));
+
+    let show = h.run(&["domain", "show", "Order"]);
+    show.assert_exit(0);
+    assert!(show.stdout.contains("\"changedByEvents\""));
+    assert!(show.stdout.contains("OrderPlaced"));
+    assert!(show.stdout.contains("\"is_aggregate_root\": true"));
+}
+
+#[test]
+fn tc_902_domain_new_rejects_non_conformant_fragment() {
+    let h = Harness::new();
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    // event changing a non-existent entity → rejected, exit 1, §3.2 message
+    let out = h.run(&["domain", "new", "event", "Bad", "--label", "Bad", "--context", "Sales", "--changes", "Nope"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("§3.2") || out.stdout.contains("§3.2"), "stderr: {} stdout: {}", out.stderr, out.stdout);
+    // and it was not committed
+    let list = h.run(&["domain", "list", "event"]);
+    assert!(!list.stdout.contains("Bad"));
+}
+
+#[test]
+fn tc_903_domain_edit_reverts_on_rejection() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    // pointing the entity at a missing context is rejected and reverted
+    let out = h.run(&["domain", "edit", "Order", "--context", "Ghost"]);
+    out.assert_exit(1);
+    let show = h.run(&["domain", "show", "Order"]);
+    assert!(show.stdout.contains("\"context\": \"Sales\""), "edit must revert: {}", show.stdout);
+    // a valid edit succeeds
+    h.run(&["domain", "edit", "Order", "--definition", "a confirmed order"]).assert_exit(0);
+    assert!(h.run(&["domain", "show", "Order"]).stdout.contains("a confirmed order"));
+}
+
+#[test]
+fn tc_904_domain_rm_and_validate_exit_codes() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    // conformant initially
+    h.run(&["domain", "validate"]).assert_exit(0);
+    // remove the entity the event depends on → warns about the dangling ref
+    let rm = h.run(&["domain", "rm", "Order"]);
+    rm.assert_exit(0);
+    assert!(rm.stderr.contains("dangling"), "expected dangling warning: {}", rm.stderr);
+    // graph is now non-conformant → validate exits 1
+    h.run(&["domain", "validate"]).assert_exit(1);
+}
+
+#[test]
+fn tc_905_domain_export_emits_turtle() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    let out = h.run(&["domain", "export"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("@prefix pf:"));
+    assert!(out.stdout.contains("d:Order a pf:Entity"));
+    assert!(out.stdout.contains("pf:changes d:Order"));
+}
+
+#[test]
+fn tc_906_domain_read_without_graph_is_a_clear_error() {
+    let h = Harness::new();
+    let out = h.run(&["domain", "list"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("no domain graph"), "stderr: {}", out.stderr);
+}
+
+// =============================================================================
+// FT-111 — `product how` validate/show/list/export/init over a How contract.
+// =============================================================================
+
+const HOW_EXAMPLE: &str = include_str!("../../../schema/examples/how-contract.example.yaml");
+
+fn write_how(h: &Harness, yaml: &str) {
+    std::fs::create_dir_all(h.dir.path().join(".product")).expect("mkdir");
+    std::fs::write(h.dir.path().join(".product/how-contract.yaml"), yaml).expect("write how");
+}
+
+#[test]
+fn tc_910_how_validate_passes_on_conformant_contract() {
+    let h = Harness::new();
+    write_how(&h, HOW_EXAMPLE);
+    let out = h.run(&["how", "validate"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("conformant"));
+    // the bundled example carries one soft warning (dangling license)
+    assert!(out.stderr.contains("warning"));
+}
+
+#[test]
+fn tc_911_how_validate_flags_broken_trace() {
+    let h = Harness::new();
+    // remove the enforcement of explicit-error-handling, which is applied by a
+    // pattern's applied_by → the crown trace-truth rule must fire.
+    let broken = HOW_EXAMPLE.replacen("    enforced_by: [result-type-audit]\n", "", 1);
+    write_how(&h, &broken);
+    let out = h.run(&["how", "validate"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("trace must be true"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_912_how_show_and_list() {
+    let h = Harness::new();
+    write_how(&h, HOW_EXAMPLE);
+    let show = h.run(&["how", "show"]);
+    show.assert_exit(0);
+    assert!(show.stdout.contains("archetype: example-rest-api"));
+    assert!(show.stdout.contains("principles:    3"));
+
+    let list = h.run(&["how", "list", "patterns"]);
+    list.assert_exit(0);
+    assert!(list.stdout.contains("repository-pattern"));
+    assert!(list.stdout.contains("result-type"));
+}
+
+#[test]
+fn tc_913_how_export_emits_turtle_with_synthesised_links() {
+    let h = Harness::new();
+    write_how(&h, HOW_EXAMPLE);
+    let out = h.run(&["how", "export"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("@prefix pf:"));
+    assert!(out.stdout.contains("a pf:TopDecision"));
+    assert!(out.stdout.contains("a pf:Verification")); // synthesised from enforced_by
+    assert!(out.stdout.contains("a pf:WorkUnit"));      // synthesised from applied_by
+}
+
+#[test]
+fn tc_914_how_init_scaffolds_and_validates() {
+    let h = Harness::new();
+    let init = h.run(&["how", "init", "--archetype", "rest-api"]);
+    init.assert_exit(0);
+    assert!(h.exists(".product/how-contract.yaml"));
+    // a second init without --force refuses
+    h.run(&["how", "init", "--archetype", "rest-api"]).assert_exit(1);
+    // the scaffold validates
+    h.run(&["how", "validate"]).assert_exit(0);
+}
+
+#[test]
+fn tc_915_how_validate_without_file_is_a_clear_error() {
+    let h = Harness::new();
+    let out = h.run(&["how", "validate"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("no how-contract"), "stderr: {}", out.stderr);
+}
+
+// =============================================================================
+// FT-112 — `product domain context`: assemble a context bundle from the What
+// graph (focus node + neighbourhood to a depth).
+// =============================================================================
+
+#[test]
+fn tc_920_domain_context_emits_bundle_with_focus_and_neighbours() {
+    let h = Harness::new();
+    seed_domain_graph(&h); // Sales/Order/OrderPlaced/PlaceOrder
+    let out = h.run(&["domain", "context", "Order", "--depth", "1"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("Domain Context Bundle: Order"));
+    assert!(out.stdout.contains("focus≜Order:Entity"));
+    assert!(out.stdout.contains("a customer order")); // focus definition
+    // direct neighbours of Order
+    assert!(out.stdout.contains("OrderPlaced"));
+    assert!(out.stdout.contains("PlaceOrder"));
+    assert!(out.stdout.contains("## Events"));
+}
+
+#[test]
+fn tc_921_domain_context_depth_controls_reach() {
+    let h = Harness::new();
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "context", "Billing", "--label", "Billing"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "Order", "--label", "Order", "--context", "Sales", "--definition", "an order"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "Invoice", "--label", "Invoice", "--context", "Billing", "--definition", "a bill"]).assert_exit(0);
+    h.run(&["domain", "new", "relation", "orderBilled", "--from", "Order", "--to", "Invoice", "--cardinality", "one-to-one", "--rationale", "one invoice per order"]).assert_exit(0);
+
+    let d1 = h.run(&["domain", "context", "Order", "--depth", "1"]);
+    d1.assert_exit(0);
+    assert!(!d1.stdout.contains("a bill"), "Invoice is 2 hops away; not at depth 1");
+
+    let d2 = h.run(&["domain", "context", "Order", "--depth", "2"]);
+    d2.assert_exit(0);
+    assert!(d2.stdout.contains("a bill"), "Invoice reachable at depth 2 via the relation");
+}
+
+#[test]
+fn tc_922_domain_context_unknown_node_is_a_clear_error() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    let out = h.run(&["domain", "context", "ghost"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("no node with id"), "stderr: {}", out.stderr);
+}
+
+// =============================================================================
+// FT-113 — `product cell`: task-type validation cross-checked against What+How.
+// =============================================================================
+
+const CELL_EXAMPLE: &str = include_str!("../../../schema/examples/task-type-definition.example.yaml");
+const HOW_EXAMPLE_FOR_CELL: &str = include_str!("../../../schema/examples/how-contract.example.yaml");
+
+fn write_cell(h: &Harness, yaml: &str) {
+    std::fs::create_dir_all(h.dir.path().join(".product")).expect("mkdir");
+    std::fs::write(h.dir.path().join(".product/cell.yaml"), yaml).expect("write cell");
+}
+
+#[test]
+fn tc_930_cell_validate_conformant_example() {
+    let h = Harness::new();
+    write_cell(&h, CELL_EXAMPLE);
+    let out = h.run(&["cell", "validate"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("conformant"));
+    assert!(out.stdout.contains("5 slot(s), 4 cell(s), 3 audit(s)"));
+}
+
+#[test]
+fn tc_931_cell_validate_flags_slot_without_inline_audit() {
+    let h = Harness::new();
+    // blank out an inline slot audit → a blocking violation
+    let broken = CELL_EXAMPLE.replacen("    audit: \"entity exists in the domain model\"", "    audit: \"\"", 1);
+    write_cell(&h, &broken);
+    let out = h.run(&["cell", "validate"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("no slot without a backing audit"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_932_cell_validate_cross_checks_domain_pointers() {
+    let h = Harness::new();
+    // add a concrete domain pointer that does not exist in the What graph
+    let with_ghost = CELL_EXAMPLE.replacen(
+        "derived_from: [\"domain:entity\", \"app-contract:endpoint\"]",
+        "derived_from: [\"domain:entity\", \"domain:Ghost\", \"app-contract:endpoint\"]",
+        1,
+    );
+    write_cell(&h, &with_ghost);
+    // capture a What graph WITHOUT a Ghost entity
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "Order", "--label", "Order", "--context", "Sales", "--definition", "an order"]).assert_exit(0);
+    let out = h.run(&["cell", "validate"]);
+    out.assert_exit(0); // dangling domain pointer is a warning, not blocking
+    assert!(out.stderr.contains("domain:Ghost"), "stderr: {}", out.stderr);
+    assert!(out.stdout.contains("domain: cross-checked"));
+}
+
+#[test]
+fn tc_933_cell_validate_cross_checks_applies_against_how() {
+    let h = Harness::new();
+    write_cell(&h, CELL_EXAMPLE);
+    std::fs::write(h.dir.path().join(".product/how-contract.yaml"), HOW_EXAMPLE_FOR_CELL).expect("how");
+    let out = h.run(&["cell", "validate"]);
+    out.assert_exit(0);
+    // the example's handler applies "vertical-slice", which is not a How pattern
+    assert!(out.stderr.contains("vertical-slice"), "stderr: {}", out.stderr);
+    assert!(out.stdout.contains("how: cross-checked"));
+}
+
+#[test]
+fn tc_934_cell_show_list_and_init() {
+    let h = Harness::new();
+    let init = h.run(&["cell", "init", "add-crud-resource", "--archetype", "rest-api"]);
+    init.assert_exit(0);
+    assert!(h.exists(".product/cell.yaml"));
+    h.run(&["cell", "init", "x", "--archetype", "rest-api"]).assert_exit(1); // no --force
+    h.run(&["cell", "validate"]).assert_exit(0);
+
+    let show = h.run(&["cell", "show"]);
+    assert!(show.stdout.contains("task-type: add-crud-resource"));
+    let list = h.run(&["cell", "list", "slots"]);
+    assert!(list.stdout.contains("entity"));
+}
+
+#[test]
+fn tc_935_cell_validate_without_file_is_a_clear_error() {
+    let h = Harness::new();
+    let out = h.run(&["cell", "validate"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("no task type"), "stderr: {}", out.stderr);
+}
+
+// =============================================================================
+// FT-114 — `product archetype`: assemble + validate How + layout + cells.
+// =============================================================================
+
+const ARCH_HOW: &str = include_str!("../../../schema/examples/how-contract.example.yaml");
+const ARCH_LAYOUT: &str = include_str!("../../../schema/examples/layout-model.example.yaml");
+const ARCH_CELL: &str = include_str!("../../../schema/examples/task-type-definition.example.yaml");
+
+fn write_archetype(h: &Harness, name: &str) {
+    let base = h.dir.path().join(".product/archetypes").join(name);
+    std::fs::create_dir_all(base.join("cells")).expect("mkdir");
+    std::fs::write(base.join("how-contract.yaml"), ARCH_HOW).expect("how");
+    std::fs::write(base.join("layout.yaml"), ARCH_LAYOUT).expect("layout");
+    std::fs::write(base.join("cells/add-crud-resource.yaml"), ARCH_CELL).expect("cell");
+}
+
+#[test]
+fn tc_940_archetype_validate_full_assembly() {
+    let h = Harness::new();
+    write_archetype(&h, "example-rest-api");
+    let out = h.run(&["archetype", "validate", "example-rest-api"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("conformant"));
+    assert!(out.stdout.contains("how present, layout present, 1 cell(s)"));
+}
+
+#[test]
+fn tc_941_archetype_validate_reports_part_tagged_violations() {
+    let h = Harness::new();
+    write_archetype(&h, "a");
+    // break the layout: a rule loses its enforces (Guard 1 violation)
+    let broken = ARCH_LAYOUT.replacen("    enforces: [explicit-composition-root]\n", "", 1);
+    std::fs::write(h.dir.path().join(".product/archetypes/a/layout.yaml"), broken).expect("w");
+    let out = h.run(&["archetype", "validate", "a"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("layout/"), "violation should be tagged with its part: {}", out.stderr);
+    assert!(out.stderr.contains("Guard 1"));
+}
+
+#[test]
+fn tc_942_archetype_missing_how_is_nonconformant() {
+    let h = Harness::new();
+    std::fs::create_dir_all(h.dir.path().join(".product/archetypes/bare")).expect("mkdir");
+    let out = h.run(&["archetype", "validate", "bare"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("must declare a How contract"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_943_archetype_show_list_and_init() {
+    let h = Harness::new();
+    let init = h.run(&["archetype", "init", "rest-api"]);
+    init.assert_exit(0);
+    assert!(h.exists(".product/archetypes/rest-api/how-contract.yaml"));
+    assert!(h.exists(".product/archetypes/rest-api/layout.yaml"));
+    assert!(h.exists(".product/archetypes/rest-api/cells/example-task.yaml"));
+    h.run(&["archetype", "init", "rest-api"]).assert_exit(1); // no --force
+    // the scaffold validates, and list/show work
+    h.run(&["archetype", "validate", "rest-api"]).assert_exit(0);
+    assert!(h.run(&["archetype", "list"]).stdout.contains("rest-api"));
+    assert!(h.run(&["archetype", "show", "rest-api"]).stdout.contains("archetype: rest-api"));
+}
+
+#[test]
+fn tc_944_archetype_cells_cross_check_the_domain() {
+    let h = Harness::new();
+    write_archetype(&h, "example-rest-api");
+    // add a concrete dangling domain pointer to a cell
+    let p = h.dir.path().join(".product/archetypes/example-rest-api/cells/add-crud-resource.yaml");
+    let yaml = std::fs::read_to_string(&p).expect("read");
+    let with_ghost = yaml.replacen(
+        "derived_from: [\"domain:entity\", \"app-contract:endpoint\"]",
+        "derived_from: [\"domain:entity\", \"domain:Ghost\", \"app-contract:endpoint\"]",
+        1,
+    );
+    std::fs::write(&p, with_ghost).expect("write");
+    // capture a What graph (no Ghost) so domain cross-check engages
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    let out = h.run(&["archetype", "validate", "example-rest-api"]);
+    out.assert_exit(0); // dangling domain pointer is a warning
+    assert!(out.stdout.contains("domain: cross-checked"));
+    assert!(out.stderr.contains("domain:Ghost"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_945_archetype_check_layout_against_the_tree() {
+    let h = Harness::new();
+    write_archetype(&h, "chk");
+    // a controlled layout checked against the harness tree (which has
+    // product.toml and, initially, no secrets)
+    let layout = "version: \"1\"\narchetype: chk\nlayout:\n  - id: manifest\n    must_exist: \"product.toml\"\n    cardinality: \"exactly 1\"\n    enforces: [provable-layout]\n  - id: nosec\n    must_not_exist: \"**/*.secrets.*\"\n    rationale: \"secrets belong in a vault\"\n    enforces: [secrets-out]\n";
+    std::fs::write(h.dir.path().join(".product/archetypes/chk/layout.yaml"), layout).expect("w");
+    // conformant: product.toml present, no secrets in the tree
+    let ok = h.run(&["archetype", "check", "chk"]);
+    ok.assert_exit(0);
+    assert!(ok.stdout.contains("layout-conformant"), "stdout: {}", ok.stdout);
+    // drop a secret file → the must_not_exist prohibition fires
+    std::fs::write(h.dir.path().join("config.secrets.json"), "x").expect("w");
+    let bad = h.run(&["archetype", "check", "chk"]);
+    bad.assert_exit(1);
+    assert!(bad.stderr.contains("must_not_exist"), "stderr: {}", bad.stderr);
+}
+
+// =============================================================================
+// FT-121 — `product decider`: derive an aggregate's signature, validate drift.
+// =============================================================================
+
+#[test]
+fn tc_946_decider_derive_and_validate() {
+    let h = Harness::new();
+    seed_domain_graph(&h); // Order aggregate; PlaceOrder targets it, emits OrderPlaced
+    let derived = h.run(&["decider", "derive", "Order"]);
+    derived.assert_exit(0);
+    assert!(derived.stdout.contains("Derived decider 'Order-decider'"), "{}", derived.stdout);
+    assert!(h.exists(".product/deciders/Order-decider.yaml"));
+    // the derived signature is conformant against the model by construction
+    let ok = h.run(&["decider", "validate", "Order-decider"]);
+    ok.assert_exit(0);
+    assert!(ok.stdout.contains("conformant"), "{}", ok.stdout);
+    assert!(h.run(&["decider", "show", "Order-decider"]).stdout.contains("decides-for: Order"));
+    assert!(h.run(&["decider", "list"]).stdout.contains("Order-decider"));
+}
+
+#[test]
+fn tc_947_decider_foreign_command_nonconformant() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    std::fs::create_dir_all(h.dir.path().join(".product/deciders")).expect("mkdir");
+    // author a decider that handles a command not targeting its aggregate
+    let yaml = "id: order-decider\ndecides_for: Order\nhandles:\n- PlaceOrder\n- ForeignCmd\nemits:\n- OrderPlaced\n";
+    std::fs::write(h.dir.path().join(".product/deciders/order-decider.yaml"), yaml).expect("w");
+    let out = h.run(&["decider", "validate", "order-decider"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("ForeignCmd"), "stderr: {}", out.stderr);
+}
+
+// FT-122 — `product decider simulate`: prove a Decider sound + complete (§3.3).
+
+const ORDER_DECIDER: &str = r#"id: order-decider
+decides_for: Order
+handles:
+- PlaceOrder
+- PayOrder
+emits:
+- OrderPlaced
+- OrderPaid
+logic:
+  initial:
+    status: none
+  evolve:
+  - on: OrderPlaced
+    set:
+      status: placed
+  - on: OrderPaid
+    set:
+      status: paid
+  decide:
+  - on: PlaceOrder
+    guards:
+    - when:
+        field: status
+        eq: none
+      else_reject: no-double-place
+    emit:
+    - OrderPlaced
+  - on: PayOrder
+    guards:
+    - when:
+        field: status
+        eq: placed
+      else_reject: pay-only-placed
+    emit:
+    - OrderPaid
+scenarios:
+- name: place fresh
+  when: PlaceOrder
+  then:
+    emit:
+    - OrderPlaced
+- name: cannot pay unplaced
+  when: PayOrder
+  then:
+    reject: pay-only-placed
+- name: place then pay
+  given:
+  - OrderPlaced
+  when: PayOrder
+  then:
+    emit:
+    - OrderPaid
+"#;
+
+fn write_decider(h: &Harness, yaml: &str) {
+    let dir = h.dir.path().join(".product/deciders");
+    std::fs::create_dir_all(&dir).expect("mkdir");
+    std::fs::write(dir.join("order-decider.yaml"), yaml).expect("write decider");
+}
+
+#[test]
+fn tc_948_decider_simulate_sound_and_complete() {
+    let h = Harness::new();
+    write_decider(&h, ORDER_DECIDER);
+    let out = h.run(&["decider", "simulate", "order-decider"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("sound + complete"), "{}", out.stdout);
+    assert!(out.stdout.contains("3 scenario(s)"), "{}", out.stdout);
+}
+
+#[test]
+fn tc_949_decider_simulate_catches_wrong_behaviour() {
+    let h = Harness::new();
+    // claim that paying an unplaced order succeeds — the guard must reject it
+    let broken = ORDER_DECIDER.replace(
+        "- name: cannot pay unplaced\n  when: PayOrder\n  then:\n    reject: pay-only-placed",
+        "- name: cannot pay unplaced\n  when: PayOrder\n  then:\n    emit:\n    - OrderPaid",
+    );
+    write_decider(&h, &broken);
+    let out = h.run(&["decider", "simulate", "order-decider"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("cannot pay unplaced"), "stderr: {}", out.stderr);
+}
+
+// FT-123 — `product decider conform`: realised code vs the oracle (§6.3).
+
+#[test]
+fn tc_956_decider_conform_matching_runner_passes() {
+    let h = Harness::new();
+    write_decider(&h, ORDER_DECIDER);
+    // a realised runner whose outputs match the Decider's simulated outcomes
+    let runner = r#"cat >/dev/null; printf '%s' '[{"emit":["OrderPlaced"]},{"reject":"pay-only-placed"},{"emit":["OrderPaid"]}]'"#;
+    let out = h.run(&["decider", "conform", "order-decider", "--runner", runner]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("behaviourally conformant"), "{}", out.stdout);
+}
+
+#[test]
+fn tc_957_decider_conform_divergent_runner_fails() {
+    let h = Harness::new();
+    write_decider(&h, ORDER_DECIDER);
+    // realised code that wrongly accepts paying an unplaced order (scenario 2)
+    let runner = r#"cat >/dev/null; printf '%s' '[{"emit":["OrderPlaced"]},{"emit":["OrderPaid"]},{"emit":["OrderPaid"]}]'"#;
+    let out = h.run(&["decider", "conform", "order-decider", "--runner", runner]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("cannot pay unplaced"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_955_decider_simulate_cel_guard_and_payloads() {
+    let h = Harness::new();
+    let yaml = r#"id: account-decider
+decides_for: Account
+handles:
+- Charge
+emits:
+- Charged
+logic:
+  initial: {}
+  evolve:
+  - on: Opened
+    set:
+      limit: "=event.limit"
+  decide:
+  - on: Charge
+    guards:
+    - expr: "command.amount <= state.limit"
+      else_reject: over-limit
+    emit:
+    - event: Charged
+      with:
+        amount: "=command.amount"
+scenarios:
+- name: within limit
+  given:
+  - event: Opened
+    with:
+      limit: 100
+  when:
+    command: Charge
+    with:
+      amount: 40
+  then:
+    emit:
+    - event: Charged
+      with:
+        amount: 40
+- name: over limit
+  given:
+  - event: Opened
+    with:
+      limit: 100
+  when:
+    command: Charge
+    with:
+      amount: 250
+  then:
+    reject: over-limit
+"#;
+    let dir = h.dir.path().join(".product/deciders");
+    std::fs::create_dir_all(&dir).expect("mkdir");
+    std::fs::write(dir.join("account-decider.yaml"), yaml).expect("write");
+    let out = h.run(&["decider", "simulate", "account-decider"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("sound + complete"), "{}", out.stdout);
+}
+
+// FT-124 — `product slice`: a saved pointer to a section of the event model (§7.1).
+
+#[test]
+fn tc_958_slice_new_and_context_assemble_the_subgraph() {
+    let h = Harness::new();
+    seed_domain_graph(&h); // Sales / Order / OrderPlaced / PlaceOrder
+    let created = h.run(&["slice", "new", "order-slice", "--anchor", "Order"]);
+    created.assert_exit(0);
+    assert!(h.exists(".product/slices/order-slice.yaml"));
+    // context restates nothing — it assembles the reachable What subgraph
+    let ctx = h.run(&["slice", "context", "order-slice"]);
+    ctx.assert_exit(0);
+    assert!(ctx.stdout.contains("Domain Context Bundle"), "{}", ctx.stdout);
+    assert!(ctx.stdout.contains("PlaceOrder"), "{}", ctx.stdout);
+    assert!(ctx.stdout.contains("OrderPlaced"), "{}", ctx.stdout);
+    assert!(h.run(&["slice", "show", "order-slice"]).stdout.contains("anchors: Order"));
+    assert!(h.run(&["slice", "list"]).stdout.contains("order-slice"));
+}
+
+#[test]
+fn tc_959_slice_new_rejects_a_dangling_anchor() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    let out = h.run(&["slice", "new", "bad", "--anchor", "Ghost"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("Ghost"), "stderr: {}", out.stderr);
+    assert!(!h.exists(".product/slices/bad.yaml"));
+}
+
+// FT-126 — `product deliverable` + `product release`: the delivery layer (§7.1).
+
+#[test]
+fn tc_967_delivery_chain_release_feature_slice() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    // a deliverable points at one slice + carries acceptance
+    let d = h.run(&["deliverable", "new", "place-order", "--slice", "order-slice", "--accept", "a1:an order can be placed"]);
+    d.assert_exit(0);
+    assert!(h.exists(".product/deliverables/place-order.yaml"));
+    // a release groups deliverables
+    let r = h.run(&["release", "new", "R1", "--feature", "place-order"]);
+    r.assert_exit(0);
+    assert!(h.exists(".product/releases/R1.yaml"));
+    // show + status reflect the chain
+    assert!(h.run(&["deliverable", "show", "place-order"]).stdout.contains("slice: order-slice"));
+    assert!(h.run(&["release", "show", "R1"]).stdout.contains("place-order"));
+    let status = h.run(&["status"]);
+    assert!(status.stdout.contains("1 slices, 1 deliverables, 1 releases"), "{}", status.stdout);
+}
+
+#[test]
+fn tc_968_delivery_rejects_dangling_references() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    // a deliverable pointing at a slice that does not exist
+    let d = h.run(&["deliverable", "new", "x", "--slice", "ghost-slice"]);
+    d.assert_exit(1);
+    assert!(d.stderr.contains("ghost-slice"), "stderr: {}", d.stderr);
+    // a release referencing a deliverable that does not exist
+    let r = h.run(&["release", "new", "R", "--feature", "ghost-feature"]);
+    r.assert_exit(1);
+    assert!(r.stderr.contains("ghost-feature"), "stderr: {}", r.stderr);
+}
+
+// FT-127 — `done` / `closed`: the §7.2 delivery predicates.
+
+#[test]
+fn tc_969_deliverable_done_lifecycle() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["deliverable", "new", "place-order", "--slice", "order-slice", "--accept", "a1:an order can be placed"]).assert_exit(0);
+    // pending acceptance → not done (the in-scope domain checks pass, acceptance fails)
+    let nd = h.run(&["deliverable", "done", "place-order"]);
+    nd.assert_exit(1);
+    assert!(nd.stdout.contains("not done"), "{}", nd.stdout);
+    // record the acceptance verdict → done
+    h.run(&["deliverable", "accept", "place-order", "a1", "--pass"]).assert_exit(0);
+    let d = h.run(&["deliverable", "done", "place-order"]);
+    d.assert_exit(0);
+    assert!(d.stdout.contains("DONE"), "{}", d.stdout);
+}
+
+#[test]
+fn tc_975_release_done_requires_members_done_and_closed() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["deliverable", "new", "place-order", "--slice", "order-slice", "--accept", "a1:ok"]).assert_exit(0);
+    h.run(&["deliverable", "accept", "place-order", "a1", "--pass"]).assert_exit(0);
+    h.run(&["release", "new", "R1", "--feature", "place-order"]).assert_exit(0);
+    let r = h.run(&["release", "done", "R1"]);
+    r.assert_exit(0);
+    assert!(r.stdout.contains("DONE"), "{}", r.stdout);
+    assert!(r.stdout.contains("cut closed"), "{}", r.stdout);
+}
+
+// FT-130 — `product build`: assemble the SPMC context + record conformance into done.
+
+#[test]
+fn tc_984_build_dry_run_assembles_the_spmc_context() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["deliverable", "new", "place-order", "--slice", "order-slice", "--accept", "a1:an order can be placed"]).assert_exit(0);
+    let out = h.run(&["build", "place-order", "--dry-run"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("Build Context: place-order"), "{}", out.stdout);
+    assert!(out.stdout.contains("## What"), "{}", out.stdout);
+    assert!(out.stdout.contains("PlaceOrder"), "{}", out.stdout); // the slice subgraph
+    assert!(out.stdout.contains("## Acceptance"), "{}", out.stdout);
+    assert!(out.stdout.contains("Gate status"), "{}", out.stdout);
+    assert!(out.stdout.contains("not done"), "{}", out.stdout); // pending acceptance
+}
+
+#[test]
+fn tc_990_build_verify_runs_acceptance_runners() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    // A deliverable whose acceptance carries runners — one that passes, one that
+    // fails. (`deliverable new` has no runner flag, so author the YAML directly.)
+    let dy = "id: place-order\nslice: order-slice\nacceptance:\n- id: a1\n  statement: passes\n  runner: shell\n  runner_args: \"true\"\n- id: a2\n  statement: fails\n  runner: shell\n  runner_args: \"false\"\n";
+    let dd = h.dir.path().join(".product/deliverables");
+    std::fs::create_dir_all(&dd).expect("mkdir");
+    std::fs::write(dd.join("place-order.yaml"), dy).expect("write deliverable");
+    // Build with the worker role offline (no LITELLM env → deterministic stub),
+    // so the only live behaviour under test is the §6 verify step.
+    let output = Command::new(&h.bin)
+        .args(["build", "place-order", "--role", "coder"])
+        .current_dir(h.dir.path())
+        .env_remove("LITELLM_BASE_URL")
+        .env_remove("LITELLM_API_KEY")
+        .output()
+        .expect("run build");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Verify + fix (§6)"), "{stdout}");
+    assert!(stdout.contains("[x] a1"), "{stdout}");
+    assert!(stdout.contains("[ ] a2"), "{stdout}");
+    // The verdicts are recorded back into the deliverable (consumed by `done`).
+    let saved = h.read(".product/deliverables/place-order.yaml");
+    assert!(saved.contains("status: passing"), "{saved}");
+    assert!(saved.contains("status: failing"), "{saved}");
+    // a2 failing → acceptance gate fails → not done.
+    assert!(stdout.contains("not done"), "{stdout}");
+}
+
+#[test]
+fn tc_991_build_verify_fix_loop_converges() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["worker", "init"]).assert_exit(0); // coder → code-writer (worker endpoint)
+    // A deliverable whose shell runner fails on the first worker output, passes on the second.
+    let dy = "id: conv\nslice: order-slice\nacceptance:\n- id: a1\n  statement: out is good\n  runner: shell\n  runner_args: \"grep -q GOOD out.txt\"\n";
+    let dd = h.dir.path().join(".product/deliverables");
+    std::fs::create_dir_all(&dd).expect("mkdir");
+    std::fs::write(dd.join("conv.yaml"), dy).expect("write deliverable");
+    // Scripted worker: call 0 writes BAD, call 1 writes GOOD.
+    let md = h.dir.path().join("mock");
+    std::fs::create_dir_all(&md).expect("mkdir mock");
+    std::fs::write(md.join("response-0.json"), "{\"files\":[{\"path\":\"out.txt\",\"content\":\"BAD\\n\"}]}").expect("r0");
+    std::fs::write(md.join("response-1.json"), "{\"files\":[{\"path\":\"out.txt\",\"content\":\"GOOD\\n\"}]}").expect("r1");
+    let output = Command::new(&h.bin)
+        .args(["build", "conv", "--role", "coder"])
+        .current_dir(h.dir.path())
+        .env("PRODUCT_MOCK_DIR", md.to_str().expect("dir"))
+        .env_remove("LITELLM_BASE_URL")
+        .env_remove("LITELLM_API_KEY")
+        .output()
+        .expect("run build");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // The first verdict failed → the loop re-dispatched, escalating up the ladder.
+    assert!(stdout.contains("re-dispatching to 'code-writer-heavy'"), "{stdout}");
+    // The second response made the runner pass → converged to DONE.
+    assert!(stdout.contains("[x] a1"), "{stdout}");
+    assert!(stdout.contains("DONE"), "{stdout}");
+    assert_eq!(h.read("out.txt").trim(), "GOOD");
+    // The session record captures rounds (calls by gate) + verdict, persisted.
+    assert!(stdout.contains("--- Session ---"), "{stdout}");
+    let session = h.read(".product/build/conv.session.json");
+    assert!(session.contains("\"deliverable\": \"conv\""), "{session}");
+    assert!(session.contains("\"gate\": \"dispatch\""), "{session}");
+    assert!(session.contains("\"gate\": \"verify\""), "{session}");
+    assert!(session.contains("\"done\": true"), "{session}");
+}
+
+#[test]
+fn tc_992_build_max_rounds_caps_the_fix_loop() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["worker", "init"]).assert_exit(0);
+    let dy = "id: conv\nslice: order-slice\nacceptance:\n- id: a1\n  statement: out good\n  runner: shell\n  runner_args: \"grep -q GOOD out.txt\"\n";
+    let dd = h.dir.path().join(".product/deliverables");
+    std::fs::create_dir_all(&dd).expect("mkdir");
+    std::fs::write(dd.join("conv.yaml"), dy).expect("write deliverable");
+    // Only a failing response — the worker can never satisfy the runner.
+    let md = h.dir.path().join("mock");
+    std::fs::create_dir_all(&md).expect("mkdir mock");
+    std::fs::write(md.join("response-0.json"), "{\"files\":[{\"path\":\"out.txt\",\"content\":\"BAD\\n\"}]}").expect("r0");
+    let output = Command::new(&h.bin)
+        .args(["build", "conv", "--role", "coder", "--max-rounds", "0"])
+        .current_dir(h.dir.path())
+        .env("PRODUCT_MOCK_DIR", md.to_str().expect("dir"))
+        .env_remove("LITELLM_BASE_URL")
+        .env_remove("LITELLM_API_KEY")
+        .output()
+        .expect("run build");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // --max-rounds 0 records the verdict but never re-dispatches a fix.
+    assert!(!stdout.contains("re-dispatching"), "max-rounds 0 must not re-dispatch: {stdout}");
+    assert!(stdout.contains("[ ] a1"), "{stdout}");
+    assert!(stdout.contains("not done"), "{stdout}");
+}
+
+#[test]
+fn tc_993_build_lsp_fix_loop_converges() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["worker", "init"]).assert_exit(0);
+    std::fs::create_dir_all(h.dir.path().join(".product/deliverables")).expect("mkdir");
+    std::fs::write(h.dir.path().join(".product/deliverables/conv.yaml"), "id: conv\nslice: order-slice\n").expect("deliverable");
+    // Worker mock: the dispatch writes a .rs file; the LSP fix rewrites it.
+    let wm = h.dir.path().join("wmock");
+    std::fs::create_dir_all(&wm).expect("wmock");
+    std::fs::write(wm.join("response-0.json"), "{\"files\":[{\"path\":\"src.rs\",\"content\":\"// v0\\n\"}]}").expect("w0");
+    std::fs::write(wm.join("response-1.json"), "{\"files\":[{\"path\":\"src.rs\",\"content\":\"// v1 fixed\\n\"}]}").expect("w1");
+    // LSP mock: first diagnose dirty (one lint), second clean (diag-1 absent).
+    let lm = h.dir.path().join("lmock");
+    std::fs::create_dir_all(&lm).expect("lmock");
+    std::fs::write(lm.join("diag-0.json"), "[\"unneeded return statement\"]").expect("d0");
+    let output = Command::new(&h.bin)
+        .args(["build", "conv", "--role", "coder", "--lsp", "--no-verify"])
+        .current_dir(h.dir.path())
+        .env("PRODUCT_MOCK_DIR", wm.to_str().expect("wm"))
+        .env("PRODUCT_MOCK_LSP", lm.to_str().expect("lm"))
+        .env_remove("LITELLM_BASE_URL")
+        .env_remove("LITELLM_API_KEY")
+        .output()
+        .expect("run build");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("LSP diagnose + fix"), "{stdout}");
+    assert!(stdout.contains("via 'code-writer-heavy'"), "escalated: {stdout}");
+    assert!(stdout.contains("[x] src.rs: clean"), "converged: {stdout}");
+    assert_eq!(h.read("src.rs").trim(), "// v1 fixed");
+}
+
+#[test]
+fn tc_983_recording_conformance_flips_done() {
+    let h = Harness::new();
+    seed_domain_graph(&h); // Order aggregate; PlaceOrder targets it, emits OrderPlaced
+    // author a sound + complete decider over the in-scope aggregate
+    let decider = "id: Order-decider\ndecides_for: Order\nhandles:\n- PlaceOrder\nemits:\n- OrderPlaced\nlogic:\n  initial:\n    status: none\n  decide:\n  - on: PlaceOrder\n    guards:\n    - when:\n        field: status\n        eq: none\n      else_reject: no-double-place\n    emit:\n    - OrderPlaced\nscenarios:\n- name: place\n  when: PlaceOrder\n  then:\n    emit:\n    - OrderPlaced\n";
+    let dd = h.dir.path().join(".product/deciders");
+    std::fs::create_dir_all(&dd).expect("mkdir");
+    std::fs::write(dd.join("Order-decider.yaml"), decider).expect("decider");
+    // slice + deliverable with passing acceptance
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["deliverable", "new", "place-order", "--slice", "order-slice", "--accept", "a1:ok"]).assert_exit(0);
+    h.run(&["deliverable", "accept", "place-order", "a1", "--pass"]).assert_exit(0);
+    // not done yet — behavioural conformance is pending (no recorded verdict)
+    let before = h.run(&["deliverable", "done", "place-order"]);
+    before.assert_exit(1);
+    assert!(before.stdout.contains("behavioural-conform"), "{}", before.stdout);
+    // record a passing conformance verdict via a matching runner
+    let runner = r#"cat >/dev/null; printf '%s' '[{"emit":["OrderPlaced"]}]'"#;
+    h.run(&["decider", "conform", "Order-decider", "--runner", runner]).assert_exit(0);
+    // now done
+    let after = h.run(&["deliverable", "done", "place-order"]);
+    after.assert_exit(0);
+    assert!(after.stdout.contains("DONE"), "{}", after.stdout);
+}
+
+// FT-131 — worker capability catalog: role → capability with escalation.
+
+#[test]
+fn tc_985_worker_resolve_escalates_by_trigger() {
+    let h = Harness::new();
+    h.run(&["worker", "init"]).assert_exit(0);
+    assert!(h.exists(".product/capabilities.yaml"));
+    h.run(&["worker", "check"]).assert_exit(0);
+    // default capability
+    let def = h.run(&["worker", "resolve", "implementer"]);
+    def.assert_exit(0);
+    assert!(def.stdout.contains("claude-code"), "{}", def.stdout);
+    // a firing trigger escalates up the ladder
+    let esc = h.run(&["worker", "resolve", "implementer", "--trigger", "stakes_foundational"]);
+    esc.assert_exit(0);
+    assert!(esc.stdout.contains("deep-reasoning"), "{}", esc.stdout);
+    assert!(h.run(&["worker", "list"]).stdout.contains("implementer"));
+}
+
+#[test]
+fn tc_986_build_resolves_worker_by_role() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["worker", "init"]).assert_exit(0);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["deliverable", "new", "place-order", "--slice", "order-slice", "--accept", "a1:ok"]).assert_exit(0);
+    let out = h.run(&["build", "place-order", "--dry-run"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("--- Worker ---"), "{}", out.stdout);
+    assert!(out.stdout.contains("capability 'claude-code'"), "{}", out.stdout);
+}
+
+// FT-133 — first-party worker: a native SPMC executor (endpoint: worker).
+
+#[test]
+fn tc_988_first_party_worker_writes_artifact_offline() {
+    let h = Harness::new();
+    h.run(&["worker", "init"]).assert_exit(0);
+    // `coder` → code-writer (endpoint: worker); offline (no litellm) → stub artifact
+    let out = h.run_with_env(
+        &["worker", "run", "coder", "--prompt", "implement the order slice"],
+        &[("LITELLM_BASE_URL", ""), ("LITELLM_API_KEY", "")],
+    );
+    out.assert_exit(0);
+    assert!(out.stdout.contains("endpoint worker"), "{}", out.stdout);
+    assert!(out.stdout.contains("offline"), "{}", out.stdout);
+    assert!(out.stdout.contains("STUB-"), "{}", out.stdout);
+}
+
+#[test]
+fn tc_989_worker_check_flags_unknown_endpoint() {
+    let h = Harness::new();
+    let p = h.dir.path().join(".product");
+    std::fs::create_dir_all(&p).expect("mkdir");
+    std::fs::write(p.join("capabilities.yaml"), "capabilities:\n- id: bad\n  endpoint: bogus\n  model_identifier: x\n").expect("w");
+    std::fs::write(p.join("role-bindings.yaml"), "role_bindings:\n- role_id: r\n  default_capability: bad\n  active: true\n").expect("w");
+    let out = h.run(&["worker", "check"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("endpoint") && out.stderr.contains("bogus"), "stderr: {}", out.stderr);
+}
+
+// FT-132 — parallel work-unit execution: build fans units across workers.
+
+#[test]
+fn tc_987_build_parallel_plan_lists_work_units() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["worker", "init"]).assert_exit(0);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["deliverable", "new", "place-order", "--slice", "order-slice", "--accept", "a1:ok"]).assert_exit(0);
+    // seed two work units (the §5 parallel unit)
+    let wud = h.dir.path().join(".product/work-units");
+    std::fs::create_dir_all(&wud).expect("mkdir");
+    let wu = |id: &str| format!("id: {id}\nschema: \"{{}}\"\nprompt: build {id}\ncontext:\n  frozen: true\n  derived_from:\n  - domain:Order\nproduces:\n  artifact: {id}.rs\n  path: src/{id}.rs\n");
+    std::fs::write(wud.join("wu-a.yaml"), wu("wu-a")).expect("w");
+    std::fs::write(wud.join("wu-b.yaml"), wu("wu-b")).expect("w");
+    let out = h.run(&["build", "place-order", "--jobs", "4", "--dry-run"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("Parallel run plan"), "{}", out.stdout);
+    assert!(out.stdout.contains("4 job(s) over 2 work unit(s)"), "{}", out.stdout);
+    assert!(out.stdout.contains("wu-a") && out.stdout.contains("wu-b"), "{}", out.stdout);
+}
+
+// FT-125 — `product status` surfaces the framework What/How/delivery graph.
+
+#[test]
+fn tc_966_status_shows_the_framework_graph() {
+    let h = Harness::new();
+    seed_domain_graph(&h); // 1 context, 1 entity, 1 event, 1 command
+    h.run(&["slice", "new", "s1", "--anchor", "Order"]).assert_exit(0);
+    let out = h.run(&["status"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("Framework graph"), "{}", out.stdout);
+    assert!(out.stdout.contains("1 contexts"), "{}", out.stdout);
+    assert!(out.stdout.contains("1 entities"), "{}", out.stdout);
+    assert!(out.stdout.contains("1 commands"), "{}", out.stdout);
+    assert!(out.stdout.contains("1 slices"), "{}", out.stdout);
+}
+
+// =============================================================================
+// FT-115 — `product how add/set`: build the Why cascade + contracts granularly.
+// =============================================================================
+
+#[test]
+fn tc_950_how_build_full_contract_from_scratch() {
+    let h = Harness::new(); // product.toml name = "test"
+    h.run(&["how", "add", "decision", "slices", "--decision", "one folder per feature", "--rationale", "change locality", "--licenses", "cohesion"]).assert_exit(0);
+    h.run(&["how", "add", "principle", "cohesion", "--statement", "code that changes together lives together", "--enforced-by", "layout-audit"]).assert_exit(0);
+    h.run(&["how", "add", "pattern", "slice-folder", "--shape", "one folder per feature", "--realizes", "cohesion"]).assert_exit(0);
+    h.run(&["how", "set", "app-contract", "--id", "app", "--language", "Rust", "--layering", "api,application,domain"]).assert_exit(0);
+    h.run(&["how", "add", "app-statement", "deps-inward", "--statement", "domain may not reference api", "--enforced-by", "layering-audit"]).assert_exit(0);
+    h.run(&["how", "set", "infra-contract", "--id", "infra", "--satisfies", "app"]).assert_exit(0);
+    h.run(&["how", "add", "resource", "compute", "--kind", "compute", "--choice", "Container Apps"]).assert_exit(0);
+    h.run(&["how", "add", "interface", "api", "--surface", "rest", "--standard", "OpenAPI", "--derived-from", "domain:Task"]).assert_exit(0);
+
+    let show = h.run(&["how", "show"]);
+    assert!(show.stdout.contains("top-decisions: 1"));
+    assert!(show.stdout.contains("infrastructure-contract: infra satisfies app (1 resource(s))"));
+    // the built-up How is conformant
+    h.run(&["how", "validate"]).assert_exit(0);
+}
+
+#[test]
+fn tc_951_how_add_duplicate_id_is_rejected() {
+    let h = Harness::new();
+    h.run(&["how", "add", "principle", "x", "--statement", "s"]).assert_exit(0);
+    let out = h.run(&["how", "add", "pattern", "x", "--shape", "s", "--realizes", "x"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("already exists"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_952_how_add_resource_requires_infra_contract() {
+    let h = Harness::new();
+    let out = h.run(&["how", "add", "resource", "db", "--kind", "data", "--choice", "pg"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("set the infrastructure contract first"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_953_how_add_unknown_element_is_rejected() {
+    let h = Harness::new();
+    let out = h.run(&["how", "add", "widget", "x"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("unknown element"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_954_how_set_preserves_added_statements() {
+    let h = Harness::new();
+    h.run(&["how", "set", "app-contract", "--id", "app", "--language", "Rust"]).assert_exit(0);
+    h.run(&["how", "add", "app-statement", "s1", "--statement", "x"]).assert_exit(0);
+    // re-set the contract metadata; the statement must survive
+    h.run(&["how", "set", "app-contract", "--id", "app", "--language", "Rust", "--runtime", "tokio"]).assert_exit(0);
+    let show = h.run(&["how", "show"]);
+    assert!(show.stdout.contains("statements: 1"), "statement must be preserved across re-set: {}", show.stdout);
+}
+
+// =============================================================================
+// FT-116 — `product work-unit`: SPMC work-unit validation cross-checked.
+// =============================================================================
+
+const WU_EXAMPLE: &str = include_str!("../../../schema/examples/work-unit.example.yaml");
+
+fn write_wu(h: &Harness, yaml: &str) {
+    std::fs::create_dir_all(h.dir.path().join(".product")).expect("mkdir");
+    std::fs::write(h.dir.path().join(".product/work-unit.yaml"), yaml).expect("write wu");
+}
+
+#[test]
+fn tc_960_work_unit_validate_conformant_example() {
+    let h = Harness::new();
+    write_wu(&h, WU_EXAMPLE);
+    let out = h.run(&["work-unit", "validate"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("conformant"));
+    assert!(out.stdout.contains("CompleteTaskHandler.cs"));
+}
+
+#[test]
+fn tc_961_work_unit_unfrozen_context_is_a_violation() {
+    let h = Harness::new();
+    write_wu(&h, &WU_EXAMPLE.replacen("frozen: true", "frozen: false", 1));
+    let out = h.run(&["work-unit", "validate"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("must be frozen"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_962_work_unit_domain_pointer_cross_checks_the_graph() {
+    let h = Harness::new();
+    // example derives from domain:Task; capture a graph without Task
+    write_wu(&h, WU_EXAMPLE);
+    h.run(&["domain", "new", "context", "Other", "--label", "Other"]).assert_exit(0);
+    let out = h.run(&["work-unit", "validate"]);
+    out.assert_exit(0); // dangling domain ref is a warning
+    assert!(out.stdout.contains("domain: cross-checked"));
+    assert!(out.stderr.contains("domain:Task"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_963_work_unit_show_and_init() {
+    let h = Harness::new();
+    let init = h.run(&["work-unit", "init", "my-unit"]);
+    init.assert_exit(0);
+    assert!(h.exists(".product/work-unit.yaml"));
+    h.run(&["work-unit", "init", "x"]).assert_exit(1); // no --force
+    let show = h.run(&["work-unit", "show"]);
+    assert!(show.stdout.contains("work-unit: my-unit"));
+    assert!(show.stdout.contains("frozen=true"));
+}
+
+#[test]
+fn tc_964_work_unit_validate_without_file_is_a_clear_error() {
+    let h = Harness::new();
+    let out = h.run(&["work-unit", "validate"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("no work unit"), "stderr: {}", out.stderr);
+}
+
+// =============================================================================
+// FT-117 — `product cell dispatch`: task type → concrete frozen work units.
+// =============================================================================
+
+fn setup_dispatch(h: &Harness) {
+    write_cell(h, CELL_EXAMPLE); // add-crud-resource at .product/cell.yaml
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "Order", "--label", "Order", "--context", "Sales", "--definition", "an order"]).assert_exit(0);
+}
+
+fn full_binds() -> Vec<&'static str> {
+    vec!["--bind", "entity=Order", "--bind", "fields=title", "--bind", "operations=CRUD", "--bind", "validation=nonempty", "--bind", "views=list"]
+}
+
+#[test]
+fn tc_970_dispatch_instantiates_work_units() {
+    let h = Harness::new();
+    setup_dispatch(&h);
+    let mut args = vec!["cell", "dispatch"];
+    args.extend(full_binds());
+    let out = h.run(&args);
+    out.assert_exit(0);
+    assert!(h.exists(".product/work-units/contract-order.yaml"));
+    assert!(h.exists(".product/work-units/handler-order.yaml"));
+    // the contract cell's domain:entity resolved to the bound entity Order
+    let wu = h.read(".product/work-units/contract-order.yaml");
+    assert!(wu.contains("domain:Order"), "{wu}");
+    assert!(wu.contains("frozen: true"));
+    assert!(wu.contains("hash: sha256:"));
+}
+
+#[test]
+fn tc_971_dispatched_work_units_validate() {
+    let h = Harness::new();
+    setup_dispatch(&h);
+    let mut args = vec!["cell", "dispatch"];
+    args.extend(full_binds());
+    h.run(&args).assert_exit(0);
+    // a produced work unit passes `product work-unit validate`
+    let out = h.run(&["work-unit", "validate", "--file", ".product/work-units/handler-order.yaml"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("domain: cross-checked"));
+}
+
+#[test]
+fn tc_972_dispatch_rejects_binding_to_non_entity() {
+    let h = Harness::new();
+    setup_dispatch(&h);
+    let out = h.run(&["cell", "dispatch", "--bind", "entity=Ghost", "--bind", "fields=f", "--bind", "operations=R", "--bind", "validation=v", "--bind", "views=l"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("not an entity in the What graph"), "stderr: {}", out.stderr);
+    assert!(!h.exists(".product/work-units/contract-ghost.yaml"));
+}
+
+#[test]
+fn tc_973_dispatch_requires_all_required_slots() {
+    let h = Harness::new();
+    setup_dispatch(&h);
+    let out = h.run(&["cell", "dispatch", "--bind", "entity=Order"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("required slot"), "stderr: {}", out.stderr);
+}
+
+#[test]
+fn tc_974_dispatch_print_does_not_write_files() {
+    let h = Harness::new();
+    setup_dispatch(&h);
+    let mut args = vec!["cell", "dispatch", "--print"];
+    args.extend(full_binds());
+    let out = h.run(&args);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("# contract-order"));
+    assert!(out.stdout.contains("domain:Order"));
+    assert!(!h.exists(".product/work-units/contract-order.yaml"), "--print must not write files");
+}
+
+#[test]
+fn tc_965_work_unit_validate_discovers_archetype_how() {
+    // A dispatched work unit lives under .product/archetypes/<name>/work-units/;
+    // validate must cross-check it against that archetype's how-contract, not
+    // only the top-level .product/how-contract.yaml.
+    let h = Harness::new();
+    let base = h.dir.path().join(".product/archetypes/demo");
+    std::fs::create_dir_all(base.join("work-units")).expect("mkdir");
+    std::fs::write(base.join("how-contract.yaml"),
+        "archetype: demo\napplication_contract:\n  id: app\n  language: Rust\npatterns:\n  - id: p1\n    shape: a shape\n    realizes: [pr1]\nprinciples:\n  - id: pr1\n    statement: s\n    enforced_by: [v1]\n").expect("how");
+    std::fs::write(base.join("work-units/wu.yaml"),
+        "id: wu\nschema: s\nprompt: p\ncontext:\n  derived_from: [\"app-contract:app\"]\n  frozen: true\nproduces:\n  artifact: a.rs\n  path: src/a.rs\napplies: [p1]\n").expect("wu");
+    let out = h.run(&["work-unit", "validate", "--file", ".product/archetypes/demo/work-units/wu.yaml"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("how: cross-checked"), "should load the archetype How: {}", out.stdout);
+    // p1 is a real pattern in that How → no "not a pattern" warning for it
+    assert!(!out.stderr.contains("applies 'p1' — not a pattern"), "stderr: {}", out.stderr);
+}
+
+// =============================================================================
+// FT-119 — CLI↔MCP parity for `domain`: product_domain_* tools via the server.
+// =============================================================================
+
+#[test]
+fn tc_981_domain_mcp_tools_have_cli_parity() {
+    let h = Harness::new(); // product.toml name = "test"
+    let rpc = [
+        r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_domain_new","arguments":{"kind":"context","id":"Sales","label":"Sales"}}}"#,
+        r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_domain_new","arguments":{"kind":"entity","id":"Order","label":"Order","context":"Sales","definition":"an order"}}}"#,
+        r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"product_domain_validate","arguments":{}}}"#,
+        r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"product_domain_list","arguments":{}}}"#,
+    ].join("\n");
+    let out = h.run_with_stdin(&["mcp", "--write"], &rpc);
+    out.assert_exit(0);
+    // both creates succeeded
+    assert_eq!(domain_rpc_result(&out.stdout, 1).expect("ctx")["ok"], serde_json::json!(true));
+    assert_eq!(domain_rpc_result(&out.stdout, 2).expect("ent")["ok"], serde_json::json!(true));
+    // validate is conformant; list reflects both nodes — same result as the CLI
+    assert_eq!(domain_rpc_result(&out.stdout, 3).expect("val")["conformant"], serde_json::json!(true));
+    assert_eq!(domain_rpc_result(&out.stdout, 4).expect("list")["count"], serde_json::json!(2));
+}
+
+#[test]
+fn tc_982_domain_mcp_new_rejects_non_conformant() {
+    let h = Harness::new();
+    let rpc = [
+        r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_domain_new","arguments":{"kind":"context","id":"Sales","label":"Sales"}}}"#,
+        r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_domain_new","arguments":{"kind":"event","id":"Ghost","label":"Ghost","context":"Sales","changes":"Nope"}}}"#,
+    ].join("\n");
+    let out = h.run_with_stdin(&["mcp", "--write"], &rpc);
+    out.assert_exit(0);
+    let r = domain_rpc_result(&out.stdout, 2).expect("event");
+    assert_eq!(r["ok"], serde_json::json!(false));
+    assert!(r["violations"][0]["message"].as_str().unwrap().contains("§3.2"));
+}

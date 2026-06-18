@@ -1,0 +1,126 @@
+@prefix pf:   <https://productframework.org/ns#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+#  The Product Framework — SHACL Conformance Shapes
+#
+#  These shapes validate that a product graph conforms to the
+#  framework's rules. Run with pyshacl (or any SHACL engine):
+#     pyshacl -s shapes.shacl.ttl -df turtle  your-product.ttl
+#
+#  Each shape's sh:message names the framework rule it enforces,
+#  so a validation report reads as a conformance report.
+#################################################################
+
+#########################  WHAT — §3.1  #########################
+
+pf:EntityShape a sh:NodeShape ;
+  sh:targetClass pf:Entity ;
+  sh:property [
+    sh:path pf:definition ; sh:minCount 1 ;
+    sh:message "§3.1 An entity must carry a business-language definition." ] ;
+  sh:property [
+    sh:path pf:inContext ; sh:minCount 1 ; sh:class pf:BoundedContext ;
+    sh:message "§3.1 An entity must belong to exactly one bounded context (never a flat model)." ;
+    sh:maxCount 1 ] .
+
+pf:RelationShape a sh:NodeShape ;
+  sh:targetClass pf:Relation ;
+  sh:property [
+    sh:path pf:cardinality ; sh:minCount 1 ;
+    sh:message "§3.1 A relation must declare cardinality." ] ;
+  sh:property [
+    sh:path pf:rationale ; sh:minCount 1 ;
+    sh:message "§3.1 A relation must carry rationale (why this link, this cardinality)." ] .
+
+pf:BoundedContextShape a sh:NodeShape ;
+  sh:targetClass pf:BoundedContext ;
+  sh:property [
+    sh:path rdfs:label ; sh:minCount 1 ;
+    sh:message "A bounded context must be named (its ubiquitous language is authoritative)." ] .
+
+pf:ContextMappingShape a sh:NodeShape ;
+  sh:targetClass pf:ContextMapping ;
+  sh:property [
+    sh:path pf:mapsTo ; sh:minCount 2 ;
+    sh:message "§3.1 A context mapping must connect two concepts (an explicit declared correspondence, never assumed)." ] ;
+  sh:property [
+    sh:path pf:rationale ; sh:minCount 1 ;
+    sh:message "§3.1 A context mapping must state the correspondence (e.g. linked by PersonId)." ] .
+
+pf:InvariantShape a sh:NodeShape ;
+  sh:targetClass pf:Invariant ;
+  sh:property [
+    sh:path pf:statement ; sh:minCount 1 ;
+    sh:message "§3.1 An invariant must be stated as a checkable constraint." ] .
+
+#########################  WHAT — §3.2  #########################
+
+pf:EventShape a sh:NodeShape ;
+  sh:targetClass pf:Event ;
+  sh:property [
+    sh:path pf:changes ; sh:minCount 1 ; sh:class pf:Entity ;
+    sh:message "§3.2 Every event must change a real domain entity (the load-bearing relation; behaviour may not reference structure that does not exist)." ] ;
+  sh:property [
+    sh:path pf:inContext ; sh:minCount 1 ; sh:class pf:BoundedContext ;
+    sh:message "§3.2 An event must live in a bounded context." ] .
+
+pf:CommandShape a sh:NodeShape ;
+  sh:targetClass pf:Command ;
+  sh:property [
+    sh:path pf:targets ; sh:minCount 1 ; sh:class pf:Entity ;
+    sh:message "§3.2 A command must target a real aggregate (entity)." ] ;
+  sh:property [
+    sh:path pf:emits ; sh:minCount 1 ; sh:class pf:Event ;
+    sh:message "§3.2 A command must emit at least one event (command coverage)." ] .
+
+pf:ReadModelShape a sh:NodeShape ;
+  sh:targetClass pf:ReadModel ;
+  sh:property [
+    sh:path pf:projects ; sh:minCount 1 ;
+    sh:message "§3.2 A read model must project at least one entity/event (read-model provenance: no ghost views)." ] .
+
+#########################  HOW — §4  ############################
+#  The How conformance shapes (decisions, principles, patterns,
+#  the two contracts, layout, interface, and the trace-truth
+#  rule) live in their own file: how.shacl.ttl. Loaded alongside
+#  this one by validate.py.
+
+#########################  WORK UNITS — §5  #####################
+
+pf:WorkUnitShape a sh:NodeShape ;
+  sh:targetClass pf:WorkUnit ;
+  sh:property [
+    sh:path pf:derivedFrom ; sh:minCount 1 ;
+    sh:message "§5 A work unit must declare its (frozen) input — what it is derived_from." ] ;
+  sh:property [
+    sh:path pf:applies ; sh:minCount 0 ;
+    sh:message "§5 A work unit references the principles/patterns it applies by pointer." ] .
+
+#########################  VERIFICATION — §6  ###################
+
+pf:VerificationShape a sh:NodeShape ;
+  sh:targetClass pf:Verification ;
+  sh:property [
+    sh:path pf:enforces ; sh:minCount 1 ;
+    sh:message "§6.1 Every verification must name what it protects (enforces a principle/contract/model element)." ] ;
+  sh:property [
+    sh:path pf:verificationKind ; sh:minCount 1 ; sh:class pf:VerificationKind ;
+    sh:message "§6.2 A verification must declare its kind." ] .
+
+#########################  DELIVERY — §7  #######################
+
+pf:FeatureShape a sh:NodeShape ;
+  sh:targetClass pf:Feature ;
+  sh:property [
+    sh:path pf:contains ; sh:minCount 1 ;
+    sh:message "§7 A feature must be a non-empty subgraph of the What (flow-shaped, not a free-floating ticket)." ] .
+
+pf:ReleaseShape a sh:NodeShape ;
+  sh:targetClass pf:Release ;
+  sh:property [
+    sh:path pf:contains ; sh:minCount 1 ; sh:class pf:Feature ;
+    sh:message "§7 A release must contain at least one feature; its cut must be closed (checked at validation time against dependencies)." ] .

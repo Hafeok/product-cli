@@ -206,6 +206,40 @@ If you don't have Claude Code installed, point `[author].cli` at `copilot` in `p
 
 ---
 
+## From spec to code — the smallest sufficient model
+
+Authoring gets you a precise spec. `product build` closes the loop: it assembles the frozen context for a **deliverable** (the slice it ships, the decisions to apply, the acceptance it must satisfy) and dispatches it to a **worker model**, then runs deterministic gates — rust-analyzer + clippy, then each acceptance runner — fixing failures in place until the deliverable is *done*.
+
+The bet behind it: **the more precisely a change is specified, the smaller the model that can implement it.** So workers are a catalogue of model tiers bound to roles with an escalation ladder. The build tries the **smallest model first** and climbs only when a gate fails:
+
+```bash
+product worker init                      # scaffold .product/capabilities.yaml + role-bindings.yaml
+product worker list                      # the model catalog + each role's escalation ladder
+
+product build my-deliverable --role coder --dry-run   # inspect the frozen context + run plan
+product build my-deliverable --role coder --lsp        # dispatch + LSP + verify gates
+```
+
+```yaml
+# .product/role-bindings.yaml — coder starts small, escalates on failure
+- role_id: coder
+  default_capability: fast-coder         # e.g. a 35B model (tier 1)
+  escalation_steps:
+  - { capability: code-writer }          # 123B (tier 2)
+  - { capability: code-writer-heavy }    # 397B (tier 3)
+```
+
+Two properties make this trustworthy rather than hopeful:
+
+- **`done` is computed, not claimed** (ADR-071): every in-scope element must conform, every Decider must be sound, every acceptance runner must pass. A worker can't declare victory.
+- **The oracle is protected** (ADR-076): a worker may make the acceptance tests *pass*, never make them *lenient* — any edit a worker makes to a test file is reverted.
+
+The build can even run **test-first**: a slice's cells become dependency-ordered work units (ADR-075) where one unit writes the test from the spec and a later unit — given that test read-only — implements against it. A deep-enough spec lets two independent small-model runs converge on the same contract.
+
+See **[docs/spec-depth-substitution.md](docs/spec-depth-substitution.md)** for the thesis and the experiment behind it.
+
+---
+
 ## How it's structured
 
 ```
@@ -366,6 +400,9 @@ dagger -m . call binary export ...   # test against the latest GitHub Release
 | `gap *`, `drift *`, `preflight` | Specification health |
 | `implement FT-XXX` | Full agent-orchestration pipeline |
 | `verify [FT-XXX]` | Run TC runners and update status |
+| `deliverable *`, `slice *`, `cell *`, `work-unit *` | SPMC build artifacts — slices, deliverables, task cells, work units |
+| `build <deliverable>` | Assemble frozen context, dispatch a worker model, run LSP + verify gates |
+| `worker *` | Model capability catalog — list, resolve a role to a tier, validate |
 | `author *` | Graph-aware authoring sessions |
 | `mcp [--http]` | Run as MCP server |
 | `metrics *`, `cycle-times`, `forecast` | Architectural fitness + delivery analytics |
@@ -430,6 +467,7 @@ cargo bench
 - [Product PRD](docs/product-prd.md) — the full vision and goals
 - [ADRs](docs/product-adrs.md) — every architectural decision behind this tool
 - [Request spec](docs/product-request-spec.md) — the unified atomic write interface
+- [Spec-depth substitution](docs/spec-depth-substitution.md) — the autonomous build thesis, and the experiment that tests it
 - [Feature checklist](CHECKLIST.md) — current implementation status
 
 ## License

@@ -164,9 +164,17 @@ pub fn run_implement(
 
     let impl_prompt = format!("{}\n\n{}", base_prompt, dynamic_suffix);
 
-    // Write to temp file
+    // Write to temp file. The name carries a UUID, not just a whole-second
+    // timestamp: concurrent `implement` runs for the same feature (e.g. the
+    // integration suite) would otherwise collide on one path in the shared
+    // temp dir and clobber each other's bundle.
     let tmp_dir = std::env::temp_dir();
-    let tmp_name = format!("product-impl-{}-{}.md", feature_id, chrono::Utc::now().timestamp());
+    let tmp_name = format!(
+        "product-impl-{}-{}-{}.md",
+        feature_id,
+        chrono::Utc::now().timestamp(),
+        uuid::Uuid::new_v4()
+    );
     let tmp_path = tmp_dir.join(&tmp_name);
     std::fs::write(&tmp_path, &impl_prompt).map_err(|e| {
         ProductError::WriteError {

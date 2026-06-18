@@ -1,0 +1,17 @@
+id: complete-task-handler
+schema: "schemas/handler.schema.json"
+prompt: "Generate the CompleteTask command handler for the Tasks slice, returning Result<T>."
+model: "small/code"
+context:
+  derived_from: ["domain:Task", "behaviour:CompleteTask", "app-contract:slice"]
+  frozen: true
+  hash: "sha256:demo"
+produces:
+  artifact: "CompleteTaskHandler.cs"
+  path: "src/Tasks/Features/CompleteTask/CompleteTaskHandler.cs"
+applies: ["vertical-slice", "result-type", "feature-cohesion"]
+trace:
+  what: "Task"
+  behaviour: "Complete-a-task flow, step 2"
+  why: ["feature-cohesion", "explicit-error-handling"]
+  structure: "vertical-slices-decision"

@@ -1,0 +1,50 @@
+id: add-mcp-tool
+name: "Add an MCP tool"
+family: integration
+archetype: product-cli
+classification: supporting
+applies_when: "exposing a domain operation as an MCP tool"
+does_not_apply_when: "a read that the existing read tools already cover"
+slots:
+  - name: command
+    kind: domain
+    dispatch: "the domain command/operation to expose"
+    capture: "which operation?"
+    audit: "the operation exists in the What graph"
+  - name: tool-name
+    kind: pattern
+    dispatch: "the mcp__ tool name"
+    capture: "what tool name?"
+    audit: "the tool is namespaced and appears in tools/list"
+cells:
+  - id: tool-def
+    artifact: "ToolDef (name + JSON inputSchema)"
+    path: "product-mcp/src/tools/<command>.rs"
+    model: reasoning
+    derived_from: ["domain:command", "app-contract:product-cli-app"]
+    applies: ["mcp-tool-surface"]
+  - id: handler
+    artifact: "handler returning { ok, node, violations }"
+    edits: "product-mcp/src/tools/<command>.rs"
+    model: code
+    derived_from: ["tool-def", "app-contract:product-cli-app"]
+    applies: ["mcp-tool-surface", "slice-plus-adapter"]
+  - id: registry-wiring
+    artifact: "dispatch arm wiring the tool into the registry"
+    edits: "product-mcp/src/tools/mod.rs"
+    model: code
+    derived_from: ["handler"]
+  - id: tool-test
+    artifact: "registry call_tool integration test"
+    edits: "product-mcp/tests/call_tool.rs"
+    model: code
+    derived_from: ["handler", "slot:tool-name"]
+audits:
+  - id: tool-registered
+    kind: contract-conformance
+    checks: "the tool appears in tools/list and dispatches"
+    protects: "tool-name slot"
+  - id: operation-exists
+    kind: domain-conformance
+    checks: "the exposed operation is a real domain command"
+    protects: "command slot"

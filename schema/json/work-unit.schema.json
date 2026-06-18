@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://productframework.org/schema/work-unit.schema.json",
+  "title": "Work Unit (SPMC)",
+  "description": "Framework §5. The smallest reproducible unit of realisation: one bounded transformation, frozen input, one artifact. The four SPMC parts plus the references and the trace it must emit.",
+  "type": "object",
+  "required": ["id", "schema", "prompt", "context", "produces"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+
+    "schema": {
+      "description": "S of SPMC: the shape of the artifact this unit produces (a path to / inline description of the output schema).",
+      "type": "string"
+    },
+    "prompt": {
+      "description": "P of SPMC: the single-purpose instruction. One prompt, one artifact.",
+      "type": "string"
+    },
+    "model": {
+      "description": "M of SPMC: the model binding. Small where possible; a unit needing a frontier model signals upstream under-specification.",
+      "type": "string"
+    },
+    "context": {
+      "description": "C of SPMC: the frozen, declared input. Same input must yield the same output (the reproducibility guarantee).",
+      "type": "object",
+      "required": ["derived_from", "frozen"],
+      "additionalProperties": false,
+      "properties": {
+        "derived_from": {
+          "type": "array", "items": { "type": "string" }, "minItems": 1,
+          "description": "Pointers to the What concepts / How conventions / upstream units this input is drawn from."
+        },
+        "frozen": {
+          "type": "boolean", "const": true,
+          "description": "Must be true. The context is frozen at dispatch; reproducibility depends on it."
+        },
+        "hash": { "type": "string", "description": "Optional content hash of the assembled context, for provenance." }
+      }
+    },
+
+    "produces": {
+      "type": "object",
+      "required": ["artifact", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "artifact": { "type": "string", "description": "The single artifact produced (one unit, one artifact)." },
+        "path": { "type": "string", "description": "The exact repository path the artifact lands at — authoritative. The harness writes the worker's content here and ignores any path the worker emits. Concrete: the cell's templated path resolved against the dispatch bindings." }
+      }
+    },
+
+    "applies": {
+      "type": "array", "items": { "type": "string" },
+      "description": "Principles/patterns this unit applies, by pointer (never re-declared). Each must be enforced by a passing verification for its trace claim to survive."
+    },
+
+    "trace": {
+      "type": "object",
+      "description": "The rationale trace this unit's output carries. Generated from the pointers; claims gated by verifications.",
+      "additionalProperties": false,
+      "properties": {
+        "what": { "type": "string", "description": "Domain concept the artifact concerns." },
+        "behaviour": { "type": "string", "description": "Flow/step the artifact realises." },
+        "why": { "type": "array", "items": { "type": "string" }, "description": "Principles/patterns applied." },
+        "structure": { "type": "string", "description": "The top decision that shapes its placement." }
+      }
+    }
+  }
+}

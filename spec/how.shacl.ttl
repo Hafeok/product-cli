@@ -1,0 +1,107 @@
+@prefix pf:   <https://productframework.org/ns#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+#  The Product Framework — SHACL Conformance Shapes: the HOW
+#
+#  The complete conformance layer for §4 (the How): the Why
+#  cascade (decisions -> principles -> patterns), the two
+#  contracts, the layout model, interface contracts, and the
+#  crown rule — the rationale trace must be true.
+#
+#  Run together with shapes.shacl.ttl (which covers the What,
+#  work units, verification, and delivery). validate.py loads
+#  every *.ttl in shapes/.
+#
+#  Each shape's sh:message names the framework section it
+#  enforces, so a validation report reads as a conformance
+#  report.
+#################################################################
+
+#####################  §4.1 — the Why cascade  ##################
+
+pf:TopDecisionShape a sh:NodeShape ;
+  sh:targetClass pf:TopDecision ;
+  sh:property [
+    sh:path pf:rationale ; sh:minCount 1 ; sh:datatype xsd:string ;
+    sh:message "§4.1 A top decision must carry rationale (what it buys, when it applies, when it does not)." ] ;
+  sh:property [
+    sh:path pf:licenses ; sh:class pf:Principle ;
+    sh:message "§4.1 A top decision may license principles; each target must be a Principle." ] .
+
+pf:PrincipleShape a sh:NodeShape ;
+  sh:targetClass pf:Principle ;
+  sh:property [
+    sh:path pf:statement ; sh:minCount 1 ;
+    sh:message "§4.1 A principle must be stated checkably (a vague principle cannot back a verification)." ] ;
+  # Earn-their-place: applied by a work unit OR enforced by a verification.
+  sh:or (
+    [ sh:property [ sh:path [ sh:inversePath pf:applies ] ; sh:minCount 1 ] ]
+    [ sh:property [ sh:path [ sh:inversePath pf:enforces ] ; sh:minCount 1 ] ]
+  ) ;
+  sh:message "§4.1 Earn-their-place: a principle must be applied by a work unit or enforced by a verification, else it is documentation, not architecture." .
+
+pf:PatternShape a sh:NodeShape ;
+  sh:targetClass pf:Pattern ;
+  sh:property [
+    sh:path pf:realizes ; sh:minCount 1 ; sh:class pf:Principle ;
+    sh:message "§4.1 A pattern must realise at least one principle (it is how a principle is concretely met)." ] .
+
+#####################  §4.2 — the two contracts  ################
+
+pf:ApplicationContractShape a sh:NodeShape ;
+  sh:targetClass pf:ApplicationContract ;
+  sh:property [
+    sh:path rdfs:label ; sh:minCount 1 ;
+    sh:message "§4.2 An application contract must be named." ] .
+  # Note: the contract's checkable *statements* are validated structurally by
+  # how-contract.schema.json; in the graph they appear as enforced_by links from verifications.
+
+pf:InfrastructureContractShape a sh:NodeShape ;
+  sh:targetClass pf:InfrastructureContract ;
+  sh:property [
+    sh:path pf:conformsTo ; sh:minCount 1 ; sh:class pf:ApplicationContract ;
+    sh:message "§4.2 An infrastructure contract must satisfy (conformsTo) the application contract." ] .
+
+#####################  §4.3 — repository layout model  ##########
+
+pf:RepositoryLayoutModelShape a sh:NodeShape ;
+  sh:targetClass pf:RepositoryLayoutModel ;
+  sh:property [
+    sh:path pf:derivedFrom ; sh:minCount 0 ;
+    sh:message "§4.3 A layout model belongs to an archetype's How; its rules are validated by layout-model.schema.json." ] .
+
+#####################  §4.4 — interface contracts  ##############
+
+pf:InterfaceContractShape a sh:NodeShape ;
+  sh:targetClass pf:InterfaceContract ;
+  sh:property [
+    sh:path pf:derivedFrom ; sh:minCount 1 ;
+    sh:message "§4.4 An interface contract must be generated from (derivedFrom) the domain/event model, never hand-written." ] .
+
+#####################  THE CROWN RULE — the trace must be true  #
+#  Cross-node constraint (§5 / §4.1): every principle a work unit
+#  claims to APPLY must be ENFORCED by some verification, or the
+#  claim is a lie with good intentions. Expressed as SPARQL with
+#  full IRIs (no prefix declaration needed).
+#################################################################
+
+pf:TraceTruthShape a sh:NodeShape ;
+  sh:targetClass pf:WorkUnit ;
+  sh:sparql [
+    a sh:SPARQLConstraint ;
+    sh:message "§5/§4.1 The trace must be true: every principle a work unit applies must be enforced by a passing verification, or the claim must be retracted." ;
+    sh:select """
+      SELECT $this ?principle WHERE {
+        $this <https://productframework.org/ns#applies> ?principle .
+        ?principle a <https://productframework.org/ns#Principle> .
+        FILTER NOT EXISTS {
+          ?v a <https://productframework.org/ns#Verification> .
+          ?v <https://productframework.org/ns#enforces> ?principle .
+        }
+      }
+    """ ;
+  ] .

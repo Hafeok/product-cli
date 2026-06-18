@@ -4,6 +4,7 @@
 //! system prompt and Product MCP active.
 
 pub mod prompts;
+pub mod domain;
 mod commit;
 mod preflight_gate;
 
@@ -210,14 +211,19 @@ fn cli_binary(cli: AgentCli) -> &'static str {
 }
 
 fn launch_claude(tmp_path: &Path, mcp_json: &str, root: &Path) -> std::io::Result<std::process::ExitStatus> {
+    // NB: do NOT pass `--tools Read`. In current Claude Code, `--tools`
+    // replaces the *entire* available tool set with the named built-ins and
+    // drops every MCP tool — so `--tools Read` silently leaves the agent with
+    // no `product` MCP tools at all. Allow Read + the product MCP server and
+    // block the direct file/shell mutators so all spec writes flow through MCP.
     Command::new("claude")
         .args([
             "--system-prompt-file",
             &tmp_path.display().to_string(),
-            "--tools",
-            "Read",
             "--allowedTools",
             "Read,mcp__product__*",
+            "--disallowedTools",
+            "Bash,Edit,Write,NotebookEdit",
             "--mcp-config",
             mcp_json,
             "--strict-mcp-config",
