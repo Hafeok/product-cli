@@ -138,6 +138,11 @@ pub enum Commands {
         #[command(subcommand)]
         command: DeciderCommands,
     },
+    /// Projector (§3.4) — derive a read model's executable fold, validate it
+    Projector {
+        #[command(subcommand)]
+        command: ProjectorCommands,
+    },
     /// Delivery feature — one slice plus its acceptance (§7.1)
     Deliverable {
         #[command(subcommand)]
