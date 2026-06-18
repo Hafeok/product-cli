@@ -25323,6 +25323,35 @@ fn tc_991_build_verify_fix_loop_converges() {
 }
 
 #[test]
+fn tc_992_build_max_rounds_caps_the_fix_loop() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["worker", "init"]).assert_exit(0);
+    let dy = "id: conv\nslice: order-slice\nacceptance:\n- id: a1\n  statement: out good\n  runner: shell\n  runner_args: \"grep -q GOOD out.txt\"\n";
+    let dd = h.dir.path().join(".product/deliverables");
+    std::fs::create_dir_all(&dd).expect("mkdir");
+    std::fs::write(dd.join("conv.yaml"), dy).expect("write deliverable");
+    // Only a failing response — the worker can never satisfy the runner.
+    let md = h.dir.path().join("mock");
+    std::fs::create_dir_all(&md).expect("mkdir mock");
+    std::fs::write(md.join("response-0.json"), "{\"files\":[{\"path\":\"out.txt\",\"content\":\"BAD\\n\"}]}").expect("r0");
+    let output = Command::new(&h.bin)
+        .args(["build", "conv", "--role", "coder", "--max-rounds", "0"])
+        .current_dir(h.dir.path())
+        .env("PRODUCT_MOCK_DIR", md.to_str().expect("dir"))
+        .env_remove("LITELLM_BASE_URL")
+        .env_remove("LITELLM_API_KEY")
+        .output()
+        .expect("run build");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // --max-rounds 0 records the verdict but never re-dispatches a fix.
+    assert!(!stdout.contains("re-dispatching"), "max-rounds 0 must not re-dispatch: {stdout}");
+    assert!(stdout.contains("[ ] a1"), "{stdout}");
+    assert!(stdout.contains("not done"), "{stdout}");
+}
+
+#[test]
 fn tc_983_recording_conformance_flips_done() {
     let h = Harness::new();
     seed_domain_graph(&h); // Order aggregate; PlaceOrder targets it, emits OrderPlaced

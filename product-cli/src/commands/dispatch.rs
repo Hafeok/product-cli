@@ -124,10 +124,11 @@ fn dispatch_forecast(command: Commands, fmt: &str) -> BoxResult {
 }
 
 fn dispatch_build(command: Commands) -> BoxResult {
-    let Commands::Build { deliverable, role, jobs, dry_run, lsp, no_verify, product } = command else {
+    let Commands::Build { deliverable, role, jobs, dry_run, lsp, no_verify, max_rounds, budget, product } = command else {
         unreachable!("dispatch_build called with non-Build variant")
     };
-    build::handle_build(&deliverable, &role, jobs, dry_run, build::Gates { lsp, verify: !no_verify }, product)
+    let gates = build::Gates { lsp, verify: !no_verify, max_rounds, budget };
+    build::handle_build(&deliverable, &role, jobs, dry_run, gates, product)
 }
 
 fn dispatch_implement(command: Commands) -> BoxResult {

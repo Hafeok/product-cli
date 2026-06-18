@@ -43,6 +43,16 @@ pub(super) fn record_call(capability: &str, prompt_tokens: u64, completion_token
     }
 }
 
+/// Total tokens spent so far this build — for budget enforcement mid-loop.
+pub(super) fn tokens_spent() -> u64 {
+    SESSION.lock().ok().and_then(|g| g.as_ref().map(|s| s.total_tokens())).unwrap_or(0)
+}
+
+/// Whether a token `budget` (if set) has been reached — stops escalation.
+pub(super) fn over_budget(budget: Option<u64>) -> bool {
+    matches!(budget, Some(b) if tokens_spent() >= b)
+}
+
 /// Record a call from a chat-completion response, reading its `usage` block.
 pub(super) fn record_usage(capability: &str, response: &serde_json::Value) {
     let pt = response["usage"]["prompt_tokens"].as_u64().unwrap_or(0);

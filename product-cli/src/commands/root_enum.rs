@@ -50,6 +50,12 @@ pub enum Commands {
         /// Skip the §6 verify step (running each acceptance criterion's runner)
         #[arg(long)]
         no_verify: bool,
+        /// Max diagnose→fix rounds per gate before recording what stands
+        #[arg(long, default_value_t = 3)]
+        max_rounds: usize,
+        /// Token budget — escalation stops once total tokens reach it
+        #[arg(long)]
+        budget: Option<u64>,
         #[arg(long)]
         product: Option<String>,
     },

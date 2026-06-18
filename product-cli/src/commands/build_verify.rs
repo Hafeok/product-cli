@@ -13,8 +13,6 @@ use product_core::pf::capability::Capability;
 use product_core::pf::deliverable::Deliverable;
 use product_core::pf::verify::{self, VerifyStep};
 
-/// Max verify→fix rounds before recording whatever verdict stands.
-const MAX_ROUNDS: usize = 3;
 /// How much of a runner's output to feed back (its tail — where errors land).
 const TAIL: usize = 2400;
 
@@ -24,7 +22,7 @@ type Outcome = (VerifyStep, bool, String);
 /// Run the verify steps, fixing failures in place, recording final verdicts.
 /// Each failed round climbs the capability `ladder` (a stronger model fixes what
 /// a weaker one could not).
-pub(super) fn run(d: &mut Deliverable, written: &[PathBuf], ladder: &[Capability], shared: &str, root: &Path) {
+pub(super) fn run(d: &mut Deliverable, written: &[PathBuf], ladder: &[Capability], shared: &str, root: &Path, max_rounds: usize, budget: Option<u64>) {
     let steps = verify::plan(d);
     if steps.is_empty() {
         return;
@@ -39,12 +37,16 @@ pub(super) fn run(d: &mut Deliverable, written: &[PathBuf], ladder: &[Capability
             println!("  [{}] {}: {} {}", if *ok { "x" } else { " " }, s.criterion, s.program, s.args.join(" "));
         }
         let failing: Vec<&Outcome> = outcomes.iter().filter(|(_, ok, _)| !ok).collect();
-        if failing.is_empty() || round >= MAX_ROUNDS {
+        if failing.is_empty() || round >= max_rounds {
+            break;
+        }
+        if super::build_session::over_budget(budget) {
+            println!("  budget reached — stopping with {} failing check(s)", failing.len());
             break;
         }
         round += 1;
         let cap = &ladder[round.min(ladder.len() - 1)];
-        println!("  re-dispatching to '{}' to fix {} failing check(s) (round {round}/{MAX_ROUNDS})", cap.id, failing.len());
+        println!("  re-dispatching to '{}' to fix {} failing check(s) (round {round}/{max_rounds})", cap.id, failing.len());
         if super::worker::dispatch(cap, &fix_prompt(shared, &failing, written, root)).is_err() {
             break;
         }

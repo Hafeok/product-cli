@@ -21,13 +21,17 @@ use std::path::{Path, PathBuf};
 
 use super::BoxResult;
 
-/// Which post-dispatch gates `build` runs (§6).
+/// Which post-dispatch gates `build` runs (§6) + their operational limits.
 #[derive(Clone, Copy)]
 pub(crate) struct Gates {
     /// Run rust-analyzer diagnose + fix over the worker's Rust output.
     pub lsp: bool,
     /// Run each acceptance criterion's runner, recording the verdict.
     pub verify: bool,
+    /// Max diagnose→fix rounds per gate before recording what stands.
+    pub max_rounds: usize,
+    /// Optional token budget; escalation stops once total tokens reach it.
+    pub budget: Option<u64>,
 }
 
 pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: bool, gates: Gates, product: Option<String>) -> BoxResult {
@@ -104,6 +108,11 @@ fn print_dry_run(context: &str, role: &str, ladder: &[Capability], units: &[Work
         let rungs: Vec<&str> = ladder.iter().map(|c| c.id.as_str()).collect();
         println!("escalation ladder: {}", rungs.join(" ⇡ "));
     }
+    println!(
+        "limits: max {} round(s)/gate, budget {}",
+        gates.max_rounds,
+        gates.budget.map(|b| format!("{b} tokens")).unwrap_or_else(|| "unbounded".to_string()),
+    );
     if !units.is_empty() {
         println!("\n--- Parallel run plan ---");
         println!("{jobs} job(s) over {} work unit(s):", units.len());
@@ -133,10 +142,10 @@ fn dispatch_live(deliverable: &str, context: &str, ladder: &[Capability], units:
         dispatch_parallel(units, cap, context, jobs)
     };
     if gates.lsp {
-        super::build_lsp::run(&written, ladder, context, &root);
+        super::build_lsp::run(&written, ladder, context, &root, gates.max_rounds, gates.budget);
     }
     if gates.verify {
-        super::build_verify::run(d, &written, ladder, context, &root);
+        super::build_verify::run(d, &written, ladder, context, &root, gates.max_rounds, gates.budget);
     }
     report_changes(&written, &root);
     Ok(())

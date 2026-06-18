@@ -13,12 +13,10 @@ use product_core::pf::lsp::Diagnostic;
 
 use super::lsp::LspSession;
 
-/// Max diagnose→fix rounds per file before we report what remains.
-const MAX_ROUNDS: usize = 3;
-
 /// Diagnose every written Rust file and fix in place; returns how many files
-/// still carry diagnostics after the loop. Each fix round climbs the `ladder`.
-pub(super) fn run(written: &[PathBuf], ladder: &[Capability], shared: &str, root: &Path) -> usize {
+/// still carry diagnostics after the loop. Each fix round climbs the `ladder`,
+/// bounded by `max_rounds` and an optional token `budget`.
+pub(super) fn run(written: &[PathBuf], ladder: &[Capability], shared: &str, root: &Path, max_rounds: usize, budget: Option<u64>) -> usize {
     let rust: Vec<&PathBuf> = written.iter().filter(|p| p.extension().is_some_and(|e| e == "rs")).collect();
     if rust.is_empty() {
         return 0;
@@ -34,7 +32,7 @@ pub(super) fn run(written: &[PathBuf], ladder: &[Capability], shared: &str, root
     };
     let mut dirty = 0;
     for path in rust {
-        match fix_file(&mut session, ladder, shared, path, root) {
+        match fix_file(&mut session, ladder, shared, path, root, max_rounds, budget) {
             Ok(0) => println!("  [x] {}: clean", rel(path, root)),
             Ok(n) => {
                 dirty += 1;
@@ -52,13 +50,17 @@ pub(super) fn run(written: &[PathBuf], ladder: &[Capability], shared: &str, root
 
 /// Diagnose one file; while it is dirty (and rounds remain) re-dispatch a fix,
 /// climbing the capability ladder each round.
-fn fix_file(session: &mut LspSession, ladder: &[Capability], shared: &str, path: &Path, root: &Path) -> Result<usize, Box<dyn std::error::Error>> {
+fn fix_file(session: &mut LspSession, ladder: &[Capability], shared: &str, path: &Path, root: &Path, max_rounds: usize, budget: Option<u64>) -> Result<usize, Box<dyn std::error::Error>> {
     let mut diags = session.diagnostics(path)?;
     let mut round = 0;
-    while !diags.is_empty() && round < MAX_ROUNDS {
+    while !diags.is_empty() && round < max_rounds {
+        if super::build_session::over_budget(budget) {
+            println!("  budget reached — leaving {} diagnostic(s) on {}", diags.len(), rel(path, root));
+            break;
+        }
         round += 1;
         let cap = &ladder[round.min(ladder.len() - 1)];
-        println!("  fixing {} via '{}' (round {round}/{MAX_ROUNDS}): {} diagnostic(s)", rel(path, root), cap.id, diags.len());
+        println!("  fixing {} via '{}' (round {round}/{max_rounds}): {} diagnostic(s)", rel(path, root), cap.id, diags.len());
         let content = std::fs::read_to_string(path)?;
         let prompt = fix_prompt(shared, &rel(path, root), &content, &diags);
         super::worker::dispatch(cap, &prompt)?;
