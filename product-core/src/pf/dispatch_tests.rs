@@ -86,6 +86,7 @@ fn edits_cell_becomes_an_edit_work_unit() {
             model: Some("code".into()),
             derived_from: vec!["domain:entity".into()],
             applies: vec![],
+            path: None,
             edits: Some("src/pf/mod.rs".into()),
         }],
         ..Default::default()
@@ -93,8 +94,41 @@ fn edits_cell_becomes_an_edit_work_unit() {
     let d = dispatch(&t, &bind(&[("entity", "Order")]), Some(&graph_with_order()));
     assert!(!d.violations.iter().any(|x| x.severity == "violation"), "{:?}", d.violations);
     let wu = &d.work_units[0];
-    assert_eq!(wu.produces.path_hint.as_deref(), Some("src/pf/mod.rs"));
+    assert_eq!(wu.produces.path, "src/pf/mod.rs");
     assert!(wu.prompt.starts_with("Edit the existing file 'src/pf/mod.rs'"), "{}", wu.prompt);
+}
+
+#[test]
+fn templated_cell_path_resolves_to_concrete_per_binding() {
+    use crate::pf::cell::{Cell, Slot};
+    // A cell is a reusable pattern: its path names a slot, not a literal file.
+    let t = TaskType {
+        id: "slice".into(),
+        name: "slice".into(),
+        applies_when: "x".into(),
+        slots: vec![Slot {
+            name: "entity".into(),
+            kind: Some("domain".into()),
+            dispatch: "the entity".into(),
+            capture: "which?".into(),
+            audit: "exists".into(),
+            required: true,
+        }],
+        cells: vec![Cell {
+            id: "core".into(),
+            artifact: "the core slice module".into(),
+            model: Some("code".into()),
+            derived_from: vec!["domain:entity".into()],
+            applies: vec![],
+            path: Some("product-core/src/pf/<entity>.rs".into()),
+            edits: None,
+        }],
+        ..Default::default()
+    };
+    let d = dispatch(&t, &bind(&[("entity", "Order")]), Some(&graph_with_order()));
+    assert!(!d.violations.iter().any(|x| x.severity == "violation"), "{:?}", d.violations);
+    // the <entity> slot resolved into the concrete output path
+    assert_eq!(d.work_units[0].produces.path, "product-core/src/pf/Order.rs");
 }
 
 #[test]

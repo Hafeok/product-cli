@@ -19,6 +19,27 @@ fn parse_files_reads_the_contract() {
 }
 
 #[test]
+fn retarget_forces_a_wrong_path_to_the_declared_one() {
+    // The model hallucinated a path (and an extra stray file); the harness owns
+    // placement, so the content lands at `target` and nothing else is written.
+    let files = vec![
+        ArtifactFile { path: "src/wherever/it/guessed.rs".into(), content: "fn real() {}".into() },
+        ArtifactFile { path: "tests/stray.rs".into(), content: "junk".into() },
+    ];
+    let (files, _edits) = retarget(files, vec![], "product-core/src/pf/build_metrics.rs");
+    assert_eq!(files.len(), 1, "one unit, one artifact");
+    assert_eq!(files[0].path, "product-core/src/pf/build_metrics.rs");
+    assert_eq!(files[0].content, "fn real() {}", "content is kept; only the path is overridden");
+}
+
+#[test]
+fn retarget_points_every_edit_at_the_declared_path() {
+    let edits = vec![EditOp { path: "guessed.rs".into(), find: "a".into(), replace: "b".into() }];
+    let (_files, edits) = retarget(vec![], edits, "the/real/file.rs");
+    assert_eq!(edits[0].path, "the/real/file.rs");
+}
+
+#[test]
 fn parse_files_rejects_a_missing_array() {
     assert!(parse_files(&json!({ "nope": 1 })).is_err());
 }

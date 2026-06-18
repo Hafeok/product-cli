@@ -14,7 +14,7 @@ fn unit(id: &str, derived_from: &[&str]) -> WorkUnit {
             frozen: true,
             hash: None,
         },
-        produces: Produces { artifact: String::new(), path_hint: None },
+        produces: Produces { artifact: String::new(), path: String::new() },
         applies: Vec::new(),
         trace: None,
     }

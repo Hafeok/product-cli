@@ -143,24 +143,39 @@ pub(super) fn ladder(catalog: &Catalog, role: &str) -> Vec<Capability> {
 /// Dispatch a prompt to a capability's runner; returns the files it wrote (empty
 /// for endpoints that stream to stdout rather than emit artifacts).
 pub(super) fn dispatch(cap: &Capability, prompt: &str) -> DispatchResult {
+    dispatch_inner(cap, prompt, None)
+}
+
+/// Dispatch a work unit, forcing the worker's output to land at the unit's one
+/// declared `target` path (Option A: the harness owns placement, so a worker's
+/// hallucinated path cannot misplace the file). Non-`worker` endpoints ignore it.
+pub(super) fn dispatch_to(cap: &Capability, prompt: &str, target: &str) -> DispatchResult {
+    dispatch_inner(cap, prompt, Some(target))
+}
+
+fn dispatch_inner(cap: &Capability, prompt: &str, target: Option<&str>) -> DispatchResult {
     match cap.endpoint.as_str() {
         "claude" => {
             super::build_session::record_call(&cap.id, 0, 0);
             run_claude(prompt).map(|_| Vec::new())
         }
         "litellm" | "anthropic" | "scaleway" => run_litellm(cap, prompt).map(|_| Vec::new()),
-        "worker" => run_first_party(cap, prompt),
+        "worker" => run_first_party(cap, prompt, target),
         other => Err(format!("unknown capability endpoint '{other}' (expected claude | litellm | worker)").into()),
     }
 }
 
 /// The first-party worker: ask the model for structured file output (or, with no
-/// model configured, write a deterministic stub), then apply the files. When
-/// `PRODUCT_MOCK_DIR` is set, consumes scripted responses instead of calling a
-/// model — so the fix loops are testable in CI without a live model.
-fn run_first_party(cap: &Capability, prompt: &str) -> DispatchResult {
+/// model configured, write a deterministic stub), then apply the files. When a
+/// `target` is given the output is retargeted there (placement is the harness's,
+/// not the model's). When `PRODUCT_MOCK_DIR` is set, consumes scripted responses
+/// instead of calling a model — so the fix loops are testable in CI.
+fn run_first_party(cap: &Capability, prompt: &str, target: Option<&str>) -> DispatchResult {
     let root = super::shared::domain_root();
-    let (files, edits) = worker_output(cap, prompt)?;
+    let (mut files, mut edits) = worker_output(cap, prompt)?;
+    if let Some(t) = target {
+        (files, edits) = fpw::retarget(files, edits, t);
+    }
     let mut written = fpw::apply_files(&files, &root)?;
     written.extend(fpw::apply_edits(&edits, &root)?);
     println!("  first-party worker wrote {} file(s):", written.len());

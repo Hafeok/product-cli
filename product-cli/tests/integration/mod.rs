@@ -25483,7 +25483,7 @@ fn tc_987_build_parallel_plan_lists_work_units() {
     // seed two work units (the §5 parallel unit)
     let wud = h.dir.path().join(".product/work-units");
     std::fs::create_dir_all(&wud).expect("mkdir");
-    let wu = |id: &str| format!("id: {id}\nschema: \"{{}}\"\nprompt: build {id}\ncontext:\n  frozen: true\n  derived_from:\n  - domain:Order\nproduces:\n  artifact: {id}.rs\n");
+    let wu = |id: &str| format!("id: {id}\nschema: \"{{}}\"\nprompt: build {id}\ncontext:\n  frozen: true\n  derived_from:\n  - domain:Order\nproduces:\n  artifact: {id}.rs\n  path: src/{id}.rs\n");
     std::fs::write(wud.join("wu-a.yaml"), wu("wu-a")).expect("w");
     std::fs::write(wud.join("wu-b.yaml"), wu("wu-b")).expect("w");
     let out = h.run(&["build", "place-order", "--jobs", "4", "--dry-run"]);
@@ -25717,7 +25717,7 @@ fn tc_965_work_unit_validate_discovers_archetype_how() {
     std::fs::write(base.join("how-contract.yaml"),
         "archetype: demo\napplication_contract:\n  id: app\n  language: Rust\npatterns:\n  - id: p1\n    shape: a shape\n    realizes: [pr1]\nprinciples:\n  - id: pr1\n    statement: s\n    enforced_by: [v1]\n").expect("how");
     std::fs::write(base.join("work-units/wu.yaml"),
-        "id: wu\nschema: s\nprompt: p\ncontext:\n  derived_from: [\"app-contract:app\"]\n  frozen: true\nproduces:\n  artifact: a.rs\napplies: [p1]\n").expect("wu");
+        "id: wu\nschema: s\nprompt: p\ncontext:\n  derived_from: [\"app-contract:app\"]\n  frozen: true\nproduces:\n  artifact: a.rs\n  path: src/a.rs\napplies: [p1]\n").expect("wu");
     let out = h.run(&["work-unit", "validate", "--file", ".product/archetypes/demo/work-units/wu.yaml"]);
     out.assert_exit(0);
     assert!(out.stdout.contains("how: cross-checked"), "should load the archetype How: {}", out.stdout);

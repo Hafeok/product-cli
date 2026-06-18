@@ -112,9 +112,13 @@ fn instantiate(task: &TaskType, cell: &super::cell::Cell, bound: &BTreeMap<&str,
         Some(p) => slug(&format!("{}-{}", cell.id, p)),
         None => slug(&format!("{}-{}", task.id, cell.id)),
     };
+    // The output path is the cell's template (slot refs like `<concept>` filled
+    // from the bindings), so the cell stays a reusable pattern while the unit is
+    // concrete. `edits` names an existing target; `path` a new artifact.
+    let path = resolve_path(cell.path.as_deref().or(cell.edits.as_deref()).unwrap_or_default(), bound);
     let action = match &cell.edits {
-        Some(path) => format!("Edit the existing file '{path}': {}", cell.artifact),
-        None => format!("Produce {}", cell.artifact),
+        Some(_) => format!("Edit the existing file '{path}': {}", cell.artifact),
+        None => format!("Produce {} at '{path}'", cell.artifact),
     };
     let prompt = format!(
         "{action} for task type '{}'{}.{}",
@@ -129,7 +133,7 @@ fn instantiate(task: &TaskType, cell: &super::cell::Cell, bound: &BTreeMap<&str,
         prompt,
         model: cell.model.clone(),
         context: Context { derived_from, frozen: true, hash: Some(format!("sha256:{hash}")) },
-        produces: Produces { artifact: cell.artifact.clone(), path_hint: cell.edits.clone() },
+        produces: Produces { artifact: cell.artifact.clone(), path },
         applies: cell.applies.clone(),
         trace: Some(Trace {
             what: primary.map(str::to_string),
@@ -138,6 +142,16 @@ fn instantiate(task: &TaskType, cell: &super::cell::Cell, bound: &BTreeMap<&str,
             structure: None,
         }),
     }
+}
+
+/// Resolve a cell path template: each `<slot>` is replaced by its bound value,
+/// so a reusable `src/pf/<concept>.rs` becomes a concrete `src/pf/order.rs`.
+fn resolve_path(template: &str, bound: &BTreeMap<&str, &str>) -> String {
+    let mut out = template.to_string();
+    for (slot, val) in bound {
+        out = out.replace(&format!("<{slot}>"), val);
+    }
+    out
 }
 
 /// Resolve a cell `derived_from` pointer: a slot reference becomes its bound

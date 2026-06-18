@@ -34,19 +34,23 @@ slots:
 cells:
   - id: contract
     artifact: "request/response DTOs + endpoint contract"
+    path: "src/<entity>/Contracts.cs"
     model: reasoning
     derived_from: ["domain:entity", "app-contract:endpoint"]
   - id: handler
     artifact: "command/query handlers in the slice"
+    path: "src/<entity>/Handlers.cs"
     model: code
     derived_from: ["contract", "app-contract:slice"]
     applies: ["vertical-slice", "result-type"]
   - id: persistence
     artifact: "EF config + migration"
+    path: "src/<entity>/Persistence.cs"
     model: code
     derived_from: ["domain:entity", "domain:relations"]
   - id: tests
     artifact: "integration tests per operation"
+    path: "tests/<entity>Tests.cs"
     model: code
     derived_from: ["contract", "slot:operations"]
 audits:

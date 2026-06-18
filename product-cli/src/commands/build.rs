@@ -232,7 +232,7 @@ fn dispatch_parallel(units: &[WorkUnit], cap: &Capability, shared: &str, jobs: u
         let layer_units: Vec<WorkUnit> = layer.iter().map(|&i| units[i].clone()).collect();
         let results = run_parallel(layer_units, jobs, |_, wu| {
             let prompt = unit_prompt(shared, wu, units, &root);
-            super::worker::dispatch(cap, &prompt)
+            super::worker::dispatch_to(cap, &prompt, &wu.produces.path)
                 .map(|paths| (wu.clone(), paths))
                 .map_err(|e| format!("{}: {e}", wu.id))
         });
@@ -258,9 +258,9 @@ fn dispatch_parallel(units: &[WorkUnit], cap: &Capability, shared: &str, jobs: u
     written
 }
 
-/// The repo paths a unit is allowed to write — its declared `path_hint` artifact.
+/// The repo path a unit is allowed to write — its one declared artifact.
 fn unit_artifacts(wu: &WorkUnit, root: &Path) -> Vec<PathBuf> {
-    wu.produces.path_hint.iter().map(|p| root.join(p)).collect()
+    vec![root.join(&wu.produces.path)]
 }
 
 /// Stage (`git add`) every test/oracle file produced so far, freezing it so a
@@ -285,7 +285,7 @@ fn unit_prompt(shared: &str, wu: &WorkUnit, all: &[WorkUnit], root: &Path) -> St
     let mut p = format!("{shared}\n\n## Work unit: {}\n{}", wu.id, wu.prompt);
     for dep in &wu.context.derived_from {
         let upstream = all.iter().find(|u| u.id != wu.id && product_core::pf::schedule::references(dep, &u.id));
-        if let Some(path) = upstream.and_then(|u| u.produces.path_hint.as_ref()) {
+        if let Some(path) = upstream.map(|u| u.produces.path.as_str()).filter(|p| !p.is_empty()) {
             if let Ok(content) = std::fs::read_to_string(root.join(path)) {
                 p.push_str(&format!(
                     "\n\n## Frozen input — `{path}` (READ-ONLY; satisfy it, do NOT edit it):\n```\n{content}\n```",
@@ -293,12 +293,13 @@ fn unit_prompt(shared: &str, wu: &WorkUnit, all: &[WorkUnit], root: &Path) -> St
             }
         }
     }
-    if let Some(path) = &wu.produces.path_hint {
-        if let Ok(content) = std::fs::read_to_string(root.join(path)) {
-            p.push_str(&format!(
-                "\n\n## Existing file to edit: {path}\nThis file already exists — return an `edits` entry that modifies it (find a unique snippet, replace it), NOT a `files` overwrite.\n```\n{content}\n```",
-            ));
-        }
+    // The harness writes your content to `produces.path`; if that file already
+    // exists, its current content is shown so you return a precise edit.
+    let path = &wu.produces.path;
+    if let Ok(content) = std::fs::read_to_string(root.join(path)) {
+        p.push_str(&format!(
+            "\n\n## Existing file to edit: {path}\nThis file already exists — return an `edits` entry that modifies it (find a unique snippet, replace it), NOT a `files` overwrite.\n```\n{content}\n```",
+        ));
     }
     p
 }

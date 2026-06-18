@@ -42,10 +42,17 @@ pub struct Cell {
     pub derived_from: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub applies: Vec<String>,
-    /// When set, this cell *edits* an existing file at this relative path (e.g.
-    /// wiring a `pub mod` declaration) rather than producing a new artifact. The
-    /// path flows to the work unit's `path_hint`, and `build` injects the file's
-    /// current content so the worker returns a precise edit (§5).
+    /// The repository path this cell's artifact lands at — a *template* that may
+    /// reference the task-type's slots as `<slot>` (e.g. `src/pf/<concept>.rs`),
+    /// resolved to a concrete path against the dispatch bindings. This is what
+    /// keeps a cell reusable across features: the pattern names a path shape, not
+    /// a literal file. Required unless `edits` names the target instead.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+    /// When set, this cell *edits* an existing file at this (templated) path
+    /// rather than producing a new artifact. The resolved path flows to the work
+    /// unit's `produces.path`, and `build` injects the file's current content so
+    /// the worker returns a precise edit (§5).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub edits: Option<String>,
 }
@@ -129,6 +136,7 @@ impl TaskType {
                 model: Some("code".to_string()),
                 derived_from: vec!["domain:entity".to_string()],
                 applies: vec![],
+                path: Some("path/to/<entity>.ext".to_string()),
                 edits: None,
             }],
             audits: vec![Audit {

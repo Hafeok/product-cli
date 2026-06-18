@@ -19,20 +19,24 @@ slots:
 cells:
   - id: tool-def
     artifact: "ToolDef (name + JSON inputSchema)"
+    path: "product-mcp/src/tools/<command>.rs"
     model: reasoning
     derived_from: ["domain:command", "app-contract:product-cli-app"]
     applies: ["mcp-tool-surface"]
   - id: handler
     artifact: "handler returning { ok, node, violations }"
+    edits: "product-mcp/src/tools/<command>.rs"
     model: code
     derived_from: ["tool-def", "app-contract:product-cli-app"]
     applies: ["mcp-tool-surface", "slice-plus-adapter"]
   - id: registry-wiring
     artifact: "dispatch arm wiring the tool into the registry"
+    edits: "product-mcp/src/tools/mod.rs"
     model: code
     derived_from: ["handler"]
   - id: tool-test
     artifact: "registry call_tool integration test"
+    edits: "product-mcp/tests/call_tool.rs"
     model: code
     derived_from: ["handler", "slot:tool-name"]
 audits:

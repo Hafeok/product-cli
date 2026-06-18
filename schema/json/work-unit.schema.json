@@ -41,11 +41,11 @@
 
     "produces": {
       "type": "object",
-      "required": ["artifact"],
+      "required": ["artifact", "path"],
       "additionalProperties": false,
       "properties": {
         "artifact": { "type": "string", "description": "The single artifact produced (one unit, one artifact)." },
-        "path_hint": { "type": "string", "description": "Where it goes, per the repository layout model." }
+        "path": { "type": "string", "description": "The exact repository path the artifact lands at — authoritative. The harness writes the worker's content here and ignores any path the worker emits. Concrete: the cell's templated path resolved against the dispatch bindings." }
       }
     },
 

@@ -8,7 +8,7 @@ context:
   hash: "sha256:demo"
 produces:
   artifact: "CompleteTaskHandler.cs"
-  path_hint: "src/Tasks/Features/CompleteTask/"
+  path: "src/Tasks/Features/CompleteTask/CompleteTaskHandler.cs"
 applies: ["vertical-slice", "result-type", "feature-cohesion"]
 trace:
   what: "Task"

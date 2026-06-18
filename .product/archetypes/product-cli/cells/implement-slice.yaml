@@ -18,17 +18,20 @@ slots:
     audit: "every operation has an adapter and an integration test"
 cells:
   - id: core-slice
-    artifact: "product-core/src/pf/<concept>.rs (model + native validate)"
+    artifact: "the core slice module (model + native validate)"
+    path: "product-core/src/pf/<concept>.rs"
     model: code
     derived_from: ["domain:concept", "app-contract:product-cli-app"]
     applies: ["slice-plus-adapter", "native-checker"]
   - id: cli-adapter
-    artifact: "product-cli/src/commands/<concept>.rs"
+    artifact: "the CLI adapter for the slice"
+    path: "product-cli/src/commands/<concept>.rs"
     model: code
     derived_from: ["core-slice", "slot:operations"]
     applies: ["slice-plus-adapter"]
   - id: integration-tests
     artifact: "assert_cmd integration tests per operation"
+    path: "product-cli/tests/integration/<concept>.rs"
     model: code
     derived_from: ["cli-adapter", "slot:operations"]
 audits:

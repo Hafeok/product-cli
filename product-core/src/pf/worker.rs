@@ -209,6 +209,20 @@ pub fn apply_edits(edits: &[EditOp], root: &Path) -> Result<Vec<PathBuf>> {
     Ok(written)
 }
 
+/// Force the worker's output to land at one declared path (the harness owns
+/// placement, so a hallucinated path cannot misplace the file). Keeps a single
+/// produced file (§5: one unit, one artifact) and points every edit at `target`.
+pub fn retarget(mut files: Vec<ArtifactFile>, mut edits: Vec<EditOp>, target: &str) -> (Vec<ArtifactFile>, Vec<EditOp>) {
+    files.truncate(1);
+    for f in &mut files {
+        f.path = target.to_string();
+    }
+    for e in &mut edits {
+        e.path = target.to_string();
+    }
+    (files, edits)
+}
+
 /// A short stable hash for stub filenames (djb2).
 fn short_hash(s: &str) -> String {
     let mut h: u64 = 5381;

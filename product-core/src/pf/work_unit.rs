@@ -23,8 +23,11 @@ pub struct Context {
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct Produces {
     pub artifact: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub path_hint: Option<String>,
+    /// The exact repository path the artifact lands at. Authoritative — the
+    /// harness writes the worker's content here and ignores any path the worker
+    /// emits, so a hallucinated location cannot misplace the file. Concrete: the
+    /// cell's templated path resolved against the dispatch bindings.
+    pub path: String,
 }
 
 /// The rationale trace the unit's output carries.
@@ -78,7 +81,7 @@ impl WorkUnit {
                 frozen: true,
                 hash: None,
             },
-            produces: Produces { artifact: "TODO.ext".to_string(), path_hint: None },
+            produces: Produces { artifact: "TODO".to_string(), path: "path/to/TODO.ext".to_string() },
             applies: vec![],
             trace: None,
         }
