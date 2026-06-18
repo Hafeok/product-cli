@@ -38,3 +38,28 @@ fn round_trips_through_json() {
     let back: BuildSession = serde_json::from_str(&s.to_json().expect("json")).expect("parse");
     assert_eq!(s, back);
 }
+
+#[test]
+fn tc_spec_depth_recorded_on_session() {
+    let mut s = BuildSession::new("demo");
+    s.spec_depth = SpecDepth {
+        nodes: 10,
+        depth: 2,
+        acceptance: 5,
+        deciders: 3,
+        context_tokens: 1024,
+    };
+    assert_eq!(s.spec_depth.nodes, 10);
+    assert_eq!(s.spec_depth.depth, 2);
+    assert_eq!(s.spec_depth.acceptance, 5);
+    assert_eq!(s.spec_depth.deciders, 3);
+    assert_eq!(s.spec_depth.context_tokens, 1024);
+
+    let json = s.to_json().expect("json");
+    let back: BuildSession = serde_json::from_str(&json).expect("parse");
+    assert_eq!(back.spec_depth.nodes, 10);
+    assert_eq!(back.spec_depth.depth, 2);
+    assert_eq!(back.spec_depth.acceptance, 5);
+    assert_eq!(back.spec_depth.deciders, 3);
+    assert_eq!(back.spec_depth.context_tokens, 1024);
+}

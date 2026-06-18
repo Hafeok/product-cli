@@ -35,6 +35,16 @@ pub struct Verdict {
     pub total: usize,
 }
 
+/// Depth and token metrics for the spec under construction.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct SpecDepth {
+    pub nodes: u64,
+    pub depth: u64,
+    pub acceptance: u64,
+    pub deciders: u64,
+    pub context_tokens: u64,
+}
+
 /// The metrics record for one build of one deliverable.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct BuildSession {
@@ -43,6 +53,7 @@ pub struct BuildSession {
     pub calls: Vec<CallRecord>,
     pub files: Vec<FileChange>,
     pub verdict: Verdict,
+    pub spec_depth: SpecDepth,
 }
 
 impl BuildSession {
