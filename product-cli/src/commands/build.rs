@@ -208,35 +208,84 @@ fn print_verify_plan(d: &Deliverable) {
     }
 }
 
-/// Fan the work units out across at most `jobs` workers, each its own capability
-/// instance. Coherence is gated afterwards (§6.1) by `report_gates`.
+/// Dispatch the work units in dependency order (§5): each topological layer runs
+/// in parallel, then its oracle artifacts are frozen before the next layer — so a
+/// `write-test` unit's test is immutable by the time the `implement` unit that
+/// derives from it runs. Coherence is gated afterwards (§6.1) by `report_gates`.
 fn dispatch_parallel(units: &[WorkUnit], cap: &Capability, shared: &str, jobs: usize) -> Vec<PathBuf> {
-    println!("Dispatching {} work unit(s) across {jobs} job(s) → '{}'…", units.len(), cap.id);
     let root = super::shared::domain_root();
-    let results = run_parallel(units.to_vec(), jobs, |_, wu| {
-        let prompt = unit_prompt(shared, wu, &root);
-        super::worker::dispatch(cap, &prompt).map_err(|e| format!("{}: {e}", wu.id))
-    });
+    let layers = product_core::pf::schedule::layers(units);
+    println!("Dispatching {} work unit(s) in {} dependency layer(s) → '{}'…", units.len(), layers.len(), cap.id);
     let mut written = Vec::new();
     let mut ok = 0;
-    for r in &results {
-        match r {
-            Ok(paths) => {
-                ok += 1;
-                written.extend(paths.clone());
-            }
-            Err(e) => eprintln!("  - failed: {e}"),
+    for (li, layer) in layers.iter().enumerate() {
+        if layers.len() > 1 {
+            println!("  layer {}/{}: {} unit(s)", li + 1, layers.len(), layer.len());
         }
+        let layer_units: Vec<WorkUnit> = layer.iter().map(|&i| units[i].clone()).collect();
+        let results = run_parallel(layer_units, jobs, |_, wu| {
+            let prompt = unit_prompt(shared, wu, units, &root);
+            super::worker::dispatch(cap, &prompt)
+                .map(|paths| (wu.clone(), paths))
+                .map_err(|e| format!("{}: {e}", wu.id))
+        });
+        for r in &results {
+            match r {
+                Ok((wu, paths)) => {
+                    ok += 1;
+                    // a unit may only write its own declared artifact; revert any
+                    // write to a frozen oracle from an earlier layer.
+                    let allowed = unit_artifacts(wu, &root);
+                    let reverted = super::build_guard::enforce(&root, &allowed, paths);
+                    if !reverted.is_empty() {
+                        println!("  ! oracle guard: {} reverted {} out-of-scope write(s) {reverted:?}", wu.id, reverted.len());
+                    }
+                    written.extend(paths.iter().filter(|p| !reverted.contains(p)).cloned());
+                }
+                Err(e) => eprintln!("  - failed: {e}"),
+            }
+        }
+        freeze_oracles(&written, &root);
     }
-    println!("  {ok}/{} work unit(s) succeeded", results.len());
+    println!("  {ok}/{} work unit(s) succeeded", units.len());
     written
 }
 
-/// The frozen per-unit prompt: shared context + the unit's instruction, plus the
-/// current content of the file a wiring unit edits — so the worker returns a
-/// precise edit instead of guessing the file's shape (§5).
-fn unit_prompt(shared: &str, wu: &WorkUnit, root: &Path) -> String {
+/// The repo paths a unit is allowed to write — its declared `path_hint` artifact.
+fn unit_artifacts(wu: &WorkUnit, root: &Path) -> Vec<PathBuf> {
+    wu.produces.path_hint.iter().map(|p| root.join(p)).collect()
+}
+
+/// Stage (`git add`) every test/oracle file produced so far, freezing it so a
+/// later layer's worker — or a fix loop — cannot rewrite it: the guard restores
+/// the staged version on any tamper.
+fn freeze_oracles(written: &[PathBuf], root: &Path) {
+    for p in written {
+        let s = p.to_string_lossy();
+        if s.ends_with("_tests.rs") || s.ends_with("_test.rs") || s.contains("/tests/") {
+            let rel = p.strip_prefix(root).unwrap_or(p);
+            let _ = std::process::Command::new("git").arg("-C").arg(root).args(["add", "--"]).arg(rel).status();
+        }
+    }
+}
+
+/// The frozen per-unit prompt: shared context + the unit's instruction, the
+/// read-only artifacts of the units it derives from (e.g. the test a `write-test`
+/// unit produced, which an `implement` unit must satisfy but not edit), and the
+/// current content of the file it edits — so the worker returns a precise edit
+/// instead of guessing the shape (§5).
+fn unit_prompt(shared: &str, wu: &WorkUnit, all: &[WorkUnit], root: &Path) -> String {
     let mut p = format!("{shared}\n\n## Work unit: {}\n{}", wu.id, wu.prompt);
+    for dep in &wu.context.derived_from {
+        let upstream = all.iter().find(|u| u.id != wu.id && product_core::pf::schedule::references(dep, &u.id));
+        if let Some(path) = upstream.and_then(|u| u.produces.path_hint.as_ref()) {
+            if let Ok(content) = std::fs::read_to_string(root.join(path)) {
+                p.push_str(&format!(
+                    "\n\n## Frozen input — `{path}` (READ-ONLY; satisfy it, do NOT edit it):\n```\n{content}\n```",
+                ));
+            }
+        }
+    }
     if let Some(path) = &wu.produces.path_hint {
         if let Ok(content) = std::fs::read_to_string(root.join(path)) {
             p.push_str(&format!(
