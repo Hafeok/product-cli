@@ -25352,6 +25352,39 @@ fn tc_992_build_max_rounds_caps_the_fix_loop() {
 }
 
 #[test]
+fn tc_993_build_lsp_fix_loop_converges() {
+    let h = Harness::new();
+    seed_domain_graph(&h);
+    h.run(&["slice", "new", "order-slice", "--anchor", "Order"]).assert_exit(0);
+    h.run(&["worker", "init"]).assert_exit(0);
+    std::fs::create_dir_all(h.dir.path().join(".product/deliverables")).expect("mkdir");
+    std::fs::write(h.dir.path().join(".product/deliverables/conv.yaml"), "id: conv\nslice: order-slice\n").expect("deliverable");
+    // Worker mock: the dispatch writes a .rs file; the LSP fix rewrites it.
+    let wm = h.dir.path().join("wmock");
+    std::fs::create_dir_all(&wm).expect("wmock");
+    std::fs::write(wm.join("response-0.json"), "{\"files\":[{\"path\":\"src.rs\",\"content\":\"// v0\\n\"}]}").expect("w0");
+    std::fs::write(wm.join("response-1.json"), "{\"files\":[{\"path\":\"src.rs\",\"content\":\"// v1 fixed\\n\"}]}").expect("w1");
+    // LSP mock: first diagnose dirty (one lint), second clean (diag-1 absent).
+    let lm = h.dir.path().join("lmock");
+    std::fs::create_dir_all(&lm).expect("lmock");
+    std::fs::write(lm.join("diag-0.json"), "[\"unneeded return statement\"]").expect("d0");
+    let output = Command::new(&h.bin)
+        .args(["build", "conv", "--role", "coder", "--lsp", "--no-verify"])
+        .current_dir(h.dir.path())
+        .env("PRODUCT_MOCK_DIR", wm.to_str().expect("wm"))
+        .env("PRODUCT_MOCK_LSP", lm.to_str().expect("lm"))
+        .env_remove("LITELLM_BASE_URL")
+        .env_remove("LITELLM_API_KEY")
+        .output()
+        .expect("run build");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("LSP diagnose + fix"), "{stdout}");
+    assert!(stdout.contains("via 'code-writer-heavy'"), "escalated: {stdout}");
+    assert!(stdout.contains("[x] src.rs: clean"), "converged: {stdout}");
+    assert_eq!(h.read("src.rs").trim(), "// v1 fixed");
+}
+
+#[test]
 fn tc_983_recording_conformance_flips_done() {
     let h = Harness::new();
     seed_domain_graph(&h); // Order aggregate; PlaceOrder targets it, emits OrderPlaced
