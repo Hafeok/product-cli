@@ -119,7 +119,11 @@ fn fix_file(diagnoser: &mut Diagnoser, ladder: &[Capability], shared: &str, path
         println!("  fixing {} via '{}' (round {round}/{max_rounds}): {} diagnostic(s)", rel(path, root), cap.id, diags.len());
         let content = std::fs::read_to_string(path)?;
         let prompt = fix_prompt(shared, &rel(path, root), &content, &diags);
-        super::worker::dispatch(cap, &prompt)?;
+        let written = super::worker::dispatch(cap, &prompt)?;
+        let reverted = super::build_guard::enforce(root, std::slice::from_ref(&path.to_path_buf()), &written);
+        if !reverted.is_empty() {
+            println!("  ! oracle guard: reverted {} worker edit(s) to test files {reverted:?}", reverted.len());
+        }
         diags = diagnoser.diagnose(path)?;
     }
     Ok(diags.len())

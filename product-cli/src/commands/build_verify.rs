@@ -47,8 +47,14 @@ pub(super) fn run(d: &mut Deliverable, written: &[PathBuf], ladder: &[Capability
         round += 1;
         let cap = &ladder[round.min(ladder.len() - 1)];
         println!("  re-dispatching to '{}' to fix {} failing check(s) (round {round}/{max_rounds})", cap.id, failing.len());
-        if super::worker::dispatch(cap, &fix_prompt(shared, &failing, written, root)).is_err() {
-            break;
+        match super::worker::dispatch(cap, &fix_prompt(shared, &failing, written, root)) {
+            Ok(paths) => {
+                let reverted = super::build_guard::enforce(root, written, &paths);
+                if !reverted.is_empty() {
+                    println!("  ! oracle guard: reverted {} worker edit(s) to test files {reverted:?} — a fix may not rewrite the acceptance test", reverted.len());
+                }
+            }
+            Err(_) => break,
         }
     }
     if let Err(e) = super::deliverable::save(d) {

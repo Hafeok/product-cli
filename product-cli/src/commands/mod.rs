@@ -8,6 +8,7 @@ mod adr_write;
 mod agent_init;
 mod author;
 mod build;
+mod build_guard;
 mod build_lsp;
 mod build_session;
 mod build_verify;
