@@ -80,8 +80,8 @@ product-cli/         # The `product` binary. Depends on product-core +
     fixtures/               # Shared test fixtures, incl. external-core-consumer
 xtask/                # Workspace convention enforcement (`cargo xtask check`)
 docs/
-  product-prd.md     # Full PRD
-  product-adrs.md    # All ADRs in one file
+  product-framework-open.md  # The open framework spec (What/How/Delivery)
+  guide/             # Getting-started, concepts, everyday-use, flows
   adrs/              # Individual ADR files
   features/          # Individual feature files (FT-XXX-*.md)
   tests/             # Individual TC files
@@ -248,11 +248,11 @@ Rules:
 
 ### Specification docs (source of truth)
 
-- **PRD**: `docs/product-prd.md` — the source of truth for what to build
+- **Framework spec**: `docs/product-framework-open.md` — the open standard for what to build (What/How/Delivery)
 - **ADRs**: `docs/adrs/ADR-XXX-*.md` — one file per decision, with YAML front-matter
 - **Features**: `docs/features/FT-XXX-*.md` — one file per feature, with YAML front-matter
 - **Test Criteria**: `docs/tests/TC-XXX-*.md` — one file per test criterion
-- **ADR index**: `docs/product-adrs.md` — all ADRs collected in one file for reference
+- **Onboarding guides**: `docs/guide/` — getting-started, concepts, everyday-use, flows; `docs/workshop-runbook.md`
 
 ### User-facing docs — Diátaxis framework (https://diataxis.fr/)
 

@@ -71,9 +71,9 @@ product guide
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `Created X rejected: [label] …` | A required field was omitted | A context/entity needs `--label`; an entity also needs `--context` and `--definition`. The rejected node is **not** saved — re-run with the field. |
-| `command … rejected: [targets]/[emits]` | The command references a node that doesn't exist yet | Author the entity and the event **first**, then the command. |
-| `event … rejected: [changes]/[inContext]` | The event has no `--changes <entity>` or `--context` | Add both; the entity and context must already exist. |
+| `Rejected X — no change made: [label] …` | A required field was omitted | A context/entity needs `--label`; an entity also needs `--context` and `--definition`. Nothing was saved — re-run with the field. |
+| `Rejected X … [targets]/[emits]` | The command references a node that doesn't exist yet | Author the entity and the event **first**, then the command. |
+| `Rejected X … [changes]/[inContext]` | The event has no `--changes <entity>` or `--context` | Add both; the entity and context must already exist. |
 | "I don't know what to do next" | — | `product guide`. Always. |
 | `domain list` shows fewer nodes than expected | Some `new` calls were rejected | Re-run `product domain validate` to see what's missing; rejected nodes never persisted. |
 

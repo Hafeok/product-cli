@@ -170,7 +170,9 @@ fn report(verb: &str, id: &str, result: OpResult) -> BoxResult {
         .iter()
         .map(|v| format!("  - [{}] {}", v.path, v.message))
         .collect();
-    Err(format!("{verb} {id} rejected:\n{}", lines.join("\n")).into())
+    // The op did not happen — don't claim the success verb ("Created"). Make
+    // it unmistakable that nothing was written, then list the rule(s) broken.
+    Err(format!("Rejected {id} — no change made:\n{}", lines.join("\n")).into())
 }
 
 fn list(kind: Option<String>, product: Option<String>) -> BoxResult {
