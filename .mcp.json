@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "product": {
+      "command": "product",
+      "args": ["mcp", "--write"]
+    }
+  }
+}
