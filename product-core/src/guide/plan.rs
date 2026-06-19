@@ -85,7 +85,7 @@ fn next_steps(s: &FrameworkState, stage: Stage) -> Vec<NextStep> {
             "List the violations; add the missing relations (e.g. an event's --changes, a command's --targets/--emits).",
         )],
         Stage::AuthorHow => vec![NextStep::new(
-            format!("product how init {}", s.product),
+            "product how init",
             "Scaffold a starter how-contract.yaml, then `product how add decision|principle|...`.",
         )],
         Stage::CarveSlice => vec![NextStep::new(

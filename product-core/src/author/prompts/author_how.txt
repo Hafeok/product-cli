@@ -14,8 +14,8 @@ How that contradicts the What.
 
 ## Choreography
 
-1. **Scaffold.** `product how init <product>` writes a starter
-   `how-contract.yaml`. Read it back with `product how show`.
+1. **Scaffold.** `product how init` writes a starter `how-contract.yaml`.
+   Read it back with `product how show`.
 2. **The Why cascade** — capture the decisions that shape realisation, each with
    its rationale (the rationale is not optional; it is what makes the decision
    reviewable):

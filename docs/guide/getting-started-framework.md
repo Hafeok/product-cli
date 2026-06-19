@@ -104,7 +104,7 @@ decisions, principles, contracts, and the repository layout — without changing
 the meaning. Scaffold a starter contract:
 
 ```bash
-product how init bookstore
+product how init
 product how add decision --label "Rust for the core" --rationale "..."   # optional
 ```
 
