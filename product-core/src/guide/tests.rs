@@ -41,11 +41,33 @@ fn how_without_slice_says_carve_slice() {
 }
 
 #[test]
+fn carve_slice_names_a_real_command_when_known() {
+    let s = FrameworkState {
+        what_total: 6, has_how: true, slices: 0,
+        first_command: Some("PlaceOrder".into()), ..state()
+    };
+    let g = guide(&s);
+    assert!(g.next_steps[0].command.contains("--anchor PlaceOrder"),
+        "should name the real command, got: {}", g.next_steps[0].command);
+}
+
+#[test]
 fn slice_without_deliverable_says_wrap() {
     let s = FrameworkState { what_total: 6, has_how: true, slices: 1, deliverables: 0, ..state() };
     let g = guide(&s);
     assert_eq!(g.stage, Stage::WrapDeliverable);
     assert!(g.next_steps[0].command.contains("deliverable new"));
+}
+
+#[test]
+fn wrap_deliverable_names_a_real_slice_when_known() {
+    let s = FrameworkState {
+        what_total: 6, has_how: true, slices: 1, deliverables: 0,
+        first_slice: Some("checkout".into()), ..state()
+    };
+    let g = guide(&s);
+    assert!(g.next_steps[0].command.contains("--slice checkout"),
+        "should name the real slice, got: {}", g.next_steps[0].command);
 }
 
 #[test]

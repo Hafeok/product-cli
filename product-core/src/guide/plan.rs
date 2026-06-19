@@ -88,14 +88,8 @@ fn next_steps(s: &FrameworkState, stage: Stage) -> Vec<NextStep> {
             "product how init",
             "Scaffold a starter how-contract.yaml, then `product how add decision|principle|...`.",
         )],
-        Stage::CarveSlice => vec![NextStep::new(
-            "product slice new <id> --anchor <command|context|flow>",
-            "Anchor a slice at a node in your event model (e.g. --anchor a command id).",
-        )],
-        Stage::WrapDeliverable => vec![NextStep::new(
-            "product deliverable new <id> --slice <slice-id>",
-            "Wrap a slice as a deliverable, then `product deliverable accept` its criteria.",
-        )],
+        Stage::CarveSlice => carve_slice_step(s),
+        Stage::WrapDeliverable => wrap_deliverable_step(s),
         Stage::BuildIt => vec![
             NextStep::new(
                 "product decider derive <aggregate>",
@@ -107,6 +101,22 @@ fn next_steps(s: &FrameworkState, stage: Stage) -> Vec<NextStep> {
             ),
         ],
     }
+}
+
+fn carve_slice_step(s: &FrameworkState) -> Vec<NextStep> {
+    let anchor = s.first_command.as_deref().unwrap_or("<command|context|flow>");
+    vec![NextStep::new(
+        format!("product slice new <id> --anchor {anchor}"),
+        "Anchor a slice at a node in your event model (e.g. --anchor a command id).",
+    )]
+}
+
+fn wrap_deliverable_step(s: &FrameworkState) -> Vec<NextStep> {
+    let slice = s.first_slice.as_deref().unwrap_or("<slice-id>");
+    vec![NextStep::new(
+        format!("product deliverable new <id> --slice {slice}"),
+        "Wrap a slice as a deliverable, then `product deliverable accept` its criteria.",
+    )]
 }
 
 /// The journey checklist in order; each item done once its stage is passed.

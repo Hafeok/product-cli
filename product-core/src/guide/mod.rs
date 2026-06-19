@@ -33,11 +33,15 @@ pub struct FrameworkState {
     pub read_models: usize,
     /// Blocking conformance violations in the What graph (0 = conformant).
     pub violations: usize,
+    /// An example command id, for a concrete `slice --anchor` suggestion.
+    pub first_command: Option<String>,
     /// A How contract (`how-contract.yaml`) is present and parses.
     pub has_how: bool,
     pub deciders: usize,
     pub projectors: usize,
     pub slices: usize,
+    /// An example slice id, for a concrete `deliverable --slice` suggestion.
+    pub first_slice: Option<String>,
     pub deliverables: usize,
     pub releases: usize,
 }
@@ -52,22 +56,7 @@ impl FrameworkState {
         let graph = crate::pf::session::DomainSession::load(&session)
             .ok()
             .map(|s| s.graph);
-
-        let count = |kind: &str| {
-            graph
-                .as_ref()
-                .map(|g| g.counts().iter().find(|(k, _)| *k == kind).map(|(_, c)| *c).unwrap_or(0))
-                .unwrap_or(0)
-        };
-        let violations = graph
-            .as_ref()
-            .map(|g| crate::pf::validate::validate_graph(g).len())
-            .unwrap_or(0);
-        let what_total = graph
-            .as_ref()
-            .map(|g| g.counts().iter().map(|(_, c)| *c).sum())
-            .unwrap_or(0);
-
+        let what = probe_what(graph.as_ref());
         let has_how = std::fs::read_to_string(pdir.join("how-contract.yaml"))
             .ok()
             .and_then(|t| crate::pf::how::HowContract::from_yaml(&t).ok())
@@ -75,21 +64,67 @@ impl FrameworkState {
 
         FrameworkState {
             product: product.to_string(),
-            what_total,
-            contexts: count("BoundedContext"),
-            entities: count("Entity"),
-            commands: count("Command"),
-            events: count("Event"),
-            read_models: count("ReadModel"),
-            violations,
+            what_total: what.total,
+            contexts: what.contexts,
+            entities: what.entities,
+            commands: what.commands,
+            events: what.events,
+            read_models: what.read_models,
+            violations: what.violations,
+            first_command: what.first_command,
             has_how,
             deciders: count_yaml(&pdir.join("deciders")),
             projectors: count_yaml(&pdir.join("projectors")),
             slices: count_yaml(&pdir.join("slices")),
+            first_slice: first_yaml_stem(&pdir.join("slices")),
             deliverables: count_yaml(&pdir.join("deliverables")),
             releases: count_yaml(&pdir.join("releases")),
         }
     }
+}
+
+/// The What-graph half of the probe, kept separate so [`FrameworkState::probe`]
+/// stays small and the graph derivation is one place.
+struct WhatProbe {
+    total: usize,
+    contexts: usize,
+    entities: usize,
+    commands: usize,
+    events: usize,
+    read_models: usize,
+    violations: usize,
+    first_command: Option<String>,
+}
+
+fn probe_what(graph: Option<&crate::pf::model::DomainGraph>) -> WhatProbe {
+    let count = |kind: &str| {
+        graph
+            .map(|g| g.counts().iter().find(|(k, _)| *k == kind).map(|(_, c)| *c).unwrap_or(0))
+            .unwrap_or(0)
+    };
+    WhatProbe {
+        total: graph.map(|g| g.counts().iter().map(|(_, c)| *c).sum()).unwrap_or(0),
+        contexts: count("BoundedContext"),
+        entities: count("Entity"),
+        commands: count("Command"),
+        events: count("Event"),
+        read_models: count("ReadModel"),
+        violations: graph.map(|g| crate::pf::validate::validate_graph(g).len()).unwrap_or(0),
+        first_command: graph.and_then(|g| g.commands.first().map(|c| c.id.clone())),
+    }
+}
+
+/// The stem of the first `*.yaml` file directly under `dir` (sorted for
+/// determinism), or `None`. Used to name a concrete slice in guidance.
+fn first_yaml_stem(dir: &Path) -> Option<String> {
+    let mut names: Vec<String> = std::fs::read_dir(dir)
+        .ok()?
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().map(|x| x == "yaml").unwrap_or(false))
+        .filter_map(|e| e.path().file_stem().and_then(|s| s.to_str()).map(String::from))
+        .collect();
+    names.sort();
+    names.into_iter().next()
 }
 
 /// Where the user is in the framework journey. Each stage names exactly one
