@@ -4,7 +4,7 @@ use clap::Command as ClapCommand;
 
 use super::{
     adr, agent_init, archetype, author, build, cell, checklist, completions, conformance, context, cycle_times, decider,
-    deliverable, dep, domain, drift, feature, gap, graph_cmd, hash, hooks, how, implement, init, lsp, mcp_cmd,
+    deliverable, dep, domain, drift, feature, gap, graph_cmd, guide, hash, hooks, how, implement, init, lsp, mcp_cmd,
     metrics_cmd, migrate, onboard, pattern, preflight, prompts_cmd, release, render, request_cmd, schema,
     primitive, projector, slice, status, tags, test_cmd, work_unit, worker, BoxResult, Commands,
 };
@@ -27,7 +27,6 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Gap { command } => gap::handle_gap(command, fmt),
         Commands::Graph { command } => graph_cmd::handle_graph(command, fmt),
         Commands::Hash { command } => hash::handle_hash(command),
-        Commands::Impact { id } => render(status::handle_impact(&id, fmt), fmt),
         Commands::Implement { .. } => dispatch_implement(command),
         Commands::Init { .. } => dispatch_init(command),
         Commands::InstallHooks => hooks::handle_install_hooks(),
@@ -43,14 +42,25 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Schema { artifact_type, type_flag, all } => {
             schema::handle_schema(type_flag.or(artifact_type), all)
         }
-        Commands::Status { phase, untested, failing } => {
-            render(status::handle_status(phase, untested, failing, fmt), fmt)
-        }
         Commands::Tags { command } => tags::handle_tags(command, fmt),
         Commands::Test { command } => test_cmd::handle_test(command, fmt),
         Commands::Verify { .. } => dispatch_verify(command, fmt),
+        // Status / impact / onboarding render-wrapped reads route through a sub-dispatcher.
+        c @ (Commands::Impact { .. } | Commands::Status { .. } | Commands::Guide) => dispatch_status_family(c, fmt),
         // Product-Framework families route through a sub-dispatcher (keeps this match small).
         c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Primitive { .. } | Commands::Deliverable { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Release { .. } | Commands::Slice { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
+    }
+}
+
+/// Sub-dispatcher for the render-wrapped status / impact / onboarding reads.
+fn dispatch_status_family(command: Commands, fmt: &str) -> BoxResult {
+    match command {
+        Commands::Impact { id } => render(status::handle_impact(&id, fmt), fmt),
+        Commands::Status { phase, untested, failing } => {
+            render(status::handle_status(phase, untested, failing, fmt), fmt)
+        }
+        Commands::Guide => render(guide::handle_guide(), fmt),
+        _ => unreachable!("dispatch_status_family called with non-status variant"),
     }
 }
 

@@ -4363,6 +4363,22 @@ Context without status line.
     );
 }
 
+#[test]
+fn tc_1019_product_guide_orients_a_new_user() {
+    let h = Harness::new();
+    // A fresh repo has no framework graph: guide points at capturing the What.
+    let out = h.run(&["guide"]);
+    assert_eq!(out.exit_code, 0, "guide should exit 0, stderr:\n{}", out.stderr);
+    assert!(out.stdout.contains("Your framework journey"), "stdout:\n{}", out.stdout);
+    assert!(out.stdout.contains("[ ] Captured a What model"), "stdout:\n{}", out.stdout);
+    assert!(out.stdout.contains("author domain"), "should suggest the next step, stdout:\n{}", out.stdout);
+
+    // JSON output carries the structured stage.
+    let j = h.run(&["--format", "json", "guide"]);
+    assert_eq!(j.exit_code, 0, "stderr:\n{}", j.stderr);
+    assert!(j.stdout.contains("capture-what"), "json should carry the stage, stdout:\n{}", j.stdout);
+}
+
 // ===========================================================================
 // TC-084: validates.adrs — extracted TCs have correct validates.adrs
 // ===========================================================================

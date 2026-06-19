@@ -34,6 +34,7 @@ mod feature_write;
 mod gap;
 mod graph_autolink;
 mod graph_cmd;
+mod guide;
 mod hash;
 mod hooks;
 mod how;

@@ -6,8 +6,7 @@ use std::path::PathBuf;
 use super::*;
 
 #[derive(Subcommand)]
-// Subcommand enums vary widely in size (e.g. `domain new/edit`); inherent spread.
-#[allow(clippy::large_enum_variant)]
+#[allow(clippy::large_enum_variant)] // subcommand enums vary widely in size; inherent spread
 pub enum Commands {
     /// ADR navigation and management
     Adr {
@@ -186,6 +185,8 @@ pub enum Commands {
         #[command(subcommand)]
         command: GraphCommands,
     },
+    /// Onboarding — where you are in the framework journey and the next step
+    Guide,
     /// Content hash operations (ADR-032)
     Hash {
         #[command(subcommand)]
@@ -369,8 +370,7 @@ pub enum Commands {
         #[command(subcommand)]
         command: TestCommands,
     },
-    /// Verify test criteria — unified six-stage pipeline (FT-044) when no
-    /// feature ID is supplied, or per-feature (ADR-021) otherwise.
+    /// Verify test criteria — six-stage pipeline (FT-044) when no feature ID is supplied, else per-feature (ADR-021)
     Verify {
         /// Feature ID (optional — if omitted, runs the full pipeline)
         id: Option<String>,

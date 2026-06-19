@@ -40,16 +40,26 @@ fn pattern_read_tools() -> Vec<ToolDef> {
     ]
 }
 
-// Read tools: product identity (FT-039)
+// Read tools: product identity (FT-039) + onboarding guidance
 fn product_tools() -> Vec<ToolDef> {
-    vec![ToolDef {
-        name: "product_responsibility".to_string(),
-        description:
-            "Get the product name and responsibility statement. This is the first call an agent should make in any session."
-                .to_string(),
-        requires_write: false,
-        input_schema: serde_json::json!({"type": "object", "properties": {}}),
-    }]
+    vec![
+        ToolDef {
+            name: "product_responsibility".to_string(),
+            description:
+                "Get the product name and responsibility statement. This is the first call an agent should make in any session."
+                    .to_string(),
+            requires_write: false,
+            input_schema: serde_json::json!({"type": "object", "properties": {}}),
+        },
+        ToolDef {
+            name: "product_guide".to_string(),
+            description:
+                "Onboarding: probe the framework (What/How/Delivery) graph and return where the user is in the journey, a journey checklist, and the exact next command(s). Call this to orient a new user, or after any framework-graph change to find the next step."
+                    .to_string(),
+            requires_write: false,
+            input_schema: serde_json::json!({"type": "object", "properties": {}}),
+        },
+    ]
 }
 
 // Read tools: context and features

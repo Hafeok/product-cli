@@ -17,6 +17,27 @@ pub(crate) fn handle_responsibility(repo_root: &Path) -> Result<Value, String> {
     }
 }
 
+/// Onboarding guidance — probe the framework graph and return the current
+/// journey stage, checklist, concept, and next command(s). Mirrors the
+/// `product guide` CLI command (shared `product_core::guide`).
+pub(crate) fn handle_guide(repo_root: &Path) -> Result<Value, String> {
+    let config = product_core::config::ProductConfig::load_from_root(repo_root)
+        .map_err(|e| format!("{}", e))?;
+    let product = config.product_name();
+    let state = product_core::guide::FrameworkState::probe(repo_root, product);
+    let guidance = product_core::guide::guide(&state);
+    let text = product_core::guide::render_text(&guidance);
+    let mut json = serde_json::to_value(&guidance).map_err(|e| e.to_string())?;
+    if let Some(obj) = json.as_object_mut() {
+        obj.insert("text".to_string(), Value::String(text));
+        obj.insert(
+            "state".to_string(),
+            serde_json::to_value(&state).map_err(|e| e.to_string())?,
+        );
+    }
+    Ok(json)
+}
+
 pub(crate) fn handle_context(
     args: &Value,
     graph: &KnowledgeGraph,
