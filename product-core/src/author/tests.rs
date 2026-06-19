@@ -114,10 +114,12 @@ fn prompts_init_creates_files() {
     let dir = tempfile::tempdir().unwrap();
     let created = prompts::init(dir.path(), ".product/prompts").unwrap();
     // FT-045 added gap-analysis, drift-analysis, conflict-check.
-    // FT-073 added author-pattern.
-    assert_eq!(created.len(), 8, "should create all 8 default prompts");
+    // FT-073 added author-pattern. Onboarding added author-domain, author-how.
+    assert_eq!(created.len(), 10, "should create all 10 default prompts");
     assert!(dir.path().join(".product/prompts/author-feature-v1.md").exists());
     assert!(dir.path().join(".product/prompts/author-pattern-v1.md").exists());
+    assert!(dir.path().join(".product/prompts/author-domain-v1.md").exists());
+    assert!(dir.path().join(".product/prompts/author-how-v1.md").exists());
     // FT-074 bumped the implement prompt to v2.
     assert!(dir.path().join(".product/prompts/implement-v2.md").exists());
     assert!(dir.path().join(".product/prompts/gap-analysis-v1.md").exists());
@@ -129,9 +131,11 @@ fn prompts_init_creates_files() {
 fn prompts_list_returns_all() {
     let dir = tempfile::tempdir().unwrap();
     let list = prompts::list(dir.path(), ".product/prompts");
-    assert_eq!(list.len(), 8);
+    assert_eq!(list.len(), 10);
     assert!(list.iter().any(|p| p.name == "author-feature"));
     assert!(list.iter().any(|p| p.name == "author-pattern"));
+    assert!(list.iter().any(|p| p.name == "author-domain"));
+    assert!(list.iter().any(|p| p.name == "author-how"));
     assert!(list.iter().any(|p| p.name == "implement"));
     assert!(list.iter().any(|p| p.name == "gap-analysis"));
     assert!(list.iter().any(|p| p.name == "drift-analysis"));
