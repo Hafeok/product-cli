@@ -156,6 +156,33 @@ Step 3 prints a single self-contained markdown document with the feature, the AD
 
 ---
 
+## Model your product: What, How & Delivery
+
+Everything above tracks *work* as features, ADRs, and tests. Product also hosts a
+deeper model — the **framework graph** — for specifying the *product itself* as
+three linked layers: the **What** (its domain and behaviour), the **How** (how
+that's realised), and **Delivery** (slices and deliverables built to a verifiable
+'done'). Same idea, one level up: separate What from How, agree the What first,
+and check everything instead of asserting it.
+
+See it in seconds:
+
+```bash
+product init -y --name bookstore --demo   # seed a small, conformant example model
+product status                            # What / How / Delivery counts
+product guide                             # where you are + the exact next command
+product domain show Order                 # inspect a node and its links
+```
+
+`product guide` is the through-line: at any point, it reads your graph and tells
+you the next step. Start here:
+
+- **[Getting started](docs/guide/getting-started-framework.md)** — model a product from scratch in 15 minutes.
+- **[Concepts](docs/guide/framework-concepts.md)** — every term (bounded context, command/event, decider, slice) in a sentence.
+- **[Workshop runbook](docs/workshop-runbook.md)** — run a hands-on session for a team.
+
+---
+
 ## The core loop
 
 Once you have artifacts in the graph, the daily flow is:
@@ -464,9 +491,16 @@ cargo bench
 
 ## Docs
 
-- [Product PRD](docs/product-prd.md) — the full vision and goals
-- [ADRs](docs/product-adrs.md) — every architectural decision behind this tool
-- [Request spec](docs/product-request-spec.md) — the unified atomic write interface
+**Model your product (the framework graph):**
+
+- [Getting started](docs/guide/getting-started-framework.md) — model a product as What/How/Delivery in 15 minutes
+- [Concepts](docs/guide/framework-concepts.md) — every term in a sentence
+- [Workshop runbook](docs/workshop-runbook.md) — run a hands-on team session
+- [Framework specification](docs/product-framework-open.md) — the normative open standard (What §3, How §4, verification §6, delivery §7)
+- [Two Pillars conformance](docs/two-pillars-conformance.md) — the clause set `product conformance check` evaluates
+
+**This tool's own development (the meta graph):**
+
 - [Spec-depth substitution](docs/spec-depth-substitution.md) — the autonomous build thesis, and the experiment that tests it
 - [Feature checklist](CHECKLIST.md) — current implementation status
 
