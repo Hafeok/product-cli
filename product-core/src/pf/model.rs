@@ -146,12 +146,27 @@ pub struct WireframeStep {
     pub displays: Option<String>,
 }
 
-/// §3.2 — an ordered behaviour assembling steps into a timeline.
+/// §3.2 — an ordered behaviour assembling steps into a timeline. §3.2.4 — a
+/// named connected subgraph of the page graph with a declared `entry_page`.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct Flow {
     pub id: String,
     pub label: String,
     pub steps: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entry_page: Option<String>,
+}
+
+/// §3.2.4 — the distinguished node of the page graph. Its `navigates_from_root`
+/// out-edges are the global destinations the primary navigation renders; a page
+/// is "top-level" iff it has an inbound edge here.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct ApplicationRoot {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub navigates_from_root: Vec<String>,
 }
 
 /// §3.2.2 — an Abstract Interaction Object: a named, modality-independent kind
@@ -209,6 +224,8 @@ pub struct DomainGraph {
     pub aios: Vec<Aio>,
     #[serde(default)]
     pub contexts_of_use: Vec<ContextOfUse>,
+    #[serde(default)]
+    pub application_roots: Vec<ApplicationRoot>,
 }
 
 impl DomainGraph {
@@ -245,6 +262,8 @@ impl DomainGraph {
             Some(NodeKind::Aio)
         } else if self.contexts_of_use.iter().any(|n| n.id == id) {
             Some(NodeKind::ContextOfUse)
+        } else if self.application_roots.iter().any(|n| n.id == id) {
+            Some(NodeKind::ApplicationRoot)
         } else {
             None
         }
@@ -271,6 +290,7 @@ impl DomainGraph {
             ("Flow", self.flows.len()),
             ("Aio", self.aios.len()),
             ("ContextOfUse", self.contexts_of_use.len()),
+            ("ApplicationRoot", self.application_roots.len()),
         ]
     }
 
@@ -295,6 +315,7 @@ impl DomainGraph {
         self.flows.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Flow)));
         self.aios.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Aio)));
         self.contexts_of_use.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ContextOfUse)));
+        self.application_roots.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ApplicationRoot)));
         out
     }
 }

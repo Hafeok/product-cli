@@ -68,6 +68,10 @@ pub struct NodeFields {
     offers: Option<Vec<String>>,
     #[arg(long = "transitions-to", value_delimiter = ',')]
     transitions_to: Option<Vec<String>>,
+    #[arg(long = "entry-page")]
+    entry_page: Option<String>,
+    #[arg(long = "navigates-from-root", value_delimiter = ',')]
+    navigates_from_root: Option<Vec<String>>,
 }
 
 impl NodeFields {
@@ -110,6 +114,8 @@ impl NodeFields {
         if let Some(v) = &self.offers {
             put("offers", pairs(v, "command"));
         }
+        if let Some(v) = &self.entry_page { put("entry_page", json!(v)); }
+        if let Some(v) = &self.navigates_from_root { put("navigates_from_root", json!(v)); }
         m
     }
 }

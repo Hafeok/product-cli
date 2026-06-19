@@ -123,7 +123,7 @@ fn parse_flows(store: &Store, g: &mut DomainGraph) -> Result<()> {
     let steps = multi(store, "pf:Flow", "pf:contains")?;
     for row in select(store, "?s ?label", "?s a pf:Flow . OPTIONAL { ?s rdfs:label ?label }")? {
         let id = local(row.get("s"));
-        g.flows.push(Flow { steps: steps.get(&id).cloned().unwrap_or_default(), id: id.clone(), label: lit(row.get("label")) });
+        g.flows.push(Flow { steps: steps.get(&id).cloned().unwrap_or_default(), id: id.clone(), label: lit(row.get("label")), ..Default::default() });
     }
     Ok(())
 }

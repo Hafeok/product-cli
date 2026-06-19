@@ -1748,12 +1748,12 @@
 - [x] TC-995: UiStep typed against AIOs passes structural check (scenario) — passing
 - [x] TC-996: UiStep referencing a CIO fails the AIO only rule (scenario) — passing
 
-### FT-135 — The page graph — navigation, flows, and the application root [ ]
+### FT-135 — The page graph — navigation, flows, and the application root [x]
 
 - [x] ADR-079: Navigation is one page graph with named flow subgraphs and a declared application root (accepted)
-- [ ] TC-997: mark flow entry page and navigate edges (scenario) — unimplemented
-- [ ] TC-998: top-level is derived from the application root (scenario) — unimplemented
-- [ ] TC-999: primary navigation recomputes when a flow joins the root (scenario) — unimplemented
+- [x] TC-997: mark flow entry page and navigate edges (scenario) — passing
+- [x] TC-998: top-level is derived from the application root (scenario) — passing
+- [x] TC-999: primary navigation recomputes when a flow joins the root (scenario) — passing
 
 ### FT-136 — Read-model state space and UI-step state coverage [ ]
 

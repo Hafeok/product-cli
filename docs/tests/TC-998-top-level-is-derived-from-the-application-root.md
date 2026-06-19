@@ -2,7 +2,7 @@
 id: TC-998
 title: top-level is derived from the application root
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-135
@@ -14,6 +14,8 @@ observes:
 - stdout
 runner: cargo-test
 runner-args: tc_998_top_level_is_derived_from_the_application_root
+last-run: 2026-06-19T16:52:11.237587053+00:00
+last-run-duration: 0.5s
 ---
 
 ## Scenario — "top-level" falls out of the graph's edges, not a hand tag

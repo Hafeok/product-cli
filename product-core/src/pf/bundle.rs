@@ -189,6 +189,7 @@ fn section_title(kind: NodeKind) -> &'static str {
         NodeKind::Flow => "Flows",
         NodeKind::Aio => "Abstract interaction objects",
         NodeKind::ContextOfUse => "Contexts of use",
+        NodeKind::ApplicationRoot => "Application root",
     }
 }
 

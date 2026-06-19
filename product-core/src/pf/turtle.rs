@@ -25,6 +25,7 @@ pub fn to_turtle(graph: &DomainGraph, product: &str) -> String {
     graph.flows.iter().for_each(|f| emit_flow(&mut out, f));
     graph.aios.iter().for_each(|a| emit_aio(&mut out, a));
     graph.contexts_of_use.iter().for_each(|c| emit_context_of_use(&mut out, c));
+    graph.application_roots.iter().for_each(|r| emit_application_root(&mut out, r));
     out
 }
 
@@ -83,6 +84,20 @@ fn emit_flow(out: &mut String, f: &super::model::Flow) {
     out.push_str(&format!("d:{} a pf:Flow ;\n  rdfs:label {}", f.id, lit(&f.label)));
     for s in &f.steps {
         out.push_str(&format!(" ;\n  pf:contains d:{}", s));
+    }
+    if let Some(e) = &f.entry_page {
+        out.push_str(&format!(" ;\n  pf:entryPage d:{}", e));
+    }
+    out.push_str(" .\n\n");
+}
+
+fn emit_application_root(out: &mut String, r: &super::model::ApplicationRoot) {
+    out.push_str(&format!("d:{} a pf:ApplicationRoot", r.id));
+    if let Some(l) = &r.label {
+        out.push_str(&format!(" ;\n  rdfs:label {}", lit(l)));
+    }
+    for d in &r.navigates_from_root {
+        out.push_str(&format!(" ;\n  pf:navigatesFromRoot d:{}", d));
     }
     out.push_str(" .\n\n");
 }

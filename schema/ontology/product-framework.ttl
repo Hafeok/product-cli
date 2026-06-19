@@ -115,6 +115,11 @@ pf:ContextOfUse a owl:Class ;
   rdfs:label "Context of Use" ;
   rdfs:comment "§3.2.2 — a declared form factor / modality a reification rule is written against; carries no realisation." .
 
+pf:ApplicationRoot a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Application Root" ;
+  rdfs:comment "§3.2.4 — the distinguished node of the page graph; its navigatesFromRoot out-edges are the global destinations." .
+
 #################################################################
 #  HOW — §4.1 the Why (decisions, principles, patterns)
 #################################################################

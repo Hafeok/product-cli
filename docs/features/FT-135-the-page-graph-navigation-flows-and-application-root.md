@@ -2,7 +2,7 @@
 id: FT-135
 title: The page graph — navigation, flows, and the application root
 phase: 7
-status: planned
+status: complete
 depends-on:
 - FT-134
 adrs:
@@ -17,14 +17,14 @@ domains:
 domains-acknowledged:
   ADR-041: Additive — adds the ApplicationRoot node kind and the navigate/in_flow/navigates_from_root edges; Flow gains entry-page semantics; nothing is removed, so no absence TC is required this increment.
   ADR-047: The functional specification lives in this feature's body, not a separate artifact.
-  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
-  ADR-050: PAT-001 (slice + adapter) governs the `pf` slice + CLI adapter; no new implementation pattern is introduced.
   ADR-049: Not a context-bundle/template command; no template surface changes.
-  ADR-043: The page-graph model and the derived top-level / primary-navigation queries live in the pure `pf` slice; the CLI is a thin adapter.
-  ADR-048: Reads/writes the captured What graph only (the domain session); no other side effects.
-  ADR-051: Every TC declares `observes:` and asserts on those surfaces (graph, exit-code, stdout).
-  ADR-018: Scenario TCs drive the binary through assert_cmd; `pf::query`/`pf::rules_ui` carry unit tests. No property or session dimension for a graph model + queries.
+  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
   ADR-040: The page graph is a What-side artifact at the What/How boundary; its queries compose with the existing event-model rules; the verify pipeline is untouched.
+  ADR-051: Every TC declares `observes:` and asserts on those surfaces (graph, exit-code, stdout).
+  ADR-043: The page-graph model and the derived top-level / primary-navigation queries live in the pure `pf` slice; the CLI is a thin adapter.
+  ADR-050: PAT-001 (slice + adapter) governs the `pf` slice + CLI adapter; no new implementation pattern is introduced.
+  ADR-048: Reads/writes the captured What graph only (the domain session); no other side effects.
+  ADR-018: Scenario TCs drive the binary through assert_cmd; `pf::query`/`pf::rules_ui` carry unit tests. No property or session dimension for a graph model + queries.
 patterns:
 - PAT-001
 ---

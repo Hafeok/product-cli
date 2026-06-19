@@ -2,7 +2,7 @@
 id: TC-997
 title: mark flow entry page and navigate edges
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-135
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_997_mark_flow_entry_page_and_navigate_edges
+last-run: 2026-06-19T16:52:11.237587053+00:00
+last-run-duration: 0.5s
 ---
 
 ## Scenario — a flow is a named connected subgraph with an entry page

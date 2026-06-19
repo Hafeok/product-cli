@@ -9,7 +9,7 @@ fn sample() -> DomainGraph {
     g.entities.push(Entity { id: "Order".into(), label: "Order".into(), context: "Sales".into(), definition: "a customer order".into(), is_aggregate_root: true, ..Default::default() });
     g.events.push(Event { id: "OrderPlaced".into(), label: "OrderPlaced".into(), context: "Sales".into(), changes: "Order".into() });
     g.commands.push(Command { id: "PlaceOrder".into(), label: "PlaceOrder".into(), context: "Sales".into(), targets: "Order".into(), emits: vec!["OrderPlaced".into()] });
-    g.flows.push(Flow { id: "PlaceOrderFlow".into(), label: "place an order".into(), steps: vec!["PlaceOrder".into(), "OrderPlaced".into()] });
+    g.flows.push(Flow { id: "PlaceOrderFlow".into(), label: "place an order".into(), steps: vec!["PlaceOrder".into(), "OrderPlaced".into()], ..Default::default() });
     g
 }
 

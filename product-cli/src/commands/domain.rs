@@ -200,10 +200,17 @@ fn list(kind: Option<String>, product: Option<String>) -> BoxResult {
 
 /// Build `(kind, id, label)` rows for `list`, honouring an optional filter.
 fn list_rows(g: &product_core::pf::DomainGraph, filter: Option<NodeKind>) -> Vec<(String, String, String)> {
+    let mut out = structure_rows(g, filter);
+    out.extend(ui_layer_rows(g, filter));
+    let _ = ALL_KINDS; // kinds enumerated across both helpers in canonical order
+    out
+}
+
+/// Rows for the §3.1/§3.2 structure + behaviour node kinds.
+fn structure_rows(g: &product_core::pf::DomainGraph, filter: Option<NodeKind>) -> Vec<(String, String, String)> {
     let mut out = Vec::new();
-    let want = |k: NodeKind| filter.is_none_or(|f| f == k);
     let mut push = |k: NodeKind, id: &str, label: String| {
-        if want(k) {
+        if filter.is_none_or(|f| f == k) {
             out.push((k.cli_name().to_string(), id.to_string(), label));
         }
     };
@@ -216,8 +223,39 @@ fn list_rows(g: &product_core::pf::DomainGraph, filter: Option<NodeKind>) -> Vec
     for n in &g.commands { push(NodeKind::Command, &n.id, format!("{} [{}]", n.label, n.context)); }
     for n in &g.events { push(NodeKind::Event, &n.id, format!("{} changes {}", n.label, n.changes)); }
     for n in &g.read_models { push(NodeKind::ReadModel, &n.id, n.label.clone()); }
-    for n in &g.wireframe_steps { push(NodeKind::WireframeStep, &n.id, n.label.clone()); }
-    for n in &g.flows { push(NodeKind::Flow, &n.id, n.label.clone()); }
+    out
+}
+
+/// Rows for the §3.2.1–§3.2.4 UI layer: pages (with derived top-level marking),
+/// flows (with entry page), the application root, AIOs (core + registered), and
+/// contexts of use.
+fn ui_layer_rows(g: &product_core::pf::DomainGraph, filter: Option<NodeKind>) -> Vec<(String, String, String)> {
+    let mut out = Vec::new();
+    let mut push = |k: NodeKind, id: &str, label: String| {
+        if filter.is_none_or(|f| f == k) {
+            out.push((k.cli_name().to_string(), id.to_string(), label));
+        }
+    };
+    // §3.2.4 — "top-level" is derived: a page with an inbound edge from the root.
+    let top_level: std::collections::HashSet<&str> = g
+        .application_roots
+        .iter()
+        .flat_map(|r| r.navigates_from_root.iter().map(String::as_str))
+        .collect();
+    for n in &g.wireframe_steps {
+        let mark = if top_level.contains(n.id.as_str()) { " [top-level]" } else { "" };
+        push(NodeKind::WireframeStep, &n.id, format!("{}{mark}", n.label));
+    }
+    for n in &g.flows {
+        let label = match &n.entry_page {
+            Some(e) => format!("{} (entry: {})", n.label, e),
+            None => n.label.clone(),
+        };
+        push(NodeKind::Flow, &n.id, label);
+    }
+    for n in &g.application_roots {
+        push(NodeKind::ApplicationRoot, &n.id, format!("→ {}", n.navigates_from_root.join(", ")));
+    }
     // The closed-core AIO vocabulary (§3.2.2) is always recognised, shown first.
     for core in product_core::pf::ids::CORE_AIOS {
         push(NodeKind::Aio, core, "(core)".to_string());
@@ -230,7 +268,6 @@ fn list_rows(g: &product_core::pf::DomainGraph, filter: Option<NodeKind>) -> Vec
         };
         push(NodeKind::ContextOfUse, &n.id, label);
     }
-    let _ = ALL_KINDS; // kinds enumerated above in canonical order
     out
 }
 

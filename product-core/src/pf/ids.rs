@@ -24,10 +24,13 @@ pub enum NodeKind {
     /// §3.2.2 — a context of use (form factor, modality, …) reification rules
     /// are written against.
     ContextOfUse,
+    /// §3.2.4 — the distinguished node of the page graph; its out-edges are the
+    /// global destinations the primary navigation renders.
+    ApplicationRoot,
 }
 
 /// Every node kind, in declaration order (for `list`/iteration).
-pub const ALL_KINDS: [NodeKind; 13] = [
+pub const ALL_KINDS: [NodeKind; 14] = [
     NodeKind::BoundedContext,
     NodeKind::Entity,
     NodeKind::ValueObject,
@@ -41,6 +44,7 @@ pub const ALL_KINDS: [NodeKind; 13] = [
     NodeKind::Flow,
     NodeKind::Aio,
     NodeKind::ContextOfUse,
+    NodeKind::ApplicationRoot,
 ];
 
 /// The closed-core Abstract Interaction Objects (§3.2.2 table). An adopter may
@@ -75,6 +79,7 @@ impl NodeKind {
             Self::Flow => "Flow",
             Self::Aio => "Aio",
             Self::ContextOfUse => "ContextOfUse",
+            Self::ApplicationRoot => "ApplicationRoot",
         }
     }
 
@@ -94,6 +99,7 @@ impl NodeKind {
             Self::Flow => "flow",
             Self::Aio => "aio",
             Self::ContextOfUse => "context-of-use",
+            Self::ApplicationRoot => "application-root",
         }
     }
 

@@ -2,7 +2,7 @@
 id: TC-999
 title: primary navigation recomputes when a flow joins the root
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-135
@@ -14,6 +14,8 @@ observes:
 - stdout
 runner: cargo-test
 runner-args: tc_999_primary_navigation_recomputes_when_a_flow_joins_the_root
+last-run: 2026-06-19T16:52:11.237587053+00:00
+last-run-duration: 0.5s
 ---
 
 ## Scenario — primary navigation is the root's out-edges, computed not maintained

@@ -9380,6 +9380,49 @@ fn tc_996_uistep_referencing_a_cio_fails_the_aio_only_rule() {
     );
 }
 
+#[test]
+fn tc_997_mark_flow_entry_page_and_navigate_edges() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "Browse", "--label", "Browse", "--transitions-to", "Review"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "Review", "--label", "Review"]).assert_exit(0);
+    h.run(&["domain", "new", "flow", "checkout", "--label", "Checkout", "--steps", "Browse,Review", "--entry-page", "Browse"]).assert_exit(0);
+    // The flow records its entry page; the navigate edge is in the export.
+    let fl = h.run(&["domain", "list", "flow"]);
+    assert!(fl.stdout.contains("entry: Browse"), "flow should show entry page, stdout:\n{}", fl.stdout);
+    let ttl = h.run(&["domain", "export"]);
+    assert!(ttl.stdout.contains("pf:transitionsTo d:Review"), "navigate edge missing, stdout:\n{}", ttl.stdout);
+    assert!(ttl.stdout.contains("pf:entryPage d:Browse"), "entry page missing, stdout:\n{}", ttl.stdout);
+}
+
+#[test]
+fn tc_998_top_level_is_derived_from_the_application_root() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "Browse", "--label", "Browse"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "Review", "--label", "Review"]).assert_exit(0);
+    h.run(&["domain", "new", "application-root", "root", "--label", "App", "--navigates-from-root", "Browse"]).assert_exit(0);
+    // Browse has an inbound edge from the root → top-level; Review is nested.
+    let out = h.run(&["domain", "list", "ui-step"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("Browse [top-level]"), "Browse should be top-level, stdout:\n{}", out.stdout);
+    assert!(!out.stdout.contains("Review [top-level]"), "Review should be nested, stdout:\n{}", out.stdout);
+}
+
+#[test]
+fn tc_999_primary_navigation_recomputes_when_a_flow_joins_the_root() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "Browse", "--label", "Browse"]).assert_exit(0);
+    // Before joining the root, nothing is top-level.
+    let before = h.run(&["domain", "list", "ui-step"]);
+    assert!(!before.stdout.contains("[top-level]"), "nothing top-level yet, stdout:\n{}", before.stdout);
+    // Adding a root edge recomputes the primary navigation set.
+    h.run(&["domain", "new", "application-root", "root", "--navigates-from-root", "Browse"]).assert_exit(0);
+    let after = h.run(&["domain", "list", "ui-step"]);
+    assert!(after.stdout.contains("Browse [top-level]"), "Browse should now be top-level, stdout:\n{}", after.stdout);
+}
+
 /// TC-434: init errors on existing canonical config without --force
 #[test]
 fn tc_434_init_errors_on_existing_product_toml_without_force() {

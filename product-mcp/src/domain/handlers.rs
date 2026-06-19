@@ -142,6 +142,7 @@ pub fn add_flow(s: &mut DomainSession, a: &Value) -> Result<Value, String> {
         id: req_str(a, "id")?,
         label: req_str(a, "label")?,
         steps: str_array(a, "steps"),
+        ..Default::default()
     };
     to_value(ops::add_flow(s, f))
 }
