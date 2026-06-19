@@ -1741,12 +1741,12 @@
 
 ## Phase 7
 
-### FT-134 — Abstract Interaction Object vocabulary and the typed UiStep [ ]
+### FT-134 — Abstract Interaction Object vocabulary and the typed UiStep [x]
 
 - [x] ADR-078: UI steps are typed against Abstract Interaction Objects; AIOs and CIOs are graph nodes (accepted)
-- [ ] TC-994: seed and list the core AIO set (scenario) — unimplemented
-- [ ] TC-995: UiStep typed against AIOs passes structural check (scenario) — unimplemented
-- [ ] TC-996: UiStep referencing a CIO fails the AIO only rule (scenario) — unimplemented
+- [x] TC-994: seed and list the core AIO set (scenario) — passing
+- [x] TC-995: UiStep typed against AIOs passes structural check (scenario) — passing
+- [x] TC-996: UiStep referencing a CIO fails the AIO only rule (scenario) — passing
 
 ### FT-135 — The page graph — navigation, flows, and the application root [ ]
 

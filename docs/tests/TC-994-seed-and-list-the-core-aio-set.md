@@ -2,7 +2,7 @@
 id: TC-994
 title: seed and list the core AIO set
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-134
@@ -14,6 +14,8 @@ observes:
 - stdout
 runner: cargo-test
 runner-args: tc_994_seed_and_list_the_core_aio_set
+last-run: 2026-06-19T16:37:43.369842347+00:00
+last-run-duration: 17.2s
 ---
 
 ## Scenario — the closed-core AIO vocabulary is present and a context of use is declarable

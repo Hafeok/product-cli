@@ -132,6 +132,7 @@ pub fn add_wireframe_step(s: &mut DomainSession, a: &Value) -> Result<Value, Str
         label: req_str(a, "label")?,
         triggers: opt_str(a, "triggers"),
         displays: opt_str(a, "displays"),
+        ..Default::default()
     };
     to_value(ops::add_wireframe_step(s, w))
 }

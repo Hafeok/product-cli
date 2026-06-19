@@ -2,7 +2,7 @@
 id: FT-134
 title: Abstract Interaction Object vocabulary and the typed UiStep
 phase: 7
-status: planned
+status: complete
 depends-on:
 - FT-110
 adrs:
@@ -15,16 +15,16 @@ domains:
 - api
 - data-model
 domains-acknowledged:
-  ADR-041: Additive — seeds the AIO/ContextOfUse node kinds and the UiStep edges; WireframeStep is kept as a deprecated alias, so no removal/absence TC is required this increment.
+  ADR-040: AIOs/UiStep are What-side artifacts at the What/How boundary; the structural rule composes with the existing What-side rules; the verify pipeline is untouched.
   ADR-047: The functional specification lives in this feature's body, not a separate artifact.
-  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
-  ADR-050: PAT-001 (slice + adapter) governs the `pf` slice + CLI adapter; no new implementation pattern is introduced.
-  ADR-049: Not a context-bundle/template command; no template surface changes.
-  ADR-043: AIO seeding, the UiStep model, and the AIO-only rule live in the pure `pf` slice; the CLI is a thin adapter.
   ADR-048: Reads/writes the captured What graph only (the domain session); no other side effects.
   ADR-051: Every TC declares `observes:` and asserts on those surfaces (graph, exit-code, stdout).
+  ADR-043: AIO seeding, the UiStep model, and the AIO-only rule live in the pure `pf` slice; the CLI is a thin adapter.
   ADR-018: Scenario TCs drive the binary through assert_cmd; `pf::rules_ui`/`pf::model` carry unit tests. No property or session dimension for a vocabulary + structural rule.
-  ADR-040: AIOs/UiStep are What-side artifacts at the What/How boundary; the structural rule composes with the existing What-side rules; the verify pipeline is untouched.
+  ADR-050: PAT-001 (slice + adapter) governs the `pf` slice + CLI adapter; no new implementation pattern is introduced.
+  ADR-041: Additive — seeds the AIO/ContextOfUse node kinds and the UiStep edges; WireframeStep is kept as a deprecated alias, so no removal/absence TC is required this increment.
+  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
+  ADR-049: Not a context-bundle/template command; no template surface changes.
 patterns:
 - PAT-001
 ---
@@ -59,7 +59,7 @@ boundary.
 - **Seed the core AIO set.** The closed-core AIOs of the §3.2.2 table are
   recognised registry entries (`Aio` nodes): `trigger-action`, `single-select`,
   `multi-select`, `text-entry`, `numeric-entry`, `date-entry`, `display-value`,
-  `display-collection`, `navigate`, `edit`. `product domain list --kind aio`
+  `display-collection`, `navigate`, `edit`. `product domain list aio`
   lists them. An adopter may register an additional AIO (a named,
   modality-independent interaction kind with a declared arity over domain data).
 - **Declare contexts of use.** `ContextOfUse` nodes capture form factor (phone,

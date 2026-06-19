@@ -9347,6 +9347,39 @@ fn tc_994_seed_and_list_the_core_aio_set() {
     assert!(cou.stdout.contains("phone"), "context of use should be listed, stdout:\n{}", cou.stdout);
 }
 
+#[test]
+fn tc_995_uistep_typed_against_aios_passes_structural_check() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // A UI step whose interactions are typed against core AIOs is conformant.
+    let mk = h.run(&[
+        "domain", "new", "ui-step", "ReviewOrder", "--label", "Review order",
+        "--surfaces", "OrderSummary:display-collection",
+        "--offers", "PlaceOrder:trigger-action",
+    ]);
+    mk.assert_exit(0);
+    let v = h.run(&["domain", "validate"]);
+    v.assert_exit(0);
+    assert!(v.stdout.contains("conformant"), "stdout:\n{}", v.stdout);
+}
+
+#[test]
+fn tc_996_uistep_referencing_a_cio_fails_the_aio_only_rule() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // A UI step naming a concrete control (a CIO) is a structural violation.
+    let out = h.run(&[
+        "domain", "new", "ui-step", "BadStep", "--label", "Bad",
+        "--offers", "PlaceOrder:primary-button",
+    ]);
+    out.assert_exit(1);
+    assert!(
+        out.stderr.contains("AIO") || out.stderr.contains("typedAs"),
+        "should reject the CIO reference, stderr:\n{}",
+        out.stderr
+    );
+}
+
 /// TC-434: init errors on existing canonical config without --force
 #[test]
 fn tc_434_init_errors_on_existing_product_toml_without_force() {

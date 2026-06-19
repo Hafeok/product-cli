@@ -90,7 +90,7 @@ impl NodeKind {
             Self::Command => "command",
             Self::Event => "event",
             Self::ReadModel => "read-model",
-            Self::WireframeStep => "wireframe-step",
+            Self::WireframeStep => "ui-step",
             Self::Flow => "flow",
             Self::Aio => "aio",
             Self::ContextOfUse => "context-of-use",
@@ -101,6 +101,10 @@ impl NodeKind {
     /// names, case-insensitively.
     pub fn parse(s: &str) -> Result<Self> {
         let norm = s.trim().to_lowercase();
+        // `wireframe-step` is the deprecated alias for the superseding `ui-step`.
+        if norm == "wireframe-step" {
+            return Ok(Self::WireframeStep);
+        }
         ALL_KINDS
             .into_iter()
             .find(|k| k.cli_name() == norm || k.class_name().to_lowercase() == norm)

@@ -109,11 +109,37 @@ pub struct ReadModel {
     pub projects: Vec<String>,
 }
 
-/// §3.2 — a UI step; triggers a command or displays a read model.
+/// §3.2.1 — one (projection, display-AIO) the step surfaces.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct Surface {
+    pub projection: String,
+    pub aio: String,
+}
+
+/// §3.2.1 — one (command, action-AIO) the step offers.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct Offer {
+    pub command: String,
+    pub aio: String,
+}
+
+/// §3.2.1 — a UI step (the What of a screen). Supersedes the free-text
+/// `triggers`/`displays` (kept as a deprecated alias) with typed edges: the
+/// projections it `surfaces` and commands it `offers`, each through an AIO, and
+/// the steps it `transitions_to`. `intent` is the one permitted free-text
+/// residue.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct WireframeStep {
     pub id: String,
     pub label: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intent: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub surfaces: Vec<Surface>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub offers: Vec<Offer>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub transitions_to: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub triggers: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

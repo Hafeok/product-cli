@@ -58,6 +58,16 @@ pub struct NodeFields {
     dimension: Option<String>,
     #[arg(long)]
     value: Option<String>,
+    #[arg(long)]
+    intent: Option<String>,
+    /// `projection:aio` pairs (repeatable, comma-separated)
+    #[arg(long, value_delimiter = ',')]
+    surfaces: Option<Vec<String>>,
+    /// `command:aio` pairs (repeatable, comma-separated)
+    #[arg(long, value_delimiter = ',')]
+    offers: Option<Vec<String>>,
+    #[arg(long = "transitions-to", value_delimiter = ',')]
+    transitions_to: Option<Vec<String>>,
 }
 
 impl NodeFields {
@@ -92,7 +102,28 @@ impl NodeFields {
         if let Some(v) = &self.means { put("means", json!(v)); }
         if let Some(v) = &self.dimension { put("dimension", json!(v)); }
         if let Some(v) = &self.value { put("value", json!(v)); }
+        if let Some(v) = &self.intent { put("intent", json!(v)); }
+        if let Some(v) = &self.transitions_to { put("transitions_to", json!(v)); }
+        if let Some(v) = &self.surfaces {
+            put("surfaces", pairs(v, "projection"));
+        }
+        if let Some(v) = &self.offers {
+            put("offers", pairs(v, "command"));
+        }
         m
     }
+}
+
+/// Parse `target:aio` pair strings into `[{<target_key>, aio}, …]` for a UI
+/// step's `surfaces`/`offers`. A pair missing its `:aio` half keeps an empty aio.
+fn pairs(items: &[String], target_key: &str) -> Value {
+    let arr: Vec<Value> = items
+        .iter()
+        .map(|s| {
+            let (target, aio) = s.split_once(':').unwrap_or((s.as_str(), ""));
+            json!({ target_key: target, "aio": aio })
+        })
+        .collect();
+    json!(arr)
 }
 

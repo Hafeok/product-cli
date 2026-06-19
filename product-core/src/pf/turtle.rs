@@ -145,6 +145,18 @@ fn emit_command(out: &mut String, cmd: &super::model::Command) {
 
 fn emit_wireframe(out: &mut String, w: &super::model::WireframeStep) {
     out.push_str(&format!("d:{} a pf:WireframeStep ;\n  rdfs:label {}", w.id, lit(&w.label)));
+    if let Some(i) = &w.intent {
+        out.push_str(&format!(" ;\n  pf:intent {}", lit(i)));
+    }
+    for s in &w.surfaces {
+        out.push_str(&format!(" ;\n  pf:surfaces d:{} ;\n  pf:typedAs d:{}", s.projection, s.aio));
+    }
+    for o in &w.offers {
+        out.push_str(&format!(" ;\n  pf:offers d:{} ;\n  pf:typedAs d:{}", o.command, o.aio));
+    }
+    for t in &w.transitions_to {
+        out.push_str(&format!(" ;\n  pf:transitionsTo d:{}", t));
+    }
     if let Some(t) = &w.triggers {
         out.push_str(&format!(" ;\n  pf:triggers d:{}", t));
     }

@@ -2,7 +2,7 @@
 id: TC-995
 title: UiStep typed against AIOs passes structural check
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-134
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_995_uistep_typed_against_aios_passes_structural_check
+last-run: 2026-06-19T16:37:43.369842347+00:00
+last-run-duration: 0.5s
 ---
 
 ## Scenario — a UiStep whose interactions are all AIO-typed is structurally conformant

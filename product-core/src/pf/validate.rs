@@ -62,8 +62,17 @@ pub fn validate_graph(graph: &DomainGraph) -> Vec<Violation> {
     for rm in &graph.read_models {
         check_read_model(rm, &mut v);
     }
-    v.extend(run_rules(&to_turtle(graph, "validate"), what_rules()));
+    v.extend(run_rules(&ui_projection(graph), what_rules()));
+    v.extend(run_rules(&ui_projection(graph), super::rules_ui::ui_rules()));
     v
+}
+
+/// The Turtle projection used for graph rules, augmented with the closed-core
+/// AIO vocabulary so the §3.2.1 AIO-only rule recognises the built-in set.
+fn ui_projection(graph: &DomainGraph) -> String {
+    let mut ttl = to_turtle(graph, "validate");
+    ttl.push_str(&super::rules_ui::core_aio_triples());
+    ttl
 }
 
 /// Run only the shape(s) that target the node with this id (the in-loop path
@@ -105,9 +114,11 @@ pub fn validate_node(graph: &DomainGraph, id: &str) -> Vec<Violation> {
         // WireframeStep, Flow have no blocking shape.
         _ => {}
     }
-    // §3.1/§3.2 cross-references run as SPARQL over the projection, scoped to
-    // the node just built (the ADR-053 in-loop path).
-    let mut graph_v = run_rules(&to_turtle(graph, "validate"), what_rules());
+    // §3.1/§3.2/§3.2.1 cross-references run as SPARQL over the projection,
+    // scoped to the node just built (the ADR-053 in-loop path).
+    let projection = ui_projection(graph);
+    let mut graph_v = run_rules(&projection, what_rules());
+    graph_v.extend(run_rules(&projection, super::rules_ui::ui_rules()));
     graph_v.retain(|x| x.focus == id);
     v.extend(graph_v);
     v

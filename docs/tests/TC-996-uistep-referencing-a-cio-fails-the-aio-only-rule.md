@@ -2,7 +2,7 @@
 id: TC-996
 title: UiStep referencing a CIO fails the AIO only rule
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-134
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_996_uistep_referencing_a_cio_fails_the_aio_only_rule
+last-run: 2026-06-19T16:37:43.369842347+00:00
+last-run-duration: 0.5s
 ---
 
 ## Scenario — a UiStep that names a concrete control is a structural violation
