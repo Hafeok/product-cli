@@ -7,7 +7,7 @@ validates:
   features:
   - FT-119
   adrs:
-  - ADR-061
+  - ADR-087
 phase: 6
 observes:
 - exit-code
@@ -27,4 +27,4 @@ with a violation naming the framework section `§3.2`.
 ## Validates
 
 - FT-119 — product_domain_* MCP tools — CLI↔MCP parity for the What graph
-- ADR-061 — The domain (What) graph is exposed as product_domain_* MCP tools
+- ADR-087 — The domain (What) graph is exposed as product_domain_* MCP tools

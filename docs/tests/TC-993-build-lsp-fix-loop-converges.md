@@ -11,7 +11,7 @@ validates:
 phase: 6
 observes:
 - stdout
-- file-state
+- disk-state
 runner: cargo-test
 runner-args: tc_993_build_lsp_fix_loop_converges
 ---

@@ -11,7 +11,7 @@ validates:
 phase: 6
 observes:
 - stdout
-- file-state
+- disk-state
 runner: cargo-test
 runner-args: tc_990_build_verify_runs_acceptance_runners
 ---

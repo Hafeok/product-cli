@@ -7,7 +7,7 @@ validates:
   features:
   - FT-120
   adrs:
-  - ADR-060
+  - ADR-086
 phase: 6
 observes:
 - exit-code
@@ -32,4 +32,4 @@ violation.
 ## Validates
 
 - FT-120 — product archetype check — enforce a layout model against the repository tree
-- ADR-060 — Layout conformance applies glob rules to the filesystem with allowlist semantics
+- ADR-086 — Layout conformance applies glob rules to the filesystem with allowlist semantics

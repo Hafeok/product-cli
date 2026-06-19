@@ -30,7 +30,7 @@ target *must* fall back to `human`, not to a parallel legacy renderer.
 
 The drift this test prevents was found during the FT-063 e2e shake-out: with
 no flag and no `[context].default-target`, the binary emitted the legacy
-`⟦Ω:Bundle⟧` AISP-framed Markdown instead of the clean `human` template
+`Ω:Bundle` AISP-framed Markdown instead of the clean `human` template
 output, even though `product context templates` reported `Default target:
 human (fallback)`.
 

@@ -7,7 +7,7 @@ depends-on:
 - FT-110
 - FT-118
 adrs:
-- ADR-061
+- ADR-087
 tests:
 - TC-981
 - TC-982

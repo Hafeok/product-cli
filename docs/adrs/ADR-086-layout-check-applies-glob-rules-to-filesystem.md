@@ -1,5 +1,5 @@
 ---
-id: ADR-060
+id: ADR-086
 title: Layout conformance applies glob rules to the filesystem with allowlist semantics
 status: accepted
 features:
@@ -10,6 +10,7 @@ domains:
 - api
 - data-model
 scope: feature-specific
+content-hash: sha256:578cf5b41eaef8e50279fbd0c1adbf7b4aeb9214d033145a21cec64953ccff7e
 source-files:
 - product-core/src/pf/layout_check.rs
 - product-cli/src/commands/archetype.rs

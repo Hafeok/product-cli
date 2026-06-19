@@ -1,5 +1,5 @@
 ---
-id: ADR-061
+id: ADR-087
 title: The domain (What) graph is exposed as product_domain_* MCP tools
 status: accepted
 features:
