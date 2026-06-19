@@ -1802,3 +1802,16 @@
 - [ ] TC-1017: content store manifest validates internally (scenario) — unimplemented
 - [ ] TC-1018: content store coupling resolves every referenced key (scenario) — unimplemented
 
+## Phase 8
+
+### FT-143 — product guide — state-aware framework-graph onboarding [x]
+
+- [x] ADR-088: Framework-graph onboarding is a derived guide plus a signposted, seedable init (accepted)
+- [x] TC-1019: product guide orients a new user (scenario) — passing
+
+### FT-144 — framework-aware init — signposting and a --demo bookstore seed [x]
+
+- [x] ADR-088: Framework-graph onboarding is a derived guide plus a signposted, seedable init (accepted)
+- [x] ADR-048: Canonical Repository Layout — All Product State Under `.product/` (accepted)
+- [x] TC-1020: init demo seeds a conformant bookstore (scenario) — passing
+
