@@ -2,7 +2,7 @@
 
 **An open standard for specifying software as What, How, and Delivery.**
 
-*A conformant instantiation of the Two Pillars Specification Framework. Version 1.1 — open specification.*
+*A conformant instantiation of the Two Pillars Specification Framework. Version 1.2 — open specification.*
 
 ---
 
@@ -26,6 +26,8 @@
 8. [Conformance to the Two Pillars](#8-conformance-to-the-two-pillars)
 9. [Encoding and the derivation contract](#9-encoding-and-the-derivation-contract)
 10. [Conformance rules (normative summary)](#10-conformance-rules-normative-summary)
+11. [Design System Conformance Profile](#11-design-system-conformance-profile) — 🅿 *Preview*
+12. [Content Store Conformance Profile](#12-content-store-conformance-profile) — 🅿 *Preview*
 
 ---
 
@@ -103,13 +105,14 @@ A conformant UI step declares two layers. The first is the **buildable core** �
 - **Intent** — one sentence, in the ubiquitous language, for what the user is trying to accomplish here. Intent is **not modelled specification** — it is the marked residue of what the model does not yet determine (see *Intent is specification debt* below). It is permitted, but it is a liability to be driven down, never the field that "gives the implementer good judgment."
 - **Information shown** — the read-model **projection** this step surfaces (it `projects`, §3.2), presented through one or more **display AIOs** (`display-value`, `display-collection`, …). The What names *which projection* and *which abstract interaction*, never how it is laid out. ("Surfaces the order-summary projection as a `display-collection`" — not "in a table.")
 - **Actions available** — the **commands** the user may issue here (exactly the commands valid at this step — the ones a Decider `handles`, §3.3), each offered through an **action or input AIO** (`trigger-action`, `single-select`, `text-entry`, …). The What names *which decision* and *which abstract interaction*, never the control. ("`single-select` of a shipping option, `trigger-action` to confirm" — not "a dropdown and a primary button.")
-- **Transitions** — given an action or a resulting event, which UI step follows. This is the flow's own topology; the step merely names its position in it.
+- **Transitions** — given an action or a resulting event, which page follows. A transition is a `navigate` edge in the application's single **page graph** (§3.2.4); the step names its position in that graph. (These edges were undersold as "a flow's internal topology" — they are in fact the edges of the whole application's navigation.)
 
 The second layer is **modelled meaning** — declarations that shape realisation without prescribing it. These are *not* residue: each is a checkable model element the seam verification (§6.3) enforces, and each is a thing intent gets *promoted into* (see below):
 
 - **Emphasis** — what matters most at this step, so the How knows what to make prominent. ("The total owed is the decisive figure" — not "make it large and bold.")
 - **Projection states as meaning** — a projection is not always a present value; it can occupy any state in its declared **state space** (§3.2), and what each state *means to the user* is a behavioural fact, not styling. A UI step's state annotations are both **constrained** and **covering**: it may annotate only states the projection actually has (no "empty" meaning for a projection that cannot be empty), and it must give a meaning to *every* state the projection can be in, or explicitly waive one with a reason. This is the UI analogue of the Decider's command-coverage rule (§3.3) — exhaustiveness over the projection's state alphabet — and the dangerous case it catches is the *forgotten* state: a projection that can fail whose screen never says what failure means. The waiver is the escape hatch a Decider doesn't get, because some states are legitimately ignorable (a load too fast to perceive); the waiver must say why. For `failed` specifically, the *meaning* is What ("the user must know it can't be shown and how to recover"); the failure *mechanism* is How — the same split as an accessibility criterion versus its discharge (§3.2.3).
 - **Accessibility obligations** — *not* prose about what "must be perceivable," but a set of **WCAG 2.2 success criteria** the step must satisfy, referenced as ingested entities (§3.2.3). Most are inherited from the AIOs the step uses (a `text-entry` carries its labelling criteria, an image-bearing `display-value` carries 1.1.1 Non-text Content); a step may add screen-specific criteria. This replaces the old free-text "accessibility intent": a criterion is a checkable entity with a known verification type, where prose was an unverifiable wish.
+- **Content references** — the standing, authored words a screen carries that are *not* projected data and *not* a control label: a heading, explanatory body copy, the prose of an empty or error state, help text, legal text. These are referenced by **content key with a declared role** (heading / body / empty-message / error-message / help / legal / …), never written as literal strings in the UI step. The role and the obligation are What ("this page needs a heading that states its purpose; its empty state needs a message conveying the way forward"); the words themselves are resolved by the How against a **content store** (§4.6). This is the same move as tokens-not-literals and AIOs-not-widgets, applied a fourth time to *copy* — and for the same reason: a literal baked into the What cannot be translated, swapped, or verified, while a keyed reference can. A page may consist *entirely* of content references and no projection or command — a pure-content page (an "about" or informational page) is simply a page whose interaction is "read," needing no new page kind.
 
 > **Intent is specification debt, not implementer autonomy.** It is tempting to call intent the field that lets an implementer exercise good judgment — but that would run the funnel principle backwards. Everywhere else the framework drives unmodelled specification *out*, concentrating hard reasoning upstream so execution is determined; a UI step that leaned on an implementer's taste to decide its realisation would be exactly the under-specification the funnel is meant to expose. So intent is treated as what it is: **specification that is not modelled yet.** It is allowed (the framework refines incrementally; not everything can be modelled upfront), but it is a *measured liability*, governed by one rule —
 >
@@ -164,6 +167,18 @@ A conformant accessibility verdict therefore states a **conformance level and it
 - **Step-level additions (declared).** A step may add criteria its particular content demands (a step presenting a timed offer adds the timing criteria; a media step adds captions/transcript criteria). These are the small declared delta on top of the inherited union.
 
 The screen's full obligation is the union, computed — so adding a `text-entry` to a screen automatically brings its labelling obligations, and removing it removes them, with no hand-maintained per-screen checklist to drift. The How (§4.5) discharges these obligations by reifying to design-system components that satisfy them; the seam verification (§6.3) checks the machine criteria and confirms the attestations exist for the rest.
+
+#### 3.2.4 The page graph — navigation as one graph
+
+Navigation is not a separate "shell" layered above the screens; it is **one graph whose nodes are pages (UI steps) and whose edges are `navigate` transitions.** A page's transitions (§3.2.1) are edges in this graph, and every way a user moves through the application — within a task or across tasks — is an edge of the same kind. There is no second navigation model to maintain; there is the page graph, and navigation *is* its edges. This reuses the `navigate` AIO (§3.2.2) at graph scope: no new primitive, just interaction one level up.
+
+**A flow is a named subgraph.** Just as a feature is a subgraph of the event model (§7), a flow is a named, connected region of the page graph with a declared **entry page**. Flows do not *own* their navigation — they partition one shared graph. This is why "the checkout flow" and "the browse flow" can share pages and link to each other without either containing the other: they are two named regions of the same graph.
+
+**The application root is a declared node.** The graph has one distinguished node, the **application root** — the place a user is before entering any flow. Its **out-edges are the global destinations**: the flows reachable from anywhere, which a renderer draws as the application's primary navigation. A `navigate` AIO *at the root* is exactly the burger menu / tab bar / sidebar, and it reifies per context of use by the same rules as any other AIO (§4.5) — phone → drawer, tablet → rail, desktop → persistent sidebar. Global actions (a `trigger-action` valid app-wide, such as sign-out or a global search) are likewise edges out of the root rather than out of a step.
+
+**"Top-level" is derived, not a category.** A page is a top-level destination iff it has an inbound edge from the root; a page is *nested* (like a checkout step) iff it is reachable only from another page. Nothing is tagged "top-level" by hand — it falls out of the graph's edges, the same way a feature's domain footprint falls out of its flow slice (§7). The application's primary navigation is therefore *computed*: it is the set of the root's out-edges, and it changes automatically as flows are added to or removed from the root.
+
+> **Why this is the right shape.** The alternative — a separate application-shell model sitting above flows — would duplicate the transition machinery at a second level and create two places navigation can drift. Treating the app as **one page graph with named subgraphs** keeps a single source of truth: the same `navigate` edge, the same reification, the same impact analysis ("what can reach this page?" is a graph query). The chrome a renderer draws around a screen is not separate content; it is the reified root-navigation of the very graph the screen lives in.
 
 ### 3.3 The Decider — the executable form of behaviour
 
@@ -400,10 +415,27 @@ reification:
 ```
 
 - **One AIO, many CIOs, by context.** The same `single-select` in the What reifies to different controls per context; the What is unchanged, which is the entire reason the AIO layer exists. A conformant instance must provide a reification rule for every (AIO, context) pair its UI steps can encounter, or some screen is left unspecified for some device — the same coverage obligation a Decider has over its commands (§3.3).
+- **Root navigation reifies like any AIO.** The `navigate` AIO at the application root (§3.2.4) — whose targets are the global destinations — is reified per context by the same rules: phone → a drawer/burger, tablet → a rail, desktop → a persistent sidebar. The application chrome a renderer draws is nothing more than this reified root-navigation; it is not separately authored content.
 - **The CIO is always an on-system component.** A reification rule may only target a component the design system defines; it cannot invent one (the closed-vocabulary rule above). Reification chooses *among* the system's components; it never escapes it.
 - **Rules carry rationale.** Each rule states why this control suits this AIO in this context — the UX reasoning that is otherwise lost. This is what makes the choice teachable and reviewable, and it is the `enforces`-style citation that lets the rule participate in the rationale trace (§5).
 
-> **The seam is verified.** A screen sits on the What→How seam, like application↔runtime (§4.2). A verification (the seam kind, §6.3) confirms the two halves agree: every datum a page displays is `project`ed by a read model in its flow (no view needs a field no projection supplies — the same completeness the Decider simulation proves for behaviour, §3.3), every control maps to a command valid at that step (no button issues a command the step cannot accept), **every AIO referenced by a UI step has a reifying CIO for each declared context** (reification coverage), every state in each surfaced projection's declared state space (§3.2) is either given a meaning by the UI step and composed, or explicitly waived (state coverage — the UI analogue of command coverage), and the step's **accessibility obligations are discharged**: every *machine* WCAG criterion (§3.2.3) passes as a deterministic gate, and every *assisted* or *manual* criterion has a recorded attestation. The verdict reports the conformance level and its basis, never a bare pass. A complementary, *cheaper* structural check runs first and belongs with the other by-construction gates: **a UI step may reference only AIO-typed nodes; if it references a CIO, the build fails** — the type boundary that makes the What/How split for UI structural rather than advisory (§3.2.1). This is what keeps the UI from drifting from the behaviour it serves, and it is *required* wherever screens are specified, because nothing else makes the screen and the flow agree.
+> **The seam is verified.** A screen sits on the What→How seam, like application↔runtime (§4.2). A verification (the seam kind, §6.3) confirms the two halves agree: every datum a page displays is `project`ed by a read model in its flow (no view needs a field no projection supplies — the same completeness the Decider simulation proves for behaviour, §3.3), every control maps to a command valid at that step (no button issues a command the step cannot accept), **every AIO referenced by a UI step has a reifying CIO for each declared context** (reification coverage), every state in each surfaced projection's declared state space (§3.2) is either given a meaning by the UI step and composed, or explicitly waived (state coverage — the UI analogue of command coverage), **every content key the step references resolves in the content store for each declared locale** (content coverage, §4.6), and the step's **accessibility obligations are discharged**: every *machine* WCAG criterion (§3.2.3) passes as a deterministic gate, and every *assisted* or *manual* criterion has a recorded attestation. The verdict reports the conformance level and its basis, never a bare pass. A complementary, *cheaper* structural check runs first and belongs with the other by-construction gates: **a UI step may reference only AIO-typed nodes; if it references a CIO, the build fails** — the type boundary that makes the What/How split for UI structural rather than advisory (§3.2.1). This is what keeps the UI from drifting from the behaviour it serves, and it is *required* wherever screens are specified, because nothing else makes the screen and the flow agree.
+
+### 4.6 Content resolution — words live in a content store
+
+The What carries content by **reference** (§3.2.1): a content key with a declared role, never a literal string. The How resolves those keys against a **content store** — the swappable provider of words, precisely parallel to how the design system is the swappable provider of components:
+
+```
+resolve(content_key, locale) -> string
+```
+
+This is the fourth instance of the framework's one UI move — *do not bake the concrete thing into the What; reference an abstraction the How resolves*: widgets become AIOs (§3.2.2), styles become tokens (§4.5), components become CIOs (§4.5), and now **copy becomes content references resolved against a store.** The payoff is identical each time: a keyed reference can be translated, swapped, and verified, where a literal cannot.
+
+- **Locale is the content store's context dimension.** Just as reification is parameterised by context of use (`reify(AIO, context)`), content resolution is parameterised by **locale** (`resolve(key, locale)`). A content store declares the locales it covers; a localized application is one resolved against a store covering its target locales, with the *same* content keys — the What does not change per language, exactly as it does not change per device.
+- **Coverage is the central obligation.** A content store must resolve every (content key, locale) pair the application's UI steps and shell reference, or some screen has missing words in some language — the same coverage obligation reification has over (AIO, context) and a Decider has over its commands. The seam verification checks it.
+- **Roles let content be checked, not just present.** Because each key carries a role (heading, empty-message, error-message, …), the store's resolution can be checked for more than mere existence — an error-message role that resolves to empty, or a heading longer than its role admits, is catchable. The role is the What-side meaning; the string is the How-side value; the seam confirms the value satisfies the role.
+
+> **The content store is to words what the design system is to components.** Both are swappable providers behind a conformance profile (the design system's is §11; the content store's is §12); both have a context dimension (context of use; locale); both are resolved at render time against a reference the What carries. A renderer assembles a screen by resolving its AIOs to components *and* its content keys to strings — two resolutions, one surface.
 
 ---
 
@@ -521,7 +553,7 @@ This framework is a conformant instantiation of the Two Pillars Specification Fr
 | Two Pillars concept | This framework's construct | Section |
 |---|---|---|
 | **What specification** | Domain model (structure) + event model (behaviour, incl. UI steps typed by Abstract Interaction Objects + context-of-use + WCAG 2.2 accessibility criteria) + Decider (executable behaviour) + Projector (executable read model) + named-algorithm primitives (the Polanyi floor) | [§3](#3-the-what--structure-and-behaviour) |
-| **How specification** | Decisions/principles/patterns + contracts (incl. repository layout model) + interface standards + screen-composition contract | [§4](#4-the-how--realising-the-what) |
+| **How specification** | Decisions/principles/patterns + contracts (incl. repository layout model) + interface standards + screen-composition contract (reification + content resolution) | [§4](#4-the-how--realising-the-what) |
 | **SPMC (Schema, Prompt, Model, Context)** | Work unit: one bounded transformation, frozen input, one artifact | [§5](#5-work-units-and-the-rationale-trace) |
 | **Derivation contract** | The typed links of [§9](#9-encoding-and-the-derivation-contract) (e.g. `derived_from`, `conforms_to`, `applies`, `realizes`, `enforces`) | [§9](#9-encoding-and-the-derivation-contract) |
 | **Verification (criteria → judge → verdict)** | Verification — the required kinds and the coherence bar | [§6](#6-verification--the-conformance-bar) |
@@ -553,10 +585,12 @@ The reference encoding is **RDF** for the graph and **SHACL** for constraints; a
 | `decides_for` / `handles` / `emits_event` | this Decider governs this aggregate / accepts these commands / may produce these events (§3.3) |
 | `projects_for` / `folds` | this Projector builds this read model / folds these events into it (§3.4) |
 | `specified_by_reference` / `pinned_by_oracle` | this named-algorithm primitive implements this named algorithm/standard / is checked against these reference I/O pairs (§3.5) |
-| `surfaces` / `offers` / `transitions_to` | this UI step surfaces this projection / offers these commands / leads to this next step on an action or event (§3.2.1) |
+| `surfaces` / `offers` / `transitions_to` | this UI step surfaces this projection / offers these commands / leads to this next page on an action or event — a `navigate` edge in the page graph (§3.2.1, §3.2.4) |
+| `navigates_from_root` / `in_flow` | this page is a global destination (edge from the application root) / this page belongs to this named flow subgraph (§3.2.4) |
 | `typed_as` / `reifies` / `in_context` | this UI-step interaction is typed as this AIO / this CIO reifies this AIO / this reification holds in this context of use (§3.2.2, §4.5) |
 | `must_satisfy` / `attests` | this AIO or UI step must satisfy this WCAG criterion / this dated, attributed attestation records that a non-machine criterion was evaluated and met (§3.2.3) |
 | `realizes_step` / `composes` / `binds` | this page realises this UI step / composes these design-system components / binds this control to this command or this field to this projection (§4.5) |
+| `references_content` / `resolves` / `in_locale` | this UI step or shell references this content key (with a role) / this content store resolves this key to a string / this resolution holds in this locale (§3.2.1, §4.6) |
 
 These links are what make the framework **queryable**: impact analysis ("what depends on X?"), onboarding traces ("why is this shaped this way?"), and the verification-to-principle linkage all fall out of graph queries rather than hand-maintained documents.
 
@@ -567,9 +601,9 @@ These links are what make the framework **queryable**: impact analysis ("what de
 1. A product is described as three models — What, How, Delivery — in one machine-readable graph.
 2. The What has two halves: a domain model (structure) and an event model (behaviour), authored and agreed before the How.
 3. The domain model is bounded contexts with explicit cross-context mappings — never one flat model; with a constraint language for invariants.
-4. The event model is built from domain-typed primitives; every event changes a real entity; a read model declares (or makes inferable) its state space (`present` plus any of `loading`/`empty`/`failed` it can exhibit); depth is proportional to behavioural complexity. A **UI step** is a flow primitive whose interactions are **typed against Abstract Interaction Objects** (§3.2.2) — a closed-core, extensible vocabulary of context-independent interaction kinds — never against concrete controls; this type boundary makes the What/How UI split structural, not advisory. Its buildable core is derived from the model (the projection it surfaces, the commands valid at it, its transitions, with input AIOs deriving their fields and validation from the relevant command's payload via the domain model); its modelled meaning — emphasis, the meaning of each state in the surfaced projection's declared **state space** (constrained to states the projection has and covering every one, or waived with reason — the UI analogue of command coverage), and **accessibility obligations** (WCAG 2.2 success criteria, ingested as entities, inherited from its AIOs and extended per step; each tagged machine/assisted/manual, §3.2.3) — is checkable specification. Its **intent** is *not* modelled specification but the marked residue of what the model does not yet determine: it is treated as specification debt, every use of it to settle a realisation choice must be promoted into a modelled element (AIO, context, reification rule, or a meaning declaration), and the intent-reliance rate is a measure of UI under-specification. The relevant **contexts of use** (form factor, modality, …) are declared as What-side elements.
+4. The event model is built from domain-typed primitives; every event changes a real entity; a read model declares (or makes inferable) its state space (`present` plus any of `loading`/`empty`/`failed` it can exhibit); depth is proportional to behavioural complexity. A **UI step** is a flow primitive whose interactions are **typed against Abstract Interaction Objects** (§3.2.2) — a closed-core, extensible vocabulary of context-independent interaction kinds — never against concrete controls; this type boundary makes the What/How UI split structural, not advisory. Its buildable core is derived from the model (the projection it surfaces, the commands valid at it, its transitions, with input AIOs deriving their fields and validation from the relevant command's payload via the domain model); its modelled meaning — emphasis, the meaning of each state in the surfaced projection's declared **state space** (constrained to states the projection has and covering every one, or waived with reason — the UI analogue of command coverage), **accessibility obligations** (WCAG 2.2 success criteria, ingested as entities, inherited from its AIOs and extended per step; each tagged machine/assisted/manual, §3.2.3), and **content references** (standing authored words — headings, body, empty/error prose, help, legal — carried by content key with a declared role, never as literals, resolved by the How against a content store, §4.6) — is checkable specification. Its **intent** is *not* modelled specification but the marked residue of what the model does not yet determine: it is treated as specification debt, every use of it to settle a realisation choice must be promoted into a modelled element (AIO, context, reification rule, or a meaning declaration), and the intent-reliance rate is a measure of UI under-specification. The relevant **contexts of use** (form factor, modality, …) are declared as What-side elements. Navigation is **one page graph** (§3.2.4): pages are nodes, `navigate` transitions are edges, a flow is a named connected subgraph with an entry page, and a declared **application root** whose out-edges are the global destinations the primary navigation renders; "top-level" is derived (an inbound edge from the root), not a hand-applied tag.
 5. Where behaviour is interesting, a **Decider** makes it executable: its signature is derived from the event model (it handles exactly the commands targeting its aggregate, emits only events those commands sanction, evolves from the events that change it, rejects via the aggregate's invariants), and it is simulated sound and complete before realisation. Trivial behaviour needs no Decider. Symmetrically, where a read model's projection is non-trivial, a **Projector** makes the fold executable to the same depth — its signature derived (it folds exactly the events the read model projects, over the entities they change), only its fold logic authored, simulated sound and complete and serving as the projection's oracle; the `projects` link alone is a name, not a function. A computation is mechanically derivable only to the degree its variability is declared data over a generic interpreter; a genuinely irreducible computation (a named algorithm or standard) is declared as a **named-algorithm primitive** specified by reference plus an I/O contract plus an oracle, is exempt from derivation and simulation, and is checked by oracle conformance — never passed off as a mechanical projection.
-6. The How captures decisions/principles/patterns (declared once, referenced by pointer, each decision carrying rationale), contracts (stated checkably, including that decision logic is kept in a pure, isolable core), interface contracts (industry standards, generated from the domain model), and — wherever the event model has UI steps — a **screen-composition contract** that binds each screen to a design system structured by Atomic Design (atoms → molecules → organisms → templates → pages), with the component set closed and styling via tokens not literals. Each page's data and controls are derived from its UI step (projected fields, valid commands), and each AIO the step references is **reified** to an on-system concrete control by a declared `reify(AIO, context) → CIO` rule that carries rationale and must cover every (AIO, context) pair its steps can encounter. The whole is checked by the seam verification. **Accessibility** is specified not as prose but as **WCAG 2.2 success criteria ingested as entities** (principle → guideline → criterion → level), each tagged by verification type: *machine* criteria are deterministic gates, *assisted* and *manual* criteria are discharged by recorded, attributed attestations entering through a frozen boundary. Obligations are inherited from a step's AIOs and extended per step; the accessibility verdict reports a conformance level and its basis, never a bare pass.
+6. The How captures decisions/principles/patterns (declared once, referenced by pointer, each decision carrying rationale), contracts (stated checkably, including that decision logic is kept in a pure, isolable core), interface contracts (industry standards, generated from the domain model), and — wherever the event model has UI steps — a **screen-composition contract** that binds each screen to a design system structured by Atomic Design (atoms → molecules → organisms → templates → pages), with the component set closed and styling via tokens not literals. Each page's data and controls are derived from its UI step (projected fields, valid commands), and each AIO the step references is **reified** to an on-system concrete control by a declared `reify(AIO, context) → CIO` rule that carries rationale and must cover every (AIO, context) pair its steps can encounter. The whole is checked by the seam verification. **Accessibility** is specified not as prose but as **WCAG 2.2 success criteria ingested as entities** (principle → guideline → criterion → level), each tagged by verification type: *machine* criteria are deterministic gates, *assisted* and *manual* criteria are discharged by recorded, attributed attestations entering through a frozen boundary. Obligations are inherited from a step's AIOs and extended per step; the accessibility verdict reports a conformance level and its basis, never a bare pass. **Content** (authored words) is carried by reference, not literal: the How resolves each content key against a **content store** (§4.6) parameterised by **locale** (`resolve(key, locale) → string`), and the store must cover every (key, locale) pair the application references.
 7. The How includes a glob-based **repository layout model** stating which files must exist (with cardinality), may exist where, must co-exist, and must not exist, with **allowlist semantics** (every file matches an allow rule or fails). Two guards are normative: every rule — especially every prohibition — cites the principle it enforces, and explicit prohibitions are reserved for actively-dangerous cases, the allowlist handling the rest. The layout model is dual-read (it scaffolds and it verifies) and checks tree shape only, layered below the content audits.
 8. A work unit is single-purpose with frozen input, references the What/How by pointer, and emits a rationale trace.
 9. No output is accepted without a verdict. A verification is a deterministic function of frozen, declared inputs — the artifact, an oracle **derived from the model** (Decider, domain model, layout model, or contracts — never authored inside the check), and versioned criteria — producing a per-criterion finding and a verdict that is the conjunction of those findings; one failure fails the build, with no override-by-assertion. Verifications meet the coherence bar and each names what it protects. Layout conformance is the cheapest verification and runs first; behavioural simulation runs before realisation; where a Decider exists, behavioural conformance checks the realised behaviour produces identical outputs to it.
@@ -582,6 +616,149 @@ These links are what make the framework **queryable**: impact analysis ("what de
 ---
 
 > **In one line.** Describe the What and How as one graph, realise it through referenced work units, gate every output with verifications that also keep the explanation honest, and deliver by partitioning the graph until a computable predicate says you are done.
+
+---
+
+## 11. Design System Conformance Profile
+
+> **🅿 PREVIEW — not yet normative.** This section is a Preview profile, published ahead of a worked reference instance and subject to change before it is folded into the normative body. It introduces **no new requirements**: it is a derived view of §3.2.2, §3.2.3, and §4.5, reorganised from the design system's side of the seam. Where this section and the normative body appear to differ, the normative body governs. Feedback is explicitly invited (see [Contributing](#contributing)).
+
+The framework's UI layering (Task & Concepts → Abstract UI → **Concrete UI** → Final UI, §3.2.2) leaves the Concrete UI layer to a **design system**. This profile states what a design system must provide to plug in as that layer — to be a *conforming design system* — so that screens specified against Abstract Interaction Objects can be realised against it and pass the seam verification (§6.3). The goal is decoupling: any design system meeting this profile can realise any conformant What, and a product can swap design systems without touching its What.
+
+### 11.1 What a conforming design system must provide
+
+A conforming design system is the supplier of **Concrete Interaction Objects** and the rules that map abstractions onto them. It must provide four things:
+
+1. **A component catalog (the CIOs).** A declared set of components, each a Concrete Interaction Object, exposing a stable identifier. This is the closed vocabulary the allowlist (§4.5) checks against — a screen may compose only catalog components.
+2. **Reification coverage.** For every Abstract Interaction Object the framework's core defines (§3.2.2), and for every context of use the design system claims to support, at least one reification rule `reify(AIO, context) → CIO` (§4.5). A design system that cannot reify a core AIO in a context it claims to support is **non-conforming for that context** — coverage is the central obligation, the design-system analogue of a Decider's command coverage.
+3. **Token surface.** A declared set of design tokens (colour, spacing, typography, …) such that every styling choice a component exposes is a token reference, never a literal — so that screens carry tokens, not values (§4.5).
+4. **Accessibility guarantees.** For each component, a declared statement of which **WCAG 2.2 success criteria** (§3.2.3) it satisfies *by construction*, and by which verification type (machine / assisted / manual). This is what lets a screen *inherit* accessibility discharge from its components instead of re-attesting per screen: if a `text-entry` AIO reifies to a component the design system guarantees satisfies the labelling criteria, the screen's obligation for those criteria is discharged by the binding.
+
+### 11.2 The coupling — how a What meets a conforming design system
+
+The What references AIOs and contexts of use; the design system supplies CIOs and reification rules; they meet at the seam:
+
+```
+What (§3.2)         AIO  ×  context of use
+                      |  reify(AIO, context) -> CIO        (design system, §4.5)
+Design system       CIO  (+ tokens, + WCAG guarantees)
+                      |  composes into
+Screen (page)       a UI step realised — checked at the seam (§6.3)
+```
+
+The seam verification confirms, against the design system's declarations: every datum shown is projected, every control maps to a valid command, **every referenced AIO has a reifying CIO for each declared context** (resolved through the design system's reification rules), every projection state is covered, and every machine WCAG criterion the step requires is satisfied by a component that guarantees it (with attestations for the rest). A conforming design system is precisely one against which this verification *can* pass for any conformant What within its claimed contexts.
+
+### 11.3 The design-system manifest (Preview schema)
+
+A conforming design system ships a **manifest** — the machine-readable declaration of the four obligations above, the artifact tooling validates and the reifier reads. The Preview shape:
+
+```yaml
+# design-system.manifest.yaml  (PREVIEW schema)
+design_system:
+  id: "acme-ds"
+  version: "3.2.0"
+  wcag_target: "2.2-AA"               # the conformance level it claims
+
+  contexts_supported:                 # which contexts of use it can reify into
+    form_factor: [phone, tablet, desktop]
+    modality:    [pointer, touch]
+
+  components:                         # the CIO catalog
+    - id: searchable-list
+      tokens: [color.fg, color.bg, space.inset, type.body]
+      satisfies:                      # WCAG guarantees, by verification type
+        - { criterion: "1.3.1", level: A,  via: machine }
+        - { criterion: "4.1.2", level: A,  via: machine }
+        - { criterion: "2.4.7", level: AA, via: assisted }
+    - id: segmented-control
+      tokens: [color.fg, color.bg, space.inset]
+      satisfies:
+        - { criterion: "1.3.1", level: A, via: machine }
+    - id: primary-button
+      tokens: [color.accent, color.on-accent, space.inset, type.label]
+      satisfies:
+        - { criterion: "2.5.8", level: AA, via: machine }   # target size
+        - { criterion: "2.4.7", level: AA, via: assisted }
+
+  reification:                        # reify(AIO, context) -> CIO, with rationale
+    - aio: single-select
+      when: { form_factor: phone, options: many }
+      cio: searchable-list
+      rationale: "a phone has no room for many side-by-side options"
+    - aio: single-select
+      when: { form_factor: tablet, options: few }
+      cio: segmented-control
+      rationale: "few options, ample width — direct choice beats a menu"
+    - aio: trigger-action
+      when: { emphasis: primary }
+      cio: primary-button
+
+  tokens:                             # the token surface
+    - { id: color.accent,    type: color }
+    - { id: space.inset,     type: dimension }
+    - { id: type.label,      type: typography }
+```
+
+The manifest's three blocks correspond exactly to the obligations: `components` is the CIO catalog and its WCAG guarantees (obligations 1 and 4), `reification` is the coverage obligation (2), `tokens` is the token surface (3). A validator checks the manifest is internally whole — every `cio` named in `reification` exists in `components`; every `criterion` is a real WCAG 2.2 entity; every token referenced by a component is declared — and a coupling check confirms the manifest's `reification` covers every core AIO across every context in `contexts_supported`.
+
+### 11.4 What this enables
+
+- **Pluggability.** A What specified against AIOs is design-system-agnostic; pointing it at a different conforming manifest reifies the same screens through different components, with no change to the What. This is the entire reason the AUI layer exists.
+- **Per-context adaptation as data.** The phone-vs-tablet decision lives in `reification`, declared and rationale-carrying, not in code.
+- **Accessibility by inheritance.** A screen inherits its components' WCAG guarantees, so accessibility is discharged at the design-system level once, not re-litigated per screen — only the genuinely screen-specific criteria need step-level attestation.
+
+> **Why Preview.** This profile is coherent with the normative body but has not yet been exercised against a real design system and a worked What. It is published to invite exactly that coupling experiment; the schema and the obligation set may change in response. It will be proposed for normative status once a reference instance has demonstrated a conforming design system realising a conformant What end to end.
+
+---
+
+## 12. Content Store Conformance Profile
+
+> **🅿 PREVIEW — not yet normative.** Companion to §11, for the *content* provider rather than the *component* provider. It introduces **no new requirements**: it is a derived view of §3.2.1 (content references) and §4.6 (content resolution), reorganised from the content store's side of the seam. Where this section and the normative body appear to differ, the normative body governs.
+
+The What references content by key with a role (§3.2.1); the How resolves those keys against a **content store** (§4.6). This profile states what a content store must provide to plug in — to be a *conforming content store* — so that screens referencing content keys can be realised against it and pass the seam verification (§6.3). The store is to words what a design system (§11) is to components: a swappable provider behind a conformance profile, with **locale** as its context dimension.
+
+### 12.1 What a conforming content store must provide
+
+1. **A keyed catalog.** A declared set of content entries, each with a stable **key** and a **role** (heading / body / empty-message / error-message / help / label-override / legal / …). The role is the contract between the What's reference and the store's value.
+2. **Locale coverage.** For every key, a resolved string in **each locale the store claims to support**. A store that cannot resolve a key the application references, in a locale it claims, is **non-conforming for that locale** — coverage over (key, locale) is the central obligation, exactly parallel to a design system's reification coverage over (AIO, context).
+3. **Role conformance.** Each resolved value must satisfy its role's constraints (an error-message is non-empty and actionable; a heading fits the length its role admits; legal text is present where required). This is what lets the seam verification check content for more than mere existence.
+
+### 12.2 The content manifest (Preview schema)
+
+```yaml
+# content-store.manifest.yaml  (PREVIEW schema)
+content_store:
+  id: "acme-content"
+  version: "1.4.0"
+  locales_supported: [en, es, de]
+
+  entries:
+    - key: checkout.review.heading
+      role: heading
+      values: { en: "Review your order", es: "Revisa tu pedido", de: "Bestellung prüfen" }
+    - key: cart.empty.message
+      role: empty-message
+      values:
+        en: "Nothing to check out yet — add something to get started."
+        es: "Aún no hay nada para pagar — añade algo para empezar."
+        de: "Noch nichts zum Bezahlen — füge etwas hinzu."
+    - key: cart.failed.message
+      role: error-message
+      values:
+        en: "Couldn't load your cart. Check your connection and retry."
+        es: "No se pudo cargar tu carrito. Revisa tu conexión e inténtalo de nuevo."
+        de: "Warenkorb konnte nicht geladen werden. Verbindung prüfen und erneut versuchen."
+```
+
+A validator checks the manifest is whole — every key carries its role; every claimed locale has a value for every key; every error/empty role resolves to non-empty actionable text — and a coupling check confirms the manifest resolves every (content key, locale) the application's UI steps and shell reference (§3.2.1, §3.2.4).
+
+### 12.3 What this enables
+
+- **Localization without touching the What.** The same content keys resolve through a store covering different locales; the What does not change per language, just as it does not change per device. A localized application is a coupling, not a fork.
+- **Editorial ownership.** Copy lives in the store, owned and revised by the people who own words, decoupled from the model and the components — the content analogue of the design system owning components.
+- **Checkable copy.** Because keys carry roles, empty error messages, missing legal text, and overflowing headings are catchable at the seam, not discovered in production.
+
+> **Why Preview.** Like §11, this profile is coherent with the normative body but unexercised against a real content store and a worked What. The two profiles are deliberately parallel; a reference instance should demonstrate one conforming design system *and* one conforming content store resolving the same What end to end, after which both are proposed for normative status together.
 
 ---
 
