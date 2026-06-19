@@ -10,6 +10,8 @@ pub mod registry;
 pub mod domain;
 mod adr_lifecycle;
 mod decider_handlers;
+mod projector_handlers;
+mod primitive_handlers;
 mod delivery_handlers;
 mod dep_handlers;
 mod domain_handlers;

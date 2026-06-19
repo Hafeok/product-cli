@@ -5,6 +5,8 @@
 //! - [`write`] — mutating tools (gated by `mcp.write` config).
 
 mod decider;
+mod projector;
+mod primitive;
 mod delivery;
 mod domain;
 mod legacy_pf;
@@ -29,6 +31,8 @@ pub fn build_tool_list() -> Vec<ToolDef> {
     tools.extend(write::all());
     tools.extend(domain::all());
     tools.extend(decider::all());
+    tools.extend(projector::all());
+    tools.extend(primitive::all());
     tools.extend(delivery::all());
     tools.extend(legacy_pf::all());
     tools
