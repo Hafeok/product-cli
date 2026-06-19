@@ -151,6 +151,12 @@ product guide         # your journey checklist + the next step
 - **Explore a node's context.** `product domain context Order --depth 2` gives an
   LLM-ready bundle around any node.
 
-Lost at any step? **`product guide`.** Stuck on a concept?
-[framework-concepts.md](framework-concepts.md). Running a session for a team?
-[../workshop-runbook.md](../workshop-runbook.md).
+Keep going:
+
+- **[Everyday use](everyday-use.md)** — the commands you'll reach for day to day.
+- **[Flows](flows.md)** — the full recipes for authoring the How, making behaviour
+  executable, and delivery + build.
+- **[Concepts](framework-concepts.md)** — any term you're unsure of.
+- **[Workshop runbook](../workshop-runbook.md)** — running a session for a team.
+
+Lost at any step? **`product guide`.**

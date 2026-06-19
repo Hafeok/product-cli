@@ -495,6 +495,8 @@ cargo bench
 
 - [Getting started](docs/guide/getting-started-framework.md) — model a product as What/How/Delivery in 15 minutes
 - [Concepts](docs/guide/framework-concepts.md) — every term in a sentence
+- [Everyday use](docs/guide/everyday-use.md) — the daily-driver commands
+- [Flows](docs/guide/flows.md) — the end-to-end recipes (capture What, author How, executable behaviour, delivery, build)
 - [Workshop runbook](docs/workshop-runbook.md) — run a hands-on team session
 - [Framework specification](docs/product-framework-open.md) — the normative open standard (What §3, How §4, verification §6, delivery §7)
 - [Two Pillars conformance](docs/two-pillars-conformance.md) — the clause set `product conformance check` evaluates
