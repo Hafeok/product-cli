@@ -42,6 +42,7 @@ pub fn generate_agent_md(
     if agent_config.include_tool_guide {
         out.push_str(&generate_tool_guide_section());
     }
+    out.push_str(&generate_ui_model_section());
 
     out
 }
@@ -187,6 +188,69 @@ useful when a custom prompt template omits the new variables.
     .to_string()
 }
 
+// Split into two halves so each function stays within the function-length
+// gate (the long raw string would otherwise count every line as a statement).
+fn generate_ui_model_section() -> String {
+    let mut out = generate_ui_model_what_section();
+    out.push_str(&generate_ui_model_realisation_section());
+    out
+}
+
+fn generate_ui_model_what_section() -> String {
+    r#"## Framework UI Model (v1.2 — specified, implementation in progress)
+
+The framework specifies UI as **What** (owned by product/design), kept
+structurally separate from **How** (realisation). When a feature touches
+screens, model these artifacts in the `pf:` What graph — never free-text
+descriptions:
+
+- **UI step** — the What of a screen, typed against **Abstract Interaction
+  Objects (AIOs)** (`single-select`, `trigger-action`, `text-entry`,
+  `display-value`, `display-collection`, `navigate`, `edit`) — never a concrete
+  control (a dropdown, a button). It declares the projection it *surfaces*, the
+  commands it *offers*, its *transitions*, its *emphasis*, a *meaning for every
+  state* of each surfaced projection, its *accessibility obligations* (WCAG 2.2
+  criteria), and its *content references* (by key + role, never literal copy).
+- **Context of use** — form factor / modality, declared as What-side facts; the
+  parameter reification rules are written against.
+- **Read-model state space** — `present` plus any of `loading`/`empty`/`failed`;
+  a UI step must give a meaning to every state it can be in or waive it with a
+  reason (state coverage — the UI analogue of Decider command coverage).
+
+"#
+    .to_string()
+}
+
+fn generate_ui_model_realisation_section() -> String {
+    r#"- **Content** — authored words carried by **content key + role**
+  (heading / body / empty-message / error-message / help / legal), resolved by
+  the How against a **content store** parameterised by **locale**. Never a
+  literal string in the What.
+- **CIO / reification (How)** — a design system supplies **Concrete Interaction
+  Objects**; `reify(AIO, context) -> CIO` rules (carrying rationale) bind each
+  AIO to an on-system component per context. Styling is tokens, not literals.
+- **Page graph** — navigation is one graph: pages are nodes, `navigate`
+  transitions are edges, a flow is a named subgraph with an entry page, and the
+  application root's out-edges are the global destinations ("top-level" is
+  derived, not tagged).
+- **Seam verification** — confirms a screen and its UI step agree: every datum
+  projected, every control a valid command, reification / state / content
+  coverage, accessibility discharged.
+
+The four "do not bake the concrete thing into the What" moves are uniform:
+widgets -> AIOs, styles -> tokens, components -> CIOs, copy -> content
+references.
+
+**Status:** this model is specified in FT-134..FT-142 / ADR-078..ADR-085
+(phase 7) and being implemented. Today the What-capture session records UI
+steps via `add_wireframe_step`; typed AIO / content / reification / seam capture
+lands with those features. Author UI features to this model so they are ready
+when the tooling catches up.
+
+"#
+    .to_string()
+}
+
 // ---------------------------------------------------------------------------
 // Watch mode — regenerate AGENTS.md on file changes
 // ---------------------------------------------------------------------------
@@ -289,5 +353,19 @@ mod tests {
         assert!(section.contains("product_gap_check"));
         assert!(section.contains("product_drift_check"));
         assert!(section.contains("product_agent_context"));
+    }
+
+    #[test]
+    fn ui_model_section_teaches_the_v1_2_artifacts() {
+        let section = generate_ui_model_section();
+        assert!(section.contains("Abstract Interaction"));
+        assert!(section.contains("AIOs"));
+        assert!(section.contains("reify(AIO, context)"));
+        assert!(section.contains("content store"));
+        assert!(section.contains("Seam verification"));
+        assert!(section.contains("Page graph"));
+        // Honest about what is callable today vs specified.
+        assert!(section.contains("add_wireframe_step"));
+        assert!(section.contains("FT-134..FT-142"));
     }
 }

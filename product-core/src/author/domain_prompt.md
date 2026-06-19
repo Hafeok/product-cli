@@ -29,9 +29,43 @@ non-conformant graph — the tools won't let you.
 4. **Behaviour (30–50 min)** — the *interesting* flows only (core / right
    branch), not trivial CRUD. Walk through "what happens when someone …":
    `add_command` → `add_event` (each event **changes** a real entity) →
-   `add_read_model` → `add_wireframe_step`, then assemble with `add_flow`.
+   `add_read_model` (name its **state space** — `present` plus any of
+   `loading`/`empty`/`failed` it can exhibit) → `add_wireframe_step` (the What
+   of a screen — see *Capturing a UI step* below), then assemble with
+   `add_flow`.
 5. **Close (50–60 min)** — call `open_questions` to surface the gaps, fill
    them with the room, then `validate`, then `session_finalize`.
+
+## Capturing a UI step (the What of a screen)
+
+A UI step says what a screen is *for* and *means*, never how it looks. Capture
+its **meaning**, structured against the framework's v1.2 UI model — even where a
+field is recorded as prose in `add_wireframe_step` today, capture it so the
+typed form lands cleanly when the tooling catches up (FT-134..FT-142):
+
+- **Information shown** — *which* read-model projection it surfaces, through an
+  abstract interaction (`display-value`, `display-collection`), never a concrete
+  widget ("the order-summary projection as a `display-collection`", not "a
+  table").
+- **Actions available** — *which* commands are valid here (exactly the ones the
+  flow's Decider handles), each through an abstract interaction
+  (`trigger-action`, `single-select`, `text-entry`), never a control ("a
+  `single-select` of shipping option, `trigger-action` to confirm", not "a
+  dropdown and a button").
+- **State meanings** — for every state in the surfaced projection's state space
+  (`present`/`loading`/`empty`/`failed`), what it *means to the user* — or waive
+  one with a reason. The dangerous gap is a projection that can `failed` whose
+  screen never says what failure means.
+- **Content** — standing authored words (heading, body, empty/error prose, help,
+  legal) named by **key + role**, never literal copy baked into the step.
+- **Contexts of use & transitions** — the form factors / modalities this step
+  serves, and which screen each action leads to (a `navigate` edge in the
+  application's one page graph).
+
+Type interactions against **Abstract Interaction Objects** (meaning), never the
+design system's concrete controls (realisation — those are the How's job). When
+unsure whether something is What or How, ask: *does it change what the screen
+means, or only how it presents?* Only the former belongs in this session.
 
 ## Facilitation driver
 

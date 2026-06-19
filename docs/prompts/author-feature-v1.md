@@ -11,14 +11,27 @@ Before writing any content:
 
 Only after completing these steps should you scaffold any files.
 
-When scaffolding TCs for the feature, declare `observes:` per
-ADR-051. The allowed surfaces are `file`, `graph`, `exit-code`,
-`tag`, `stdout`, `stderr`, `disk-state`, `mcp-response`. A
-scenario/session/smoke/contract TC at phase ≥ the configured
-threshold (`[tc-observability].required-from-phase`) without
-`observes:` is rejected by `product graph check` with E032 —
-prefer asserting against the underlying causation rather than a
-response envelope alone (the FT-046 → FT-066 lesson).
+## Features that touch screens — the v1.2 UI model
+
+If the feature specifies UI, model it as **What**, kept structurally separate
+from **How**. Do not describe screens in prose or name concrete controls — work
+in these artifacts (specified in FT-134..FT-142 / ADR-078..ADR-085):
+
+- **UI step** typed against **Abstract Interaction Objects** (`single-select`,
+  `trigger-action`, `text-entry`, `display-value`, `display-collection`,
+  `navigate`, `edit`) — never a dropdown/button. It surfaces a projection,
+  offers commands, declares emphasis, a meaning for every read-model state
+  (`present`/`loading`/`empty`/`failed`), accessibility obligations (WCAG 2.2),
+  and content references (key + role, never literal copy).
+- **Reification** is the How: `reify(AIO, context) -> CIO` maps each AIO to a
+  design-system component per context of use; styling is tokens, not literals.
+- **Content** resolves against a **content store** by **locale**; **navigation**
+  is one **page graph**; the **seam verification** checks the screen and its UI
+  step agree (datum projected, control a valid command, reification / state /
+  content coverage, accessibility discharged).
+
+Link such a feature to the relevant ADR (ADR-078..ADR-085) and keep its TCs
+asserting on the graph and the coverage rules, not on rendered output.
 
 ## Closing the session — preflight is a hard gate
 
