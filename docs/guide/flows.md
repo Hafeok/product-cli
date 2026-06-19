@@ -76,20 +76,73 @@ Where behaviour is interesting, derive a **Decider** (for an aggregate) or a
 model; you then author the logic and scenarios, and simulate it sound **before
 any code exists**.
 
-```bash
-product decider derive Order        # → writes 'Order-decider' (handles/emits/evolves derived)
-product decider list
-product decider simulate Order-decider   # simulate the DECIDER (name = <aggregate>-decider)
-# a freshly-derived decider reports "needs authored logic + scenarios" — that's
-# the honest next step: author its decide/evolve logic and given/then scenarios,
-# then simulate proves it sound and complete.
+**Step 1 — derive the signature** (free, by construction):
 
-product projector derive OrderSummary    # → 'OrderSummary-projector' (the fold, derived)
+```bash
+product decider derive Order        # → writes .product/deciders/Order-decider.yaml
+product decider list
+```
+
+The derived file is signature-only — `handles` / `emits` / `evolves_from`. Simulating
+it now reports *"needs authored logic + scenarios"*: that's the honest next step.
+
+**Step 2 — author the logic and scenarios** by editing the derived YAML. The
+logic is a small **guarded state machine** (ADR-062); guards are structured
+predicates or **CEL** expressions tied to the invariant they protect (ADR-063);
+scenarios are the oracle — *given* prior events, *when* a command, *then* events
+or a rejection:
+
+```yaml
+# .product/deciders/Order-decider.yaml  (append to the derived signature)
+logic:
+  initial: { item_count: 0 }
+  decide:
+  - on: PlaceOrder
+    guards:
+    - expr: "command.item_count > 0"     # a CEL guard …
+      else_reject: OrderHasItems          # … tied to a real invariant id
+    emit:
+    - OrderPlaced
+  evolve:
+  - on: OrderPlaced
+    set: { item_count: 1 }
+scenarios:
+- name: an order with items is placed
+  given: []
+  when: { command: PlaceOrder, with: { item_count: 2 } }
+  then: { emit: [OrderPlaced] }
+- name: an empty order is rejected
+  given: []
+  when: { command: PlaceOrder, with: { item_count: 0 } }
+  then: { reject: OrderHasItems }
+```
+
+(`else_reject` must name an invariant in your What — add one with
+`product domain new invariant OrderHasItems --context <ctx> --applies-to Order --statement "…"`.)
+
+**Step 3 — prove it sound before any code:**
+
+```bash
+product decider simulate Order-decider   # → sound + complete — 2 scenario(s) over 1 command(s)
+```
+
+`simulate` runs every scenario through the authored state machine and checks the
+Decider is **sound** (no scenario contradicts the logic) and **complete** (every
+handled command is exercised). The same scenarios are the oracle reused *after*
+realisation by `product decider conform <name> --runner …` (§6.3) — author once,
+check twice.
+
+**Projectors are symmetric** — derive the fold, author its `project` logic +
+scenarios, simulate:
+
+```bash
+product projector derive OrderSummary     # → 'OrderSummary-projector'
 product projector simulate OrderSummary-projector
 ```
 
-> Naming: `derive <aggregate>` creates `<aggregate>-decider`; `simulate`/`show`/
-> `validate` take that **derived name**, not the aggregate. Same for projectors.
+> Naming: `derive <aggregate>` creates `<aggregate>-decider`; `simulate` / `show` /
+> `validate` / `conform` take that **derived name**, not the aggregate. Same for
+> projectors (`<read-model>-projector`).
 
 For a genuinely irreducible computation (a hash, a solver), declare a
 **named-algorithm primitive** instead (`product primitive …`) — specified by
