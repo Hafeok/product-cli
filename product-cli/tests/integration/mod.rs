@@ -9323,6 +9323,30 @@ fn tc_1020_init_demo_seeds_a_conformant_bookstore() {
     assert!(g.stdout.contains("[x] What is conformant"), "guide stdout:\n{}", g.stdout);
 }
 
+#[test]
+fn tc_994_seed_and_list_the_core_aio_set() {
+    let h = Harness::new();
+    // The closed-core AIO vocabulary (§3.2.2) is always recognised.
+    let out = h.run(&["domain", "list", "aio"]);
+    out.assert_exit(0);
+    for aio in [
+        "trigger-action", "single-select", "multi-select", "text-entry", "numeric-entry",
+        "date-entry", "display-value", "display-collection", "navigate", "edit",
+    ] {
+        assert!(out.stdout.contains(aio), "core AIO {aio} should be listed, stdout:\n{}", out.stdout);
+    }
+
+    // A context of use is declarable and surfaced.
+    let mk = h.run(&[
+        "domain", "new", "context-of-use", "phone",
+        "--label", "Phone", "--dimension", "form-factor", "--value", "phone",
+    ]);
+    mk.assert_exit(0);
+    let cou = h.run(&["domain", "list", "context-of-use"]);
+    cou.assert_exit(0);
+    assert!(cou.stdout.contains("phone"), "context of use should be listed, stdout:\n{}", cou.stdout);
+}
+
 /// TC-434: init errors on existing canonical config without --force
 #[test]
 fn tc_434_init_errors_on_existing_product_toml_without_force() {

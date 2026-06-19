@@ -105,6 +105,16 @@ pf:Flow a owl:Class ;
   rdfs:label "Flow" ;
   rdfs:comment "An ordered behaviour: a timeline of wireframe → command → event(s) → read model." .
 
+pf:Aio a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Abstract Interaction Object" ;
+  rdfs:comment "§3.2.2 — a context-independent kind of interaction a UI step is typed against; never a concrete control." .
+
+pf:ContextOfUse a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Context of Use" ;
+  rdfs:comment "§3.2.2 — a declared form factor / modality a reification rule is written against; carries no realisation." .
+
 #################################################################
 #  HOW — §4.1 the Why (decisions, principles, patterns)
 #################################################################

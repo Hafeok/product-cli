@@ -19,7 +19,7 @@ runner-args: tc_994_seed_and_list_the_core_aio_set
 ## Scenario — the closed-core AIO vocabulary is present and a context of use is declarable
 
 **Given** a captured What graph for a product,
-**When** the user runs `product domain list --kind aio`,
+**When** the user runs `product domain list aio`,
 **Then** the process exits 0 and stdout lists the closed-core AIOs of the §3.2.2
 table — at least `trigger-action`, `single-select`, `multi-select`,
 `text-entry`, `numeric-entry`, `date-entry`, `display-value`,
@@ -28,7 +28,7 @@ the graph.
 
 **And when** the user declares a context of use (form factor `phone`, modality
 `touch`), **then** a `ContextOfUse` node is added to the What graph and is
-surfaced by `product domain list --kind context-of-use`.
+surfaced by `product domain list context-of-use`.
 
 ## Validates
 

@@ -23,6 +23,8 @@ pub fn to_turtle(graph: &DomainGraph, product: &str) -> String {
     graph.read_models.iter().for_each(|rm| emit_read_model(&mut out, rm));
     graph.wireframe_steps.iter().for_each(|w| emit_wireframe(&mut out, w));
     graph.flows.iter().for_each(|f| emit_flow(&mut out, f));
+    graph.aios.iter().for_each(|a| emit_aio(&mut out, a));
+    graph.contexts_of_use.iter().for_each(|c| emit_context_of_use(&mut out, c));
     out
 }
 
@@ -81,6 +83,25 @@ fn emit_flow(out: &mut String, f: &super::model::Flow) {
     out.push_str(&format!("d:{} a pf:Flow ;\n  rdfs:label {}", f.id, lit(&f.label)));
     for s in &f.steps {
         out.push_str(&format!(" ;\n  pf:contains d:{}", s));
+    }
+    out.push_str(" .\n\n");
+}
+
+fn emit_aio(out: &mut String, a: &super::model::Aio) {
+    out.push_str(&format!("d:{} a pf:Aio ;\n  rdfs:label {}", a.id, lit(&a.label)));
+    if let Some(m) = &a.means {
+        out.push_str(&format!(" ;\n  pf:means {}", lit(m)));
+    }
+    out.push_str(" .\n\n");
+}
+
+fn emit_context_of_use(out: &mut String, c: &super::model::ContextOfUse) {
+    out.push_str(&format!("d:{} a pf:ContextOfUse ;\n  rdfs:label {}", c.id, lit(&c.label)));
+    if let Some(d) = &c.dimension {
+        out.push_str(&format!(" ;\n  pf:dimension {}", lit(d)));
+    }
+    if let Some(v) = &c.value {
+        out.push_str(&format!(" ;\n  pf:contextValue {}", lit(v)));
     }
     out.push_str(" .\n\n");
 }

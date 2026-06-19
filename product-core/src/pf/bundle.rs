@@ -187,6 +187,8 @@ fn section_title(kind: NodeKind) -> &'static str {
         NodeKind::ReadModel => "Read models",
         NodeKind::WireframeStep => "Wireframe steps",
         NodeKind::Flow => "Flows",
+        NodeKind::Aio => "Abstract interaction objects",
+        NodeKind::ContextOfUse => "Contexts of use",
     }
 }
 

@@ -177,9 +177,15 @@ fn report(verb: &str, id: &str, result: OpResult) -> BoxResult {
 
 fn list(kind: Option<String>, product: Option<String>) -> BoxResult {
     let (_, dir) = resolve(product)?;
-    let session = load(&dir)?;
     let filter = kind.map(|k| NodeKind::parse(&k)).transpose()?;
-    let rows = list_rows(&session.graph, filter);
+    // A missing session is a clear error (tc_906) — except for `list aio`, since
+    // the closed-core AIO vocabulary is recognised before any What is captured.
+    let graph = match load(&dir) {
+        Ok(s) => s.graph,
+        Err(_) if filter == Some(NodeKind::Aio) => product_core::pf::DomainGraph::default(),
+        Err(e) => return Err(e),
+    };
+    let rows = list_rows(&graph, filter);
     if rows.is_empty() {
         println!("(no nodes)");
         return Ok(());
@@ -212,6 +218,18 @@ fn list_rows(g: &product_core::pf::DomainGraph, filter: Option<NodeKind>) -> Vec
     for n in &g.read_models { push(NodeKind::ReadModel, &n.id, n.label.clone()); }
     for n in &g.wireframe_steps { push(NodeKind::WireframeStep, &n.id, n.label.clone()); }
     for n in &g.flows { push(NodeKind::Flow, &n.id, n.label.clone()); }
+    // The closed-core AIO vocabulary (§3.2.2) is always recognised, shown first.
+    for core in product_core::pf::ids::CORE_AIOS {
+        push(NodeKind::Aio, core, "(core)".to_string());
+    }
+    for n in &g.aios { push(NodeKind::Aio, &n.id, n.label.clone()); }
+    for n in &g.contexts_of_use {
+        let label = match (&n.dimension, &n.value) {
+            (Some(d), Some(v)) => format!("{} [{}={}]", n.label, d, v),
+            _ => n.label.clone(),
+        };
+        push(NodeKind::ContextOfUse, &n.id, label);
+    }
     let _ = ALL_KINDS; // kinds enumerated above in canonical order
     out
 }

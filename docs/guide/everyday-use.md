@@ -19,7 +19,7 @@ product status     # counts across What / How / Delivery (+ the meta graph)
 
 ```bash
 product domain list                     # every What node
-product domain list --kind entity       # filter by kind (entity, command, event, …)
+product domain list entity              # filter by kind (entity, command, event, aio, …)
 product domain show Order                # one node and its links
 product domain context Order --depth 2  # an LLM-ready bundle around a node
 product domain export                   # the whole What graph as Turtle

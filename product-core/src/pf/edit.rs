@@ -109,6 +109,8 @@ fn insert(g: &mut DomainGraph, kind: NodeKind, id: &str, fields: &Map<String, Va
         NodeKind::ReadModel => g.read_models.push(build(id, fields)?),
         NodeKind::WireframeStep => g.wireframe_steps.push(build(id, fields)?),
         NodeKind::Flow => g.flows.push(build(id, fields)?),
+        NodeKind::Aio => g.aios.push(build(id, fields)?),
+        NodeKind::ContextOfUse => g.contexts_of_use.push(build(id, fields)?),
     }
     Ok(())
 }
@@ -127,6 +129,8 @@ fn patch(g: &mut DomainGraph, kind: NodeKind, id: &str, fields: &Map<String, Val
         NodeKind::ReadModel => patch_at(&mut g.read_models, id, fields),
         NodeKind::WireframeStep => patch_at(&mut g.wireframe_steps, id, fields),
         NodeKind::Flow => patch_at(&mut g.flows, id, fields),
+        NodeKind::Aio => patch_at(&mut g.aios, id, fields),
+        NodeKind::ContextOfUse => patch_at(&mut g.contexts_of_use, id, fields),
     }
 }
 
@@ -170,7 +174,7 @@ trait HasId {
 macro_rules! has_id {
     ($($t:ty),+ $(,)?) => { $(impl HasId for $t { fn node_id(&self) -> &str { &self.id } })+ };
 }
-has_id!(BoundedContext, Entity, ValueObject, Relation, Invariant, ContextMapping, Command, Event, ReadModel, WireframeStep, Flow);
+has_id!(BoundedContext, Entity, ValueObject, Relation, Invariant, ContextMapping, Command, Event, ReadModel, WireframeStep, Flow, Aio, ContextOfUse);
 
 #[cfg(test)]
 #[path = "edit_tests.rs"]

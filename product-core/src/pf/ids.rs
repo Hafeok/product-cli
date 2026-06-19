@@ -18,10 +18,16 @@ pub enum NodeKind {
     ReadModel,
     WireframeStep,
     Flow,
+    /// §3.2.2 — an Abstract Interaction Object: a context-independent kind of
+    /// interaction a UI step is typed against (never a concrete control).
+    Aio,
+    /// §3.2.2 — a context of use (form factor, modality, …) reification rules
+    /// are written against.
+    ContextOfUse,
 }
 
 /// Every node kind, in declaration order (for `list`/iteration).
-pub const ALL_KINDS: [NodeKind; 11] = [
+pub const ALL_KINDS: [NodeKind; 13] = [
     NodeKind::BoundedContext,
     NodeKind::Entity,
     NodeKind::ValueObject,
@@ -33,6 +39,23 @@ pub const ALL_KINDS: [NodeKind; 11] = [
     NodeKind::ReadModel,
     NodeKind::WireframeStep,
     NodeKind::Flow,
+    NodeKind::Aio,
+    NodeKind::ContextOfUse,
+];
+
+/// The closed-core Abstract Interaction Objects (§3.2.2 table). An adopter may
+/// register additional AIOs as `Aio` nodes; these core ids are always recognised.
+pub const CORE_AIOS: [&str; 10] = [
+    "trigger-action",
+    "single-select",
+    "multi-select",
+    "text-entry",
+    "numeric-entry",
+    "date-entry",
+    "display-value",
+    "display-collection",
+    "navigate",
+    "edit",
 ];
 
 impl NodeKind {
@@ -50,6 +73,8 @@ impl NodeKind {
             Self::ReadModel => "ReadModel",
             Self::WireframeStep => "WireframeStep",
             Self::Flow => "Flow",
+            Self::Aio => "Aio",
+            Self::ContextOfUse => "ContextOfUse",
         }
     }
 
@@ -67,6 +92,8 @@ impl NodeKind {
             Self::ReadModel => "read-model",
             Self::WireframeStep => "wireframe-step",
             Self::Flow => "flow",
+            Self::Aio => "aio",
+            Self::ContextOfUse => "context-of-use",
         }
     }
 

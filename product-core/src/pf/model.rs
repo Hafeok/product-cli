@@ -128,6 +128,30 @@ pub struct Flow {
     pub steps: Vec<String>,
 }
 
+/// §3.2.2 — an Abstract Interaction Object: a named, modality-independent kind
+/// of interaction a UI step is typed against. The closed core lives in
+/// `ids::CORE_AIOS`; this node registers an adopter's additional AIOs.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct Aio {
+    pub id: String,
+    pub label: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub means: Option<String>,
+}
+
+/// §3.2.2 — a declared context of use (form factor, modality, …) — a What-side
+/// fact carrying no realisation; the parameter reification rules are written
+/// against.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct ContextOfUse {
+    pub id: String,
+    pub label: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dimension: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value: Option<String>,
+}
+
 /// The whole What graph: the typed nodes captured in a session. Ordered
 /// `Vec`s preserve insertion order for stable Turtle output. Graphs are
 /// workshop-sized, so linear lookup is fine.
@@ -155,6 +179,10 @@ pub struct DomainGraph {
     pub wireframe_steps: Vec<WireframeStep>,
     #[serde(default)]
     pub flows: Vec<Flow>,
+    #[serde(default)]
+    pub aios: Vec<Aio>,
+    #[serde(default)]
+    pub contexts_of_use: Vec<ContextOfUse>,
 }
 
 impl DomainGraph {
@@ -187,6 +215,10 @@ impl DomainGraph {
             Some(NodeKind::WireframeStep)
         } else if self.flows.iter().any(|n| n.id == id) {
             Some(NodeKind::Flow)
+        } else if self.aios.iter().any(|n| n.id == id) {
+            Some(NodeKind::Aio)
+        } else if self.contexts_of_use.iter().any(|n| n.id == id) {
+            Some(NodeKind::ContextOfUse)
         } else {
             None
         }
@@ -211,6 +243,8 @@ impl DomainGraph {
             ("ReadModel", self.read_models.len()),
             ("WireframeStep", self.wireframe_steps.len()),
             ("Flow", self.flows.len()),
+            ("Aio", self.aios.len()),
+            ("ContextOfUse", self.contexts_of_use.len()),
         ]
     }
 
@@ -233,6 +267,8 @@ impl DomainGraph {
         self.read_models.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ReadModel)));
         self.wireframe_steps.iter().for_each(|n| out.push((n.id.clone(), NodeKind::WireframeStep)));
         self.flows.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Flow)));
+        self.aios.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Aio)));
+        self.contexts_of_use.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ContextOfUse)));
         out
     }
 }

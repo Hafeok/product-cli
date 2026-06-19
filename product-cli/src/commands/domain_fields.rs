@@ -52,6 +52,12 @@ pub struct NodeFields {
     displays: Option<String>,
     #[arg(long, value_delimiter = ',')]
     steps: Option<Vec<String>>,
+    #[arg(long)]
+    means: Option<String>,
+    #[arg(long)]
+    dimension: Option<String>,
+    #[arg(long)]
+    value: Option<String>,
 }
 
 impl NodeFields {
@@ -83,6 +89,9 @@ impl NodeFields {
         if let Some(v) = &self.triggers { put("triggers", json!(v)); }
         if let Some(v) = &self.displays { put("displays", json!(v)); }
         if let Some(v) = &self.steps { put("steps", json!(v)); }
+        if let Some(v) = &self.means { put("means", json!(v)); }
+        if let Some(v) = &self.dimension { put("dimension", json!(v)); }
+        if let Some(v) = &self.value { put("value", json!(v)); }
         m
     }
 }
