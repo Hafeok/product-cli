@@ -218,9 +218,7 @@ pub enum Commands {
         /// Disable Step 0a auto-fill of TC runner config (FT-068)
         #[arg(long = "no-auto-runners")]
         no_auto_runners: bool,
-        /// Prompt template profile (FT-074). Use "legacy-template" for the
-        /// pre-FT-074 bundle shape without Patterns / observes inline /
-        /// ADR-051 hard-constraint line.
+        /// Prompt template profile (FT-074); use "legacy-template" for the pre-FT-074 bundle shape
         #[arg(long)]
         target: Option<String>,
     },
@@ -247,13 +245,15 @@ pub enum Commands {
         /// Enable MCP write tools by default
         #[arg(long)]
         write_tools: bool,
-        /// Use the pre-FT-057 root-based layout (`product.toml` + `docs/...`).
-        /// Default is the canonical `.product/` layout (ADR-048).
+        /// Pre-FT-057 root layout (`product.toml` + `docs/...`); default is canonical `.product/` (ADR-048)
         #[arg(long)]
         legacy_layout: bool,
         /// Target directory (default: current directory)
         #[arg(long, value_name = "DIR")]
         path: Option<PathBuf>,
+        /// Seed a worked example (the bookstore What model) for demos and workshops
+        #[arg(long)]
+        demo: bool,
     },
     /// Install git hooks and scaffolding
     InstallHooks,

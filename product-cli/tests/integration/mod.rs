@@ -9305,6 +9305,24 @@ fn tc_433_init_yes_uses_defaults_without_prompts() {
     );
 }
 
+#[test]
+fn tc_1020_init_demo_seeds_a_conformant_bookstore() {
+    let h = Harness::new_bare();
+    let out = h.run(&["init", "--yes", "--name", "bookstore", "--demo"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("Seeded the bookstore demo"), "stdout:\n{}", out.stdout);
+
+    // The seeded What graph is real and conformant.
+    let v = h.run(&["domain", "validate"]);
+    v.assert_exit(0);
+    assert!(v.stdout.contains("conformant"), "domain validate stdout:\n{}", v.stdout);
+
+    // guide reflects the captured, conformant What.
+    let g = h.run(&["guide"]);
+    assert!(g.stdout.contains("[x] Captured a What model"), "guide stdout:\n{}", g.stdout);
+    assert!(g.stdout.contains("[x] What is conformant"), "guide stdout:\n{}", g.stdout);
+}
+
 /// TC-434: init errors on existing canonical config without --force
 #[test]
 fn tc_434_init_errors_on_existing_product_toml_without_force() {

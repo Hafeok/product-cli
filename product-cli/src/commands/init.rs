@@ -24,6 +24,7 @@ pub(crate) fn handle_init(
     write_tools: bool,
     legacy_layout: bool,
     path: Option<PathBuf>,
+    demo: bool,
 ) -> BoxResult {
     let target_dir = resolve_target_dir(path.as_deref())?;
     let layout: &Layout = if legacy_layout { &LEGACY } else { &CANONICAL };
@@ -94,8 +95,29 @@ pub(crate) fn handle_init(
 
     manage_gitignore(&target_dir.join(".gitignore"), checklist_in_gitignore, layout)?;
 
-    println!("\nRun `product feature new \"My First Feature\"` to get started.");
+    if demo {
+        let n = product_core::demo::seed_bookstore(&target_dir, &project_name)?;
+        println!("\nSeeded the bookstore demo — {n} What nodes.");
+        print_next_steps(true);
+    } else {
+        print_next_steps(false);
+    }
     Ok(())
+}
+
+/// Signpost both graphs after init: the framework graph (What/How/Delivery) and
+/// the meta graph (features/ADRs/TCs). `product guide` is the through-line.
+fn print_next_steps(demo: bool) {
+    println!("\nNext steps:");
+    if demo {
+        println!("  product status            # see the seeded What/How/Delivery counts");
+        println!("  product guide             # your journey checklist + the next step");
+        println!("  product domain show Order # inspect a node and its links");
+    } else {
+        println!("  product guide                       # model your product (What → How → Delivery)");
+        println!("  product author domain <name>        # facilitated What-capture session");
+        println!("  product feature new \"My Feature\"     # or track work as features/ADRs/TCs");
+    }
 }
 
 fn resolve_target_dir(path: Option<&Path>) -> Result<PathBuf, Box<dyn std::error::Error>> {

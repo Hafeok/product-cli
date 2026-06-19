@@ -176,6 +176,7 @@ fn dispatch_init(command: Commands) -> BoxResult {
         write_tools,
         legacy_layout,
         path,
+        demo,
     } = command
     else {
         unreachable!("dispatch_init called with non-Init variant")
@@ -190,6 +191,7 @@ fn dispatch_init(command: Commands) -> BoxResult {
         write_tools,
         legacy_layout,
         path,
+        demo,
     )
 }
 

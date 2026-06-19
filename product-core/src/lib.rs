@@ -21,6 +21,7 @@ pub mod config_sections;
 pub mod conformance;
 pub mod context;
 pub mod cycle_times;
+pub mod demo;
 pub mod dep_types;
 pub mod domains;
 pub mod drift;
