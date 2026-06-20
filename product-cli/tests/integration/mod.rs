@@ -9524,6 +9524,61 @@ fn tc_1005_assisted_criterion_discharged_by_attestation() {
     bad.assert_exit(1);
 }
 
+#[test]
+fn tc_1006_ui_step_references_content_by_key_and_role() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // Content is carried by key + role, recorded as references_content edges.
+    h.run(&["domain", "new", "ui-step", "ReviewOrder", "--label", "Review",
+        "--content", "checkout.review.heading:heading", "--content", "cart.empty.message:empty-message"]).assert_exit(0);
+    let ttl = h.run(&["domain", "export"]);
+    assert!(ttl.stdout.contains("referencesContent") && ttl.stdout.contains("checkout.review.heading"),
+        "content refs should be in the export, stdout:\n{}", ttl.stdout);
+    // A literal sentence baked in as a "key" is rejected (no literals on the What).
+    let bad = h.run(&["domain", "new", "ui-step", "BadStep", "--label", "Bad", "--content", "Review your order:heading"]);
+    bad.assert_exit(1);
+    assert!(bad.stderr.contains("keyed reference"), "stderr:\n{}", bad.stderr);
+}
+
+#[test]
+fn tc_1007_content_coverage_over_key_and_locale() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "ReviewOrder", "--label", "Review",
+        "--content", "checkout.review.heading:heading", "--content", "cart.empty.message:body"]).assert_exit(0);
+    // A store covering both keys in en+es → coverage passes.
+    h.run(&["domain", "new", "content-store", "store", "--locales", "en,es",
+        "--resolves", "checkout.review.heading:en:Review your order",
+        "--resolves", "checkout.review.heading:es:Revisa tu pedido",
+        "--resolves", "cart.empty.message:en:Nothing here",
+        "--resolves", "cart.empty.message:es:Nada aqui"]).assert_exit(0);
+    h.run(&["domain", "validate"]).assert_exit(0);
+    // Dropping the es value for one key → coverage fails naming the pair.
+    h.run(&["domain", "edit", "store", "--locales", "en,es",
+        "--resolves", "checkout.review.heading:en:Review",
+        "--resolves", "checkout.review.heading:es:Revisa",
+        "--resolves", "cart.empty.message:en:Nothing"]).assert_exit(0);
+    let fail = h.run(&["domain", "validate"]);
+    fail.assert_exit(1);
+    assert!(fail.stderr.contains("cart.empty.message") && fail.stderr.contains("es"),
+        "should name the missing (key, locale), stderr:\n{}", fail.stderr);
+}
+
+#[test]
+fn tc_1008_role_conformance_catches_empty_error_message() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "Cart", "--label", "Cart", "--content", "cart.failed.message:error-message"]).assert_exit(0);
+    // An error-message role resolving to empty is caught at check time.
+    h.run(&["domain", "new", "content-store", "store", "--locales", "en", "--resolves", "cart.failed.message:en:"]).assert_exit(0);
+    let fail = h.run(&["domain", "validate"]);
+    fail.assert_exit(1);
+    assert!(fail.stderr.contains("empty") && fail.stderr.contains("error-message"), "stderr:\n{}", fail.stderr);
+    // A non-empty resolution passes.
+    h.run(&["domain", "edit", "store", "--locales", "en", "--resolves", "cart.failed.message:en:Could not load. Retry."]).assert_exit(0);
+    h.run(&["domain", "validate"]).assert_exit(0);
+}
+
 /// TC-434: init errors on existing canonical config without --force
 #[test]
 fn tc_434_init_errors_on_existing_product_toml_without_force() {

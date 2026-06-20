@@ -2,7 +2,7 @@
 id: TC-1008
 title: role conformance catches empty error message
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-138
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1008_role_conformance_catches_empty_error_message
+last-run: 2026-06-20T18:46:50.690946991+00:00
+last-run-duration: 0.5s
 ---
 
 ## Scenario — a role makes content checkable, not merely present

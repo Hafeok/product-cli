@@ -96,6 +96,15 @@ pub struct NodeFields {
     date: Option<String>,
     #[arg(long)]
     by: Option<String>,
+    /// UI-step content references: `key:role` (repeatable)
+    #[arg(long = "content")]
+    content: Option<Vec<String>>,
+    /// Content-store locales (e.g. `en,es`)
+    #[arg(long, value_delimiter = ',')]
+    locales: Option<Vec<String>>,
+    /// Content-store resolutions: `key:locale:value` (repeatable)
+    #[arg(long = "resolves")]
+    resolves: Option<Vec<String>>,
     /// `projection:state:meaning` (repeatable)
     #[arg(long = "state-meaning")]
     state_meaning: Option<Vec<String>>,
@@ -146,12 +155,15 @@ impl NodeFields {
             let mut put = |k: &str, v: Value| { m.insert(k.to_string(), v); };
             if let Some(v) = &self.intent { put("intent", json!(v)); }
             if let Some(v) = &self.transitions_to { put("transitions_to", json!(v)); }
-            if let Some(v) = &self.surfaces { put("surfaces", pairs(v, "projection")); }
-            if let Some(v) = &self.offers { put("offers", pairs(v, "command")); }
+            if let Some(v) = &self.surfaces { put("surfaces", pairs(v, "projection", "aio")); }
+            if let Some(v) = &self.offers { put("offers", pairs(v, "command", "aio")); }
             if let Some(v) = &self.entry_page { put("entry_page", json!(v)); }
             if let Some(v) = &self.navigates_from_root { put("navigates_from_root", json!(v)); }
             if let Some(v) = &self.states { put("states", json!(v)); }
         if let Some(v) = &self.must_satisfy { put("must_satisfy", json!(v)); }
+        if let Some(v) = &self.content { put("content_refs", pairs(v, "key", "role")); }
+        if let Some(v) = &self.locales { put("locales", json!(v)); }
+        if let Some(v) = &self.resolves { put("resolutions", triples(v)); }
         if let Some(v) = &self.level { put("level", json!(v)); }
         if let Some(v) = &self.verification { put("verification", json!(v)); }
         if let Some(v) = self.satisfied { put("satisfied", json!(v)); }
@@ -188,14 +200,31 @@ fn state_annotations(meanings: Option<&[String]>, waivers: Option<&[String]>) ->
     out
 }
 
-/// Parse `target:aio` pair strings into `[{<target_key>, aio}, …]` for a UI
-/// step's `surfaces`/`offers`. A pair missing its `:aio` half keeps an empty aio.
-fn pairs(items: &[String], target_key: &str) -> Value {
+/// Parse `a:b` pair strings into `[{<k1>: a, <k2>: b}, …]` (e.g. `proj:aio` for
+/// `surfaces`, `key:role` for content refs). A pair missing its `:b` half keeps b empty.
+fn pairs(items: &[String], k1: &str, k2: &str) -> Value {
     let arr: Vec<Value> = items
         .iter()
         .map(|s| {
-            let (target, aio) = s.split_once(':').unwrap_or((s.as_str(), ""));
-            json!({ target_key: target, "aio": aio })
+            let (a, b) = s.split_once(':').unwrap_or((s.as_str(), ""));
+            json!({ k1: a, k2: b })
+        })
+        .collect();
+    json!(arr)
+}
+
+/// Parse `key:locale:value` strings into `[{key, locale, value}, …]` for a
+/// content store's resolutions.
+fn triples(items: &[String]) -> Value {
+    let arr: Vec<Value> = items
+        .iter()
+        .map(|s| {
+            let mut it = s.splitn(3, ':');
+            json!({
+                "key": it.next().unwrap_or(""),
+                "locale": it.next().unwrap_or(""),
+                "value": it.next().unwrap_or(""),
+            })
         })
         .collect();
     json!(arr)

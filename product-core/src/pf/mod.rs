@@ -33,6 +33,7 @@ pub mod how_turtle;
 pub mod how_validate;
 pub mod ids;
 pub mod model;
+pub mod model_ui;
 pub mod ops;
 pub mod primitive;
 pub mod projector;

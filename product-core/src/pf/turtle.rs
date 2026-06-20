@@ -28,6 +28,7 @@ pub fn to_turtle(graph: &DomainGraph, product: &str) -> String {
     graph.application_roots.iter().for_each(|r| emit_application_root(&mut out, r));
     graph.wcag_criteria.iter().for_each(|c| emit_wcag(&mut out, c));
     graph.attestations.iter().for_each(|a| emit_attestation(&mut out, a));
+    graph.content_stores.iter().for_each(|s| emit_content_store(&mut out, s));
     out
 }
 
@@ -92,6 +93,21 @@ fn emit_flow(out: &mut String, f: &super::model::Flow) {
     }
     if let Some(e) = &f.entry_page {
         out.push_str(&format!(" ;\n  pf:entryPage d:{}", e));
+    }
+    out.push_str(" .\n\n");
+}
+
+fn emit_content_store(out: &mut String, s: &super::model::ContentStore) {
+    out.push_str(&format!("d:{} a pf:ContentStore", s.id));
+    if let Some(l) = &s.label { out.push_str(&format!(" ;\n  rdfs:label {}", lit(l))); }
+    for loc in &s.locales {
+        out.push_str(&format!(" ;\n  pf:locale {}", lit(loc)));
+    }
+    for r in &s.resolutions {
+        out.push_str(&format!(
+            " ;\n  pf:resolves [ pf:contentKey {} ; pf:inLocale {} ; pf:value {} ]",
+            lit(&r.key), lit(&r.locale), lit(&r.value)
+        ));
     }
     out.push_str(" .\n\n");
 }
@@ -197,6 +213,9 @@ fn emit_wireframe(out: &mut String, w: &super::model::WireframeStep) {
     }
     for c in &w.must_satisfy {
         out.push_str(&format!(" ;\n  pf:mustSatisfy d:{}", c));
+    }
+    for cr in &w.content_refs {
+        out.push_str(&format!(" ;\n  pf:referencesContent [ pf:contentKey {} ; pf:role {} ]", lit(&cr.key), lit(&cr.role)));
     }
     if let Some(t) = &w.triggers {
         out.push_str(&format!(" ;\n  pf:triggers d:{}", t));

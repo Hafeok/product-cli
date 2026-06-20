@@ -33,10 +33,13 @@ pub enum NodeKind {
     /// §3.2.3 — a dated, attributed record that a non-machine criterion was
     /// evaluated and met.
     Attestation,
+    /// §4.6 — the swappable provider of words: resolves (content key, locale) →
+    /// string for the content references a UI step carries.
+    ContentStore,
 }
 
 /// Every node kind, in declaration order (for `list`/iteration).
-pub const ALL_KINDS: [NodeKind; 16] = [
+pub const ALL_KINDS: [NodeKind; 17] = [
     NodeKind::BoundedContext,
     NodeKind::Entity,
     NodeKind::ValueObject,
@@ -53,6 +56,7 @@ pub const ALL_KINDS: [NodeKind; 16] = [
     NodeKind::ApplicationRoot,
     NodeKind::WcagCriterion,
     NodeKind::Attestation,
+    NodeKind::ContentStore,
 ];
 
 /// Built-in WCAG 2.2 criteria seed: (id, level, verification-type, name). An
@@ -111,6 +115,7 @@ impl NodeKind {
             Self::ApplicationRoot => "ApplicationRoot",
             Self::WcagCriterion => "WcagCriterion",
             Self::Attestation => "Attestation",
+            Self::ContentStore => "ContentStore",
         }
     }
 
@@ -133,6 +138,7 @@ impl NodeKind {
             Self::ApplicationRoot => "application-root",
             Self::WcagCriterion => "wcag-criterion",
             Self::Attestation => "attestation",
+            Self::ContentStore => "content-store",
         }
     }
 

@@ -192,6 +192,7 @@ fn section_title(kind: NodeKind) -> &'static str {
         NodeKind::ApplicationRoot => "Application root",
         NodeKind::WcagCriterion => "WCAG criteria",
         NodeKind::Attestation => "Attestations",
+        NodeKind::ContentStore => "Content stores",
     }
 }
 

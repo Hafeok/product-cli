@@ -130,6 +130,11 @@ pf:Attestation a owl:Class ;
   rdfs:label "Attestation" ;
   rdfs:comment "§3.2.3 — a dated, attributed record that a non-machine criterion was evaluated and met for a step." .
 
+pf:ContentStore a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Content Store" ;
+  rdfs:comment "§4.6 — the swappable provider of words; resolves (content key, locale) → string for a UI step's content references." .
+
 #################################################################
 #  HOW — §4.1 the Why (decisions, principles, patterns)
 #################################################################

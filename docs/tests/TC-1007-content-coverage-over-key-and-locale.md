@@ -2,7 +2,7 @@
 id: TC-1007
 title: content coverage over key and locale
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-138
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1007_content_coverage_over_key_and_locale
+last-run: 2026-06-20T18:46:50.690946991+00:00
+last-run-duration: 0.6s
 ---
 
 ## Scenario — the store must resolve every referenced key in every claimed locale

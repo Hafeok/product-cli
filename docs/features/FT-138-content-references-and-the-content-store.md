@@ -2,7 +2,7 @@
 id: FT-138
 title: Content references and the content store
 phase: 7
-status: planned
+status: complete
 depends-on:
 - FT-134
 adrs:
@@ -15,16 +15,16 @@ domains:
 - api
 - data-model
 domains-acknowledged:
-  ADR-041: Additive — adds the ContentKey/ContentStore/Locale node kinds and the references_content/resolves/in_locale edges; nothing is removed or deprecated, so no absence TC is required this increment.
-  ADR-047: The functional specification lives in this feature's body, not a separate artifact.
-  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
-  ADR-050: PAT-001 (slice + adapter) governs the `pf` slice + CLI adapter; no new implementation pattern is introduced.
-  ADR-049: Not a context-bundle/template command; no template surface changes.
-  ADR-043: Content references, the store model, and the (key,locale) coverage and role-conformance rules live in the pure `pf` slice; the CLI is a thin adapter.
-  ADR-048: Reads/writes the captured What graph and the declared content store only; no other side effects.
-  ADR-051: Every TC declares `observes:` and asserts on those surfaces (graph, exit-code).
   ADR-018: Scenario TCs drive the binary through assert_cmd; `pf::content`/`pf::rules_ui` carry unit tests. No property or session dimension for content references and coverage.
+  ADR-051: Every TC declares `observes:` and asserts on those surfaces (graph, exit-code).
+  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
+  ADR-041: Additive — adds the ContentKey/ContentStore/Locale node kinds and the references_content/resolves/in_locale edges; nothing is removed or deprecated, so no absence TC is required this increment.
   ADR-040: Content references are What-side; the store is the How-side resolver; the coverage rule composes with the existing What-side rules; the verify pipeline is untouched.
+  ADR-043: Content references, the store model, and the (key,locale) coverage and role-conformance rules live in the pure `pf` slice; the CLI is a thin adapter.
+  ADR-050: PAT-001 (slice + adapter) governs the `pf` slice + CLI adapter; no new implementation pattern is introduced.
+  ADR-047: The functional specification lives in this feature's body, not a separate artifact.
+  ADR-048: Reads/writes the captured What graph and the declared content store only; no other side effects.
+  ADR-049: Not a context-bundle/template command; no template surface changes.
 patterns:
 - PAT-001
 ---

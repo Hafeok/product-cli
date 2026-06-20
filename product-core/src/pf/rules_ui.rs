@@ -93,6 +93,88 @@ fn violation(focus: &str, message: String) -> super::validate::Violation {
     }
 }
 
+// --- §4.6 content coverage ------------------------------------------------
+
+/// §4.6 — content coverage + role conformance. Every (content key, locale) a UI
+/// step references must be resolved by some content store in every locale the
+/// stores claim; and an `error-message`/`empty-message` role must resolve to a
+/// non-empty string. Roles tie the What-side meaning to the How-side value.
+pub fn check_content_coverage(graph: &super::model::DomainGraph) -> Vec<super::validate::Violation> {
+    let mut out = Vec::new();
+    // The locales the application claims = union of every store's locales.
+    let locales: std::collections::BTreeSet<&str> = graph
+        .content_stores
+        .iter()
+        .flat_map(|s| s.locales.iter().map(String::as_str))
+        .collect();
+    if locales.is_empty() {
+        return out; // no store declared yet — nothing to check against
+    }
+    let resolve = |key: &str, locale: &str| -> Option<&str> {
+        graph.content_stores.iter().find_map(|s| {
+            s.resolutions.iter().find(|r| r.key == key && r.locale == locale).map(|r| r.value.as_str())
+        })
+    };
+    for step in &graph.wireframe_steps {
+        for cref in &step.content_refs {
+            for &loc in &locales {
+                match resolve(&cref.key, loc) {
+                    None => out.push(content_violation(&step.id, format!(
+                        "§4.6 content '{}' is not resolved for locale '{loc}' (content coverage).",
+                        cref.key
+                    ))),
+                    Some(v) if v.trim().is_empty() && is_message_role(&cref.role) => {
+                        out.push(content_violation(&step.id, format!(
+                            "§4.6 role '{}' for '{}' resolves to empty in '{loc}' (role conformance).",
+                            cref.role, cref.key
+                        )))
+                    }
+                    Some(_) => {}
+                }
+            }
+        }
+    }
+    out
+}
+
+/// §3.2.1 — content on a UI step is a keyed *reference*, never a literal. A
+/// content ref's key must be a key (no whitespace) with a declared role; a
+/// literal sentence baked in as a "key" is rejected. Runs always (not gated on a
+/// store), so the reference discipline holds before any store exists.
+pub fn check_content_refs(graph: &super::model::DomainGraph) -> Vec<super::validate::Violation> {
+    let mut out = Vec::new();
+    for step in &graph.wireframe_steps {
+        for cref in &step.content_refs {
+            if cref.key.trim().is_empty() || cref.key.contains(char::is_whitespace) {
+                out.push(content_violation(&step.id, format!(
+                    "§3.2.1 content must be a keyed reference, not a literal — {:?} is not a content key.",
+                    cref.key
+                )));
+            }
+            if cref.role.trim().is_empty() {
+                out.push(content_violation(&step.id, format!(
+                    "§3.2.1 content reference '{}' must declare a role (heading/body/empty-message/…).",
+                    cref.key
+                )));
+            }
+        }
+    }
+    out
+}
+
+fn is_message_role(role: &str) -> bool {
+    matches!(role, "error-message" | "empty-message" | "heading" | "legal")
+}
+
+fn content_violation(focus: &str, message: String) -> super::validate::Violation {
+    super::validate::Violation {
+        focus: focus.to_string(),
+        path: "content_refs".to_string(),
+        message,
+        severity: "violation".to_string(),
+    }
+}
+
 // --- §3.2.3 accessibility -------------------------------------------------
 
 /// One WCAG criterion a step must satisfy, with where it came from and how it is

@@ -1769,12 +1769,12 @@
 - [x] TC-1004: machine criterion is a deterministic gate (scenario) — passing
 - [x] TC-1005: assisted criterion discharged by attestation (scenario) — passing
 
-### FT-138 — Content references and the content store [ ]
+### FT-138 — Content references and the content store [x]
 
 - [x] ADR-082: Content is carried by reference and resolved against a locale-parameterised content store (accepted)
-- [ ] TC-1006: UI step references content by key and role (scenario) — unimplemented
-- [ ] TC-1007: content coverage over key and locale (scenario) — unimplemented
-- [ ] TC-1008: role conformance catches empty error message (scenario) — unimplemented
+- [x] TC-1006: UI step references content by key and role (scenario) — passing
+- [x] TC-1007: content coverage over key and locale (scenario) — passing
+- [x] TC-1008: role conformance catches empty error message (scenario) — passing
 
 ### FT-139 — Design system and reification rules [ ]
 

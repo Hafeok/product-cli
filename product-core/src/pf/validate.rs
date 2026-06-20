@@ -68,6 +68,8 @@ pub fn validate_graph(graph: &DomainGraph) -> Vec<Violation> {
     v.extend(run_rules(&ui_projection(graph), what_rules()));
     v.extend(run_rules(&ui_projection(graph), super::rules_ui::ui_rules()));
     v.extend(super::rules_ui::check_state_coverage(graph));
+    v.extend(super::rules_ui::check_content_refs(graph));
+    v.extend(super::rules_ui::check_content_coverage(graph));
     v
 }
 
@@ -129,6 +131,8 @@ pub fn validate_node(graph: &DomainGraph, id: &str) -> Vec<Violation> {
     let mut graph_v = run_rules(&projection, what_rules());
     graph_v.extend(run_rules(&projection, super::rules_ui::ui_rules()));
     graph_v.extend(super::rules_ui::check_state_coverage(graph));
+    graph_v.extend(super::rules_ui::check_content_refs(graph));
+    graph_v.extend(super::rules_ui::check_content_coverage(graph));
     graph_v.retain(|x| x.focus == id);
     v.extend(graph_v);
     v
