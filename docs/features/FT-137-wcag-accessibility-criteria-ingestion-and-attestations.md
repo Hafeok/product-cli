@@ -2,7 +2,7 @@
 id: FT-137
 title: WCAG accessibility criteria ingestion and attestations
 phase: 7
-status: planned
+status: complete
 depends-on:
 - FT-134
 adrs:
@@ -16,15 +16,15 @@ domains:
 - data-model
 domains-acknowledged:
   ADR-041: Additive — adds the WcagCriterion/Attestation node kinds and the must_satisfy/attests edges; nothing is removed or deprecated, so no absence TC is required this increment.
-  ADR-047: The functional specification lives in this feature's body, not a separate artifact.
-  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
   ADR-050: PAT-001 (slice + adapter) governs the `pf` slice + CLI adapter; no new implementation pattern is introduced.
-  ADR-049: Not a context-bundle/template command; no template surface changes.
-  ADR-043: WCAG ingestion, the inherited-union computation, the machine gate, and the attestation-coverage rule live in the pure `pf` slice; the CLI is a thin adapter.
-  ADR-048: Reads/writes the captured What graph only (the domain session plus ingested WCAG reference data); no other side effects.
   ADR-051: Every TC declares `observes:` and asserts on those surfaces (graph, exit-code, stdout).
-  ADR-018: Scenario TCs drive the binary through assert_cmd; `pf::wcag`/`pf::rules_ui` carry unit tests. No property or session dimension for ingestion + a coverage rule.
+  ADR-047: The functional specification lives in this feature's body, not a separate artifact.
   ADR-040: WCAG criteria are What-side artifacts at the What/How boundary; the gate and attestation-coverage rules compose with the existing What-side UI rules; the verify pipeline is untouched.
+  ADR-048: Reads/writes the captured What graph only (the domain session plus ingested WCAG reference data); no other side effects.
+  ADR-043: WCAG ingestion, the inherited-union computation, the machine gate, and the attestation-coverage rule live in the pure `pf` slice; the CLI is a thin adapter.
+  ADR-018: Scenario TCs drive the binary through assert_cmd; `pf::wcag`/`pf::rules_ui` carry unit tests. No property or session dimension for ingestion + a coverage rule.
+  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
+  ADR-049: Not a context-bundle/template command; no template surface changes.
 patterns:
 - PAT-001
 ---

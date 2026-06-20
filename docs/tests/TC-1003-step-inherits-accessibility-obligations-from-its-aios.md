@@ -2,7 +2,7 @@
 id: TC-1003
 title: step inherits accessibility obligations from its AIOs
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-137
@@ -14,6 +14,8 @@ observes:
 - stdout
 runner: cargo-test
 runner-args: tc_1003_step_inherits_accessibility_obligations_from_its_aios
+last-run: 2026-06-20T18:17:51.089850889+00:00
+last-run-duration: 15.7s
 ---
 
 ## Scenario — a step's accessibility obligation is the computed union of its AIOs' criteria
@@ -22,7 +24,7 @@ runner-args: tc_1003_step_inherits_accessibility_obligations_from_its_aios
 declares its labelling criteria via `must_satisfy` and an image-bearing
 `display-value` declares 1.1.1 Non-text Content,
 **And** a `UiStep` `EditProfile` that references a `text-entry` AIO,
-**When** the user runs `product domain show EditProfile`,
+**When** the user runs `product domain accessibility EditProfile`,
 **Then** the process exits 0 and stdout reports the step's accessibility
 obligation as the **computed union** of its AIOs' criteria — the labelling
 criteria appear, each annotated with the AIO it is inherited from, and no

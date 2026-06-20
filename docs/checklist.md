@@ -1762,12 +1762,12 @@
 - [x] TC-1001: forgotten failed state fails coverage (scenario) — passing
 - [x] TC-1002: waiving an ignorable state passes with reason (scenario) — passing
 
-### FT-137 — WCAG accessibility criteria ingestion and attestations [ ]
+### FT-137 — WCAG accessibility criteria ingestion and attestations [x]
 
 - [x] ADR-081: Accessibility is ingested WCAG 2.2 criteria with machine, assisted, and manual verification (accepted)
-- [ ] TC-1003: step inherits accessibility obligations from its AIOs (scenario) — unimplemented
-- [ ] TC-1004: machine criterion is a deterministic gate (scenario) — unimplemented
-- [ ] TC-1005: assisted criterion discharged by attestation (scenario) — unimplemented
+- [x] TC-1003: step inherits accessibility obligations from its AIOs (scenario) — passing
+- [x] TC-1004: machine criterion is a deterministic gate (scenario) — passing
+- [x] TC-1005: assisted criterion discharged by attestation (scenario) — passing
 
 ### FT-138 — Content references and the content store [ ]
 

@@ -126,9 +126,8 @@ pub struct Offer {
     pub aio: String,
 }
 
-/// §3.2.1 — what a surfaced projection's state *means to the user* at a step, or
-/// an explicit `waiver` (with reason) for an ignorable state. Exactly one of
-/// `meaning`/`waiver` is set.
+/// §3.2.1 — what a surfaced projection's state *means to the user*, or a
+/// `waiver` (with reason) for an ignorable state. Exactly one is set.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct StateMeaning {
     pub projection: String,
@@ -158,6 +157,10 @@ pub struct WireframeStep {
     pub transitions_to: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub state_meanings: Vec<StateMeaning>,
+    /// §3.2.3 — screen-specific WCAG criteria added on top of the AIO-inherited
+    /// union.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub must_satisfy: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub triggers: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -175,9 +178,8 @@ pub struct Flow {
     pub entry_page: Option<String>,
 }
 
-/// §3.2.4 — the distinguished node of the page graph. Its `navigates_from_root`
-/// out-edges are the global destinations the primary navigation renders; a page
-/// is "top-level" iff it has an inbound edge here.
+/// §3.2.4 — the distinguished node of the page graph; its `navigates_from_root`
+/// out-edges are the global destinations (a page is "top-level" iff linked here).
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct ApplicationRoot {
     pub id: String,
@@ -196,6 +198,9 @@ pub struct Aio {
     pub label: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub means: Option<String>,
+    /// §3.2.3 — WCAG criteria this AIO carries; inherited by steps that use it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub must_satisfy: Vec<String>,
 }
 
 /// §3.2.2 — a declared context of use (form factor, modality, …) — a What-side
@@ -209,6 +214,31 @@ pub struct ContextOfUse {
     pub dimension: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
+}
+
+/// §3.2.3 — an ingested WCAG 2.2 success criterion (`verification`:
+/// machine/assisted/manual; `level`: A/AA/AAA; `satisfied`: the machine gate).
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct WcagCriterion {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub level: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub verification: Option<String>,
+    #[serde(default)]
+    pub satisfied: bool,
+}
+
+/// §3.2.3 — a dated, attributed record that a non-machine criterion was met.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct Attestation {
+    pub id: String,
+    pub step: String,
+    pub criterion: String,
+    pub date: String,
+    pub by: String,
 }
 
 /// The whole What graph: the typed nodes captured in a session. Ordered
@@ -244,6 +274,10 @@ pub struct DomainGraph {
     pub contexts_of_use: Vec<ContextOfUse>,
     #[serde(default)]
     pub application_roots: Vec<ApplicationRoot>,
+    #[serde(default)]
+    pub wcag_criteria: Vec<WcagCriterion>,
+    #[serde(default)]
+    pub attestations: Vec<Attestation>,
 }
 
 impl DomainGraph {
@@ -282,6 +316,10 @@ impl DomainGraph {
             Some(NodeKind::ContextOfUse)
         } else if self.application_roots.iter().any(|n| n.id == id) {
             Some(NodeKind::ApplicationRoot)
+        } else if self.wcag_criteria.iter().any(|n| n.id == id) {
+            Some(NodeKind::WcagCriterion)
+        } else if self.attestations.iter().any(|n| n.id == id) {
+            Some(NodeKind::Attestation)
         } else {
             None
         }
@@ -309,6 +347,8 @@ impl DomainGraph {
             ("Aio", self.aios.len()),
             ("ContextOfUse", self.contexts_of_use.len()),
             ("ApplicationRoot", self.application_roots.len()),
+            ("WcagCriterion", self.wcag_criteria.len()),
+            ("Attestation", self.attestations.len()),
         ]
     }
 
@@ -334,6 +374,8 @@ impl DomainGraph {
         self.aios.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Aio)));
         self.contexts_of_use.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ContextOfUse)));
         self.application_roots.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ApplicationRoot)));
+        self.wcag_criteria.iter().for_each(|n| out.push((n.id.clone(), NodeKind::WcagCriterion)));
+        self.attestations.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Attestation)));
         out
     }
 }

@@ -93,6 +93,103 @@ fn violation(focus: &str, message: String) -> super::validate::Violation {
     }
 }
 
+// --- §3.2.3 accessibility -------------------------------------------------
+
+/// One WCAG criterion a step must satisfy, with where it came from and how it is
+/// (or isn't) discharged.
+#[derive(Debug, Clone, serde::Serialize, PartialEq)]
+pub struct Obligation {
+    pub criterion: String,
+    pub level: String,
+    pub verification: String,
+    /// "step" or the AIO id it was inherited from.
+    pub source: String,
+    pub discharged: bool,
+    pub basis: String,
+}
+
+/// The accessibility verdict for one UI step: the computed obligation union and
+/// whether each is discharged (machine gate satisfied, or an attestation
+/// recorded). Reports level + basis, never a bare pass (§3.2.3).
+#[derive(Debug, Clone, serde::Serialize, PartialEq)]
+pub struct AccessibilityVerdict {
+    pub step: String,
+    pub conformant: bool,
+    pub obligations: Vec<Obligation>,
+}
+
+/// Look up a criterion's (level, verification) from the graph, then the built-in
+/// CORE_WCAG seed.
+fn criterion_meta(graph: &super::model::DomainGraph, id: &str) -> Option<(String, String)> {
+    if let Some(c) = graph.wcag_criteria.iter().find(|c| c.id == id) {
+        return Some((
+            c.level.clone().unwrap_or_else(|| "A".into()),
+            c.verification.clone().unwrap_or_else(|| "manual".into()),
+        ));
+    }
+    super::ids::CORE_WCAG
+        .iter()
+        .find(|(cid, ..)| *cid == id)
+        .map(|(_, level, vt, _)| ((*level).to_string(), (*vt).to_string()))
+}
+
+/// The criteria a step inherits from one AIO id (registered node or core seed).
+fn aio_criteria(graph: &super::model::DomainGraph, aio: &str) -> Vec<String> {
+    if let Some(node) = graph.aios.iter().find(|a| a.id == aio) {
+        if !node.must_satisfy.is_empty() {
+            return node.must_satisfy.clone();
+        }
+    }
+    super::ids::CORE_AIO_CRITERIA
+        .iter()
+        .find(|(id, _)| *id == aio)
+        .map(|(_, cs)| cs.iter().map(|s| s.to_string()).collect())
+        .unwrap_or_default()
+}
+
+/// Compute a step's accessibility verdict: the union of its AIOs' inherited
+/// criteria plus its own `must_satisfy`, each discharged by a machine gate
+/// (criterion `satisfied`) or a recorded attestation.
+pub fn accessibility_verdict(graph: &super::model::DomainGraph, step_id: &str) -> Option<AccessibilityVerdict> {
+    let step = graph.wireframe_steps.iter().find(|s| s.id == step_id)?;
+    let mut obligations: Vec<Obligation> = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+
+    let mut add = |criterion: &str, source: &str, obligations: &mut Vec<Obligation>| {
+        if !seen.insert(criterion.to_string()) {
+            return;
+        }
+        let (level, verification) = criterion_meta(graph, criterion)
+            .unwrap_or_else(|| ("A".into(), "manual".into()));
+        let satisfied = graph.wcag_criteria.iter().find(|c| c.id == criterion).map(|c| c.satisfied)
+            .or_else(|| super::ids::CORE_WCAG.iter().find(|(id, ..)| *id == criterion).map(|_| false))
+            .unwrap_or(false);
+        let attested = graph.attestations.iter().any(|a| a.step == step_id && a.criterion == criterion);
+        let (discharged, basis) = if verification == "machine" {
+            if satisfied { (true, "machine gate".into()) } else { (false, "machine gate failed".into()) }
+        } else if attested {
+            (true, "attestation".into())
+        } else {
+            (false, "no attestation".into())
+        };
+        obligations.push(Obligation {
+            criterion: criterion.to_string(), level, verification, source: source.to_string(), discharged, basis,
+        });
+    };
+
+    // Inherited from the AIOs the step references (surfaces + offers), then own.
+    for s in &step.surfaces {
+        for c in aio_criteria(graph, &s.aio) { add(&c, &s.aio, &mut obligations); }
+    }
+    for o in &step.offers {
+        for c in aio_criteria(graph, &o.aio) { add(&c, &o.aio, &mut obligations); }
+    }
+    for c in &step.must_satisfy { add(c, "step", &mut obligations); }
+
+    let conformant = obligations.iter().all(|o| o.discharged);
+    Some(AccessibilityVerdict { step: step_id.to_string(), conformant, obligations })
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::sparql_rules::run_rules;

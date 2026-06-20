@@ -27,6 +27,15 @@ type Resolved = Result<(String, PathBuf), Box<dyn std::error::Error>>;
 // read variants is expected for a clap subcommand enum.
 #[allow(clippy::large_enum_variant)]
 pub enum DomainCommands {
+    /// Accessibility verdict for a UI step (§3.2.3) — the computed obligation
+    /// union, each discharged by a machine gate or an attestation; exit 1 if any
+    /// is undischarged
+    Accessibility {
+        /// The UI step id
+        id: String,
+        #[arg(long)]
+        product: Option<String>,
+    },
     /// Assemble an LLM context bundle around a node (focus + neighbourhood)
     Context {
         /// The focus node id (entity, context, flow, …)
@@ -101,6 +110,39 @@ pub(crate) fn handle_domain_cmd(cmd: DomainCommands) -> BoxResult {
         DomainCommands::Rm { id, product } => rm(id, product),
         DomainCommands::Validate { product } => validate_cmd(product),
         DomainCommands::Export { product } => export(product),
+        DomainCommands::Accessibility { id, product } => accessibility(id, product),
+    }
+}
+
+/// §3.2.3 — print a UI step's accessibility verdict (obligation union + basis);
+/// exit 1 if any obligation is undischarged.
+fn accessibility(id: String, product: Option<String>) -> BoxResult {
+    let (_, dir) = resolve(product)?;
+    let session = load(&dir)?;
+    let verdict = product_core::pf::rules_ui::accessibility_verdict(&session.graph, &id)
+        .ok_or_else(|| format!("no UI step with id {id:?} in the graph"))?;
+    let level = verdict.obligations.iter().filter_map(|o| highest_level(&o.level)).max().unwrap_or(0);
+    let level_str = ["—", "A", "AA", "AAA"][(level as usize).min(3)];
+    println!("Accessibility verdict for {id}: {}", if verdict.conformant { "conformant" } else { "NOT conformant" });
+    println!("  conformance level: {level_str}");
+    for o in &verdict.obligations {
+        let mark = if o.discharged { "✓" } else { "✗" };
+        println!("  {mark} {} [{}] ({}) — {} — from {}", o.criterion, o.level, o.verification, o.basis, o.source);
+    }
+    if verdict.conformant {
+        Ok(())
+    } else {
+        Err(format!("accessibility: {id} has undischarged obligations").into())
+    }
+}
+
+/// Map a WCAG level string to a rank (A=1, AA=2, AAA=3) for "highest required".
+fn highest_level(level: &str) -> Option<u8> {
+    match level {
+        "A" => Some(1),
+        "AA" => Some(2),
+        "AAA" => Some(3),
+        _ => None,
     }
 }
 

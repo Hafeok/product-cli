@@ -190,6 +190,8 @@ fn section_title(kind: NodeKind) -> &'static str {
         NodeKind::Aio => "Abstract interaction objects",
         NodeKind::ContextOfUse => "Contexts of use",
         NodeKind::ApplicationRoot => "Application root",
+        NodeKind::WcagCriterion => "WCAG criteria",
+        NodeKind::Attestation => "Attestations",
     }
 }
 

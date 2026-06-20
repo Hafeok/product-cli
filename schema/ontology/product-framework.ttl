@@ -120,6 +120,16 @@ pf:ApplicationRoot a owl:Class ;
   rdfs:label "Application Root" ;
   rdfs:comment "§3.2.4 — the distinguished node of the page graph; its navigatesFromRoot out-edges are the global destinations." .
 
+pf:WcagCriterion a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "WCAG Criterion" ;
+  rdfs:comment "§3.2.3 — an ingested WCAG 2.2 success criterion (level + machine/assisted/manual verification) a UI step or AIO must satisfy." .
+
+pf:Attestation a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Attestation" ;
+  rdfs:comment "§3.2.3 — a dated, attributed record that a non-machine criterion was evaluated and met for a step." .
+
 #################################################################
 #  HOW — §4.1 the Why (decisions, principles, patterns)
 #################################################################

@@ -2,7 +2,7 @@
 id: TC-1004
 title: machine criterion is a deterministic gate
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-137
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1004_machine_criterion_is_a_deterministic_gate
+last-run: 2026-06-20T18:17:51.089850889+00:00
+last-run-duration: 0.7s
 ---
 
 ## Scenario — an unsatisfied machine criterion fails the gate with a level and a basis

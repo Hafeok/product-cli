@@ -27,10 +27,16 @@ pub enum NodeKind {
     /// §3.2.4 — the distinguished node of the page graph; its out-edges are the
     /// global destinations the primary navigation renders.
     ApplicationRoot,
+    /// §3.2.3 — an ingested WCAG 2.2 success criterion (level + verification
+    /// type) a UI step or AIO must satisfy.
+    WcagCriterion,
+    /// §3.2.3 — a dated, attributed record that a non-machine criterion was
+    /// evaluated and met.
+    Attestation,
 }
 
 /// Every node kind, in declaration order (for `list`/iteration).
-pub const ALL_KINDS: [NodeKind; 14] = [
+pub const ALL_KINDS: [NodeKind; 16] = [
     NodeKind::BoundedContext,
     NodeKind::Entity,
     NodeKind::ValueObject,
@@ -45,6 +51,29 @@ pub const ALL_KINDS: [NodeKind; 14] = [
     NodeKind::Aio,
     NodeKind::ContextOfUse,
     NodeKind::ApplicationRoot,
+    NodeKind::WcagCriterion,
+    NodeKind::Attestation,
+];
+
+/// Built-in WCAG 2.2 criteria seed: (id, level, verification-type, name). An
+/// adopter may register more as `WcagCriterion` nodes; these are always known.
+pub const CORE_WCAG: [(&str, &str, &str, &str); 6] = [
+    ("1.1.1", "A", "machine", "Non-text Content"),
+    ("1.3.1", "A", "machine", "Info and Relationships"),
+    ("3.3.2", "A", "machine", "Labels or Instructions"),
+    ("4.1.2", "A", "machine", "Name, Role, Value"),
+    ("2.4.7", "AA", "assisted", "Focus Visible"),
+    ("2.5.8", "AA", "machine", "Target Size (Minimum)"),
+];
+
+/// Built-in accessibility obligations inherited from each core AIO (§3.2.3):
+/// (aio-id, &[criterion-id]). A step's full obligation is the union of these
+/// over the AIOs it references, plus its own `must_satisfy`.
+pub const CORE_AIO_CRITERIA: [(&str, &[&str]); 4] = [
+    ("text-entry", &["3.3.2", "1.3.1", "4.1.2"]),
+    ("numeric-entry", &["3.3.2", "1.3.1", "4.1.2"]),
+    ("date-entry", &["3.3.2", "1.3.1", "4.1.2"]),
+    ("display-value", &["1.1.1"]),
 ];
 
 /// The closed-core Abstract Interaction Objects (§3.2.2 table). An adopter may
@@ -80,6 +109,8 @@ impl NodeKind {
             Self::Aio => "Aio",
             Self::ContextOfUse => "ContextOfUse",
             Self::ApplicationRoot => "ApplicationRoot",
+            Self::WcagCriterion => "WcagCriterion",
+            Self::Attestation => "Attestation",
         }
     }
 
@@ -100,6 +131,8 @@ impl NodeKind {
             Self::Aio => "aio",
             Self::ContextOfUse => "context-of-use",
             Self::ApplicationRoot => "application-root",
+            Self::WcagCriterion => "wcag-criterion",
+            Self::Attestation => "attestation",
         }
     }
 

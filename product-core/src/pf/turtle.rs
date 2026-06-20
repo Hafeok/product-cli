@@ -26,6 +26,8 @@ pub fn to_turtle(graph: &DomainGraph, product: &str) -> String {
     graph.aios.iter().for_each(|a| emit_aio(&mut out, a));
     graph.contexts_of_use.iter().for_each(|c| emit_context_of_use(&mut out, c));
     graph.application_roots.iter().for_each(|r| emit_application_root(&mut out, r));
+    graph.wcag_criteria.iter().for_each(|c| emit_wcag(&mut out, c));
+    graph.attestations.iter().for_each(|a| emit_attestation(&mut out, a));
     out
 }
 
@@ -94,6 +96,21 @@ fn emit_flow(out: &mut String, f: &super::model::Flow) {
     out.push_str(" .\n\n");
 }
 
+fn emit_wcag(out: &mut String, c: &super::model::WcagCriterion) {
+    out.push_str(&format!("d:{} a pf:WcagCriterion", c.id));
+    if let Some(l) = &c.label { out.push_str(&format!(" ;\n  rdfs:label {}", lit(l))); }
+    if let Some(l) = &c.level { out.push_str(&format!(" ;\n  pf:level {}", lit(l))); }
+    if let Some(v) = &c.verification { out.push_str(&format!(" ;\n  pf:verification {}", lit(v))); }
+    out.push_str(&format!(" ;\n  pf:satisfied {} .\n\n", c.satisfied));
+}
+
+fn emit_attestation(out: &mut String, a: &super::model::Attestation) {
+    out.push_str(&format!(
+        "d:{} a pf:Attestation ;\n  pf:attestsStep d:{} ;\n  pf:attestsCriterion d:{} ;\n  pf:date {} ;\n  pf:attestedBy {} .\n\n",
+        a.id, a.step, a.criterion, lit(&a.date), lit(&a.by)
+    ));
+}
+
 fn emit_application_root(out: &mut String, r: &super::model::ApplicationRoot) {
     out.push_str(&format!("d:{} a pf:ApplicationRoot", r.id));
     if let Some(l) = &r.label {
@@ -109,6 +126,9 @@ fn emit_aio(out: &mut String, a: &super::model::Aio) {
     out.push_str(&format!("d:{} a pf:Aio ;\n  rdfs:label {}", a.id, lit(&a.label)));
     if let Some(m) = &a.means {
         out.push_str(&format!(" ;\n  pf:means {}", lit(m)));
+    }
+    for c in &a.must_satisfy {
+        out.push_str(&format!(" ;\n  pf:mustSatisfy d:{}", c));
     }
     out.push_str(" .\n\n");
 }
@@ -174,6 +194,9 @@ fn emit_wireframe(out: &mut String, w: &super::model::WireframeStep) {
     }
     for t in &w.transitions_to {
         out.push_str(&format!(" ;\n  pf:transitionsTo d:{}", t));
+    }
+    for c in &w.must_satisfy {
+        out.push_str(&format!(" ;\n  pf:mustSatisfy d:{}", c));
     }
     if let Some(t) = &w.triggers {
         out.push_str(&format!(" ;\n  pf:triggers d:{}", t));

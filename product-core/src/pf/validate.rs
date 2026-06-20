@@ -62,6 +62,9 @@ pub fn validate_graph(graph: &DomainGraph) -> Vec<Violation> {
     for rm in &graph.read_models {
         check_read_model(rm, &mut v);
     }
+    for a in &graph.attestations {
+        check_attestation(a, &mut v);
+    }
     v.extend(run_rules(&ui_projection(graph), what_rules()));
     v.extend(run_rules(&ui_projection(graph), super::rules_ui::ui_rules()));
     v.extend(super::rules_ui::check_state_coverage(graph));
@@ -111,6 +114,11 @@ pub fn validate_node(graph: &DomainGraph, id: &str) -> Vec<Violation> {
                 check_read_model(rm, &mut v);
             }
         }
+        Some(NodeKind::Attestation) => {
+            if let Some(a) = graph.attestations.iter().find(|n| n.id == id) {
+                check_attestation(a, &mut v);
+            }
+        }
         // Event/Command cross-references are graph rules (below); ValueObject,
         // WireframeStep, Flow have no blocking shape.
         _ => {}
@@ -139,6 +147,17 @@ fn check_entity(e: &super::model::Entity, v: &mut Vec<Violation>) {
     if e.definition.trim().is_empty() {
         v.push(Violation::new(&e.id, "definition",
             "§3.1 An entity must carry a business-language definition."));
+    }
+}
+
+fn check_attestation(a: &super::model::Attestation, v: &mut Vec<Violation>) {
+    if a.date.trim().is_empty() {
+        v.push(Violation::new(&a.id, "date",
+            "§3.2.3 An attestation must carry a date (the frozen-boundary record)."));
+    }
+    if a.by.trim().is_empty() {
+        v.push(Violation::new(&a.id, "by",
+            "§3.2.3 An attestation must be attributed (who evaluated the criterion)."));
     }
 }
 

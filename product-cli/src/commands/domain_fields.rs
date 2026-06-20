@@ -75,6 +75,27 @@ pub struct NodeFields {
     /// Read-model states beyond `present` (e.g. `loading,empty,failed`)
     #[arg(long, value_delimiter = ',')]
     states: Option<Vec<String>>,
+    /// WCAG criteria a step or AIO must satisfy (comma-separated)
+    #[arg(long = "must-satisfy", value_delimiter = ',')]
+    must_satisfy: Option<Vec<String>>,
+    /// WCAG level (A/AA/AAA)
+    #[arg(long)]
+    level: Option<String>,
+    /// WCAG verification type (machine/assisted/manual)
+    #[arg(long)]
+    verification: Option<String>,
+    /// Machine-gate result for a WcagCriterion
+    #[arg(long)]
+    satisfied: Option<bool>,
+    /// Attestation: the step / criterion it discharges, who attests
+    #[arg(long)]
+    step: Option<String>,
+    #[arg(long)]
+    criterion: Option<String>,
+    #[arg(long)]
+    date: Option<String>,
+    #[arg(long)]
+    by: Option<String>,
     /// `projection:state:meaning` (repeatable)
     #[arg(long = "state-meaning")]
     state_meaning: Option<Vec<String>>,
@@ -130,6 +151,14 @@ impl NodeFields {
             if let Some(v) = &self.entry_page { put("entry_page", json!(v)); }
             if let Some(v) = &self.navigates_from_root { put("navigates_from_root", json!(v)); }
             if let Some(v) = &self.states { put("states", json!(v)); }
+        if let Some(v) = &self.must_satisfy { put("must_satisfy", json!(v)); }
+        if let Some(v) = &self.level { put("level", json!(v)); }
+        if let Some(v) = &self.verification { put("verification", json!(v)); }
+        if let Some(v) = self.satisfied { put("satisfied", json!(v)); }
+        if let Some(v) = &self.step { put("step", json!(v)); }
+        if let Some(v) = &self.criterion { put("criterion", json!(v)); }
+        if let Some(v) = &self.date { put("date", json!(v)); }
+        if let Some(v) = &self.by { put("by", json!(v)); }
         }
         let annotations = state_annotations(self.state_meaning.as_deref(), self.waive_state.as_deref());
         if !annotations.is_empty() {

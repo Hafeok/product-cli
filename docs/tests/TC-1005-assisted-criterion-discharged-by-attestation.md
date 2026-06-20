@@ -2,7 +2,7 @@
 id: TC-1005
 title: assisted criterion discharged by attestation
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-137
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1005_assisted_criterion_discharged_by_attestation
+last-run: 2026-06-20T18:17:51.089850889+00:00
+last-run-duration: 0.7s
 ---
 
 ## Scenario — an assisted criterion is discharged only by a dated, attributed attestation

@@ -9475,6 +9475,55 @@ fn tc_1002_waiving_an_ignorable_state_passes_with_reason() {
     out.assert_exit(0);
 }
 
+#[test]
+fn tc_1003_step_inherits_accessibility_obligations_from_its_aios() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // A step using a text-entry AIO inherits its labelling criteria (the union),
+    // each annotated with the AIO it came from — no hand-maintained list.
+    h.run(&["domain", "new", "ui-step", "EditProfile", "--label", "Edit", "--offers", "PlaceOrder:text-entry"]).assert_exit(0);
+    let out = h.run(&["domain", "accessibility", "EditProfile"]);
+    assert!(out.stdout.contains("3.3.2") && out.stdout.contains("from text-entry"),
+        "union should inherit labelling from text-entry, stdout:\n{}", out.stdout);
+    assert!(!out.stdout.contains("1.1.1"), "no display-value yet, stdout:\n{}", out.stdout);
+    // Adding a display-value AIO adds 1.1.1 Non-text Content to the union.
+    h.run(&["domain", "new", "ui-step", "WithImage", "--label", "Img",
+        "--offers", "PlaceOrder:text-entry", "--surfaces", "OrderSummary:display-value"]).assert_exit(0);
+    let out2 = h.run(&["domain", "accessibility", "WithImage"]);
+    assert!(out2.stdout.contains("1.1.1"), "display-value should add 1.1.1, stdout:\n{}", out2.stdout);
+}
+
+#[test]
+fn tc_1004_machine_criterion_is_a_deterministic_gate() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["domain", "new", "wcag-criterion", "contrast", "--label", "Contrast", "--level", "AA", "--verification", "machine"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "Page1", "--label", "P1", "--must-satisfy", "contrast"]).assert_exit(0);
+    // Unsatisfied machine criterion → the gate fails (mechanical).
+    let fail = h.run(&["domain", "accessibility", "Page1"]);
+    fail.assert_exit(1);
+    assert!(fail.stdout.contains("AA") && fail.stdout.contains("machine"), "verdict reports level + basis, stdout:\n{}", fail.stdout);
+    // Satisfied → the gate passes.
+    h.run(&["domain", "edit", "contrast", "--satisfied", "true"]).assert_exit(0);
+    h.run(&["domain", "accessibility", "Page1"]).assert_exit(0);
+}
+
+#[test]
+fn tc_1005_assisted_criterion_discharged_by_attestation() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["domain", "new", "wcag-criterion", "focusvis", "--label", "Focus", "--level", "AA", "--verification", "assisted"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "Page2", "--label", "P2", "--must-satisfy", "focusvis"]).assert_exit(0);
+    // No attestation → undischarged.
+    h.run(&["domain", "accessibility", "Page2"]).assert_exit(1);
+    // A dated, attributed attestation discharges it.
+    h.run(&["domain", "new", "attestation", "att1", "--step", "Page2", "--criterion", "focusvis", "--date", "2026-06-19", "--by", "QA"]).assert_exit(0);
+    h.run(&["domain", "accessibility", "Page2"]).assert_exit(0);
+    // An attestation missing its date/attribution is rejected at the boundary.
+    let bad = h.run(&["domain", "new", "attestation", "att2", "--step", "Page2", "--criterion", "focusvis"]);
+    bad.assert_exit(1);
+}
+
 /// TC-434: init errors on existing canonical config without --force
 #[test]
 fn tc_434_init_errors_on_existing_product_toml_without_force() {
