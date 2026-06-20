@@ -122,6 +122,7 @@ pub fn add_read_model(s: &mut DomainSession, a: &Value) -> Result<Value, String>
         id: req_str(a, "id")?,
         label: req_str(a, "label")?,
         projects: str_array(a, "projects"),
+        ..Default::default()
     };
     to_value(ops::add_read_model(s, r))
 }

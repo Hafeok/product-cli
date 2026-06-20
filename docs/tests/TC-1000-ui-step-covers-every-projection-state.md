@@ -2,7 +2,7 @@
 id: TC-1000
 title: UI step covers every projection state
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-136
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1000_ui_step_covers_every_projection_state
+last-run: 2026-06-20T17:54:52.495698456+00:00
+last-run-duration: 22.5s
 ---
 
 ## Scenario — a UI step that means every state of its projection is conformant

@@ -2,7 +2,7 @@
 id: TC-1001
 title: forgotten failed state fails coverage
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-136
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1001_forgotten_failed_state_fails_coverage
+last-run: 2026-06-20T17:54:52.495698456+00:00
+last-run-duration: 0.5s
 ---
 
 ## Scenario — a projection that can fail whose screen never says what failure means

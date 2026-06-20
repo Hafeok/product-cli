@@ -114,7 +114,7 @@ fn parse_read_models(store: &Store, g: &mut DomainGraph) -> Result<()> {
     let projects = multi(store, "pf:ReadModel", "pf:projects")?;
     for row in select(store, "?s ?label", "?s a pf:ReadModel . OPTIONAL { ?s rdfs:label ?label }")? {
         let id = local(row.get("s"));
-        g.read_models.push(ReadModel { projects: projects.get(&id).cloned().unwrap_or_default(), id: id.clone(), label: lit(row.get("label")) });
+        g.read_models.push(ReadModel { projects: projects.get(&id).cloned().unwrap_or_default(), id: id.clone(), label: lit(row.get("label")), ..Default::default() });
     }
     Ok(())
 }

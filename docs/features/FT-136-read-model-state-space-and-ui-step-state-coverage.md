@@ -2,7 +2,7 @@
 id: FT-136
 title: Read-model state space and UI-step state coverage
 phase: 7
-status: planned
+status: complete
 depends-on:
 - FT-134
 adrs:
@@ -15,16 +15,16 @@ domains:
 - api
 - data-model
 domains-acknowledged:
+  ADR-018: Scenario TCs drive the binary through assert_cmd; `pf::rules_ui`/`pf::model` carry unit tests. No property or session dimension for a coverage rule.
   ADR-041: Additive — adds a state-space field to read models and state-meaning/waiver annotations to UiSteps; nothing is removed or deprecated, so no absence TC is required.
-  ADR-047: The functional specification lives in this feature's body, not a separate artifact.
-  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
   ADR-050: PAT-001 (slice + adapter) governs the `pf` slice + CLI adapter; no new implementation pattern is introduced.
   ADR-049: Not a context-bundle/template command; no template surface changes.
-  ADR-043: The state space, the annotations, and the coverage rule live in the pure `pf` slice; the CLI is a thin adapter.
+  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
   ADR-048: Reads/writes the captured What graph only (the domain session); no other side effects.
-  ADR-051: Every TC declares `observes:` (graph, exit-code) and asserts on those surfaces.
-  ADR-018: Scenario TCs drive the binary through assert_cmd; `pf::rules_ui`/`pf::model` carry unit tests. No property or session dimension for a coverage rule.
   ADR-040: The state space and its coverage rule are What-side artifacts at the What/How boundary; they compose with the existing What-side rules; the verify pipeline is untouched.
+  ADR-051: Every TC declares `observes:` (graph, exit-code) and asserts on those surfaces.
+  ADR-043: The state space, the annotations, and the coverage rule live in the pure `pf` slice; the CLI is a thin adapter.
+  ADR-047: The functional specification lives in this feature's body, not a separate artifact.
 patterns:
 - PAT-001
 ---

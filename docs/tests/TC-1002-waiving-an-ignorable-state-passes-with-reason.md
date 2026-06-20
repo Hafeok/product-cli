@@ -2,7 +2,7 @@
 id: TC-1002
 title: waiving an ignorable state passes with reason
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-136
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1002_waiving_an_ignorable_state_passes_with_reason
+last-run: 2026-06-20T17:54:52.495698456+00:00
+last-run-duration: 0.4s
 ---
 
 ## Scenario — an ignorable state is dismissable on the record; an impossible one is not

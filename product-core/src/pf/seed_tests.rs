@@ -11,7 +11,7 @@ fn sample() -> DomainGraph {
     g.relations.push(Relation { id: "rel".into(), label: Some("owns".into()), from: "Task".into(), to: "Task".into(), cardinality: "one-to-many".into(), rationale: "self ref".into() });
     g.events.push(Event { id: "Done".into(), label: "Done".into(), context: "Tasks".into(), changes: "Task".into() });
     g.commands.push(Command { id: "Complete".into(), label: "Complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["Done".into()] });
-    g.read_models.push(ReadModel { id: "Open".into(), label: "Open".into(), projects: vec!["Task".into(), "Done".into()] });
+    g.read_models.push(ReadModel { id: "Open".into(), label: "Open".into(), projects: vec!["Task".into(), "Done".into()], ..Default::default() });
     g.flows.push(Flow { id: "Flow".into(), label: "Complete a task".into(), steps: vec!["Complete".into(), "Done".into(), "Open".into()], ..Default::default() });
     g
 }

@@ -101,12 +101,15 @@ pub struct Event {
     pub changes: String,
 }
 
-/// §3.2 — a view; projects entities/events.
+/// §3.2 — a view; projects entities/events. §3.2 state space — `present` plus
+/// any of `loading`/`empty`/`failed` it can exhibit (declared in `states`).
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct ReadModel {
     pub id: String,
     pub label: String,
     pub projects: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub states: Vec<String>,
 }
 
 /// §3.2.1 — one (projection, display-AIO) the step surfaces.
@@ -121,6 +124,19 @@ pub struct Surface {
 pub struct Offer {
     pub command: String,
     pub aio: String,
+}
+
+/// §3.2.1 — what a surfaced projection's state *means to the user* at a step, or
+/// an explicit `waiver` (with reason) for an ignorable state. Exactly one of
+/// `meaning`/`waiver` is set.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct StateMeaning {
+    pub projection: String,
+    pub state: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub meaning: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub waiver: Option<String>,
 }
 
 /// §3.2.1 — a UI step (the What of a screen). Supersedes the free-text
@@ -140,6 +156,8 @@ pub struct WireframeStep {
     pub offers: Vec<Offer>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub transitions_to: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub state_meanings: Vec<StateMeaning>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub triggers: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

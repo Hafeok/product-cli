@@ -18,7 +18,7 @@ fn conformant_what_graph_has_no_violations() {
     g.entities.push(entity("Task", "Tasks"));
     g.events.push(Event { id: "TaskDone".into(), label: "TaskDone".into(), context: "Tasks".into(), changes: "Task".into() });
     g.commands.push(Command { id: "Complete".into(), label: "Complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["TaskDone".into()] });
-    g.read_models.push(ReadModel { id: "Open".into(), label: "Open".into(), projects: vec!["Task".into()] });
+    g.read_models.push(ReadModel { id: "Open".into(), label: "Open".into(), projects: vec!["Task".into()], ..Default::default() });
     assert_eq!(validate_graph(&g), vec![]);
 }
 

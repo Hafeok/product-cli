@@ -72,6 +72,15 @@ pub struct NodeFields {
     entry_page: Option<String>,
     #[arg(long = "navigates-from-root", value_delimiter = ',')]
     navigates_from_root: Option<Vec<String>>,
+    /// Read-model states beyond `present` (e.g. `loading,empty,failed`)
+    #[arg(long, value_delimiter = ',')]
+    states: Option<Vec<String>>,
+    /// `projection:state:meaning` (repeatable)
+    #[arg(long = "state-meaning")]
+    state_meaning: Option<Vec<String>>,
+    /// `projection:state:reason` — waive an ignorable state (repeatable)
+    #[arg(long = "waive-state")]
+    waive_state: Option<Vec<String>>,
 }
 
 impl NodeFields {
@@ -106,18 +115,48 @@ impl NodeFields {
         if let Some(v) = &self.means { put("means", json!(v)); }
         if let Some(v) = &self.dimension { put("dimension", json!(v)); }
         if let Some(v) = &self.value { put("value", json!(v)); }
-        if let Some(v) = &self.intent { put("intent", json!(v)); }
-        if let Some(v) = &self.transitions_to { put("transitions_to", json!(v)); }
-        if let Some(v) = &self.surfaces {
-            put("surfaces", pairs(v, "projection"));
-        }
-        if let Some(v) = &self.offers {
-            put("offers", pairs(v, "command"));
-        }
-        if let Some(v) = &self.entry_page { put("entry_page", json!(v)); }
-        if let Some(v) = &self.navigates_from_root { put("navigates_from_root", json!(v)); }
+        self.put_ui_fields(&mut m);
         m
     }
+
+    /// The §3.2.1–§3.2.4 UI-layer field puts, split out to keep `to_map` small.
+    fn put_ui_fields(&self, m: &mut Map<String, Value>) {
+        {
+            let mut put = |k: &str, v: Value| { m.insert(k.to_string(), v); };
+            if let Some(v) = &self.intent { put("intent", json!(v)); }
+            if let Some(v) = &self.transitions_to { put("transitions_to", json!(v)); }
+            if let Some(v) = &self.surfaces { put("surfaces", pairs(v, "projection")); }
+            if let Some(v) = &self.offers { put("offers", pairs(v, "command")); }
+            if let Some(v) = &self.entry_page { put("entry_page", json!(v)); }
+            if let Some(v) = &self.navigates_from_root { put("navigates_from_root", json!(v)); }
+            if let Some(v) = &self.states { put("states", json!(v)); }
+        }
+        let annotations = state_annotations(self.state_meaning.as_deref(), self.waive_state.as_deref());
+        if !annotations.is_empty() {
+            m.insert("state_meanings".to_string(), json!(annotations));
+        }
+    }
+}
+
+/// Parse `--state-meaning`/`--waive-state` strings (`projection:state:text`)
+/// into `[{projection, state, meaning|waiver}]` for a UI step's `state_meanings`.
+fn state_annotations(meanings: Option<&[String]>, waivers: Option<&[String]>) -> Vec<Value> {
+    let parse = |items: Option<&[String]>, key: &str| -> Vec<Value> {
+        items
+            .unwrap_or(&[])
+            .iter()
+            .filter_map(|s| {
+                let mut it = s.splitn(3, ':');
+                let projection = it.next()?.to_string();
+                let state = it.next()?.to_string();
+                let text = it.next().unwrap_or("").to_string();
+                Some(json!({ "projection": projection, "state": state, key: text }))
+            })
+            .collect()
+    };
+    let mut out = parse(meanings, "meaning");
+    out.extend(parse(waivers, "waiver"));
+    out
 }
 
 /// Parse `target:aio` pair strings into `[{<target_key>, aio}, …]` for a UI

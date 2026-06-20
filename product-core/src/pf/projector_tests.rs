@@ -9,7 +9,7 @@ fn graph() -> DomainGraph {
     g.events.push(Event { id: "OrderPlaced".into(), label: "Order Placed".into(), context: "Sales".into(), changes: "Order".into() });
     g.events.push(Event { id: "OrderShipped".into(), label: "Order Shipped".into(), context: "Sales".into(), changes: "Order".into() });
     g.events.push(Event { id: "UserRenamed".into(), label: "User Renamed".into(), context: "Iam".into(), changes: "User".into() });
-    g.read_models.push(ReadModel { id: "rm-orders".into(), label: "Orders".into(), projects: vec!["Order".into()] });
+    g.read_models.push(ReadModel { id: "rm-orders".into(), label: "Orders".into(), projects: vec!["Order".into()], ..Default::default() });
     g
 }
 

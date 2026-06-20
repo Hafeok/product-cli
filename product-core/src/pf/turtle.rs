@@ -77,6 +77,9 @@ fn emit_read_model(out: &mut String, rm: &super::model::ReadModel) {
     for p in &rm.projects {
         out.push_str(&format!(" ;\n  pf:projects d:{}", p));
     }
+    for s in &rm.states {
+        out.push_str(&format!(" ;\n  pf:hasState {}", lit(s)));
+    }
     out.push_str(" .\n\n");
 }
 

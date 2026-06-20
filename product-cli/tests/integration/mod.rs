@@ -9423,6 +9423,58 @@ fn tc_999_primary_navigation_recomputes_when_a_flow_joins_the_root() {
     assert!(after.stdout.contains("Browse [top-level]"), "Browse should now be top-level, stdout:\n{}", after.stdout);
 }
 
+// FT-136 — read-model state space + UI state coverage helpers.
+fn setup_state_space(h: &Harness) {
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // OrderSummary's state space: present + empty + failed.
+    h.run(&["domain", "edit", "OrderSummary", "--states", "empty,failed"]).assert_exit(0);
+}
+
+#[test]
+fn tc_1000_ui_step_covers_every_projection_state() {
+    let h = Harness::new_bare();
+    setup_state_space(&h);
+    let mk = h.run(&[
+        "domain", "new", "ui-step", "Review", "--label", "Review",
+        "--surfaces", "OrderSummary:display-collection",
+        "--state-meaning", "OrderSummary:present:The order total",
+        "--state-meaning", "OrderSummary:empty:Your cart is empty",
+        "--state-meaning", "OrderSummary:failed:Could not load",
+    ]);
+    mk.assert_exit(0);
+    h.run(&["domain", "validate"]).assert_exit(0);
+}
+
+#[test]
+fn tc_1001_forgotten_failed_state_fails_coverage() {
+    let h = Harness::new_bare();
+    setup_state_space(&h);
+    // Omitting the `failed` meaning (and not waiving it) is a coverage violation.
+    let out = h.run(&[
+        "domain", "new", "ui-step", "Forgetful", "--label", "F",
+        "--surfaces", "OrderSummary:display-collection",
+        "--state-meaning", "OrderSummary:present:total",
+        "--state-meaning", "OrderSummary:empty:empty",
+    ]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("failed") && out.stderr.contains("coverage"), "stderr:\n{}", out.stderr);
+}
+
+#[test]
+fn tc_1002_waiving_an_ignorable_state_passes_with_reason() {
+    let h = Harness::new_bare();
+    setup_state_space(&h);
+    // Waiving `failed` with a reason satisfies coverage.
+    let out = h.run(&[
+        "domain", "new", "ui-step", "Waived", "--label", "W",
+        "--surfaces", "OrderSummary:display-collection",
+        "--state-meaning", "OrderSummary:present:total",
+        "--state-meaning", "OrderSummary:empty:empty",
+        "--waive-state", "OrderSummary:failed:logged elsewhere",
+    ]);
+    out.assert_exit(0);
+}
+
 /// TC-434: init errors on existing canonical config without --force
 #[test]
 fn tc_434_init_errors_on_existing_product_toml_without_force() {
