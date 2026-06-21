@@ -2,7 +2,7 @@
 id: TC-1010
 title: reification coverage over AIO and context
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-139
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1010_reification_coverage_over_aio_and_context
+last-run: 2026-06-21T19:06:43.421096467+00:00
+last-run-duration: 0.6s
 ---
 
 ## Scenario — every (AIO, context) a screen can encounter must have a reifying rule

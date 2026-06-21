@@ -75,6 +75,16 @@ pub fn remove(session: &mut DomainSession, id: &str) -> OpResult {
     g.read_models.retain(|n| n.id != id);
     g.wireframe_steps.retain(|n| n.id != id);
     g.flows.retain(|n| n.id != id);
+    g.aios.retain(|n| n.id != id);
+    g.contexts_of_use.retain(|n| n.id != id);
+    g.application_roots.retain(|n| n.id != id);
+    g.wcag_criteria.retain(|n| n.id != id);
+    g.attestations.retain(|n| n.id != id);
+    g.content_stores.retain(|n| n.id != id);
+    g.design_systems.retain(|n| n.id != id);
+    g.cios.retain(|n| n.id != id);
+    g.tokens.retain(|n| n.id != id);
+    g.reification_rules.retain(|n| n.id != id);
     if g.node_count() < before {
         session.tool_calls += 1;
         ok(id)
@@ -115,6 +125,10 @@ fn insert(g: &mut DomainGraph, kind: NodeKind, id: &str, fields: &Map<String, Va
         NodeKind::WcagCriterion => g.wcag_criteria.push(build(id, fields)?),
         NodeKind::Attestation => g.attestations.push(build(id, fields)?),
         NodeKind::ContentStore => g.content_stores.push(build(id, fields)?),
+        NodeKind::DesignSystem => g.design_systems.push(build(id, fields)?),
+        NodeKind::Cio => g.cios.push(build(id, fields)?),
+        NodeKind::Token => g.tokens.push(build(id, fields)?),
+        NodeKind::ReificationRule => g.reification_rules.push(build(id, fields)?),
     }
     Ok(())
 }
@@ -139,6 +153,10 @@ fn patch(g: &mut DomainGraph, kind: NodeKind, id: &str, fields: &Map<String, Val
         NodeKind::WcagCriterion => patch_at(&mut g.wcag_criteria, id, fields),
         NodeKind::Attestation => patch_at(&mut g.attestations, id, fields),
         NodeKind::ContentStore => patch_at(&mut g.content_stores, id, fields),
+        NodeKind::DesignSystem => patch_at(&mut g.design_systems, id, fields),
+        NodeKind::Cio => patch_at(&mut g.cios, id, fields),
+        NodeKind::Token => patch_at(&mut g.tokens, id, fields),
+        NodeKind::ReificationRule => patch_at(&mut g.reification_rules, id, fields),
     }
 }
 
@@ -182,7 +200,7 @@ trait HasId {
 macro_rules! has_id {
     ($($t:ty),+ $(,)?) => { $(impl HasId for $t { fn node_id(&self) -> &str { &self.id } })+ };
 }
-has_id!(BoundedContext, Entity, ValueObject, Relation, Invariant, ContextMapping, Command, Event, ReadModel, WireframeStep, Flow, Aio, ContextOfUse, ApplicationRoot, WcagCriterion, Attestation, ContentStore);
+has_id!(BoundedContext, Entity, ValueObject, Relation, Invariant, ContextMapping, Command, Event, ReadModel, WireframeStep, Flow, Aio, ContextOfUse, ApplicationRoot, WcagCriterion, Attestation, ContentStore, DesignSystem, Cio, Token, ReificationRule);
 
 #[cfg(test)]
 #[path = "edit_tests.rs"]

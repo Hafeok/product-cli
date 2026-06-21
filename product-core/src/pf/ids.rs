@@ -36,10 +36,21 @@ pub enum NodeKind {
     /// §4.6 — the swappable provider of words: resolves (content key, locale) →
     /// string for the content references a UI step carries.
     ContentStore,
+    /// §4.5 — the design system: the closed catalog of CIOs + token surface a
+    /// screen composes from.
+    DesignSystem,
+    /// §4.5 — a Concrete Interaction Object: an on-system component an AIO
+    /// reifies into.
+    Cio,
+    /// §4.5 — a design token (colour, spacing, …); styling references tokens,
+    /// never literals.
+    Token,
+    /// §4.5 — a reify(AIO, context) → CIO rule carrying rationale.
+    ReificationRule,
 }
 
 /// Every node kind, in declaration order (for `list`/iteration).
-pub const ALL_KINDS: [NodeKind; 17] = [
+pub const ALL_KINDS: [NodeKind; 21] = [
     NodeKind::BoundedContext,
     NodeKind::Entity,
     NodeKind::ValueObject,
@@ -57,6 +68,10 @@ pub const ALL_KINDS: [NodeKind; 17] = [
     NodeKind::WcagCriterion,
     NodeKind::Attestation,
     NodeKind::ContentStore,
+    NodeKind::DesignSystem,
+    NodeKind::Cio,
+    NodeKind::Token,
+    NodeKind::ReificationRule,
 ];
 
 /// Built-in WCAG 2.2 criteria seed: (id, level, verification-type, name). An
@@ -116,6 +131,10 @@ impl NodeKind {
             Self::WcagCriterion => "WcagCriterion",
             Self::Attestation => "Attestation",
             Self::ContentStore => "ContentStore",
+            Self::DesignSystem => "DesignSystem",
+            Self::Cio => "Cio",
+            Self::Token => "Token",
+            Self::ReificationRule => "ReificationRule",
         }
     }
 
@@ -139,6 +158,10 @@ impl NodeKind {
             Self::WcagCriterion => "wcag-criterion",
             Self::Attestation => "attestation",
             Self::ContentStore => "content-store",
+            Self::DesignSystem => "design-system",
+            Self::Cio => "cio",
+            Self::Token => "token",
+            Self::ReificationRule => "reification-rule",
         }
     }
 

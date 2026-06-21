@@ -56,6 +56,10 @@ pub struct WireframeStep {
     /// How against a content store (§4.6), never stored as literals here.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub content_refs: Vec<ContentRef>,
+    /// §4.5 — style values the screen carries; each must be a design-system
+    /// token reference, never a literal (tokens-not-literals).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub styles: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub triggers: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -164,4 +168,44 @@ pub struct Attestation {
     pub criterion: String,
     pub date: String,
     pub by: String,
+}
+
+/// §4.5 — the design system: the closed CIO catalog + token surface a screen
+/// composes from (`cios`, `tokens`).
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct DesignSystem {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub cios: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tokens: Vec<String>,
+}
+
+/// §4.5 — a Concrete Interaction Object: an on-system component an AIO reifies to.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct Cio {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+}
+
+/// §4.5 — a design token (colour, spacing, typography, …).
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct Token {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>,
+}
+
+/// §4.5 — a reify(AIO, context) → CIO rule with rationale (the UX reasoning).
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct ReificationRule {
+    pub id: String,
+    pub aio: String,
+    pub context: String,
+    pub cio: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rationale: Option<String>,
 }

@@ -154,6 +154,14 @@ pub struct DomainGraph {
     pub attestations: Vec<Attestation>,
     #[serde(default)]
     pub content_stores: Vec<ContentStore>,
+    #[serde(default)]
+    pub design_systems: Vec<DesignSystem>,
+    #[serde(default)]
+    pub cios: Vec<Cio>,
+    #[serde(default)]
+    pub tokens: Vec<Token>,
+    #[serde(default)]
+    pub reification_rules: Vec<ReificationRule>,
 }
 
 impl DomainGraph {
@@ -162,45 +170,10 @@ impl DomainGraph {
         self.kind_of(id).is_some()
     }
 
-    /// The class of the node with this id, if it exists.
+    /// The class of the node with this id, if it exists. Derived from the
+    /// canonical `ids()` table so there is one place that enumerates kinds.
     pub fn kind_of(&self, id: &str) -> Option<NodeKind> {
-        if self.contexts.iter().any(|n| n.id == id) {
-            Some(NodeKind::BoundedContext)
-        } else if self.entities.iter().any(|n| n.id == id) {
-            Some(NodeKind::Entity)
-        } else if self.value_objects.iter().any(|n| n.id == id) {
-            Some(NodeKind::ValueObject)
-        } else if self.relations.iter().any(|n| n.id == id) {
-            Some(NodeKind::Relation)
-        } else if self.invariants.iter().any(|n| n.id == id) {
-            Some(NodeKind::Invariant)
-        } else if self.context_mappings.iter().any(|n| n.id == id) {
-            Some(NodeKind::ContextMapping)
-        } else if self.commands.iter().any(|n| n.id == id) {
-            Some(NodeKind::Command)
-        } else if self.events.iter().any(|n| n.id == id) {
-            Some(NodeKind::Event)
-        } else if self.read_models.iter().any(|n| n.id == id) {
-            Some(NodeKind::ReadModel)
-        } else if self.wireframe_steps.iter().any(|n| n.id == id) {
-            Some(NodeKind::WireframeStep)
-        } else if self.flows.iter().any(|n| n.id == id) {
-            Some(NodeKind::Flow)
-        } else if self.aios.iter().any(|n| n.id == id) {
-            Some(NodeKind::Aio)
-        } else if self.contexts_of_use.iter().any(|n| n.id == id) {
-            Some(NodeKind::ContextOfUse)
-        } else if self.application_roots.iter().any(|n| n.id == id) {
-            Some(NodeKind::ApplicationRoot)
-        } else if self.wcag_criteria.iter().any(|n| n.id == id) {
-            Some(NodeKind::WcagCriterion)
-        } else if self.attestations.iter().any(|n| n.id == id) {
-            Some(NodeKind::Attestation)
-        } else if self.content_stores.iter().any(|n| n.id == id) {
-            Some(NodeKind::ContentStore)
-        } else {
-            None
-        }
+        self.ids().into_iter().find(|(nid, _)| nid == id).map(|(_, k)| k)
     }
 
     /// True if the node with this id exists and has the given kind.
@@ -228,6 +201,10 @@ impl DomainGraph {
             ("WcagCriterion", self.wcag_criteria.len()),
             ("Attestation", self.attestations.len()),
             ("ContentStore", self.content_stores.len()),
+            ("DesignSystem", self.design_systems.len()),
+            ("Cio", self.cios.len()),
+            ("Token", self.tokens.len()),
+            ("ReificationRule", self.reification_rules.len()),
         ]
     }
 
@@ -256,6 +233,10 @@ impl DomainGraph {
         self.wcag_criteria.iter().for_each(|n| out.push((n.id.clone(), NodeKind::WcagCriterion)));
         self.attestations.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Attestation)));
         self.content_stores.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ContentStore)));
+        self.design_systems.iter().for_each(|n| out.push((n.id.clone(), NodeKind::DesignSystem)));
+        self.cios.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Cio)));
+        self.tokens.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Token)));
+        self.reification_rules.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ReificationRule)));
         out
     }
 }

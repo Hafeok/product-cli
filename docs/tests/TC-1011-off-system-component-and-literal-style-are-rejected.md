@@ -2,7 +2,7 @@
 id: TC-1011
 title: off-system component and literal style are rejected
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-139
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1011_off_system_component_and_literal_style_are_rejected
+last-run: 2026-06-21T19:06:43.421096467+00:00
+last-run-duration: 0.5s
 ---
 
 ## Scenario — reification stays on-system and styling stays in tokens

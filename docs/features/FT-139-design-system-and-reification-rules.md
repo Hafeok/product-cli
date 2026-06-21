@@ -2,7 +2,7 @@
 id: FT-139
 title: Design system and reification rules
 phase: 7
-status: planned
+status: complete
 depends-on:
 - FT-134
 adrs:
@@ -17,14 +17,14 @@ domains:
 domains-acknowledged:
   ADR-041: Additive — adds the DesignSystem/Cio/Token/ReificationRule node kinds and the reifies/in_context/realizes_step/composes/binds edges; this is the first How-side material in the UI system, so nothing existing is removed or deprecated and no absence TC is required.
   ADR-047: The functional specification lives in this feature's body, not a separate artifact.
-  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
-  ADR-050: PAT-001 (slice + adapter) governs the `pf` slice + CLI adapter; no new implementation pattern is introduced.
-  ADR-049: Not a context-bundle/template command; no template surface changes.
-  ADR-043: The reification model and the coverage/closed-vocabulary/token rules live in the pure `pf` slice (`reify`, `rules_how`); the CLI is a thin adapter. This populates the How side, previously reported as "(none)".
   ADR-048: Reads/writes the captured graph only (the How contract for an archetype); no other side effects.
-  ADR-051: Every TC declares `observes:` and asserts on those surfaces (graph, exit-code, stdout).
+  ADR-049: Not a context-bundle/template command; no template surface changes.
+  ADR-050: PAT-001 (slice + adapter) governs the `pf` slice + CLI adapter; no new implementation pattern is introduced.
+  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
   ADR-018: Scenario TCs drive the binary through assert_cmd; `pf::reify`/`pf::rules_how` carry unit tests. No property or session dimension for a reification model and its rules.
+  ADR-043: The reification model and the coverage/closed-vocabulary/token rules live in the pure `pf` slice (`reify`, `rules_how`); the CLI is a thin adapter. This populates the How side, previously reported as "(none)".
   ADR-040: The design system and reification are How-side (Concrete UI) material at the What/How seam; the coverage/closed-vocabulary rules compose with the existing How-side rules; the verify pipeline is untouched.
+  ADR-051: Every TC declares `observes:` and asserts on those surfaces (graph, exit-code, stdout).
 patterns:
 - PAT-001
 ---

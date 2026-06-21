@@ -105,6 +105,21 @@ pub struct NodeFields {
     /// Content-store resolutions: `key:locale:value` (repeatable)
     #[arg(long = "resolves")]
     resolves: Option<Vec<String>>,
+    /// Reification: the AIO a rule reifies
+    #[arg(long)]
+    aio: Option<String>,
+    /// Reification: the CIO a rule targets
+    #[arg(long)]
+    cio: Option<String>,
+    /// Design-system CIO catalog (comma-separated)
+    #[arg(long, value_delimiter = ',')]
+    cios: Option<Vec<String>>,
+    /// Design-system token surface (comma-separated)
+    #[arg(long, value_delimiter = ',')]
+    tokens: Option<Vec<String>>,
+    /// UI-step style values (must be design-system tokens, not literals)
+    #[arg(long, value_delimiter = ',')]
+    styles: Option<Vec<String>>,
     /// `projection:state:meaning` (repeatable)
     #[arg(long = "state-meaning")]
     state_meaning: Option<Vec<String>>,
@@ -164,6 +179,11 @@ impl NodeFields {
         if let Some(v) = &self.content { put("content_refs", pairs(v, "key", "role")); }
         if let Some(v) = &self.locales { put("locales", json!(v)); }
         if let Some(v) = &self.resolves { put("resolutions", triples(v)); }
+        if let Some(v) = &self.aio { put("aio", json!(v)); }
+        if let Some(v) = &self.cio { put("cio", json!(v)); }
+        if let Some(v) = &self.cios { put("cios", json!(v)); }
+        if let Some(v) = &self.tokens { put("tokens", json!(v)); }
+        if let Some(v) = &self.styles { put("styles", json!(v)); }
         if let Some(v) = &self.level { put("level", json!(v)); }
         if let Some(v) = &self.verification { put("verification", json!(v)); }
         if let Some(v) = self.satisfied { put("satisfied", json!(v)); }

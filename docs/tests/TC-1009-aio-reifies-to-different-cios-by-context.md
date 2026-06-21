@@ -2,7 +2,7 @@
 id: TC-1009
 title: AIO reifies to different CIOs by context
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-139
@@ -14,6 +14,8 @@ observes:
 - stdout
 runner: cargo-test
 runner-args: tc_1009_aio_reifies_to_different_cios_by_context
+last-run: 2026-06-21T19:06:43.421096467+00:00
+last-run-duration: 18.0s
 ---
 
 ## Scenario — one AIO, many CIOs by context, the What unchanged

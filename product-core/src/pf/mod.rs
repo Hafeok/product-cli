@@ -45,6 +45,7 @@ pub mod questions;
 pub mod release;
 pub mod rules_decider;
 pub mod rules_how;
+pub mod rules_reify;
 pub mod rules_ui;
 pub mod rules_what;
 pub mod run;

@@ -193,6 +193,10 @@ fn section_title(kind: NodeKind) -> &'static str {
         NodeKind::WcagCriterion => "WCAG criteria",
         NodeKind::Attestation => "Attestations",
         NodeKind::ContentStore => "Content stores",
+        NodeKind::DesignSystem => "Design systems",
+        NodeKind::Cio => "Concrete interaction objects",
+        NodeKind::Token => "Tokens",
+        NodeKind::ReificationRule => "Reification rules",
     }
 }
 

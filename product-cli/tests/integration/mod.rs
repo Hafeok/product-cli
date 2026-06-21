@@ -9579,6 +9579,83 @@ fn tc_1008_role_conformance_catches_empty_error_message() {
     h.run(&["domain", "validate"]).assert_exit(0);
 }
 
+// FT-139 — design system + reification helpers.
+fn setup_design_system(h: &Harness) {
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["domain", "new", "context-of-use", "phone", "--label", "Phone"]).assert_exit(0);
+    h.run(&["domain", "new", "context-of-use", "tablet", "--label", "Tablet"]).assert_exit(0);
+    h.run(&["domain", "new", "design-system", "ds",
+        "--cios", "segmented-control,searchable-list,primary-button", "--tokens", "color.accent"]).assert_exit(0);
+}
+
+#[test]
+fn tc_1009_aio_reifies_to_different_cios_by_context() {
+    let h = Harness::new_bare();
+    setup_design_system(&h);
+    h.run(&["domain", "new", "reification-rule", "r1", "--aio", "single-select",
+        "--context", "tablet", "--cio", "segmented-control", "--rationale", "few options, ample width"]).assert_exit(0);
+    h.run(&["domain", "new", "reification-rule", "r2", "--aio", "single-select",
+        "--context", "phone", "--cio", "searchable-list", "--rationale", "no room for many"]).assert_exit(0);
+    let out = h.run(&["domain", "reification", "single-select"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("segmented-control") && out.stdout.contains("searchable-list"),
+        "one AIO reifies to two CIOs by context, stdout:\n{}", out.stdout);
+    assert!(out.stdout.contains("few options"), "rationale should show, stdout:\n{}", out.stdout);
+}
+
+#[test]
+fn tc_1010_reification_coverage_over_aio_and_context() {
+    let h = Harness::new_bare();
+    setup_design_system(&h);
+    h.run(&["domain", "new", "ui-step", "Pick", "--label", "Pick", "--offers", "PlaceOrder:single-select"]).assert_exit(0);
+    h.run(&["domain", "new", "reification-rule", "r1", "--aio", "single-select", "--context", "tablet", "--cio", "segmented-control"]).assert_exit(0);
+    h.run(&["domain", "new", "reification-rule", "r2", "--aio", "single-select", "--context", "phone", "--cio", "searchable-list"]).assert_exit(0);
+    h.run(&["domain", "reification", "--check"]).assert_exit(0);
+    // Removing the (single-select, phone) rule makes coverage incomplete.
+    h.run(&["domain", "rm", "r2"]).assert_exit(0);
+    let fail = h.run(&["domain", "reification", "--check"]);
+    fail.assert_exit(1);
+    assert!(fail.stderr.contains("single-select") && fail.stderr.contains("phone"),
+        "should name the uncovered (AIO, context), stderr:\n{}", fail.stderr);
+}
+
+#[test]
+fn tc_1011_off_system_component_and_literal_style_are_rejected() {
+    let h = Harness::new_bare();
+    setup_design_system(&h);
+    // A reification rule targeting a non-catalog CIO fails the closed-vocab check.
+    h.run(&["domain", "new", "reification-rule", "bad", "--aio", "trigger-action", "--context", "phone", "--cio", "fancy-carousel"]).assert_exit(0);
+    let fail = h.run(&["domain", "reification", "--check"]);
+    fail.assert_exit(1);
+    assert!(fail.stderr.contains("fancy-carousel"), "off-system CIO named, stderr:\n{}", fail.stderr);
+    // A literal style value (not a token) is non-conformant.
+    h.run(&["domain", "rm", "bad"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "Styled", "--label", "S", "--styles", "#3366ff"]).assert_exit(0);
+    let fail2 = h.run(&["domain", "reification", "--check"]);
+    fail2.assert_exit(1);
+    assert!(fail2.stderr.contains("literal"), "literal style rejected, stderr:\n{}", fail2.stderr);
+}
+
+#[test]
+fn domain_rm_deletes_every_node_kind() {
+    // Regression: `remove` must cover all node kinds, not just the original 11.
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    for (kind, id, extra) in [
+        ("aio", "range-select", vec!["--label", "R"]),
+        ("context-of-use", "phone", vec!["--label", "P"]),
+        ("design-system", "ds", vec!["--cios", "primary-button"]),
+        ("cio", "primary-button", vec!["--label", "B"]),
+    ] {
+        let mut args = vec!["domain", "new", kind, id];
+        args.extend(extra);
+        h.run(&args).assert_exit(0);
+        // The node deletes, and a second delete fails (it is truly gone).
+        h.run(&["domain", "rm", id]).assert_exit(0);
+        h.run(&["domain", "rm", id]).assert_exit(1);
+    }
+}
+
 /// TC-434: init errors on existing canonical config without --force
 #[test]
 fn tc_434_init_errors_on_existing_product_toml_without_force() {

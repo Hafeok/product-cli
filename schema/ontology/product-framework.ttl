@@ -135,6 +135,26 @@ pf:ContentStore a owl:Class ;
   rdfs:label "Content Store" ;
   rdfs:comment "§4.6 — the swappable provider of words; resolves (content key, locale) → string for a UI step's content references." .
 
+pf:DesignSystem a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Design System" ;
+  rdfs:comment "§4.5 — the closed CIO catalog + token surface a screen composes from." .
+
+pf:Cio a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Concrete Interaction Object" ;
+  rdfs:comment "§4.5 — an on-system design-system component an AIO reifies into." .
+
+pf:Token a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Design Token" ;
+  rdfs:comment "§4.5 — a design token (colour, spacing, typography); styling references tokens, never literals." .
+
+pf:ReificationRule a owl:Class ;
+  rdfs:subClassOf pf:Artifact ;
+  rdfs:label "Reification Rule" ;
+  rdfs:comment "§4.5 — a reify(AIO, context) → CIO rule carrying its UX rationale." .
+
 #################################################################
 #  HOW — §4.1 the Why (decisions, principles, patterns)
 #################################################################

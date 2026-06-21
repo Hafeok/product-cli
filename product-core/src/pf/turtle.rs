@@ -29,6 +29,18 @@ pub fn to_turtle(graph: &DomainGraph, product: &str) -> String {
     graph.wcag_criteria.iter().for_each(|c| emit_wcag(&mut out, c));
     graph.attestations.iter().for_each(|a| emit_attestation(&mut out, a));
     graph.content_stores.iter().for_each(|s| emit_content_store(&mut out, s));
+    graph.design_systems.iter().for_each(|d| emit_design_system(&mut out, d));
+    graph.reification_rules.iter().for_each(|r| emit_reification_rule(&mut out, r));
+    for c in &graph.cios {
+        out.push_str(&format!("d:{} a pf:Cio", c.id));
+        if let Some(l) = &c.label { out.push_str(&format!(" ;\n  rdfs:label {}", lit(l))); }
+        out.push_str(" .\n\n");
+    }
+    for t in &graph.tokens {
+        out.push_str(&format!("d:{} a pf:Token", t.id));
+        if let Some(k) = &t.kind { out.push_str(&format!(" ;\n  pf:tokenKind {}", lit(k))); }
+        out.push_str(" .\n\n");
+    }
     out
 }
 
@@ -94,6 +106,23 @@ fn emit_flow(out: &mut String, f: &super::model::Flow) {
     if let Some(e) = &f.entry_page {
         out.push_str(&format!(" ;\n  pf:entryPage d:{}", e));
     }
+    out.push_str(" .\n\n");
+}
+
+fn emit_design_system(out: &mut String, d: &super::model::DesignSystem) {
+    out.push_str(&format!("d:{} a pf:DesignSystem", d.id));
+    if let Some(l) = &d.label { out.push_str(&format!(" ;\n  rdfs:label {}", lit(l))); }
+    for c in &d.cios { out.push_str(&format!(" ;\n  pf:hasCio d:{}", c)); }
+    for t in &d.tokens { out.push_str(&format!(" ;\n  pf:hasToken {}", lit(t))); }
+    out.push_str(" .\n\n");
+}
+
+fn emit_reification_rule(out: &mut String, r: &super::model::ReificationRule) {
+    out.push_str(&format!(
+        "d:{} a pf:ReificationRule ;\n  pf:reifies d:{} ;\n  pf:inContext d:{} ;\n  pf:toCio d:{}",
+        r.id, r.aio, r.context, r.cio
+    ));
+    if let Some(why) = &r.rationale { out.push_str(&format!(" ;\n  pf:rationale {}", lit(why))); }
     out.push_str(" .\n\n");
 }
 

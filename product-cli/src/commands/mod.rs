@@ -26,6 +26,7 @@ mod dep;
 mod dispatch;
 mod domain;
 mod domain_fields;
+mod domain_rows;
 mod drift;
 mod drift_diff;
 mod feature;
