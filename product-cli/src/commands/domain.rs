@@ -46,6 +46,14 @@ pub enum DomainCommands {
         #[arg(long)]
         product: Option<String>,
     },
+    /// Data conformance (§3.1/§6.3): validate a production dataset against its
+    /// shape; reports the data-divergence rate (exit 1 on any violation)
+    Data {
+        /// A ProductionDataset id (omit to check every declared dataset)
+        dataset: Option<String>,
+        #[arg(long)]
+        product: Option<String>,
+    },
     /// Edit fields of an existing node by id
     Edit {
         /// The node id to edit
@@ -114,6 +122,7 @@ pub enum DomainCommands {
 pub(crate) fn handle_domain_cmd(cmd: DomainCommands) -> BoxResult {
     match cmd {
         DomainCommands::Context { id, depth, product } => context(id, depth, product),
+        DomainCommands::Data { dataset, product } => data_check(dataset, product),
         DomainCommands::List { kind, product } => list(kind, product),
         DomainCommands::Show { id, product } => show(id, product),
         DomainCommands::New { kind, id, fields, product } => new(kind, id, fields, product),
@@ -185,6 +194,64 @@ fn highest_level(level: &str) -> Option<u8> {
         "AA" => Some(2),
         "AAA" => Some(3),
         _ => None,
+    }
+}
+
+/// §3.1/§6.3 — validate one or all production datasets against their shapes,
+/// reporting the data-divergence rate. Exit 1 if any record diverges.
+fn data_check(dataset: Option<String>, product: Option<String>) -> BoxResult {
+    let (_, dir) = resolve(product)?;
+    let g = load(&dir)?.graph;
+    let targets: Vec<String> = match dataset {
+        Some(id) => vec![id],
+        None => g.production_datasets.iter().map(|d| d.id.clone()).collect(),
+    };
+    if targets.is_empty() {
+        println!("no production datasets declared — author one with `product domain new production-dataset …`");
+        return Ok(());
+    }
+    let mut diverged = false;
+    for id in &targets {
+        let ds = g.production_datasets.iter().find(|d| &d.id == id)
+            .ok_or_else(|| format!("no production dataset {id:?} in the graph"))?;
+        let records = read_records(&ds.source)?;
+        let verdict = product_core::pf::data_check::check_dataset(&g, id, &records)?;
+        print_verdict(&verdict);
+        if !verdict.conformant() {
+            diverged = true;
+        }
+    }
+    if diverged {
+        return Err("data conformance: some records diverge from the declared shape \
+                    — fix the data, or (if the spec is stale) fix the shape".into());
+    }
+    Ok(())
+}
+
+/// Read a dataset source: a JSON array of record objects.
+fn read_records(source: &str) -> Result<Vec<serde_json::Value>, Box<dyn std::error::Error>> {
+    let text = std::fs::read_to_string(source)
+        .map_err(|e| format!("could not read dataset source {source:?}: {e}"))?;
+    let value: serde_json::Value = serde_json::from_str(&text)
+        .map_err(|e| format!("dataset source {source:?} is not valid JSON: {e}"))?;
+    match value {
+        serde_json::Value::Array(rows) => Ok(rows),
+        _ => Err(format!("dataset source {source:?} must be a JSON array of records").into()),
+    }
+}
+
+/// Print a data-conformance verdict: the divergence rate then per-record findings.
+fn print_verdict(v: &product_core::pf::data_check::DataVerdict) {
+    println!("Data conformance for {} (shape {}, target {}):", v.dataset, v.shape, v.target);
+    println!(
+        "  {} record(s): {} conforming, {} violating — divergence rate {:.1}%",
+        v.total, v.conforming, v.violating, v.divergence_rate * 100.0
+    );
+    for f in &v.findings {
+        println!("  ✗ record {} [{}] {}: {}", f.record, f.field, f.kind, f.detail);
+    }
+    if v.conformant() {
+        println!("  ✓ all records conform to the shape");
     }
 }
 

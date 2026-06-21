@@ -65,6 +65,16 @@ pub fn validate_graph(graph: &DomainGraph) -> Vec<Violation> {
     for a in &graph.attestations {
         check_attestation(a, &mut v);
     }
+    for rs in &graph.reference_sets {
+        super::rules_data::check_reference_set(rs, &mut v);
+    }
+    for s in &graph.data_shapes {
+        super::rules_data::check_data_shape(s, &mut v);
+    }
+    for d in &graph.production_datasets {
+        super::rules_data::check_dataset(d, &mut v);
+    }
+    v.extend(super::rules_data::data_cross_refs(graph));
     v.extend(run_rules(&ui_projection(graph), what_rules()));
     v.extend(run_rules(&ui_projection(graph), super::rules_ui::ui_rules()));
     v.extend(super::rules_ui::check_state_coverage(graph));
@@ -81,50 +91,50 @@ fn ui_projection(graph: &DomainGraph) -> String {
     ttl
 }
 
-/// Run only the shape(s) that target the node with this id (the in-loop path
-/// every mutating tool runs against the fragment it just built).
-pub fn validate_node(graph: &DomainGraph, id: &str) -> Vec<Violation> {
-    let mut v = Vec::new();
+/// Run the native (non-cross-reference) shape that targets this node's kind.
+fn check_local_shape(graph: &DomainGraph, id: &str, v: &mut Vec<Violation>) {
     match graph.kind_of(id) {
         Some(NodeKind::BoundedContext) => {
-            if let Some(c) = graph.contexts.iter().find(|n| n.id == id) {
-                check_context(c, &mut v);
-            }
+            if let Some(c) = graph.contexts.iter().find(|n| n.id == id) { check_context(c, v); }
         }
         Some(NodeKind::Entity) => {
-            if let Some(e) = graph.entities.iter().find(|n| n.id == id) {
-                check_entity(e, &mut v);
-            }
+            if let Some(e) = graph.entities.iter().find(|n| n.id == id) { check_entity(e, v); }
         }
         Some(NodeKind::Relation) => {
-            if let Some(r) = graph.relations.iter().find(|n| n.id == id) {
-                check_relation(r, &mut v);
-            }
+            if let Some(r) = graph.relations.iter().find(|n| n.id == id) { check_relation(r, v); }
         }
         Some(NodeKind::ContextMapping) => {
-            if let Some(m) = graph.context_mappings.iter().find(|n| n.id == id) {
-                check_mapping(m, &mut v);
-            }
+            if let Some(m) = graph.context_mappings.iter().find(|n| n.id == id) { check_mapping(m, v); }
         }
         Some(NodeKind::Invariant) => {
-            if let Some(i) = graph.invariants.iter().find(|n| n.id == id) {
-                check_invariant(i, &mut v);
-            }
+            if let Some(i) = graph.invariants.iter().find(|n| n.id == id) { check_invariant(i, v); }
         }
         Some(NodeKind::ReadModel) => {
-            if let Some(rm) = graph.read_models.iter().find(|n| n.id == id) {
-                check_read_model(rm, &mut v);
-            }
+            if let Some(rm) = graph.read_models.iter().find(|n| n.id == id) { check_read_model(rm, v); }
         }
         Some(NodeKind::Attestation) => {
-            if let Some(a) = graph.attestations.iter().find(|n| n.id == id) {
-                check_attestation(a, &mut v);
-            }
+            if let Some(a) = graph.attestations.iter().find(|n| n.id == id) { check_attestation(a, v); }
+        }
+        Some(NodeKind::ReferenceSet) => {
+            if let Some(rs) = graph.reference_sets.iter().find(|n| n.id == id) { super::rules_data::check_reference_set(rs, v); }
+        }
+        Some(NodeKind::DataShape) => {
+            if let Some(s) = graph.data_shapes.iter().find(|n| n.id == id) { super::rules_data::check_data_shape(s, v); }
+        }
+        Some(NodeKind::ProductionDataset) => {
+            if let Some(d) = graph.production_datasets.iter().find(|n| n.id == id) { super::rules_data::check_dataset(d, v); }
         }
         // Event/Command cross-references are graph rules (below); ValueObject,
         // WireframeStep, Flow have no blocking shape.
         _ => {}
     }
+}
+
+/// Run only the shape(s) that target the node with this id (the in-loop path
+/// every mutating tool runs against the fragment it just built).
+pub fn validate_node(graph: &DomainGraph, id: &str) -> Vec<Violation> {
+    let mut v = Vec::new();
+    check_local_shape(graph, id, &mut v);
     // §3.1/§3.2/§3.2.1 cross-references run as SPARQL over the projection,
     // scoped to the node just built (the ADR-053 in-loop path).
     let projection = ui_projection(graph);

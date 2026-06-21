@@ -28,6 +28,15 @@ fn structure_rows(g: &DomainGraph, filter: Option<NodeKind>) -> Vec<(String, Str
     for n in &g.commands { push(NodeKind::Command, &n.id, format!("{} [{}]", n.label, n.context)); }
     for n in &g.events { push(NodeKind::Event, &n.id, format!("{} changes {}", n.label, n.changes)); }
     for n in &g.read_models { push(NodeKind::ReadModel, &n.id, n.label.clone()); }
+    for n in &g.reference_sets {
+        push(NodeKind::ReferenceSet, &n.id, format!("for {} ({} value(s))", n.concept, n.values.len()));
+    }
+    for n in &g.data_shapes {
+        push(NodeKind::DataShape, &n.id, format!("shapes {}", n.target));
+    }
+    for n in &g.production_datasets {
+        push(NodeKind::ProductionDataset, &n.id, format!("{} ⊨ {}", n.source, n.shape));
+    }
     out
 }
 

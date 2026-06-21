@@ -85,6 +85,9 @@ pub fn remove(session: &mut DomainSession, id: &str) -> OpResult {
     g.cios.retain(|n| n.id != id);
     g.tokens.retain(|n| n.id != id);
     g.reification_rules.retain(|n| n.id != id);
+    g.reference_sets.retain(|n| n.id != id);
+    g.data_shapes.retain(|n| n.id != id);
+    g.production_datasets.retain(|n| n.id != id);
     if g.node_count() < before {
         session.tool_calls += 1;
         ok(id)
@@ -129,6 +132,9 @@ fn insert(g: &mut DomainGraph, kind: NodeKind, id: &str, fields: &Map<String, Va
         NodeKind::Cio => g.cios.push(build(id, fields)?),
         NodeKind::Token => g.tokens.push(build(id, fields)?),
         NodeKind::ReificationRule => g.reification_rules.push(build(id, fields)?),
+        NodeKind::ReferenceSet => g.reference_sets.push(build(id, fields)?),
+        NodeKind::DataShape => g.data_shapes.push(build(id, fields)?),
+        NodeKind::ProductionDataset => g.production_datasets.push(build(id, fields)?),
     }
     Ok(())
 }
@@ -157,6 +163,9 @@ fn patch(g: &mut DomainGraph, kind: NodeKind, id: &str, fields: &Map<String, Val
         NodeKind::Cio => patch_at(&mut g.cios, id, fields),
         NodeKind::Token => patch_at(&mut g.tokens, id, fields),
         NodeKind::ReificationRule => patch_at(&mut g.reification_rules, id, fields),
+        NodeKind::ReferenceSet => patch_at(&mut g.reference_sets, id, fields),
+        NodeKind::DataShape => patch_at(&mut g.data_shapes, id, fields),
+        NodeKind::ProductionDataset => patch_at(&mut g.production_datasets, id, fields),
     }
 }
 
@@ -200,7 +209,7 @@ trait HasId {
 macro_rules! has_id {
     ($($t:ty),+ $(,)?) => { $(impl HasId for $t { fn node_id(&self) -> &str { &self.id } })+ };
 }
-has_id!(BoundedContext, Entity, ValueObject, Relation, Invariant, ContextMapping, Command, Event, ReadModel, WireframeStep, Flow, Aio, ContextOfUse, ApplicationRoot, WcagCriterion, Attestation, ContentStore, DesignSystem, Cio, Token, ReificationRule);
+has_id!(BoundedContext, Entity, ValueObject, Relation, Invariant, ContextMapping, Command, Event, ReadModel, WireframeStep, Flow, Aio, ContextOfUse, ApplicationRoot, WcagCriterion, Attestation, ContentStore, DesignSystem, Cio, Token, ReificationRule, ReferenceSet, DataShape, ProductionDataset);
 
 #[cfg(test)]
 #[path = "edit_tests.rs"]

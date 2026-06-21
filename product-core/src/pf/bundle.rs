@@ -197,6 +197,9 @@ fn section_title(kind: NodeKind) -> &'static str {
         NodeKind::Cio => "Concrete interaction objects",
         NodeKind::Token => "Tokens",
         NodeKind::ReificationRule => "Reification rules",
+        NodeKind::ReferenceSet => "Reference data",
+        NodeKind::DataShape => "Data shapes",
+        NodeKind::ProductionDataset => "Production datasets",
     }
 }
 

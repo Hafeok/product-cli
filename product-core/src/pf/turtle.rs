@@ -31,6 +31,9 @@ pub fn to_turtle(graph: &DomainGraph, product: &str) -> String {
     graph.content_stores.iter().for_each(|s| emit_content_store(&mut out, s));
     graph.design_systems.iter().for_each(|d| emit_design_system(&mut out, d));
     graph.reification_rules.iter().for_each(|r| emit_reification_rule(&mut out, r));
+    graph.reference_sets.iter().for_each(|rs| emit_reference_set(&mut out, rs));
+    graph.data_shapes.iter().for_each(|s| emit_data_shape(&mut out, s));
+    graph.production_datasets.iter().for_each(|d| emit_dataset(&mut out, d));
     for c in &graph.cios {
         out.push_str(&format!("d:{} a pf:Cio", c.id));
         if let Some(l) = &c.label { out.push_str(&format!(" ;\n  rdfs:label {}", lit(l))); }
@@ -251,6 +254,45 @@ fn emit_wireframe(out: &mut String, w: &super::model::WireframeStep) {
     }
     if let Some(d) = &w.displays {
         out.push_str(&format!(" ;\n  pf:displays d:{}", d));
+    }
+    out.push_str(" .\n\n");
+}
+
+fn emit_reference_set(out: &mut String, rs: &super::model::ReferenceSet) {
+    out.push_str(&format!("d:{} a pf:ReferenceSet ;\n  pf:referenceDataFor d:{}", rs.id, rs.concept));
+    if let Some(l) = &rs.label {
+        out.push_str(&format!(" ;\n  rdfs:label {}", lit(l)));
+    }
+    for v in &rs.values {
+        out.push_str(&format!(" ;\n  pf:referenceValue {}", lit(v)));
+    }
+    out.push_str(" .\n\n");
+}
+
+fn emit_data_shape(out: &mut String, s: &super::model::DataShape) {
+    out.push_str(&format!("d:{} a pf:DataShape ;\n  pf:shapeTarget d:{}", s.id, s.target));
+    if let Some(l) = &s.label {
+        out.push_str(&format!(" ;\n  rdfs:label {}", lit(l)));
+    }
+    for r in &s.required {
+        out.push_str(&format!(" ;\n  pf:requiredField {}", lit(r)));
+    }
+    for c in &s.enums {
+        out.push_str(&format!(
+            " ;\n  pf:enumConstraint [ pf:field {} ; pf:fromReferenceSet d:{} ]",
+            lit(&c.field), c.reference_set
+        ));
+    }
+    out.push_str(" .\n\n");
+}
+
+fn emit_dataset(out: &mut String, d: &super::model::ProductionDataset) {
+    out.push_str(&format!(
+        "d:{} a pf:ProductionDataset ;\n  pf:conformsToShape d:{} ;\n  pf:dataSource {}",
+        d.id, d.shape, lit(&d.source)
+    ));
+    if let Some(l) = &d.label {
+        out.push_str(&format!(" ;\n  rdfs:label {}", lit(l)));
     }
     out.push_str(" .\n\n");
 }

@@ -47,10 +47,19 @@ pub enum NodeKind {
     Token,
     /// §4.5 — a reify(AIO, context) → CIO rule carrying rationale.
     ReificationRule,
+    /// §3.1 — constitutive reference data: a governed set of values the
+    /// behaviour depends on (the What side of the structure/data split).
+    ReferenceSet,
+    /// §3.1 — a validatable shape over an entity: the structure side made
+    /// machine-checkable, the oracle production data is validated against.
+    DataShape,
+    /// §3.1 — a production dataset: the populated facts data conformance
+    /// (§6.3) checks the shapes against, never specification itself.
+    ProductionDataset,
 }
 
 /// Every node kind, in declaration order (for `list`/iteration).
-pub const ALL_KINDS: [NodeKind; 21] = [
+pub const ALL_KINDS: [NodeKind; 24] = [
     NodeKind::BoundedContext,
     NodeKind::Entity,
     NodeKind::ValueObject,
@@ -72,6 +81,9 @@ pub const ALL_KINDS: [NodeKind; 21] = [
     NodeKind::Cio,
     NodeKind::Token,
     NodeKind::ReificationRule,
+    NodeKind::ReferenceSet,
+    NodeKind::DataShape,
+    NodeKind::ProductionDataset,
 ];
 
 /// Built-in WCAG 2.2 criteria seed: (id, level, verification-type, name). An
@@ -135,6 +147,9 @@ impl NodeKind {
             Self::Cio => "Cio",
             Self::Token => "Token",
             Self::ReificationRule => "ReificationRule",
+            Self::ReferenceSet => "ReferenceSet",
+            Self::DataShape => "DataShape",
+            Self::ProductionDataset => "ProductionDataset",
         }
     }
 
@@ -162,6 +177,9 @@ impl NodeKind {
             Self::Cio => "cio",
             Self::Token => "token",
             Self::ReificationRule => "reification-rule",
+            Self::ReferenceSet => "reference-set",
+            Self::DataShape => "data-shape",
+            Self::ProductionDataset => "production-dataset",
         }
     }
 

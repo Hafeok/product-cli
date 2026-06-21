@@ -1802,6 +1802,14 @@
 - [ ] TC-1017: content store manifest validates internally (scenario) — unimplemented
 - [ ] TC-1018: content store coupling resolves every referenced key (scenario) — unimplemented
 
+### FT-145 — Domain model structure/data split and data conformance [x]
+
+- [x] ADR-089: The domain model has a data side — reference data is What, production data is the oracle (accepted)
+- [x] TC-1021: author the structure data split (scenario) — passing
+- [x] TC-1022: clean production data has zero divergence (scenario) — passing
+- [x] TC-1023: data conformance catches drift and reports the rate (scenario) — passing
+- [x] TC-1024: validate catches dangling data cross references (scenario) — passing
+
 ## Phase 8
 
 ### FT-143 — product guide — state-aware framework-graph onboarding [x]
