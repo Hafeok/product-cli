@@ -14,8 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1017_content_store_manifest_validates_internally
-last-run: 2026-06-22T13:23:54.355327709+00:00
-last-run-duration: 0.3s
+last-run: 2026-06-22T18:49:08.027555139+00:00
+last-run-duration: 0.5s
 ---
 
 ## Scenario — a whole content-store manifest validates; a missing locale or empty error role fails

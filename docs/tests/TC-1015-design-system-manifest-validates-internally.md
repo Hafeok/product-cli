@@ -14,8 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1015_design_system_manifest_validates_internally
-last-run: 2026-06-22T13:20:00.313714453+00:00
-last-run-duration: 0.3s
+last-run: 2026-06-22T18:48:53.210722136+00:00
+last-run-duration: 13.2s
 ---
 
 ## Scenario — a whole design-system manifest validates; a dangling reification cio fails
