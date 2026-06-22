@@ -47,6 +47,7 @@ pub mod provenance;
 pub mod query;
 pub mod questions;
 pub mod release;
+pub mod render_contract;
 pub mod rules_data;
 pub mod rules_decider;
 pub mod rules_how;

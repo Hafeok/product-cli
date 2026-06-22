@@ -9902,6 +9902,82 @@ fn tc_1018_content_store_coupling_resolves_every_referenced_key() {
     assert!(out.stderr.contains("missing.key") && (out.stderr.contains("de") || out.stderr.contains("en")), "stderr:\n{}", out.stderr);
 }
 
+#[test]
+fn tc_1029_data_conformance_is_adoptable_standalone() {
+    // A graph with ONLY a domain structure + a production dataset — no event
+    // model, Decider, Projector, UI, or work units — is §13's minimal adoption.
+    let h = Harness::new();
+    author_order_data_split(&h);
+    // Structurally valid with nothing but its data side.
+    h.run(&["domain", "validate"]).assert_exit(0);
+    // Data conformance runs end to end and reports the divergence rate.
+    h.write("orders.json", r#"[{"id":"o1","total":10,"shipping":"standard"}]"#);
+    let out = h.run(&["domain", "data", "OrdersLive"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("divergence rate"), "should report the rate, stdout:\n{}", out.stdout);
+}
+
+/// Build a small page graph: root → flow `checkout` with one UI step `Review`
+/// that surfaces a display-value (WCAG-bearing) and offers a trigger-action.
+fn seed_page_graph(h: &Harness) {
+    // The demo already seeds OrderSummary + PlaceOrder. Create the step while the
+    // read model has no states, then add states (the render contract projects the
+    // state space regardless of step-level coverage).
+    h.run(&["domain", "new", "application-root", "root", "--label", "Root",
+        "--navigates-from-root", "Review"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "Review", "--label", "Review", "--intent", "Confirm",
+        "--surfaces", "OrderSummary:display-value", "--offers", "PlaceOrder:trigger-action"]).assert_exit(0);
+    h.run(&["domain", "edit", "OrderSummary", "--states", "empty,present"]).assert_exit(0);
+    h.run(&["domain", "new", "flow", "checkout", "--label", "Checkout",
+        "--steps", "Review", "--entry-page", "Review"]).assert_exit(0);
+}
+
+#[test]
+fn tc_1027_render_contract_projects_page_graph_and_aui() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
+    seed_page_graph(&h);
+    let out = h.run(&["preview", "render-contract", "checkout"]);
+    out.assert_exit(0);
+    let v: serde_json::Value = serde_json::from_str(&out.stdout).expect("valid JSON");
+    assert_eq!(v["contract_version"], "preview-0");
+    assert_eq!(v["flow"]["entry"], "Review");
+    assert_eq!(v["root"]["destinations"][0]["to"], "Review");
+    let screen = &v["screens"][0];
+    assert_eq!(screen["projection"], "OrderSummary");
+    assert_eq!(screen["state_space"], serde_json::json!(["empty", "present"]));
+    // The display-value element inherits its AIO's WCAG obligation (1.1.1).
+    let disp = screen["elements"].as_array().unwrap().iter()
+        .find(|e| e["role"] == "display").unwrap();
+    assert_eq!(disp["aio"], "display-value");
+    assert!(disp["wcag"].as_array().unwrap().iter().any(|c| c == "1.1.1"), "wcag: {}", disp["wcag"]);
+    // The control issues a command and transitions are projected.
+    let ctrl = screen["elements"].as_array().unwrap().iter()
+        .find(|e| e["role"] == "control").unwrap();
+    assert_eq!(ctrl["issues"], "PlaceOrder");
+}
+
+#[test]
+fn tc_1028_render_contract_resolves_content_and_rejects_unknown_flow() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
+    // The demo seeds OrderSummary; reference it.
+    h.run(&["domain", "new", "ui-step", "Review", "--label", "Review",
+        "--surfaces", "OrderSummary:display-value", "--content", "cart.empty:empty-message"]).assert_exit(0);
+    h.run(&["domain", "new", "flow", "checkout", "--label", "Checkout",
+        "--steps", "Review", "--entry-page", "Review"]).assert_exit(0);
+    h.run(&["domain", "new", "content-store", "cs", "--locales", "en",
+        "--resolves", "cart.empty:en:Your cart is empty"]).assert_exit(0);
+    let out = h.run(&["preview", "render-contract", "checkout", "--locale", "en"]);
+    out.assert_exit(0);
+    let v: serde_json::Value = serde_json::from_str(&out.stdout).expect("valid JSON");
+    assert_eq!(v["content_store"]["cart.empty"]["value"], "Your cart is empty");
+    // An unknown flow exits non-zero and names the missing flow.
+    let bad = h.run(&["preview", "render-contract", "ghost"]);
+    bad.assert_exit(1);
+    assert!(bad.stderr.contains("ghost"), "stderr:\n{}", bad.stderr);
+}
+
 /// TC-434: init errors on existing canonical config without --force
 #[test]
 fn tc_434_init_errors_on_existing_product_toml_without_force() {

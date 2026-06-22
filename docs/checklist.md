@@ -1812,6 +1812,17 @@
 - [x] TC-1025: data shape datatype constraint catches type drift (scenario) — passing
 - [x] TC-1026: divergence rate trend is surfaced across runs (scenario) — passing
 
+### FT-146 — Render contract projection for renderers [x]
+
+- [x] ADR-085: Preview conformance profiles for the design system and the content store (accepted)
+- [x] TC-1027: render contract projects page graph and aui (scenario) — passing
+- [x] TC-1028: render contract resolves content and rejects unknown flow (scenario) — passing
+
+### FT-147 — Data conformance profile as minimal standalone adoption [x]
+
+- [x] ADR-089: The domain model has a data side — reference data is What, production data is the oracle (accepted)
+- [x] TC-1029: data conformance is adoptable standalone (scenario) — passing
+
 ## Phase 8
 
 ### FT-143 — product guide — state-aware framework-graph onboarding [x]

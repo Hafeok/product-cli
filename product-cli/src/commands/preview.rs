@@ -28,11 +28,25 @@ pub enum PreviewCommands {
     /// Design-system manifest (§11.3) — validate wholeness; `--couple` checks
     /// reification coverage over the core AIOs × the What's contexts of use
     DesignSystem {
-        /// Path to the TOML design-system manifest
+        /// Path to the YAML design-system manifest
         manifest: PathBuf,
         /// Also run the coupling check against the captured What graph
         #[arg(long)]
         couple: bool,
+        #[arg(long)]
+        product: Option<String>,
+    },
+    /// Render contract — project a flow's page graph + Abstract UI as the JSON a
+    /// renderer consumes (the §11 coupling's other half)
+    RenderContract {
+        /// The flow id to project
+        flow: String,
+        /// A declared context of use to stamp on the contract
+        #[arg(long)]
+        context: Option<String>,
+        /// Resolve content keys for this locale
+        #[arg(long)]
+        locale: Option<String>,
         #[arg(long)]
         product: Option<String>,
     },
@@ -46,7 +60,20 @@ pub(crate) fn handle_preview(cmd: PreviewCommands) -> BoxResult {
         PreviewCommands::ContentStore { manifest, couple, product } => {
             content_store(manifest, couple, product)
         }
+        PreviewCommands::RenderContract { flow, context, locale, product } => {
+            render_contract(flow, context, locale, product)
+        }
     }
+}
+
+fn render_contract(flow: String, context: Option<String>, locale: Option<String>, product: Option<String>) -> BoxResult {
+    let p = product
+        .or_else(super::shared::default_product_name)
+        .ok_or("no product — pass --product or set `name` in product.toml")?;
+    let graph = load_what(Some(p.clone()))?;
+    let contract = product_core::pf::render_contract::build(&graph, &flow, &p, context, locale)?;
+    println!("{}", serde_json::to_string_pretty(&contract)?);
+    Ok(())
 }
 
 fn content_store(manifest: PathBuf, couple: bool, product: Option<String>) -> BoxResult {
