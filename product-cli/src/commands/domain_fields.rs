@@ -126,6 +126,30 @@ pub struct NodeFields {
     /// `projection:state:reason` — waive an ignorable state (repeatable)
     #[arg(long = "waive-state")]
     waive_state: Option<Vec<String>>,
+    /// §3.1 reference-set concept (the entity/value-object it is data for)
+    #[arg(long)]
+    concept: Option<String>,
+    /// §3.1 reference-set members (comma-separated)
+    #[arg(long, value_delimiter = ',')]
+    values: Option<Vec<String>>,
+    /// §3.1 data-shape target entity
+    #[arg(long)]
+    target: Option<String>,
+    /// §3.1 data-shape required fields (comma-separated)
+    #[arg(long, value_delimiter = ',')]
+    required: Option<Vec<String>>,
+    /// §3.1 data-shape enum constraints: `field=ReferenceSetId` (repeatable)
+    #[arg(long = "enum")]
+    enums: Option<Vec<String>>,
+    /// §3.1 data-shape type constraints: `field=datatype` (repeatable)
+    #[arg(long = "type")]
+    types: Option<Vec<String>>,
+    /// §3.1 production-dataset shape (the shape it conforms to)
+    #[arg(long)]
+    shape: Option<String>,
+    /// §3.1 production-dataset source (JSON file of records)
+    #[arg(long)]
+    source: Option<String>,
 }
 
 impl NodeFields {
@@ -161,7 +185,21 @@ impl NodeFields {
         if let Some(v) = &self.dimension { put("dimension", json!(v)); }
         if let Some(v) = &self.value { put("value", json!(v)); }
         self.put_ui_fields(&mut m);
+        self.put_data_fields(&mut m);
         m
+    }
+
+    /// The §3.1 data-side field puts (reference sets, shapes, datasets).
+    fn put_data_fields(&self, m: &mut Map<String, Value>) {
+        let mut put = |k: &str, v: Value| { m.insert(k.to_string(), v); };
+        if let Some(v) = &self.concept { put("concept", json!(v)); }
+        if let Some(v) = &self.values { put("values", json!(v)); }
+        if let Some(v) = &self.target { put("target", json!(v)); }
+        if let Some(v) = &self.required { put("required", json!(v)); }
+        if let Some(v) = &self.enums { put("enums", field_pairs(v, "reference_set")); }
+        if let Some(v) = &self.types { put("types", field_pairs(v, "datatype")); }
+        if let Some(v) = &self.shape { put("shape", json!(v)); }
+        if let Some(v) = &self.source { put("source", json!(v)); }
     }
 
     /// The §3.2.1–§3.2.4 UI-layer field puts, split out to keep `to_map` small.
@@ -228,6 +266,19 @@ fn pairs(items: &[String], k1: &str, k2: &str) -> Value {
         .map(|s| {
             let (a, b) = s.split_once(':').unwrap_or((s.as_str(), ""));
             json!({ k1: a, k2: b })
+        })
+        .collect();
+    json!(arr)
+}
+
+/// Parse `field=value` strings into `[{field, <value_key>: value}, …]` for a
+/// data shape's enum (`reference_set`) or type (`datatype`) constraints.
+fn field_pairs(items: &[String], value_key: &str) -> Value {
+    let arr: Vec<Value> = items
+        .iter()
+        .map(|s| {
+            let (field, val) = s.split_once('=').unwrap_or((s.as_str(), ""));
+            json!({ "field": field, value_key: val })
         })
         .collect();
     json!(arr)

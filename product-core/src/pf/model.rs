@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use super::ids::NodeKind;
 
+pub use super::model_data::*;
 pub use super::model_ui::*;
 
 /// A named attribute of an entity (e.g. `email: string`).
@@ -162,6 +163,12 @@ pub struct DomainGraph {
     pub tokens: Vec<Token>,
     #[serde(default)]
     pub reification_rules: Vec<ReificationRule>,
+    #[serde(default)]
+    pub reference_sets: Vec<ReferenceSet>,
+    #[serde(default)]
+    pub data_shapes: Vec<DataShape>,
+    #[serde(default)]
+    pub production_datasets: Vec<ProductionDataset>,
 }
 
 impl DomainGraph {
@@ -205,6 +212,9 @@ impl DomainGraph {
             ("Cio", self.cios.len()),
             ("Token", self.tokens.len()),
             ("ReificationRule", self.reification_rules.len()),
+            ("ReferenceSet", self.reference_sets.len()),
+            ("DataShape", self.data_shapes.len()),
+            ("ProductionDataset", self.production_datasets.len()),
         ]
     }
 
@@ -237,6 +247,9 @@ impl DomainGraph {
         self.cios.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Cio)));
         self.tokens.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Token)));
         self.reification_rules.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ReificationRule)));
+        self.reference_sets.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ReferenceSet)));
+        self.data_shapes.iter().for_each(|n| out.push((n.id.clone(), NodeKind::DataShape)));
+        self.production_datasets.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ProductionDataset)));
         out
     }
 }

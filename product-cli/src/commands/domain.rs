@@ -20,7 +20,7 @@ use std::path::{Path, PathBuf};
 use super::domain_fields::NodeFields;
 use super::BoxResult;
 
-type Resolved = Result<(String, PathBuf), Box<dyn std::error::Error>>;
+pub(super) type Resolved = Result<(String, PathBuf), Box<dyn std::error::Error>>;
 
 #[derive(Subcommand)]
 // `new`/`edit` flatten the full NodeFields flag set; the size gap to the small
@@ -45,6 +45,17 @@ pub enum DomainCommands {
         depth: usize,
         #[arg(long)]
         product: Option<String>,
+    },
+    /// Data conformance (§3.1/§6.3): validate a production dataset against its
+    /// shape; reports the data-divergence rate + trend (exit 1 on any violation)
+    Data {
+        /// A ProductionDataset id (omit to check every declared dataset)
+        dataset: Option<String>,
+        #[arg(long)]
+        product: Option<String>,
+        /// Do not append this run to the divergence-rate history
+        #[arg(long = "no-record")]
+        no_record: bool,
     },
     /// Edit fields of an existing node by id
     Edit {
@@ -114,6 +125,7 @@ pub enum DomainCommands {
 pub(crate) fn handle_domain_cmd(cmd: DomainCommands) -> BoxResult {
     match cmd {
         DomainCommands::Context { id, depth, product } => context(id, depth, product),
+        DomainCommands::Data { dataset, product, no_record } => super::domain_data::run(dataset, product, no_record),
         DomainCommands::List { kind, product } => list(kind, product),
         DomainCommands::Show { id, product } => show(id, product),
         DomainCommands::New { kind, id, fields, product } => new(kind, id, fields, product),
@@ -189,7 +201,7 @@ fn highest_level(level: &str) -> Option<u8> {
 }
 
 /// Resolve (product, session-dir): explicit `--product` or the repo's `name`.
-fn resolve(product: Option<String>) -> Resolved {
+pub(super) fn resolve(product: Option<String>) -> Resolved {
     let p = product
         .or_else(super::shared::default_product_name)
         .ok_or("no product — pass --product or set `name` in product.toml")?;
@@ -197,7 +209,7 @@ fn resolve(product: Option<String>) -> Resolved {
     Ok((p.clone(), session_dir(&super::shared::domain_root(), &p)))
 }
 
-fn load(dir: &Path) -> Result<DomainSession, Box<dyn std::error::Error>> {
+pub(super) fn load(dir: &Path) -> Result<DomainSession, Box<dyn std::error::Error>> {
     DomainSession::load(dir).map_err(|_| {
         "no domain graph for this product yet — create one with \
          `product domain new <kind> <id> …` or `product author domain`"

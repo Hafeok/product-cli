@@ -25,6 +25,7 @@ mod deliverable;
 mod dep;
 mod dispatch;
 mod domain;
+mod domain_data;
 mod domain_fields;
 mod domain_rows;
 mod drift;

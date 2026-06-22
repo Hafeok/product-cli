@@ -9636,6 +9636,106 @@ fn tc_1011_off_system_component_and_literal_style_are_rejected() {
     assert!(fail2.stderr.contains("literal"), "literal style rejected, stderr:\n{}", fail2.stderr);
 }
 
+/// Author the §3.1 structure/data split, then `domain data` finds clean
+/// production data conformant with zero divergence.
+fn author_order_data_split(h: &Harness) {
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "Order", "--label", "Order", "--definition", "a customer order", "--context", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "reference-set", "ShippingMethods", "--concept", "Order", "--values", "standard,express"]).assert_exit(0);
+    h.run(&["domain", "new", "data-shape", "OrderShape", "--target", "Order", "--required", "id,total", "--enum", "shipping=ShippingMethods"]).assert_exit(0);
+    h.run(&["domain", "new", "production-dataset", "OrdersLive", "--shape", "OrderShape", "--source", "orders.json"]).assert_exit(0);
+}
+
+#[test]
+fn tc_1021_author_the_structure_data_split() {
+    let h = Harness::new();
+    author_order_data_split(&h);
+    // Reference data, the shape, and the dataset are all in the graph.
+    let v = h.run(&["domain", "validate"]);
+    v.assert_exit(0);
+    assert!(v.stdout.contains("conformant"), "stdout:\n{}", v.stdout);
+    let list = h.run(&["domain", "list", "reference-set"]);
+    assert!(list.stdout.contains("ShippingMethods"), "stdout:\n{}", list.stdout);
+    // The data side exports as RDF on the structure/data split predicates.
+    let ttl = h.run(&["domain", "export"]);
+    assert!(ttl.stdout.contains("pf:referenceDataFor d:Order"), "ttl:\n{}", ttl.stdout);
+    assert!(ttl.stdout.contains("pf:conformsToShape d:OrderShape"), "ttl:\n{}", ttl.stdout);
+}
+
+#[test]
+fn tc_1022_clean_production_data_has_zero_divergence() {
+    let h = Harness::new();
+    author_order_data_split(&h);
+    h.write("orders.json", r#"[{"id":"o1","total":10,"shipping":"standard"},{"id":"o2","total":20,"shipping":"express"}]"#);
+    let out = h.run(&["domain", "data", "OrdersLive"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("divergence rate 0.0%"), "stdout:\n{}", out.stdout);
+    assert!(out.stdout.contains("all records conform"), "stdout:\n{}", out.stdout);
+}
+
+#[test]
+fn tc_1023_data_conformance_catches_drift_and_reports_the_rate() {
+    let h = Harness::new();
+    author_order_data_split(&h);
+    // One row drops a required field and carries an enum value the set never declared.
+    h.write("orders.json", r#"[{"id":"o1","total":10,"shipping":"standard"},{"id":"o2","shipping":"drone"},{"id":"o3","total":5,"shipping":"express"}]"#);
+    let out = h.run(&["domain", "data", "OrdersLive"]);
+    out.assert_exit(1);
+    assert!(out.stdout.contains("divergence rate 33.3%"), "stdout:\n{}", out.stdout);
+    assert!(out.stdout.contains("missing-required"), "stdout:\n{}", out.stdout);
+    assert!(out.stdout.contains("not-in-reference-set"), "stdout:\n{}", out.stdout);
+    // The verdict reads both ways (data wrong or spec stale).
+    assert!(out.stderr.contains("fix the data") && out.stderr.contains("fix the shape"), "stderr:\n{}", out.stderr);
+}
+
+#[test]
+fn tc_1024_validate_catches_dangling_data_cross_references() {
+    let h = Harness::new();
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "Order", "--label", "Order", "--definition", "d", "--context", "Sales"]).assert_exit(0);
+    // A shape targeting a non-existent entity is authorable but caught by validate.
+    h.run(&["domain", "new", "data-shape", "GhostShape", "--target", "Nonexistent"]).assert_exit(0);
+    let v = h.run(&["domain", "validate"]);
+    v.assert_exit(1);
+    assert!(v.stderr.contains("GhostShape"), "stderr:\n{}", v.stderr);
+}
+
+#[test]
+fn tc_1025_data_shape_datatype_constraint_catches_type_drift() {
+    let h = Harness::new();
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "Order", "--label", "Order", "--definition", "d", "--context", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "data-shape", "OrderShape", "--target", "Order", "--required", "id", "--type", "total=integer"]).assert_exit(0);
+    h.run(&["domain", "new", "production-dataset", "OrdersLive", "--shape", "OrderShape", "--source", "orders.json"]).assert_exit(0);
+    h.write("orders.json", r#"[{"id":"o1","total":10},{"id":"o2","total":"twelve"}]"#);
+    let out = h.run(&["domain", "data", "OrdersLive"]);
+    out.assert_exit(1);
+    assert!(out.stdout.contains("not-of-type"), "stdout:\n{}", out.stdout);
+    assert!(out.stdout.contains("divergence rate 50.0%"), "stdout:\n{}", out.stdout);
+}
+
+#[test]
+fn tc_1026_divergence_rate_trend_is_surfaced_across_runs() {
+    let h = Harness::new();
+    author_order_data_split(&h);
+    // First run: clean data, zero divergence, recorded as the baseline.
+    h.write("orders.json", r#"[{"id":"o1","total":10,"shipping":"standard"}]"#);
+    let first = h.run(&["domain", "data", "OrdersLive"]);
+    first.assert_exit(0);
+    assert!(first.stdout.contains("first run"), "stdout:\n{}", first.stdout);
+    // Second run: data has drifted — the trend reports the rate rising.
+    h.write("orders.json", r#"[{"id":"o1","total":10,"shipping":"drone"}]"#);
+    let second = h.run(&["domain", "data", "OrdersLive"]);
+    second.assert_exit(1);
+    assert!(second.stdout.contains("rising"), "trend should rise, stdout:\n{}", second.stdout);
+    // --no-record leaves the history untouched (no standing signal written).
+    let n = h.run(&["domain", "data", "OrdersLive", "--no-record"]);
+    n.assert_exit(1);
+    assert!(!h.exists(".product/author-domain/test/data-history.jsonl")
+        || h.read(".product/author-domain/test/data-history.jsonl").lines().count() == 2,
+        "history should hold exactly the two recorded runs");
+}
+
 #[test]
 fn domain_rm_deletes_every_node_kind() {
     // Regression: `remove` must cover all node kinds, not just the original 11.
