@@ -45,6 +45,42 @@ impl DataVerdict {
     }
 }
 
+/// The movement of a dataset's divergence rate versus its previous run — the
+/// §3.1 spec-staleness signal, "made visible as it happens" (§13.3). A rising
+/// rate is a model falling behind reality.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum DivergenceTrend {
+    /// No prior run for this dataset.
+    First,
+    Rising,
+    Falling,
+    Stable,
+}
+
+impl DivergenceTrend {
+    /// A short human marker for the report line.
+    pub fn marker(self) -> &'static str {
+        match self {
+            Self::First => "first run",
+            Self::Rising => "▲ rising",
+            Self::Falling => "▼ falling",
+            Self::Stable => "▬ stable",
+        }
+    }
+}
+
+/// Classify the current rate against the previous one. Rates within one
+/// percentage point count as stable (noise, not movement).
+pub fn classify_trend(previous: Option<f64>, current: f64) -> DivergenceTrend {
+    match previous {
+        None => DivergenceTrend::First,
+        Some(prev) if (current - prev).abs() < 0.01 => DivergenceTrend::Stable,
+        Some(prev) if current > prev => DivergenceTrend::Rising,
+        Some(_) => DivergenceTrend::Falling,
+    }
+}
+
 /// Validate `records` against the shape the `dataset` conforms to. Errors if the
 /// dataset or its shape is not in the graph.
 pub fn check_dataset(graph: &DomainGraph, dataset: &str, records: &[Value]) -> Result<DataVerdict> {
@@ -113,6 +149,42 @@ fn check_record(graph: &DomainGraph, shape: &DataShape, i: usize, rec: &Value, o
             });
         }
     }
+    for c in &shape.types {
+        let Some(val) = obj.and_then(|m| m.get(&c.field)) else { continue };
+        if val.is_null() {
+            continue;
+        }
+        if !value_matches_type(val, &c.datatype) {
+            out.push(DataFinding {
+                record: i,
+                field: c.field.clone(),
+                kind: "not-of-type".to_string(),
+                detail: format!("value {} is not a {}", val, c.datatype),
+            });
+        }
+    }
+}
+
+/// True if a JSON value satisfies a declared datatype (`string` · `integer` ·
+/// `number` · `boolean` · `date`). An unknown datatype never matches.
+fn value_matches_type(v: &Value, datatype: &str) -> bool {
+    match datatype {
+        "string" => v.is_string(),
+        "integer" => v.is_i64() || v.is_u64(),
+        "number" => v.is_number(),
+        "boolean" => v.is_boolean(),
+        "date" => v.as_str().map(is_iso_date).unwrap_or(false),
+        _ => false,
+    }
+}
+
+/// A minimal `YYYY-MM-DD` shape check — the date datatype's machine gate.
+fn is_iso_date(s: &str) -> bool {
+    let b = s.as_bytes();
+    b.len() == 10
+        && b[4] == b'-'
+        && b[7] == b'-'
+        && b.iter().enumerate().all(|(i, c)| if i == 4 || i == 7 { *c == b'-' } else { c.is_ascii_digit() })
 }
 
 /// Render a JSON scalar as the string compared against a reference set.

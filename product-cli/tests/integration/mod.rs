@@ -9701,6 +9701,42 @@ fn tc_1024_validate_catches_dangling_data_cross_references() {
 }
 
 #[test]
+fn tc_1025_data_shape_datatype_constraint_catches_type_drift() {
+    let h = Harness::new();
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "Order", "--label", "Order", "--definition", "d", "--context", "Sales"]).assert_exit(0);
+    h.run(&["domain", "new", "data-shape", "OrderShape", "--target", "Order", "--required", "id", "--type", "total=integer"]).assert_exit(0);
+    h.run(&["domain", "new", "production-dataset", "OrdersLive", "--shape", "OrderShape", "--source", "orders.json"]).assert_exit(0);
+    h.write("orders.json", r#"[{"id":"o1","total":10},{"id":"o2","total":"twelve"}]"#);
+    let out = h.run(&["domain", "data", "OrdersLive"]);
+    out.assert_exit(1);
+    assert!(out.stdout.contains("not-of-type"), "stdout:\n{}", out.stdout);
+    assert!(out.stdout.contains("divergence rate 50.0%"), "stdout:\n{}", out.stdout);
+}
+
+#[test]
+fn tc_1026_divergence_rate_trend_is_surfaced_across_runs() {
+    let h = Harness::new();
+    author_order_data_split(&h);
+    // First run: clean data, zero divergence, recorded as the baseline.
+    h.write("orders.json", r#"[{"id":"o1","total":10,"shipping":"standard"}]"#);
+    let first = h.run(&["domain", "data", "OrdersLive"]);
+    first.assert_exit(0);
+    assert!(first.stdout.contains("first run"), "stdout:\n{}", first.stdout);
+    // Second run: data has drifted — the trend reports the rate rising.
+    h.write("orders.json", r#"[{"id":"o1","total":10,"shipping":"drone"}]"#);
+    let second = h.run(&["domain", "data", "OrdersLive"]);
+    second.assert_exit(1);
+    assert!(second.stdout.contains("rising"), "trend should rise, stdout:\n{}", second.stdout);
+    // --no-record leaves the history untouched (no standing signal written).
+    let n = h.run(&["domain", "data", "OrdersLive", "--no-record"]);
+    n.assert_exit(1);
+    assert!(!h.exists(".product/author-domain/test/data-history.jsonl")
+        || h.read(".product/author-domain/test/data-history.jsonl").lines().count() == 2,
+        "history should hold exactly the two recorded runs");
+}
+
+#[test]
 fn domain_rm_deletes_every_node_kind() {
     // Regression: `remove` must cover all node kinds, not just the original 11.
     let h = Harness::new_bare();

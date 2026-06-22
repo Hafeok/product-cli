@@ -31,10 +31,20 @@ pub struct EnumConstraint {
     pub reference_set: String,
 }
 
+/// §3.1 — a datatype constraint: a `field` whose value must be of `datatype`
+/// (`string` · `integer` · `number` · `boolean` · `date`). Catches type drift
+/// the structure side cannot otherwise see.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct TypeConstraint {
+    pub field: String,
+    pub datatype: String,
+}
+
 /// §3.1 — a validatable **shape** over an entity: the structure side made
 /// machine-checkable. `target` is the entity it shapes; `required` lists the
 /// fields production records must carry; `enums` constrains fields to a declared
-/// reference set. Production data is validated against it as an oracle (§6.3).
+/// reference set; `types` constrains fields to a datatype. Production data is
+/// validated against it as an oracle (§6.3).
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct DataShape {
     pub id: String,
@@ -48,6 +58,9 @@ pub struct DataShape {
     /// Fields whose value must be a member of a declared reference set.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub enums: Vec<EnumConstraint>,
+    /// Fields whose value must be of a declared datatype.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub types: Vec<TypeConstraint>,
 }
 
 /// §3.1 — a **production dataset**: the oracle the structure is checked against.

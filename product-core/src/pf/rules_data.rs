@@ -25,11 +25,20 @@ pub fn check_reference_set(rs: &ReferenceSet, out: &mut Vec<Violation>) {
     }
 }
 
+/// The datatypes a type constraint may declare (the engine's machine gates).
+const DATATYPES: [&str; 5] = ["string", "integer", "number", "boolean", "date"];
+
 /// In-loop presence checks for a data shape (no cross-reference).
 pub fn check_data_shape(s: &DataShape, out: &mut Vec<Violation>) {
     if s.target.trim().is_empty() {
         out.push(v(&s.id, "target",
             "§3.1 A data shape must target an entity (the structure it makes checkable)."));
+    }
+    for c in &s.types {
+        if !DATATYPES.contains(&c.datatype.as_str()) {
+            out.push(v(&s.id, "types",
+                "§3.1 A datatype constraint must be one of: string, integer, number, boolean, date."));
+        }
     }
 }
 

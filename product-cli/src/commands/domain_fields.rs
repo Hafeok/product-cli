@@ -141,6 +141,9 @@ pub struct NodeFields {
     /// §3.1 data-shape enum constraints: `field=ReferenceSetId` (repeatable)
     #[arg(long = "enum")]
     enums: Option<Vec<String>>,
+    /// §3.1 data-shape type constraints: `field=datatype` (repeatable)
+    #[arg(long = "type")]
+    types: Option<Vec<String>>,
     /// §3.1 production-dataset shape (the shape it conforms to)
     #[arg(long)]
     shape: Option<String>,
@@ -193,7 +196,8 @@ impl NodeFields {
         if let Some(v) = &self.values { put("values", json!(v)); }
         if let Some(v) = &self.target { put("target", json!(v)); }
         if let Some(v) = &self.required { put("required", json!(v)); }
-        if let Some(v) = &self.enums { put("enums", enum_pairs(v)); }
+        if let Some(v) = &self.enums { put("enums", field_pairs(v, "reference_set")); }
+        if let Some(v) = &self.types { put("types", field_pairs(v, "datatype")); }
         if let Some(v) = &self.shape { put("shape", json!(v)); }
         if let Some(v) = &self.source { put("source", json!(v)); }
     }
@@ -267,14 +271,14 @@ fn pairs(items: &[String], k1: &str, k2: &str) -> Value {
     json!(arr)
 }
 
-/// Parse `field=ReferenceSetId` strings into `[{field, reference_set}, …]` for
-/// a data shape's enum constraints.
-fn enum_pairs(items: &[String]) -> Value {
+/// Parse `field=value` strings into `[{field, <value_key>: value}, …]` for a
+/// data shape's enum (`reference_set`) or type (`datatype`) constraints.
+fn field_pairs(items: &[String], value_key: &str) -> Value {
     let arr: Vec<Value> = items
         .iter()
         .map(|s| {
-            let (field, rs) = s.split_once('=').unwrap_or((s.as_str(), ""));
-            json!({ "field": field, "reference_set": rs })
+            let (field, val) = s.split_once('=').unwrap_or((s.as_str(), ""));
+            json!({ "field": field, value_key: val })
         })
         .collect();
     json!(arr)

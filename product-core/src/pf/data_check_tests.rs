@@ -15,10 +15,11 @@ fn graph() -> DomainGraph {
     });
     g.data_shapes.push(DataShape {
         id: "OrderShape".into(),
-        label: None,
         target: "Order".into(),
         required: vec!["id".into(), "total".into()],
         enums: vec![EnumConstraint { field: "shipping".into(), reference_set: "ShippingMethods".into() }],
+        types: vec![TypeConstraint { field: "total".into(), datatype: "integer".into() }],
+        ..Default::default()
     });
     g.production_datasets.push(ProductionDataset {
         id: "OrdersLive".into(),
@@ -86,4 +87,26 @@ fn empty_dataset_is_zero_divergence_not_a_panic() {
 fn unknown_dataset_errs() {
     let g = graph();
     assert!(check_dataset(&g, "ghost", &[]).is_err());
+}
+
+#[test]
+fn wrong_datatype_is_caught() {
+    let g = graph(); // OrderShape declares total: integer
+    let records = vec![
+        json!({ "id": "o1", "total": 10, "shipping": "standard" }),
+        json!({ "id": "o2", "total": "twelve", "shipping": "express" }),
+    ];
+    let v = check_dataset(&g, "OrdersLive", &records).expect("verdict");
+    assert_eq!(v.violating, 1);
+    let f = v.findings.iter().find(|f| f.kind == "not-of-type").expect("type finding");
+    assert_eq!(f.field, "total");
+    assert_eq!(f.record, 1);
+}
+
+#[test]
+fn trend_classifies_movement_against_the_previous_run() {
+    assert_eq!(classify_trend(None, 0.2), DivergenceTrend::First);
+    assert_eq!(classify_trend(Some(0.1), 0.3), DivergenceTrend::Rising);
+    assert_eq!(classify_trend(Some(0.3), 0.1), DivergenceTrend::Falling);
+    assert_eq!(classify_trend(Some(0.20), 0.205), DivergenceTrend::Stable);
 }

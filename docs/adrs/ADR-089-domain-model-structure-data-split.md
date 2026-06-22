@@ -10,12 +10,17 @@ domains:
 - api
 - data-model
 scope: feature-specific
-content-hash: sha256:d413664d4fb47fcbf82ae32367ff7bc88d73f583211fb011c738b3577ea0eba2
+content-hash: sha256:7b3d2e3c5428f2892b5ce0023e5910e8e83fb46121b59ec465d6d9e0c9e1fcd3
+amendments:
+- date: 2026-06-22T06:51:46Z
+  reason: Extend with datatype constraints and the divergence-rate trend; add domain_data.rs adapter
+  previous-hash: sha256:d413664d4fb47fcbf82ae32367ff7bc88d73f583211fb011c738b3577ea0eba2
 source-files:
 - product-core/src/pf/model_data.rs
 - product-core/src/pf/data_check.rs
 - product-core/src/pf/rules_data.rs
 - product-cli/src/commands/domain.rs
+- product-cli/src/commands/domain_data.rs
 ---
 
 ## Context
@@ -37,8 +42,10 @@ Add a data side to the `pf` graph as three node kinds and a conformance engine:
    it is `reference_data_for` and its closed set of `values`. It lives in the
    What because the model and behaviour reference it.
 2. **`DataShape`** — the structure made machine-checkable. It targets an entity
-   (`conforms_to_shape`) and declares `required` fields and `enums` constraints
-   (membership in a declared reference set) — the SHACL-property side of §3.1.
+   (`conforms_to_shape`) and declares three field-constraint kinds — the
+   SHACL-property side of §3.1: `required` (present + non-null), `enums`
+   (membership in a declared reference set), and `types` (a datatype: string /
+   integer / number / boolean / date).
 3. **`ProductionDataset`** — the oracle pointer. It names the `shape` it
    conforms to and a `source` of populated records; it is not specification.
 
@@ -46,10 +53,14 @@ Add a data side to the `pf` graph as three node kinds and a conformance engine:
 validates each record against the shape, and reports the **data-divergence
 rate** — the fraction of records that fail — exiting 1 on any divergence. The
 verdict is deliberately bidirectional: a failure means either the data is wrong
-*or* the spec is stale, and the message says so. The pure engine lives in
-`pf::data_check`; the data-side rules (presence + cross-reference) in
-`pf::rules_data`; the model in `pf::model_data`; the CLI is a thin adapter
-(`domain data`), per the slice + adapter pattern (PAT-001).
+*or* the spec is stale, and the message says so. Each run is recorded to a
+per-product history and the report surfaces the **trend** (first / rising /
+falling / stable) against the previous run — the §3.1 "spec staleness becomes
+measurable" signal (§13.3); `--no-record` skips persistence. The pure engine
+and the trend classifier live in `pf::data_check`; the data-side rules (presence
++ datatype + cross-reference) in `pf::rules_data`; the model in `pf::model_data`;
+the CLI is a thin adapter (`domain data` → `commands::domain_data`), per the
+slice + adapter pattern (PAT-001).
 
 ## Rationale
 
@@ -83,3 +94,5 @@ verdict is deliberately bidirectional: a failure means either the data is wrong
 - TC-1022 — clean data is conformant at a 0.0% divergence rate.
 - TC-1023 — divergence caught per record, rate reported, verdict reads both ways.
 - TC-1024 — `validate` catches a dangling data cross-reference.
+- TC-1025 — a datatype constraint catches type drift.
+- TC-1026 — the divergence-rate trend is surfaced across runs; `--no-record` skips it.

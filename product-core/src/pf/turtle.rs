@@ -283,6 +283,12 @@ fn emit_data_shape(out: &mut String, s: &super::model::DataShape) {
             lit(&c.field), c.reference_set
         ));
     }
+    for c in &s.types {
+        out.push_str(&format!(
+            " ;\n  pf:typeConstraint [ pf:field {} ; pf:datatype {} ]",
+            lit(&c.field), lit(&c.datatype)
+        ));
+    }
     out.push_str(" .\n\n");
 }
 

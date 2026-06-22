@@ -12,6 +12,8 @@ tests:
 - TC-1022
 - TC-1023
 - TC-1024
+- TC-1025
+- TC-1026
 domains:
 - api
 - data-model
@@ -58,17 +60,24 @@ enum value the schema never declared).
   `concept` it is constitutive of (`reference_data_for`) and its closed set of
   `values`. It is versioned and governed like the rest of the What.
 - **A shape is the structure made checkable.** A `DataShape` targets an entity
-  (`conforms_to_shape`) and declares `required` fields and `enums` constraints
-  (a field's value must be a member of a declared reference set) — the
-  SHACL-property side of §3.1.
+  (`conforms_to_shape`) and declares three kinds of field constraint — the
+  SHACL-property side of §3.1: `required` (present + non-null), `enums` (a
+  field's value must be a member of a declared reference set), and `types` (a
+  field's value must be of a declared datatype: string / integer / number /
+  boolean / date).
 - **A production dataset is the oracle.** A `ProductionDataset` names the
   `shape` it conforms to and a `source` of populated records; it is not
   specification.
 - **Data conformance.** `product domain data <dataset>` (omit the id to check
   every declared dataset) reads the source, validates each record against the
   shape, and reports the **data-divergence rate** — the fraction of records that
-  fail. A missing required field and an undeclared enum value are both caught,
-  per record. Exit 1 on any divergence.
+  fail. A missing required field, an undeclared enum value, and a wrong datatype
+  are each caught, per record. Exit 1 on any divergence.
+- **The divergence rate is tracked over time.** Each run is recorded to a
+  per-product history, and the report surfaces the **trend** (first run / rising
+  / falling / stable) against the previous run — the §3.1 "spec staleness
+  becomes measurable" signal, made visible as it happens (§13.3). `--no-record`
+  runs the check without writing to the history (for CI/read-only use).
 - **The verdict reads both ways.** A divergence is genuinely ambiguous: the data
   may be wrong, or the spec may be stale. The message says so — fix the data, or
   (if the model no longer describes the system) fix the shape.
@@ -85,13 +94,13 @@ enum value the schema never declared).
 
 ## Out of scope
 
-- **Continuous, scheduled assertion in production** ("authored once, asserted
-  continuously", §3.1) — this feature runs the check on demand; standing
-  production monitoring is future work.
+- **Scheduled, on-write assertion in production** ("asserted continuously",
+  §3.1) — this feature records the divergence rate on each on-demand run and
+  reports the trend; wiring it to a scheduler or a write hook is future work.
 - **Full RDF + SHACL shape expression** — the shape language here covers
-  required-field presence and reference-set membership, the two §3.1 motivating
-  defects; richer SHACL constraints are future work.
-- **Free datatype constraints** beyond reference-set membership.
+  required-field presence, reference-set membership, and datatype, the §3.1
+  motivating defects; richer SHACL constraints (regex, ranges, cardinality) are
+  future work.
 
 ## Acceptance
 
@@ -102,3 +111,7 @@ enum value the schema never declared).
   not-in-reference-set), the divergence rate is reported, and the verdict reads
   both ways.
 - TC-1024 — `domain validate` catches a dangling data cross-reference.
+- TC-1025 — a datatype constraint catches type drift (a string where an integer
+  is declared).
+- TC-1026 — the divergence-rate trend is surfaced across runs (first → rising),
+  and `--no-record` leaves the history untouched.
