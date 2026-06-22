@@ -2,7 +2,7 @@
 id: TC-1012
 title: seam passes when screen and step agree
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-140
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1012_seam_passes_when_screen_and_step_agree
+last-run: 2026-06-22T13:02:02.406096890+00:00
+last-run-duration: 10.7s
 ---
 
 ## Scenario — a fully-agreeing screen passes the seam with a level-and-basis verdict

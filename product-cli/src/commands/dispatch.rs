@@ -5,7 +5,7 @@ use clap::Command as ClapCommand;
 use super::{
     adr, agent_init, archetype, author, build, cell, checklist, completions, conformance, context, cycle_times, decider,
     deliverable, dep, domain, drift, feature, gap, graph_cmd, guide, hash, hooks, how, implement, init, lsp, mcp_cmd,
-    metrics_cmd, migrate, onboard, pattern, preflight, prompts_cmd, release, render, request_cmd, schema,
+    metrics_cmd, migrate, onboard, pattern, preflight, prompts_cmd, release, render, request_cmd, schema, seam,
     primitive, projector, slice, status, tags, test_cmd, work_unit, worker, BoxResult, Commands,
 };
 
@@ -42,6 +42,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Schema { artifact_type, type_flag, all } => {
             schema::handle_schema(type_flag.or(artifact_type), all)
         }
+        Commands::Seam { id, product } => seam::handle_seam(id, product),
         Commands::Tags { command } => tags::handle_tags(command, fmt),
         Commands::Test { command } => test_cmd::handle_test(command, fmt),
         Commands::Verify { .. } => dispatch_verify(command, fmt),
@@ -84,36 +85,22 @@ fn dispatch_pf(command: Commands) -> BoxResult {
 }
 
 fn dispatch_context(command: Commands) -> BoxResult {
-    let Commands::Context {
-        id,
-        depth,
-        phase,
-        adrs_only,
-        order,
-        measure,
-        measure_all,
-        target,
-        for_llm,
-        show,
-        where_flag,
-        reset,
-    } = command
-    else {
+    let Commands::Context { cli } = command else {
         unreachable!("dispatch_context called with non-Context variant")
     };
     context::handle_context(context::ContextArgs {
-        id: id.as_deref(),
-        depth,
-        phase,
-        adrs_only,
-        order,
-        measure,
-        measure_all,
-        target,
-        for_llm,
-        show,
-        where_flag,
-        reset,
+        id: cli.id.as_deref(),
+        depth: cli.depth,
+        phase: cli.phase,
+        adrs_only: cli.adrs_only,
+        order: cli.order,
+        measure: cli.measure,
+        measure_all: cli.measure_all,
+        target: cli.target,
+        for_llm: cli.for_llm,
+        show: cli.show,
+        where_flag: cli.where_flag,
+        reset: cli.reset,
     })
 }
 

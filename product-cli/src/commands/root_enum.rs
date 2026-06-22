@@ -79,42 +79,8 @@ pub enum Commands {
     },
     /// Assemble context bundles for LLM agents
     Context {
-        /// Feature or ADR ID, OR the literal "templates" subcommand
-        #[arg(required_unless_present = "measure_all")]
-        id: Option<String>,
-        /// BFS traversal depth (default: 1)
-        #[arg(long, default_value = "1")]
-        depth: usize,
-        /// Scope to a phase (bundles all features in that phase)
-        #[arg(long)]
-        phase: Option<u32>,
-        /// Include only ADRs (no test criteria) when using --phase
-        #[arg(long)]
-        adrs_only: bool,
-        /// Order ADRs by ID instead of betweenness centrality
-        #[arg(long, value_name = "ORDER")]
-        order: Option<String>,
-        /// Measure bundle dimensions and write to feature front-matter + metrics.jsonl
-        #[arg(long)]
-        measure: bool,
-        /// Measure every feature in one pass, printing only the aggregate summary
-        #[arg(long = "measure-all")]
-        measure_all: bool,
-        /// Per-model template name (FT-063); falls back to [context].default-target
-        #[arg(long, value_name = "NAME")]
-        target: Option<String>,
-        /// Deprecated alias for --target claude-opus (FT-063)
-        #[arg(long = "for-llm")]
-        for_llm: bool,
-        /// `templates --show NAME` — print template TOML to stdout
-        #[arg(long, value_name = "NAME")]
-        show: Option<String>,
-        /// `templates --where` — show resolution path for each template
-        #[arg(long = "where")]
-        where_flag: bool,
-        /// `templates --reset NAME` — remove user override
-        #[arg(long, value_name = "NAME")]
-        reset: Option<String>,
+        #[command(flatten)]
+        cli: context::ContextCli,
     },
     /// Historical cycle times (FT-054, ADR-046)
     CycleTimes {
@@ -342,6 +308,13 @@ pub enum Commands {
         /// Show all schemas in a single document
         #[arg(long)]
         all: bool,
+    },
+    /// Seam verification (§6.3) — verify a UI step's screen and its What agree
+    Seam {
+        /// The UI step id
+        id: String,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Delivery slice — a saved pointer to a section of the event model
     Slice {

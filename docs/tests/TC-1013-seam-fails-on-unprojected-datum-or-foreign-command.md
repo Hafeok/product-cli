@@ -2,7 +2,7 @@
 id: TC-1013
 title: seam fails on unprojected datum or foreign command
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-140
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1013_seam_fails_on_unprojected_datum_or_foreign_command
+last-run: 2026-06-22T13:02:02.406096890+00:00
+last-run-duration: 0.6s
 ---
 
 ## Scenario — a screen that needs unsupplied data or issues an unaccepted command fails the seam

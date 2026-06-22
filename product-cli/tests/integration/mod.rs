@@ -9756,6 +9756,53 @@ fn domain_rm_deletes_every_node_kind() {
     }
 }
 
+#[test]
+fn tc_1012_seam_passes_when_screen_and_step_agree() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // ReviewOrder surfaces a real projection, offers a real command, AIO-typed.
+    h.run(&["domain", "new", "ui-step", "ReviewOrder", "--label", "Review",
+        "--surfaces", "OrderSummary:display-collection", "--offers", "PlaceOrder:trigger-action"]).assert_exit(0);
+    let out = h.run(&["seam", "ReviewOrder"]);
+    out.assert_exit(0);
+    assert!(out.stdout.contains("conformant") && out.stdout.contains("✓ datum-projected"),
+        "seam verdict reports each passing sub-check, stdout:\n{}", out.stdout);
+}
+
+#[test]
+fn tc_1013_seam_fails_on_unprojected_datum_or_foreign_command() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // A page displaying data no read model projects fails datum-projected.
+    h.run(&["domain", "new", "ui-step", "BadDatum", "--label", "B", "--surfaces", "Nonexistent:display-collection"]).assert_exit(0);
+    let d = h.run(&["seam", "BadDatum"]);
+    d.assert_exit(1);
+    assert!(d.stdout.contains("✗ datum-projected") && d.stderr.contains("Nonexistent"), "stdout:\n{}\nstderr:\n{}", d.stdout, d.stderr);
+    // A control issuing a command the step cannot accept fails control-maps-to-command.
+    h.run(&["domain", "new", "ui-step", "BadCmd", "--label", "B", "--offers", "GhostCmd:trigger-action"]).assert_exit(0);
+    let c = h.run(&["seam", "BadCmd"]);
+    c.assert_exit(1);
+    assert!(c.stdout.contains("✗ control-maps-to-command") && c.stderr.contains("GhostCmd"), "stdout:\n{}\nstderr:\n{}", c.stdout, c.stderr);
+}
+
+#[test]
+fn tc_1014_seam_composes_coverage_failures() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // Create a conformant step, then let the model drift around it so the seam
+    // catches a state gap, a content gap, and a reification gap independently.
+    h.run(&["domain", "new", "ui-step", "Multi", "--label", "M",
+        "--surfaces", "OrderSummary:single-select", "--content", "x.y:heading"]).assert_exit(0);
+    h.run(&["domain", "edit", "OrderSummary", "--states", "empty"]).assert_exit(0);     // state gap
+    h.run(&["domain", "new", "content-store", "cs", "--locales", "en"]).assert_exit(0); // content gap (no x.y)
+    h.run(&["domain", "new", "context-of-use", "phone", "--label", "P"]).assert_exit(0);// reify gap (no rule)
+    let out = h.run(&["seam", "Multi"]);
+    out.assert_exit(1);
+    for sub in ["✗ state-coverage", "✗ content-coverage", "✗ reification-coverage"] {
+        assert!(out.stdout.contains(sub), "composite should list {sub}, stdout:\n{}", out.stdout);
+    }
+}
+
 /// TC-434: init errors on existing canonical config without --force
 #[test]
 fn tc_434_init_errors_on_existing_product_toml_without_force() {

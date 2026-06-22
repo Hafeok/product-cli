@@ -60,6 +60,7 @@ mod request_cmd;
 mod request_cmd_helpers;
 mod request_log_cmd;
 mod schema;
+mod seam;
 mod shared;
 mod slice;
 mod status;

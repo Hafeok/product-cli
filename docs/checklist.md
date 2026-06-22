@@ -1783,12 +1783,12 @@
 - [x] TC-1010: reification coverage over AIO and context (scenario) — passing
 - [x] TC-1011: off-system component and literal style are rejected (scenario) — passing
 
-### FT-140 — The seam verification — screen against UI step [ ]
+### FT-140 — The seam verification — screen against UI step [x]
 
 - [x] ADR-084: The seam verification confirms a screen and its UI step agree (accepted)
-- [ ] TC-1012: seam passes when screen and step agree (scenario) — unimplemented
-- [ ] TC-1013: seam fails on unprojected datum or foreign command (scenario) — unimplemented
-- [ ] TC-1014: seam composes coverage failures (scenario) — unimplemented
+- [x] TC-1012: seam passes when screen and step agree (scenario) — passing
+- [x] TC-1013: seam fails on unprojected datum or foreign command (scenario) — passing
+- [x] TC-1014: seam composes coverage failures (scenario) — passing
 
 ### FT-141 — Design System Conformance Profile (preview) [ ]
 

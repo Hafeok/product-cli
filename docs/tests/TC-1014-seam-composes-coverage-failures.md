@@ -2,7 +2,7 @@
 id: TC-1014
 title: seam composes coverage failures
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-140
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1014_seam_composes_coverage_failures
+last-run: 2026-06-22T13:02:02.406096890+00:00
+last-run-duration: 0.7s
 ---
 
 ## Scenario — every coverage gap is reported independently, never collapsed into one fail

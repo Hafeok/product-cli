@@ -2,7 +2,7 @@
 id: FT-140
 title: The seam verification — screen against UI step
 phase: 7
-status: planned
+status: complete
 depends-on:
 - FT-134
 - FT-135
@@ -20,16 +20,16 @@ domains:
 - api
 - data-model
 domains-acknowledged:
-  ADR-041: Additive — implements the already-declared `pf:seam` VerificationKind; nothing is removed or deprecated, so no absence TC is required.
-  ADR-047: The functional specification lives in this feature's body, not a separate artifact.
-  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
-  ADR-050: PAT-001 (slice + adapter) governs the `pf::seam` slice + CLI adapter; no new implementation pattern is introduced.
-  ADR-049: Not a context-bundle/template command; no template surface changes.
-  ADR-043: The composite seam check lives in the pure `pf::seam` slice, composing the per-phase rules; the CLI is a thin adapter.
-  ADR-048: Reads the captured What graph plus the How's reification/content declarations; emits a verdict, writing no graph state.
-  ADR-051: Every TC declares `observes:` (graph, exit-code) and asserts on those surfaces.
   ADR-018: Scenario TCs drive the binary through assert_cmd; `pf::seam` carries unit tests over the composition. No property or session dimension for a verdict.
+  ADR-048: Reads the captured What graph plus the How's reification/content declarations; emits a verdict, writing no graph state.
+  ADR-043: The composite seam check lives in the pure `pf::seam` slice, composing the per-phase rules; the CLI is a thin adapter.
   ADR-040: The seam is a What→How verification kind; it joins the required kinds of §6.3 and reports a conformance level and its basis, never a bare pass.
+  ADR-051: Every TC declares `observes:` (graph, exit-code) and asserts on those surfaces.
+  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
+  ADR-047: The functional specification lives in this feature's body, not a separate artifact.
+  ADR-050: PAT-001 (slice + adapter) governs the `pf::seam` slice + CLI adapter; no new implementation pattern is introduced.
+  ADR-041: Additive — implements the already-declared `pf:seam` VerificationKind; nothing is removed or deprecated, so no absence TC is required.
+  ADR-049: Not a context-bundle/template command; no template surface changes.
 patterns:
 - PAT-001
 ---

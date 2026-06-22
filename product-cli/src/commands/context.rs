@@ -13,6 +13,48 @@ use super::{load_graph, BoxResult};
 
 mod templates;
 
+/// Clap args for the top-level `context` command, flattened into `Commands`
+/// (keeps the `root_enum.rs` variant small without changing the CLI surface).
+#[derive(clap::Args)]
+pub(crate) struct ContextCli {
+    /// Feature or ADR ID, OR the literal "templates" subcommand
+    #[arg(required_unless_present = "measure_all")]
+    pub id: Option<String>,
+    /// BFS traversal depth (default: 1)
+    #[arg(long, default_value = "1")]
+    pub depth: usize,
+    /// Scope to a phase (bundles all features in that phase)
+    #[arg(long)]
+    pub phase: Option<u32>,
+    /// Include only ADRs (no test criteria) when using --phase
+    #[arg(long)]
+    pub adrs_only: bool,
+    /// Order ADRs by ID instead of betweenness centrality
+    #[arg(long, value_name = "ORDER")]
+    pub order: Option<String>,
+    /// Measure bundle dimensions and write to feature front-matter + metrics.jsonl
+    #[arg(long)]
+    pub measure: bool,
+    /// Measure every feature in one pass, printing only the aggregate summary
+    #[arg(long = "measure-all")]
+    pub measure_all: bool,
+    /// Per-model template name (FT-063); falls back to [context].default-target
+    #[arg(long, value_name = "NAME")]
+    pub target: Option<String>,
+    /// Deprecated alias for --target claude-opus (FT-063)
+    #[arg(long = "for-llm")]
+    pub for_llm: bool,
+    /// `templates --show NAME` — print template TOML to stdout
+    #[arg(long, value_name = "NAME")]
+    pub show: Option<String>,
+    /// `templates --where` — show resolution path for each template
+    #[arg(long = "where")]
+    pub where_flag: bool,
+    /// `templates --reset NAME` — remove user override
+    #[arg(long, value_name = "NAME")]
+    pub reset: Option<String>,
+}
+
 pub(crate) struct ContextArgs<'a> {
     pub id: Option<&'a str>,
     pub depth: usize,

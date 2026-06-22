@@ -53,6 +53,7 @@ pub mod rules_ui;
 pub mod rules_what;
 pub mod run;
 pub mod schedule;
+pub mod seam;
 pub mod seed;
 pub mod session;
 pub mod slice;
