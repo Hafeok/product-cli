@@ -16,8 +16,8 @@ observes:
 - disk-state
 runner: cargo-test
 runner-args: tc_1020_init_demo_seeds_a_conformant_bookstore
-last-run: 2026-06-19T15:22:08.028853574+00:00
-last-run-duration: 0.4s
+last-run: 2026-06-22T19:14:22.986571030+00:00
+last-run-duration: 0.3s
 ---
 
 ## Scenario — `init --demo` writes a real, conformant What model

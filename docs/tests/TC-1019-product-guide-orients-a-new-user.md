@@ -14,8 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1019_product_guide_orients_a_new_user
-last-run: 2026-06-19T15:22:00.175149544+00:00
-last-run-duration: 7.5s
+last-run: 2026-06-22T19:14:22.986571030+00:00
+last-run-duration: 7.6s
 ---
 
 ## Scenario — guide names the stage and the next step on a fresh repo
