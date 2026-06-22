@@ -60,9 +60,10 @@ fn content_store(manifest: PathBuf, couple: bool, product: Option<String>) -> Bo
         findings.extend(product_core::pf::manifest_content::couple_content(&m, &graph));
     }
 
+    let cs = &m.content_store;
     let summary = format!("content store '{}': {{scope}} — {} entries, {} locales",
-        m.content_store.id, m.entries.len(), m.content_store.locales_supported.len());
-    report(&format!("content store '{}'", m.content_store.id), couple, &summary, findings)
+        cs.id, cs.entries.len(), cs.locales_supported.len());
+    report(&format!("content store '{}'", cs.id), couple, &summary, findings)
 }
 
 /// Print the scope line (whole / whole + coupled) on success, or each finding on
@@ -91,9 +92,10 @@ fn design_system(manifest: PathBuf, couple: bool, product: Option<String>) -> Bo
         findings.extend(product_core::pf::manifest::couple_ds(&m, &graph));
     }
 
+    let ds = &m.design_system;
     let summary = format!("design system '{}': {{scope}} — {} components, {} reification rules",
-        m.design_system.id, m.components.len(), m.reification.len());
-    report(&format!("design system '{}'", m.design_system.id), couple, &summary, findings)
+        ds.id, ds.components.len(), ds.reification.len());
+    report(&format!("design system '{}'", ds.id), couple, &summary, findings)
 }
 
 /// Load the captured What graph for the coupling check.

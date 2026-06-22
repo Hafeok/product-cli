@@ -19,33 +19,34 @@ pub struct Entry {
     pub values: BTreeMap<String, String>,
 }
 
+/// The body of the §12.2 manifest (everything under the `content_store:` key).
 #[derive(Debug, Clone, serde::Deserialize, PartialEq)]
-pub struct ContentStoreHeader {
+pub struct ContentStore {
     pub id: String,
     #[serde(default)]
     pub version: String,
     #[serde(default)]
     pub locales_supported: Vec<String>,
-}
-
-/// The §12.2 content-store manifest.
-#[derive(Debug, Clone, serde::Deserialize, PartialEq)]
-pub struct ContentManifest {
-    pub content_store: ContentStoreHeader,
     #[serde(default)]
     pub entries: Vec<Entry>,
+}
+
+/// The §12.2 content-store manifest (the canonical YAML shape).
+#[derive(Debug, Clone, serde::Deserialize, PartialEq)]
+pub struct ContentManifest {
+    pub content_store: ContentStore,
 }
 
 /// Roles whose text must be non-empty and actionable.
 const ACTIONABLE_ROLES: [&str; 2] = ["error-message", "empty-message"];
 
-/// Parse a TOML content-store manifest, pointing the user at the expected shape
-/// on a schema mismatch.
-pub fn parse_content(toml_src: &str) -> Result<ContentManifest, String> {
-    toml::from_str(toml_src).map_err(|e| {
+/// Parse a canonical YAML content-store manifest, pointing the user at the
+/// expected shape on a schema mismatch.
+pub fn parse_content(yaml_src: &str) -> Result<ContentManifest, String> {
+    serde_yaml::from_str(yaml_src).map_err(|e| {
         format!("manifest does not match the §12.2 content-store schema: {e}\n\
-                 expected: [content_store] id; locales_supported = [..]; \
-                 [[entries]] key/role/values = {{ <locale> = \"…\" }}")
+                 expected: content_store: id; locales_supported: [..]; \
+                 entries: [{{key, role, values: {{<locale>: \"…\"}}}}]")
     })
 }
 
@@ -53,7 +54,7 @@ pub fn parse_content(toml_src: &str) -> Result<ContentManifest, String> {
 /// has a value for every key, and every actionable role resolves to non-empty text.
 pub fn validate_content(m: &ContentManifest) -> Vec<String> {
     let mut findings = Vec::new();
-    for e in &m.entries {
+    for e in &m.content_store.entries {
         if e.role.trim().is_empty() {
             findings.push(format!("entry '{}' has no role", e.key));
         }
@@ -81,7 +82,7 @@ pub fn couple_content(m: &ContentManifest, graph: &DomainGraph) -> Vec<String> {
         .collect();
     for key in keys {
         for loc in &m.content_store.locales_supported {
-            let resolved = m.entries.iter().any(|e| e.key == key && e.values.contains_key(loc));
+            let resolved = m.content_store.entries.iter().any(|e| e.key == key && e.values.contains_key(loc));
             if !resolved {
                 findings.push(format!(
                     "non-conforming for locale '{loc}': cannot resolve ({key}, {loc})"

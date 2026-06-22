@@ -1,0 +1,57 @@
+# content-store.manifest.yaml  (PREVIEW — exercises §12)
+# A conforming content store for the checkout example. Resolves every content key
+# the What references, across the locales it claims (§12.1: keyed catalog with
+# roles, locale coverage, role conformance). Demonstrates "one What, many words".
+
+content_store:
+  id: "wire-content"
+  version: "0.1.0"
+  locales_supported: [en, es]
+
+  entries:
+    - key: checkout.review.heading
+      role: heading
+      values:
+        en: "Review your order"
+        es: "Revisa tu pedido"
+
+    - key: checkout.payment.heading
+      role: heading
+      values:
+        en: "How would you like to pay?"
+        es: "¿Cómo quieres pagar?"
+
+    - key: confirm.heading
+      role: heading
+      values:
+        en: "You're all set"
+        es: "Todo listo"
+
+    - key: browse.heading
+      role: heading
+      values:
+        en: "Browse the shop"
+        es: "Explora la tienda"
+
+    - key: orders.heading
+      role: heading
+      values:
+        en: "Your orders"
+        es: "Tus pedidos"
+
+    - key: cart.empty.message
+      role: empty-message            # role: must be non-empty and actionable
+      values:
+        en: "Nothing to check out yet — add something to get started."
+        es: "Aún no hay nada para pagar — añade algo para empezar."
+
+    - key: cart.failed.message
+      role: error-message            # role: must say what went wrong and how to recover
+      values:
+        en: "Couldn't load your cart. Check your connection and retry."
+        es: "No se pudo cargar tu carrito. Revisa tu conexión e inténtalo de nuevo."
+
+# Coverage check (§12.2): every content key referenced by the What's UI steps and
+# shell resolves in both `en` and `es`; every empty-/error-message role is non-empty.
+# A renderer coupling this store with locale=es produces the same screens in Spanish,
+# with no change to the What.

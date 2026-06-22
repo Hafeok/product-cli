@@ -9803,27 +9803,38 @@ fn tc_1014_seam_composes_coverage_failures() {
     }
 }
 
-/// A whole §11.3 design-system manifest reifying every core AIO on `phone`.
+/// A §11.3 design-system manifest (canonical YAML) with the given reification
+/// rules (each `(aio, when, cio)`). `whole_ds_manifest` reifies single-select on
+/// phone and trigger-action by emphasis.
+fn ds_manifest(rules: &[(&str, &str, &str)]) -> String {
+    let reify: String = rules.iter().map(|(aio, when, cio)| format!(
+        "    - {{ aio: {aio}, when: {{ {when} }}, cio: {cio}, rationale: x }}\n")).collect();
+    format!(
+        "design_system:\n  id: acme\n  version: \"1.0\"\n  wcag_target: \"2.2-AA\"\n\
+         \x20 contexts_supported: {{ form_factor: [phone, tablet], modality: [touch] }}\n\
+         \x20 components:\n\
+         \x20   - {{ id: searchable-list, tokens: [color.accent], satisfies: [{{ criterion: \"1.3.1\", level: A, via: machine }}] }}\n\
+         \x20   - {{ id: primary-button, tokens: [color.accent], satisfies: [{{ criterion: \"2.5.8\", level: AA, via: machine }}] }}\n\
+         \x20 reification:\n{reify}\
+         \x20 tokens: [{{ id: color.accent, type: color }}]\n")
+}
+
 fn whole_ds_manifest() -> String {
-    let aios = ["trigger-action", "single-select", "multi-select", "text-entry", "numeric-entry",
-        "date-entry", "display-value", "display-collection", "navigate", "edit"];
-    let rules: String = aios.iter().map(|a| format!(
-        "[[reification]]\naio = \"{a}\"\nwhen = \"phone\"\ncio = \"segmented-control\"\nrationale = \"x\"\n")).collect();
-    format!("[design_system]\nid = \"acme\"\nversion = \"1.0\"\nwcag_target = \"AA\"\n\
-        contexts_supported = [\"phone\"]\ntokens = [\"color.accent\"]\n\
-        [[components]]\nid = \"segmented-control\"\ntokens = [\"color.accent\"]\n\
-        satisfies = [{{ criterion = \"1.3.1\", level = \"A\", verification = \"machine\" }}]\n{rules}")
+    ds_manifest(&[
+        ("single-select", "form_factor: phone", "searchable-list"),
+        ("trigger-action", "emphasis: primary", "primary-button"),
+    ])
 }
 
 #[test]
 fn tc_1015_design_system_manifest_validates_internally() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
-    h.write("ds.toml", &whole_ds_manifest());
-    h.run(&["preview", "design-system", "ds.toml"]).assert_exit(0);
+    h.write("ds.yaml", &whole_ds_manifest());
+    h.run(&["preview", "design-system", "ds.yaml"]).assert_exit(0);
     // A reification naming a cio absent from components fails wholeness.
-    h.write("bad.toml", &whole_ds_manifest().replacen("cio = \"segmented-control\"", "cio = \"ghost-cio\"", 1));
-    let out = h.run(&["preview", "design-system", "bad.toml"]);
+    h.write("bad.yaml", &whole_ds_manifest().replacen("cio: searchable-list", "cio: ghost-cio", 1));
+    let out = h.run(&["preview", "design-system", "bad.yaml"]);
     out.assert_exit(1);
     assert!(out.stderr.contains("ghost-cio") && out.stderr.contains("absent"), "stderr:\n{}", out.stderr);
 }
@@ -9832,42 +9843,45 @@ fn tc_1015_design_system_manifest_validates_internally() {
 fn tc_1016_design_system_coupling_covers_every_aio_context() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
-    h.run(&["domain", "new", "context-of-use", "phone", "--label", "P"]).assert_exit(0);
-    h.write("ds.toml", &whole_ds_manifest());
-    // Full reification over phone → coupling complete.
-    h.run(&["preview", "design-system", "ds.toml", "--couple"]).assert_exit(0);
+    h.run(&["domain", "new", "context-of-use", "phone", "--label", "P",
+        "--dimension", "form_factor", "--value", "phone"]).assert_exit(0);
+    // A UI step referencing single-select (surfaced) + trigger-action (offered),
+    // against the demo's existing read model + command.
+    h.run(&["domain", "new", "ui-step", "Pick", "--label", "Pick",
+        "--surfaces", "OrderSummary:single-select", "--offers", "PlaceOrder:trigger-action"]).assert_exit(0);
+    h.write("ds.yaml", &whole_ds_manifest());
+    // Both referenced AIOs reify on phone → coupling complete.
+    h.run(&["preview", "design-system", "ds.yaml", "--couple"]).assert_exit(0);
     // Drop single-select's rule → non-conforming for phone, naming the gap.
-    let dropped = whole_ds_manifest().replacen(
-        "[[reification]]\naio = \"single-select\"\nwhen = \"phone\"\ncio = \"segmented-control\"\nrationale = \"x\"\n", "", 1);
-    h.write("gap.toml", &dropped);
-    let out = h.run(&["preview", "design-system", "gap.toml", "--couple"]);
+    h.write("gap.yaml", &ds_manifest(&[("trigger-action", "emphasis: primary", "primary-button")]));
+    let out = h.run(&["preview", "design-system", "gap.yaml", "--couple"]);
     out.assert_exit(1);
     assert!(out.stderr.contains("single-select") && out.stderr.contains("phone"), "stderr:\n{}", out.stderr);
 }
 
-/// A whole §12.2 content-store manifest with two entries over en/de.
+/// A whole §12.2 content-store manifest (canonical YAML) with two entries over en/de.
 fn whole_content_manifest() -> String {
-    "[content_store]\nid = \"copy\"\nversion = \"1.0\"\nlocales_supported = [\"en\", \"de\"]\n\
-     [[entries]]\nkey = \"cart.empty.message\"\nrole = \"empty-message\"\n\
-     values = { en = \"Your cart is empty\", de = \"Ihr Warenkorb ist leer\" }\n\
-     [[entries]]\nkey = \"checkout.title\"\nrole = \"heading\"\n\
-     values = { en = \"Checkout\", de = \"Kasse\" }\n".to_string()
+    "content_store:\n  id: copy\n  version: \"1.0\"\n  locales_supported: [en, de]\n  entries:\n\
+     \x20   - key: cart.empty.message\n      role: empty-message\n\
+     \x20     values: { en: \"Your cart is empty\", de: \"Ihr Warenkorb ist leer\" }\n\
+     \x20   - key: checkout.title\n      role: heading\n\
+     \x20     values: { en: \"Checkout\", de: \"Kasse\" }\n".to_string()
 }
 
 #[test]
 fn tc_1017_content_store_manifest_validates_internally() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
-    h.write("cs.toml", &whole_content_manifest());
-    h.run(&["preview", "content-store", "cs.toml"]).assert_exit(0);
+    h.write("cs.yaml", &whole_content_manifest());
+    h.run(&["preview", "content-store", "cs.yaml"]).assert_exit(0);
     // A key missing a value for a claimed locale fails wholeness.
-    h.write("nolocale.toml", &whole_content_manifest().replacen(", de = \"Kasse\"", "", 1));
-    let a = h.run(&["preview", "content-store", "nolocale.toml"]);
+    h.write("nolocale.yaml", &whole_content_manifest().replacen(", de: \"Kasse\"", "", 1));
+    let a = h.run(&["preview", "content-store", "nolocale.yaml"]);
     a.assert_exit(1);
     assert!(a.stderr.contains("checkout.title") && a.stderr.contains("de"), "stderr:\n{}", a.stderr);
     // An error/empty-message role resolving to empty text fails.
-    h.write("empty.toml", &whole_content_manifest().replacen("Your cart is empty", "", 1));
-    let b = h.run(&["preview", "content-store", "empty.toml"]);
+    h.write("empty.yaml", &whole_content_manifest().replacen("Your cart is empty", "", 1));
+    let b = h.run(&["preview", "content-store", "empty.yaml"]);
     b.assert_exit(1);
     assert!(b.stderr.contains("cart.empty.message") && b.stderr.contains("empty"), "stderr:\n{}", b.stderr);
 }
@@ -9878,12 +9892,12 @@ fn tc_1018_content_store_coupling_resolves_every_referenced_key() {
     h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
     h.run(&["domain", "new", "ui-step", "Cart", "--label", "Cart",
         "--content", "cart.empty.message:empty-message"]).assert_exit(0);
-    h.write("cs.toml", &whole_content_manifest());
+    h.write("cs.yaml", &whole_content_manifest());
     // The store resolves the referenced key in every locale → coupling complete.
-    h.run(&["preview", "content-store", "cs.toml", "--couple"]).assert_exit(0);
+    h.run(&["preview", "content-store", "cs.yaml", "--couple"]).assert_exit(0);
     // A UI step referencing an unresolved key → non-conforming for that locale.
     h.run(&["domain", "new", "ui-step", "P2", "--label", "P2", "--content", "missing.key:body"]).assert_exit(0);
-    let out = h.run(&["preview", "content-store", "cs.toml", "--couple"]);
+    let out = h.run(&["preview", "content-store", "cs.yaml", "--couple"]);
     out.assert_exit(1);
     assert!(out.stderr.contains("missing.key") && (out.stderr.contains("de") || out.stderr.contains("en")), "stderr:\n{}", out.stderr);
 }

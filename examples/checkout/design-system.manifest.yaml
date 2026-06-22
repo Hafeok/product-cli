@@ -1,0 +1,70 @@
+# design-system.manifest.yaml  (PREVIEW — exercises §11)
+# A conforming design system for the checkout example. Declares the four
+# obligations of §11.1: a CIO catalog, reification coverage, a token surface,
+# and per-component WCAG guarantees.
+
+design_system:
+  id: "wire-ds"
+  version: "0.1.0"
+  wcag_target: "2.2-AA"
+
+  contexts_supported:
+    form_factor: [phone, tablet]
+    modality:    [touch, pointer]
+
+  components:                       # the CIO catalog
+    - id: searchable-list
+      tokens: [color.fg, color.bg, space.inset, type.body]
+      satisfies:
+        - { criterion: "1.3.1", level: A,  via: machine }
+        - { criterion: "4.1.2", level: A,  via: machine }
+        - { criterion: "2.4.7", level: AA, via: assisted }
+    - id: segmented-control
+      tokens: [color.fg, color.bg, space.inset]
+      satisfies:
+        - { criterion: "1.3.1", level: A,  via: machine }
+        - { criterion: "4.1.2", level: A,  via: machine }
+    - id: list
+      tokens: [color.fg, space.inset, type.body]
+      satisfies:
+        - { criterion: "1.3.1", level: A, via: machine }
+    - id: value-block
+      tokens: [color.fg, type.display]
+      satisfies:
+        - { criterion: "1.3.1", level: A, via: machine }
+    - id: primary-button
+      tokens: [color.accent, color.on-accent, space.inset, type.label]
+      satisfies:
+        - { criterion: "2.5.8", level: AA, via: machine }    # target size
+        - { criterion: "2.4.7", level: AA, via: assisted }
+    - id: drawer                    # the burger menu — root navigation reified
+      tokens: [color.bg, color.fg, space.inset]
+      satisfies:
+        - { criterion: "2.4.7", level: AA, via: assisted }
+        - { criterion: "2.1.1", level: A,  via: manual }     # keyboard operable
+    - id: rail                      # tablet root navigation
+      tokens: [color.bg, color.fg]
+      satisfies:
+        - { criterion: "2.4.7", level: AA, via: assisted }
+
+  reification:                      # reify(AIO, context) -> CIO ; must cover every pair
+    - { aio: single-select,      when: { form_factor: phone,  options: many }, cio: searchable-list,
+        rationale: "no room for many side-by-side options on a phone" }
+    - { aio: single-select,      when: { form_factor: tablet, options: few  }, cio: segmented-control,
+        rationale: "few options, ample width — direct choice beats a menu" }
+    - { aio: display-collection, when: {}, cio: list }
+    - { aio: display-value,      when: {}, cio: value-block }
+    - { aio: trigger-action,     when: { emphasis: primary }, cio: primary-button }
+    - { aio: navigate,           when: { scope: root, form_factor: phone  }, cio: drawer,
+        rationale: "global destinations behind a drawer on a phone" }
+    - { aio: navigate,           when: { scope: root, form_factor: tablet }, cio: rail }
+
+  tokens:                           # the token surface
+    - { id: color.fg,        type: color }
+    - { id: color.bg,        type: color }
+    - { id: color.accent,    type: color }
+    - { id: color.on-accent, type: color }
+    - { id: space.inset,     type: dimension }
+    - { id: type.body,       type: typography }
+    - { id: type.label,      type: typography }
+    - { id: type.display,    type: typography }

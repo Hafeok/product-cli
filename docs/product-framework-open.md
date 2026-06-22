@@ -28,6 +28,7 @@
 10. [Conformance rules (normative summary)](#10-conformance-rules-normative-summary)
 11. [Design System Conformance Profile](#11-design-system-conformance-profile) — 🅿 *Preview*
 12. [Content Store Conformance Profile](#12-content-store-conformance-profile) — 🅿 *Preview*
+13. [Data Conformance Profile](#13-data-conformance-profile) — 🅿 *Preview*
 
 ---
 
@@ -78,13 +79,33 @@ DELIVERY  how the What is brought to a verifiable 'done' — model only
 
 The What is the specification every role reads and agrees on. It has two halves, expressed in one graph: the **domain model** (what exists) and the **event model** (what happens) — and, where behaviour is interesting, a **Decider** that makes that behaviour executable (§3.3).
 
-### 3.1 The domain model — structure
+### 3.1 The domain model — structure and data
 
-The shared definition of **what concepts mean** and how they relate. Conformance requirements:
+The shared definition of **what concepts mean** and how they relate. A domain model has **two sides**, and conflating them is a common defect:
+
+- the **structure** — what *constitutes* a valid model: the entity types, relations, cardinalities, and invariants. This is what developers usually mean by "domain model" (the DDD, type-level sense), and it is the SHACL-*shape* side of the reference encoding (§9).
+- the **data** — the actual populated facts: *which* products exist, what they are called, the real entities. This is the side data practitioners work from; they validate a model against what the data *actually is*, and they catch what the structure side cannot see (a field that is null in 90% of rows, an enum value the schema never declared, two "distinct" entities that are one row in practice). It is the RDF-*instance* side of the same encoding.
+
+A model trusted only from the structure side is asserted top-down and never reconciled with ground truth — which is exactly why data practitioners distrust developer domain models. The framework therefore makes **both sides first-class**, and distinguishes two kinds of data by their relationship to the model.
+
+**Structure — conformance requirements:**
 
 - **Bounded contexts, not one flat model.** Within a context a term has exactly one meaning (the **ubiquitous language**); the same word may mean different things in different contexts. Cross-context correspondences are **explicit declared mappings**, never assumed. (This is what resolves "is a User a Customer?" rather than restating the confusion.)
 - **Entities, relations, value objects, invariants.** Relations carry cardinality **and rationale**. Invariants are stated as machine-checkable constraints.
 - **Machine-readable, with a constraint language.** The model must be expressible as a graph with validatable shapes (RDF + SHACL is the reference; an equivalent is conformant). A diagram alone is not a conformant domain model — it cannot generate or validate.
+
+**Data — reference data is What; production data is an oracle:**
+
+- **Reference data is part of the What.** Some instance data is *constitutive* — the system's behaviour is undefined without it: the set of valid shipping methods, the tax categories, the product taxonomy, the currencies accepted. This is **reference data**, and it lives in the What because the model and behaviour reference it: a `single-select` of shipping options (§3.2.2) draws its options from declared reference data, not from thin air, and an invariant like "tax category must be one of the declared set" is checkable only because the set is modelled. Reference data is versioned and governed like the rest of the What.
+- **Production data is the validation oracle, not part of the What.** The live entities — the 4,200 products, the real orders — are *not* specification; they are *populated* facts the running system holds. But they serve a role the framework values: they are an **oracle the structure is checked against.** "Does real data conform to the declared shapes?" is a verification — **data conformance** (§6.3) — and it catches model defects nothing else will. A structure that no production data satisfies is as suspect as a Decider no scenario exercises: the model earns trust by real data passing its shapes, not by being declared. This is the data practitioner's lens given teeth.
+
+> **Data conformance reads in both directions — and never closes.** Every other conformance check in the framework runs one way: the artifact is judged against the spec, and a failure means the *artifact* is wrong. Data conformance is the first check whose failure is **genuinely ambiguous**: when production data violates a shape, either the data is wrong *or the spec is stale*, and the framework does not presume which. That ambiguity is the mechanism, not a weakness — it is the one place the running system can **indict the specification.** A shape that real data persistently violates may not be catching bad data; it may be reporting that the model no longer describes the system, and the correct response may be to fix the spec, not the data. This inverts the usual authority: elsewhere the spec is the truth the world is held to; here, production data is a *witness* against a stale spec.
+
+> **Authored once, asserted continuously.** Every other verification is a build-time gate — it runs once, before acceptance. Data-conformance shapes are different in kind: authored once in the What, they can be evaluated against live data **forever** — on every write, or on a schedule — so the same artifact is both a build-time gate on the model's coherence *and* a standing **production monitor**. This dual-temporality (write once, assert continuously) is what lets a system know, at any moment, whether the data it holds is valid against what it believes should be true.
+
+> **Spec staleness becomes measurable — the data-divergence rate.** Because the assertion runs continuously, the rate at which production data diverges from the declared model is a direct, ongoing signal of how far the spec has fallen behind reality. This is the **data-divergence rate**, a first-class metric and the *over-confidence* counterpart to the intent-reliance rate (§3.2.1): where intent-reliance measures under-specification (the model says too little), data-divergence measures over-confidence (the model claims something reality no longer supports). A spec with a rising divergence rate is a spec going stale — now *visible as it happens*, rather than discovered when something breaks. This closes the reproducibility → measurement → improvement chain (§1) onto the spec's own fidelity.
+
+> **The constitutive/populated test.** If changing a datum changes what the system *means* (remove a shipping method and a behaviour becomes impossible), it is **reference data** and belongs in the What. If it is just more rows of the same kind (one more product), it is **production data** and belongs to the running system, where it serves as the conformance oracle. The line is not "is it data" but "is it specification."
 
 ### 3.2 The event model — behaviour
 
@@ -494,6 +515,7 @@ A conformant instance must have verifications covering, at minimum:
 | **Contract conformance** | realised code obeys the How's contracts |
 | **Seam** | separately-described parts agree — e.g. application vs. runtime (§4.2), or a screen vs. its UI step: every datum shown is projected, every control maps to a valid command, every referenced AIO has a reifying CIO per context, and a UI step references only AIO-typed nodes (§3.2.2, §4.5) |
 | **Domain conformance** | realised code matches the domain model; no structural drift |
+| **Data conformance** | production data validates against the domain model's declared shapes (§3.1) — the structure checked against real data as an oracle. Unlike the other (build-time) kinds it also runs **continuously in production**, and its failures read **both ways**: data wrong *or* spec stale (the data-divergence rate, §3.1) |
 | **Behavioural conformance** | realised behaviour matches the event model; where a Decider (§3.3) or Projector (§3.4) exists, the realised behaviour or projection produces identical outputs to it across the same scenarios |
 | **Oracle conformance** | a named-algorithm primitive (§3.5) produces outputs matching its referenced algorithm/standard across its declared oracle pairs — the only check available where there is no Decider or Projector to simulate against |
 
@@ -552,7 +574,7 @@ This framework is a conformant instantiation of the Two Pillars Specification Fr
 
 | Two Pillars concept | This framework's construct | Section |
 |---|---|---|
-| **What specification** | Domain model (structure) + event model (behaviour, incl. UI steps typed by Abstract Interaction Objects + context-of-use + WCAG 2.2 accessibility criteria) + Decider (executable behaviour) + Projector (executable read model) + named-algorithm primitives (the Polanyi floor) | [§3](#3-the-what--structure-and-behaviour) |
+| **What specification** | Domain model (structure + reference data) + event model (behaviour, incl. UI steps typed by Abstract Interaction Objects + context-of-use + WCAG 2.2 accessibility criteria) + Decider (executable behaviour) + Projector (executable read model) + named-algorithm primitives (the Polanyi floor) | [§3](#3-the-what--structure-and-behaviour) |
 | **How specification** | Decisions/principles/patterns + contracts (incl. repository layout model) + interface standards + screen-composition contract (reification + content resolution) | [§4](#4-the-how--realising-the-what) |
 | **SPMC (Schema, Prompt, Model, Context)** | Work unit: one bounded transformation, frozen input, one artifact | [§5](#5-work-units-and-the-rationale-trace) |
 | **Derivation contract** | The typed links of [§9](#9-encoding-and-the-derivation-contract) (e.g. `derived_from`, `conforms_to`, `applies`, `realizes`, `enforces`) | [§9](#9-encoding-and-the-derivation-contract) |
@@ -561,12 +583,14 @@ This framework is a conformant instantiation of the Two Pillars Specification Fr
 
 ### 8.1 Conformance levels
 
-- **Level 1 — Described.** A conformant What (domain + event model) exists as a machine-readable graph with declared bounded contexts and mappings. Where behaviour is interesting, a Decider (§3.3) makes it executable and is simulated sound and complete before any realisation; where a read model's projection is non-trivial, a Projector (§3.4) makes the fold executable to the same depth; genuinely irreducible computations are declared as named-algorithm primitives (§3.5), specified by reference and pinned by an oracle. Where a flow has screens, its UI steps (§3.2.1) declare their intent and derive their data and actions from the model, typed against Abstract Interaction Objects (§3.2.2).
+- **Level 1 — Described.** A conformant What (domain + event model) exists as a machine-readable graph with declared bounded contexts and mappings, including any **reference data** the behaviour depends on (§3.1). Where behaviour is interesting, a Decider (§3.3) makes it executable and is simulated sound and complete before any realisation; where a read model's projection is non-trivial, a Projector (§3.4) makes the fold executable to the same depth; genuinely irreducible computations are declared as named-algorithm primitives (§3.5), specified by reference and pinned by an oracle. Where a flow has screens, its UI steps (§3.2.1) declare their intent and derive their data and actions from the model, typed against Abstract Interaction Objects (§3.2.2).
 - **Level 2 — Realised.** A conformant How exists (including a repository layout model); work units reference the What and How by pointer; interface contracts use standards and are generated from the domain model; where the event model has UI steps, screens are specified as design-system compositions (Atomic Design) with reification rules mapping each AIO, per context of use, to an on-system component.
 - **Level 3 — Verified.** Verifications of all required kinds ([§6.3](#63-the-required-verification-kinds)) exist — including layout conformance — meet the coherence bar, gate acceptance, and back the rationale trace.
 - **Level 4 — Delivered.** Features and releases are graph partitions; "done" is computed by predicate; progress is the fraction passing verification.
 
 *Levels are cumulative. A claim of conformance states the highest level satisfied.*
+
+> **One capability is adoptable alone: data conformance.** The levels above describe building a system *from* the framework. But **data conformance** (§3.1, §6.3) can be adopted by an existing system that uses none of the rest — no Deciders, no Projectors, no UI model, no work units. A team with only a domain structure and a production database can declare the shapes their data should satisfy and immediately get a continuous conformance signal — because every system already has data, and almost none can answer "is it valid against what we believe should be true?" This makes data conformance the lowest-commitment, highest-immediate-value **entry point** into the framework: a team starts here because it pays off on day one, and the rest of the model becomes the natural next step once the structure is declared. The Data Conformance Profile (§13) states this minimal adoption.
 
 ---
 
@@ -582,6 +606,7 @@ The reference encoding is **RDF** for the graph and **SHACL** for constraints; a
 | `realizes` | this pattern implements this principle |
 | `enforces` | this verification proves this principle/contract/model element holds |
 | `changes` / `projects` / `has_state` | this event changes this entity / this read model projects these / this projection can occupy this state (§3.2) |
+| `reference_data_for` / `conforms_to_shape` | this declared instance data is constitutive reference data for this concept / this production dataset is validated against this shape as an oracle (§3.1) |
 | `decides_for` / `handles` / `emits_event` | this Decider governs this aggregate / accepts these commands / may produce these events (§3.3) |
 | `projects_for` / `folds` | this Projector builds this read model / folds these events into it (§3.4) |
 | `specified_by_reference` / `pinned_by_oracle` | this named-algorithm primitive implements this named algorithm/standard / is checked against these reference I/O pairs (§3.5) |
@@ -600,7 +625,7 @@ These links are what make the framework **queryable**: impact analysis ("what de
 
 1. A product is described as three models — What, How, Delivery — in one machine-readable graph.
 2. The What has two halves: a domain model (structure) and an event model (behaviour), authored and agreed before the How.
-3. The domain model is bounded contexts with explicit cross-context mappings — never one flat model; with a constraint language for invariants.
+3. The domain model has two sides: **structure** (bounded contexts with explicit cross-context mappings — never one flat model; entities, relations, value objects, invariants in a constraint language) and **data**. Constitutive **reference data** (valid shipping methods, tax categories, taxonomies the behaviour depends on) is part of the What; **production data** is not specification but serves as the **oracle** the structure is validated against (data conformance, §6.3) — a structure no real data satisfies is suspect. The test: if changing a datum changes what the system means, it is reference data; if it is just more rows, it is production data. Data-conformance shapes are authored once but **asserted continuously** in production, and their failures read **both ways** (data defect *or* spec drift); the **data-divergence rate** is the resulting first-class signal of spec staleness, the over-confidence counterpart to the intent-reliance rate. Data conformance is adoptable standalone as the framework's minimal entry point (§13).
 4. The event model is built from domain-typed primitives; every event changes a real entity; a read model declares (or makes inferable) its state space (`present` plus any of `loading`/`empty`/`failed` it can exhibit); depth is proportional to behavioural complexity. A **UI step** is a flow primitive whose interactions are **typed against Abstract Interaction Objects** (§3.2.2) — a closed-core, extensible vocabulary of context-independent interaction kinds — never against concrete controls; this type boundary makes the What/How UI split structural, not advisory. Its buildable core is derived from the model (the projection it surfaces, the commands valid at it, its transitions, with input AIOs deriving their fields and validation from the relevant command's payload via the domain model); its modelled meaning — emphasis, the meaning of each state in the surfaced projection's declared **state space** (constrained to states the projection has and covering every one, or waived with reason — the UI analogue of command coverage), **accessibility obligations** (WCAG 2.2 success criteria, ingested as entities, inherited from its AIOs and extended per step; each tagged machine/assisted/manual, §3.2.3), and **content references** (standing authored words — headings, body, empty/error prose, help, legal — carried by content key with a declared role, never as literals, resolved by the How against a content store, §4.6) — is checkable specification. Its **intent** is *not* modelled specification but the marked residue of what the model does not yet determine: it is treated as specification debt, every use of it to settle a realisation choice must be promoted into a modelled element (AIO, context, reification rule, or a meaning declaration), and the intent-reliance rate is a measure of UI under-specification. The relevant **contexts of use** (form factor, modality, …) are declared as What-side elements. Navigation is **one page graph** (§3.2.4): pages are nodes, `navigate` transitions are edges, a flow is a named connected subgraph with an entry page, and a declared **application root** whose out-edges are the global destinations the primary navigation renders; "top-level" is derived (an inbound edge from the root), not a hand-applied tag.
 5. Where behaviour is interesting, a **Decider** makes it executable: its signature is derived from the event model (it handles exactly the commands targeting its aggregate, emits only events those commands sanction, evolves from the events that change it, rejects via the aggregate's invariants), and it is simulated sound and complete before realisation. Trivial behaviour needs no Decider. Symmetrically, where a read model's projection is non-trivial, a **Projector** makes the fold executable to the same depth — its signature derived (it folds exactly the events the read model projects, over the entities they change), only its fold logic authored, simulated sound and complete and serving as the projection's oracle; the `projects` link alone is a name, not a function. A computation is mechanically derivable only to the degree its variability is declared data over a generic interpreter; a genuinely irreducible computation (a named algorithm or standard) is declared as a **named-algorithm primitive** specified by reference plus an I/O contract plus an oracle, is exempt from derivation and simulation, and is checked by oracle conformance — never passed off as a mechanical projection.
 6. The How captures decisions/principles/patterns (declared once, referenced by pointer, each decision carrying rationale), contracts (stated checkably, including that decision logic is kept in a pure, isolable core), interface contracts (industry standards, generated from the domain model), and — wherever the event model has UI steps — a **screen-composition contract** that binds each screen to a design system structured by Atomic Design (atoms → molecules → organisms → templates → pages), with the component set closed and styling via tokens not literals. Each page's data and controls are derived from its UI step (projected fields, valid commands), and each AIO the step references is **reified** to an on-system concrete control by a declared `reify(AIO, context) → CIO` rule that carries rationale and must cover every (AIO, context) pair its steps can encounter. The whole is checked by the seam verification. **Accessibility** is specified not as prose but as **WCAG 2.2 success criteria ingested as entities** (principle → guideline → criterion → level), each tagged by verification type: *machine* criteria are deterministic gates, *assisted* and *manual* criteria are discharged by recorded, attributed attestations entering through a frozen boundary. Obligations are inherited from a step's AIOs and extended per step; the accessibility verdict reports a conformance level and its basis, never a bare pass. **Content** (authored words) is carried by reference, not literal: the How resolves each content key against a **content store** (§4.6) parameterised by **locale** (`resolve(key, locale) → string`), and the store must cover every (key, locale) pair the application references.
@@ -759,6 +784,33 @@ A validator checks the manifest is whole — every key carries its role; every c
 - **Checkable copy.** Because keys carry roles, empty error messages, missing legal text, and overflowing headings are catchable at the seam, not discovered in production.
 
 > **Why Preview.** Like §11, this profile is coherent with the normative body but unexercised against a real content store and a worked What. The two profiles are deliberately parallel; a reference instance should demonstrate one conforming design system *and* one conforming content store resolving the same What end to end, after which both are proposed for normative status together.
+
+---
+
+## 13. Data Conformance Profile
+
+> **🅿 PREVIEW — not yet normative.** Unlike §11 and §12 (which describe *providers* that plug into a full instance), this profile describes the framework's **minimal standalone adoption**: data conformance used on its own, by a system that uses none of the rest of the framework. It introduces no new requirements — it is §3.1 (structure and data) and §6.3 (data conformance) packaged as an entry point. The normative body governs on any apparent difference.
+
+### 13.1 What it is
+
+The smallest useful slice of the framework is: **declare the shapes your data should satisfy, then assert them against real data — continuously.** A system needs only a domain *structure* (entities, relations, cardinalities, invariants as validatable shapes — §3.1) and a production dataset. It needs no event model, no Decider or Projector, no UI model, no work units. This is the lowest-commitment, highest-immediate-value way in: every system already has data, and almost none can answer *"is it valid against what we believe should be true?"*
+
+### 13.2 What a conforming adoption provides
+
+1. **A declared structure.** The entity types, relations, cardinalities, and invariants the data is expected to satisfy, expressed as validatable shapes (RDF + SHACL is the reference; an equivalent conforms). This is the structure side of §3.1, and nothing more is required.
+2. **A bound dataset.** A declared production dataset (or several) that the shapes are evaluated against — the oracle (§3.1).
+3. **Continuous assertion.** The shapes are evaluated against the data not once but on an ongoing basis — on write, or on a schedule — so conformance is a *standing* signal, not a one-time check (§3.1, "authored once, asserted continuously").
+4. **Bidirectional triage.** A declared posture for reading failures: each violation is triaged as *data defect* (fix the data) or *spec drift* (fix the model), because a data-conformance failure is ambiguous by design (§3.1). An adoption that only ever blames the data is using half the capability.
+
+### 13.3 The signal it produces
+
+The **data-divergence rate** — the proportion of production data that fails the declared shapes, tracked over time (§3.1). It is the over-confidence counterpart to the intent-reliance rate: a rising divergence rate is a model falling behind reality, made visible as it happens. A conforming adoption surfaces this rate, not just pass/fail, because the *trend* is the early warning a single verdict hides.
+
+### 13.4 Why it is the doorway
+
+A team that adopts data conformance alone has, as a side effect, done the hardest part of Level 1 (§8.1): declared a real, validatable domain structure. From there, the rest of the framework is incremental — the event model attaches to entities that already exist, Deciders and Projectors make their behaviour executable, the UI model derives from projections. Data conformance pays for itself immediately *and* lays the foundation the rest builds on, which is why it is offered as the entry point rather than a final level.
+
+> **Why Preview.** This profile names a packaging, not a new mechanism; it awaits a reference adoption that runs data conformance continuously against a real production system and reports a data-divergence trend, after which it is proposed for normative status as the framework's recognized minimal entry point.
 
 ---
 
