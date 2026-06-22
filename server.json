@@ -7,13 +7,13 @@
     "source": "github",
     "id": "1209070346"
   },
-  "version": "0.1.6",
+  "version": "0.2.0",
   "websiteUrl": "https://github.com/Hafeok/product-cli",
   "packages": [
     {
       "registryType": "mcpb",
       "identifier": "https://github.com/Hafeok/product-cli/releases/download/v0.1.6/product-x86_64-unknown-linux-gnu.tar.xz?source=mcp-registry",
-      "version": "0.1.6",
+      "version": "0.2.0",
       "transport": {
         "type": "stdio"
       },
