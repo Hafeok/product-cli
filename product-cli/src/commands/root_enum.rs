@@ -274,6 +274,11 @@ pub enum Commands {
         /// Feature ID
         id: String,
     },
+    /// Preview profiles (§11/§12) — validate a design-system or content-store manifest
+    Preview {
+        #[command(subcommand)]
+        command: PreviewCommands,
+    },
     Primitive {
         #[command(subcommand)]
         command: PrimitiveCommands,

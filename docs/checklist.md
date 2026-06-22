@@ -1790,17 +1790,17 @@
 - [x] TC-1013: seam fails on unprojected datum or foreign command (scenario) — passing
 - [x] TC-1014: seam composes coverage failures (scenario) — passing
 
-### FT-141 — Design System Conformance Profile (preview) [ ]
+### FT-141 — Design System Conformance Profile (preview) [x]
 
 - [x] ADR-085: Preview conformance profiles for the design system and the content store (accepted)
-- [ ] TC-1015: design system manifest validates internally (scenario) — unimplemented
-- [ ] TC-1016: design system coupling covers every AIO context (scenario) — unimplemented
+- [x] TC-1015: design system manifest validates internally (scenario) — passing
+- [x] TC-1016: design system coupling covers every AIO context (scenario) — passing
 
-### FT-142 — Content Store Conformance Profile (preview) [ ]
+### FT-142 — Content Store Conformance Profile (preview) [x]
 
 - [x] ADR-085: Preview conformance profiles for the design system and the content store (accepted)
-- [ ] TC-1017: content store manifest validates internally (scenario) — unimplemented
-- [ ] TC-1018: content store coupling resolves every referenced key (scenario) — unimplemented
+- [x] TC-1017: content store manifest validates internally (scenario) — passing
+- [x] TC-1018: content store coupling resolves every referenced key (scenario) — passing
 
 ### FT-145 — Domain model structure/data split and data conformance [x]
 

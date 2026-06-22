@@ -9803,6 +9803,91 @@ fn tc_1014_seam_composes_coverage_failures() {
     }
 }
 
+/// A whole §11.3 design-system manifest reifying every core AIO on `phone`.
+fn whole_ds_manifest() -> String {
+    let aios = ["trigger-action", "single-select", "multi-select", "text-entry", "numeric-entry",
+        "date-entry", "display-value", "display-collection", "navigate", "edit"];
+    let rules: String = aios.iter().map(|a| format!(
+        "[[reification]]\naio = \"{a}\"\nwhen = \"phone\"\ncio = \"segmented-control\"\nrationale = \"x\"\n")).collect();
+    format!("[design_system]\nid = \"acme\"\nversion = \"1.0\"\nwcag_target = \"AA\"\n\
+        contexts_supported = [\"phone\"]\ntokens = [\"color.accent\"]\n\
+        [[components]]\nid = \"segmented-control\"\ntokens = [\"color.accent\"]\n\
+        satisfies = [{{ criterion = \"1.3.1\", level = \"A\", verification = \"machine\" }}]\n{rules}")
+}
+
+#[test]
+fn tc_1015_design_system_manifest_validates_internally() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
+    h.write("ds.toml", &whole_ds_manifest());
+    h.run(&["preview", "design-system", "ds.toml"]).assert_exit(0);
+    // A reification naming a cio absent from components fails wholeness.
+    h.write("bad.toml", &whole_ds_manifest().replacen("cio = \"segmented-control\"", "cio = \"ghost-cio\"", 1));
+    let out = h.run(&["preview", "design-system", "bad.toml"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("ghost-cio") && out.stderr.contains("absent"), "stderr:\n{}", out.stderr);
+}
+
+#[test]
+fn tc_1016_design_system_coupling_covers_every_aio_context() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
+    h.run(&["domain", "new", "context-of-use", "phone", "--label", "P"]).assert_exit(0);
+    h.write("ds.toml", &whole_ds_manifest());
+    // Full reification over phone → coupling complete.
+    h.run(&["preview", "design-system", "ds.toml", "--couple"]).assert_exit(0);
+    // Drop single-select's rule → non-conforming for phone, naming the gap.
+    let dropped = whole_ds_manifest().replacen(
+        "[[reification]]\naio = \"single-select\"\nwhen = \"phone\"\ncio = \"segmented-control\"\nrationale = \"x\"\n", "", 1);
+    h.write("gap.toml", &dropped);
+    let out = h.run(&["preview", "design-system", "gap.toml", "--couple"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("single-select") && out.stderr.contains("phone"), "stderr:\n{}", out.stderr);
+}
+
+/// A whole §12.2 content-store manifest with two entries over en/de.
+fn whole_content_manifest() -> String {
+    "[content_store]\nid = \"copy\"\nversion = \"1.0\"\nlocales_supported = [\"en\", \"de\"]\n\
+     [[entries]]\nkey = \"cart.empty.message\"\nrole = \"empty-message\"\n\
+     values = { en = \"Your cart is empty\", de = \"Ihr Warenkorb ist leer\" }\n\
+     [[entries]]\nkey = \"checkout.title\"\nrole = \"heading\"\n\
+     values = { en = \"Checkout\", de = \"Kasse\" }\n".to_string()
+}
+
+#[test]
+fn tc_1017_content_store_manifest_validates_internally() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
+    h.write("cs.toml", &whole_content_manifest());
+    h.run(&["preview", "content-store", "cs.toml"]).assert_exit(0);
+    // A key missing a value for a claimed locale fails wholeness.
+    h.write("nolocale.toml", &whole_content_manifest().replacen(", de = \"Kasse\"", "", 1));
+    let a = h.run(&["preview", "content-store", "nolocale.toml"]);
+    a.assert_exit(1);
+    assert!(a.stderr.contains("checkout.title") && a.stderr.contains("de"), "stderr:\n{}", a.stderr);
+    // An error/empty-message role resolving to empty text fails.
+    h.write("empty.toml", &whole_content_manifest().replacen("Your cart is empty", "", 1));
+    let b = h.run(&["preview", "content-store", "empty.toml"]);
+    b.assert_exit(1);
+    assert!(b.stderr.contains("cart.empty.message") && b.stderr.contains("empty"), "stderr:\n{}", b.stderr);
+}
+
+#[test]
+fn tc_1018_content_store_coupling_resolves_every_referenced_key() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "Cart", "--label", "Cart",
+        "--content", "cart.empty.message:empty-message"]).assert_exit(0);
+    h.write("cs.toml", &whole_content_manifest());
+    // The store resolves the referenced key in every locale → coupling complete.
+    h.run(&["preview", "content-store", "cs.toml", "--couple"]).assert_exit(0);
+    // A UI step referencing an unresolved key → non-conforming for that locale.
+    h.run(&["domain", "new", "ui-step", "P2", "--label", "P2", "--content", "missing.key:body"]).assert_exit(0);
+    let out = h.run(&["preview", "content-store", "cs.toml", "--couple"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("missing.key") && (out.stderr.contains("de") || out.stderr.contains("en")), "stderr:\n{}", out.stderr);
+}
+
 /// TC-434: init errors on existing canonical config without --force
 #[test]
 fn tc_434_init_errors_on_existing_product_toml_without_force() {

@@ -5,7 +5,7 @@ use clap::Command as ClapCommand;
 use super::{
     adr, agent_init, archetype, author, build, cell, checklist, completions, conformance, context, cycle_times, decider,
     deliverable, dep, domain, drift, feature, gap, graph_cmd, guide, hash, hooks, how, implement, init, lsp, mcp_cmd,
-    metrics_cmd, migrate, onboard, pattern, preflight, prompts_cmd, release, render, request_cmd, schema, seam,
+    metrics_cmd, migrate, onboard, pattern, preflight, preview, prompts_cmd, release, render, request_cmd, schema, seam,
     primitive, projector, slice, status, tags, test_cmd, work_unit, worker, BoxResult, Commands,
 };
 
@@ -49,7 +49,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         // Status / impact / onboarding render-wrapped reads route through a sub-dispatcher.
         c @ (Commands::Impact { .. } | Commands::Status { .. } | Commands::Guide) => dispatch_status_family(c, fmt),
         // Product-Framework families route through a sub-dispatcher (keeps this match small).
-        c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Primitive { .. } | Commands::Deliverable { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Release { .. } | Commands::Slice { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
+        c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Primitive { .. } | Commands::Deliverable { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Preview { .. } | Commands::Release { .. } | Commands::Slice { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
     }
 }
 
@@ -76,6 +76,7 @@ fn dispatch_pf(command: Commands) -> BoxResult {
         Commands::Deliverable { command } => deliverable::handle_deliverable(command),
         Commands::Domain { command } => domain::handle_domain_cmd(command),
         Commands::How { command } => how::handle_how(command),
+        Commands::Preview { command } => preview::handle_preview(command),
         Commands::Release { command } => release::handle_release(command),
         Commands::Slice { command } => slice::handle_slice(command),
         Commands::WorkUnit { command } => work_unit::handle_work_unit(command),

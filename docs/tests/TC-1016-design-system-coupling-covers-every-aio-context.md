@@ -2,7 +2,7 @@
 id: TC-1016
 title: design system coupling covers every AIO context
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-141
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1016_design_system_coupling_covers_every_aio_context
+last-run: 2026-06-22T13:20:00.313714453+00:00
+last-run-duration: 0.4s
 ---
 
 ## Scenario — reification coverage over (AIO, context) is the design-system command-coverage analogue

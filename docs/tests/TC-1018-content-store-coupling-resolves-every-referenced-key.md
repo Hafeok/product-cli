@@ -2,7 +2,7 @@
 id: TC-1018
 title: content store coupling resolves every referenced key
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-142
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1018_content_store_coupling_resolves_every_referenced_key
+last-run: 2026-06-22T13:23:54.355327709+00:00
+last-run-duration: 0.3s
 ---
 
 ## Scenario — content coverage over (key, locale) is the content analogue of reification coverage

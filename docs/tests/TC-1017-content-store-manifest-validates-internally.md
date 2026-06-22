@@ -2,7 +2,7 @@
 id: TC-1017
 title: content store manifest validates internally
 type: scenario
-status: unimplemented
+status: passing
 validates:
   features:
   - FT-142
@@ -14,6 +14,8 @@ observes:
 - exit-code
 runner: cargo-test
 runner-args: tc_1017_content_store_manifest_validates_internally
+last-run: 2026-06-22T13:23:54.355327709+00:00
+last-run-duration: 0.3s
 ---
 
 ## Scenario — a whole content-store manifest validates; a missing locale or empty error role fails

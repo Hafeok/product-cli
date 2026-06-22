@@ -2,7 +2,7 @@
 id: FT-141
 title: Design System Conformance Profile (preview)
 phase: 7
-status: planned
+status: complete
 depends-on:
 - FT-139
 adrs:
@@ -14,16 +14,16 @@ domains:
 - api
 - data-model
 domains-acknowledged:
-  ADR-041: Additive — adds a preview manifest format + validator; nothing existing is removed or deprecated, so no absence TC is required.
-  ADR-047: The functional specification lives in this feature's body, not a separate artifact.
-  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
-  ADR-050: PAT-001 (slice + adapter) governs the `pf` slice + CLI adapter; no new implementation pattern is introduced.
-  ADR-049: Not a context-bundle/template command; no template surface changes.
-  ADR-043: Manifest validation + the coupling check live in the pure `pf` slice (manifest/design_system); the CLI is a thin adapter.
-  ADR-048: Reads a design-system manifest and the captured What graph only; no other side effects.
-  ADR-051: Every TC declares `observes:` and asserts on those surfaces (graph, exit-code).
   ADR-018: Scenario TCs drive the binary through assert_cmd; `pf::manifest`/`pf::design_system` carry unit tests. No property or session dimension for a manifest validator.
+  ADR-043: Manifest validation + the coupling check live in the pure `pf` slice (manifest/design_system); the CLI is a thin adapter.
   ADR-040: The profile is a How-side provider contract at the What/How boundary; the coupling check composes with the existing seam rules; the verify pipeline is untouched.
+  ADR-048: Reads a design-system manifest and the captured What graph only; no other side effects.
+  ADR-049: Not a context-bundle/template command; no template surface changes.
+  ADR-042: TCs use the reserved `scenario` type only; no new TC type is introduced.
+  ADR-047: The functional specification lives in this feature's body, not a separate artifact.
+  ADR-050: PAT-001 (slice + adapter) governs the `pf` slice + CLI adapter; no new implementation pattern is introduced.
+  ADR-041: Additive — adds a preview manifest format + validator; nothing existing is removed or deprecated, so no absence TC is required.
+  ADR-051: Every TC declares `observes:` and asserts on those surfaces (graph, exit-code).
 patterns:
 - PAT-001
 ---
