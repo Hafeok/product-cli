@@ -144,8 +144,10 @@ function showPanel(n){
 function connect(){
   const dot=document.getElementById('dot'), st=document.getElementById('status');
   const es=new EventSource('/api/events');
+  const onTick=()=>{ dot.classList.add('flash'); setTimeout(()=>dot.classList.remove('flash'),300); load(); };
   es.onopen=()=>{ st.textContent='live'; };
-  es.onmessage=()=>{ dot.classList.add('flash'); setTimeout(()=>dot.classList.remove('flash'),300); load(); };
+  es.addEventListener('changed', onTick);   // server emits a named "changed" event
+  es.onmessage=onTick;                        // fallback for default-typed events
   es.onerror=()=>{ st.textContent='reconnecting…'; };
 }
 
