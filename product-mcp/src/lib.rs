@@ -25,6 +25,7 @@ mod request_handlers;
 mod write_handlers;
 pub mod stdio;
 pub mod http;
+pub mod watch;
 pub mod scaffold;
 pub mod tools;
 

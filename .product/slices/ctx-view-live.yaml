@@ -1,0 +1,4 @@
+id: ctx-view-live
+anchors:
+- flow-model-session
+- flow-live-update

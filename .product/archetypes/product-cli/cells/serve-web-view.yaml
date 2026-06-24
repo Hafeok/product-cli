@@ -1,0 +1,52 @@
+id: serve-web-view
+name: "Serve a live web view of a graph"
+family: integration
+archetype: product-cli
+classification: supporting
+applies_when: "exposing a read-only, live-updating browser view of a graph over the running MCP HTTP server"
+does_not_apply_when: "a static one-off export, or a view the existing read tools already cover"
+slots:
+  - name: projection
+    kind: behaviour
+    dispatch: "the read model projected to the client"
+    capture: "which read model?"
+    audit: "the read model exists in the What graph and projects an entity"
+  - name: screen
+    kind: behaviour
+    dispatch: "the ui-step the view renders"
+    capture: "which ui-step?"
+    audit: "the ui-step exists and displays the projection"
+cells:
+  - id: view-serializer
+    artifact: "the DomainGraph -> ViewGraph serializer with per-node model lane tags"
+    path: "product-core/src/pf/viz.rs"
+    model: code
+    derived_from: ["domain:projection", "app-contract:product-cli-app"]
+    applies: ["slice-plus-adapter", "native-checker"]
+  - id: view-routes
+    artifact: "GET / + GET /api/graph + GET /api/events routes on the MCP HTTP server"
+    edits: "product-mcp/src/http.rs"
+    model: code
+    derived_from: ["view-serializer", "app-contract:product-cli-app"]
+    applies: ["mcp-http-view"]
+  - id: view-watcher
+    artifact: "a notify watcher feeding the SSE change channel"
+    path: "product-mcp/src/watch.rs"
+    model: code
+    derived_from: ["view-routes", "domain:screen"]
+    applies: ["filesystem-change-source"]
+  - id: view-client
+    artifact: "the embedded two-lane Cytoscape view page"
+    path: "product-mcp/src/assets/view.html"
+    model: reasoning
+    derived_from: ["view-routes", "domain:screen"]
+    applies: ["two-lane-view"]
+audits:
+  - id: view-derivation-verified
+    kind: contract-conformance
+    checks: "GET /api/graph reflects the on-disk What graph on every request (no cache, rebuilt from .product/)"
+    protects: "projection slot"
+  - id: lane-separation-verified
+    kind: contract-conformance
+    checks: "every view node carries a domain|event lane tag and every bridge edge runs from an event node to a domain node"
+    protects: "screen slot"

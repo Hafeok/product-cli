@@ -1,0 +1,13 @@
+id: ship-ctx-view-live
+slice: ctx-view-live
+acceptance:
+- id: view-derivation-verified
+  statement: GET /api/graph reflects the on-disk What graph on every request
+  status: passing
+  runner: cargo-test
+  runner_args: view_graph_reflects_disk_each_call
+- id: lane-separation-verified
+  statement: every view node carries a domain|event lane and bridges run event->domain
+  status: passing
+  runner: cargo-test
+  runner_args: pf::viz::tests

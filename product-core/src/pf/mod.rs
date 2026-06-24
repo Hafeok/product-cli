@@ -64,6 +64,7 @@ pub mod sparql_rules;
 pub mod turtle;
 pub mod validate;
 pub mod verify;
+pub mod viz;
 pub mod wcag22;
 pub mod work_unit;
 pub mod work_unit_validate;
