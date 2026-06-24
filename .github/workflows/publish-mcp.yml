@@ -102,7 +102,9 @@ jobs:
           TAG: ${{ steps.resolve.outputs.tag }}
         run: |
           set -euo pipefail
-          ASSET="product-${MCPB_TARGET}.${MCPB_ARCHIVE_EXT}"
+          # cargo-dist names archives by the crate name (product-cli), even
+          # though the binary it ships is `product`.
+          ASSET="product-cli-${MCPB_TARGET}.${MCPB_ARCHIVE_EXT}"
           SHA_ASSET="${ASSET}.sha256"
           echo "Fetching $SHA_ASSET from release $TAG..."
           gh release download "$TAG" --repo "${{ github.repository }}" --pattern "$SHA_ASSET" --dir /tmp
