@@ -82,7 +82,11 @@ jobs:
           TAG_VERSION: ${{ steps.resolve.outputs.tag_version }}
         run: |
           set -euo pipefail
-          CARGO_VERSION=$(grep -E '^version = ' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+          # The package version lives in product-cli/Cargo.toml (the `product`
+          # binary); the root Cargo.toml is a pure workspace manifest with no
+          # version line. Grepping the root would yield an empty string and
+          # fail the match below on every release.
+          CARGO_VERSION=$(grep -E '^version = ' product-cli/Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
           SERVER_VERSION=$(jq -r '.version' server.json)
           SERVER_PKG_VERSION=$(jq -r '.packages[0].version' server.json)
           echo "tag=$TAG_VERSION cargo=$CARGO_VERSION server=$SERVER_VERSION pkg=$SERVER_PKG_VERSION"
