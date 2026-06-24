@@ -1,0 +1,43 @@
+id: e-viewgraph-decider
+decides_for: e-viewgraph
+handles:
+- cmd-refetch-graph
+- cmd-render-view
+emits:
+- ev-view-refreshed
+evolves_from:
+- ev-graph-changed
+- ev-view-refreshed
+logic:
+  initial:
+    rendered: false
+    stale: false
+  evolve:
+  - on: ev-graph-changed
+    set:
+      stale: true
+  - on: ev-view-refreshed
+    set:
+      stale: false
+      rendered: true
+  decide:
+  - on: cmd-refetch-graph
+    emit:
+    - ev-view-refreshed
+  - on: cmd-render-view
+    emit:
+    - ev-view-refreshed
+scenarios:
+- name: first render marks the view rendered and fresh
+  given: []
+  when: cmd-render-view
+  then:
+    emit:
+    - ev-view-refreshed
+- name: an on-disk change is cleared by a refetch
+  given:
+  - ev-graph-changed
+  when: cmd-refetch-graph
+  then:
+    emit:
+    - ev-view-refreshed
