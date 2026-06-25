@@ -2,7 +2,17 @@
 
 ## What is this project?
 
-Product is a Rust CLI and MCP server that manages a file-based knowledge graph of features (FT-XXX), architectural decisions (ADR-XXX), and test criteria (TC-XXX). It assembles precise LLM context bundles from the graph and orchestrates the full spec-to-implementation loop.
+Product is a Rust CLI and MCP server for the **Product Framework** — the open
+What/How specification graph (`docs/product-framework-open.md`). It captures and
+verifies a product's *What* (domain model, event model, Deciders, Projectors,
+systems, triggers, UI/AIO model) and *How* (contracts, reification, delivery),
+all under `.product/`. The reference What lives in
+`.product/author-domain/product-cli/`.
+
+> **Graph-only.** This repo was pivoted to the framework graph alone. The former
+> FT/ADR/TC knowledge-graph tool (the `feature`/`adr`/`test`/`gap`/`drift`/
+> `conformance`/`implement`/`verify` commands, `docs/{features,adrs,tests}`, and
+> the meta-graph engine) has been removed. Don't reach for those commands or dirs.
 
 ## Build & Test
 
@@ -10,26 +20,22 @@ Product is a Rust CLI and MCP server that manages a file-based knowledge graph o
 cargo build                                          # compile
 cargo t                                              # full suite, runs every binary (alias in .cargo/config.toml)
 cargo clippy -- -D warnings -D clippy::unwrap_used   # lint (zero unwrap policy)
-cargo bench                                          # 4 benchmarks
 ```
 
 **Always run `cargo t`, never plain `cargo test`.** Plain `cargo test` stops at
-the first failing binary and silently skips subsequent suites — so a failure
-in the code-quality fitness tests hides regressions in integration, sessions,
-and property tests. The `t` alias is defined as `test --no-fail-fast` in
-`.cargo/config.toml`: it runs every test binary and reports the complete
-result set at the end.
+the first failing binary and skips the rest. The `t` alias is `test
+--no-fail-fast` (`.cargo/config.toml`): it runs every test binary and reports
+the complete result set at the end.
 
-Suite composition (six binaries, ~820 tests, ~14s wall-clock):
+Suite composition (~420 tests):
 
-| Binary | Tests | What it covers |
-|---|---|---|
-| `cargo test --lib` | 253 | Unit tests on pure functions (in `#[cfg(test)] mod tests`) |
-| `--doc` | 6 | Doc tests in `///` examples |
-| `--test code_quality_tests` | 13 | File length ≤ 400, SRP in doc comments |
-| `--test integration_tests` | 448 | `assert_cmd`-driven CLI scenarios |
-| `--test property_tests` | 13 | `proptest`, 1000 cases each |
-| `--test sessions` | 94 | Session-based integration (ADR-018 Design 2) |
+| Binary | What it covers |
+|---|---|
+| `cargo test -p product-core --lib` | pf unit tests (the framework graph, in `#[cfg(test)] mod tests`) |
+| `cargo test -p product-mcp` | MCP registry + framework tool handlers |
+| `--test framework` | `assert_cmd`-driven framework CLI scenarios (`tests/framework.rs`) |
+| `--test code_quality_tests` | fitness gates: file length ≤ 400, function length, SRP, module structure |
+| `product-core/tests/property` | `proptest` over fileops/init |
 
 All three gates (build, `cargo t`, clippy) must pass before any commit.
 Code-quality fitness tests (`tests/code_quality_tests.rs`) enforce a

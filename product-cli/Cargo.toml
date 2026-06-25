@@ -34,7 +34,6 @@ ureq = { version = "2", default-features = false, features = ["tls", "json"] }
 tempfile   = "3"
 assert_cmd = "2"
 predicates = "3"
-regex      = "1"
 sha2       = "0.10"
 # FT-065 — validate the committed `server.json` MCP-registry manifest against
 # the offline schema fixture in `tests/fixtures/server.schema.json`. Test-only.
