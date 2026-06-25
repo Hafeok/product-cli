@@ -10,10 +10,8 @@ MISSING=()
 if [ -d product-core/src ] || [ -d product-cli/src ] || [ -d product-mcp/src ]; then
   # Workspace mode (FT-107): modules live under per-crate src/ trees.
   declare -A REQUIRED_PATHS=(
-    [graph]=product-core/src/graph
+    [pf]=product-core/src/pf
     [parse]=product-core/src/parse
-    [context]=product-core/src/context
-    [verify]=product-core/src/verify
     [io]=product-core/src/io
     [commands]=product-cli/src/commands
     [mcp]=product-mcp/src
@@ -26,7 +24,7 @@ if [ -d product-core/src ] || [ -d product-cli/src ] || [ -d product-mcp/src ]; 
   MAIN_PATH=product-cli/src/main.rs
 else
   # Single-crate fallback — used by tempdir-based unit tests for this script.
-  REQUIRED_MODULES=(graph parse context commands verify mcp io)
+  REQUIRED_MODULES=(pf parse commands mcp io)
   for mod in "${REQUIRED_MODULES[@]}"; do
     if [ ! -d "src/$mod" ]; then
       MISSING+=("src/$mod/")

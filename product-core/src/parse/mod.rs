@@ -1,7 +1,4 @@
-//! Parsing — front-matter extraction, formal block parsing, TOML processing.
-
-pub use crate::formal::*;
-pub use crate::parser::*;
+//! Parsing helpers — TOML/date deserialization for config.
 
 /// Deserialize `due-date` as an ISO 8601 date (YYYY-MM-DD). On failure the
 /// error carries the marker substring `due-date: expected YYYY-MM-DD` which

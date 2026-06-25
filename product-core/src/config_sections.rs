@@ -151,7 +151,7 @@ impl Default for PrefixConfig {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct MetricsConfig {
     #[serde(default)]
-    pub thresholds: HashMap<String, crate::metrics::ThresholdConfig>,
+    pub thresholds: HashMap<String, toml::Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

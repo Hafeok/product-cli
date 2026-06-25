@@ -1,9 +1,6 @@
 //! Product library — module re-exports for tests, benchmarks, integration.
 
-pub mod adr;
-pub mod agent_context;
 pub mod author;
-pub mod checklist;
 pub mod config;
 #[cfg(test)]
 #[path = "config_tests.rs"]
@@ -18,42 +15,13 @@ pub mod config_patterns;
 pub mod config_planning;
 pub mod config_request_builder;
 pub mod config_sections;
-pub mod conformance;
-pub mod context;
-pub mod cycle_times;
 pub mod demo;
-pub mod dep_types;
-pub mod domains;
-pub mod drift;
 pub mod error;
-pub mod feature;
-pub mod field_schema;
 pub mod fileops;
-pub mod formal;
-pub mod gap;
-pub mod graph;
 pub mod guide;
-pub mod hash;
-pub mod implement;
-pub mod metrics;
-pub mod migrate;
-pub mod onboard;
-pub mod parser;
-pub mod pattern;
 pub mod pf;
-pub mod pattern_types;
-pub mod rdf;
-pub mod request;
 pub mod root;
-pub mod status;
-pub mod tc;
-pub mod types_artifact;
-pub mod request_log;
-pub mod tags;
-pub mod test_type;
-pub mod types;
 
 // Wrapper modules for canonical module structure (ADR-029)
 pub mod io;
 pub mod parse;
-pub mod verify;

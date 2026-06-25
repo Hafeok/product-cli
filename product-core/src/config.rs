@@ -136,34 +136,7 @@ impl ProductConfig {
         let config: Self = toml::from_str(&content).map_err(|e| {
             ProductError::ConfigError(format!("Failed to parse {}: {}", path.display(), e))
         })?;
-        config.check_tc_types_reserved()?;
         Ok(config)
-    }
-
-    /// E017 (ADR-042): reject reserved structural TC-type names in
-    /// `[tc-types].custom`. Runs on every `load()` — before any subcommand.
-    pub fn check_tc_types_reserved(&self) -> Result<()> {
-        let reserved = crate::types::TestType::RESERVED;
-        let offenders: Vec<String> = self
-            .tc_types
-            .custom
-            .iter()
-            .filter(|name| reserved.contains(&name.as_str()))
-            .cloned()
-            .collect();
-        if !offenders.is_empty() {
-            return Err(ProductError::ConfigError(format!(
-                "error[E017]: reserved TC type name(s) in [tc-types].custom: {}\n   = reserved names: {}\n   = hint: remove the offending entries from product.toml — reserved names drive Product mechanics (phase gate, W004, G002, G009) and cannot be redeclared as custom types",
-                offenders.join(", "),
-                reserved.join(", "),
-            )));
-        }
-        Ok(())
-    }
-
-    /// Configured custom TC types (`[tc-types].custom`, ADR-042).
-    pub fn custom_tc_types(&self) -> &[String] {
-        &self.tc_types.custom
     }
 
     /// Find a config file by walking up from cwd (FT-057, ADR-048).
@@ -229,17 +202,6 @@ impl ProductConfig {
         root.join(config_path)
     }
 
-    /// Is this TC-type value recognised? (ADR-042). See
-    /// `crate::test_type::is_known_tc_type`.
-    pub fn is_known_tc_type(&self, name: &str) -> bool {
-        crate::test_type::is_known_tc_type(&self.tc_types.custom, name)
-    }
-
-    /// Hint string listing every recognised TC type (ADR-042).
-    pub fn tc_type_hint(&self) -> String {
-        crate::test_type::tc_type_hint(&self.tc_types.custom)
-    }
-
     /// Effective product name: `[product].name` takes precedence over top-level `name`
     pub fn product_name(&self) -> &str {
         self.product
@@ -256,15 +218,5 @@ impl ProductConfig {
             .filter(|s| !s.trim().is_empty())
     }
 
-    /// Validate `[product]` section — warns on top-level conjunction (TC-478)
-    pub fn validate_product_section(&self) -> Vec<String> {
-        let mut w = Vec::new();
-        if let Some(r) = self.responsibility() {
-            if crate::graph::responsibility::contains_top_level_conjunction(r) {
-                w.push("warning[W019]: product responsibility may describe multiple products\n  = hint: single statement only — top-level \" and \" suggests two products".into());
-            }
-        }
-        w
-    }
 }
 

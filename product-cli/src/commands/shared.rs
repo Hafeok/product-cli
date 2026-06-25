@@ -36,30 +36,15 @@ pub(crate) fn domain_root() -> PathBuf {
         .unwrap_or_else(|_| std::env::current_dir().unwrap_or_default())
 }
 
-/// Process-startup hooks that run before every command: one-shot log-path
-/// migration (FT-042) and stale tmp-file cleanup (ADR-015).
+/// Process-startup hooks that run before every command: stale tmp-file cleanup
+/// over the `.product/` framework tree (ADR-015).
 pub(crate) fn run_startup_hooks() -> BoxResult {
     cleanup_stale_tmp_files();
-    migrate_log_path_if_needed();
     Ok(())
 }
 
-fn migrate_log_path_if_needed() {
-    if let Ok((config, root)) = ProductConfig::discover() {
-        let _ = product_core::request_log::migrate_if_needed(&root, Some(&config.paths.requests));
-    }
-}
-
 fn cleanup_stale_tmp_files() {
-    if let Ok((config, root)) = ProductConfig::discover() {
-        let dirs = [
-            config.resolve_path(&root, &config.paths.features),
-            config.resolve_path(&root, &config.paths.adrs),
-            config.resolve_path(&root, &config.paths.tests),
-            config.resolve_path(&root, &config.paths.dependencies),
-        ];
-        for dir in &dirs {
-            fileops::cleanup_tmp_files(dir);
-        }
+    if let Ok((_, root)) = ProductConfig::discover() {
+        fileops::cleanup_tmp_files(&root.join(".product"));
     }
 }

@@ -237,7 +237,7 @@ fn tc_375_module_structure_passes() {
     let dir = tempfile::tempdir().expect("tempdir");
 
     // Create all required module directories
-    for module in &["graph", "parse", "context", "commands", "verify", "mcp", "io"] {
+    for module in &["pf", "parse", "commands", "mcp", "io"] {
         std::fs::create_dir_all(dir.path().join(format!("src/{module}"))).expect("mkdir");
     }
 
@@ -269,8 +269,8 @@ fn tc_375_module_structure_passes() {
 fn tc_376_module_structure_missing() {
     let dir = tempfile::tempdir().expect("tempdir");
 
-    // Create most modules but NOT graph/
-    for module in &["parse", "context", "commands", "verify", "mcp", "io"] {
+    // Create most modules but NOT pf/
+    for module in &["parse", "commands", "mcp", "io"] {
         std::fs::create_dir_all(dir.path().join(format!("src/{module}"))).expect("mkdir");
     }
 
@@ -292,7 +292,7 @@ fn tc_376_module_structure_missing() {
         stdout
     );
     assert!(
-        stdout.contains("src/graph/"),
+        stdout.contains("src/pf/"),
         "Expected missing module name in output, got: {stdout}"
     );
 }
@@ -305,7 +305,7 @@ fn tc_377_module_structure_main_too_long() {
     let dir = tempfile::tempdir().expect("tempdir");
 
     // Create all required modules
-    for module in &["graph", "parse", "context", "commands", "verify", "mcp", "io"] {
+    for module in &["pf", "parse", "commands", "mcp", "io"] {
         std::fs::create_dir_all(dir.path().join(format!("src/{module}"))).expect("mkdir");
     }
 

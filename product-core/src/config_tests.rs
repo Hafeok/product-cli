@@ -66,18 +66,3 @@ fn product_name_precedence_and_fallback() {
     assert_eq!(cfg2.product_name(), "fb");
 }
 
-#[test]
-fn validate_product_conjunction() {
-    let cfg: ProductConfig = toml::from_str(
-        "name = \"t\"\n[product]\nresponsibility = \"A platform and a monitor\"\n",
-    )
-    .unwrap();
-    assert!(!cfg.validate_product_section().is_empty(), "top-level and");
-    let cfg2: ProductConfig = toml::from_str(
-        "name = \"t\"\n[product]\nresponsibility = \"A platform — no deps, no config\"\n",
-    )
-    .unwrap();
-    assert!(cfg2.validate_product_section().is_empty(), "subordinate ok");
-    let cfg3: ProductConfig = toml::from_str("name = \"t\"\n").unwrap();
-    assert!(cfg3.validate_product_section().is_empty(), "absent ok");
-}
