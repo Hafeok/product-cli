@@ -1,9 +1,17 @@
 <!DOCTYPE html>
 <!--
   Live What-Graph view (FT: ctx-view). Fully self-contained: no CDN, no build
-  step — served from the product-mcp binary via include_str!. Renders the two
-  lanes (domain model §3.1 | event model §3.2) with bridge edges crossing the
-  divider, and live-refreshes from /api/events.
+  step — served from the product-mcp binary via include_str!. Two render modes,
+  switched from the header and remembered in localStorage:
+
+    • Timeline  — an Event-Modeling swimlane reading left→right: a UI/trigger
+      lane on top, a command (blue) / view (green) lane below it, and one amber
+      "stream" lane per aggregate at the bottom holding its orange events. A
+      Building-Blocks legend sits in the left gutter.
+    • Two-lane  — the structural §3.1 domain | §3.2 event split, with bridge
+      edges crossing the divider.
+
+  Both live-refresh from /api/events (SSE 'changed').
 -->
 <html lang="en">
 <head>
@@ -11,7 +19,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>What Graph — Live View</title>
 <style>
-  :root { --domain:#2563eb; --event:#d97706; --bridge:#db2777; --bg:#0f172a; --panel:#1e293b; --line:#475569; --text:#e2e8f0; --muted:#94a3b8; }
+  :root { --domain:#2563eb; --event:#d97706; --bridge:#db2777; --bg:#0f172a; --panel:#1e293b; --line:#475569; --text:#e2e8f0; --muted:#94a3b8;
+          --cmd:#2563eb; --view:#16a34a; --evt:#f59e0b; --ui:#e2e8f0; --stream:rgba(245,158,11,.07); }
   * { box-sizing: border-box; }
   body { margin:0; font:14px/1.4 system-ui, sans-serif; background:var(--bg); color:var(--text); }
   header { display:flex; align-items:center; gap:16px; padding:10px 16px; background:var(--panel); border-bottom:1px solid var(--line); }
@@ -19,19 +28,31 @@
   #live { display:flex; align-items:center; gap:6px; color:var(--muted); font-size:12px; }
   #dot { width:9px; height:9px; border-radius:50%; background:#22c55e; transition:background .2s; }
   #dot.flash { background:#fde047; }
+  #modes { display:flex; gap:0; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  #modes button { background:none; border:0; color:var(--muted); font:inherit; font-size:12px; padding:4px 12px; cursor:pointer; }
+  #modes button.on { background:var(--line); color:var(--text); }
   #filters { display:flex; flex-wrap:wrap; gap:10px; margin-left:auto; font-size:12px; color:var(--muted); }
   #filters label { display:flex; align-items:center; gap:4px; cursor:pointer; }
   .lane-head { display:flex; }
   .lane-head div { flex:1; text-align:center; padding:6px; font-weight:600; letter-spacing:.04em; }
   .lane-head .d { color:var(--domain); }
   .lane-head .e { color:var(--event); }
-  #wrap { position:relative; }
-  svg { display:block; width:100%; }
+  #wrap { position:relative; overflow-x:auto; }
+  svg { display:block; }
   .ctx-label { fill:var(--muted); font-size:11px; font-weight:600; letter-spacing:.03em; }
   .node rect { rx:5; stroke-width:1.5; cursor:pointer; }
   .node text { fill:var(--text); font-size:11px; pointer-events:none; }
   .edge { stroke:var(--line); fill:none; stroke-width:1.2; }
   .edge.bridge { stroke:var(--bridge); stroke-dasharray:5 3; stroke-width:1.6; }
+  .flow { stroke:#64748b; fill:none; stroke-width:1.4; marker-end:url(#arrow); opacity:.55; }
+  .xlink { stroke:#38bdf8; fill:none; stroke-width:1.4; marker-end:url(#arrow); opacity:0; transition:opacity .12s; }
+  .xlink.show { opacity:.9; }
+  .node:hover rect { filter:brightness(1.25); }
+  .lane-bg { stroke:none; }
+  .lane-name { fill:var(--evt); font-size:11px; font-weight:600; opacity:.85; }
+  .row-name { fill:#cbd5e1; font-size:11px; font-weight:700; letter-spacing:.02em; }
+  .legend-title { fill:var(--text); font-size:11px; font-weight:700; letter-spacing:.04em; }
+  .legend-cap { fill:var(--muted); font-size:10px; }
   #panel { position:fixed; top:54px; right:0; width:300px; max-height:80vh; overflow:auto; background:var(--panel);
            border:1px solid var(--line); border-radius:8px 0 0 8px; padding:14px; display:none; }
   #panel h2 { margin:0 0 4px; font-size:14px; }
@@ -46,21 +67,30 @@
 <header>
   <h1>What Graph — Live View</h1>
   <span id="live"><span id="dot"></span><span id="status">connecting…</span></span>
+  <div id="modes">
+    <button data-mode="timeline">Timeline</button>
+    <button data-mode="lanes">Two-lane</button>
+  </div>
   <div id="filters"></div>
 </header>
-<div class="lane-head"><div class="d">DOMAIN MODEL · §3.1 structure</div><div class="e">EVENT MODEL · §3.2 behaviour</div></div>
+<div class="lane-head" id="laneHead" style="display:none"><div class="d">DOMAIN MODEL · §3.1 structure</div><div class="e">EVENT MODEL · §3.2 behaviour</div></div>
 <div id="wrap"><svg id="svg"></svg><div id="empty" style="display:none">No What graph yet — capture one with <code>product domain new …</code></div></div>
 <aside id="panel"></aside>
 <script>
+// Two-lane (structural) palette — domain blue/indigo, event amber.
 const KIND_COLOR = {
   entity:'#1d4ed8', 'value-object':'#3b82f6', invariant:'#6366f1',
   command:'#ea580c', event:'#d97706', 'read-model':'#ca8a04', 'ui-step':'#a16207', flow:'#854d0e',
 };
+// Event-Modeling palette — command blue, view green, event orange, UI white.
+const EM_COLOR = { 'ui-step':'var(--ui)', command:'var(--cmd)', 'read-model':'var(--view)', event:'var(--evt)' };
 const NS='http://www.w3.org/2000/svg';
 let hidden = new Set();   // kinds toggled off
 let last = null;          // last fetched graph
+let mode = localStorage.getItem('viewMode') || 'timeline';
 
 function el(tag, attrs){ const n=document.createElementNS(NS,tag); for(const k in attrs) n.setAttribute(k,attrs[k]); return n; }
+function trim(s,n){ return s.length>n ? s.slice(0,n-1)+'…' : s; }
 
 async function load(){
   let g;
@@ -70,23 +100,164 @@ async function load(){
   buildFilters(g); render(g);
 }
 
+function setMode(m){
+  mode=m; localStorage.setItem('viewMode',m);
+  for(const b of document.querySelectorAll('#modes button')) b.classList.toggle('on', b.dataset.mode===m);
+  document.getElementById('laneHead').style.display = m==='lanes' ? 'flex':'none';
+  if(last){ buildFilters(last); render(last); }
+}
+
+function render(g){ mode==='lanes' ? renderLanes(g) : renderTimeline(g); }
+
 function buildFilters(g){
   const box = document.getElementById('filters');
-  const kinds = [...new Set(g.nodes.map(n=>n.kind))].sort();
+  // timeline only renders behavioural kinds — don't offer toggles that do nothing.
+  const TL=new Set(['command','event','read-model','ui-step']);
+  const kinds = [...new Set(g.nodes.map(n=>n.kind))].filter(k=>mode==='lanes'||TL.has(k)).sort();
   box.innerHTML='';
   for(const k of kinds){
     const lab=document.createElement('label');
     const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!hidden.has(k);
     cb.onchange=()=>{ cb.checked?hidden.delete(k):hidden.add(k); render(last); };
-    const sw=document.createElement('span'); sw.style.cssText=`width:9px;height:9px;border-radius:2px;background:${KIND_COLOR[k]||'#888'}`;
+    const c = (mode==='lanes' ? KIND_COLOR[k] : (EM_COLOR[k]||'').replace('var(--ui)','#e2e8f0').replace('var(--cmd)','#2563eb').replace('var(--view)','#16a34a').replace('var(--evt)','#f59e0b')) || '#888';
+    const sw=document.createElement('span'); sw.style.cssText=`width:9px;height:9px;border-radius:2px;background:${c}`;
     lab.append(cb,sw,document.createTextNode(k)); box.appendChild(lab);
   }
 }
 
-// Lay each lane out as context-grouped vertical stacks; bridges cross the gap.
-function render(g){
+function defs(svg){
+  const d=el('defs',{});
+  const m=el('marker',{id:'arrow',viewBox:'0 0 10 10',refX:'9',refY:'5',markerWidth:'6',markerHeight:'6',orient:'auto-start-reverse'});
+  m.appendChild(el('path',{d:'M0,0 L10,5 L0,10 z',fill:'#94a3b8'}));
+  d.appendChild(m); svg.appendChild(d);
+}
+
+// ── Timeline (Event-Modeling swimlanes) ──────────────────────────────────────
+// One column per slice (command or view), ordered by flow sequence. A UI lane
+// sits on top, the command (blue) / view (green) lane below it, and one amber
+// stream lane per aggregate at the bottom holds that aggregate's orange events
+// directly under the command that emits them. Spine connectors (ui→command,
+// command→event) run vertically inside a column; cross-links (event→view, etc.)
+// stay hidden until a node is hovered, so the default read is clean.
+function renderTimeline(g){
+  const svg=document.getElementById('svg'); svg.innerHTML=''; defs(svg);
+  const nodes=g.nodes.filter(n=>!hidden.has(n.kind));
+  const byId=Object.fromEntries(nodes.map(n=>[n.id,n]));
+  const live=id=>byId[id]!==undefined;
+  const ek=k=>g.edges.filter(e=>e.kind===k && live(e.from) && live(e.to));
+  const triggers=ek('triggers'), emits=ek('emits'), changes=ek('changes'),
+        projects=g.edges.filter(e=>e.kind==='projects'), displays=ek('displays'), transitions=ek('transitions');
+  const ctxLabel=Object.fromEntries((g.contexts||[]).map(c=>[c.id,c.label]));
+
+  // stream (aggregate) each event lives in = the entity it `changes`.
+  const streamOf={}; for(const e of changes) streamOf[e.from]=e.to;
+  let streamIds=[];
+  for(const ev of nodes.filter(n=>n.kind==='event')){ const s=streamOf[ev.id]||'—'; if(!streamIds.includes(s)) streamIds.push(s); }
+
+  // ── columns: one per anchor (command or view), in flow-step order. ──
+  const isAnchor=n=>n.kind==='command'||n.kind==='read-model';
+  const colOf={}; let col=0;
+  const take=id=>{ if(colOf[id]===undefined && byId[id] && isAnchor(byId[id])) colOf[id]=col++; };
+  for(const e of g.edges) if(e.kind==='step') take(e.to);   // flow order first
+  for(const n of nodes) if(isAnchor(n)) take(n.id);          // then any leftovers
+  // events inherit their emitting command's column; orphans get their own.
+  const emittedBy={}; for(const e of emits) emittedBy[e.to]=e.from;
+  for(const n of nodes) if(n.kind==='event'){ const c=colOf[emittedBy[n.id]]; colOf[n.id]=c!==undefined?c:col++; }
+  // ui inherits the column of the command it triggers / view it displays.
+  const trigCmd={}; for(const e of triggers) trigCmd[e.from]=e.to;
+  const dispView={}; for(const e of displays) dispView[e.from]=e.to;
+  for(const n of nodes) if(n.kind==='ui-step'){ const c=colOf[trigCmd[n.id]]??colOf[dispView[n.id]]; colOf[n.id]=c!==undefined?c:col++; }
+  const ncols=Math.max(1,col);
+  const behav=nodes.filter(n=>['ui-step','command','read-model','event'].includes(n.kind));
+  const evNodes=nodes.filter(n=>n.kind==='event');
+
+  // order lanes by the leftmost column they carry an event in (active first).
+  const firstCol={}; for(const ev of evNodes){ const s=streamOf[ev.id]||'—', c=colOf[ev.id]||0; firstCol[s]=Math.min(firstCol[s]??1e9,c); }
+  streamIds.sort((a,b)=>(firstCol[a]-firstCol[b])||a.localeCompare(b));
+  const streamRow=Object.fromEntries(streamIds.map((s,i)=>[s,i]));
+
+  // ── geometry ──
+  const gutterW=190, colW=180, boxW=150, boxH=34, uiH=34, pad=20, stackH=boxH+8;
+  const colX=c=>gutterW+colW/2+c*colW;                    // column centre
+  const uiY=pad+uiH/2, cvY=uiY+uiH/2+18+boxH/2, streamTop=cvY+boxH/2+22;
+  // each lane is as tall as its busiest cell (events that share a column stack).
+  const cellCount={}; for(const ev of evNodes){ const k=(streamRow[streamOf[ev.id]||'—'])+':'+(colOf[ev.id]||0); cellCount[k]=(cellCount[k]||0)+1; }
+  const laneStack=streamIds.map((s,i)=>{ let m=1; for(const c2 in cellCount) if(c2.startsWith(i+':')) m=Math.max(m,cellCount[c2]); return m; });
+  const laneH=laneStack.map(m=>16+m*stackH);
+  const laneY0=[]; { let y=streamTop; for(const h of laneH){ laneY0.push(y); y+=h; } }
+  const totalH=streamTop+laneH.reduce((a,b)=>a+b,0)+pad;
+  const W=Math.max(svg.parentNode.clientWidth, gutterW+ncols*colW+pad);
+
+  // ── lane backgrounds + gutter labels ──
+  // header band tints (ui + command/view) so the two top rows read as lanes too.
+  svg.appendChild(el('rect',{x:gutterW,y:pad-6,width:W-gutterW,height:uiH+12,fill:'rgba(148,163,184,.05)',class:'lane-bg'}));
+  svg.appendChild(el('rect',{x:gutterW,y:cvY-boxH/2-6,width:W-gutterW,height:boxH+12,fill:'rgba(37,99,235,.05)',class:'lane-bg'}));
+  gutterText('Triggers / UI',uiY); gutterText('Commands · Views',cvY);
+  streamIds.forEach((s,i)=>{
+    svg.appendChild(el('rect',{x:gutterW,y:laneY0[i],width:W-gutterW,height:laneH[i]-6,fill:'var(--stream)',class:'lane-bg'}));
+    svg.appendChild(el('line',{x1:gutterW,y1:laneY0[i],x2:W,y2:laneY0[i],stroke:'#1e293b','stroke-width':'1'}));
+    gutterText(ctxLabel[s]||(s==='—'?'(unbound)':s), laneY0[i]+(laneH[i]-6)/2, true);
+  });
+  function gutterText(txt,y,stream){ const t=el('text',{x:gutterW-12,y,class:stream?'lane-name':'row-name'});
+    t.setAttribute('text-anchor','end'); t.setAttribute('dominant-baseline','middle'); t.textContent=trim(txt,22); svg.appendChild(t); }
+
+  // ── place nodes (events stack vertically when several share a cell) ──
+  const pos={}; const cell={};
+  for(const n of behav){
+    const c=colOf[n.id]||0; let y;
+    if(n.kind==='ui-step') y=uiY;
+    else if(n.kind==='event'){ const r=streamRow[streamOf[n.id]||'—']; const k='e'+c+':'+r; const i=cell[k]||0; cell[k]=i+1; y=laneY0[r]+8+boxH/2+i*stackH; }
+    else { const k='cv'+c; const i=cell[k]||0; cell[k]=i+1; y=cvY+i*16; }
+    pos[n.id]={x:colX(c),y};
+  }
+
+  // ── connectors: spine drawn always; cross-links hidden, shown on hover ──
+  const xref=[];   // {path, from, to}
+  const path=(e,cls)=>{ const a=pos[e.from],b=pos[e.to]; if(!a||!b) return null;
+    const my=(a.y+b.y)/2; const p=el('path',{class:cls,d:`M${a.x},${a.y} C${a.x},${my} ${b.x},${my} ${b.x},${b.y}`}); svg.appendChild(p); return p; };
+  for(const e of triggers) path(e,'flow');
+  for(const e of emits) path(e,'flow');
+  // event → view (feeds) and ui → view (displays): cross-links, hidden by default.
+  const feeds=[];
+  for(const ev of nodes){ if(ev.kind!=='event') continue; const s=streamOf[ev.id]; if(!s) continue;
+    for(const p of projects) if(p.to===s && live(p.from)) feeds.push({from:ev.id,to:p.from}); }
+  for(const e of feeds.concat(displays).concat(transitions)){ const p=path(e,'xlink'); if(p) xref.push({p,from:e.from,to:e.to}); }
+
+  // ── nodes ──
+  for(const n of behav){
+    const p=pos[n.id]; if(!p) continue;
+    const isUI=n.kind==='ui-step', h=isUI?uiH-6:boxH, c=EM_COLOR[n.kind]||'#888';
+    const grp=el('g',{class:'node'}); grp.dataset.id=n.id;
+    const rect=el('rect',{x:p.x-boxW/2,y:p.y-h/2,width:boxW,height:h});
+    if(isUI){ rect.setAttribute('fill','#0b1220'); rect.setAttribute('stroke',c); rect.setAttribute('stroke-dasharray','3 2'); }
+    else { rect.setAttribute('fill',c); rect.setAttribute('fill-opacity','.9'); rect.setAttribute('stroke',c); }
+    grp.appendChild(rect);
+    const t=el('text',{x:p.x,y:p.y+3}); t.setAttribute('text-anchor','middle');
+    t.textContent=trim(n.label||n.id,Math.floor(boxW/6.2));
+    if(n.kind==='command'||n.kind==='read-model'||n.kind==='event') t.setAttribute('fill','#0b1120');
+    grp.appendChild(t);
+    grp.style.cursor='pointer'; grp.onclick=()=>showPanel(n);
+    grp.onmouseenter=()=>highlight(n.id,true); grp.onmouseleave=()=>highlight(n.id,false);
+    svg.appendChild(grp);
+  }
+  function highlight(id,on){ for(const x of xref) if(x.from===id||x.to===id) x.p.classList.toggle('show',on); }
+
+  drawLegend(svg,gutterW,totalH);
+  if(!behav.length){ const t=el('text',{x:W/2,y:totalH/2,class:'lane-name'}); t.setAttribute('text-anchor','middle');
+    t.textContent='No behaviour captured yet — add commands, events, read-models.'; svg.appendChild(t); }
+  svg.setAttribute('width',W); svg.setAttribute('height',totalH); svg.setAttribute('viewBox',`0 0 ${W} ${totalH}`);
+}
+
+// Building-Blocks legend, drawn across the top of the left gutter.
+function drawLegend(svg,gutterW,h){
+  svg.appendChild(el('line',{x1:gutterW,y1:0,x2:gutterW,y2:h,stroke:'#334155'}));
+}
+
+// ── Two-lane (structural §3.1 | §3.2) ────────────────────────────────────────
+// Each lane is a context-grouped vertical stack; bridges cross the divider.
+function renderLanes(g){
   const svg=document.getElementById('svg'); svg.innerHTML='';
-  const W=svg.clientWidth||1200, laneW=W/2, padX=70, rowH=46, ctxGap=26, boxW=Math.min(220, laneW-padX*1.4);
+  const W=svg.parentNode.clientWidth||1200, laneW=W/2, padX=70, rowH=46, ctxGap=26, boxW=Math.min(220, laneW-padX*1.4);
   const ctxLabel = Object.fromEntries((g.contexts||[]).map(c=>[c.id,c.label]));
   const nodes=g.nodes.filter(n=>!hidden.has(n.kind));
   const pos={};   // id -> {x,y}
@@ -107,16 +278,13 @@ function render(g){
     maxY=Math.max(maxY,y);
   }
 
-  // edges first (under nodes)
   for(const e of g.edges){
     const a=pos[e.from], b=pos[e.to]; if(!a||!b) continue;
     const mx=(a.x+b.x)/2;
     const p=el('path',{class:'edge'+(e.bridge?' bridge':''), d:`M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}`});
     svg.appendChild(p);
   }
-  // divider
   svg.appendChild(el('line',{x1:laneW,y1:0,x2:laneW,y2:maxY+20,stroke:'#334155','stroke-dasharray':'4 4'}));
-  // nodes
   for(const n of nodes){
     const p=pos[n.id]; if(!p) continue;
     const g1=el('g',{class:'node'}); g1.style.cursor='pointer';
@@ -125,16 +293,14 @@ function render(g){
     const t=el('text',{x:p.x-boxW/2+8,y:p.y+3}); t.textContent=trim(n.label||n.id,Math.floor(boxW/6.5)); g1.appendChild(t);
     g1.onclick=()=>showPanel(n); svg.appendChild(g1);
   }
-  svg.setAttribute('height', maxY+30); svg.setAttribute('viewBox',`0 0 ${W} ${maxY+30}`);
+  svg.setAttribute('width',W); svg.setAttribute('height', maxY+30); svg.setAttribute('viewBox',`0 0 ${W} ${maxY+30}`);
 }
-
-function trim(s,n){ return s.length>n ? s.slice(0,n-1)+'…' : s; }
 
 function showPanel(n){
   const p=document.getElementById('panel'); p.style.display='block';
   const ins=last.edges.filter(e=>e.to===n.id), outs=last.edges.filter(e=>e.from===n.id);
   const line=(e,dir)=>`${dir==='out'?'→ '+e.to:'← '+e.from} <span class="k">(${e.kind}${e.bridge?', bridge':''})</span>`;
-  p.innerHTML=`<h2>${n.label||n.id}</h2><div class="k">${n.kind} · ${n.model} lane${n.context?' · '+n.context:''}</div>
+  p.innerHTML=`<h2>${n.label||n.id}</h2><div class="k">${n.kind}${n.model?' · '+n.model+' lane':''}${n.context?' · '+n.context:''}</div>
     <dl><dt>id</dt><dd>${n.id}</dd>
     ${outs.length?`<dt>out</dt><dd>${outs.map(e=>line(e,'out')).join('<br>')}</dd>`:''}
     ${ins.length?`<dt>in</dt><dd>${ins.map(e=>line(e,'in')).join('<br>')}</dd>`:''}</dl>
@@ -151,6 +317,8 @@ function connect(){
   es.onerror=()=>{ st.textContent='reconnecting…'; };
 }
 
+for(const b of document.querySelectorAll('#modes button')) b.onclick=()=>setMode(b.dataset.mode);
+setMode(mode);
 load(); connect();
 window.addEventListener('resize',()=>last&&render(last));
 </script>
