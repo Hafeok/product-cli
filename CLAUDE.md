@@ -57,48 +57,36 @@ internal `xtask` helper (FT-107).
 
 ```
 Cargo.toml           # Workspace manifest — [workspace.members] + clippy lints
-product-core/        # Pure library: graph, slices, parser, types, error,
-  Cargo.toml         #   fileops, request, RDF, agent_context, implement,
-  src/lib.rs         #   verify, etc. NO clap / axum / tower-http.
-  src/<slice>/       #   `[lib] name = "product_core"`
-  tests/             #   property_tests + harness for the lib
-  benches/           #   graph benchmarks
+product-core/        # Pure library: the `pf/` framework graph (domain model,
+  Cargo.toml         #   event model, Deciders, Projectors, systems, triggers,
+  src/lib.rs         #   UI/AIO model, How contract, validate/turtle/seed/rules),
+  src/pf/            #   plus guide, demo, error, fileops, parse, io, config.
+  src/pf/<slice>/    #   NO clap / axum / tower-http. `[lib] name = "product_core"`
+  tests/property/    #   proptest over fileops/init
 product-mcp/         # MCP server (stdio + HTTP via axum). Depends on
   Cargo.toml         #   product-core. Re-exports `ToolRegistry`,
   src/lib.rs         #   `run_stdio`, `run_http`, `serve_http_blocking`.
-  src/...            #   `[lib] name = "product_mcp"`
+  src/...            #   framework tool handlers (domain/decider/projector/…)
 product-cli/         # The `product` binary. Depends on product-core +
-  Cargo.toml         #   product-mcp. Owns clap, clap_complete, the
-  src/main.rs        #   commands/ adapter layer, and integration tests
-  src/root.rs        #   that drive the binary via assert_cmd.
-  src/commands/      #   CLI adapter layer — one file per subcommand family
-    mod.rs           #     Subcommand enum + dispatch match
-    shared.rs        #     load_graph/acquire_write_lock helpers
-    output.rs        #     Output enum, CmdResult, render_result bridge
-    feature.rs       #     Feature navigation (list, show, next)
-    feature_write.rs #     Feature write adapters → call product_core::feature
-    status.rs        #     Status/impact adapters → call product_core::status
-    ...
+  src/main.rs        #   product-mcp. Owns clap, the commands/ adapter layer,
+  src/commands/      #   and the framework integration tests.
+    mod.rs           #     Subcommand enum + dispatch
+    domain.rs        #     What-graph CRUD + `validate [--strict]`
+    decider.rs       #     §3.3 Decider derive/validate/simulate
+    projector.rs     #     §3.4 Projector derive/validate
+    build.rs · how.rs · slice.rs · seam.rs · preview.rs · …
   tests/
-    code_quality_tests.rs   # ADR-029 fitness gates (walks every member src/)
-    integration_tests.rs    # assert_cmd-driven CLI scenarios (~600 tests)
-    sessions.rs             # session-based integration (ADR-018 Design 2)
-    fixtures/               # Shared test fixtures, incl. external-core-consumer
+    framework.rs            # assert_cmd-driven framework CLI scenarios (~44)
+    code_quality_tests.rs   # fitness gates (walk every member src/)
 xtask/                # Workspace convention enforcement (`cargo xtask check`)
 docs/
-  product-framework-open.md  # The open framework spec (What/How/Delivery)
-  guide/             # Getting-started, concepts, everyday-use, flows
-  adrs/              # Individual ADR files
-  features/          # Individual feature files (FT-XXX-*.md)
-  tests/             # Individual TC files
-  guide/             # Generated Diátaxis docs per feature (FT-XXX-*.md)
-scripts/
-  generate-docs.sh   # Spawns claude -p per feature to generate docs/guide/ files
-  checks/            # Code-quality scripts (file-length, function-length, etc.)
-  harness/           # implement.sh and author.sh runner scripts
+  product-framework-open.md   # The open framework spec (What/How/Delivery)
+  two-pillars-conformance.md  # The conformance clause set
+  examples/ · workshop/       # Worked examples + workshop runbook
 .product/
-  config.toml        # Repo config (paths, prefixes, thresholds)
-CHECKLIST.md         # Auto-generated feature checklist (tracks [x]/[T]/[ ] status)
+  config.toml          # Repo config
+  author-domain/       # The captured What graphs (e.g. product-cli — the example What)
+  deciders/ · slices/ · work-units/ · deliverables/ · archetypes/
 ```
 
 **Downstream consumers** (e.g. `decision-cli`) should add only:
@@ -108,42 +96,39 @@ CHECKLIST.md         # Auto-generated feature checklist (tracks [x]/[T]/[ ] stat
 product-core = { path = "../product-cli/product-core" }   # or a git rev
 ```
 
-This buys the graph, parser, slices, and `ProductError` without
+This buys the `pf/` framework graph and `ProductError` without
 pulling in `clap`, `axum`, `tower-http`, or the `product` binary.
-TC-889 (`tests/fixtures/external-core-consumer/`) is a tiny live
-example.
 
-## Implementation Workflow
+## Working with the framework graph
 
-Use the `product` CLI (or MCP tools) to stay in sync with the knowledge graph.
+Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
+`.product/`:
 
-**If using `product implement FT-XXX`** — the pipeline assembles the context bundle and passes it to the spawned agent automatically. Do not also run `product context` — that would duplicate the context.
+- **Author the What** — `product domain new <kind> <id> …` captures domain nodes
+  (entity, command, event, read-model, ui-step, system, trigger, …);
+  `product domain show/list` inspects them; `product domain export` emits Turtle.
+- **Validate** — `product domain validate` runs the per-node §3.1/§3.2 shapes;
+  `product domain validate --strict` adds the graph-level completeness checks
+  (flow ownership §3.2.5, the Command pattern §3.2.0, view consumption §3.4, the
+  unreifiable seam §4.5).
+- **Make behaviour executable** — `product decider derive <aggregate>` derives a
+  Decider's signature from the event model; `product decider validate <id>` runs
+  the §3.3 drift rules + the state/Decider justification detectors;
+  `product decider simulate` runs its scenarios. `product projector …` is the §3.4
+  read-model peer.
+- **Realise it** — `product how`, `product slice`, `product build`, `product seam`,
+  `product preview` cover the How contract, delivery slices, and the screen seam.
 
-**If implementing manually** (without `product implement`):
-
-1. **Get context** — run `product context FT-XXX --depth 2` to get the full bundle (linked ADRs + test criteria)
-2. **Check decisions** — run `product impact ADR-XXX` to understand what a change affects before modifying behavior
-
-**Always, regardless of path:**
-
-- **Configure TC runners** — before verifying, ensure every TC linked to the feature has `runner: cargo-test` and `runner-args: "tc_XXX_snake_case_name"` in its front-matter (see "TC Runner Configuration" below). Without these fields, `product verify` (and four other gates) fail with E022; `product implement` auto-fills them from the TC filename unless `--no-auto-runners` is set.
-- **Verify work** — run `product verify FT-XXX` after implementation to execute TC runners and update test status in front-matter
-- **Mark done** — when all TCs pass, `product verify` auto-updates feature status to complete and regenerates `CHECKLIST.md`
-- **Check health** — run `product gap check` and `product drift check` to catch specification issues before committing
-- **Check spec conformance** — run `product conformance check` to evaluate the graph against the Two Pillars Level 3 clause set (clause mapping in `docs/two-pillars-conformance.md`); exit 1 means a MUST clause is violated
-
-Do not manually edit feature status or CHECKLIST.md — let the CLI manage that through `verify` and `checklist generate`.
+The reference What lives in `.product/author-domain/product-cli/`; the live web
+view (`product mcp --http`, then open `/`) renders it as an Event-Modeling timeline.
 
 ## Key Conventions
 
 - **No unwrap**: `#![deny(clippy::unwrap_used)]` — use `?`, `.ok_or()`, `.unwrap_or_default()`, or match
 - **Error model**: All errors go through `ProductError` in `error.rs` — each variant maps to a specific exit code
 - **Atomic writes**: File writes use `fileops::atomic_write()` with advisory locking
-- **Graph is derived**: No persistent graph store. Graph is rebuilt from YAML front-matter on every invocation (ADR-003)
-- **CHECKLIST.md is generated**: Never hand-edit. Run `product checklist generate` or it regenerates after `product verify`
-- **Front-matter is source of truth**: All artifact identity and relationships declared in YAML front-matter (ADR-002)
-- **IDs**: Features=FT-XXX, ADRs=ADR-XXX, Tests=TC-XXX (ADR-005)
-- **Test types**: scenario, invariant, chaos, exit-criteria (ADR-011)
+- **Graph is derived**: No persistent graph store. The What graph is held in a session and serialized to Turtle/YAML under `.product/`
+- **Pure `pf/`**: every file in `product-core/src/pf/` depends only on `crate::error` — the framework graph is self-contained
 
 ## Architecture Pattern — Slice + Adapter
 
@@ -162,78 +147,34 @@ slice library without inheriting the CLI surface (FT-107).
   is derived from `serde::Serialize` on the plan / result types.
 - Unit tests (`src/<slice>/tests.rs`) exercise the pure functions directly.
 
-Reference slices:
-- `src/feature/` — create, status change (with ADR-010 cascade), domain edit
-- `src/adr/` — create, status change, domain/scope/source-files edits,
-  supersession (bidirectional + cycle detection), amend, seal, conflicts
-- `src/tc/` — create, status change, runner config
-- `src/status/` — project summary, untested/failing feature lists
-- `src/request/` — the unified atomic-write pipeline (pre-existing)
+Reference slices (`product-core/src/pf/`):
+- `pf/feature/`-style modules don't exist; the slices are the framework kinds —
+  e.g. `pf/decider*` (derive/validate/simulate the §3.3 Decider),
+  `pf/projector*` (§3.4), `pf/slice*`, `pf/how*`, `pf/seam*`, and the `domain`
+  CRUD pipeline (`pf/edit.rs` → `pf/validate.rs` → `pf/turtle.rs`/`pf/seed.rs`).
 
 **Command adapters (`product-cli/src/commands/<cmd>.rs`)** — thin:
-- Return `CmdResult = Result<Output, ProductError>` (not `BoxResult`).
-- Load graph via `shared::load_graph_typed()`, acquire lock via
-  `shared::acquire_write_lock_typed()` when writing.
-- Call the slice's `plan_*` + `apply_*` (for writes) or `build_*` +
-  `render_*_text` (for reads), then wrap in `Output::text(...)` /
-  `Output::both { text, json }`. Never call `println!`.
-- Wire into `dispatch()` in `commands/mod.rs` via `render(...)` which
-  handles the format flag and error conversion.
+- A read/write adapter returns `CmdResult = Result<Output, ProductError>`; it
+  loads the What graph via a pf session loader, calls the slice's pure
+  `derive_*`/`validate_*`/`plan_*`+`apply_*`, and wraps the result in `Output`.
+  Never call `println!`.
+- Wire into `dispatch()` in `commands/dispatch.rs` (PF families funnel through
+  `dispatch_pf`).
 
-**Handlers that remain on `BoxResult`** are not legacy — they're intentional.
-Keep them that way when:
-- The handler prints continuous progress during a long operation
-  (`implement`, `author`, `init`, `onboard`, `migrate`, `mcp`).
-- The handler has exit-code semantics that `CmdResult` cannot express, such
-  as exit 2 for "warning-only" states (`dep check`, `preflight`).
-- The handler is an interactive flow that reads stdin mid-computation
-  (`feature link` with TC-inference prompts, `feature acknowledge`).
-- The handler is a trivial wrapper (`completions`, `hooks`, `schema`) where
-  `Output::Empty` wrapping is pure churn.
-
-Migrate a `BoxResult` handler only when you have a reason: adding JSON
-parity, extracting a pure function for unit testing, or fixing a bug where
-the pure/I/O split makes the fix cleaner.
+**Handlers that remain on `BoxResult`** are intentional — keep them where a
+handler prints continuous progress (`build`, `author`, `init`, `mcp`), has
+exit-code semantics `CmdResult` can't express, or is a trivial wrapper
+(`completions`, `hooks`).
 
 ## Adding a New Command
 
-1. Add the clap subcommand in `src/commands/<cmd>.rs` and re-export from
-   `commands/mod.rs`.
-2. If the command has non-trivial logic, create a slice at `src/<cmd>/`
-   following the Slice + Adapter pattern above.
-3. Implement the handler as a thin adapter returning `CmdResult`.
-4. Wire into the match block in `dispatch()` via `render(...)`.
-5. Add unit tests on the pure slice functions (in `src/<cmd>/tests.rs`).
-6. Add integration tests in `tests/integration/` with `assert_cmd`.
-7. Create TC-XXX doc in `docs/tests/` if the feature has a formal test
-   criterion. **Add runner config to every TC** — see section below.
-
-## TC Runner Configuration
-
-Every TC that has an integration test **must** include `runner` and `runner-args` in its YAML front-matter, otherwise `product verify` will skip it. When writing a new TC or implementing a feature with existing TCs, always add these fields:
-
-```yaml
----
-id: TC-054
-title: product impact ADR-001
-type: scenario
-status: passing
-validates:
-  features:
-  - FT-011
-  adrs:
-  - ADR-012
-phase: 1
-runner: cargo-test
-runner-args: "tc_054_product_impact_adr_001"
----
-```
-
-Rules:
-- `runner: cargo-test` — use this for all integration tests
-- `runner-args` — the integration test function name, formatted as `tc_XXX_snake_case_title` (derived from the TC id and title)
-- The `runner-args` value must match the `#[test] fn` name in `tests/integration.rs` exactly
-- Add runner fields **at the same time** you write the integration test — never leave a TC without runner config if it has a test
+1. Add the clap subcommand in `src/commands/<cmd>.rs` and the variant in
+   `commands/root_enum.rs`; declare the module in `commands/mod.rs`.
+2. If the command has non-trivial logic, create a slice at `product-core/src/pf/<cmd>*`.
+3. Implement the handler as a thin adapter.
+4. Wire into `commands/dispatch.rs`.
+5. Add unit tests on the pure slice functions (a `pf/<cmd>_tests.rs` sibling).
+6. Add a framework integration test in `product-cli/tests/framework.rs` with `assert_cmd`.
 
 ## Adding a New Module
 
@@ -245,40 +186,19 @@ Rules:
 
 ## Test Organization
 
-- **Unit tests**: `#[cfg(test)] mod tests` at bottom of each source file
-- **Integration tests**: `tests/integration.rs` using `assert_cmd` + temp fixtures
-- **Property tests**: `tests/property.rs` using `proptest`
-- **Benchmarks**: `benches/graph_bench.rs`
+- **Unit tests**: `#[cfg(test)] mod tests` (or a `#[path] mod tests` sibling) at the bottom of each `pf/` source file — the real framework-graph coverage.
+- **Framework integration tests**: `product-cli/tests/framework.rs` using `assert_cmd` + a temp-dir `Harness` (`init --demo` → `domain`/`decider`/…).
+- **Fitness gates**: `product-cli/tests/code_quality_tests.rs` (file length ≤ 400, function length, SRP, module structure).
+- **Property tests**: `product-core/tests/property/` using `proptest` (fileops/init).
 
 ## Documentation System
 
-### Specification docs (source of truth)
-
-- **Framework spec**: `docs/product-framework-open.md` — the open standard for what to build (What/How/Delivery)
-- **ADRs**: `docs/adrs/ADR-XXX-*.md` — one file per decision, with YAML front-matter
-- **Features**: `docs/features/FT-XXX-*.md` — one file per feature, with YAML front-matter
-- **Test Criteria**: `docs/tests/TC-XXX-*.md` — one file per test criterion
-- **Onboarding guides**: `docs/guide/` — getting-started, concepts, everyday-use, flows; `docs/workshop-runbook.md`
-
-### User-facing docs — Diátaxis framework (https://diataxis.fr/)
-
-Generated per-feature guides live in `docs/guide/FT-XXX-*.md`. Each guide follows the Diátaxis framework, which organises documentation into four modes along two axes (action vs. knowledge, learning vs. working):
-
-| Mode | Serves | Section heading | What it contains |
-|------|--------|-----------------|------------------|
-| **Tutorial** | Learning + action | `## Tutorial` | Step-by-step lessons that take a newcomer through a concrete experience. Learning-oriented. |
-| **How-to guide** | Working + action | `## How-to Guide` | Task-oriented recipes that solve a specific problem. Goal-oriented. |
-| **Reference** | Working + knowledge | `## Reference` | Exact CLI syntax, flags, output formats, configuration. Information-oriented. |
-| **Explanation** | Learning + knowledge | `## Explanation` | Design decisions, trade-offs, architecture context. Understanding-oriented. |
-
-Each guide also starts with `## Overview` (one paragraph on what the feature is and why it exists).
-
-Guide files must **not** contain YAML front-matter (`---` blocks). The knowledge graph parser only scans `docs/features/`, `docs/adrs/`, and `docs/tests/` (configured in `product.toml`), but omitting front-matter from guides avoids accidental collisions if scan paths change.
-
-Regenerate guides with `scripts/generate-docs.sh`. The script assembles a context bundle per feature via the product CLI and spawns `claude -p` to write each file. Files with ≥20 lines are skipped on re-runs.
+- **Framework spec** (source of truth): `docs/product-framework-open.md` — the open standard for What/How/Delivery, §-numbered.
+- **Conformance clauses**: `docs/two-pillars-conformance.md`.
+- **Examples + workshop**: `docs/examples/`, `docs/workshop/`, `docs/workshop-runbook.md`.
 
 ## Dependencies
 
-Key crates: clap (CLI), serde/serde_yaml/serde_json/toml (serialization), oxigraph (SPARQL), axum/tokio (HTTP server), sha2 (hashing), fd-lock (file locking), chrono (dates), regex, uuid.
+Key crates: clap (CLI), serde/serde_yaml/serde_json/toml (serialization), oxigraph (RDF/SPARQL — the `pf` rule engine + seed parser), axum/tokio (HTTP server), sha2 (hashing), fd-lock (file locking), chrono (dates).
 
 Dev: tempfile, assert_cmd, predicates, proptest.
