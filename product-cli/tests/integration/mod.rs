@@ -9484,6 +9484,27 @@ fn tc_1033_automation_trigger_must_watch_a_view() {
 }
 
 #[test]
+fn tc_1034_interaction_class_is_the_gating_context_dimension() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // §3.2.2 — a system may target the recognised gui/tui classes.
+    h.run(&[
+        "domain", "new", "system", "sys-cli", "--label", "Dev CLI",
+        "--system-kind", "cli", "--purpose", "developer tool", "--target-classes", "tui",
+    ])
+    .assert_exit(0);
+    // An unrecognised interaction class is a §3.2.2 finding.
+    h.run(&[
+        "domain", "new", "system", "sys-bad", "--label", "Bad",
+        "--system-kind", "application", "--purpose", "x", "--target-classes", "holographic",
+    ])
+    .assert_exit(1)
+    .assert_stderr_contains("§3.2.2");
+    let ttl = h.run(&["domain", "export"]);
+    assert!(ttl.stdout.contains("pf:targetsClass \"tui\""), "class edge missing, stdout:\n{}", ttl.stdout);
+}
+
+#[test]
 fn tc_999_primary_navigation_recomputes_when_a_flow_joins_the_root() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);

@@ -401,11 +401,16 @@
 - [x] TC-1030: product domain new system captures a first-class system node (scenario) — passing
 - [x] TC-1031: a flow belongs to a declared system (scenario) — passing
 
-### FT-149 — Trigger block and the four event-model patterns [ ]
+### FT-149 — Trigger block and the four event-model patterns [x]
 
 - [x] ADR-091: Trigger generalises user external automated as one block (accepted)
 - [x] TC-1032: trigger block issues a command (scenario) — passing
 - [x] TC-1033: automation trigger must watch a view (invariant) — passing
+
+### FT-150 — Interaction class as the gating context dimension [ ]
+
+- [x] ADR-092: Interaction class is the senior context dimension with a closed core (accepted)
+- [x] TC-1034: interaction class is the gating context dimension (invariant) — passing
 
 ## Phase 2
 

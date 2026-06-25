@@ -58,6 +58,25 @@ fn cmd(id: &str, ctx: &str) -> Command {
 }
 
 #[test]
+fn interaction_class_is_a_closed_core_context_dimension() {
+    let mut g = DomainGraph::default();
+    // A system targeting a recognised class is fine; an unknown class is a finding.
+    g.systems.push(System { id: "sys".into(), label: "S".into(), kind: "cli".into(), purpose: "tool".into(), target_classes: vec!["tui".into()], ..Default::default() });
+    assert_eq!(validate_node(&g, "sys"), vec![]);
+    g.systems[0].target_classes = vec!["gui".into(), "holographic".into()];
+    let vs = validate_node(&g, "sys");
+    assert!(vs.iter().any(|x| x.path == "target_classes"), "unknown class: {vs:?}");
+
+    // A context of use declaring the class dimension must name gui or tui.
+    g.contexts_of_use.push(ContextOfUse { id: "cou".into(), label: "TUI".into(), dimension: Some("interaction-class".into()), value: Some("tui".into()) });
+    assert_eq!(validate_node(&g, "cou"), vec![]);
+    g.contexts_of_use[0].value = Some("voice".into());
+    let vs = validate_node(&g, "cou");
+    assert_eq!(vs.len(), 1);
+    assert_eq!(vs[0].path, "value");
+}
+
+#[test]
 fn trigger_requires_source_and_a_resolvable_command() {
     let mut g = DomainGraph::default();
     g.triggers.push(Trigger { id: "t".into(), label: "T".into(), ..Default::default() });

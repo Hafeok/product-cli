@@ -83,6 +83,9 @@ pub fn validate_graph(graph: &DomainGraph) -> Vec<Violation> {
     for t in &graph.triggers {
         check_trigger(t, graph, &mut v);
     }
+    for c in &graph.contexts_of_use {
+        check_context_of_use(c, &mut v);
+    }
     v.extend(super::rules_data::data_cross_refs(graph));
     v.extend(run_rules(&ui_projection(graph), what_rules()));
     v.extend(run_rules(&ui_projection(graph), super::rules_ui::ui_rules()));
@@ -142,6 +145,9 @@ fn check_local_shape(graph: &DomainGraph, id: &str, v: &mut Vec<Violation>) {
         Some(NodeKind::Trigger) => {
             if let Some(t) = graph.triggers.iter().find(|n| n.id == id) { check_trigger(t, graph, v); }
         }
+        Some(NodeKind::ContextOfUse) => {
+            if let Some(c) = graph.contexts_of_use.iter().find(|n| n.id == id) { check_context_of_use(c, v); }
+        }
         // Event/Command cross-references are graph rules (below); ValueObject,
         // WireframeStep have no blocking shape.
         _ => {}
@@ -200,6 +206,24 @@ fn check_system(s: &super::model::System, graph: &DomainGraph, v: &mut Vec<Viola
         if !graph.is_kind(root, NodeKind::ApplicationRoot) {
             v.push(Violation::new(&s.id, "root",
                 "§3.2.5 A system's root must resolve to a declared ApplicationRoot."));
+        }
+    }
+    for c in &s.target_classes {
+        if !super::ids::CORE_INTERACTION_CLASSES.contains(&c.as_str()) {
+            v.push(Violation::new(&s.id, "target_classes",
+                "§3.2.2 A system's interaction class must be a recognised class (gui or tui — the gating context dimension)."));
+        }
+    }
+}
+
+// §3.2.2 — interaction class is the senior context dimension; a context of use
+// declaring it must name a recognised class. Platform is an open dimension.
+fn check_context_of_use(c: &super::model::ContextOfUse, v: &mut Vec<Violation>) {
+    if c.dimension.as_deref() == Some("interaction-class") {
+        let ok = c.value.as_deref().map(|x| super::ids::CORE_INTERACTION_CLASSES.contains(&x)).unwrap_or(false);
+        if !ok {
+            v.push(Violation::new(&c.id, "value",
+                "§3.2.2 An interaction-class context must name a recognised class (gui or tui)."));
         }
     }
 }

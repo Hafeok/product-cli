@@ -115,6 +115,11 @@ pub const CORE_AIO_CRITERIA: [(&str, &[&str]); 4] = [
     ("display-value", &["1.1.1"]),
 ];
 
+/// The closed-core interaction classes (§3.2.2) — the *senior* context-of-use
+/// dimension that gates which other dimensions apply (GUI brings form factor +
+/// pointer/touch; TUI brings terminal capabilities). The base set is normative.
+pub const CORE_INTERACTION_CLASSES: [&str; 2] = ["gui", "tui"];
+
 /// The closed-core Abstract Interaction Objects (§3.2.2 table). An adopter may
 /// register additional AIOs as `Aio` nodes; these core ids are always recognised.
 pub const CORE_AIOS: [&str; 10] = [
