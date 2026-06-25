@@ -1,116 +1,11 @@
 name = "product-cli"
 version = "0.2.0"
 schema-version = "1"
-schema-version-warning = true
-checklist-in-gitignore = true
 
 [product]
-responsibility = "A knowledge graph for LLM-driven development."
-
-[paths]
-features = "docs/features"
-adrs = "docs/adrs"
-tests = "docs/tests"
-graph = "docs/graph"
-checklist = "docs/checklist.md"
-dependencies = "docs/dependencies"
-requests = ".product/requests.jsonl"
-prompts = "docs/prompts"
-gaps = "docs/gaps.json"
-
-[prefixes]
-feature = "FT"
-adr = "ADR"
-test = "TC"
-dependency = "DEP"
-
-[tc-types]
-custom = ["contract", "migration", "property", "session", "smoke"]
-
-[phases]
-1 = "Core CLI & Graph"
-
-[domains]
-"security" = "Authentication, authorisation, secrets, trust boundaries"
-"error-handling" = "Error model, diagnostics, exit codes, recovery"
-"storage" = "Persistence, durability, backup"
-"networking" = "DNS, mTLS, service discovery, port allocation"
-"api" = "CLI surface, MCP tools, event schema"
-"observability" = "Metrics, tracing, logging, telemetry"
-"data-model" = "RDF, SPARQL, ontology, event sourcing"
-"scheduling" = "Workload placement, resource limits, eviction, CPU/memory"
-"testing" = "Property, session, and LLM-benchmark test strategy (ADR-018)"
+responsibility = "A CLI and MCP server for the Product Framework: author and verify a What/How specification graph."
 
 [mcp]
 write = true
 port = 7777
-# token = ""
 cors-origins = []
-
-[author]
-cli = "claude"
-
-[verify.prerequisites]
-build = "cargo build --quiet"
-lint = "cargo clippy --quiet -- -D warnings -D clippy::unwrap_used"
-
-[agent-context]
-include-repo-state = true
-include-schemas = true
-include-domains = true
-include-tool-guide = true
-output-file = "AGENTS.md"
-
-[metrics.thresholds.spec_coverage]
-min = 0.8
-severity = "warning"
-
-[metrics.thresholds.test_coverage]
-min = 0.7
-severity = "warning"
-
-[metrics.thresholds.exit_criteria_coverage]
-min = 0.5
-severity = "warning"
-
-[metrics.thresholds.phi]
-min = 0.6
-severity = "warning"
-
-[metrics.thresholds.gap_density]
-max = 0.3
-severity = "warning"
-
-[metrics.thresholds.gap_resolution_rate]
-min = 0.5
-severity = "warning"
-
-[metrics.thresholds.drift_density]
-max = 0.2
-severity = "warning"
-
-[metrics.thresholds.centrality_stability]
-min = 0.0
-severity = "warning"
-
-[metrics.thresholds.implementation_velocity]
-min = 1.0
-severity = "warning"
-
-# FT-055 / ADR-047 — feature body completeness check (W030).
-# Defaults are listed explicitly to future-proof against changes upstream.
-[features]
-required-sections = ["Description", "Functional Specification", "Out of scope"]
-functional-spec-subsections = ["Inputs", "Outputs", "State", "Behaviour", "Invariants", "Error handling", "Boundaries"]
-required-from-phase = 1
-completeness-severity = "warning"
-
-# FT-072 / ADR-051 — TC observability requirement (`observes:` field).
-# `required-from-phase = 99` grandfathers the existing corpus. New TCs
-# authored within FT-072 already dogfood the field; future TCs in phases
-# beyond 99 (none today) will be required to declare it.
-[tc-observability]
-required-from-phase = 99
-required-for-types = ["scenario", "session", "smoke", "contract"]
-custom = []
-body-reference-severity = "warning"
