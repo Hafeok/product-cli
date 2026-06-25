@@ -33,6 +33,11 @@ pub struct Decider {
     pub evolves_from: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rejects: Vec<String>,
+    /// §3.3 — the aggregate state fields a decision reads at decide time. An
+    /// explicit declaration that complements the structured guards, so state
+    /// justification can see a field is read even when a guard uses a CEL expr.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub reads: Vec<String>,
     /// The one authored part (§3.3): the guarded state machine. Optional — a
     /// freshly derived Decider has only its signature.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -88,6 +93,7 @@ pub fn derive_decider(graph: &DomainGraph, aggregate: &str) -> Result<Decider> {
         emits,
         evolves_from,
         rejects,
+        reads: Vec::new(),
         logic: None,
         scenarios: Vec::new(),
     })
@@ -106,6 +112,8 @@ pub fn validate_decider(decider: &Decider, graph: &DomainGraph) -> Vec<Violation
         return out;
     }
     out.extend(run_rules(&decider_to_turtle(graph, decider, "validate"), decider_rules()));
+    // §3.3/§3.4 state + Decider justification — advisory model-gap detectors.
+    out.extend(super::rules_decider::justification_findings(decider));
     out
 }
 

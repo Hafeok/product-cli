@@ -24,6 +24,12 @@ pub fn decider_to_turtle(graph: &DomainGraph, decider: &Decider, product: &str) 
     for e in &decider.emits {
         out.push_str(&format!(" ;\n  pf:emitsEvent d:{e}"));
     }
+    for i in &decider.rejects {
+        out.push_str(&format!(" ;\n  pf:rejects d:{i}"));
+    }
+    for f in &decider.reads {
+        out.push_str(&format!(" ;\n  pf:reads {:?}", f));
+    }
     out.push_str(" .\n\n");
     out
 }

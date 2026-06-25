@@ -407,10 +407,15 @@
 - [x] TC-1032: trigger block issues a command (scenario) — passing
 - [x] TC-1033: automation trigger must watch a view (invariant) — passing
 
-### FT-150 — Interaction class as the gating context dimension [ ]
+### FT-150 — Interaction class as the gating context dimension [x]
 
 - [x] ADR-092: Interaction class is the senior context dimension with a closed core (accepted)
 - [x] TC-1034: interaction class is the gating context dimension (invariant) — passing
+
+### FT-151 — State justification and Decider justification [ ]
+
+- [x] ADR-093: Justification findings are advisory model-gap detectors not gates (accepted)
+- [x] TC-1035: state and decider justification are advisory findings (invariant) — passing
 
 ## Phase 2
 

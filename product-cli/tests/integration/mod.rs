@@ -9505,6 +9505,31 @@ fn tc_1034_interaction_class_is_the_gating_context_dimension() {
 }
 
 #[test]
+fn tc_1035_state_and_decider_justification_are_advisory_findings() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // A guard-less Decider over the demo's Order aggregate: it evolves `placed`
+    // but reads nothing and never rejects — both are §3.3 model-gap findings.
+    h.write(
+        ".product/deciders/Order-decider.yaml",
+        "id: Order-decider\ndecides_for: Order\nhandles:\n- PlaceOrder\nemits:\n- OrderPlaced\nevolves_from:\n- OrderPlaced\nlogic:\n  initial:\n    placed: false\n  evolve:\n  - on: OrderPlaced\n    set:\n      placed: true\n  decide:\n  - on: PlaceOrder\n    emit:\n    - OrderPlaced\n",
+    );
+    let out = h.run(&["decider", "validate", "Order-decider"]);
+    // §3.3/§3.4 — the findings are advisory warnings, not blocking gates.
+    out.assert_exit(0);
+    assert!(
+        out.stderr.contains("State justification") && out.stderr.contains("placed"),
+        "state justification warning missing, stderr:\n{}",
+        out.stderr
+    );
+    assert!(
+        out.stderr.contains("Decider justification"),
+        "decider justification warning missing, stderr:\n{}",
+        out.stderr
+    );
+}
+
+#[test]
 fn tc_999_primary_navigation_recomputes_when_a_flow_joins_the_root() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
