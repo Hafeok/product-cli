@@ -1,0 +1,8 @@
+id: e-boundedcontext-decider
+decides_for: e-boundedcontext
+handles:
+- cmd-add-bounded-context
+emits:
+- ev-context-added
+evolves_from:
+- ev-context-added

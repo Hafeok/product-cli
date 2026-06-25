@@ -1,0 +1,12 @@
+{
+  "product": "product-cli",
+  "title": "product-cli — Product Framework Domain & Event Model",
+  "participants": [
+    "Product Owner",
+    "Engineer",
+    "Domain Expert"
+  ],
+  "content_hash": "83c2cbec2aa263ec29a8eb4deac763f4e1c482bc54a8f18f303f0ad44f1cb071",
+  "finalized_at": "2026-06-15T11:11:20.375095769+00:00",
+  "tool_call_count": 152
+}
