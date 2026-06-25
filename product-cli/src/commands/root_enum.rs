@@ -8,17 +8,6 @@ use super::*;
 #[derive(Subcommand)]
 #[allow(clippy::large_enum_variant)] // subcommand enums vary widely in size; inherent spread
 pub enum Commands {
-    /// ADR navigation and management
-    Adr {
-        #[command(subcommand)]
-        command: AdrCommands,
-    },
-    /// Generate AGENTS.md from current repository state (ADR-031)
-    AgentInit {
-        /// Watch for changes and regenerate automatically
-        #[arg(long)]
-        watch: bool,
-    },
     /// Archetype (How + layout + cells) — assemble and validate
     Archetype {
         #[command(subcommand)]
@@ -62,40 +51,10 @@ pub enum Commands {
         #[command(subcommand)]
         command: CellCommands,
     },
-    /// Checklist generation
-    Checklist {
-        #[command(subcommand)]
-        command: ChecklistCommands,
-    },
     /// Generate shell completions
     Completions {
         /// Shell: bash, zsh, fish
         shell: String,
-    },
-    /// Two Pillars conformance — check the graph against spec clauses
-    Conformance {
-        #[command(subcommand)]
-        command: ConformanceCommands,
-    },
-    /// Assemble context bundles for LLM agents
-    Context {
-        #[command(flatten)]
-        cli: context::ContextCli,
-    },
-    /// Historical cycle times (FT-054, ADR-046)
-    CycleTimes {
-        /// Recent-N sample window (default: [cycle-times].recent-window)
-        #[arg(long)]
-        recent: Option<usize>,
-        /// Restrict to a phase
-        #[arg(long)]
-        phase: Option<u32>,
-        /// Show in-progress elapsed-so-far table instead
-        #[arg(long = "in-progress")]
-        in_progress: bool,
-        /// Output format override: text | json | csv
-        #[arg(long = "format", value_name = "FMT")]
-        format: Option<String>,
     },
     /// Decider (§3.3) — derive an aggregate's executable signature, validate it
     Decider {
@@ -107,86 +66,17 @@ pub enum Commands {
         #[command(subcommand)]
         command: DeliverableCommands,
     },
-    /// Dependency management (ADR-030)
-    Dep {
-        #[command(subcommand)]
-        command: DepCommands,
-    },
     /// Domain (What) graph — list, show, and CRUD over captured artifacts
     Domain {
         #[command(subcommand)]
         command: DomainCommands,
     },
-    /// Drift detection — spec vs implementation
-    Drift {
-        #[command(subcommand)]
-        command: DriftCommands,
-    },
-    /// Feature navigation and management
-    Feature {
-        #[command(subcommand)]
-        command: FeatureCommands,
-    },
-    /// Naive completion forecast (FT-054, ADR-046)
-    Forecast {
-        /// Feature ID (for single-feature forecast)
-        id: Option<String>,
-        /// Phase number (for phase forecast)
-        #[arg(long)]
-        phase: Option<u32>,
-        /// Required flag — opts into a rough estimate labelled as such
-        #[arg(long)]
-        naive: bool,
-        /// Override `[cycle-times].recent-window` for this invocation
-        #[arg(long = "sample-size")]
-        sample_size: Option<usize>,
-    },
-    /// Gap analysis between ADRs, features, and tests
-    Gap {
-        #[command(subcommand)]
-        command: GapCommands,
-    },
-    /// Graph operations
-    Graph {
-        #[command(subcommand)]
-        command: GraphCommands,
-    },
     /// Onboarding — where you are in the framework journey and the next step
     Guide,
-    /// Content hash operations (ADR-032)
-    Hash {
-        #[command(subcommand)]
-        command: HashCommands,
-    },
     /// How contract (§4 architecture) — validate, show, and project
     How {
         #[command(subcommand)]
         command: HowCommands,
-    },
-    /// Impact analysis
-    Impact {
-        /// Artifact ID (feature, ADR, or test)
-        id: String,
-    },
-    /// Implement a feature (gap gate, context assembly, agent invocation)
-    Implement {
-        /// Feature ID
-        id: String,
-        /// Inspect context without invoking agent
-        #[arg(long)]
-        dry_run: bool,
-        /// Skip auto-verify after agent completion
-        #[arg(long)]
-        no_verify: bool,
-        /// Run non-interactively via claude -p (no human in the loop)
-        #[arg(long)]
-        headless: bool,
-        /// Disable Step 0a auto-fill of TC runner config (FT-068)
-        #[arg(long = "no-auto-runners")]
-        no_auto_runners: bool,
-        /// Prompt template profile (FT-074); use "legacy-template" for the pre-FT-074 bundle shape
-        #[arg(long)]
-        target: Option<String>,
     },
     /// Initialize a new Product repository (ADR-033, ADR-048)
     Init {
@@ -249,31 +139,6 @@ pub enum Commands {
         #[arg(long)]
         write: bool,
     },
-    /// Architectural fitness functions
-    Metrics {
-        #[command(subcommand)]
-        command: MetricsCommands,
-    },
-    /// Migration from monolithic documents
-    Migrate {
-        #[command(subcommand)]
-        command: MigrateCommands,
-    },
-    /// Codebase onboarding — discover decisions from existing code (ADR-027)
-    Onboard {
-        #[command(subcommand)]
-        command: OnboardCommands,
-    },
-    /// Pattern artifact management (FT-070, ADR-050)
-    Pattern {
-        #[command(subcommand)]
-        command: PatternCommands,
-    },
-    /// Pre-flight analysis — check domain and cross-cutting coverage
-    Preflight {
-        /// Feature ID
-        id: String,
-    },
     /// Preview profiles (§11/§12) — validate a design-system or content-store manifest
     Preview {
         #[command(subcommand)]
@@ -287,32 +152,10 @@ pub enum Commands {
         #[command(subcommand)]
         command: ProjectorCommands,
     },
-    /// Manage authoring session prompts (ADR-022)
-    Prompts {
-        #[command(subcommand)]
-        command: PromptsCommands,
-    },
     /// Release — a coherent set of delivery features (§7.1)
     Release {
         #[command(subcommand)]
         command: ReleaseCommands,
-    },
-    /// Unified atomic write interface (FT-041, ADR-038)
-    Request {
-        #[command(subcommand)]
-        command: request_cmd::RequestCommands,
-    },
-    /// Display front-matter schemas for artifact types (ADR-031, FT-049)
-    Schema {
-        /// Artifact type: feature, adr, test, dep, formal
-        artifact_type: Option<String>,
-        /// Artifact type as a named flag (alternative to the positional).
-        /// Example: `product schema --type formal`.
-        #[arg(long = "type", value_name = "TYPE")]
-        type_flag: Option<String>,
-        /// Show all schemas in a single document
-        #[arg(long)]
-        all: bool,
     },
     /// Seam verification (§6.3) — verify a UI step's screen and its What agree
     Seam {
@@ -325,45 +168,6 @@ pub enum Commands {
     Slice {
         #[command(subcommand)]
         command: SliceCommands,
-    },
-    /// Status summary
-    Status {
-        /// Filter to a specific phase
-        #[arg(long)]
-        phase: Option<u32>,
-        /// Show only features with no linked tests
-        #[arg(long)]
-        untested: bool,
-        /// Show only features with failing tests
-        #[arg(long)]
-        failing: bool,
-    },
-    /// Tag lifecycle — browse product/* git tags (ADR-036)
-    Tags {
-        #[command(subcommand)]
-        command: tags::TagsCommands,
-    },
-    /// Test criterion navigation and management
-    Test {
-        #[command(subcommand)]
-        command: TestCommands,
-    },
-    /// Verify test criteria — six-stage pipeline (FT-044) when no feature ID is supplied, else per-feature (ADR-021)
-    Verify {
-        /// Feature ID (optional — if omitted, runs the full pipeline)
-        id: Option<String>,
-        /// Run all TCs linked to cross-cutting ADRs, regardless of feature
-        #[arg(long)]
-        platform: bool,
-        /// Skip ADR lifecycle check (bypass E016 for migration scenarios)
-        #[arg(long)]
-        skip_adr_check: bool,
-        /// Scope the pipeline's stage 5 (feature TCs) to a phase
-        #[arg(long)]
-        phase: Option<u32>,
-        /// Emit single-document JSON to stdout for CI pipelines (no colour)
-        #[arg(long)]
-        ci: bool,
     },
     /// Work units (SPMC) — validate, show, and scaffold
     WorkUnit {

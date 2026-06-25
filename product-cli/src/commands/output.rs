@@ -53,6 +53,7 @@ pub enum Output {
 }
 
 impl Output {
+    #[allow(dead_code)]
     pub fn text(s: impl Into<String>) -> Self {
         Output::Text(s.into())
     }

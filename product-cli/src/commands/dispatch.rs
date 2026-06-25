@@ -3,65 +3,24 @@
 use clap::Command as ClapCommand;
 
 use super::{
-    adr, agent_init, archetype, author, build, cell, checklist, completions, conformance, context, cycle_times, decider,
-    deliverable, dep, domain, drift, feature, gap, graph_cmd, guide, hash, hooks, how, implement, init, lsp, mcp_cmd,
-    metrics_cmd, migrate, onboard, pattern, preflight, preview, prompts_cmd, release, render, request_cmd, schema, seam,
-    primitive, projector, slice, status, tags, test_cmd, work_unit, worker, BoxResult, Commands,
+    archetype, author, build, cell, completions, decider, deliverable, domain, guide, hooks, how,
+    init, lsp, mcp_cmd, preview, primitive, projector, release, render, seam, slice, work_unit,
+    worker, BoxResult, Commands,
 };
 
 pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapCommand) -> BoxResult {
     match command {
-        Commands::Adr { command } => adr::handle_adr(command, fmt),
-        Commands::AgentInit { watch } => agent_init::handle_agent_init(watch),
         Commands::Author { command } => author::handle_author(command),
         Commands::Build { .. } => dispatch_build(command),
-        Commands::Checklist { command } => checklist::handle_checklist(command),
         Commands::Completions { shell } => completions::handle_completions(&shell, cli_command),
-        Commands::Conformance { command } => conformance::handle_conformance(command, fmt),
-        Commands::Context { .. } => dispatch_context(command),
-        Commands::CycleTimes { .. } => dispatch_cycle_times(command, fmt),
-        Commands::Dep { command } => dep::handle_dep(command, fmt),
-        Commands::Drift { command } => drift::handle_drift(command, fmt),
-        Commands::Feature { command } => feature::handle_feature(command, fmt),
-        Commands::Forecast { .. } => dispatch_forecast(command, fmt),
-        Commands::Gap { command } => gap::handle_gap(command, fmt),
-        Commands::Graph { command } => graph_cmd::handle_graph(command, fmt),
-        Commands::Hash { command } => hash::handle_hash(command),
-        Commands::Implement { .. } => dispatch_implement(command),
+        Commands::Guide => render(guide::handle_guide(), fmt),
         Commands::Init { .. } => dispatch_init(command),
         Commands::InstallHooks => hooks::handle_install_hooks(),
         Commands::Lsp { command } => lsp::handle_lsp(command),
         Commands::Mcp { .. } => dispatch_mcp(command),
-        Commands::Metrics { command } => metrics_cmd::handle_metrics(command),
-        Commands::Migrate { command } => migrate::handle_migrate(command),
-        Commands::Onboard { command } => onboard::handle_onboard(command),
-        Commands::Pattern { command } => pattern::handle_pattern(command, fmt),
-        Commands::Preflight { id } => preflight::handle_preflight(&id, fmt),
-        Commands::Prompts { command } => prompts_cmd::handle_prompts(command),
-        Commands::Request { command } => request_cmd::handle_request(command, fmt),
-        Commands::Schema { artifact_type, type_flag, all } => {
-            schema::handle_schema(type_flag.or(artifact_type), all)
-        }
         Commands::Seam { id, product } => seam::handle_seam(id, product),
-        Commands::Tags { command } => tags::handle_tags(command, fmt),
-        Commands::Test { command } => test_cmd::handle_test(command, fmt),
-        Commands::Verify { .. } => dispatch_verify(command, fmt),
-        // Status / impact / onboarding render-wrapped reads route through a sub-dispatcher.
-        c @ (Commands::Impact { .. } | Commands::Status { .. } | Commands::Guide) => dispatch_status_family(c, fmt),
         // Product-Framework families route through a sub-dispatcher (keeps this match small).
         c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Primitive { .. } | Commands::Deliverable { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Preview { .. } | Commands::Release { .. } | Commands::Slice { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
-    }
-}
-
-/// Sub-dispatcher for the render-wrapped status / impact / onboarding reads.
-fn dispatch_status_family(command: Commands, fmt: &str) -> BoxResult {
-    match command {
-        Commands::Impact { id } => render(status::handle_impact(&id, fmt), fmt),
-        Commands::Status { phase, untested, failing } => {
-            render(status::handle_status(phase, untested, failing, fmt), fmt)
-        }
-        Commands::Guide => render(guide::handle_guide(), fmt),
-        _ => unreachable!("dispatch_status_family called with non-status variant"),
     }
 }
 
@@ -85,72 +44,12 @@ fn dispatch_pf(command: Commands) -> BoxResult {
     }
 }
 
-fn dispatch_context(command: Commands) -> BoxResult {
-    let Commands::Context { cli } = command else {
-        unreachable!("dispatch_context called with non-Context variant")
-    };
-    context::handle_context(context::ContextArgs {
-        id: cli.id.as_deref(),
-        depth: cli.depth,
-        phase: cli.phase,
-        adrs_only: cli.adrs_only,
-        order: cli.order,
-        measure: cli.measure,
-        measure_all: cli.measure_all,
-        target: cli.target,
-        for_llm: cli.for_llm,
-        show: cli.show,
-        where_flag: cli.where_flag,
-        reset: cli.reset,
-    })
-}
-
-fn dispatch_cycle_times(command: Commands, fmt: &str) -> BoxResult {
-    let Commands::CycleTimes { recent, phase, in_progress, format } = command else {
-        unreachable!("dispatch_cycle_times called with non-CycleTimes variant")
-    };
-    let effective_fmt = format.as_deref().unwrap_or(fmt);
-    render(
-        cycle_times::handle_cycle_times(recent, phase, in_progress, effective_fmt),
-        effective_fmt,
-    )
-}
-
-fn dispatch_forecast(command: Commands, fmt: &str) -> BoxResult {
-    let Commands::Forecast { id, phase, naive, sample_size } = command else {
-        unreachable!("dispatch_forecast called with non-Forecast variant")
-    };
-    cycle_times::handle_forecast(id.as_deref(), phase, naive, sample_size, fmt)
-}
-
 fn dispatch_build(command: Commands) -> BoxResult {
     let Commands::Build { deliverable, role, jobs, dry_run, lsp, no_verify, max_rounds, budget, product } = command else {
         unreachable!("dispatch_build called with non-Build variant")
     };
     let gates = build::Gates { lsp, verify: !no_verify, max_rounds, budget };
     build::handle_build(&deliverable, &role, jobs, dry_run, gates, product)
-}
-
-fn dispatch_implement(command: Commands) -> BoxResult {
-    let Commands::Implement {
-        id,
-        dry_run,
-        no_verify,
-        headless,
-        no_auto_runners,
-        target,
-    } = command
-    else {
-        unreachable!("dispatch_implement called with non-Implement variant")
-    };
-    implement::handle_implement(
-        &id,
-        dry_run,
-        no_verify,
-        headless,
-        no_auto_runners,
-        target.as_deref(),
-    )
 }
 
 fn dispatch_init(command: Commands) -> BoxResult {
@@ -188,11 +87,4 @@ fn dispatch_mcp(command: Commands) -> BoxResult {
         unreachable!("dispatch_mcp called with non-Mcp variant")
     };
     mcp_cmd::handle_mcp(http, port, &bind, token, repo, write)
-}
-
-fn dispatch_verify(command: Commands, fmt: &str) -> BoxResult {
-    let Commands::Verify { id, platform, skip_adr_check, phase, ci } = command else {
-        unreachable!("dispatch_verify called with non-Verify variant")
-    };
-    implement::handle_verify(id.as_deref(), platform, skip_adr_check, phase, ci, fmt)
 }

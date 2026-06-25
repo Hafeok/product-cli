@@ -5,7 +5,7 @@
 //! boxed variant returning `BoxResult` for legacy handlers still in
 //! transition. The boxed variants simply wrap the typed ones.
 
-use product_core::{config::ProductConfig, error::ProductError, fileops, graph::KnowledgeGraph, parser};
+use product_core::{config::ProductConfig, error::ProductError, fileops};
 use std::path::PathBuf;
 
 use super::BoxResult;
@@ -17,48 +17,6 @@ pub(crate) fn acquire_write_lock() -> Result<fileops::RepoLock, Box<dyn std::err
 pub(crate) fn acquire_write_lock_typed() -> Result<fileops::RepoLock, ProductError> {
     let (_, root) = ProductConfig::discover()?;
     fileops::RepoLock::acquire(&root)
-}
-
-pub(crate) fn load_graph(
-) -> Result<(ProductConfig, PathBuf, KnowledgeGraph), Box<dyn std::error::Error>> {
-    load_graph_typed().map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
-}
-
-pub(crate) fn load_graph_typed(
-) -> Result<(ProductConfig, PathBuf, KnowledgeGraph), ProductError> {
-    let (config, root) = ProductConfig::discover()?;
-
-    for warning in config.check_schema_version()? {
-        eprintln!("{}", warning);
-    }
-
-    let features_dir = config.resolve_path(&root, &config.paths.features);
-    let adrs_dir = config.resolve_path(&root, &config.paths.adrs);
-    let tests_dir = config.resolve_path(&root, &config.paths.tests);
-    let deps_dir = config.resolve_path(&root, &config.paths.dependencies);
-    let patterns_dir = config.resolve_path(&root, &config.paths.patterns);
-
-    let loaded = parser::load_all_full(
-        &features_dir,
-        &adrs_dir,
-        &tests_dir,
-        Some(&deps_dir),
-        Some(&patterns_dir),
-    )?;
-
-    for e in &loaded.parse_errors {
-        eprintln!("{}", e);
-    }
-
-    let graph = KnowledgeGraph::build_full(
-        loaded.features,
-        loaded.adrs,
-        loaded.tests,
-        loaded.dependencies,
-        loaded.patterns,
-    )
-    .with_parse_errors(loaded.parse_errors);
-    Ok((config, root, graph))
 }
 
 /// The repo's configured product name, if a product.toml is discoverable and
