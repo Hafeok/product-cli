@@ -43,7 +43,25 @@ pub fn from_turtle(turtle: &str) -> Result<DomainGraph> {
     }
     parse_read_models(&store, &mut g)?;
     parse_flows(&store, &mut g)?;
+    parse_systems(&store, &mut g)?;
     Ok(g)
+}
+
+fn parse_systems(store: &Store, g: &mut DomainGraph) -> Result<()> {
+    let platforms = multi(store, "pf:System", "pf:targetsPlatform")?;
+    let classes = multi(store, "pf:System", "pf:targetsClass")?;
+    for row in select(store, "?s ?label ?kind ?purpose ?root",
+        "?s a pf:System . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:systemKind ?kind } OPTIONAL { ?s pf:purpose ?purpose } OPTIONAL { ?s pf:rootsAt ?root }")? {
+        let id = local(row.get("s"));
+        g.systems.push(System {
+            target_platforms: platforms.get(&id).cloned().unwrap_or_default(),
+            target_classes: classes.get(&id).cloned().unwrap_or_default(),
+            id: id.clone(), label: lit(row.get("label")),
+            kind: lit(row.get("kind")), purpose: lit(row.get("purpose")),
+            root: opt(row.get("root")).map(|_| local(row.get("root"))),
+        });
+    }
+    Ok(())
 }
 
 fn parse_entities(store: &Store, g: &mut DomainGraph) -> Result<()> {
@@ -121,9 +139,9 @@ fn parse_read_models(store: &Store, g: &mut DomainGraph) -> Result<()> {
 
 fn parse_flows(store: &Store, g: &mut DomainGraph) -> Result<()> {
     let steps = multi(store, "pf:Flow", "pf:contains")?;
-    for row in select(store, "?s ?label", "?s a pf:Flow . OPTIONAL { ?s rdfs:label ?label }")? {
+    for row in select(store, "?s ?label ?system", "?s a pf:Flow . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:systemOf ?system }")? {
         let id = local(row.get("s"));
-        g.flows.push(Flow { steps: steps.get(&id).cloned().unwrap_or_default(), id: id.clone(), label: lit(row.get("label")), ..Default::default() });
+        g.flows.push(Flow { steps: steps.get(&id).cloned().unwrap_or_default(), id: id.clone(), label: lit(row.get("label")), system: opt(row.get("system")).map(|_| local(row.get("system"))), ..Default::default() });
     }
     Ok(())
 }

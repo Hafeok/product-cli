@@ -169,6 +169,8 @@ pub struct DomainGraph {
     pub data_shapes: Vec<DataShape>,
     #[serde(default)]
     pub production_datasets: Vec<ProductionDataset>,
+    #[serde(default)]
+    pub systems: Vec<System>,
 }
 
 impl DomainGraph {
@@ -215,6 +217,7 @@ impl DomainGraph {
             ("ReferenceSet", self.reference_sets.len()),
             ("DataShape", self.data_shapes.len()),
             ("ProductionDataset", self.production_datasets.len()),
+            ("System", self.systems.len()),
         ]
     }
 
@@ -250,6 +253,7 @@ impl DomainGraph {
         self.reference_sets.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ReferenceSet)));
         self.data_shapes.iter().for_each(|n| out.push((n.id.clone(), NodeKind::DataShape)));
         self.production_datasets.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ProductionDataset)));
+        self.systems.iter().for_each(|n| out.push((n.id.clone(), NodeKind::System)));
         out
     }
 }

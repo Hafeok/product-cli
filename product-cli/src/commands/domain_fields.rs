@@ -150,6 +150,21 @@ pub struct NodeFields {
     /// §3.1 production-dataset source (JSON file of records)
     #[arg(long)]
     source: Option<String>,
+    /// §3.2.5 system kind (application/website/service/cli/…)
+    #[arg(long = "system-kind")]
+    system_kind: Option<String>,
+    /// §3.2.5 system target platforms (e.g. `ios,android,web`)
+    #[arg(long = "target-platforms", value_delimiter = ',')]
+    target_platforms: Option<Vec<String>>,
+    /// §3.2.2 system target interaction classes (e.g. `gui,tui`)
+    #[arg(long = "target-classes", value_delimiter = ',')]
+    target_classes: Option<Vec<String>>,
+    /// §3.2.4 the ApplicationRoot a system roots at
+    #[arg(long = "roots-at")]
+    roots_at: Option<String>,
+    /// §3.2.5 the system a flow belongs to
+    #[arg(long)]
+    system: Option<String>,
 }
 
 impl NodeFields {
@@ -186,7 +201,18 @@ impl NodeFields {
         if let Some(v) = &self.value { put("value", json!(v)); }
         self.put_ui_fields(&mut m);
         self.put_data_fields(&mut m);
+        self.put_system_fields(&mut m);
         m
+    }
+
+    /// The §3.2.5 system-side field puts (kind, purpose reuse, platforms, root).
+    fn put_system_fields(&self, m: &mut Map<String, Value>) {
+        let mut put = |k: &str, v: Value| { m.insert(k.to_string(), v); };
+        if let Some(v) = &self.system_kind { put("kind", json!(v)); }
+        if let Some(v) = &self.target_platforms { put("target_platforms", json!(v)); }
+        if let Some(v) = &self.target_classes { put("target_classes", json!(v)); }
+        if let Some(v) = &self.roots_at { put("root", json!(v)); }
+        if let Some(v) = &self.system { put("system", json!(v)); }
     }
 
     /// The §3.1 data-side field puts (reference sets, shapes, datasets).

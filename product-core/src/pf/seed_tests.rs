@@ -48,3 +48,26 @@ fn seeded_graph_is_conformant() {
 fn malformed_turtle_errs() {
     assert!(from_turtle("this is not turtle <<<").is_err());
 }
+
+#[test]
+fn system_round_trips_with_flow_ownership() {
+    let mut g = DomainGraph::default();
+    g.systems.push(System {
+        id: "sys-shop".into(), label: "Acme Shop".into(), kind: "application".into(),
+        purpose: "consumer e-commerce".into(), target_platforms: vec!["ios".into(), "web".into()],
+        target_classes: vec!["gui".into()], root: Some("root-shop".into()),
+    });
+    g.flows.push(Flow { id: "checkout".into(), label: "Checkout".into(), steps: vec![], system: Some("sys-shop".into()), ..Default::default() });
+
+    let parsed = from_turtle(&to_turtle(&g, "demo")).expect("parse seed");
+    let s = &parsed.systems[0];
+    assert_eq!(s.id, "sys-shop");
+    assert_eq!(s.kind, "application");
+    assert_eq!(s.purpose, "consumer e-commerce");
+    assert_eq!(s.root.as_deref(), Some("root-shop"));
+    let mut platforms = s.target_platforms.clone();
+    platforms.sort();
+    assert_eq!(platforms, vec!["ios".to_string(), "web".to_string()]);
+    assert_eq!(s.target_classes, vec!["gui".to_string()]);
+    assert_eq!(parsed.flows[0].system.as_deref(), Some("sys-shop"));
+}

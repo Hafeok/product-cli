@@ -200,6 +200,7 @@ fn section_title(kind: NodeKind) -> &'static str {
         NodeKind::ReferenceSet => "Reference data",
         NodeKind::DataShape => "Data shapes",
         NodeKind::ProductionDataset => "Production datasets",
+        NodeKind::System => "Systems",
     }
 }
 

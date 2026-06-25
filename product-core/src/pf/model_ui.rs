@@ -75,6 +75,9 @@ pub struct Flow {
     pub steps: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub entry_page: Option<String>,
+    /// §3.2.5 — the system this flow belongs to (a flow belongs to exactly one).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub system: Option<String>,
 }
 
 /// §3.2.4 — the distinguished node of the page graph; its `navigates_from_root`
@@ -86,6 +89,31 @@ pub struct ApplicationRoot {
     pub label: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub navigates_from_root: Vec<String>,
+}
+
+/// §3.2.5 — a first-class system: the named thing a page graph and flows belong
+/// to. It owns a `root` and its flows but shares the domain model, so a What may
+/// declare several systems over one domain (a customer app + an admin website),
+/// each a distinct surface with its own root, flows, and target contexts.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct System {
+    pub id: String,
+    pub label: String,
+    /// What sort of thing it is (application, website, service, cli, …).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub kind: String,
+    /// One sentence of what it is for, in the ubiquitous language.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub purpose: String,
+    /// §3.2.2 — the platform dimension of context of use (iOS, Android, web).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub target_platforms: Vec<String>,
+    /// §3.2.2 — the gating interaction classes it targets (gui, tui, …).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub target_classes: Vec<String>,
+    /// §3.2.4 — the ApplicationRoot its page graph roots at.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub root: Option<String>,
 }
 
 /// §3.2.2 — an Abstract Interaction Object: a named, modality-independent kind

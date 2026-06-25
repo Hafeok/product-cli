@@ -15,7 +15,7 @@ fn graph() -> DomainGraph {
         content_refs: vec![ContentRef { key: "cart.empty".into(), role: "empty-message".into() }],
         ..Default::default()
     });
-    g.flows.push(Flow { id: "checkout".into(), label: "Checkout".into(), steps: vec!["Review".into()], entry_page: Some("Review".into()) });
+    g.flows.push(Flow { id: "checkout".into(), label: "Checkout".into(), steps: vec!["Review".into()], entry_page: Some("Review".into()), ..Default::default() });
     g
 }
 

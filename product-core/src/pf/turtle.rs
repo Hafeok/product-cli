@@ -34,6 +34,7 @@ pub fn to_turtle(graph: &DomainGraph, product: &str) -> String {
     graph.reference_sets.iter().for_each(|rs| emit_reference_set(&mut out, rs));
     graph.data_shapes.iter().for_each(|s| emit_data_shape(&mut out, s));
     graph.production_datasets.iter().for_each(|d| emit_dataset(&mut out, d));
+    graph.systems.iter().for_each(|s| emit_system(&mut out, s));
     for c in &graph.cios {
         out.push_str(&format!("d:{} a pf:Cio", c.id));
         if let Some(l) = &c.label { out.push_str(&format!(" ;\n  rdfs:label {}", lit(l))); }
@@ -108,6 +109,29 @@ fn emit_flow(out: &mut String, f: &super::model::Flow) {
     }
     if let Some(e) = &f.entry_page {
         out.push_str(&format!(" ;\n  pf:entryPage d:{}", e));
+    }
+    if let Some(s) = &f.system {
+        out.push_str(&format!(" ;\n  pf:systemOf d:{}", s));
+    }
+    out.push_str(" .\n\n");
+}
+
+fn emit_system(out: &mut String, s: &super::model::System) {
+    out.push_str(&format!("d:{} a pf:System ;\n  rdfs:label {}", s.id, lit(&s.label)));
+    if !s.kind.is_empty() {
+        out.push_str(&format!(" ;\n  pf:systemKind {}", lit(&s.kind)));
+    }
+    if !s.purpose.is_empty() {
+        out.push_str(&format!(" ;\n  pf:purpose {}", lit(&s.purpose)));
+    }
+    for p in &s.target_platforms {
+        out.push_str(&format!(" ;\n  pf:targetsPlatform {}", lit(p)));
+    }
+    for c in &s.target_classes {
+        out.push_str(&format!(" ;\n  pf:targetsClass {}", lit(c)));
+    }
+    if let Some(r) = &s.root {
+        out.push_str(&format!(" ;\n  pf:rootsAt d:{}", r));
     }
     out.push_str(" .\n\n");
 }

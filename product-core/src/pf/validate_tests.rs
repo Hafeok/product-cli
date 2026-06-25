@@ -23,6 +23,37 @@ fn conformant_what_graph_has_no_violations() {
 }
 
 #[test]
+fn system_requires_kind_and_purpose() {
+    let mut g = DomainGraph::default();
+    g.systems.push(System { id: "sys".into(), label: "Sys".into(), ..Default::default() });
+    let vs = validate_node(&g, "sys");
+    assert_eq!(vs.len(), 2, "missing kind and purpose: {vs:?}");
+    assert!(vs.iter().any(|x| x.path == "kind"));
+    assert!(vs.iter().any(|x| x.path == "purpose"));
+}
+
+#[test]
+fn system_root_must_resolve_and_flow_system_must_resolve() {
+    let mut g = DomainGraph::default();
+    g.systems.push(System {
+        id: "sys".into(), label: "Sys".into(), kind: "cli".into(), purpose: "a tool".into(),
+        root: Some("ghost-root".into()), ..Default::default()
+    });
+    let vs = validate_node(&g, "sys");
+    assert_eq!(vs.len(), 1);
+    assert_eq!(vs[0].path, "root");
+
+    // a flow pointing at a real system is fine; a dangling one is a finding.
+    g.systems[0].root = None;
+    g.flows.push(Flow { id: "f-ok".into(), label: "Ok".into(), system: Some("sys".into()), ..Default::default() });
+    g.flows.push(Flow { id: "f-bad".into(), label: "Bad".into(), system: Some("nope".into()), ..Default::default() });
+    assert_eq!(validate_node(&g, "f-ok"), vec![]);
+    let bad = validate_node(&g, "f-bad");
+    assert_eq!(bad.len(), 1);
+    assert_eq!(bad[0].path, "system");
+}
+
+#[test]
 fn event_changing_nothing_is_rejected() {
     let mut g = DomainGraph::default();
     g.contexts.push(ctx("Tasks"));

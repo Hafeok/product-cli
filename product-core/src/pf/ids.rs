@@ -56,10 +56,13 @@ pub enum NodeKind {
     /// §3.1 — a production dataset: the populated facts data conformance
     /// (§6.3) checks the shapes against, never specification itself.
     ProductionDataset,
+    /// §3.2.5 — a first-class system: the named thing (name, kind, purpose,
+    /// target platforms/classes) the page graph and flows belong to.
+    System,
 }
 
 /// Every node kind, in declaration order (for `list`/iteration).
-pub const ALL_KINDS: [NodeKind; 24] = [
+pub const ALL_KINDS: [NodeKind; 25] = [
     NodeKind::BoundedContext,
     NodeKind::Entity,
     NodeKind::ValueObject,
@@ -84,6 +87,7 @@ pub const ALL_KINDS: [NodeKind; 24] = [
     NodeKind::ReferenceSet,
     NodeKind::DataShape,
     NodeKind::ProductionDataset,
+    NodeKind::System,
 ];
 
 /// Built-in WCAG 2.2 criteria seed: (id, level, verification-type, name). An
@@ -150,6 +154,7 @@ impl NodeKind {
             Self::ReferenceSet => "ReferenceSet",
             Self::DataShape => "DataShape",
             Self::ProductionDataset => "ProductionDataset",
+            Self::System => "System",
         }
     }
 
@@ -180,6 +185,7 @@ impl NodeKind {
             Self::ReferenceSet => "reference-set",
             Self::DataShape => "data-shape",
             Self::ProductionDataset => "production-dataset",
+            Self::System => "system",
         }
     }
 

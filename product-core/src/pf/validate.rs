@@ -74,6 +74,12 @@ pub fn validate_graph(graph: &DomainGraph) -> Vec<Violation> {
     for d in &graph.production_datasets {
         super::rules_data::check_dataset(d, &mut v);
     }
+    for s in &graph.systems {
+        check_system(s, graph, &mut v);
+    }
+    for f in &graph.flows {
+        check_flow(f, graph, &mut v);
+    }
     v.extend(super::rules_data::data_cross_refs(graph));
     v.extend(run_rules(&ui_projection(graph), what_rules()));
     v.extend(run_rules(&ui_projection(graph), super::rules_ui::ui_rules()));
@@ -124,9 +130,43 @@ fn check_local_shape(graph: &DomainGraph, id: &str, v: &mut Vec<Violation>) {
         Some(NodeKind::ProductionDataset) => {
             if let Some(d) = graph.production_datasets.iter().find(|n| n.id == id) { super::rules_data::check_dataset(d, v); }
         }
+        Some(NodeKind::System) => {
+            if let Some(s) = graph.systems.iter().find(|n| n.id == id) { check_system(s, graph, v); }
+        }
+        Some(NodeKind::Flow) => {
+            if let Some(f) = graph.flows.iter().find(|n| n.id == id) { check_flow(f, graph, v); }
+        }
         // Event/Command cross-references are graph rules (below); ValueObject,
-        // WireframeStep, Flow have no blocking shape.
+        // WireframeStep have no blocking shape.
         _ => {}
+    }
+}
+
+// --- §3.2.5 the system ----------------------------------------------------
+
+fn check_system(s: &super::model::System, graph: &DomainGraph, v: &mut Vec<Violation>) {
+    if s.kind.trim().is_empty() {
+        v.push(Violation::new(&s.id, "kind",
+            "§3.2.5 A system must declare its kind (application/website/service/cli/…)."));
+    }
+    if s.purpose.trim().is_empty() {
+        v.push(Violation::new(&s.id, "purpose",
+            "§3.2.5 A system must state its purpose in one sentence (the ubiquitous language)."));
+    }
+    if let Some(root) = &s.root {
+        if !graph.is_kind(root, NodeKind::ApplicationRoot) {
+            v.push(Violation::new(&s.id, "root",
+                "§3.2.5 A system's root must resolve to a declared ApplicationRoot."));
+        }
+    }
+}
+
+fn check_flow(f: &super::model::Flow, graph: &DomainGraph, v: &mut Vec<Violation>) {
+    if let Some(sys) = &f.system {
+        if !graph.is_kind(sys, NodeKind::System) {
+            v.push(Violation::new(&f.id, "system",
+                "§3.2.5 A flow's system must resolve to a declared System (a flow belongs to exactly one)."));
+        }
     }
 }
 

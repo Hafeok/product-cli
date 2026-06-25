@@ -9410,6 +9410,48 @@ fn tc_998_top_level_is_derived_from_the_application_root() {
 }
 
 #[test]
+fn tc_1030_system_is_a_first_class_what_node() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // §3.2.5 — a system without a purpose is rejected.
+    h.run(&["domain", "new", "system", "sys-bad", "--label", "Bad", "--system-kind", "application"])
+        .assert_exit(1)
+        .assert_stderr_contains("§3.2.5");
+    // A complete system is captured and conformant.
+    h.run(&[
+        "domain", "new", "system", "sys-shop", "--label", "Acme Shop", "--system-kind", "application",
+        "--purpose", "consumer e-commerce", "--target-platforms", "ios,web", "--target-classes", "gui",
+    ])
+    .assert_exit(0);
+    h.run(&["domain", "validate"]).assert_exit(0);
+    // Its identity and reach are in the Turtle export under pf:System.
+    let ttl = h.run(&["domain", "export"]);
+    assert!(ttl.stdout.contains("a pf:System"), "system class missing, stdout:\n{}", ttl.stdout);
+    assert!(ttl.stdout.contains("pf:systemKind"), "system kind missing, stdout:\n{}", ttl.stdout);
+    assert!(ttl.stdout.contains("pf:targetsClass"), "interaction class missing, stdout:\n{}", ttl.stdout);
+}
+
+#[test]
+fn tc_1031_a_flow_belongs_to_a_declared_system() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&[
+        "domain", "new", "system", "sys-shop", "--label", "Acme Shop",
+        "--system-kind", "application", "--purpose", "shop",
+    ])
+    .assert_exit(0);
+    // A flow owned by a declared system is accepted.
+    h.run(&["domain", "new", "flow", "checkout", "--label", "Checkout", "--system", "sys-shop"]).assert_exit(0);
+    // A flow naming an undeclared system is a §3.2.5 finding.
+    h.run(&["domain", "new", "flow", "ghost", "--label", "Ghost", "--system", "no-such-system"])
+        .assert_exit(1)
+        .assert_stderr_contains("§3.2.5");
+    // The ownership edge is in the export.
+    let ttl = h.run(&["domain", "export"]);
+    assert!(ttl.stdout.contains("pf:systemOf d:sys-shop"), "ownership edge missing, stdout:\n{}", ttl.stdout);
+}
+
+#[test]
 fn tc_999_primary_navigation_recomputes_when_a_flow_joins_the_root() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
