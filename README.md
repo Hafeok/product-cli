@@ -1,511 +1,84 @@
 # Product
 
-**A knowledge graph for LLM-driven development.**
+**A CLI and MCP server for the Product Framework — specify software as a verifiable What/How graph.**
 
-You give Claude (or Cursor, or Codex) too much code and not enough decisions, and it builds the wrong thing. Product fixes the context problem at the root: it manages your features, architectural decisions, and test criteria as a structured graph of markdown files, then assembles the *exact* context bundle an agent needs — feature plus the ADRs that govern it plus the tests that validate it — in one command.
+The [Product Framework](docs/product-framework-open.md) is an open standard for
+describing a software product as one connected, machine-readable graph: the
+**What** (domain model + event model — entities, commands, events, read models,
+UI steps typed against Abstract Interaction Objects, *systems*, *triggers*,
+*Deciders*, *Projectors*), the **How** (contracts, the screen-composition /
+reification model, delivery slices), and the typed links between them. The graph
+can drive generation, gate verification, and explain itself — so "describe this
+system" is a query, not a stale document.
+
+This repo is the reference tooling: a single Rust binary (`product`) plus an MCP
+server that lets an agent author and verify the graph directly. No database, no
+service — the graph lives as YAML/Turtle under `.product/`.
 
 ```
-                  ┌──────────────────┐
-                  │   Feature        │
-                  │   FT-007         │
-                  └────────┬─────────┘
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-         ADR-012      ADR-019      TC-031, TC-032
-        (governs)    (governs)    (validates)
-
-  $ product context FT-007 --depth 2
-  → markdown bundle ready to paste into Claude
+$ product init --demo                 # scaffold + seed the bookstore What model
+$ product domain new system sys-shop --system-kind application \
+      --purpose "consumer e-commerce" --target-classes gui
+$ product domain validate --strict    # per-node shapes + graph-level completeness
+$ product decider derive Order        # derive an aggregate's executable signature
+$ product decider validate Order-decider
+$ product mcp --http                  # MCP server + a live Event-Modeling web view at /
 ```
-
-No database. No service. Just markdown with YAML front-matter, a single Rust binary, and an MCP server so agents can drive the graph themselves.
-
----
-
-## Why you'd want this
-
-- **Your AI agent keeps forgetting decisions you made three weeks ago.** Product makes those decisions first-class, linked, and queryable.
-- **Your PRD has drifted from the code.** `product drift check` catches it; `product gap check` finds the spec holes.
-- **You're tired of pasting six files into a chat to give context.** `product context FT-XXX` gives you the right six, and only those.
-- **You want agents that can read and write the graph.** `product mcp` exposes the whole tool surface to Claude Code, claude.ai mobile, or any MCP client.
-
-If your project has more than one decision worth remembering and more than one feature in flight, this is for you.
 
 ---
 
 ## Install
 
-Pick whichever fits your environment. None require a Rust toolchain except option 2.
+```bash
+# from source
+cargo install --path product-cli
+```
 
-**1. Prebuilt binary (recommended)** — works on macOS, Linux, Windows:
+## 60-second tour
 
 ```bash
-# macOS / Linux
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/Hafeok/product-cli/releases/latest/download/product-installer.sh | sh
-
-# Windows (PowerShell)
-irm https://github.com/Hafeok/product-cli/releases/latest/download/product-installer.ps1 | iex
+product init --demo                   # a worked What model to explore
+product domain list                   # the captured nodes, by kind
+product domain show Order             # one node and its links
+product domain export                 # the graph as RDF/Turtle
+product domain validate               # §3.1/§3.2 per-node conformance shapes
+product domain validate --strict      # + §3.2.0/§3.2.5/§3.4/§4.5 completeness checks
+product decider derive Order          # §3.3 — derive decide/evolve signature
+product decider simulate Order-decider  # run its flow-derived scenarios
+product guide                         # where you are + the next step
 ```
 
-The script drops `product` into `~/.cargo/bin` (or `%CARGO_HOME%\bin` on Windows). Add that to your `PATH` if it isn't already.
-
-**2. From source (if you have Rust)**:
-
-```bash
-cargo install --git https://github.com/Hafeok/product-cli
-```
-
-**3. Via Dagger** — for hermetic CI use, no install on the runner:
-
-```bash
-dagger -m github.com/Hafeok/product-cli call binary export --path ./product
-```
-
-Verify any of the above with:
-
-```bash
-product --version    # → product 0.1.0
-```
-
-### Install via the MCP Registry
-
-Product is published to the official [Model Context Protocol registry](https://registry.modelcontextprotocol.io/) under the namespace **`io.github.Hafeok/product-cli`** (per ADR-020 / FT-065). Any MCP-capable client can discover and install it through standard registry tooling — no clone, no `cargo install`.
-
-**Claude Code:**
-
-```bash
-claude mcp install io.github.Hafeok/product-cli
-```
-
-The CLI downloads the matching GitHub Release binary, places it on `$PATH`, and writes a `.mcp.json` entry that spawns `product mcp` over stdio in your repo. The server then discovers `.product/config.toml` (or the legacy fallback chain — see ADR-048) from the working directory.
-
-**Generic stdio `.mcp.json`** — paste into the `mcpServers` block of any MCP client that consumes the standard configuration shape:
-
-```json
-{
-  "mcpServers": {
-    "product": {
-      "command": "product",
-      "args": ["mcp"],
-      "cwd": "${workspaceFolder}"
-    }
-  }
-}
-```
-
-**Generic HTTP `.mcp.json`** — for remote agents (claude.ai mobile, Cursor over the network):
-
-```json
-{
-  "mcpServers": {
-    "product": {
-      "url": "https://your-tunnel.example.com/mcp",
-      "headers": { "Authorization": "Bearer $PRODUCT_MCP_TOKEN" }
-    }
-  }
-}
-```
-
-**Architecture not in the release matrix?** Fall back to `cargo install --git https://github.com/Hafeok/product-cli` and configure the same `.mcp.json` entry — the binary is identical to the one the registry serves.
-
-The on-disk manifest the registry consumes is committed at [`server.json`](./server.json); a CI smoke test (TC-776) keeps its `version` in lockstep with `product.toml` on every push.
-
----
-
-## 60-second quickstart
-
-```bash
-# 1. scaffold a project (anywhere)
-mkdir my-app && cd my-app
-product init -y --name my-app \
-  --domain api="HTTP surface" \
-  --domain storage="Persistence"
-
-# 2. create a feature + its ADR + a test, all linked, in one atomic write
-cat > /tmp/req.yaml <<'EOF'
-type: create
-reason: "Rate limit the public API"
-artifacts:
-  - type: feature
-    ref: ft-rate-limit
-    title: Rate Limiting
-    phase: 1
-    domains: [api]
-    adrs: [ref:adr-token-bucket]
-    tests: [ref:tc-100rps]
-  - type: adr
-    ref: adr-token-bucket
-    title: Token bucket for rate limiting
-    domains: [api]
-    scope: domain
-  - type: tc
-    ref: tc-100rps
-    title: Enforced at 100 req/s
-    tc-type: scenario
-EOF
-product request apply /tmp/req.yaml
-
-# 3. ask the graph what you'd hand to an LLM to implement this
-product context FT-001 --depth 2
-```
-
-Step 3 prints a single self-contained markdown document with the feature, the ADR that governs it, and the test that validates it — sized for an LLM context window, deterministic, and free of unrelated noise. That bundle is the entire point of the tool.
-
-> Don't want to write the YAML yourself? Skip to **Author with Claude** below — `product author feature` does the same thing through a guided conversation.
-
----
-
-## Model your product: What, How & Delivery
-
-Everything above tracks *work* as features, ADRs, and tests. Product also hosts a
-deeper model — the **framework graph** — for specifying the *product itself* as
-three linked layers: the **What** (its domain and behaviour), the **How** (how
-that's realised), and **Delivery** (slices and deliverables built to a verifiable
-'done'). Same idea, one level up: separate What from How, agree the What first,
-and check everything instead of asserting it.
-
-See it in seconds:
-
-```bash
-product init -y --name bookstore --demo   # seed a small, conformant example model
-product status                            # What / How / Delivery counts
-product guide                             # where you are + the exact next command
-product domain show Order                 # inspect a node and its links
-```
-
-`product guide` is the through-line: at any point, it reads your graph and tells
-you the next step. Start here:
-
-- **[Getting started](docs/guide/getting-started-framework.md)** — model a product from scratch in 15 minutes.
-- **[Concepts](docs/guide/framework-concepts.md)** — every term (bounded context, command/event, decider, slice) in a sentence.
-- **[Workshop runbook](docs/workshop-runbook.md)** — run a hands-on session for a team.
-
----
-
-## The core loop
-
-Once you have artifacts in the graph, the daily flow is:
-
-```bash
-product status                  # what's in flight, what's blocked, what's done
-product feature next            # next feature to pick up (graph-derived)
-product context FT-007          # bundle to hand to your agent
-product implement FT-007        # or let Product orchestrate the agent itself
-product verify FT-007           # run the linked TCs and update status
-```
-
-`product implement` runs the full pipeline: gap-checks the spec, assembles the bundle, spawns your configured agent (Claude Code by default), then verifies. `product verify` executes each TC's configured runner (e.g. `cargo test`) and writes results back into front-matter.
-
----
-
-## Author with Claude
-
-Writing well-formed features by hand is tedious — you have to remember which ADRs are relevant, link the right tests, pick the right phase, and not duplicate something that already exists. `product author feature` makes that someone else's problem.
-
-```bash
-product author feature
-```
-
-What this does:
-
-1. Spawns Claude Code (or whatever agent you configured in `[author]` of `product.toml`) with a versioned authoring system prompt pre-loaded.
-2. Connects the Product MCP server so Claude has **full read access to your graph from the first message**.
-3. Before proposing anything, Claude calls `product_feature_list`, `product_graph_central`, and `product_context` on related features — so its proposal is grounded in what already exists, not invented.
-4. You describe what you want in plain English. Claude asks clarifying questions tied to existing decisions ("ADR-012 already governs rate limiting via token bucket — should this feature inherit that or override?").
-5. When you agree on the shape, Claude scaffolds the feature file, drafts any new ADRs and TCs, and links everything bidirectionally — typically as a single `product request apply` so the write is atomic.
-6. Before exiting, it runs `product graph check` and `product gap check` so you don't end up with broken links or untested features.
-
-```bash
-product author feature                    # open-ended: "I want to add X"
-product author feature --feature FT-007   # extend an existing feature; gates on preflight
-product author adr                        # for a pure decision (no new capability)
-product author review                     # spec gardening — fix orphans, weak metrics, missing TCs
-```
-
-Three useful properties:
-
-- **It cannot hallucinate IDs.** Claude scaffolds via the request interface, which assigns real IDs only on apply. No ghost references to features that don't exist.
-- **It reads before it writes.** The system prompt forces graph reads before scaffolding, so the proposal isn't a duplicate of something you wrote three weeks ago.
-- **It works from your phone.** If `product mcp --http` is running on your dev box or a server, the same authoring flow runs in any claude.ai conversation that has the Product MCP server configured. Author a feature on the train; verify it on a laptop.
-
-If you don't have Claude Code installed, point `[author].cli` at `copilot` in `product.toml`, or stick with the `product request` flow shown in the quickstart.
-
----
-
-## From spec to code — the smallest sufficient model
-
-Authoring gets you a precise spec. `product build` closes the loop: it assembles the frozen context for a **deliverable** (the slice it ships, the decisions to apply, the acceptance it must satisfy) and dispatches it to a **worker model**, then runs deterministic gates — rust-analyzer + clippy, then each acceptance runner — fixing failures in place until the deliverable is *done*.
-
-The bet behind it: **the more precisely a change is specified, the smaller the model that can implement it.** So workers are a catalogue of model tiers bound to roles with an escalation ladder. The build tries the **smallest model first** and climbs only when a gate fails:
-
-```bash
-product worker init                      # scaffold .product/capabilities.yaml + role-bindings.yaml
-product worker list                      # the model catalog + each role's escalation ladder
-
-product build my-deliverable --role coder --dry-run   # inspect the frozen context + run plan
-product build my-deliverable --role coder --lsp        # dispatch + LSP + verify gates
-```
-
-```yaml
-# .product/role-bindings.yaml — coder starts small, escalates on failure
-- role_id: coder
-  default_capability: fast-coder         # e.g. a 35B model (tier 1)
-  escalation_steps:
-  - { capability: code-writer }          # 123B (tier 2)
-  - { capability: code-writer-heavy }    # 397B (tier 3)
-```
-
-Two properties make this trustworthy rather than hopeful:
-
-- **`done` is computed, not claimed** (ADR-071): every in-scope element must conform, every Decider must be sound, every acceptance runner must pass. A worker can't declare victory.
-- **The oracle is protected** (ADR-076): a worker may make the acceptance tests *pass*, never make them *lenient* — any edit a worker makes to a test file is reverted.
-
-The build can even run **test-first**: a slice's cells become dependency-ordered work units (ADR-075) where one unit writes the test from the spec and a later unit — given that test read-only — implements against it. A deep-enough spec lets two independent small-model runs converge on the same contract.
-
-See **[docs/spec-depth-substitution.md](docs/spec-depth-substitution.md)** for the thesis and the experiment behind it.
-
----
-
-## How it's structured
-
-```
-docs/
-  features/   FT-001-*.md     ← one feature per file, YAML front-matter declares links
-  adrs/       ADR-001-*.md    ← one decision per file
-  tests/      TC-001-*.md     ← one test criterion per file
-  deps/       DEP-001-*.md    ← external dependencies (libs, services, hardware)
-product.toml                   ← repo config (paths, prefixes, domains)
-```
-
-Every artifact has YAML front-matter declaring its identity and edges. The graph is *derived* on every invocation — there is no separate index to keep in sync, and `git diff` shows you exactly what the graph changed.
-
-```yaml
----
-id: FT-007
-title: Rate Limiting
-phase: 1
-status: in-progress
-domains: [api, security]
-adrs: [ADR-012]
-tests: [TC-031, TC-032]
----
-```
-
----
-
-## Writing to the graph: the request interface
-
-For anything that touches more than one field or more than one artifact, use a **request** — a YAML document describing an atomic, validated mutation:
-
-```bash
-product request create              # opens $EDITOR with a template
-product request validate FILE       # dry-run, reports every finding in one pass
-product request diff FILE           # show what would change
-product request apply FILE          # atomic write; assigns IDs; rewrites refs
-product request apply FILE --commit # apply and create a git commit
-```
-
-`ref:` values inside a request are forward references — Product topo-sorts the artifacts, assigns the real IDs (`FT-009`, `ADR-031`, `TC-050`), rewrites every reference on write, and materialises bidirectional cross-links automatically. A failed apply leaves zero files changed, verified by SHA-256 checksum.
-
-For trivial single-field tweaks the granular commands are fine and shorter to type:
-
-```bash
-product feature new "User Auth" --phase 1
-product feature link FT-001 --adr ADR-001 --test TC-001
-product adr status ADR-001 --set accepted
-```
-
----
-
-## Plug it into your agent
-
-```bash
-product mcp           # stdio MCP server — for Claude Code on the desktop
-product mcp --http    # HTTP MCP server — for claude.ai, including mobile
-```
-
-`product init` writes `.mcp.json` so Claude Code picks up the server automatically. From inside an agent session you can ask things like *"show me what FT-007 depends on"*, *"create a feature for X with these two ADRs"*, or *"implement FT-007"* and the agent calls Product's tools rather than guessing at your code layout.
-
----
-
-## Health checks
-
-```bash
-product graph check        # broken links, dangling refs, status invariants
-product gap check          # specification holes (features without tests, etc.)
-product drift check        # spec vs implementation divergence
-product preflight FT-007   # domain coverage check before implementing
-product impact ADR-012     # what does changing this decision affect?
-product conformance check  # Two Pillars spec conformance (Level 3 clause set)
-```
-
-Wire them into pre-commit or CI and your specs stop rotting.
-
----
-
-## Use it from Dagger
-
-Product ships as a [Dagger](https://dagger.io/) module. If you already use Dagger for CI, this gives you a hermetic, no-install path to running graph checks, assembling context bundles, or shipping the binary into a downstream container — without ever putting `product` on the runner image.
-
-### Why through Dagger
-
-- **Zero-install CI.** Your runner doesn't need a Rust toolchain or even `curl`. Dagger pulls the prebuilt binary from the GitHub Release and caches it.
-- **Pinned and reproducible.** `--version=v0.1.0` locks the binary; the pipeline gives the same result on a laptop and in CI.
-- **Composable.** `dag.Product().Container()` returns a container with `product` on PATH that you can chain into your own pipelines.
-
-### Functions
-
-```bash
-dagger -m github.com/Hafeok/product-cli functions
-```
-
-| Function | What it does |
-|---|---|
-| `binary --version --platform` | Returns the `product` binary as a `*File`. Default version is `latest`, default platform is `linux/amd64`. |
-| `container --version --platform` | Debian slim with `product` on PATH and as the entrypoint. |
-| `validate --source --version` | Runs `product graph check` against a directory containing `product.toml`. Fails the pipeline on any graph error — perfect CI gate. |
-| `context --source --feature --depth --version` | Assembles an LLM context bundle for a feature inside a sandbox; returns the markdown as a string. |
-
-### Common one-liners
-
-```bash
-# Drop the binary on disk
-dagger -m github.com/Hafeok/product-cli call binary export --path ./product
-
-# Specific version + platform
-dagger -m github.com/Hafeok/product-cli call binary \
-  --version=v0.1.0 --platform=darwin/arm64 \
-  export --path ./product
-
-# Fail CI if the graph is broken
-dagger -m github.com/Hafeok/product-cli call validate --source=.
-
-# Pipe a context bundle into a downstream tool
-dagger -m github.com/Hafeok/product-cli call context \
-  --source=. --feature=FT-007 --depth=2 > bundle.md
-```
-
-### GitHub Actions example
-
-```yaml
-- uses: dagger/dagger-for-github@v6
-  with:
-    verb: call
-    module: github.com/Hafeok/product-cli
-    args: validate --source=.
-```
-
-That's the entire CI gate. No setup-rust, no cargo install, no version drift between local and CI.
-
-### Local development of the module
-
-If you're iterating on the module itself (in `dagger/`):
-
-```bash
-cd dagger && dagger develop          # regenerate the SDK after editing main.go
-dagger -m . functions                # list functions
-dagger -m . call binary export ...   # test against the latest GitHub Release
-```
-
----
-
-## Command reference
-
-| Group | What it covers |
-|---|---|
-| `init` | Scaffold a new Product repository |
-| `request *` | Unified atomic write interface — create / change / validate / apply / diff |
-| `feature *` | List, show, navigate, link, update features |
-| `adr *` | List, show, link, supersede ADRs |
-| `test *` | List, show, run test criteria |
-| `dep *` | External dependency artifacts |
-| `context FT-XXX` | Assemble an LLM context bundle |
-| `graph *` | check / rebuild / query / stats / centrality / autolink |
-| `impact ADR-XXX` | Change-impact analysis |
-| `status` | Project dashboard |
-| `gap *`, `drift *`, `preflight` | Specification health |
-| `implement FT-XXX` | Full agent-orchestration pipeline |
-| `verify [FT-XXX]` | Run TC runners and update status |
-| `deliverable *`, `slice *`, `cell *`, `work-unit *` | SPMC build artifacts — slices, deliverables, task cells, work units |
-| `build <deliverable>` | Assemble frozen context, dispatch a worker model, run LSP + verify gates |
-| `worker *` | Model capability catalog — list, resolve a role to a tier, validate |
-| `author *` | Graph-aware authoring sessions |
-| `mcp [--http]` | Run as MCP server |
-| `metrics *`, `cycle-times`, `forecast` | Architectural fitness + delivery analytics |
-| `onboard`, `migrate` | Bring an existing codebase into the graph |
-
-Run `product <group> --help` for the flags on any of them.
-
----
-
-## Path scoping
-
-`product` locates the graph it operates on by, in priority order:
-
-1. **`--root <path>`** — top-level flag, accepted before or after the
-   subcommand. Highest priority; use for one-off scripting.
-2. **`PRODUCT_ROOT` env var** — session-level override. Use to scope an
-   entire shell or container at a single graph. Empty values are ignored.
-3. **Walk-up from the current directory** — the default, unchanged. Picks
-   the nearest ancestor that contains a `.product/` directory or
-   `product.toml`.
-
-When `--root` and `PRODUCT_ROOT` are both set, `--root` wins.
-
-```bash
-product --root crates/verify-cli feature list   # one-off
-PRODUCT_ROOT=/workspace/typo-cli product mcp    # whole-session scope
-```
-
-Explicit paths are tilde-expanded, resolved against the current directory
-when relative, and canonicalized (symlinks followed). Pointing at the
-`.product/` directory itself (`--root foo/.product`) is treated as the
-parent. The path must exist, be a directory, and contain a `.product/`
-subdirectory; otherwise the binary exits with code 24 and an
-`error[E024]: graph root not found` diagnostic naming the supplied value
-and the source (`flag` or `env`).
-
-The MCP server reads the same resolution at startup and is fixed to the
-resolved root for its lifetime — restart the server to point at a
-different graph.
-
----
-
-## Architecture in one paragraph
-
-Single Rust binary, no runtime deps. The graph is rebuilt in memory from front-matter on every invocation (ADR-003), so it can never drift from the files. Oxigraph powers SPARQL queries (ADR-008). Betweenness centrality ranks ADR importance (ADR-012). All file writes go through atomic write + advisory lock (ADR-015). `#![deny(clippy::unwrap_used)]` — zero panics on user input.
-
----
+## The model
+
+- **What** — `product domain …` captures the domain + event model; `product
+  decider …` (§3.3) and `product projector …` (§3.4) make behaviour and read
+  models executable; `product primitive …` (§3.5) names irreducible algorithms.
+- **How** — `product how`, `product slice`, `product build`, `product seam`,
+  `product preview` cover the How contract, delivery slices, the screen seam, and
+  the §11/§12 design-system / content-store preview profiles.
+- Everything is validated against the framework's SHACL shapes + SPARQL rules;
+  the captured What serializes to Turtle (`product domain export`).
+
+## MCP + the web view
+
+`product mcp --http` starts the MCP server (framework tools: `product_domain_*`,
+`product_decider_*`, `product_projector_*`, …) and serves a live web view at `/`
+that renders the active What graph as an Event-Modeling swimlane timeline
+(triggers / commands / views over per-aggregate event streams), with a two-lane
+structural mode and live SSE refresh.
 
 ## Build & test
 
 ```bash
 cargo build
-cargo t                                              # full suite (alias for --no-fail-fast)
+cargo t                                          # full suite (alias: test --no-fail-fast)
 cargo clippy -- -D warnings -D clippy::unwrap_used
-cargo bench
 ```
 
----
-
-## Docs
-
-**Model your product (the framework graph):**
-
-- [Getting started](docs/guide/getting-started-framework.md) — model a product as What/How/Delivery in 15 minutes
-- [Concepts](docs/guide/framework-concepts.md) — every term in a sentence
-- [Everyday use](docs/guide/everyday-use.md) — the daily-driver commands
-- [Flows](docs/guide/flows.md) — the end-to-end recipes (capture What, author How, executable behaviour, delivery, build)
-- [Workshop runbook](docs/workshop-runbook.md) — run a hands-on team session
-- [Framework specification](docs/product-framework-open.md) — the normative open standard (What §3, How §4, verification §6, delivery §7)
-- [Two Pillars conformance](docs/two-pillars-conformance.md) — the clause set `product conformance check` evaluates
-
-**This tool's own development (the meta graph):**
-
-- [Spec-depth substitution](docs/spec-depth-substitution.md) — the autonomous build thesis, and the experiment that tests it
-- [Feature checklist](CHECKLIST.md) — current implementation status
+See [CLAUDE.md](CLAUDE.md) for the architecture and contributor workflow, and
+[docs/product-framework-open.md](docs/product-framework-open.md) for the spec.
 
 ## License
 
-See [LICENSE](LICENSE).
+Specification text under CC BY 4.0; code/shapes under Apache-2.0 — see
+[`LICENSE`](LICENSE) and [`LICENSE-docs`](LICENSE-docs).
