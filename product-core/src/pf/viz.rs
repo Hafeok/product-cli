@@ -150,6 +150,22 @@ fn push_event(g: &DomainGraph, nodes: &mut Vec<ViewNode>, edges: &mut Vec<RawEdg
         for s in &f.steps {
             edges.push((f.id.clone(), s.clone(), "step".into()));
         }
+        if let Some(sys) = &f.system {
+            edges.push((f.id.clone(), sys.clone(), "system-of".into()));
+        }
+    }
+    // §3.2.0 — Triggers initiate commands (the top of the Command pattern);
+    // an automated Trigger watches a View (Automation/Translation).
+    for t in &g.triggers {
+        nodes.push(node(&t.id, &t.label, "trigger", EVENT, ""));
+        edges.push((t.id.clone(), t.issues.clone(), "issues".into()));
+        if let Some(w) = &t.watches {
+            edges.push((t.id.clone(), w.clone(), "watches".into()));
+        }
+    }
+    // §3.2.5 — Systems own flows; surfaced so the client can group/label them.
+    for s in &g.systems {
+        nodes.push(node(&s.id, &s.label, "system", DOMAIN, ""));
     }
 }
 
@@ -165,7 +181,17 @@ mod tests {
         g.commands.push(Command { id: "Place".into(), label: "Place".into(), context: "ctx".into(), targets: "Order".into(), emits: vec!["Placed".into()] });
         g.events.push(Event { id: "Placed".into(), label: "Placed".into(), context: "ctx".into(), changes: "Order".into() });
         g.read_models.push(ReadModel { id: "Cart".into(), label: "Cart".into(), projects: vec!["Order".into()], ..Default::default() });
+        g.systems.push(System { id: "sys".into(), label: "Shop".into(), kind: "application".into(), purpose: "shop".into(), ..Default::default() });
+        g.triggers.push(Trigger { id: "t".into(), label: "User places".into(), source: "user".into(), issues: "Place".into(), ..Default::default() });
         g
+    }
+
+    #[test]
+    fn surfaces_triggers_and_systems() {
+        let v = to_view_graph(&sample());
+        assert!(v.nodes.iter().any(|n| n.id == "t" && n.kind == "trigger" && n.model == EVENT), "trigger node in event lane");
+        assert!(v.nodes.iter().any(|n| n.id == "sys" && n.kind == "system" && n.model == DOMAIN), "system node in domain lane");
+        assert!(v.edges.iter().any(|e| e.from == "t" && e.to == "Place" && e.kind == "issues"), "trigger issues command");
     }
 
     #[test]

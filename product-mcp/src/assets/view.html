@@ -83,7 +83,7 @@ const KIND_COLOR = {
   command:'#ea580c', event:'#d97706', 'read-model':'#ca8a04', 'ui-step':'#a16207', flow:'#854d0e',
 };
 // Event-Modeling palette — command blue, view green, event orange, UI white.
-const EM_COLOR = { 'ui-step':'var(--ui)', command:'var(--cmd)', 'read-model':'var(--view)', event:'var(--evt)' };
+const EM_COLOR = { 'ui-step':'var(--ui)', trigger:'#a78bfa', command:'var(--cmd)', 'read-model':'var(--view)', event:'var(--evt)' };
 const NS='http://www.w3.org/2000/svg';
 let hidden = new Set();   // kinds toggled off
 let last = null;          // last fetched graph
@@ -112,7 +112,7 @@ function render(g){ mode==='lanes' ? renderLanes(g) : renderTimeline(g); }
 function buildFilters(g){
   const box = document.getElementById('filters');
   // timeline only renders behavioural kinds — don't offer toggles that do nothing.
-  const TL=new Set(['command','event','read-model','ui-step']);
+  const TL=new Set(['command','event','read-model','ui-step','trigger']);
   const kinds = [...new Set(g.nodes.map(n=>n.kind))].filter(k=>mode==='lanes'||TL.has(k)).sort();
   box.innerHTML='';
   for(const k of kinds){
@@ -145,7 +145,7 @@ function renderTimeline(g){
   const byId=Object.fromEntries(nodes.map(n=>[n.id,n]));
   const live=id=>byId[id]!==undefined;
   const ek=k=>g.edges.filter(e=>e.kind===k && live(e.from) && live(e.to));
-  const triggers=ek('triggers'), emits=ek('emits'), changes=ek('changes'),
+  const triggers=ek('triggers'), emits=ek('emits'), changes=ek('changes'), issues=ek('issues'), watches=ek('watches'),
         projects=g.edges.filter(e=>e.kind==='projects'), displays=ek('displays'), transitions=ek('transitions');
   const ctxLabel=Object.fromEntries((g.contexts||[]).map(c=>[c.id,c.label]));
 
@@ -163,12 +163,15 @@ function renderTimeline(g){
   // events inherit their emitting command's column; orphans get their own.
   const emittedBy={}; for(const e of emits) emittedBy[e.to]=e.from;
   for(const n of nodes) if(n.kind==='event'){ const c=colOf[emittedBy[n.id]]; colOf[n.id]=c!==undefined?c:col++; }
-  // ui inherits the column of the command it triggers / view it displays.
+  // ui inherits the column of the command it triggers / view it displays;
+  // a Trigger inherits the column of the command it issues (§3.2.0).
   const trigCmd={}; for(const e of triggers) trigCmd[e.from]=e.to;
   const dispView={}; for(const e of displays) dispView[e.from]=e.to;
+  const issuedCmd={}; for(const e of issues) issuedCmd[e.from]=e.to;
   for(const n of nodes) if(n.kind==='ui-step'){ const c=colOf[trigCmd[n.id]]??colOf[dispView[n.id]]; colOf[n.id]=c!==undefined?c:col++; }
+  for(const n of nodes) if(n.kind==='trigger'){ const c=colOf[issuedCmd[n.id]]; colOf[n.id]=c!==undefined?c:col++; }
   const ncols=Math.max(1,col);
-  const behav=nodes.filter(n=>['ui-step','command','read-model','event'].includes(n.kind));
+  const behav=nodes.filter(n=>['ui-step','trigger','command','read-model','event'].includes(n.kind));
   const evNodes=nodes.filter(n=>n.kind==='event');
 
   // order lanes by the leftmost column they carry an event in (active first).
@@ -205,7 +208,7 @@ function renderTimeline(g){
   const pos={}; const cell={};
   for(const n of behav){
     const c=colOf[n.id]||0; let y;
-    if(n.kind==='ui-step') y=uiY;
+    if(n.kind==='ui-step'||n.kind==='trigger'){ const k='ui'+c; const i=cell[k]||0; cell[k]=i+1; y=uiY+i*15; }
     else if(n.kind==='event'){ const r=streamRow[streamOf[n.id]||'—']; const k='e'+c+':'+r; const i=cell[k]||0; cell[k]=i+1; y=laneY0[r]+8+boxH/2+i*stackH; }
     else { const k='cv'+c; const i=cell[k]||0; cell[k]=i+1; y=cvY+i*16; }
     pos[n.id]={x:colX(c),y};
@@ -216,17 +219,18 @@ function renderTimeline(g){
   const path=(e,cls)=>{ const a=pos[e.from],b=pos[e.to]; if(!a||!b) return null;
     const my=(a.y+b.y)/2; const p=el('path',{class:cls,d:`M${a.x},${a.y} C${a.x},${my} ${b.x},${my} ${b.x},${b.y}`}); svg.appendChild(p); return p; };
   for(const e of triggers) path(e,'flow');
+  for(const e of issues) path(e,'flow');
   for(const e of emits) path(e,'flow');
-  // event → view (feeds) and ui → view (displays): cross-links, hidden by default.
+  // event → view (feeds), ui → view (displays), trigger → watched view: cross-links.
   const feeds=[];
   for(const ev of nodes){ if(ev.kind!=='event') continue; const s=streamOf[ev.id]; if(!s) continue;
     for(const p of projects) if(p.to===s && live(p.from)) feeds.push({from:ev.id,to:p.from}); }
-  for(const e of feeds.concat(displays).concat(transitions)){ const p=path(e,'xlink'); if(p) xref.push({p,from:e.from,to:e.to}); }
+  for(const e of feeds.concat(displays).concat(transitions).concat(watches)){ const p=path(e,'xlink'); if(p) xref.push({p,from:e.from,to:e.to}); }
 
   // ── nodes ──
   for(const n of behav){
     const p=pos[n.id]; if(!p) continue;
-    const isUI=n.kind==='ui-step', h=isUI?uiH-6:boxH, c=EM_COLOR[n.kind]||'#888';
+    const isUI=n.kind==='ui-step', isTop=isUI||n.kind==='trigger', h=isTop?uiH-6:boxH, c=EM_COLOR[n.kind]||'#888';
     const grp=el('g',{class:'node'}); grp.dataset.id=n.id;
     const rect=el('rect',{x:p.x-boxW/2,y:p.y-h/2,width:boxW,height:h});
     if(isUI){ rect.setAttribute('fill','#0b1220'); rect.setAttribute('stroke',c); rect.setAttribute('stroke-dasharray','3 2'); }
@@ -234,7 +238,7 @@ function renderTimeline(g){
     grp.appendChild(rect);
     const t=el('text',{x:p.x,y:p.y+3}); t.setAttribute('text-anchor','middle');
     t.textContent=trim(n.label||n.id,Math.floor(boxW/6.2));
-    if(n.kind==='command'||n.kind==='read-model'||n.kind==='event') t.setAttribute('fill','#0b1120');
+    if(n.kind==='command'||n.kind==='read-model'||n.kind==='event'||n.kind==='trigger') t.setAttribute('fill','#0b1120');
     grp.appendChild(t);
     grp.style.cursor='pointer'; grp.onclick=()=>showPanel(n);
     grp.onmouseenter=()=>highlight(n.id,true); grp.onmouseleave=()=>highlight(n.id,false);
