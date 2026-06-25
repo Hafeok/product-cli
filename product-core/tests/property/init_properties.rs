@@ -106,25 +106,11 @@ proptest! {
             schema_check.err()
         );
 
-        // 3. All paths are valid relative directory strings (no absolute, no ..)
-        let paths = [
-            &config.paths.features,
-            &config.paths.adrs,
-            &config.paths.tests,
-            &config.paths.graph,
-            &config.paths.checklist,
-        ];
-        for p in &paths {
-            prop_assert!(
-                !p.starts_with('/'),
-                "path should not be absolute: {}",
-                p
-            );
-            prop_assert!(
-                !p.contains(".."),
-                "path should not contain '..': {}",
-                p
-            );
-        }
+        // 3. The product name round-trips through the generated config.
+        prop_assert_eq!(
+            config.product_name(),
+            name.as_str(),
+            "init-generated config should preserve the product name"
+        );
     }
 }

@@ -8,8 +8,7 @@ use product_core::{config::ProductConfig, error::ProductError, fileops};
 use std::path::{Path, PathBuf};
 
 use super::init_helpers::{
-    build_toml, manage_gitignore, parse_cli_domains, run_interactive_prompts, Layout, CANONICAL,
-    LEGACY,
+    build_toml, parse_cli_domains, run_interactive_prompts, Layout, CANONICAL, LEGACY,
 };
 use super::BoxResult;
 
@@ -30,8 +29,7 @@ pub(crate) fn handle_init(
     let layout: &Layout = if legacy_layout { &LEGACY } else { &CANONICAL };
     let config_path = target_dir.join(layout.config);
 
-    let (checklist_in_gitignore, preserved_responsibility) =
-        check_existing_config(&config_path, force)?;
+    let preserved_responsibility = check_existing_config(&config_path, force)?;
 
     let default_name = target_dir
         .file_name()
@@ -68,12 +66,10 @@ pub(crate) fn handle_init(
 
     let toml_content = build_toml(
         &project_name,
-        checklist_in_gitignore,
         responsibility.as_deref(),
         &domains,
         mcp_write,
         mcp_port,
-        layout,
     );
 
     if let Some(parent) = config_path.parent() {
@@ -85,16 +81,6 @@ pub(crate) fn handle_init(
     println!("Created:");
     println!("  {}", layout.config);
 
-    for d in [layout.features, layout.adrs, layout.tests, layout.graph] {
-        let dir_path = target_dir.join(d);
-        std::fs::create_dir_all(&dir_path).map_err(|e| {
-            ProductError::IoError(format!("failed to create {}: {}", dir_path.display(), e))
-        })?;
-        println!("  {}/", d);
-    }
-
-    manage_gitignore(&target_dir.join(".gitignore"), checklist_in_gitignore, layout)?;
-
     if demo {
         let n = product_core::demo::seed_bookstore(&target_dir, &project_name)?;
         println!("\nSeeded the bookstore demo — {n} What nodes.");
@@ -105,18 +91,19 @@ pub(crate) fn handle_init(
     Ok(())
 }
 
-/// Signpost both graphs after init: the framework graph (What/How/Delivery) and
-/// the meta graph (features/ADRs/TCs). `product guide` is the through-line.
+/// Signpost the framework graph (What → How → Delivery) after init.
+/// `product guide` is the through-line.
 fn print_next_steps(demo: bool) {
     println!("\nNext steps:");
     if demo {
-        println!("  product status            # see the seeded What/How/Delivery counts");
-        println!("  product guide             # your journey checklist + the next step");
-        println!("  product domain show Order # inspect a node and its links");
+        println!("  product guide               # your journey checklist + the next step");
+        println!("  product domain list         # the seeded What nodes, by kind");
+        println!("  product domain show Order   # inspect a node and its links");
+        println!("  product domain validate --strict   # check graph completeness");
     } else {
-        println!("  product guide                       # model your product (What → How → Delivery)");
-        println!("  product author domain <name>        # facilitated What-capture session");
-        println!("  product feature new \"My Feature\"     # or track work as features/ADRs/TCs");
+        println!("  product guide               # model your product (What → How → Delivery)");
+        println!("  product author domain <name>       # facilitated What-capture session");
+        println!("  product domain new system <id> …   # or capture the What directly");
     }
 }
 
@@ -142,9 +129,9 @@ fn resolve_target_dir(path: Option<&Path>) -> Result<PathBuf, Box<dyn std::error
 fn check_existing_config(
     config_path: &Path,
     force: bool,
-) -> Result<(bool, Option<String>), Box<dyn std::error::Error>> {
+) -> Result<Option<String>, Box<dyn std::error::Error>> {
     if !config_path.exists() {
-        return Ok((true, None));
+        return Ok(None);
     }
     if !force {
         return Err(Box::new(ProductError::ConfigError(format!(
@@ -157,10 +144,7 @@ fn check_existing_config(
         ))));
     }
     match ProductConfig::load(config_path) {
-        Ok(c) => Ok((
-            c.checklist_in_gitignore,
-            c.responsibility().map(|s| s.to_string()),
-        )),
-        Err(_) => Ok((true, None)),
+        Ok(c) => Ok(c.responsibility().map(|s| s.to_string())),
+        Err(_) => Ok(None),
     }
 }

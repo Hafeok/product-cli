@@ -2,7 +2,6 @@
 
 use clap::Subcommand;
 use product_core::author;
-use product_core::config::ProductConfig;
 
 use super::BoxResult;
 
@@ -64,11 +63,8 @@ fn handle_domain(cmd: AuthorCommands) -> BoxResult {
         return Ok(());
     }
 
-    // Resolve the agent CLI from the flag or, if a product.toml is reachable,
-    // its `[author].cli`; otherwise default to claude.
-    let cli_str = cli
-        .or_else(|| ProductConfig::discover().ok().map(|(c, _)| c.author.cli))
-        .unwrap_or_else(|| "claude".to_string());
+    // Resolve the agent CLI from the flag, otherwise default to claude.
+    let cli_str = cli.unwrap_or_else(|| "claude".to_string());
     let agent_cli = author::AgentCli::parse(&cli_str)?;
     let root = std::env::current_dir()?;
     author::domain::start_session(&product, agent_cli, seed.as_deref(), &root)?;

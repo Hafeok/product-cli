@@ -2,7 +2,6 @@
 
 use crate::error::{ProductError, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -14,78 +13,15 @@ pub struct ProductConfig {
     pub schema_version: String,
     #[serde(rename = "schema-version-warning", default = "default_true")]
     pub schema_version_warning: bool,
-    #[serde(default)]
-    pub paths: PathsConfig,
-    #[serde(default)]
-    pub phases: HashMap<String, String>,
-    #[serde(default)]
-    pub prefixes: PrefixConfig,
+    /// MCP server settings — `[mcp]`.
     #[serde(default)]
     pub mcp: Option<McpConfig>,
-    #[serde(default)]
-    pub metrics: Option<MetricsConfig>,
-    /// Concern domain vocabulary (ADR-025)
-    #[serde(default)]
-    pub domains: HashMap<String, String>,
-    /// Whether checklist.md is added to .gitignore by `product init` (ADR-007)
-    #[serde(rename = "checklist-in-gitignore", default = "default_true")]
-    pub checklist_in_gitignore: bool,
-    /// Agent context generation configuration (ADR-031)
-    #[serde(rename = "agent-context", default)]
-    pub agent_context: AgentContextConfig,
-    /// Verify prerequisites — declarative shell conditions (ADR-021)
-    #[serde(default)]
-    pub verify: VerifyConfig,
-    /// Tag-based implementation tracking configuration (ADR-036)
-    #[serde(default)]
-    pub tags: TagsConfig,
-    /// Product identity and responsibility (FT-039)
+    /// Product identity and responsibility — `[product]`.
     #[serde(default)]
     pub product: Option<ProductSection>,
-    /// Request log configuration (FT-042, ADR-039)
-    #[serde(default)]
-    pub log: LogConfig,
-    /// TC type vocabulary (ADR-042, FT-048).
-    #[serde(rename = "tc-types", default)]
-    pub tc_types: TcTypesConfig,
-    /// Interactive request builder — `[request-builder]` (FT-052, ADR-044).
-    #[serde(rename = "request-builder", default)]
-    pub request_builder: RequestBuilderConfig,
-    /// Planning annotations — `[planning]` (FT-053, ADR-045).
-    #[serde(default)]
-    pub planning: crate::config_planning::PlanningConfig,
-    /// Cycle-time visibility — `[cycle-times]` (FT-054, ADR-046).
-    #[serde(rename = "cycle-times", default)]
-    pub cycle_times: CycleTimesConfig,
-    #[serde(default)]
-    pub author: AuthorConfig,
-    /// Feature body completeness — `[features]` (FT-055, ADR-047).
-    #[serde(default)]
-    pub features: FeaturesConfig,
-    /// Per-model context bundle template selection — `[context]`
-    /// (FT-063, ADR-049).
-    #[serde(default)]
-    pub context: ContextConfig,
-    /// Pattern artifact body checks — `[patterns]` (FT-070, ADR-050).
-    #[serde(default)]
-    pub patterns: PatternsConfig,
-    /// TC observability requirement — `[tc-observability]` (FT-072, ADR-051).
-    #[serde(rename = "tc-observability", default)]
-    pub tc_observability: TcObservabilityConfig,
 }
 
-pub use crate::config_author::AuthorConfig;
-pub use crate::config_cycle_times::CycleTimesConfig;
-pub use crate::config_features::{CompletenessSeverity, FeaturesConfig, PatternsRequiredSeverity};
-pub use crate::config_observability::{BodyReferenceSeverity, TcObservabilityConfig};
-pub use crate::config_paths::PathsConfig;
-pub use crate::config_patterns::{PatternBodySeverity, PatternsConfig};
-pub use crate::config_planning::PlanningConfig;
-pub use crate::config_request_builder::RequestBuilderConfig;
-pub use crate::config_sections::{
-    AgentContextConfig, ContextConfig, LogConfig, McpConfig, MetricsConfig, PrefixConfig,
-    ProductSection, TagsConfig, TcTypesConfig, VerifyConfig,
-};
+pub use crate::config_sections::{McpConfig, ProductSection};
 
 fn default_version() -> String { "0.1".to_string() }
 fn default_schema_version() -> String { "1".to_string() }

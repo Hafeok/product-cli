@@ -1,55 +1,17 @@
-//! `product init` helpers — layout descriptors, TOML rendering, gitignore
-//! management, and the interactive prompt loop. Extracted from
-//! `commands/init.rs` to keep both files under the 400-line fitness limit.
+//! `product init` helpers — the config layout, TOML rendering, the interactive
+//! prompt loop. Extracted from `commands/init.rs` to keep both files small.
 
-use product_core::{error::ProductError, fileops};
 
-use super::BoxResult;
 
-/// Filesystem layout produced by `product init`.
+/// Where `product init` writes the config. The framework graph itself lives
+/// under `.product/` and its dirs are created lazily by the domain sessions.
 pub(crate) struct Layout {
     pub config: &'static str,
-    pub features: &'static str,
-    pub adrs: &'static str,
-    pub tests: &'static str,
-    pub graph: &'static str,
-    pub checklist: &'static str,
-    pub extra_paths: &'static [(&'static str, &'static str)],
-    pub gitignore_graph: &'static str,
-    pub gitignore_checklist: &'static str,
-    pub gitignore_extra: Option<&'static str>,
 }
 
-pub(crate) const CANONICAL: Layout = Layout {
-    config: ".product/config.toml",
-    features: ".product/features",
-    adrs: ".product/adrs",
-    tests: ".product/tests",
-    graph: ".product/graph",
-    checklist: ".product/checklist.md",
-    extra_paths: &[
-        ("dependencies", ".product/dependencies"),
-        ("requests", ".product/requests.jsonl"),
-        ("prompts", ".product/prompts"),
-        ("gaps", ".product/gaps.json"),
-    ],
-    gitignore_graph: ".product/graph/",
-    gitignore_checklist: ".product/checklist.md",
-    gitignore_extra: Some(".product/sessions/"),
-};
+pub(crate) const CANONICAL: Layout = Layout { config: ".product/config.toml" };
 
-pub(crate) const LEGACY: Layout = Layout {
-    config: "product.toml",
-    features: "docs/features",
-    adrs: "docs/adrs",
-    tests: "docs/tests",
-    graph: "docs/graph",
-    checklist: "docs/checklist.md",
-    extra_paths: &[],
-    gitignore_graph: "docs/graph/",
-    gitignore_checklist: "docs/checklist.md",
-    gitignore_extra: None,
-};
+pub(crate) const LEGACY: Layout = Layout { config: "product.toml" };
 
 pub(crate) fn parse_cli_domains(cli_domains: &[String]) -> Vec<(String, String)> {
     let mut out = Vec::new();
@@ -181,15 +143,12 @@ pub(crate) fn run_interactive_prompts(
     Ok(InteractiveAnswers { project_name, responsibility, mcp_write, mcp_port })
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn build_toml(
     project_name: &str,
-    checklist_in_gitignore: bool,
     responsibility: Option<&str>,
     domains: &[(String, String)],
     mcp_write: bool,
     mcp_port: u16,
-    layout: &Layout,
 ) -> String {
     let domains_section = if domains.is_empty() {
         String::new()
@@ -215,106 +174,27 @@ pub(crate) fn build_toml(
             let escaped = r.replace('\\', "\\\\").replace('"', "\\\"");
             format!("[product]\nresponsibility = \"{}\"\n\n", escaped)
         }
-        _ => "[product]\n# responsibility \u{2014} single statement of what the product is and is not (FT-039)\nresponsibility = \"\"\n\n".to_string(),
+        _ => "[product]\n# responsibility \u{2014} a single statement of what the product is and is not\nresponsibility = \"\"\n\n".to_string(),
     };
 
-    let mut paths_block = format!(
-        "[paths]\nfeatures = \"{}\"\nadrs = \"{}\"\ntests = \"{}\"\ngraph = \"{}\"\nchecklist = \"{}\"\n",
-        layout.features, layout.adrs, layout.tests, layout.graph, layout.checklist
-    );
-    for (k, v) in layout.extra_paths {
-        paths_block.push_str(&format!("{} = \"{}\"\n", k, v));
-    }
+    let domains_block = if domains_section.is_empty() {
+        String::new()
+    } else {
+        format!("[domains]\n{domains_section}\n")
+    };
 
     format!(
         r#"name = "{name}"
 schema-version = "1"
-checklist-in-gitignore = {clg}
 
-{product}{paths}
-[prefixes]
-feature = "FT"
-adr = "ADR"
-test = "TC"
-
-[phases]
-1 = "Phase 1"
-
-[domains]
-{domains}
-[mcp]
+{product}{domains}[mcp]
 write = {mcp_write}
 port = {mcp_port}
-
-[author]
-cli = "claude"
-
-# FT-055 / ADR-047 — feature body completeness check (W030).
-# Defaults are listed explicitly to future-proof against changes upstream.
-[features]
-required-sections = ["Description", "Functional Specification", "Out of scope"]
-functional-spec-subsections = ["Inputs", "Outputs", "State", "Behaviour", "Invariants", "Error handling", "Boundaries"]
-required-from-phase = 1
-completeness-severity = "warning"
 "#,
         name = project_name,
-        clg = checklist_in_gitignore,
         product = product_section,
-        paths = paths_block,
-        domains = domains_section,
+        domains = domains_block,
         mcp_write = mcp_write,
         mcp_port = mcp_port,
     )
-}
-
-pub(crate) fn manage_gitignore(
-    path: &std::path::Path,
-    checklist_in_gitignore: bool,
-    layout: &Layout,
-) -> BoxResult {
-    let mut entries_to_add: Vec<&str> = vec![layout.gitignore_graph];
-    if let Some(extra) = layout.gitignore_extra {
-        entries_to_add.push(extra);
-    }
-    if checklist_in_gitignore {
-        entries_to_add.push(layout.gitignore_checklist);
-    }
-
-    let existing = if path.exists() {
-        std::fs::read_to_string(path).map_err(|e| {
-            ProductError::IoError(format!("failed to read {}: {}", path.display(), e))
-        })?
-    } else {
-        String::new()
-    };
-
-    let mut lines: Vec<String> = if existing.is_empty() {
-        Vec::new()
-    } else {
-        existing.lines().map(String::from).collect()
-    };
-
-    let has_header = lines.iter().any(|l| l.contains("Product CLI"));
-    let mut added_any = false;
-
-    for entry in &entries_to_add {
-        if !lines.iter().any(|l| l.trim() == *entry) {
-            if !added_any && !has_header {
-                if !lines.is_empty() && lines.last().map(|l| !l.is_empty()).unwrap_or(false) {
-                    lines.push(String::new());
-                }
-                lines.push("# Product CLI \u{2014} generated files".to_string());
-            }
-            lines.push(entry.to_string());
-            added_any = true;
-        }
-    }
-
-    let mut content = lines.join("\n");
-    if !content.ends_with('\n') {
-        content.push('\n');
-    }
-    fileops::write_file_atomic(path, &content)?;
-    println!("  .gitignore");
-    Ok(())
 }
