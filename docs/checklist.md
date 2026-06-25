@@ -412,10 +412,15 @@
 - [x] ADR-092: Interaction class is the senior context dimension with a closed core (accepted)
 - [x] TC-1034: interaction class is the gating context dimension (invariant) — passing
 
-### FT-151 — State justification and Decider justification [ ]
+### FT-151 — State justification and Decider justification [x]
 
 - [x] ADR-093: Justification findings are advisory model-gap detectors not gates (accepted)
 - [x] TC-1035: state and decider justification are advisory findings (invariant) — passing
+
+### FT-152 — Unreifiable AIOs as recorded coverage gaps [ ]
+
+- [x] ADR-094: Record an unreifiable AIO as a rationale-bearing gap (accepted)
+- [x] TC-1036: unreifiable aio is a recorded coverage gap (invariant) — passing
 
 ## Phase 2
 

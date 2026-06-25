@@ -139,6 +139,21 @@ pub struct Trigger {
     pub translates_from: Option<String>,
 }
 
+/// §4.5 — a declared, deliberate coverage gap: an AIO that cannot honestly be
+/// reified in an interaction class (e.g. a `display-collection` of images in a
+/// TUI). A *recorded* gap that carries a rationale, never a silent omission —
+/// the same honesty as tagging a WCAG criterion manual or naming the Polanyi
+/// floor: the framework records the boundary instead of papering over it.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct UnreifiableRule {
+    pub id: String,
+    pub aio: String,
+    /// The interaction class (gui / tui) the AIO is unreifiable in.
+    pub class: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rationale: Option<String>,
+}
+
 /// §3.2.2 — an Abstract Interaction Object: a named, modality-independent kind
 /// of interaction a UI step is typed against. The closed core lives in
 /// `ids::CORE_AIOS`; this node registers an adopter's additional AIOs.

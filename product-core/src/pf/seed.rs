@@ -45,7 +45,19 @@ pub fn from_turtle(turtle: &str) -> Result<DomainGraph> {
     parse_flows(&store, &mut g)?;
     parse_systems(&store, &mut g)?;
     parse_triggers(&store, &mut g)?;
+    parse_unreifiable(&store, &mut g)?;
     Ok(g)
+}
+
+fn parse_unreifiable(store: &Store, g: &mut DomainGraph) -> Result<()> {
+    for row in select(store, "?s ?aio ?class ?rat",
+        "?s a pf:UnreifiableRule . OPTIONAL { ?s pf:reifies ?aio } OPTIONAL { ?s pf:unreifiableIn ?class } OPTIONAL { ?s pf:rationale ?rat }")? {
+        g.unreifiable_rules.push(UnreifiableRule {
+            id: local(row.get("s")), aio: local(row.get("aio")),
+            class: lit(row.get("class")), rationale: opt(row.get("rat")),
+        });
+    }
+    Ok(())
 }
 
 fn parse_triggers(store: &Store, g: &mut DomainGraph) -> Result<()> {

@@ -177,6 +177,9 @@ pub struct NodeFields {
     /// §3.2.0 the source system a Translation trigger reads from
     #[arg(long = "translates-from")]
     translates_from: Option<String>,
+    /// §4.5 the interaction class an AIO is unreifiable in (gui/tui)
+    #[arg(long)]
+    class: Option<String>,
 }
 
 impl NodeFields {
@@ -229,6 +232,7 @@ impl NodeFields {
         if let Some(v) = &self.issues { put("issues", json!(v)); }
         if let Some(v) = &self.watches { put("watches", json!(v)); }
         if let Some(v) = &self.translates_from { put("translates_from", json!(v)); }
+        if let Some(v) = &self.class { put("class", json!(v)); }
     }
 
     /// The §3.1 data-side field puts (reference sets, shapes, datasets).

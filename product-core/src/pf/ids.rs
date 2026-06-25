@@ -62,10 +62,13 @@ pub enum NodeKind {
     /// §3.2.0 — a Trigger: what initiates a command (source: user / external /
     /// automated). Automation and Translation patterns are automated triggers.
     Trigger,
+    /// §4.5 — a declared (AIO, interaction class) pair that cannot honestly be
+    /// reified — a recorded coverage gap with a rationale, not a silent omission.
+    UnreifiableRule,
 }
 
 /// Every node kind, in declaration order (for `list`/iteration).
-pub const ALL_KINDS: [NodeKind; 26] = [
+pub const ALL_KINDS: [NodeKind; 27] = [
     NodeKind::BoundedContext,
     NodeKind::Entity,
     NodeKind::ValueObject,
@@ -92,6 +95,7 @@ pub const ALL_KINDS: [NodeKind; 26] = [
     NodeKind::ProductionDataset,
     NodeKind::System,
     NodeKind::Trigger,
+    NodeKind::UnreifiableRule,
 ];
 
 /// Built-in WCAG 2.2 criteria seed: (id, level, verification-type, name). An
@@ -165,6 +169,7 @@ impl NodeKind {
             Self::ProductionDataset => "ProductionDataset",
             Self::System => "System",
             Self::Trigger => "Trigger",
+            Self::UnreifiableRule => "UnreifiableRule",
         }
     }
 
@@ -197,6 +202,7 @@ impl NodeKind {
             Self::ProductionDataset => "production-dataset",
             Self::System => "system",
             Self::Trigger => "trigger",
+            Self::UnreifiableRule => "unreifiable-rule",
         }
     }
 

@@ -90,3 +90,18 @@ fn triggers_round_trip() {
     assert_eq!(auto.watches.as_deref(), Some("LowStock"));
     assert_eq!(auto.translates_from.as_deref(), Some("sys-wms"));
 }
+
+#[test]
+fn unreifiable_rules_round_trip() {
+    let mut g = DomainGraph::default();
+    g.unreifiable_rules.push(UnreifiableRule {
+        id: "u-gallery".into(), aio: "display-collection".into(), class: "tui".into(),
+        rationale: Some("no faithful character-grid form".into()),
+    });
+    let parsed = from_turtle(&to_turtle(&g, "demo")).expect("parse seed");
+    assert_eq!(parsed.unreifiable_rules.len(), 1);
+    let u = &parsed.unreifiable_rules[0];
+    assert_eq!(u.aio, "display-collection");
+    assert_eq!(u.class, "tui");
+    assert_eq!(u.rationale.as_deref(), Some("no faithful character-grid form"));
+}

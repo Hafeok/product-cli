@@ -86,6 +86,9 @@ pub fn validate_graph(graph: &DomainGraph) -> Vec<Violation> {
     for c in &graph.contexts_of_use {
         check_context_of_use(c, &mut v);
     }
+    for u in &graph.unreifiable_rules {
+        check_unreifiable(u, graph, &mut v);
+    }
     v.extend(super::rules_data::data_cross_refs(graph));
     v.extend(run_rules(&ui_projection(graph), what_rules()));
     v.extend(run_rules(&ui_projection(graph), super::rules_ui::ui_rules()));
@@ -147,6 +150,9 @@ fn check_local_shape(graph: &DomainGraph, id: &str, v: &mut Vec<Violation>) {
         }
         Some(NodeKind::ContextOfUse) => {
             if let Some(c) = graph.contexts_of_use.iter().find(|n| n.id == id) { check_context_of_use(c, v); }
+        }
+        Some(NodeKind::UnreifiableRule) => {
+            if let Some(u) = graph.unreifiable_rules.iter().find(|n| n.id == id) { check_unreifiable(u, graph, v); }
         }
         // Event/Command cross-references are graph rules (below); ValueObject,
         // WireframeStep have no blocking shape.
@@ -213,6 +219,25 @@ fn check_system(s: &super::model::System, graph: &DomainGraph, v: &mut Vec<Viola
             v.push(Violation::new(&s.id, "target_classes",
                 "§3.2.2 A system's interaction class must be a recognised class (gui or tui — the gating context dimension)."));
         }
+    }
+}
+
+// §4.5 — an unreifiable rule is a *recorded* coverage gap: it names a real AIO,
+// a recognised interaction class, and — the whole point — carries a rationale,
+// so the boundary is recorded rather than papered over.
+fn check_unreifiable(u: &super::model::UnreifiableRule, graph: &DomainGraph, v: &mut Vec<Violation>) {
+    let known_aio = super::ids::CORE_AIOS.contains(&u.aio.as_str()) || graph.is_kind(&u.aio, NodeKind::Aio);
+    if !known_aio {
+        v.push(Violation::new(&u.id, "aio",
+            "§4.5 An unreifiable rule must name a recognised AIO (a core AIO or a declared Aio)."));
+    }
+    if !super::ids::CORE_INTERACTION_CLASSES.contains(&u.class.as_str()) {
+        v.push(Violation::new(&u.id, "class",
+            "§4.5 An unreifiable rule must name a recognised interaction class (gui or tui)."));
+    }
+    if u.rationale.as_deref().map(|s| s.trim().is_empty()).unwrap_or(true) {
+        v.push(Violation::new(&u.id, "rationale",
+            "§4.5 An unreifiable rule must carry a rationale — a recorded gap, never a silent omission."));
     }
 }
 

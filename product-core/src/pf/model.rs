@@ -173,6 +173,8 @@ pub struct DomainGraph {
     pub systems: Vec<System>,
     #[serde(default)]
     pub triggers: Vec<Trigger>,
+    #[serde(default)]
+    pub unreifiable_rules: Vec<UnreifiableRule>,
 }
 
 impl DomainGraph {
@@ -221,6 +223,7 @@ impl DomainGraph {
             ("ProductionDataset", self.production_datasets.len()),
             ("System", self.systems.len()),
             ("Trigger", self.triggers.len()),
+            ("UnreifiableRule", self.unreifiable_rules.len()),
         ]
     }
 
@@ -258,6 +261,7 @@ impl DomainGraph {
         self.production_datasets.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ProductionDataset)));
         self.systems.iter().for_each(|n| out.push((n.id.clone(), NodeKind::System)));
         self.triggers.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Trigger)));
+        self.unreifiable_rules.iter().for_each(|n| out.push((n.id.clone(), NodeKind::UnreifiableRule)));
         out
     }
 }

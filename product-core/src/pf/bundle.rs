@@ -202,6 +202,7 @@ fn section_title(kind: NodeKind) -> &'static str {
         NodeKind::ProductionDataset => "Production datasets",
         NodeKind::System => "Systems",
         NodeKind::Trigger => "Triggers",
+        NodeKind::UnreifiableRule => "Unreifiable rules",
     }
 }
 

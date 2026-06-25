@@ -58,6 +58,20 @@ fn cmd(id: &str, ctx: &str) -> Command {
 }
 
 #[test]
+fn unreifiable_rule_must_be_a_recorded_gap() {
+    let mut g = DomainGraph::default();
+    // A complete recorded gap (real AIO, real class, a rationale) is conformant.
+    g.unreifiable_rules.push(UnreifiableRule { id: "u".into(), aio: "display-collection".into(), class: "tui".into(), rationale: Some("no grid form".into()) });
+    assert_eq!(validate_node(&g, "u"), vec![]);
+    // A silent omission (no rationale) and a bogus class/AIO are findings.
+    g.unreifiable_rules[0] = UnreifiableRule { id: "u".into(), aio: "wobble".into(), class: "hologram".into(), rationale: None };
+    let vs = validate_node(&g, "u");
+    assert!(vs.iter().any(|x| x.path == "aio"), "{vs:?}");
+    assert!(vs.iter().any(|x| x.path == "class"), "{vs:?}");
+    assert!(vs.iter().any(|x| x.path == "rationale"), "{vs:?}");
+}
+
+#[test]
 fn interaction_class_is_a_closed_core_context_dimension() {
     let mut g = DomainGraph::default();
     // A system targeting a recognised class is fine; an unknown class is a finding.

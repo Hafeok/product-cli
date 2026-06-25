@@ -9530,6 +9530,25 @@ fn tc_1035_state_and_decider_justification_are_advisory_findings() {
 }
 
 #[test]
+fn tc_1036_unreifiable_aio_is_a_recorded_coverage_gap() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // §4.5 — a recorded gap needs a rationale; without one it is a silent omission.
+    h.run(&["domain", "new", "unreifiable-rule", "u-bad", "--aio", "display-collection", "--class", "tui"])
+        .assert_exit(1)
+        .assert_stderr_contains("§4.5");
+    // A complete recorded gap (real AIO, recognised class, a rationale) is captured.
+    h.run(&[
+        "domain", "new", "unreifiable-rule", "u-gallery", "--aio", "display-collection",
+        "--class", "tui", "--rationale", "an image gallery has no faithful character-grid form",
+    ])
+    .assert_exit(0);
+    let ttl = h.run(&["domain", "export"]);
+    assert!(ttl.stdout.contains("a pf:UnreifiableRule"), "class missing, stdout:\n{}", ttl.stdout);
+    assert!(ttl.stdout.contains("pf:unreifiableIn \"tui\""), "unreifiableIn edge missing, stdout:\n{}", ttl.stdout);
+}
+
+#[test]
 fn tc_999_primary_navigation_recomputes_when_a_flow_joins_the_root() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);

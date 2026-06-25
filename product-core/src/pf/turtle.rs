@@ -36,6 +36,7 @@ pub fn to_turtle(graph: &DomainGraph, product: &str) -> String {
     graph.production_datasets.iter().for_each(|d| emit_dataset(&mut out, d));
     graph.systems.iter().for_each(|s| emit_system(&mut out, s));
     graph.triggers.iter().for_each(|t| emit_trigger(&mut out, t));
+    graph.unreifiable_rules.iter().for_each(|u| emit_unreifiable(&mut out, u));
     for c in &graph.cios {
         out.push_str(&format!("d:{} a pf:Cio", c.id));
         if let Some(l) = &c.label { out.push_str(&format!(" ;\n  rdfs:label {}", lit(l))); }
@@ -150,6 +151,14 @@ fn emit_trigger(out: &mut String, t: &super::model::Trigger) {
     }
     if let Some(s) = &t.translates_from {
         out.push_str(&format!(" ;\n  pf:translatesFrom d:{}", s));
+    }
+    out.push_str(" .\n\n");
+}
+
+fn emit_unreifiable(out: &mut String, u: &super::model::UnreifiableRule) {
+    out.push_str(&format!("d:{} a pf:UnreifiableRule ;\n  pf:reifies d:{} ;\n  pf:unreifiableIn {}", u.id, u.aio, lit(&u.class)));
+    if let Some(why) = &u.rationale {
+        out.push_str(&format!(" ;\n  pf:rationale {}", lit(why)));
     }
     out.push_str(" .\n\n");
 }
