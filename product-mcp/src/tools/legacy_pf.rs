@@ -1,5 +1,5 @@
 //! Tool definitions for the remaining framework families — archetype, cell,
-//! how, work-unit, dep (read-only inspection; CLI↔MCP parity).
+//! how, work-unit, worker (read-only inspection; CLI↔MCP parity).
 
 use super::ToolDef;
 
@@ -14,7 +14,6 @@ fn read(name: &str, description: &str, props: serde_json::Value, required: serde
 
 pub(super) fn all() -> Vec<ToolDef> {
     let named = serde_json::json!({"name": {"type": "string"}, "product": {"type": "string"}});
-    let id = serde_json::json!({"id": {"type": "string"}});
     let none = serde_json::json!({});
     vec![
         // archetype
@@ -32,10 +31,6 @@ pub(super) fn all() -> Vec<ToolDef> {
         // work-unit
         read("product_work_unit_show", "Show the work unit (.product/work-unit.yaml).", none.clone(), serde_json::json!([])),
         read("product_work_unit_validate", "Validate the work unit against the What graph + How contract.", serde_json::json!({"product": {"type": "string"}}), serde_json::json!([])),
-        // dep
-        read("product_dep_list", "List dependencies in the knowledge graph.", none.clone(), serde_json::json!([])),
-        read("product_dep_show", "Show a dependency's front matter.", id.clone(), serde_json::json!(["id"])),
-        read("product_dep_features", "List the features that use a dependency.", id, serde_json::json!(["id"])),
         // worker (capability catalog)
         read("product_worker_list", "List the worker capabilities + role bindings.", none, serde_json::json!([])),
         read("product_worker_resolve", "Resolve a role to its capability, applying escalation triggers.",

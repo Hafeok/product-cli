@@ -9,19 +9,16 @@ fn tool_registry_has_read_tools() {
     std::fs::write(dir.path().join("product.toml"), "name = \"test\"\n").expect("write");
     let registry = ToolRegistry::new(dir.path().to_path_buf(), false);
     let tools = registry.tool_list();
-    assert!(tools.iter().any(|t| t.name == "product_context"));
-    assert!(tools.iter().any(|t| t.name == "product_feature_list"));
+    assert!(tools.iter().any(|t| t.name == "product_domain_list"));
+    assert!(tools.iter().any(|t| t.name == "product_decider_list"));
 }
 
 #[test]
 fn tool_registry_write_disabled_blocks() {
     let dir = tempfile::tempdir().expect("tempdir");
-    std::fs::write(dir.path().join("product.toml"), "name = \"test\"\n[paths]\nfeatures = \"f\"\nadrs = \"a\"\ntests = \"t\"\n").expect("write");
-    std::fs::create_dir_all(dir.path().join("f")).expect("mkdir");
-    std::fs::create_dir_all(dir.path().join("a")).expect("mkdir");
-    std::fs::create_dir_all(dir.path().join("t")).expect("mkdir");
+    std::fs::write(dir.path().join("product.toml"), "name = \"test\"\n").expect("write");
     let registry = ToolRegistry::new(dir.path().to_path_buf(), false);
-    let result = registry.call_tool("product_feature_new", &serde_json::json!({"title": "test"}));
+    let result = registry.call_tool("product_domain_new", &serde_json::json!({"kind": "entity", "id": "X"}));
     assert!(result.is_err());
     assert!(result.err().unwrap_or_default().contains("disabled"));
 }

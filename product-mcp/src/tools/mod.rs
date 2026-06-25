@@ -1,8 +1,4 @@
-//! MCP tool definitions — read/write tool schemas (ADR-020).
-//!
-//! Submodules:
-//! - [`read`] — query-only tools.
-//! - [`write`] — mutating tools (gated by `mcp.write` config).
+//! MCP tool definitions — the What/How framework-graph tool schemas.
 
 mod decider;
 mod projector;
@@ -10,8 +6,6 @@ mod primitive;
 mod delivery;
 mod domain;
 mod legacy_pf;
-mod read;
-mod write;
 
 use serde::Serialize;
 use serde_json::Value;
@@ -27,9 +21,7 @@ pub struct ToolDef {
 
 /// Build the complete list of tool definitions
 pub fn build_tool_list() -> Vec<ToolDef> {
-    let mut tools = read::all();
-    tools.extend(write::all());
-    tools.extend(domain::all());
+    let mut tools = domain::all();
     tools.extend(decider::all());
     tools.extend(projector::all());
     tools.extend(primitive::all());

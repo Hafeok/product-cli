@@ -1,18 +1,14 @@
-//! MCP tool registry — call_tool dispatcher (ADR-020)
+//! MCP tool registry — call_tool dispatcher (ADR-020).
+//!
+//! The framework-graph tools all run from `repo_root` (reading `.product/` and
+//! the captured What graph), so the registry boots and dispatches without
+//! building any aggregate graph up front.
 
-use product_core::config::ProductConfig;
-use product_core::graph::KnowledgeGraph;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 
 use super::tools::{self, ToolDef};
 use super::{JsonRpcRequest, JsonRpcResponse};
-use super::adr_lifecycle;
-use super::field_handlers;
-use super::health_handlers;
-use super::pattern_handlers;
-use super::read_handlers;
-use super::write_handlers;
 
 // ---------------------------------------------------------------------------
 // Tool registry
@@ -48,8 +44,7 @@ impl ToolRegistry {
         } else {
             None
         };
-        let graph = load_graph(&self.repo_root)?;
-        dispatch_tool(name, args, &graph, &self.repo_root)
+        dispatch_tool(name, args, &self.repo_root)
     }
 
     /// Handle a JSON-RPC request. Returns `None` for notifications.
@@ -109,163 +104,83 @@ fn handle_tools_call(request: &JsonRpcRequest, registry: &ToolRegistry) -> JsonR
 }
 
 // ---------------------------------------------------------------------------
-// Graph loading
+// Tool dispatcher — framework What/How graph families
 // ---------------------------------------------------------------------------
 
-fn load_graph(repo_root: &Path) -> Result<KnowledgeGraph, String> {
-    let config = ProductConfig::load_from_root(repo_root)
-        .map_err(|e| format!("{}", e))?;
-    let features_dir = config.resolve_path(repo_root, &config.paths.features);
-    let adrs_dir = config.resolve_path(repo_root, &config.paths.adrs);
-    let tests_dir = config.resolve_path(repo_root, &config.paths.tests);
-    let deps_dir = config.resolve_path(repo_root, &config.paths.dependencies);
-    let patterns_dir = config.resolve_path(repo_root, &config.paths.patterns);
-    let loaded = product_core::parser::load_all_full(
-        &features_dir,
-        &adrs_dir,
-        &tests_dir,
-        Some(&deps_dir),
-        Some(&patterns_dir),
-    )
-    .map_err(|e| format!("{}", e))?;
-    Ok(KnowledgeGraph::build_full(
-        loaded.features,
-        loaded.adrs,
-        loaded.tests,
-        loaded.dependencies,
-        loaded.patterns,
-    ))
+fn dispatch_tool(name: &str, args: &Value, repo_root: &Path) -> Result<Value, String> {
+    dispatch_what(name, args, repo_root)
+        .or_else(|| dispatch_delivery(name, args, repo_root))
+        .or_else(|| dispatch_framework_read(name, args, repo_root))
+        .unwrap_or_else(|| Err(format!("Tool handler not implemented: {}", name)))
 }
 
-// ---------------------------------------------------------------------------
-// Tool dispatcher
-// ---------------------------------------------------------------------------
+/// §3.1–§3.5 — the What graph: domain, decider, projector, primitive.
+fn dispatch_what(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
+    use super::{decider_handlers as dc, domain_handlers as dm, primitive_handlers as pm, projector_handlers as pj};
+    Some(match name {
+        "product_domain_list" => dm::handle_domain_list(args, repo_root),
+        "product_domain_show" => dm::handle_domain_show(args, repo_root),
+        "product_domain_validate" => dm::handle_domain_validate(args, repo_root),
+        "product_domain_export" => dm::handle_domain_export(args, repo_root),
+        "product_domain_context" => dm::handle_domain_context(args, repo_root),
+        "product_domain_new" => dm::handle_domain_new(args, repo_root),
+        "product_domain_edit" => dm::handle_domain_edit(args, repo_root),
+        "product_domain_rm" => dm::handle_domain_rm(args, repo_root),
+        "product_decider_list" => dc::handle_decider_list(args, repo_root),
+        "product_decider_show" => dc::handle_decider_show(args, repo_root),
+        "product_decider_validate" => dc::handle_decider_validate(args, repo_root),
+        "product_decider_simulate" => dc::handle_decider_simulate(args, repo_root),
+        "product_decider_derive" => dc::handle_decider_derive(args, repo_root),
+        "product_projector_list" => pj::handle_projector_list(args, repo_root),
+        "product_projector_show" => pj::handle_projector_show(args, repo_root),
+        "product_projector_validate" => pj::handle_projector_validate(args, repo_root),
+        "product_projector_simulate" => pj::handle_projector_simulate(args, repo_root),
+        "product_projector_derive" => pj::handle_projector_derive(args, repo_root),
+        "product_primitive_list" => pm::handle_primitive_list(args, repo_root),
+        "product_primitive_show" => pm::handle_primitive_show(args, repo_root),
+        "product_primitive_validate" => pm::handle_primitive_validate(args, repo_root),
+        _ => return None,
+    })
+}
 
-fn dispatch_tool(
-    name: &str,
-    args: &Value,
-    graph: &KnowledgeGraph,
-    repo_root: &Path,
-) -> Result<Value, String> {
-    match name {
-        "product_responsibility" => read_handlers::handle_responsibility(repo_root),
-        "product_guide" => read_handlers::handle_guide(repo_root),
-        "product_context" => read_handlers::handle_context(args, graph, repo_root),
-        "product_feature_list" => read_handlers::handle_feature_list(graph),
-        "product_feature_show" => read_handlers::handle_feature_show(args, graph),
-        "product_feature_deps" => read_handlers::handle_feature_deps(args, graph),
-        "product_adr_list" => read_handlers::handle_adr_list(graph),
-        "product_adr_show" => read_handlers::handle_adr_show(args, graph),
-        "product_test_show" => read_handlers::handle_test_show(args, graph),
-        "product_graph_check" => {
-            // FT-069: route through the shared `graph::full_check::run` to
-            // guarantee byte-identical parity with `product graph check
-            // --format json`. The MCP handler used to call `graph.check()`
-            // plus a single responsibility pass, silently omitting
-            // domain (E011/E012), structural-with-config (E006/W030),
-            // planning (W028/W029), and log-verification findings.
-            let config = product_core::config::ProductConfig::load_from_root(repo_root)
-                .map_err(|e| format!("{}", e))?;
-            let result = product_core::graph::full_check::run(graph, &config, repo_root);
-            Ok(result.to_json())
-        }
-        "product_graph_central" => read_handlers::handle_graph_central(args, graph),
-        "product_impact" => read_handlers::handle_impact(args, graph),
-        "product_gap_check" => read_handlers::handle_gap_check(args, graph, repo_root),
-        "product_drift_check" => health_handlers::handle_drift_check(args, graph, repo_root),
-        "product_preflight" => health_handlers::handle_preflight(args, graph, repo_root),
-        "product_schema" => read_handlers::handle_schema(args),
-        "product_agent_context" => read_handlers::handle_agent_context(graph, repo_root),
-        "product_prompts_list" => read_handlers::handle_prompts_list(repo_root),
-        "product_prompts_get" => read_handlers::handle_prompts_get(args, repo_root),
-        "product_feature_new" => write_handlers::handle_feature_new(args, graph, repo_root),
-        "product_adr_new" => write_handlers::handle_adr_new(args, graph, repo_root),
-        "product_test_new" => write_handlers::handle_test_new(args, graph, repo_root),
-        "product_feature_link" => write_handlers::handle_feature_link(args, graph),
-        "product_feature_depends_on" => field_handlers::handle_feature_depends_on(args, graph),
-        "product_adr_status" => adr_lifecycle::handle_adr_status_write(args, graph),
-        "product_feature_status" => {
-            write_handlers::handle_feature_status_update(args, graph)
-        }
-        "product_test_status" => {
-            write_handlers::handle_test_status_update(args, graph)
-        }
-        "product_body_update" => write_handlers::handle_body_update(args, graph, repo_root),
-        "product_adr_amend" => adr_lifecycle::handle_adr_amend(args, graph),
-        // Field management tools (FT-038)
-        "product_feature_domain" => field_handlers::handle_feature_domain(args, graph, repo_root),
-        "product_feature_acknowledge" => field_handlers::handle_feature_acknowledge(args, graph),
-        "product_adr_domain" => field_handlers::handle_adr_domain(args, graph, repo_root),
-        "product_adr_scope" => field_handlers::handle_adr_scope(args, graph),
-        "product_adr_supersede" => field_handlers::handle_adr_supersede(args, graph),
-        "product_adr_source_files" => field_handlers::handle_adr_source_files(args, graph, repo_root),
-        "product_test_runner" => field_handlers::handle_test_runner(args, graph, repo_root),
-        // Pattern tools (FT-070, ADR-050)
-        "product_pattern_new" => pattern_handlers::handle_pattern_new(args, graph, repo_root),
-        "product_pattern_status" => pattern_handlers::handle_pattern_status(args, graph),
-        "product_pattern_link" => pattern_handlers::handle_pattern_link(args, graph),
-        "product_pattern_list" => pattern_handlers::handle_pattern_list(args, graph),
-        "product_pattern_show" => pattern_handlers::handle_pattern_show(args, graph),
-        // Request tools (FT-041, ADR-038, FT-064)
-        "product_request_validate" => super::request_handlers::handle_request_validate(args, repo_root),
-        "product_request_apply" => super::request_handlers::handle_request_apply(args, repo_root),
-        "product_request_delete" => super::request_handlers::handle_request_delete(args, repo_root),
-        // Domain (What) graph — CLI↔MCP parity (FT-119)
-        "product_domain_list" => super::domain_handlers::handle_domain_list(args, repo_root),
-        "product_domain_show" => super::domain_handlers::handle_domain_show(args, repo_root),
-        "product_domain_validate" => super::domain_handlers::handle_domain_validate(args, repo_root),
-        "product_domain_export" => super::domain_handlers::handle_domain_export(args, repo_root),
-        "product_domain_context" => super::domain_handlers::handle_domain_context(args, repo_root),
-        "product_domain_new" => super::domain_handlers::handle_domain_new(args, repo_root),
-        "product_domain_edit" => super::domain_handlers::handle_domain_edit(args, repo_root),
-        "product_domain_rm" => super::domain_handlers::handle_domain_rm(args, repo_root),
-        // Decider — CLI↔MCP parity (§3.3)
-        "product_decider_list" => super::decider_handlers::handle_decider_list(args, repo_root),
-        "product_decider_show" => super::decider_handlers::handle_decider_show(args, repo_root),
-        "product_decider_validate" => super::decider_handlers::handle_decider_validate(args, repo_root),
-        "product_decider_simulate" => super::decider_handlers::handle_decider_simulate(args, repo_root),
-        "product_decider_derive" => super::decider_handlers::handle_decider_derive(args, repo_root),
-        "product_projector_list" => super::projector_handlers::handle_projector_list(args, repo_root),
-        "product_projector_show" => super::projector_handlers::handle_projector_show(args, repo_root),
-        "product_projector_validate" => super::projector_handlers::handle_projector_validate(args, repo_root),
-        "product_projector_simulate" => super::projector_handlers::handle_projector_simulate(args, repo_root),
-        "product_projector_derive" => super::projector_handlers::handle_projector_derive(args, repo_root),
-        "product_primitive_list" => super::primitive_handlers::handle_primitive_list(args, repo_root),
-        "product_primitive_show" => super::primitive_handlers::handle_primitive_show(args, repo_root),
-        "product_primitive_validate" => super::primitive_handlers::handle_primitive_validate(args, repo_root),
-        // Delivery: slice / deliverable / release — CLI↔MCP parity (§7)
-        "product_slice_list" => super::delivery_handlers::handle_slice_list(args, repo_root),
-        "product_slice_show" => super::delivery_handlers::handle_slice_show(args, repo_root),
-        "product_slice_context" => super::delivery_handlers::handle_slice_context(args, repo_root),
-        "product_slice_new" => super::delivery_handlers::handle_slice_new(args, repo_root),
-        "product_deliverable_list" => super::delivery_handlers::handle_deliverable_list(args, repo_root),
-        "product_deliverable_show" => super::delivery_handlers::handle_deliverable_show(args, repo_root),
-        "product_deliverable_done" => super::delivery_handlers::handle_deliverable_done(args, repo_root),
-        "product_deliverable_new" => super::delivery_handlers::handle_deliverable_new(args, repo_root),
-        "product_deliverable_accept" => super::delivery_handlers::handle_deliverable_accept(args, repo_root),
-        "product_release_list" => super::delivery_handlers::handle_release_list(args, repo_root),
-        "product_release_show" => super::delivery_handlers::handle_release_show(args, repo_root),
-        "product_release_done" => super::delivery_handlers::handle_release_done(args, repo_root),
-        "product_release_new" => super::delivery_handlers::handle_release_new(args, repo_root),
-        // Framework families reading .product/ — CLI↔MCP parity
-        "product_archetype_list" => super::framework_read_handlers::handle_archetype_list(args, repo_root),
-        "product_archetype_show" => super::framework_read_handlers::handle_archetype_show(args, repo_root),
-        "product_archetype_validate" => super::framework_read_handlers::handle_archetype_validate(args, repo_root),
-        "product_archetype_check" => super::framework_read_handlers::handle_archetype_check(args, repo_root),
-        "product_cell_show" => super::framework_read_handlers::handle_cell_show(args, repo_root),
-        "product_cell_validate" => super::framework_read_handlers::handle_cell_validate(args, repo_root),
-        "product_how_show" => super::framework_read_handlers::handle_how_show(args, repo_root),
-        "product_how_validate" => super::framework_read_handlers::handle_how_validate(args, repo_root),
-        "product_how_export" => super::framework_read_handlers::handle_how_export(args, repo_root),
-        "product_work_unit_show" => super::framework_read_handlers::handle_work_unit_show(args, repo_root),
-        "product_work_unit_validate" => super::framework_read_handlers::handle_work_unit_validate(args, repo_root),
-        // Dependencies (legacy graph) — CLI↔MCP parity
-        "product_dep_list" => super::dep_handlers::handle_dep_list(args, graph),
-        "product_dep_show" => super::dep_handlers::handle_dep_show(args, graph),
-        "product_dep_features" => super::dep_handlers::handle_dep_features(args, graph),
-        // Worker capability catalog — CLI↔MCP parity
-        "product_worker_list" => super::framework_read_handlers::handle_worker_list(args, repo_root),
-        "product_worker_resolve" => super::framework_read_handlers::handle_worker_resolve(args, repo_root),
-        _ => Err(format!("Tool handler not implemented: {}", name)),
-    }
+/// §7 — delivery: slice, deliverable, release.
+fn dispatch_delivery(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
+    use super::delivery_handlers as d;
+    Some(match name {
+        "product_slice_list" => d::handle_slice_list(args, repo_root),
+        "product_slice_show" => d::handle_slice_show(args, repo_root),
+        "product_slice_context" => d::handle_slice_context(args, repo_root),
+        "product_slice_new" => d::handle_slice_new(args, repo_root),
+        "product_deliverable_list" => d::handle_deliverable_list(args, repo_root),
+        "product_deliverable_show" => d::handle_deliverable_show(args, repo_root),
+        "product_deliverable_done" => d::handle_deliverable_done(args, repo_root),
+        "product_deliverable_new" => d::handle_deliverable_new(args, repo_root),
+        "product_deliverable_accept" => d::handle_deliverable_accept(args, repo_root),
+        "product_release_list" => d::handle_release_list(args, repo_root),
+        "product_release_show" => d::handle_release_show(args, repo_root),
+        "product_release_done" => d::handle_release_done(args, repo_root),
+        "product_release_new" => d::handle_release_new(args, repo_root),
+        _ => return None,
+    })
+}
+
+/// §4/§5 — How families reading .product/: archetype, cell, how, work-unit, worker.
+fn dispatch_framework_read(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
+    use super::framework_read_handlers as f;
+    Some(match name {
+        "product_archetype_list" => f::handle_archetype_list(args, repo_root),
+        "product_archetype_show" => f::handle_archetype_show(args, repo_root),
+        "product_archetype_validate" => f::handle_archetype_validate(args, repo_root),
+        "product_archetype_check" => f::handle_archetype_check(args, repo_root),
+        "product_cell_show" => f::handle_cell_show(args, repo_root),
+        "product_cell_validate" => f::handle_cell_validate(args, repo_root),
+        "product_how_show" => f::handle_how_show(args, repo_root),
+        "product_how_validate" => f::handle_how_validate(args, repo_root),
+        "product_how_export" => f::handle_how_export(args, repo_root),
+        "product_work_unit_show" => f::handle_work_unit_show(args, repo_root),
+        "product_work_unit_validate" => f::handle_work_unit_validate(args, repo_root),
+        "product_worker_list" => f::handle_worker_list(args, repo_root),
+        "product_worker_resolve" => f::handle_worker_resolve(args, repo_root),
+        _ => return None,
+    })
 }
