@@ -80,5 +80,4 @@ See [CLAUDE.md](CLAUDE.md) for the architecture and contributor workflow, and
 
 ## License
 
-Specification text under CC BY 4.0; code/shapes under Apache-2.0 — see
-[`LICENSE`](LICENSE) and [`LICENSE-docs`](LICENSE-docs).
+See [`LICENSE`](LICENSE).
