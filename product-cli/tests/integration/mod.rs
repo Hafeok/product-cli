@@ -9549,6 +9549,32 @@ fn tc_1036_unreifiable_aio_is_a_recorded_coverage_gap() {
 }
 
 #[test]
+fn tc_1037_strict_what_conformance_checks_graph_completeness() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // Ordinary validate is per-node and passes; strict adds graph-level
+    // completeness (a command needs a trigger, a view needs a consumer).
+    h.run(&["domain", "validate"]).assert_exit(0);
+    let strict = h.run(&["domain", "validate", "--strict"]);
+    strict.assert_exit(1);
+    assert!(
+        strict.stderr.contains("§3.2.0") && strict.stderr.contains("Command pattern"),
+        "command-pattern finding missing, stderr:\n{}",
+        strict.stderr
+    );
+    assert!(
+        strict.stderr.contains("§3.4") && strict.stderr.contains("View consumed"),
+        "view-consumed finding missing, stderr:\n{}",
+        strict.stderr
+    );
+    // Closing the gaps — a trigger for the command, a UI step surfacing the view —
+    // makes the strict check pass.
+    h.run(&["domain", "new", "trigger", "t-place", "--label", "Place", "--trigger-source", "user", "--issues", "PlaceOrder"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "Review", "--label", "Review", "--surfaces", "OrderSummary:display-collection"]).assert_exit(0);
+    h.run(&["domain", "validate", "--strict"]).assert_exit(0);
+}
+
+#[test]
 fn tc_999_primary_navigation_recomputes_when_a_flow_joins_the_root() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);

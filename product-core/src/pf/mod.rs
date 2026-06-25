@@ -51,6 +51,7 @@ pub mod render_contract;
 pub mod rules_data;
 pub mod rules_decider;
 pub mod rules_how;
+pub mod rules_pattern;
 pub mod rules_reify;
 pub mod rules_ui;
 pub mod rules_what;

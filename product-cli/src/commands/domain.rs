@@ -119,6 +119,11 @@ pub enum DomainCommands {
     Validate {
         #[arg(long)]
         product: Option<String>,
+        /// Also run strict What-conformance: flow ownership (§3.2.5), the
+        /// Command pattern (§3.2.0), view consumption (§3.4), the unreifiable
+        /// seam (§4.5) — graph-level completeness, not per-node shape.
+        #[arg(long)]
+        strict: bool,
     },
 }
 
@@ -131,7 +136,7 @@ pub(crate) fn handle_domain_cmd(cmd: DomainCommands) -> BoxResult {
         DomainCommands::New { kind, id, fields, product } => new(kind, id, fields, product),
         DomainCommands::Edit { id, fields, product } => edit_node(id, fields, product),
         DomainCommands::Rm { id, product } => rm(id, product),
-        DomainCommands::Validate { product } => validate_cmd(product),
+        DomainCommands::Validate { product, strict } => validate_cmd(product, strict),
         DomainCommands::Export { product } => export(product),
         DomainCommands::Accessibility { id, product } => accessibility(id, product),
         DomainCommands::Reification { aio, check, product } => reification(aio, check, product),
@@ -305,12 +310,16 @@ fn show(id: String, product: Option<String>) -> BoxResult {
     Ok(())
 }
 
-fn validate_cmd(product: Option<String>) -> BoxResult {
+fn validate_cmd(product: Option<String>, strict: bool) -> BoxResult {
     let (_, dir) = resolve(product)?;
     let session = load(&dir)?;
-    let violations = validate::validate_graph(&session.graph);
+    let mut violations = validate::validate_graph(&session.graph);
+    if strict {
+        violations.extend(product_core::pf::rules_pattern::pattern_conformance(&session.graph));
+    }
     if violations.is_empty() {
-        println!("conformant — {} node(s), 0 violations", session.graph.node_count());
+        let mode = if strict { " (strict)" } else { "" };
+        println!("conformant{} — {} node(s), 0 violations", mode, session.graph.node_count());
         return Ok(());
     }
     eprintln!("non-conformant — {} violation(s):", violations.len());
