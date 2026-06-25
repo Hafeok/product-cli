@@ -89,6 +89,7 @@ pub fn remove(session: &mut DomainSession, id: &str) -> OpResult {
     g.data_shapes.retain(|n| n.id != id);
     g.production_datasets.retain(|n| n.id != id);
     g.systems.retain(|n| n.id != id);
+    g.triggers.retain(|n| n.id != id);
     if g.node_count() < before {
         session.tool_calls += 1;
         ok(id)
@@ -137,6 +138,7 @@ fn insert(g: &mut DomainGraph, kind: NodeKind, id: &str, fields: &Map<String, Va
         NodeKind::DataShape => g.data_shapes.push(build(id, fields)?),
         NodeKind::ProductionDataset => g.production_datasets.push(build(id, fields)?),
         NodeKind::System => g.systems.push(build(id, fields)?),
+        NodeKind::Trigger => g.triggers.push(build(id, fields)?),
     }
     Ok(())
 }
@@ -169,6 +171,7 @@ fn patch(g: &mut DomainGraph, kind: NodeKind, id: &str, fields: &Map<String, Val
         NodeKind::DataShape => patch_at(&mut g.data_shapes, id, fields),
         NodeKind::ProductionDataset => patch_at(&mut g.production_datasets, id, fields),
         NodeKind::System => patch_at(&mut g.systems, id, fields),
+        NodeKind::Trigger => patch_at(&mut g.triggers, id, fields),
     }
 }
 
@@ -212,7 +215,7 @@ trait HasId {
 macro_rules! has_id {
     ($($t:ty),+ $(,)?) => { $(impl HasId for $t { fn node_id(&self) -> &str { &self.id } })+ };
 }
-has_id!(BoundedContext, Entity, ValueObject, Relation, Invariant, ContextMapping, Command, Event, ReadModel, WireframeStep, Flow, Aio, ContextOfUse, ApplicationRoot, WcagCriterion, Attestation, ContentStore, DesignSystem, Cio, Token, ReificationRule, ReferenceSet, DataShape, ProductionDataset, System);
+has_id!(BoundedContext, Entity, ValueObject, Relation, Invariant, ContextMapping, Command, Event, ReadModel, WireframeStep, Flow, Aio, ContextOfUse, ApplicationRoot, WcagCriterion, Attestation, ContentStore, DesignSystem, Cio, Token, ReificationRule, ReferenceSet, DataShape, ProductionDataset, System, Trigger);
 
 #[cfg(test)]
 #[path = "edit_tests.rs"]

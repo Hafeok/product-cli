@@ -395,11 +395,17 @@
 - [x] TC-797: verify_platform_includes_platform_scoped_tc (scenario) — passing
 - [x] TC-798: ft_067_exit_criteria (exit-criteria) — passing
 
-### FT-148 — System as a first-class What node [ ]
+### FT-148 — System as a first-class What node [x]
 
 - [x] ADR-090: System identity is What; deployment identity is How (accepted)
 - [x] TC-1030: product domain new system captures a first-class system node (scenario) — passing
 - [x] TC-1031: a flow belongs to a declared system (scenario) — passing
+
+### FT-149 — Trigger block and the four event-model patterns [ ]
+
+- [x] ADR-091: Trigger generalises user external automated as one block (accepted)
+- [x] TC-1032: trigger block issues a command (scenario) — passing
+- [x] TC-1033: automation trigger must watch a view (invariant) — passing
 
 ## Phase 2
 

@@ -71,3 +71,22 @@ fn system_round_trips_with_flow_ownership() {
     assert_eq!(s.target_classes, vec!["gui".to_string()]);
     assert_eq!(parsed.flows[0].system.as_deref(), Some("sys-shop"));
 }
+
+#[test]
+fn triggers_round_trip() {
+    let mut g = DomainGraph::default();
+    g.triggers.push(Trigger { id: "t-user".into(), label: "Place".into(), source: "user".into(), issues: "PlaceOrder".into(), ..Default::default() });
+    g.triggers.push(Trigger {
+        id: "t-auto".into(), label: "Restock".into(), source: "automated".into(),
+        issues: "Restock".into(), watches: Some("LowStock".into()), translates_from: Some("sys-wms".into()),
+    });
+    let parsed = from_turtle(&to_turtle(&g, "demo")).expect("parse seed");
+    assert_eq!(parsed.triggers.len(), 2);
+    let user = parsed.triggers.iter().find(|t| t.id == "t-user").expect("user");
+    assert_eq!(user.source, "user");
+    assert_eq!(user.issues, "PlaceOrder");
+    let auto = parsed.triggers.iter().find(|t| t.id == "t-auto").expect("auto");
+    assert_eq!(auto.source, "automated");
+    assert_eq!(auto.watches.as_deref(), Some("LowStock"));
+    assert_eq!(auto.translates_from.as_deref(), Some("sys-wms"));
+}

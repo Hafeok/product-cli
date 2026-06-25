@@ -80,6 +80,9 @@ pub fn validate_graph(graph: &DomainGraph) -> Vec<Violation> {
     for f in &graph.flows {
         check_flow(f, graph, &mut v);
     }
+    for t in &graph.triggers {
+        check_trigger(t, graph, &mut v);
+    }
     v.extend(super::rules_data::data_cross_refs(graph));
     v.extend(run_rules(&ui_projection(graph), what_rules()));
     v.extend(run_rules(&ui_projection(graph), super::rules_ui::ui_rules()));
@@ -136,9 +139,49 @@ fn check_local_shape(graph: &DomainGraph, id: &str, v: &mut Vec<Violation>) {
         Some(NodeKind::Flow) => {
             if let Some(f) = graph.flows.iter().find(|n| n.id == id) { check_flow(f, graph, v); }
         }
+        Some(NodeKind::Trigger) => {
+            if let Some(t) = graph.triggers.iter().find(|n| n.id == id) { check_trigger(t, graph, v); }
+        }
         // Event/Command cross-references are graph rules (below); ValueObject,
         // WireframeStep have no blocking shape.
         _ => {}
+    }
+}
+
+// --- §3.2.0 the Trigger block and its patterns ----------------------------
+
+fn check_trigger(t: &super::model::Trigger, graph: &DomainGraph, v: &mut Vec<Violation>) {
+    const SOURCES: [&str; 3] = ["user", "external", "automated"];
+    if t.source.trim().is_empty() {
+        v.push(Violation::new(&t.id, "source",
+            "§3.2.0 A trigger must declare its source (user / external / automated)."));
+    } else if !SOURCES.contains(&t.source.as_str()) {
+        v.push(Violation::new(&t.id, "source",
+            "§3.2.0 A trigger's source must be one of user, external, or automated."));
+    }
+    if t.issues.trim().is_empty() {
+        v.push(Violation::new(&t.id, "issues", "§3.2.0 A trigger must issue a command."));
+    } else if !graph.is_kind(&t.issues, NodeKind::Command) {
+        v.push(Violation::new(&t.id, "issues",
+            "§3.2.0 A trigger's issued command must resolve to a declared Command."));
+    }
+    // Automation pattern: an automated trigger observes a View, then acts.
+    if t.source == "automated" && t.watches.is_none() {
+        v.push(Violation::new(&t.id, "watches",
+            "§3.2.0 An automated trigger must watch a View (read model) — the Automation pattern observes, then issues a command."));
+    }
+    if let Some(w) = &t.watches {
+        if !graph.is_kind(w, NodeKind::ReadModel) {
+            v.push(Violation::new(&t.id, "watches",
+                "§3.2.0 A trigger's watched View must resolve to a declared read model."));
+        }
+    }
+    // Translation pattern: the read side reads from exactly one source system.
+    if let Some(sys) = &t.translates_from {
+        if !graph.is_kind(sys, NodeKind::System) {
+            v.push(Violation::new(&t.id, "translates_from",
+                "§3.2.0 A Translation trigger's source system must resolve to a declared System."));
+        }
     }
 }
 

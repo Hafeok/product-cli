@@ -171,6 +171,8 @@ pub struct DomainGraph {
     pub production_datasets: Vec<ProductionDataset>,
     #[serde(default)]
     pub systems: Vec<System>,
+    #[serde(default)]
+    pub triggers: Vec<Trigger>,
 }
 
 impl DomainGraph {
@@ -218,6 +220,7 @@ impl DomainGraph {
             ("DataShape", self.data_shapes.len()),
             ("ProductionDataset", self.production_datasets.len()),
             ("System", self.systems.len()),
+            ("Trigger", self.triggers.len()),
         ]
     }
 
@@ -254,6 +257,7 @@ impl DomainGraph {
         self.data_shapes.iter().for_each(|n| out.push((n.id.clone(), NodeKind::DataShape)));
         self.production_datasets.iter().for_each(|n| out.push((n.id.clone(), NodeKind::ProductionDataset)));
         self.systems.iter().for_each(|n| out.push((n.id.clone(), NodeKind::System)));
+        self.triggers.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Trigger)));
         out
     }
 }

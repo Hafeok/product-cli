@@ -165,6 +165,18 @@ pub struct NodeFields {
     /// §3.2.5 the system a flow belongs to
     #[arg(long)]
     system: Option<String>,
+    /// §3.2.0 trigger source (user/external/automated)
+    #[arg(long = "trigger-source")]
+    trigger_source: Option<String>,
+    /// §3.2.0 the command a trigger issues
+    #[arg(long)]
+    issues: Option<String>,
+    /// §3.2.0 the View an automated trigger watches
+    #[arg(long)]
+    watches: Option<String>,
+    /// §3.2.0 the source system a Translation trigger reads from
+    #[arg(long = "translates-from")]
+    translates_from: Option<String>,
 }
 
 impl NodeFields {
@@ -213,6 +225,10 @@ impl NodeFields {
         if let Some(v) = &self.target_classes { put("target_classes", json!(v)); }
         if let Some(v) = &self.roots_at { put("root", json!(v)); }
         if let Some(v) = &self.system { put("system", json!(v)); }
+        if let Some(v) = &self.trigger_source { put("source", json!(v)); }
+        if let Some(v) = &self.issues { put("issues", json!(v)); }
+        if let Some(v) = &self.watches { put("watches", json!(v)); }
+        if let Some(v) = &self.translates_from { put("translates_from", json!(v)); }
     }
 
     /// The §3.1 data-side field puts (reference sets, shapes, datasets).

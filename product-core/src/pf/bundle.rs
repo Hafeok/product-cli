@@ -201,6 +201,7 @@ fn section_title(kind: NodeKind) -> &'static str {
         NodeKind::DataShape => "Data shapes",
         NodeKind::ProductionDataset => "Production datasets",
         NodeKind::System => "Systems",
+        NodeKind::Trigger => "Triggers",
     }
 }
 

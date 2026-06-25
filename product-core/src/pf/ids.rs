@@ -59,10 +59,13 @@ pub enum NodeKind {
     /// §3.2.5 — a first-class system: the named thing (name, kind, purpose,
     /// target platforms/classes) the page graph and flows belong to.
     System,
+    /// §3.2.0 — a Trigger: what initiates a command (source: user / external /
+    /// automated). Automation and Translation patterns are automated triggers.
+    Trigger,
 }
 
 /// Every node kind, in declaration order (for `list`/iteration).
-pub const ALL_KINDS: [NodeKind; 25] = [
+pub const ALL_KINDS: [NodeKind; 26] = [
     NodeKind::BoundedContext,
     NodeKind::Entity,
     NodeKind::ValueObject,
@@ -88,6 +91,7 @@ pub const ALL_KINDS: [NodeKind; 25] = [
     NodeKind::DataShape,
     NodeKind::ProductionDataset,
     NodeKind::System,
+    NodeKind::Trigger,
 ];
 
 /// Built-in WCAG 2.2 criteria seed: (id, level, verification-type, name). An
@@ -155,6 +159,7 @@ impl NodeKind {
             Self::DataShape => "DataShape",
             Self::ProductionDataset => "ProductionDataset",
             Self::System => "System",
+            Self::Trigger => "Trigger",
         }
     }
 
@@ -186,6 +191,7 @@ impl NodeKind {
             Self::DataShape => "data-shape",
             Self::ProductionDataset => "production-dataset",
             Self::System => "system",
+            Self::Trigger => "trigger",
         }
     }
 

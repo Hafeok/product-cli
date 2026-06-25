@@ -116,6 +116,29 @@ pub struct System {
     pub root: Option<String>,
 }
 
+/// §3.2.0 — a Trigger: what initiates a command. Its `source` is exactly one of
+/// `user` (a UI step), `external` (an API caller), or `automated` (a process
+/// that reads a View and issues a command with no human in the loop). The
+/// Automation and Translation patterns are an automated trigger that `watches` a
+/// View; a Translation additionally reads from one source system.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct Trigger {
+    pub id: String,
+    pub label: String,
+    /// user | external | automated.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub source: String,
+    /// The command this trigger issues.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub issues: String,
+    /// §3.2.0 — the View an automated trigger watches (Automation/Translation).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub watches: Option<String>,
+    /// §3.2.0 — the source system a Translation trigger reads events from.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub translates_from: Option<String>,
+}
+
 /// §3.2.2 — an Abstract Interaction Object: a named, modality-independent kind
 /// of interaction a UI step is typed against. The closed core lives in
 /// `ids::CORE_AIOS`; this node registers an adopter's additional AIOs.

@@ -35,6 +35,7 @@ pub fn to_turtle(graph: &DomainGraph, product: &str) -> String {
     graph.data_shapes.iter().for_each(|s| emit_data_shape(&mut out, s));
     graph.production_datasets.iter().for_each(|d| emit_dataset(&mut out, d));
     graph.systems.iter().for_each(|s| emit_system(&mut out, s));
+    graph.triggers.iter().for_each(|t| emit_trigger(&mut out, t));
     for c in &graph.cios {
         out.push_str(&format!("d:{} a pf:Cio", c.id));
         if let Some(l) = &c.label { out.push_str(&format!(" ;\n  rdfs:label {}", lit(l))); }
@@ -132,6 +133,23 @@ fn emit_system(out: &mut String, s: &super::model::System) {
     }
     if let Some(r) = &s.root {
         out.push_str(&format!(" ;\n  pf:rootsAt d:{}", r));
+    }
+    out.push_str(" .\n\n");
+}
+
+fn emit_trigger(out: &mut String, t: &super::model::Trigger) {
+    out.push_str(&format!("d:{} a pf:Trigger ;\n  rdfs:label {}", t.id, lit(&t.label)));
+    if !t.source.is_empty() {
+        out.push_str(&format!(" ;\n  pf:source {}", lit(&t.source)));
+    }
+    if !t.issues.is_empty() {
+        out.push_str(&format!(" ;\n  pf:issues d:{}", t.issues));
+    }
+    if let Some(w) = &t.watches {
+        out.push_str(&format!(" ;\n  pf:watches d:{}", w));
+    }
+    if let Some(s) = &t.translates_from {
+        out.push_str(&format!(" ;\n  pf:translatesFrom d:{}", s));
     }
     out.push_str(" .\n\n");
 }

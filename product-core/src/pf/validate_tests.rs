@@ -53,6 +53,46 @@ fn system_root_must_resolve_and_flow_system_must_resolve() {
     assert_eq!(bad[0].path, "system");
 }
 
+fn cmd(id: &str, ctx: &str) -> Command {
+    Command { id: id.into(), label: id.into(), context: ctx.into(), targets: "Order".into(), emits: vec![] }
+}
+
+#[test]
+fn trigger_requires_source_and_a_resolvable_command() {
+    let mut g = DomainGraph::default();
+    g.triggers.push(Trigger { id: "t".into(), label: "T".into(), ..Default::default() });
+    let vs = validate_node(&g, "t");
+    assert!(vs.iter().any(|x| x.path == "source"), "missing source: {vs:?}");
+    assert!(vs.iter().any(|x| x.path == "issues"), "missing/unresolved issues: {vs:?}");
+
+    // A user trigger issuing a real command is conformant.
+    g.contexts.push(ctx("Orders"));
+    g.commands.push(cmd("Place", "Orders"));
+    g.triggers[0] = Trigger { id: "t".into(), label: "T".into(), source: "user".into(), issues: "Place".into(), ..Default::default() };
+    assert_eq!(validate_node(&g, "t"), vec![]);
+}
+
+#[test]
+fn automation_and_translation_patterns_are_checked() {
+    let mut g = DomainGraph::default();
+    g.contexts.push(ctx("Orders"));
+    g.commands.push(cmd("Place", "Orders"));
+    // An automated trigger that watches no View is a §3.2.0 finding.
+    g.triggers.push(Trigger { id: "t".into(), label: "Auto".into(), source: "automated".into(), issues: "Place".into(), ..Default::default() });
+    let vs = validate_node(&g, "t");
+    assert!(vs.iter().any(|x| x.path == "watches"), "automation must watch a view: {vs:?}");
+
+    // A Translation reading from an undeclared system is a finding.
+    g.read_models.push(ReadModel { id: "Todo".into(), label: "Todo".into(), projects: vec!["Order".into()], ..Default::default() });
+    g.triggers[0] = Trigger {
+        id: "t".into(), label: "Xlate".into(), source: "automated".into(), issues: "Place".into(),
+        watches: Some("Todo".into()), translates_from: Some("ghost-system".into()),
+    };
+    let vs = validate_node(&g, "t");
+    assert_eq!(vs.len(), 1);
+    assert_eq!(vs[0].path, "translates_from");
+}
+
 #[test]
 fn event_changing_nothing_is_rejected() {
     let mut g = DomainGraph::default();

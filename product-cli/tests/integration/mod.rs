@@ -9452,6 +9452,38 @@ fn tc_1031_a_flow_belongs_to_a_declared_system() {
 }
 
 #[test]
+fn tc_1032_trigger_block_issues_a_command() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // §3.2.0 — a trigger's source must be user/external/automated.
+    h.run(&["domain", "new", "trigger", "t-bad", "--label", "Bad", "--trigger-source", "robot", "--issues", "PlaceOrder"])
+        .assert_exit(1)
+        .assert_stderr_contains("§3.2.0");
+    // A user trigger issuing a declared command is the Command pattern's start.
+    h.run(&["domain", "new", "trigger", "t-user", "--label", "User places order", "--trigger-source", "user", "--issues", "PlaceOrder"])
+        .assert_exit(0);
+    h.run(&["domain", "validate"]).assert_exit(0);
+    let ttl = h.run(&["domain", "export"]);
+    assert!(ttl.stdout.contains("a pf:Trigger"), "trigger class missing, stdout:\n{}", ttl.stdout);
+    assert!(ttl.stdout.contains("pf:issues d:PlaceOrder"), "issues edge missing, stdout:\n{}", ttl.stdout);
+}
+
+#[test]
+fn tc_1033_automation_trigger_must_watch_a_view() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // §3.2.0 Automation — an automated trigger that watches no View is a finding.
+    h.run(&["domain", "new", "trigger", "t-auto-bad", "--label", "Auto", "--trigger-source", "automated", "--issues", "PlaceOrder"])
+        .assert_exit(1)
+        .assert_stderr_contains("watch a View");
+    // Watching a declared read model satisfies the Automation pattern shape.
+    h.run(&["domain", "new", "trigger", "t-auto", "--label", "Auto restock", "--trigger-source", "automated", "--issues", "PlaceOrder", "--watches", "OrderSummary"])
+        .assert_exit(0);
+    let ttl = h.run(&["domain", "export"]);
+    assert!(ttl.stdout.contains("pf:watches d:OrderSummary"), "watches edge missing, stdout:\n{}", ttl.stdout);
+}
+
+#[test]
 fn tc_999_primary_navigation_recomputes_when_a_flow_joins_the_root() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);

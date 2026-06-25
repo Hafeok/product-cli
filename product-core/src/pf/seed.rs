@@ -44,7 +44,21 @@ pub fn from_turtle(turtle: &str) -> Result<DomainGraph> {
     parse_read_models(&store, &mut g)?;
     parse_flows(&store, &mut g)?;
     parse_systems(&store, &mut g)?;
+    parse_triggers(&store, &mut g)?;
     Ok(g)
+}
+
+fn parse_triggers(store: &Store, g: &mut DomainGraph) -> Result<()> {
+    for row in select(store, "?s ?label ?source ?issues ?watches ?from",
+        "?s a pf:Trigger . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:source ?source } OPTIONAL { ?s pf:issues ?issues } OPTIONAL { ?s pf:watches ?watches } OPTIONAL { ?s pf:translatesFrom ?from }")? {
+        g.triggers.push(Trigger {
+            id: local(row.get("s")), label: lit(row.get("label")),
+            source: lit(row.get("source")), issues: local(row.get("issues")),
+            watches: opt(row.get("watches")).map(|_| local(row.get("watches"))),
+            translates_from: opt(row.get("from")).map(|_| local(row.get("from"))),
+        });
+    }
+    Ok(())
 }
 
 fn parse_systems(store: &Store, g: &mut DomainGraph) -> Result<()> {
