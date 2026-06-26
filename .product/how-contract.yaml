@@ -23,6 +23,13 @@ top_decisions:
   - model-separation
   enforced_by:
   - view-derivation-verified
+- id: schema-from-structs
+  decision: MCP write-tool input schemas are generated from the node structs via schemars, never hand-written
+  rationale: a hand-maintained schema is a third copy of the field set (alongside the structs and CLI flags) that silently drifts; a schema-typed MCP client then mis-encodes undeclared array/bool fields. Deriving the schema from the structs makes any drift a compile/test failure.
+  licenses:
+  - schema-single-source
+  enforced_by:
+  - domain-schema-parity
 principles:
 - id: slice-cohesion
   statement: plan_/apply_/render_ functions are pure; I/O is isolated in apply_
@@ -60,6 +67,14 @@ principles:
   statement: the domain model (§3.1 structure) and event model (§3.2 behaviour) are honoured as a first-class visual partition — two lanes with bridge edges crossing between them
   enforced_by:
   - lane-separation-verified
+- id: schema-single-source
+  statement: product_domain_new/edit input schemas are generated from the model structs; every struct field is declared with its real JSON type, so the schema cannot drift from what the handler accepts
+  enforced_by:
+  - domain-schema-parity
+- id: serialization-round-trips
+  statement: 'every persisted model round-trips: parse(serialize(x)) equals x, proven by property tests over arbitrary values, never hand-picked example strings'
+  enforced_by:
+  - how-yaml-roundtrip-proptest
 patterns:
 - id: slice-plus-adapter
   shape: a pure src/<slice>/ module plus a thin commands/<cmd>.rs adapter
@@ -85,7 +100,7 @@ patterns:
   enforced_by:
   - domain-mcp-registry-tests
 - id: integration-test
-  shape: an assert_cmd-driven #[test] fn tc_XXX_* in tests/integration/mod.rs plus a TC-XXX doc with runner cargo-test wired to that fn name
+  shape: 'an assert_cmd-driven #[test] fn tc_XXX_* in tests/integration/mod.rs plus a TC-XXX doc with runner cargo-test wired to that fn name'
   realizes:
   - behavior-verified-end-to-end
   applied_by:
@@ -116,6 +131,20 @@ patterns:
   - serve-web-view
   enforced_by:
   - lane-separation-verified
+- id: generated-tool-schema
+  shape: node_field_props() unions schemars::schema_for over every writable node kind; the node structs derive JsonSchema; new/edit input_schema is built from that union
+  realizes:
+  - schema-single-source
+  applied_by:
+  - add-mcp-tool
+  enforced_by:
+  - domain-schema-parity
+- id: roundtrip-property-test
+  shape: a proptest asserts parse(serialize(x)) == x over a strategy of adversarial text (YAML-significant chars), so every special character is covered by the property, not guessed
+  realizes:
+  - serialization-round-trips
+  enforced_by:
+  - how-yaml-roundtrip-proptest
 application_contract:
   id: product-cli-app
   language: Rust
