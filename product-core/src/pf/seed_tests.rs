@@ -1,7 +1,6 @@
 //! Round-trip tests for Turtle seed parsing.
 
 use super::*;
-use crate::pf::model::*;
 use crate::pf::turtle::to_turtle;
 
 fn sample() -> DomainGraph {
@@ -89,6 +88,90 @@ fn triggers_round_trip() {
     assert_eq!(auto.source, "automated");
     assert_eq!(auto.watches.as_deref(), Some("LowStock"));
     assert_eq!(auto.translates_from.as_deref(), Some("sys-wms"));
+}
+
+/// A graph with one node of every kind, every field populated — the spec for
+/// a lossless Turtle round-trip. If `to_turtle`/`from_turtle` drop any field,
+/// the `assert_eq!` below diffs it.
+fn maximal() -> DomainGraph {
+    let mut g = DomainGraph::default();
+    max_structure(&mut g);
+    max_behaviour(&mut g);
+    max_ui(&mut g);
+    max_data(&mut g);
+    g
+}
+
+fn max_structure(g: &mut DomainGraph) {
+    g.contexts.push(BoundedContext { id: "ctx".into(), label: "Context".into(), purpose: Some("a purpose".into()), glossary: vec!["term-a".into(), "term-b".into()] });
+    g.entities.push(Entity {
+        id: "ent".into(), label: "Entity".into(), context: "ctx".into(), definition: "an entity".into(),
+        identity: Some("id".into()), is_aggregate_root: true,
+        attributes: vec![Attribute { name: "email".into(), ty: Some("string".into()) }, Attribute { name: "name".into(), ty: None }],
+    });
+    g.value_objects.push(ValueObject { id: "vo".into(), label: "Money".into(), context: "ctx".into(), definition: Some("an amount".into()) });
+    g.relations.push(Relation { id: "rel".into(), label: Some("owns".into()), from: "ent".into(), to: "vo".into(), cardinality: "one-to-many".into(), rationale: "structural".into() });
+    g.invariants.push(Invariant { id: "inv".into(), statement: "must hold".into(), context: Some("ctx".into()), applies_to: Some("ent".into()) });
+    g.context_mappings.push(ContextMapping { id: "map".into(), concept_a: "Aaa".into(), concept_b: "Bbb".into(), kind: Some("shared-kernel".into()), rationale: "shared".into() });
+}
+
+fn max_behaviour(g: &mut DomainGraph) {
+    g.commands.push(Command { id: "cmd".into(), label: "Do".into(), context: "ctx".into(), targets: "ent".into(), emits: vec!["ev".into(), "ev2".into()] });
+    g.events.push(Event { id: "ev".into(), label: "Done".into(), context: "ctx".into(), changes: "ent".into() });
+    g.events.push(Event { id: "ev2".into(), label: "Also".into(), context: "ctx".into(), changes: "ent".into() });
+    g.read_models.push(ReadModel { id: "rm".into(), label: "View".into(), projects: vec!["ent".into(), "ev".into()], states: vec!["loading".into(), "empty".into()] });
+    g.flows.push(Flow { id: "flow".into(), label: "Journey".into(), steps: vec!["step".into()], entry_page: Some("step".into()), system: Some("sys".into()) });
+    g.systems.push(System { id: "sys".into(), label: "App".into(), kind: "application".into(), purpose: "do things".into(), target_platforms: vec!["web".into()], target_classes: vec!["gui".into()], root: Some("root".into()) });
+    g.triggers.push(Trigger { id: "trig".into(), label: "Init".into(), source: "automated".into(), issues: "cmd".into(), watches: Some("rm".into()), translates_from: Some("sys".into()) });
+}
+
+fn max_ui(g: &mut DomainGraph) {
+    g.wireframe_steps.push(WireframeStep {
+        id: "step".into(), label: "Screen".into(), intent: Some("show the thing".into()),
+        surfaces: vec![Surface { projection: "rm".into(), aio: "display-collection".into() }],
+        offers: vec![Offer { command: "cmd".into(), aio: "action-trigger".into() }],
+        transitions_to: vec!["step2".into()],
+        state_meanings: vec![
+            StateMeaning { projection: "rm".into(), state: "loading".into(), meaning: Some("fetching".into()), waiver: None },
+            StateMeaning { projection: "rm".into(), state: "empty".into(), meaning: None, waiver: Some("ignorable".into()) },
+        ],
+        must_satisfy: vec!["wcag-1".into()],
+        content_refs: vec![ContentRef { key: "heading".into(), role: "heading".into() }],
+        styles: vec!["color-primary".into()],
+        triggers: Some("trig".into()), displays: Some("rm".into()),
+    });
+    g.aios.push(Aio { id: "aio".into(), label: "Range".into(), means: Some("pick a range".into()), must_satisfy: vec!["wcag-1".into()] });
+    g.contexts_of_use.push(ContextOfUse { id: "cou".into(), label: "Mobile".into(), dimension: Some("form-factor".into()), value: Some("handset".into()) });
+    g.application_roots.push(ApplicationRoot { id: "root".into(), label: Some("Home".into()), navigates_from_root: vec!["step".into()] });
+    g.wcag_criteria.push(WcagCriterion { id: "wcag-1".into(), label: Some("Contrast".into()), level: Some("AA".into()), verification: Some("machine".into()), satisfied: true });
+    g.attestations.push(Attestation { id: "att".into(), step: "step".into(), criterion: "wcag-1".into(), date: "2026-01-01".into(), by: "auditor".into() });
+    g.content_stores.push(ContentStore { id: "store".into(), label: Some("Copy".into()), locales: vec!["en".into(), "da".into()], resolutions: vec![Resolution { key: "heading".into(), locale: "en".into(), value: "Hello".into() }] });
+    g.design_systems.push(DesignSystem { id: "ds".into(), label: Some("DS".into()), cios: vec!["cio".into()], tokens: vec!["color-primary".into()] });
+    g.cios.push(Cio { id: "cio".into(), label: Some("Button".into()) });
+    g.tokens.push(Token { id: "color-primary".into(), kind: Some("color".into()) });
+    g.reification_rules.push(ReificationRule { id: "rr".into(), aio: "aio".into(), context: "cou".into(), cio: "cio".into(), rationale: Some("fits".into()) });
+    g.unreifiable_rules.push(UnreifiableRule { id: "ur".into(), aio: "aio".into(), class: "tui".into(), rationale: Some("no form".into()) });
+}
+
+fn max_data(g: &mut DomainGraph) {
+    g.reference_sets.push(ReferenceSet { id: "refset".into(), label: Some("Methods".into()), concept: "ent".into(), values: vec!["a".into(), "b".into()] });
+    g.data_shapes.push(DataShape {
+        id: "shape".into(), label: Some("Shape".into()), target: "ent".into(), required: vec!["email".into()],
+        enums: vec![EnumConstraint { field: "method".into(), reference_set: "refset".into() }],
+        types: vec![TypeConstraint { field: "email".into(), datatype: "string".into() }],
+    });
+    g.production_datasets.push(ProductionDataset { id: "ds-prod".into(), label: Some("Prod".into()), shape: "shape".into(), source: "data.json".into() });
+}
+
+#[test]
+fn full_graph_round_trips_losslessly() {
+    let g = maximal();
+    let parsed = from_turtle(&to_turtle(&g, "demo")).expect("parse seed");
+    let mut expected = g.clone();
+    crate::pf::seed_canon::canonicalize(&mut expected);
+    assert_eq!(parsed, expected, "every field must survive a Turtle round-trip");
+    // re-export of the parsed graph is byte-stable (canonical order is a fixpoint).
+    assert_eq!(to_turtle(&parsed, "demo"), to_turtle(&expected, "demo"));
 }
 
 #[test]

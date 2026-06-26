@@ -13,9 +13,9 @@ Cargo.lock
 .product/checklist.md
 tests/__pycache__/
 
-# dispatched work units are generated output (regenerable via `product cell dispatch`)
-.product/archetypes/*/work-units/
-.product/work-units/
+# session.json is the regenerable working cache; the committed <product>.ttl is
+# the authoritative spec, and the session reloads from it (pf::session::load).
+.product/author-domain/*/session.json
 
 # build run I/O — frozen context, session metrics, logs (regenerable per `product build`)
 .product/build/

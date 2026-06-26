@@ -17,7 +17,7 @@ pub const UI_INTERACTION_TYPED_AS_AIO: SparqlRule = SparqlRule {
     select: r#"
       SELECT ?step WHERE {
         ?step a <https://productframework.org/ns#WireframeStep> ;
-              <https://productframework.org/ns#typedAs> ?aio .
+              (<https://productframework.org/ns#surfaces>|<https://productframework.org/ns#offers>)/<https://productframework.org/ns#typedAs> ?aio .
         FILTER NOT EXISTS { ?aio a <https://productframework.org/ns#Aio> . }
       }
     "#,
@@ -287,19 +287,19 @@ mod tests {
 
     #[test]
     fn step_typed_against_a_core_aio_passes() {
-        let g = ttl("d:Review a pf:WireframeStep ; pf:offers d:Confirm ; pf:typedAs d:trigger-action .\n");
+        let g = ttl("d:Review a pf:WireframeStep ; pf:offers [ pf:command d:Confirm ; pf:typedAs d:trigger-action ] .\n");
         assert!(run_rules(&g, ui_rules()).is_empty());
     }
 
     #[test]
     fn step_typed_against_a_registered_aio_passes() {
-        let g = ttl("d:RangeSel a pf:Aio .\nd:Review a pf:WireframeStep ; pf:typedAs d:RangeSel .\n");
+        let g = ttl("d:RangeSel a pf:Aio .\nd:Review a pf:WireframeStep ; pf:surfaces [ pf:projection d:Cal ; pf:typedAs d:RangeSel ] .\n");
         assert!(run_rules(&g, ui_rules()).is_empty());
     }
 
     #[test]
     fn step_referencing_a_cio_fires() {
-        let g = ttl("d:Review a pf:WireframeStep ; pf:offers d:Confirm ; pf:typedAs d:primary-button .\n");
+        let g = ttl("d:Review a pf:WireframeStep ; pf:offers [ pf:command d:Confirm ; pf:typedAs d:primary-button ] .\n");
         let vs = run_rules(&g, ui_rules());
         assert_eq!(vs.len(), 1);
         assert_eq!(vs[0].path, "typedAs");

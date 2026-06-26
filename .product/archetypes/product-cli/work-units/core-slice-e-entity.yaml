@@ -1,0 +1,20 @@
+id: core-slice-e-entity
+schema: 'shape: product-core/src/pf/<concept>.rs (model + native validate)'
+prompt: 'Produce product-core/src/pf/<concept>.rs (model + native validate) for task type ''implement-slice'' (e-entity). Apply: slice-plus-adapter, native-checker.'
+model: code
+context:
+  derived_from:
+  - domain:e-entity
+  - app-contract:product-cli-app
+  frozen: true
+  hash: sha256:29675a1a28214abd8449764c862d3de96a67154a10ee58b87550aaea832954f1
+produces:
+  artifact: product-core/src/pf/<concept>.rs (model + native validate)
+applies:
+- slice-plus-adapter
+- native-checker
+trace:
+  what: e-entity
+  why:
+  - slice-plus-adapter
+  - native-checker

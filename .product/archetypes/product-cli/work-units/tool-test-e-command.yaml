@@ -1,0 +1,14 @@
+id: tool-test-e-command
+schema: 'shape: registry call_tool integration test'
+prompt: Produce registry call_tool integration test for task type 'add-mcp-tool' (e-command).
+model: code
+context:
+  derived_from:
+  - handler
+  - pattern:product_domain_add
+  frozen: true
+  hash: sha256:3f96a0077f89db463856fc4431a777d3bd0eeae4307ef4fe29481ba813c37bc7
+produces:
+  artifact: registry call_tool integration test
+trace:
+  what: e-command

@@ -1,0 +1,19 @@
+id: view-routes-rm-view-graph
+schema: 'shape: GET / + GET /api/graph + GET /api/events routes on the MCP HTTP server'
+prompt: 'Edit the existing file ''product-mcp/src/http.rs'': GET / + GET /api/graph + GET /api/events routes on the MCP HTTP server for task type ''serve-web-view'' (rm-view-graph). Apply: mcp-http-view.'
+model: code
+context:
+  derived_from:
+  - view-serializer
+  - app-contract:product-cli-app
+  frozen: true
+  hash: sha256:9215332fd667360335068234e408cfa7618f8ef64f3640156925d0d414f0999d
+produces:
+  artifact: GET / + GET /api/graph + GET /api/events routes on the MCP HTTP server
+  path: product-mcp/src/http.rs
+applies:
+- mcp-http-view
+trace:
+  what: rm-view-graph
+  why:
+  - mcp-http-view

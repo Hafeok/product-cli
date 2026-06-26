@@ -1,0 +1,14 @@
+id: integration-tests-e-entity
+schema: 'shape: assert_cmd integration tests per operation'
+prompt: Produce assert_cmd integration tests per operation for task type 'implement-slice' (e-entity).
+model: code
+context:
+  derived_from:
+  - cli-adapter
+  - behaviour:validate,show
+  frozen: true
+  hash: sha256:0980c7e6986307ec0e58984f5c82341e63677364a1de1bd7fd2c08b862b6fba1
+produces:
+  artifact: assert_cmd integration tests per operation
+trace:
+  what: e-entity

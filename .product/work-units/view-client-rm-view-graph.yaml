@@ -1,0 +1,19 @@
+id: view-client-rm-view-graph
+schema: 'shape: the embedded two-lane Cytoscape view page'
+prompt: 'Produce the embedded two-lane Cytoscape view page at ''product-mcp/src/assets/view.html'' for task type ''serve-web-view'' (rm-view-graph). Apply: two-lane-view.'
+model: reasoning
+context:
+  derived_from:
+  - view-routes
+  - behaviour:wf-two-lane-canvas
+  frozen: true
+  hash: sha256:5ff23b0c86094ba433f391530539272397a59b5fe9f280176fbb1c0266a7dbba
+produces:
+  artifact: the embedded two-lane Cytoscape view page
+  path: product-mcp/src/assets/view.html
+applies:
+- two-lane-view
+trace:
+  what: rm-view-graph
+  why:
+  - two-lane-view

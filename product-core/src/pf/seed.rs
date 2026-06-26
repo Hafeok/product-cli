@@ -24,10 +24,12 @@ pub fn from_turtle(turtle: &str) -> Result<DomainGraph> {
         .map_err(|e| ProductError::ConfigError(format!("could not parse seed Turtle: {}", e)))?;
 
     let mut g = DomainGraph::default();
+    let glossary = multi(&store, "pf:BoundedContext", "pf:ubiquitousTerm")?;
     for row in select(&store, "?s ?label ?purpose", "?s a pf:BoundedContext . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:purpose ?purpose }")? {
+        let id = local(row.get("s"));
         g.contexts.push(BoundedContext {
-            id: local(row.get("s")), label: lit(row.get("label")),
-            purpose: opt(row.get("purpose")), glossary: vec![],
+            glossary: glossary.get(&id).cloned().unwrap_or_default(),
+            id, label: lit(row.get("label")), purpose: opt(row.get("purpose")),
         });
     }
     parse_entities(&store, &mut g)?;
@@ -46,6 +48,9 @@ pub fn from_turtle(turtle: &str) -> Result<DomainGraph> {
     parse_systems(&store, &mut g)?;
     parse_triggers(&store, &mut g)?;
     parse_unreifiable(&store, &mut g)?;
+    super::seed_ui::parse_ui(&store, &mut g)?;
+    super::seed_data::parse_data(&store, &mut g)?;
+    super::seed_canon::canonicalize(&mut g);
     Ok(g)
 }
 
@@ -91,12 +96,21 @@ fn parse_systems(store: &Store, g: &mut DomainGraph) -> Result<()> {
 }
 
 fn parse_entities(store: &Store, g: &mut DomainGraph) -> Result<()> {
+    let mut attrs: HashMap<String, Vec<Attribute>> = HashMap::new();
+    for row in select(store, "?s ?name ?ty",
+        "?s a pf:Entity ; pf:hasAttribute ?b . ?b pf:attrName ?name . OPTIONAL { ?b pf:attrType ?ty }")? {
+        attrs.entry(local(row.get("s"))).or_default().push(Attribute {
+            name: lit(row.get("name")), ty: opt(row.get("ty")),
+        });
+    }
     for row in select(store, "?s ?label ?def ?ctx ?agg ?identity",
         "?s a pf:Entity . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:definition ?def } OPTIONAL { ?s pf:inContext ?ctx } OPTIONAL { ?s pf:isAggregateRoot ?agg } OPTIONAL { ?s pf:identity ?identity }")? {
+        let id = local(row.get("s"));
         g.entities.push(Entity {
-            id: local(row.get("s")), label: lit(row.get("label")), context: local(row.get("ctx")),
+            attributes: attrs.remove(&id).unwrap_or_default(),
+            id, label: lit(row.get("label")), context: local(row.get("ctx")),
             definition: lit(row.get("def")), identity: opt(row.get("identity")),
-            is_aggregate_root: lit(row.get("agg")) == "true", attributes: vec![],
+            is_aggregate_root: lit(row.get("agg")) == "true",
         });
     }
     Ok(())
@@ -156,27 +170,37 @@ fn parse_commands(store: &Store, g: &mut DomainGraph) -> Result<()> {
 
 fn parse_read_models(store: &Store, g: &mut DomainGraph) -> Result<()> {
     let projects = multi(store, "pf:ReadModel", "pf:projects")?;
+    let states = multi(store, "pf:ReadModel", "pf:hasState")?;
     for row in select(store, "?s ?label", "?s a pf:ReadModel . OPTIONAL { ?s rdfs:label ?label }")? {
         let id = local(row.get("s"));
-        g.read_models.push(ReadModel { projects: projects.get(&id).cloned().unwrap_or_default(), id: id.clone(), label: lit(row.get("label")), ..Default::default() });
+        g.read_models.push(ReadModel {
+            projects: projects.get(&id).cloned().unwrap_or_default(),
+            states: states.get(&id).cloned().unwrap_or_default(),
+            id: id.clone(), label: lit(row.get("label")),
+        });
     }
     Ok(())
 }
 
 fn parse_flows(store: &Store, g: &mut DomainGraph) -> Result<()> {
     let steps = multi(store, "pf:Flow", "pf:contains")?;
-    for row in select(store, "?s ?label ?system", "?s a pf:Flow . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:systemOf ?system }")? {
+    for row in select(store, "?s ?label ?system ?entry", "?s a pf:Flow . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:systemOf ?system } OPTIONAL { ?s pf:entryPage ?entry }")? {
         let id = local(row.get("s"));
-        g.flows.push(Flow { steps: steps.get(&id).cloned().unwrap_or_default(), id: id.clone(), label: lit(row.get("label")), system: opt(row.get("system")).map(|_| local(row.get("system"))), ..Default::default() });
+        g.flows.push(Flow {
+            steps: steps.get(&id).cloned().unwrap_or_default(),
+            id: id.clone(), label: lit(row.get("label")),
+            entry_page: opt(row.get("entry")).map(|_| local(row.get("entry"))),
+            system: opt(row.get("system")).map(|_| local(row.get("system"))),
+        });
     }
     Ok(())
 }
 
 // --- Oxigraph helpers -----------------------------------------------------
 
-type Row = HashMap<String, Term>;
+pub(super) type Row = HashMap<String, Term>;
 
-fn select(store: &Store, vars: &str, body: &str) -> Result<Vec<Row>> {
+pub(super) fn select(store: &Store, vars: &str, body: &str) -> Result<Vec<Row>> {
     let q = format!("PREFIX pf: <{}> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> SELECT {} WHERE {{ {} }}", PF, vars, body);
     run(store, &q)
 }
@@ -202,7 +226,7 @@ fn run(store: &Store, q: &str) -> Result<Vec<Row>> {
 
 /// Collect multi-valued objects of `predicate` for each subject of `class`,
 /// keyed by the subject's local id.
-fn multi(store: &Store, class: &str, predicate: &str) -> Result<HashMap<String, Vec<String>>> {
+pub(super) fn multi(store: &Store, class: &str, predicate: &str) -> Result<HashMap<String, Vec<String>>> {
     let q = format!("PREFIX pf: <{}> SELECT ?s ?o WHERE {{ ?s a {} . ?s {} ?o }}", PF, class, predicate);
     let mut map: HashMap<String, Vec<String>> = HashMap::new();
     for row in run(store, &q)? {
@@ -213,7 +237,7 @@ fn multi(store: &Store, class: &str, predicate: &str) -> Result<HashMap<String, 
 }
 
 /// The local id of a term: the fragment after `#`, else the last path segment.
-fn local(term: Option<&Term>) -> String {
+pub(super) fn local(term: Option<&Term>) -> String {
     match term {
         Some(Term::NamedNode(n)) => {
             let s = n.as_str();
@@ -225,7 +249,7 @@ fn local(term: Option<&Term>) -> String {
 }
 
 /// The literal value of a term (empty string if absent).
-fn lit(term: Option<&Term>) -> String {
+pub(super) fn lit(term: Option<&Term>) -> String {
     match term {
         Some(Term::Literal(l)) => l.value().to_string(),
         Some(Term::NamedNode(n)) => n.as_str().rsplit(['#', '/']).next().unwrap_or("").to_string(),
@@ -234,7 +258,7 @@ fn lit(term: Option<&Term>) -> String {
 }
 
 /// `Some(value)` if the term is present and non-empty, else `None`.
-fn opt(term: Option<&Term>) -> Option<String> {
+pub(super) fn opt(term: Option<&Term>) -> Option<String> {
     let v = lit(term);
     if v.is_empty() { None } else { Some(v) }
 }

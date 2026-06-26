@@ -3,85 +3,97 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-d:ctx-model a pf:BoundedContext ;
-  rdfs:label "The Model (What)" ;
-  pf:purpose "§3 — The What. The structural domain model (bounded contexts, entities, value objects, relations, invariants, context mappings) and the event/behaviour model (events, commands, read models, wireframe steps, flows) that together describe what a product is and does." ;
-  pf:ubiquitousTerm "Bounded Context" ;
-  pf:ubiquitousTerm "Entity" ;
-  pf:ubiquitousTerm "Value Object" ;
-  pf:ubiquitousTerm "Relation" ;
-  pf:ubiquitousTerm "Invariant" ;
-  pf:ubiquitousTerm "Context Mapping" ;
-  pf:ubiquitousTerm "Event" ;
-  pf:ubiquitousTerm "Command" ;
-  pf:ubiquitousTerm "Read Model" ;
-  pf:ubiquitousTerm "Wireframe Step" ;
-  pf:ubiquitousTerm "Flow" ;
-  pf:ubiquitousTerm "Aggregate Root" .
-
-d:ctx-why a pf:BoundedContext ;
-  rdfs:label "The Why" ;
-  pf:purpose "§4.1 — The reasoning layer of the How: foundational top decisions, the principles they license, and the patterns that realise those principles. Each must earn its place." ;
-  pf:ubiquitousTerm "Top Decision" ;
-  pf:ubiquitousTerm "Principle" ;
-  pf:ubiquitousTerm "Pattern" ;
-  pf:ubiquitousTerm "Rationale" ;
-  pf:ubiquitousTerm "Licenses" ;
-  pf:ubiquitousTerm "Realizes" .
+d:ctx-composition a pf:BoundedContext ;
+  rdfs:label "Composition" ;
+  pf:purpose "The top layer: a product is a composition of archetype instances sharing one domain model; an archetype is a reusable, pre-filled How for a recurring system shape." ;
+  pf:ubiquitousTerm "Archetype" ;
+  pf:ubiquitousTerm "Product" ;
+  pf:ubiquitousTerm "Realised By" ;
+  pf:ubiquitousTerm "Realises" .
 
 d:ctx-contracts a pf:BoundedContext ;
   rdfs:label "Contracts" ;
   pf:purpose "§4.2–4.4 — The binding How: application contracts (invariant code-shaping decisions), infrastructure contracts (concrete runtime choices), the repository layout model, and interface contracts generated from the model." ;
   pf:ubiquitousTerm "Application Contract" ;
+  pf:ubiquitousTerm "Conforms To" ;
   pf:ubiquitousTerm "Infrastructure Contract" ;
-  pf:ubiquitousTerm "Repository Layout Model" ;
   pf:ubiquitousTerm "Interface Contract" ;
-  pf:ubiquitousTerm "Conforms To" .
-
-d:ctx-realisation a pf:BoundedContext ;
-  rdfs:label "Realisation" ;
-  pf:purpose "§5 — Turning the spec into code: work units (the smallest reproducible SPMC transformation), dual-read task-type definitions, discovery records, and generated rationale traces." ;
-  pf:ubiquitousTerm "Work Unit" ;
-  pf:ubiquitousTerm "Task-Type Definition" ;
-  pf:ubiquitousTerm "Discovery Record" ;
-  pf:ubiquitousTerm "Rationale Trace" ;
-  pf:ubiquitousTerm "SPMC" ;
-  pf:ubiquitousTerm "Applies" ;
-  pf:ubiquitousTerm "Derived From" .
-
-d:ctx-verification a pf:BoundedContext ;
-  rdfs:label "Verification" ;
-  pf:purpose "§6 — Deterministic gates with versioned criteria. Each verification enforces a principle/contract/model element and declares its kind; verdicts are the outcomes." ;
-  pf:ubiquitousTerm "Verification" ;
-  pf:ubiquitousTerm "Verification Kind" ;
-  pf:ubiquitousTerm "Verdict" ;
-  pf:ubiquitousTerm "Enforces" ;
-  pf:ubiquitousTerm "Gate" .
+  pf:ubiquitousTerm "Repository Layout Model" .
 
 d:ctx-delivery a pf:BoundedContext ;
   rdfs:label "Delivery" ;
   pf:purpose "§7 — Shipping value: features (the smallest independently valuable, verifiable, flow-shaped subgraph of the What) and releases (a coherent, closed cut of features)." ;
-  pf:ubiquitousTerm "Feature" ;
-  pf:ubiquitousTerm "Release" ;
-  pf:ubiquitousTerm "Done" ;
+  pf:ubiquitousTerm "Closed Cut" ;
   pf:ubiquitousTerm "Contains" ;
-  pf:ubiquitousTerm "Closed Cut" .
+  pf:ubiquitousTerm "Done" ;
+  pf:ubiquitousTerm "Feature" ;
+  pf:ubiquitousTerm "Release" .
 
-d:ctx-composition a pf:BoundedContext ;
-  rdfs:label "Composition" ;
-  pf:purpose "The top layer: a product is a composition of archetype instances sharing one domain model; an archetype is a reusable, pre-filled How for a recurring system shape." ;
-  pf:ubiquitousTerm "Product" ;
-  pf:ubiquitousTerm "Archetype" ;
-  pf:ubiquitousTerm "Realised By" ;
-  pf:ubiquitousTerm "Realises" .
+d:ctx-model a pf:BoundedContext ;
+  rdfs:label "The Model (What)" ;
+  pf:purpose "§3 — The What. The structural domain model (bounded contexts, entities, value objects, relations, invariants, context mappings) and the event/behaviour model (events, commands, read models, wireframe steps, flows) that together describe what a product is and does." ;
+  pf:ubiquitousTerm "Aggregate Root" ;
+  pf:ubiquitousTerm "Bounded Context" ;
+  pf:ubiquitousTerm "Command" ;
+  pf:ubiquitousTerm "Context Mapping" ;
+  pf:ubiquitousTerm "Entity" ;
+  pf:ubiquitousTerm "Event" ;
+  pf:ubiquitousTerm "Flow" ;
+  pf:ubiquitousTerm "Invariant" ;
+  pf:ubiquitousTerm "Read Model" ;
+  pf:ubiquitousTerm "Relation" ;
+  pf:ubiquitousTerm "Value Object" ;
+  pf:ubiquitousTerm "Wireframe Step" .
+
+d:ctx-realisation a pf:BoundedContext ;
+  rdfs:label "Realisation" ;
+  pf:purpose "§5 — Turning the spec into code: work units (the smallest reproducible SPMC transformation), dual-read task-type definitions, discovery records, and generated rationale traces." ;
+  pf:ubiquitousTerm "Applies" ;
+  pf:ubiquitousTerm "Derived From" ;
+  pf:ubiquitousTerm "Discovery Record" ;
+  pf:ubiquitousTerm "Rationale Trace" ;
+  pf:ubiquitousTerm "SPMC" ;
+  pf:ubiquitousTerm "Task-Type Definition" ;
+  pf:ubiquitousTerm "Work Unit" .
+
+d:ctx-shop a pf:BoundedContext ;
+  rdfs:label "Shop UI" ;
+  pf:purpose "A UI-rich demo slice: the checkout screen and its §3.2.2/§4.5 UI sub-model." .
+
+d:ctx-verification a pf:BoundedContext ;
+  rdfs:label "Verification" ;
+  pf:purpose "§6 — Deterministic gates with versioned criteria. Each verification enforces a principle/contract/model element and declares its kind; verdicts are the outcomes." ;
+  pf:ubiquitousTerm "Enforces" ;
+  pf:ubiquitousTerm "Gate" ;
+  pf:ubiquitousTerm "Verdict" ;
+  pf:ubiquitousTerm "Verification" ;
+  pf:ubiquitousTerm "Verification Kind" .
 
 d:ctx-view a pf:BoundedContext ;
   rdfs:label "Live What-Graph View" ;
   pf:purpose "§3 tooling — a read-only, live-updating visual projection of the What graph that cleanly separates the domain model (§3.1 structure) from the event model (§3.2 behaviour) so a team can view and discuss it while an LLM mutates the graph via MCP." .
 
-d:ctx-shop a pf:BoundedContext ;
-  rdfs:label "Shop UI" ;
-  pf:purpose "A UI-rich demo slice: the checkout screen and its §3.2.2/§4.5 UI sub-model." .
+d:ctx-why a pf:BoundedContext ;
+  rdfs:label "The Why" ;
+  pf:purpose "§4.1 — The reasoning layer of the How: foundational top decisions, the principles they license, and the patterns that realise those principles. Each must earn its place." ;
+  pf:ubiquitousTerm "Licenses" ;
+  pf:ubiquitousTerm "Pattern" ;
+  pf:ubiquitousTerm "Principle" ;
+  pf:ubiquitousTerm "Rationale" ;
+  pf:ubiquitousTerm "Realizes" ;
+  pf:ubiquitousTerm "Top Decision" .
+
+d:e-appcontract a pf:Entity ;
+  rdfs:label "Application Contract" ;
+  pf:definition "Invariant code-shaping decisions (language, layering, organization, persistence) that hold across every instance." ;
+  pf:inContext d:ctx-contracts ;
+  pf:isAggregateRoot "true" .
+
+d:e-archetype a pf:Entity ;
+  rdfs:label "Archetype" ;
+  pf:definition "A reusable, pre-filled How for a recurring system shape. A product realises one or more." ;
+  pf:inContext d:ctx-composition ;
+  pf:isAggregateRoot "true" .
 
 d:e-boundedcontext a pf:Entity ;
   rdfs:label "Bounded Context" ;
@@ -90,32 +102,43 @@ d:e-boundedcontext a pf:Entity ;
   pf:isAggregateRoot "true" ;
   pf:identity "Identified by name; its ubiquitous language is authoritative within it" .
 
-d:e-entity a pf:Entity ;
-  rdfs:label "Entity" ;
-  pf:definition "A domain concept with identity. May be an aggregate root. Belongs to exactly one bounded context and carries a business-language definition." ;
-  pf:inContext d:ctx-model ;
-  pf:isAggregateRoot "true" ;
-  pf:identity "Has explicit identity (what makes one instance distinct)" .
+d:e-cart a pf:Entity ;
+  rdfs:label "Cart" ;
+  pf:definition "A shopper's basket of line items." ;
+  pf:inContext d:ctx-shop ;
+  pf:isAggregateRoot "true" .
 
-d:e-valueobject a pf:Entity ;
-  rdfs:label "Value Object" ;
-  pf:definition "A domain concept without identity (e.g. Money, Address), defined by its attributes and living in a bounded context." ;
-  pf:inContext d:ctx-model .
-
-d:e-relation a pf:Entity ;
-  rdfs:label "Relation" ;
-  pf:definition "A typed connection between two entities, carrying cardinality and rationale (why this link and this cardinality)." ;
-  pf:inContext d:ctx-model .
-
-d:e-invariant a pf:Entity ;
-  rdfs:label "Invariant" ;
-  pf:definition "A rule that must always hold, stated as a checkable constraint and realised as a machine-checkable SHACL constraint downstream." ;
+d:e-command a pf:Entity ;
+  rdfs:label "Command" ;
+  pf:definition "An intent that causes events; targets an aggregate (entity) and emits at least one event." ;
   pf:inContext d:ctx-model .
 
 d:e-contextmapping a pf:Entity ;
   rdfs:label "Context Mapping" ;
   pf:definition "An explicit, declared correspondence between concepts in two different bounded contexts (§3.1) — never assumed." ;
+  pf:inContext d:ctx-model ;
+  pf:hasAttribute [ pf:attrName "kind" ; pf:attrType "string" ] ;
+  pf:hasAttribute [ pf:attrName "rationale" ; pf:attrType "string" ] .
+
+d:e-decider a pf:Entity ;
+  rdfs:label "Decider" ;
+  pf:definition "§3.3 — the executable form of behaviour for an aggregate: decide(state,command)->events|reject and evolve(state,event)->state, its signature derived from the event model." ;
   pf:inContext d:ctx-model .
+
+d:e-discoveryrecord a pf:Entity ;
+  rdfs:label "Discovery Record" ;
+  pf:definition "A type-aware capture of an exploratory session, recorded as a diff against the framework layers." ;
+  pf:inContext d:ctx-realisation .
+
+d:e-entity a pf:Entity ;
+  rdfs:label "Entity" ;
+  pf:definition "A domain concept with identity. May be an aggregate root. Belongs to exactly one bounded context and carries a business-language definition." ;
+  pf:inContext d:ctx-model ;
+  pf:isAggregateRoot "true" ;
+  pf:identity "Has explicit identity (what makes one instance distinct)" ;
+  pf:hasAttribute [ pf:attrName "definition" ; pf:attrType "string" ] ;
+  pf:hasAttribute [ pf:attrName "identity" ; pf:attrType "string" ] ;
+  pf:hasAttribute [ pf:attrName "isAggregateRoot" ; pf:attrType "boolean" ] .
 
 d:e-event a pf:Entity ;
   rdfs:label "Event" ;
@@ -123,20 +146,11 @@ d:e-event a pf:Entity ;
   pf:inContext d:ctx-model ;
   pf:identity "Distinguished by the fact it records (a past occurrence)" .
 
-d:e-command a pf:Entity ;
-  rdfs:label "Command" ;
-  pf:definition "An intent that causes events; targets an aggregate (entity) and emits at least one event." ;
-  pf:inContext d:ctx-model .
-
-d:e-readmodel a pf:Entity ;
-  rdfs:label "Read Model" ;
-  pf:definition "A view built to look at or decide on; projects at least one entity/event (read-model provenance: no ghost views)." ;
-  pf:inContext d:ctx-model .
-
-d:e-wireframestep a pf:Entity ;
-  rdfs:label "Wireframe Step" ;
-  pf:definition "What the user sees at a step; triggers a command or displays a read model, stated in ubiquitous-language terms." ;
-  pf:inContext d:ctx-model .
+d:e-feature a pf:Entity ;
+  rdfs:label "Feature" ;
+  pf:definition "The smallest independently valuable and verifiable slice; a flow-shaped, non-empty subgraph of the What (§7)." ;
+  pf:inContext d:ctx-delivery ;
+  pf:isAggregateRoot "true" .
 
 d:e-flow a pf:Entity ;
   rdfs:label "Flow" ;
@@ -144,36 +158,18 @@ d:e-flow a pf:Entity ;
   pf:inContext d:ctx-model ;
   pf:isAggregateRoot "true" .
 
-d:e-topdecision a pf:Entity ;
-  rdfs:label "Top Decision" ;
-  pf:definition "A foundational choice (project shape, layout, layering) that carries rationale and licenses principles (§4.1)." ;
-  pf:inContext d:ctx-why ;
-  pf:isAggregateRoot "true" .
-
-d:e-principle a pf:Entity ;
-  rdfs:label "Principle" ;
-  pf:definition "A rule a top decision licenses, stated checkably. Must earn its place by being applied by a work unit or enforced by a verification." ;
-  pf:inContext d:ctx-why .
-
-d:e-pattern a pf:Entity ;
-  rdfs:label "Pattern" ;
-  pf:definition "A concrete shape that realises a principle; what a work unit emits." ;
-  pf:inContext d:ctx-why .
-
-d:e-appcontract a pf:Entity ;
-  rdfs:label "Application Contract" ;
-  pf:definition "Invariant code-shaping decisions (language, layering, organization, persistence) that hold across every instance." ;
+d:e-howcontract a pf:Entity ;
+  rdfs:label "How Contract" ;
+  pf:definition "§4 — the authoring surface for an archetype's complete How: the Why cascade (top decisions → principles → patterns), the application and infrastructure contracts, the repository layout model reference, and the interface contracts. One per archetype." ;
   pf:inContext d:ctx-contracts ;
-  pf:isAggregateRoot "true" .
+  pf:isAggregateRoot "true" ;
+  pf:identity "Identified by its archetype; one How contract per archetype" ;
+  pf:hasAttribute [ pf:attrName "archetype" ; pf:attrType "string" ] ;
+  pf:hasAttribute [ pf:attrName "version" ; pf:attrType "string" ] .
 
 d:e-infracontract a pf:Entity ;
   rdfs:label "Infrastructure Contract" ;
   pf:definition "Concrete runtime choices for an instance; frozen once chosen; must satisfy (conform to) the application contract." ;
-  pf:inContext d:ctx-contracts .
-
-d:e-layoutmodel a pf:Entity ;
-  rdfs:label "Repository Layout Model" ;
-  pf:definition "A glob-based declaration of which files are legal where (§4.3). Authored as YAML." ;
   pf:inContext d:ctx-contracts .
 
 d:e-interfacecontract a pf:Entity ;
@@ -181,26 +177,104 @@ d:e-interfacecontract a pf:Entity ;
   pf:definition "A published interface in an industry-standard format (OpenAPI/AsyncAPI/Protobuf), generated from (derived from) the domain/event model, not hand-written (§4.4)." ;
   pf:inContext d:ctx-contracts .
 
-d:e-workunit a pf:Entity ;
-  rdfs:label "Work Unit" ;
-  pf:definition "The smallest reproducible unit of realisation (SPMC): one bounded transformation, frozen input, one artifact (§5)." ;
-  pf:inContext d:ctx-realisation ;
+d:e-invariant a pf:Entity ;
+  rdfs:label "Invariant" ;
+  pf:definition "A rule that must always hold, stated as a checkable constraint and realised as a machine-checkable SHACL constraint downstream." ;
+  pf:inContext d:ctx-model ;
+  pf:hasAttribute [ pf:attrName "statement" ; pf:attrType "string" ] .
+
+d:e-layoutmodel a pf:Entity ;
+  rdfs:label "Repository Layout Model" ;
+  pf:definition "A glob-based declaration of which files are legal where (§4.3). Authored as YAML." ;
+  pf:inContext d:ctx-contracts .
+
+d:e-modellane a pf:Entity ;
+  rdfs:label "Model Lane" ;
+  pf:definition "A fixed horizontal partition of the canvas: the domain lane (left, §3.1) or the event lane (right, §3.2)." ;
+  pf:inContext d:ctx-view ;
+  pf:identity "lane key: domain | event" .
+
+d:e-pattern a pf:Entity ;
+  rdfs:label "Pattern" ;
+  pf:definition "A concrete shape that realises a principle; what a work unit emits." ;
+  pf:inContext d:ctx-why .
+
+d:e-primitive a pf:Entity ;
+  rdfs:label "Named-Algorithm Primitive" ;
+  pf:definition "§3.5 — the Polanyi floor: an irreducible computation specified by reference plus an I/O contract plus an oracle, exempt from derivation." ;
+  pf:inContext d:ctx-model .
+
+d:e-principle a pf:Entity ;
+  rdfs:label "Principle" ;
+  pf:definition "A rule a top decision licenses, stated checkably. Must earn its place by being applied by a work unit or enforced by a verification." ;
+  pf:inContext d:ctx-why ;
+  pf:hasAttribute [ pf:attrName "statement" ; pf:attrType "string" ] .
+
+d:e-product a pf:Entity ;
+  rdfs:label "Product" ;
+  pf:definition "The top: a composition of archetype instances sharing one domain model." ;
+  pf:inContext d:ctx-composition ;
   pf:isAggregateRoot "true" .
+
+d:e-projector a pf:Entity ;
+  rdfs:label "Projector" ;
+  pf:definition "§3.4 — the executable form of a read model: project(state,event)->state, folding exactly the events the read model projects." ;
+  pf:inContext d:ctx-model .
+
+d:e-rationaletrace a pf:Entity ;
+  rdfs:label "Rationale Trace" ;
+  pf:definition "A generated record linking a produced artifact to the decisions that caused it; must be true (gated by verifications)." ;
+  pf:inContext d:ctx-realisation .
+
+d:e-readmodel a pf:Entity ;
+  rdfs:label "Read Model" ;
+  pf:definition "A view built to look at or decide on; projects at least one entity/event (read-model provenance: no ghost views)." ;
+  pf:inContext d:ctx-model .
+
+d:e-relation a pf:Entity ;
+  rdfs:label "Relation" ;
+  pf:definition "A typed connection between two entities, carrying cardinality and rationale (why this link and this cardinality)." ;
+  pf:inContext d:ctx-model ;
+  pf:hasAttribute [ pf:attrName "cardinality" ; pf:attrType "string" ] ;
+  pf:hasAttribute [ pf:attrName "rationale" ; pf:attrType "string" ] .
+
+d:e-release a pf:Entity ;
+  rdfs:label "Release" ;
+  pf:definition "A chosen, coherent set of features; a subgraph whose cut must be closed (§7)." ;
+  pf:inContext d:ctx-delivery ;
+  pf:isAggregateRoot "true" .
+
+d:e-system a pf:Entity ;
+  rdfs:label "System" ;
+  pf:definition "§3.2.5 — a first-class system: the named thing (kind, purpose, target platforms/classes) a page graph and flows belong to; a What may describe several over one domain." ;
+  pf:inContext d:ctx-model .
 
 d:e-tasktype a pf:Entity ;
   rdfs:label "Task-Type Definition" ;
   pf:definition "A dual-read schema where the dispatch input equals the capture form equals the acceptance criteria. Authored as YAML." ;
   pf:inContext d:ctx-realisation .
 
-d:e-discoveryrecord a pf:Entity ;
-  rdfs:label "Discovery Record" ;
-  pf:definition "A type-aware capture of an exploratory session, recorded as a diff against the framework layers." ;
-  pf:inContext d:ctx-realisation .
+d:e-topdecision a pf:Entity ;
+  rdfs:label "Top Decision" ;
+  pf:definition "A foundational choice (project shape, layout, layering) that carries rationale and licenses principles (§4.1)." ;
+  pf:inContext d:ctx-why ;
+  pf:isAggregateRoot "true" ;
+  pf:hasAttribute [ pf:attrName "rationale" ; pf:attrType "string" ] .
 
-d:e-rationaletrace a pf:Entity ;
-  rdfs:label "Rationale Trace" ;
-  pf:definition "A generated record linking a produced artifact to the decisions that caused it; must be true (gated by verifications)." ;
-  pf:inContext d:ctx-realisation .
+d:e-trigger a pf:Entity ;
+  rdfs:label "Trigger" ;
+  pf:definition "§3.2.0 — what initiates a command; its source is exactly one of user, external, or automated. Automation and Translation are automated triggers watching a View." ;
+  pf:inContext d:ctx-model .
+
+d:e-valueobject a pf:Entity ;
+  rdfs:label "Value Object" ;
+  pf:definition "A domain concept without identity (e.g. Money, Address), defined by its attributes and living in a bounded context." ;
+  pf:inContext d:ctx-model .
+
+d:e-verdict a pf:Entity ;
+  rdfs:label "Verdict" ;
+  pf:definition "The outcome of a verification (or a composition of verifications, e.g. release_done)." ;
+  pf:inContext d:ctx-verification .
 
 d:e-verification a pf:Entity ;
   rdfs:label "Verification" ;
@@ -213,41 +287,11 @@ d:e-verificationkind a pf:Entity ;
   pf:definition "The category of a verification (e.g. layout-conformance, internal-coherence, contract-conformance, seam, domain-conformance, behavioural-conformance, cross-archetype), ordered cheapest-first." ;
   pf:inContext d:ctx-verification .
 
-d:e-verdict a pf:Entity ;
-  rdfs:label "Verdict" ;
-  pf:definition "The outcome of a verification (or a composition of verifications, e.g. release_done)." ;
-  pf:inContext d:ctx-verification .
-
-d:e-feature a pf:Entity ;
-  rdfs:label "Feature" ;
-  pf:definition "The smallest independently valuable and verifiable slice; a flow-shaped, non-empty subgraph of the What (§7)." ;
-  pf:inContext d:ctx-delivery ;
-  pf:isAggregateRoot "true" .
-
-d:e-release a pf:Entity ;
-  rdfs:label "Release" ;
-  pf:definition "A chosen, coherent set of features; a subgraph whose cut must be closed (§7)." ;
-  pf:inContext d:ctx-delivery ;
-  pf:isAggregateRoot "true" .
-
-d:e-product a pf:Entity ;
-  rdfs:label "Product" ;
-  pf:definition "The top: a composition of archetype instances sharing one domain model." ;
-  pf:inContext d:ctx-composition ;
-  pf:isAggregateRoot "true" .
-
-d:e-archetype a pf:Entity ;
-  rdfs:label "Archetype" ;
-  pf:definition "A reusable, pre-filled How for a recurring system shape. A product realises one or more." ;
-  pf:inContext d:ctx-composition ;
-  pf:isAggregateRoot "true" .
-
-d:e-howcontract a pf:Entity ;
-  rdfs:label "How Contract" ;
-  pf:definition "§4 — the authoring surface for an archetype's complete How: the Why cascade (top decisions → principles → patterns), the application and infrastructure contracts, the repository layout model reference, and the interface contracts. One per archetype." ;
-  pf:inContext d:ctx-contracts ;
-  pf:isAggregateRoot "true" ;
-  pf:identity "Identified by its archetype; one How contract per archetype" .
+d:e-viewedge a pf:Entity ;
+  rdfs:label "View Edge" ;
+  pf:definition "A single renderable edge between two View Nodes, carrying its edge kind; a bridge edge crosses the lane divider." ;
+  pf:inContext d:ctx-view ;
+  pf:identity "(from, to, kind) triple" .
 
 d:e-viewgraph a pf:Entity ;
   rdfs:label "View Graph" ;
@@ -262,67 +306,49 @@ d:e-viewnode a pf:Entity ;
   pf:inContext d:ctx-view ;
   pf:identity "node id (mirrors the source What-graph node id)" .
 
-d:e-viewedge a pf:Entity ;
-  rdfs:label "View Edge" ;
-  pf:definition "A single renderable edge between two View Nodes, carrying its edge kind; a bridge edge crosses the lane divider." ;
-  pf:inContext d:ctx-view ;
-  pf:identity "(from, to, kind) triple" .
+d:e-wireframestep a pf:Entity ;
+  rdfs:label "Wireframe Step" ;
+  pf:definition "What the user sees at a step; triggers a command or displays a read model, stated in ubiquitous-language terms." ;
+  pf:inContext d:ctx-model .
 
-d:e-modellane a pf:Entity ;
-  rdfs:label "Model Lane" ;
-  pf:definition "A fixed horizontal partition of the canvas: the domain lane (left, §3.1) or the event lane (right, §3.2)." ;
-  pf:inContext d:ctx-view ;
-  pf:identity "lane key: domain | event" .
-
-d:e-cart a pf:Entity ;
-  rdfs:label "Cart" ;
-  pf:definition "A shopper's basket of line items." ;
-  pf:inContext d:ctx-shop ;
+d:e-workunit a pf:Entity ;
+  rdfs:label "Work Unit" ;
+  pf:definition "The smallest reproducible unit of realisation (SPMC): one bounded transformation, frozen input, one artifact (§5)." ;
+  pf:inContext d:ctx-realisation ;
   pf:isAggregateRoot "true" .
-
-d:e-system a pf:Entity ;
-  rdfs:label "System" ;
-  pf:definition "§3.2.5 — a first-class system: the named thing (kind, purpose, target platforms/classes) a page graph and flows belong to; a What may describe several over one domain." ;
-  pf:inContext d:ctx-model .
-
-d:e-trigger a pf:Entity ;
-  rdfs:label "Trigger" ;
-  pf:definition "§3.2.0 — what initiates a command; its source is exactly one of user, external, or automated. Automation and Translation are automated triggers watching a View." ;
-  pf:inContext d:ctx-model .
-
-d:e-decider a pf:Entity ;
-  rdfs:label "Decider" ;
-  pf:definition "§3.3 — the executable form of behaviour for an aggregate: decide(state,command)->events|reject and evolve(state,event)->state, its signature derived from the event model." ;
-  pf:inContext d:ctx-model .
-
-d:e-projector a pf:Entity ;
-  rdfs:label "Projector" ;
-  pf:definition "§3.4 — the executable form of a read model: project(state,event)->state, folding exactly the events the read model projects." ;
-  pf:inContext d:ctx-model .
-
-d:e-primitive a pf:Entity ;
-  rdfs:label "Named-Algorithm Primitive" ;
-  pf:definition "§3.5 — the Polanyi floor: an irreducible computation specified by reference plus an I/O contract plus an oracle, exempt from derivation." ;
-  pf:inContext d:ctx-model .
 
 d:vo-modelkind a pf:ValueObject ;
   rdfs:label "Model Kind" ;
   pf:inContext d:ctx-view ;
   pf:definition "An enumerated tag — domain | event — derived from a node's source NodeKind; it assigns the node to exactly one Model Lane." .
 
-d:rel-event-changes-entity a pf:Relation ;
-  rdfs:label "changes" ;
-  pf:from d:e-event ;
+d:r-decider-entity a pf:Relation ;
+  rdfs:label "decides for" ;
+  pf:from d:e-decider ;
   pf:to d:e-entity ;
-  pf:cardinality "many-to-one" ;
-  pf:rationale "The load-bearing relation (§3.2): every event must change exactly one real domain entity — behaviour may not reference structure that does not exist. One entity is changed by many events over time." .
+  pf:cardinality "one-to-one" ;
+  pf:rationale "a Decider governs one aggregate entity (§3.3)" .
 
-d:rel-command-targets-entity a pf:Relation ;
-  rdfs:label "targets" ;
-  pf:from d:e-command ;
-  pf:to d:e-entity ;
+d:r-projector-rm a pf:Relation ;
+  rdfs:label "projects for" ;
+  pf:from d:e-projector ;
+  pf:to d:e-readmodel ;
+  pf:cardinality "one-to-one" ;
+  pf:rationale "a Projector builds one read model (§3.4)" .
+
+d:r-system-flow a pf:Relation ;
+  rdfs:label "owns" ;
+  pf:from d:e-system ;
+  pf:to d:e-flow ;
+  pf:cardinality "one-to-many" ;
+  pf:rationale "a flow belongs to exactly one system (§3.2.5)" .
+
+d:r-trigger-command a pf:Relation ;
+  rdfs:label "issues" ;
+  pf:from d:e-trigger ;
+  pf:to d:e-command ;
   pf:cardinality "many-to-one" ;
-  pf:rationale "A command expresses intent against exactly one aggregate (entity) it operates on; an aggregate is targeted by many commands." .
+  pf:rationale "a Trigger initiates exactly one Command (§3.2.0)" .
 
 d:rel-command-emits-event a pf:Relation ;
   rdfs:label "emits" ;
@@ -331,34 +357,6 @@ d:rel-command-emits-event a pf:Relation ;
   pf:cardinality "one-to-many" ;
   pf:rationale "Command coverage (§3.2): a command must produce at least one event; an event is emitted by the command that caused it." .
 
-d:rel-readmodel-projects-entity a pf:Relation ;
-  rdfs:label "projects (entity)" ;
-  pf:from d:e-readmodel ;
-  pf:to d:e-entity ;
-  pf:cardinality "many-to-many" ;
-  pf:rationale "Read-model provenance (§3.2): a read model must be built from at least one entity (no ghost views); an entity feeds many read models." .
-
-d:rel-readmodel-projects-event a pf:Relation ;
-  rdfs:label "projects (event)" ;
-  pf:from d:e-readmodel ;
-  pf:to d:e-event ;
-  pf:cardinality "many-to-many" ;
-  pf:rationale "A read model may also project the events it is built from; an event can feed many read models." .
-
-d:rel-entity-incontext a pf:Relation ;
-  rdfs:label "in context" ;
-  pf:from d:e-entity ;
-  pf:to d:e-boundedcontext ;
-  pf:cardinality "many-to-one" ;
-  pf:rationale "§3.1: an entity belongs to exactly one bounded context (never a flat model); a context contains many entities." .
-
-d:rel-event-incontext a pf:Relation ;
-  rdfs:label "in context" ;
-  pf:from d:e-event ;
-  pf:to d:e-boundedcontext ;
-  pf:cardinality "many-to-one" ;
-  pf:rationale "§3.2: an event lives in exactly one bounded context; a context contains many events." .
-
 d:rel-command-incontext a pf:Relation ;
   rdfs:label "in context" ;
   pf:from d:e-command ;
@@ -366,117 +364,12 @@ d:rel-command-incontext a pf:Relation ;
   pf:cardinality "many-to-one" ;
   pf:rationale "A command lives in exactly one bounded context, sharing that context's ubiquitous language; a context contains many commands." .
 
-d:rel-mapping-maps-entity a pf:Relation ;
-  rdfs:label "maps to" ;
-  pf:from d:e-contextmapping ;
+d:rel-command-targets-entity a pf:Relation ;
+  rdfs:label "targets" ;
+  pf:from d:e-command ;
   pf:to d:e-entity ;
-  pf:cardinality "one-to-many" ;
-  pf:rationale "§3.1: a context mapping connects two concepts (entities) in different bounded contexts — an explicit declared correspondence, never assumed." .
-
-d:rel-pattern-realizes-principle a pf:Relation ;
-  rdfs:label "realizes" ;
-  pf:from d:e-pattern ;
-  pf:to d:e-principle ;
-  pf:cardinality "many-to-many" ;
-  pf:rationale "§4.1: a pattern is a concrete shape that realises at least one principle; a principle can be realised by several patterns." .
-
-d:rel-topdecision-licenses-principle a pf:Relation ;
-  rdfs:label "licenses" ;
-  pf:from d:e-topdecision ;
-  pf:to d:e-principle ;
-  pf:cardinality "one-to-many" ;
-  pf:rationale "§4.1: a top decision is what makes a principle apply — it licenses zero or more; a principle is licensed by the decision that introduces it." .
-
-d:rel-workunit-applies-principle a pf:Relation ;
-  rdfs:label "applies (principle)" ;
-  pf:from d:e-workunit ;
-  pf:to d:e-principle ;
-  pf:cardinality "many-to-many" ;
-  pf:rationale "§5/§4.1 earn-their-place: a work unit emits code shaped by the principles it applies; a principle applied by a work unit (or enforced by a verification) earns its architectural place." .
-
-d:rel-workunit-applies-pattern a pf:Relation ;
-  rdfs:label "applies (pattern)" ;
-  pf:from d:e-workunit ;
-  pf:to d:e-pattern ;
-  pf:cardinality "many-to-many" ;
-  pf:rationale "§5: a work unit emits the patterns it applies; a pattern is applied across many work units." .
-
-d:rel-verification-enforces-principle a pf:Relation ;
-  rdfs:label "enforces (principle)" ;
-  pf:from d:e-verification ;
-  pf:to d:e-principle ;
-  pf:cardinality "many-to-many" ;
-  pf:rationale "§6.1: every verification must name what it protects by enforcing a principle (or contract/model element); a principle can be enforced by several verifications." .
-
-d:rel-verification-enforces-appcontract a pf:Relation ;
-  rdfs:label "enforces (contract)" ;
-  pf:from d:e-verification ;
-  pf:to d:e-appcontract ;
-  pf:cardinality "many-to-many" ;
-  pf:rationale "§6.1: a verification may instead (or also) enforce an application contract — naming the contract it protects." .
-
-d:rel-verification-declares-kind a pf:Relation ;
-  rdfs:label "verification kind" ;
-  pf:from d:e-verification ;
-  pf:to d:e-verificationkind ;
   pf:cardinality "many-to-one" ;
-  pf:rationale "§6.2: a verification declares exactly one kind, which orders it (cheapest gate first); a kind classifies many verifications." .
-
-d:rel-verification-yields-verdict a pf:Relation ;
-  rdfs:label "yields" ;
-  pf:from d:e-verification ;
-  pf:to d:e-verdict ;
-  pf:cardinality "one-to-many" ;
-  pf:rationale "§6: a verification yields a verdict as its outcome; a composite verdict (e.g. release_done) composes several verifications' verdicts." .
-
-d:rel-infra-conformsto-app a pf:Relation ;
-  rdfs:label "conforms to" ;
-  pf:from d:e-infracontract ;
-  pf:to d:e-appcontract ;
-  pf:cardinality "many-to-one" ;
-  pf:rationale "§4.2: an infrastructure contract must satisfy (conform to) the application contract; one application contract is satisfied by many infrastructure contracts." .
-
-d:rel-interface-derivedfrom-entity a pf:Relation ;
-  rdfs:label "derived from" ;
-  pf:from d:e-interfacecontract ;
-  pf:to d:e-entity ;
-  pf:cardinality "many-to-many" ;
-  pf:rationale "§4.4: an interface contract is generated from (derived from) the domain/event model, not hand-written; it draws on many entities." .
-
-d:rel-workunit-derivedfrom-feature a pf:Relation ;
-  rdfs:label "derived from" ;
-  pf:from d:e-workunit ;
-  pf:to d:e-feature ;
-  pf:cardinality "many-to-one" ;
-  pf:rationale "§5: a work unit declares its frozen input — the feature (a flow-shaped slice of the What) it is derived from; one feature drives many work units." .
-
-d:rel-rationaletrace-derivedfrom-topdecision a pf:Relation ;
-  rdfs:label "derived from" ;
-  pf:from d:e-rationaletrace ;
-  pf:to d:e-topdecision ;
-  pf:cardinality "many-to-many" ;
-  pf:rationale "§5: a rationale trace links a produced artifact back to the top decisions that caused it; a decision shows up in many traces." .
-
-d:rel-feature-contains-flow a pf:Relation ;
-  rdfs:label "contains" ;
-  pf:from d:e-feature ;
-  pf:to d:e-flow ;
-  pf:cardinality "one-to-many" ;
-  pf:rationale "§7: a feature is a non-empty, flow-shaped subgraph of the What — it contains at least one flow; a flow ships within the feature it belongs to." .
-
-d:rel-release-contains-feature a pf:Relation ;
-  rdfs:label "contains" ;
-  pf:from d:e-release ;
-  pf:to d:e-feature ;
-  pf:cardinality "one-to-many" ;
-  pf:rationale "§7: a release contains at least one feature and its cut must be closed (dependencies included); a feature ships in one release at a time." .
-
-d:rel-product-realises-archetype a pf:Relation ;
-  rdfs:label "realises" ;
-  pf:from d:e-product ;
-  pf:to d:e-archetype ;
-  pf:cardinality "many-to-many" ;
-  pf:rationale "Composition: a product realises one or more archetypes (their pre-filled How); a reusable archetype is realised across many products." .
+  pf:rationale "A command expresses intent against exactly one aggregate (entity) it operates on; an aggregate is targeted by many commands." .
 
 d:rel-context-realisedby-archetype a pf:Relation ;
   rdfs:label "realised by" ;
@@ -485,19 +378,12 @@ d:rel-context-realisedby-archetype a pf:Relation ;
   pf:cardinality "many-to-one" ;
   pf:rationale "Composition: a bounded context is realised by an archetype instance; one archetype can realise several contexts of the same shape." .
 
-d:rel-product-contains-context a pf:Relation ;
-  rdfs:label "shares domain model" ;
-  pf:from d:e-product ;
-  pf:to d:e-boundedcontext ;
-  pf:cardinality "one-to-many" ;
-  pf:rationale "Composition: a product is a set of archetype instances sharing one domain model — it contains the bounded contexts of that single shared model." .
-
-d:rel-valueobject-incontext a pf:Relation ;
-  rdfs:label "in context" ;
-  pf:from d:e-valueobject ;
-  pf:to d:e-boundedcontext ;
-  pf:cardinality "many-to-one" ;
-  pf:rationale "§3.1: like an entity, a value object belongs to exactly one bounded context, though it has no identity of its own; a context contains many value objects." .
+d:rel-discovery-informs-topdecision a pf:Relation ;
+  rdfs:label "informs" ;
+  pf:from d:e-discoveryrecord ;
+  pf:to d:e-topdecision ;
+  pf:cardinality "many-to-many" ;
+  pf:rationale "§5: a discovery record captures an exploratory session as a diff against the framework layers; its findings inform top decisions and other layers." .
 
 d:rel-entity-composedof-valueobject a pf:Relation ;
   rdfs:label "described by" ;
@@ -506,61 +392,33 @@ d:rel-entity-composedof-valueobject a pf:Relation ;
   pf:cardinality "many-to-many" ;
   pf:rationale "§3.1: an entity is described by value objects (e.g. an attribute typed as Money or Address); a value-object type is reused across many entities." .
 
-d:rel-relation-connects-entity a pf:Relation ;
-  rdfs:label "connects" ;
-  pf:from d:e-relation ;
+d:rel-entity-incontext a pf:Relation ;
+  rdfs:label "in context" ;
+  pf:from d:e-entity ;
+  pf:to d:e-boundedcontext ;
+  pf:cardinality "many-to-one" ;
+  pf:rationale "§3.1: an entity belongs to exactly one bounded context (never a flat model); a context contains many entities." .
+
+d:rel-event-changes-entity a pf:Relation ;
+  rdfs:label "changes" ;
+  pf:from d:e-event ;
   pf:to d:e-entity ;
+  pf:cardinality "many-to-one" ;
+  pf:rationale "The load-bearing relation (§3.2): every event must change exactly one real domain entity — behaviour may not reference structure that does not exist. One entity is changed by many events over time." .
+
+d:rel-event-incontext a pf:Relation ;
+  rdfs:label "in context" ;
+  pf:from d:e-event ;
+  pf:to d:e-boundedcontext ;
+  pf:cardinality "many-to-one" ;
+  pf:rationale "§3.2: an event lives in exactly one bounded context; a context contains many events." .
+
+d:rel-feature-contains-flow a pf:Relation ;
+  rdfs:label "contains" ;
+  pf:from d:e-feature ;
+  pf:to d:e-flow ;
   pf:cardinality "one-to-many" ;
-  pf:rationale "§3.1: a relation is a typed connection naming a source and a target entity; an entity participates in many relations." .
-
-d:rel-invariant-constrains-entity a pf:Relation ;
-  rdfs:label "constrains" ;
-  pf:from d:e-invariant ;
-  pf:to d:e-entity ;
-  pf:cardinality "many-to-one" ;
-  pf:rationale "§3.1: an invariant constrains the entity (aggregate) whose rule it states; an entity may carry many invariants." .
-
-d:rel-wireframe-triggers-command a pf:Relation ;
-  rdfs:label "triggers" ;
-  pf:from d:e-wireframestep ;
-  pf:to d:e-command ;
-  pf:cardinality "many-to-one" ;
-  pf:rationale "§3.2: a wireframe step issues (triggers) the command behind a user action; a command may be triggered from several steps." .
-
-d:rel-wireframe-displays-readmodel a pf:Relation ;
-  rdfs:label "displays" ;
-  pf:from d:e-wireframestep ;
-  pf:to d:e-readmodel ;
-  pf:cardinality "many-to-one" ;
-  pf:rationale "§3.2: a wireframe step displays a read model to the user; a read model may surface in several steps." .
-
-d:rel-layout-derivedfrom-topdecision a pf:Relation ;
-  rdfs:label "derived from" ;
-  pf:from d:e-layoutmodel ;
-  pf:to d:e-topdecision ;
-  pf:cardinality "many-to-one" ;
-  pf:rationale "§4.3: the repository layout model declares which files are legal where; it is derived from the project-shape/layout top decision that licenses it." .
-
-d:rel-verification-enforces-layout a pf:Relation ;
-  rdfs:label "enforces (layout)" ;
-  pf:from d:e-verification ;
-  pf:to d:e-layoutmodel ;
-  pf:cardinality "many-to-many" ;
-  pf:rationale "§6.2: the layout-conformance verification (the cheapest gate, run first) enforces the repository layout model — naming what it protects." .
-
-d:rel-workunit-typedby-tasktype a pf:Relation ;
-  rdfs:label "typed by" ;
-  pf:from d:e-workunit ;
-  pf:to d:e-tasktype ;
-  pf:cardinality "many-to-one" ;
-  pf:rationale "§5: a work unit is dispatched and accepted per a task-type definition (dual-read: dispatch input = capture form = acceptance criteria); one task type governs many work units." .
-
-d:rel-discovery-informs-topdecision a pf:Relation ;
-  rdfs:label "informs" ;
-  pf:from d:e-discoveryrecord ;
-  pf:to d:e-topdecision ;
-  pf:cardinality "many-to-many" ;
-  pf:rationale "§5: a discovery record captures an exploratory session as a diff against the framework layers; its findings inform top decisions and other layers." .
+  pf:rationale "§7: a feature is a non-empty, flow-shaped subgraph of the What — it contains at least one flow; a flow ships within the feature it belongs to." .
 
 d:rel-howcontract-belongsto-archetype a pf:Relation ;
   rdfs:label "is How of" ;
@@ -583,6 +441,13 @@ d:rel-howcontract-carries-appcontract a pf:Relation ;
   pf:cardinality "one-to-one" ;
   pf:rationale "§4.2: a How contract carries exactly one application contract (required) — the invariant code-shaping decisions stable across the archetype's instances." .
 
+d:rel-howcontract-lists-interface a pf:Relation ;
+  rdfs:label "lists" ;
+  pf:from d:e-howcontract ;
+  pf:to d:e-interfacecontract ;
+  pf:cardinality "one-to-many" ;
+  pf:rationale "§4.4: a How contract lists the archetype's published interface contracts, each generated from the domain model." .
+
 d:rel-howcontract-references-layout a pf:Relation ;
   rdfs:label "references" ;
   pf:from d:e-howcontract ;
@@ -590,12 +455,40 @@ d:rel-howcontract-references-layout a pf:Relation ;
   pf:cardinality "one-to-one" ;
   pf:rationale "§4.3: a How contract references the archetype's repository layout model (which files are legal where)." .
 
-d:rel-howcontract-lists-interface a pf:Relation ;
-  rdfs:label "lists" ;
-  pf:from d:e-howcontract ;
-  pf:to d:e-interfacecontract ;
+d:rel-infra-conformsto-app a pf:Relation ;
+  rdfs:label "conforms to" ;
+  pf:from d:e-infracontract ;
+  pf:to d:e-appcontract ;
+  pf:cardinality "many-to-one" ;
+  pf:rationale "§4.2: an infrastructure contract must satisfy (conform to) the application contract; one application contract is satisfied by many infrastructure contracts." .
+
+d:rel-interface-derivedfrom-entity a pf:Relation ;
+  rdfs:label "derived from" ;
+  pf:from d:e-interfacecontract ;
+  pf:to d:e-entity ;
+  pf:cardinality "many-to-many" ;
+  pf:rationale "§4.4: an interface contract is generated from (derived from) the domain/event model, not hand-written; it draws on many entities." .
+
+d:rel-invariant-constrains-entity a pf:Relation ;
+  rdfs:label "constrains" ;
+  pf:from d:e-invariant ;
+  pf:to d:e-entity ;
+  pf:cardinality "many-to-one" ;
+  pf:rationale "§3.1: an invariant constrains the entity (aggregate) whose rule it states; an entity may carry many invariants." .
+
+d:rel-layout-derivedfrom-topdecision a pf:Relation ;
+  rdfs:label "derived from" ;
+  pf:from d:e-layoutmodel ;
+  pf:to d:e-topdecision ;
+  pf:cardinality "many-to-one" ;
+  pf:rationale "§4.3: the repository layout model declares which files are legal where; it is derived from the project-shape/layout top decision that licenses it." .
+
+d:rel-mapping-maps-entity a pf:Relation ;
+  rdfs:label "maps to" ;
+  pf:from d:e-contextmapping ;
+  pf:to d:e-entity ;
   pf:cardinality "one-to-many" ;
-  pf:rationale "§4.4: a How contract lists the archetype's published interface contracts, each generated from the domain model." .
+  pf:rationale "§3.1: a context mapping connects two concepts (entities) in different bounded contexts — an explicit declared correspondence, never assumed." .
 
 d:rel-node-in-lane a pf:Relation ;
   rdfs:label "node in lane" ;
@@ -604,33 +497,189 @@ d:rel-node-in-lane a pf:Relation ;
   pf:cardinality "many-to-one" ;
   pf:rationale "Every View Node belongs to exactly one Model Lane, fixed by its Model Kind." .
 
-d:r-trigger-command a pf:Relation ;
-  rdfs:label "issues" ;
-  pf:from d:e-trigger ;
+d:rel-pattern-realizes-principle a pf:Relation ;
+  rdfs:label "realizes" ;
+  pf:from d:e-pattern ;
+  pf:to d:e-principle ;
+  pf:cardinality "many-to-many" ;
+  pf:rationale "§4.1: a pattern is a concrete shape that realises at least one principle; a principle can be realised by several patterns." .
+
+d:rel-product-contains-context a pf:Relation ;
+  rdfs:label "shares domain model" ;
+  pf:from d:e-product ;
+  pf:to d:e-boundedcontext ;
+  pf:cardinality "one-to-many" ;
+  pf:rationale "Composition: a product is a set of archetype instances sharing one domain model — it contains the bounded contexts of that single shared model." .
+
+d:rel-product-realises-archetype a pf:Relation ;
+  rdfs:label "realises" ;
+  pf:from d:e-product ;
+  pf:to d:e-archetype ;
+  pf:cardinality "many-to-many" ;
+  pf:rationale "Composition: a product realises one or more archetypes (their pre-filled How); a reusable archetype is realised across many products." .
+
+d:rel-rationaletrace-derivedfrom-topdecision a pf:Relation ;
+  rdfs:label "derived from" ;
+  pf:from d:e-rationaletrace ;
+  pf:to d:e-topdecision ;
+  pf:cardinality "many-to-many" ;
+  pf:rationale "§5: a rationale trace links a produced artifact back to the top decisions that caused it; a decision shows up in many traces." .
+
+d:rel-readmodel-projects-entity a pf:Relation ;
+  rdfs:label "projects (entity)" ;
+  pf:from d:e-readmodel ;
+  pf:to d:e-entity ;
+  pf:cardinality "many-to-many" ;
+  pf:rationale "Read-model provenance (§3.2): a read model must be built from at least one entity (no ghost views); an entity feeds many read models." .
+
+d:rel-readmodel-projects-event a pf:Relation ;
+  rdfs:label "projects (event)" ;
+  pf:from d:e-readmodel ;
+  pf:to d:e-event ;
+  pf:cardinality "many-to-many" ;
+  pf:rationale "A read model may also project the events it is built from; an event can feed many read models." .
+
+d:rel-relation-connects-entity a pf:Relation ;
+  rdfs:label "connects" ;
+  pf:from d:e-relation ;
+  pf:to d:e-entity ;
+  pf:cardinality "one-to-many" ;
+  pf:rationale "§3.1: a relation is a typed connection naming a source and a target entity; an entity participates in many relations." .
+
+d:rel-release-contains-feature a pf:Relation ;
+  rdfs:label "contains" ;
+  pf:from d:e-release ;
+  pf:to d:e-feature ;
+  pf:cardinality "one-to-many" ;
+  pf:rationale "§7: a release contains at least one feature and its cut must be closed (dependencies included); a feature ships in one release at a time." .
+
+d:rel-topdecision-licenses-principle a pf:Relation ;
+  rdfs:label "licenses" ;
+  pf:from d:e-topdecision ;
+  pf:to d:e-principle ;
+  pf:cardinality "one-to-many" ;
+  pf:rationale "§4.1: a top decision is what makes a principle apply — it licenses zero or more; a principle is licensed by the decision that introduces it." .
+
+d:rel-valueobject-incontext a pf:Relation ;
+  rdfs:label "in context" ;
+  pf:from d:e-valueobject ;
+  pf:to d:e-boundedcontext ;
+  pf:cardinality "many-to-one" ;
+  pf:rationale "§3.1: like an entity, a value object belongs to exactly one bounded context, though it has no identity of its own; a context contains many value objects." .
+
+d:rel-verification-declares-kind a pf:Relation ;
+  rdfs:label "verification kind" ;
+  pf:from d:e-verification ;
+  pf:to d:e-verificationkind ;
+  pf:cardinality "many-to-one" ;
+  pf:rationale "§6.2: a verification declares exactly one kind, which orders it (cheapest gate first); a kind classifies many verifications." .
+
+d:rel-verification-enforces-appcontract a pf:Relation ;
+  rdfs:label "enforces (contract)" ;
+  pf:from d:e-verification ;
+  pf:to d:e-appcontract ;
+  pf:cardinality "many-to-many" ;
+  pf:rationale "§6.1: a verification may instead (or also) enforce an application contract — naming the contract it protects." .
+
+d:rel-verification-enforces-layout a pf:Relation ;
+  rdfs:label "enforces (layout)" ;
+  pf:from d:e-verification ;
+  pf:to d:e-layoutmodel ;
+  pf:cardinality "many-to-many" ;
+  pf:rationale "§6.2: the layout-conformance verification (the cheapest gate, run first) enforces the repository layout model — naming what it protects." .
+
+d:rel-verification-enforces-principle a pf:Relation ;
+  rdfs:label "enforces (principle)" ;
+  pf:from d:e-verification ;
+  pf:to d:e-principle ;
+  pf:cardinality "many-to-many" ;
+  pf:rationale "§6.1: every verification must name what it protects by enforcing a principle (or contract/model element); a principle can be enforced by several verifications." .
+
+d:rel-verification-yields-verdict a pf:Relation ;
+  rdfs:label "yields" ;
+  pf:from d:e-verification ;
+  pf:to d:e-verdict ;
+  pf:cardinality "one-to-many" ;
+  pf:rationale "§6: a verification yields a verdict as its outcome; a composite verdict (e.g. release_done) composes several verifications' verdicts." .
+
+d:rel-wireframe-displays-readmodel a pf:Relation ;
+  rdfs:label "displays" ;
+  pf:from d:e-wireframestep ;
+  pf:to d:e-readmodel ;
+  pf:cardinality "many-to-one" ;
+  pf:rationale "§3.2: a wireframe step displays a read model to the user; a read model may surface in several steps." .
+
+d:rel-wireframe-triggers-command a pf:Relation ;
+  rdfs:label "triggers" ;
+  pf:from d:e-wireframestep ;
   pf:to d:e-command ;
   pf:cardinality "many-to-one" ;
-  pf:rationale "a Trigger initiates exactly one Command (§3.2.0)" .
+  pf:rationale "§3.2: a wireframe step issues (triggers) the command behind a user action; a command may be triggered from several steps." .
 
-d:r-system-flow a pf:Relation ;
-  rdfs:label "owns" ;
-  pf:from d:e-system ;
-  pf:to d:e-flow ;
-  pf:cardinality "one-to-many" ;
-  pf:rationale "a flow belongs to exactly one system (§3.2.5)" .
+d:rel-workunit-applies-pattern a pf:Relation ;
+  rdfs:label "applies (pattern)" ;
+  pf:from d:e-workunit ;
+  pf:to d:e-pattern ;
+  pf:cardinality "many-to-many" ;
+  pf:rationale "§5: a work unit emits the patterns it applies; a pattern is applied across many work units." .
 
-d:r-decider-entity a pf:Relation ;
-  rdfs:label "decides for" ;
-  pf:from d:e-decider ;
-  pf:to d:e-entity ;
-  pf:cardinality "one-to-one" ;
-  pf:rationale "a Decider governs one aggregate entity (§3.3)" .
+d:rel-workunit-applies-principle a pf:Relation ;
+  rdfs:label "applies (principle)" ;
+  pf:from d:e-workunit ;
+  pf:to d:e-principle ;
+  pf:cardinality "many-to-many" ;
+  pf:rationale "§5/§4.1 earn-their-place: a work unit emits code shaped by the principles it applies; a principle applied by a work unit (or enforced by a verification) earns its architectural place." .
 
-d:r-projector-rm a pf:Relation ;
-  rdfs:label "projects for" ;
-  pf:from d:e-projector ;
-  pf:to d:e-readmodel ;
-  pf:cardinality "one-to-one" ;
-  pf:rationale "a Projector builds one read model (§3.4)" .
+d:rel-workunit-derivedfrom-feature a pf:Relation ;
+  rdfs:label "derived from" ;
+  pf:from d:e-workunit ;
+  pf:to d:e-feature ;
+  pf:cardinality "many-to-one" ;
+  pf:rationale "§5: a work unit declares its frozen input — the feature (a flow-shaped slice of the What) it is derived from; one feature drives many work units." .
+
+d:rel-workunit-typedby-tasktype a pf:Relation ;
+  rdfs:label "typed by" ;
+  pf:from d:e-workunit ;
+  pf:to d:e-tasktype ;
+  pf:cardinality "many-to-one" ;
+  pf:rationale "§5: a work unit is dispatched and accepted per a task-type definition (dual-read: dispatch input = capture form = acceptance criteria); one task type governs many work units." .
+
+d:i-decider-rejects a pf:Invariant ;
+  pf:statement "A Decider must have at least one reachable rejection — it must enforce an invariant, or it should not exist (§3.3 Decider justification)." ;
+  pf:appliesTo d:e-decider .
+
+d:i-system-class a pf:Invariant ;
+  pf:statement "A system's interaction classes must be recognised (gui or tui) — the gating context dimension (§3.2.2)." ;
+  pf:appliesTo d:e-system .
+
+d:i-trigger-source a pf:Invariant ;
+  pf:statement "A trigger's source is exactly one of user, external, or automated; an automated trigger must watch a View (§3.2.0)." ;
+  pf:appliesTo d:e-trigger .
+
+d:inv-appcontract-checkable a pf:Invariant ;
+  pf:statement "§4.2 Every application-contract statement must be checkable (precise enough for a verification to confirm) — a convention that cannot be checked cannot be a contract." ;
+  pf:inContext d:ctx-contracts ;
+  pf:appliesTo d:e-appcontract .
+
+d:inv-appcontract-named a pf:Invariant ;
+  pf:statement "§4.2 An application contract must be named." ;
+  pf:inContext d:ctx-contracts ;
+  pf:appliesTo d:e-appcontract .
+
+d:inv-bridge-direction a pf:Invariant ;
+  pf:statement "Every bridge edge runs from a node in the event lane to a node in the domain lane (behaviour acts on structure); the domain lane never references the event lane." ;
+  pf:inContext d:ctx-view ;
+  pf:appliesTo d:e-viewedge .
+
+d:inv-command-emits a pf:Invariant ;
+  pf:statement "§3.2 A command must emit at least one event (command coverage)." ;
+  pf:inContext d:ctx-model ;
+  pf:appliesTo d:e-command .
+
+d:inv-command-targets a pf:Invariant ;
+  pf:statement "§3.2 A command must target a real aggregate (entity)." ;
+  pf:inContext d:ctx-model ;
+  pf:appliesTo d:e-command .
 
 d:inv-entity-definition a pf:Invariant ;
   pf:statement "§3.1 An entity must carry a business-language definition." ;
@@ -642,31 +691,6 @@ d:inv-entity-onecontext a pf:Invariant ;
   pf:inContext d:ctx-model ;
   pf:appliesTo d:e-entity .
 
-d:inv-relation-cardinality a pf:Invariant ;
-  pf:statement "§3.1 A relation must declare a cardinality." ;
-  pf:inContext d:ctx-model ;
-  pf:appliesTo d:e-relation .
-
-d:inv-relation-rationale a pf:Invariant ;
-  pf:statement "§3.1 A relation must carry rationale (why this link and this cardinality)." ;
-  pf:inContext d:ctx-model ;
-  pf:appliesTo d:e-relation .
-
-d:inv-mapping-twoconcepts a pf:Invariant ;
-  pf:statement "§3.1 A context mapping must connect two concepts (an explicit declared correspondence, never assumed)." ;
-  pf:inContext d:ctx-model ;
-  pf:appliesTo d:e-contextmapping .
-
-d:inv-mapping-rationale a pf:Invariant ;
-  pf:statement "§3.1 A context mapping must state the correspondence (e.g. linked by PersonId)." ;
-  pf:inContext d:ctx-model ;
-  pf:appliesTo d:e-contextmapping .
-
-d:inv-invariant-checkable a pf:Invariant ;
-  pf:statement "§3.1 An invariant must be stated as a checkable constraint." ;
-  pf:inContext d:ctx-model ;
-  pf:appliesTo d:e-invariant .
-
 d:inv-event-changes a pf:Invariant ;
   pf:statement "§3.2 Every event must change a real domain entity (the load-bearing relation; behaviour may not reference structure that does not exist)." ;
   pf:inContext d:ctx-model ;
@@ -677,25 +701,55 @@ d:inv-event-context a pf:Invariant ;
   pf:inContext d:ctx-model ;
   pf:appliesTo d:e-event .
 
-d:inv-command-targets a pf:Invariant ;
-  pf:statement "§3.2 A command must target a real aggregate (entity)." ;
-  pf:inContext d:ctx-model ;
-  pf:appliesTo d:e-command .
+d:inv-feature-subgraph a pf:Invariant ;
+  pf:statement "§7 A feature must be a non-empty subgraph of the What (flow-shaped, not a free-floating ticket)." ;
+  pf:inContext d:ctx-delivery ;
+  pf:appliesTo d:e-feature .
 
-d:inv-command-emits a pf:Invariant ;
-  pf:statement "§3.2 A command must emit at least one event (command coverage)." ;
-  pf:inContext d:ctx-model ;
-  pf:appliesTo d:e-command .
+d:inv-howcontract-required a pf:Invariant ;
+  pf:statement "§4 A How contract must declare the archetype it belongs to and carry an application contract." ;
+  pf:inContext d:ctx-contracts ;
+  pf:appliesTo d:e-howcontract .
 
-d:inv-readmodel-projects a pf:Invariant ;
-  pf:statement "§3.2 A read model must project at least one entity/event (read-model provenance: no ghost views)." ;
-  pf:inContext d:ctx-model ;
-  pf:appliesTo d:e-readmodel .
+d:inv-infra-conforms a pf:Invariant ;
+  pf:statement "§4.2 An infrastructure contract must satisfy (conform to) the application contract." ;
+  pf:inContext d:ctx-contracts ;
+  pf:appliesTo d:e-infracontract .
 
-d:inv-topdecision-rationale a pf:Invariant ;
-  pf:statement "§4.1 A top decision must carry rationale (what it buys, when it applies)." ;
+d:inv-infra-frozen a pf:Invariant ;
+  pf:statement "§4.2 An infrastructure contract must be frozen once chosen (frozen = true), selected per instance at Discovery." ;
+  pf:inContext d:ctx-contracts ;
+  pf:appliesTo d:e-infracontract .
+
+d:inv-interface-derived a pf:Invariant ;
+  pf:statement "§4.4 An interface contract must be generated from (derived from) the domain/event model, not hand-written." ;
+  pf:inContext d:ctx-contracts ;
+  pf:appliesTo d:e-interfacecontract .
+
+d:inv-invariant-checkable a pf:Invariant ;
+  pf:statement "§3.1 An invariant must be stated as a checkable constraint." ;
+  pf:inContext d:ctx-model ;
+  pf:appliesTo d:e-invariant .
+
+d:inv-lane-from-kind a pf:Invariant ;
+  pf:statement "A View Node's lane is derived from its source NodeKind: structural kinds (Entity, ValueObject, Relation, Invariant, ContextMapping) map to the domain lane; behavioural kinds (Event, Command, ReadModel, WireframeStep, Flow) map to the event lane." ;
+  pf:inContext d:ctx-view ;
+  pf:appliesTo d:e-viewnode .
+
+d:inv-mapping-rationale a pf:Invariant ;
+  pf:statement "§3.1 A context mapping must state the correspondence (e.g. linked by PersonId)." ;
+  pf:inContext d:ctx-model ;
+  pf:appliesTo d:e-contextmapping .
+
+d:inv-mapping-twoconcepts a pf:Invariant ;
+  pf:statement "§3.1 A context mapping must connect two concepts (an explicit declared correspondence, never assumed)." ;
+  pf:inContext d:ctx-model ;
+  pf:appliesTo d:e-contextmapping .
+
+d:inv-pattern-realizes a pf:Invariant ;
+  pf:statement "§4.1 A pattern must realise at least one principle." ;
   pf:inContext d:ctx-why ;
-  pf:appliesTo d:e-topdecision .
+  pf:appliesTo d:e-pattern .
 
 d:inv-principle-checkable a pf:Invariant ;
   pf:statement "§4.1 A principle must be stated checkably (a vague principle cannot back a verification)." ;
@@ -707,23 +761,33 @@ d:inv-principle-earnplace a pf:Invariant ;
   pf:inContext d:ctx-why ;
   pf:appliesTo d:e-principle .
 
-d:inv-pattern-realizes a pf:Invariant ;
-  pf:statement "§4.1 A pattern must realise at least one principle." ;
+d:inv-readmodel-projects a pf:Invariant ;
+  pf:statement "§3.2 A read model must project at least one entity/event (read-model provenance: no ghost views)." ;
+  pf:inContext d:ctx-model ;
+  pf:appliesTo d:e-readmodel .
+
+d:inv-relation-cardinality a pf:Invariant ;
+  pf:statement "§3.1 A relation must declare a cardinality." ;
+  pf:inContext d:ctx-model ;
+  pf:appliesTo d:e-relation .
+
+d:inv-relation-rationale a pf:Invariant ;
+  pf:statement "§3.1 A relation must carry rationale (why this link and this cardinality)." ;
+  pf:inContext d:ctx-model ;
+  pf:appliesTo d:e-relation .
+
+d:inv-release-closedcut a pf:Invariant ;
+  pf:statement "§7 A release must contain at least one feature; its cut must be closed (checked at validation time against dependencies)." ;
+  pf:inContext d:ctx-delivery ;
+  pf:appliesTo d:e-release .
+
+d:inv-topdecision-rationale a pf:Invariant ;
+  pf:statement "§4.1 A top decision must carry rationale (what it buys, when it applies)." ;
   pf:inContext d:ctx-why ;
-  pf:appliesTo d:e-pattern .
+  pf:appliesTo d:e-topdecision .
 
-d:inv-infra-conforms a pf:Invariant ;
-  pf:statement "§4.2 An infrastructure contract must satisfy (conform to) the application contract." ;
-  pf:inContext d:ctx-contracts ;
-  pf:appliesTo d:e-infracontract .
-
-d:inv-interface-derived a pf:Invariant ;
-  pf:statement "§4.4 An interface contract must be generated from (derived from) the domain/event model, not hand-written." ;
-  pf:inContext d:ctx-contracts ;
-  pf:appliesTo d:e-interfacecontract .
-
-d:inv-workunit-frozeninput a pf:Invariant ;
-  pf:statement "§5 A work unit must declare its (frozen) input — what it is derived from." ;
+d:inv-trace-truth a pf:Invariant ;
+  pf:statement "§5/§4.1 The trace must be true (the crown rule): every principle a work unit applies must be enforced by a passing verification, or the claim must be retracted." ;
   pf:inContext d:ctx-realisation ;
   pf:appliesTo d:e-workunit .
 
@@ -737,62 +801,10 @@ d:inv-verification-kind a pf:Invariant ;
   pf:inContext d:ctx-verification ;
   pf:appliesTo d:e-verification .
 
-d:inv-feature-subgraph a pf:Invariant ;
-  pf:statement "§7 A feature must be a non-empty subgraph of the What (flow-shaped, not a free-floating ticket)." ;
-  pf:inContext d:ctx-delivery ;
-  pf:appliesTo d:e-feature .
-
-d:inv-release-closedcut a pf:Invariant ;
-  pf:statement "§7 A release must contain at least one feature; its cut must be closed (checked at validation time against dependencies)." ;
-  pf:inContext d:ctx-delivery ;
-  pf:appliesTo d:e-release .
-
-d:inv-trace-truth a pf:Invariant ;
-  pf:statement "§5/§4.1 The trace must be true (the crown rule): every principle a work unit applies must be enforced by a passing verification, or the claim must be retracted." ;
+d:inv-workunit-frozeninput a pf:Invariant ;
+  pf:statement "§5 A work unit must declare its (frozen) input — what it is derived from." ;
   pf:inContext d:ctx-realisation ;
   pf:appliesTo d:e-workunit .
-
-d:inv-appcontract-named a pf:Invariant ;
-  pf:statement "§4.2 An application contract must be named." ;
-  pf:inContext d:ctx-contracts ;
-  pf:appliesTo d:e-appcontract .
-
-d:inv-appcontract-checkable a pf:Invariant ;
-  pf:statement "§4.2 Every application-contract statement must be checkable (precise enough for a verification to confirm) — a convention that cannot be checked cannot be a contract." ;
-  pf:inContext d:ctx-contracts ;
-  pf:appliesTo d:e-appcontract .
-
-d:inv-infra-frozen a pf:Invariant ;
-  pf:statement "§4.2 An infrastructure contract must be frozen once chosen (frozen = true), selected per instance at Discovery." ;
-  pf:inContext d:ctx-contracts ;
-  pf:appliesTo d:e-infracontract .
-
-d:inv-howcontract-required a pf:Invariant ;
-  pf:statement "§4 A How contract must declare the archetype it belongs to and carry an application contract." ;
-  pf:inContext d:ctx-contracts ;
-  pf:appliesTo d:e-howcontract .
-
-d:inv-lane-from-kind a pf:Invariant ;
-  pf:statement "A View Node's lane is derived from its source NodeKind: structural kinds (Entity, ValueObject, Relation, Invariant, ContextMapping) map to the domain lane; behavioural kinds (Event, Command, ReadModel, WireframeStep, Flow) map to the event lane." ;
-  pf:inContext d:ctx-view ;
-  pf:appliesTo d:e-viewnode .
-
-d:inv-bridge-direction a pf:Invariant ;
-  pf:statement "Every bridge edge runs from a node in the event lane to a node in the domain lane (behaviour acts on structure); the domain lane never references the event lane." ;
-  pf:inContext d:ctx-view ;
-  pf:appliesTo d:e-viewedge .
-
-d:i-system-class a pf:Invariant ;
-  pf:statement "A system's interaction classes must be recognised (gui or tui) — the gating context dimension (§3.2.2)." ;
-  pf:appliesTo d:e-system .
-
-d:i-trigger-source a pf:Invariant ;
-  pf:statement "A trigger's source is exactly one of user, external, or automated; an automated trigger must watch a View (§3.2.0)." ;
-  pf:appliesTo d:e-trigger .
-
-d:i-decider-rejects a pf:Invariant ;
-  pf:statement "A Decider must have at least one reachable rejection — it must enforce an invariant, or it should not exist (§3.3 Decider justification)." ;
-  pf:appliesTo d:e-decider .
 
 d:map-delivery-model a pf:ContextMapping ;
   pf:mapsTo d:e-feature ;
@@ -800,17 +812,71 @@ d:map-delivery-model a pf:ContextMapping ;
   pf:mappingKind "shared-kernel" ;
   pf:rationale "A feature (Delivery) is a flow-shaped subgraph of the What (the Model) — Delivery does not copy model nodes, it shares the very same Flow/Entity nodes. The Model and Delivery contexts share a kernel." .
 
+d:map-realisation-contracts a pf:ContextMapping ;
+  pf:mapsTo d:e-appcontract ;
+  pf:mapsTo d:e-workunit ;
+  pf:mappingKind "conformist" ;
+  pf:rationale "Work units (Realisation) emit code that must conform to the Contracts context's application contract; Realisation is a conformist downstream of Contracts, taking the contract as given." .
+
 d:map-verification-why a pf:ContextMapping ;
-  pf:mapsTo d:e-verification ;
   pf:mapsTo d:e-principle ;
+  pf:mapsTo d:e-verification ;
   pf:mappingKind "customer-supplier" ;
   pf:rationale "Verification enforces principles authored in The Why; the principle's checkable statement is the contract between them. The Why is the supplier of statements, Verification the customer that proves they hold." .
 
-d:map-realisation-contracts a pf:ContextMapping ;
-  pf:mapsTo d:e-workunit ;
-  pf:mapsTo d:e-appcontract ;
-  pf:mappingKind "conformist" ;
-  pf:rationale "Work units (Realisation) emit code that must conform to the Contracts context's application contract; Realisation is a conformist downstream of Contracts, taking the contract as given." .
+d:cmd-accept-decision a pf:Command ;
+  rdfs:label "Accept Decision" ;
+  pf:inContext d:ctx-why ;
+  pf:targets d:e-topdecision ;
+  pf:emits d:ev-decision-accepted .
+
+d:cmd-add-bounded-context a pf:Command ;
+  rdfs:label "Add Bounded Context" ;
+  pf:inContext d:ctx-model ;
+  pf:targets d:e-boundedcontext ;
+  pf:emits d:ev-context-added .
+
+d:cmd-add-command a pf:Command ;
+  rdfs:label "Add Command" ;
+  pf:inContext d:ctx-model ;
+  pf:targets d:e-command ;
+  pf:emits d:ev-command-added .
+
+d:cmd-add-entity a pf:Command ;
+  rdfs:label "Add Entity" ;
+  pf:inContext d:ctx-model ;
+  pf:targets d:e-entity ;
+  pf:emits d:ev-entity-added .
+
+d:cmd-add-event a pf:Command ;
+  rdfs:label "Add Event" ;
+  pf:inContext d:ctx-model ;
+  pf:targets d:e-event ;
+  pf:emits d:ev-event-added .
+
+d:cmd-agent-init a pf:Command ;
+  rdfs:label "Initialize Agent Context" ;
+  pf:inContext d:ctx-composition ;
+  pf:targets d:e-product ;
+  pf:emits d:ev-agent-context-initialized .
+
+d:cmd-check-conformance a pf:Command ;
+  rdfs:label "Check Conformance" ;
+  pf:inContext d:ctx-verification ;
+  pf:targets d:e-product ;
+  pf:emits d:ev-conformance-evaluated .
+
+d:cmd-checkout a pf:Command ;
+  rdfs:label "Checkout" ;
+  pf:inContext d:ctx-shop ;
+  pf:targets d:e-cart ;
+  pf:emits d:ev-checked-out .
+
+d:cmd-finalize-session a pf:Command ;
+  rdfs:label "Finalize Session" ;
+  pf:inContext d:ctx-composition ;
+  pf:targets d:e-product ;
+  pf:emits d:ev-what-finalized .
 
 d:cmd-implement-feature a pf:Command ;
   rdfs:label "Implement Feature" ;
@@ -819,60 +885,11 @@ d:cmd-implement-feature a pf:Command ;
   pf:emits d:ev-context-assembled ;
   pf:emits d:ev-workunit-dispatched .
 
-d:cmd-verify-feature a pf:Command ;
-  rdfs:label "Verify Feature" ;
-  pf:inContext d:ctx-verification ;
-  pf:targets d:e-feature ;
-  pf:emits d:ev-verification-run ;
-  pf:emits d:ev-feature-completed .
-
-d:cmd-check-conformance a pf:Command ;
-  rdfs:label "Check Conformance" ;
-  pf:inContext d:ctx-verification ;
-  pf:targets d:e-product ;
-  pf:emits d:ev-conformance-evaluated .
-
-d:cmd-add-bounded-context a pf:Command ;
-  rdfs:label "Add Bounded Context" ;
-  pf:inContext d:ctx-model ;
-  pf:targets d:e-boundedcontext ;
-  pf:emits d:ev-context-added .
-
-d:cmd-add-entity a pf:Command ;
-  rdfs:label "Add Entity" ;
-  pf:inContext d:ctx-model ;
-  pf:targets d:e-entity ;
-  pf:emits d:ev-entity-added .
-
-d:cmd-validate-what a pf:Command ;
-  rdfs:label "Validate What" ;
-  pf:inContext d:ctx-verification ;
-  pf:targets d:e-product ;
-  pf:emits d:ev-what-validated .
-
-d:cmd-finalize-session a pf:Command ;
-  rdfs:label "Finalize Session" ;
-  pf:inContext d:ctx-composition ;
-  pf:targets d:e-product ;
-  pf:emits d:ev-what-finalized .
-
 d:cmd-init-repo a pf:Command ;
   rdfs:label "Initialize Repository" ;
   pf:inContext d:ctx-composition ;
   pf:targets d:e-product ;
   pf:emits d:ev-repo-initialized .
-
-d:cmd-agent-init a pf:Command ;
-  rdfs:label "Initialize Agent Context" ;
-  pf:inContext d:ctx-composition ;
-  pf:targets d:e-product ;
-  pf:emits d:ev-agent-context-initialized .
-
-d:cmd-accept-decision a pf:Command ;
-  rdfs:label "Accept Decision" ;
-  pf:inContext d:ctx-why ;
-  pf:targets d:e-topdecision ;
-  pf:emits d:ev-decision-accepted .
 
 d:cmd-refetch-graph a pf:Command ;
   rdfs:label "Refetch Graph" ;
@@ -886,43 +903,33 @@ d:cmd-render-view a pf:Command ;
   pf:targets d:e-viewgraph ;
   pf:emits d:ev-view-refreshed .
 
-d:cmd-add-event a pf:Command ;
-  rdfs:label "Add Event" ;
-  pf:inContext d:ctx-model ;
-  pf:targets d:e-event ;
-  pf:emits d:ev-event-added .
-
-d:cmd-add-command a pf:Command ;
-  rdfs:label "Add Command" ;
-  pf:inContext d:ctx-model ;
-  pf:targets d:e-command ;
-  pf:emits d:ev-command-added .
-
-d:cmd-checkout a pf:Command ;
-  rdfs:label "Checkout" ;
-  pf:inContext d:ctx-shop ;
-  pf:targets d:e-cart ;
-  pf:emits d:ev-checked-out .
-
-d:ev-context-assembled a pf:Event ;
-  rdfs:label "Context Bundle Assembled" ;
-  pf:inContext d:ctx-realisation ;
-  pf:changes d:e-workunit .
-
-d:ev-workunit-dispatched a pf:Event ;
-  rdfs:label "Work Unit Dispatched" ;
-  pf:inContext d:ctx-realisation ;
-  pf:changes d:e-workunit .
-
-d:ev-verification-run a pf:Event ;
-  rdfs:label "Verification Run" ;
+d:cmd-validate-what a pf:Command ;
+  rdfs:label "Validate What" ;
   pf:inContext d:ctx-verification ;
-  pf:changes d:e-verdict .
+  pf:targets d:e-product ;
+  pf:emits d:ev-what-validated .
 
-d:ev-feature-completed a pf:Event ;
-  rdfs:label "Feature Completed" ;
-  pf:inContext d:ctx-delivery ;
-  pf:changes d:e-feature .
+d:cmd-verify-feature a pf:Command ;
+  rdfs:label "Verify Feature" ;
+  pf:inContext d:ctx-verification ;
+  pf:targets d:e-feature ;
+  pf:emits d:ev-feature-completed ;
+  pf:emits d:ev-verification-run .
+
+d:ev-agent-context-initialized a pf:Event ;
+  rdfs:label "Agent Context Initialized" ;
+  pf:inContext d:ctx-composition ;
+  pf:changes d:e-product .
+
+d:ev-checked-out a pf:Event ;
+  rdfs:label "Checked Out" ;
+  pf:inContext d:ctx-shop ;
+  pf:changes d:e-cart .
+
+d:ev-command-added a pf:Event ;
+  rdfs:label "Command Added" ;
+  pf:inContext d:ctx-model ;
+  pf:changes d:e-command .
 
 d:ev-conformance-evaluated a pf:Event ;
   rdfs:label "Conformance Evaluated" ;
@@ -934,60 +941,75 @@ d:ev-context-added a pf:Event ;
   pf:inContext d:ctx-model ;
   pf:changes d:e-boundedcontext .
 
-d:ev-entity-added a pf:Event ;
-  rdfs:label "Entity Added" ;
-  pf:inContext d:ctx-model ;
-  pf:changes d:e-entity .
-
-d:ev-what-validated a pf:Event ;
-  rdfs:label "What Validated" ;
-  pf:inContext d:ctx-verification ;
-  pf:changes d:e-verdict .
-
-d:ev-what-finalized a pf:Event ;
-  rdfs:label "What Finalized" ;
-  pf:inContext d:ctx-composition ;
-  pf:changes d:e-product .
-
-d:ev-repo-initialized a pf:Event ;
-  rdfs:label "Repository Initialized" ;
-  pf:inContext d:ctx-composition ;
-  pf:changes d:e-product .
-
-d:ev-agent-context-initialized a pf:Event ;
-  rdfs:label "Agent Context Initialized" ;
-  pf:inContext d:ctx-composition ;
-  pf:changes d:e-product .
+d:ev-context-assembled a pf:Event ;
+  rdfs:label "Context Bundle Assembled" ;
+  pf:inContext d:ctx-realisation ;
+  pf:changes d:e-workunit .
 
 d:ev-decision-accepted a pf:Event ;
   rdfs:label "Decision Accepted" ;
   pf:inContext d:ctx-why ;
   pf:changes d:e-topdecision .
 
-d:ev-graph-changed a pf:Event ;
-  rdfs:label "Graph Changed" ;
-  pf:inContext d:ctx-view ;
-  pf:changes d:e-viewgraph .
-
-d:ev-view-refreshed a pf:Event ;
-  rdfs:label "View Refreshed" ;
-  pf:inContext d:ctx-view ;
-  pf:changes d:e-viewgraph .
+d:ev-entity-added a pf:Event ;
+  rdfs:label "Entity Added" ;
+  pf:inContext d:ctx-model ;
+  pf:changes d:e-entity .
 
 d:ev-event-added a pf:Event ;
   rdfs:label "Event Added" ;
   pf:inContext d:ctx-model ;
   pf:changes d:e-event .
 
-d:ev-command-added a pf:Event ;
-  rdfs:label "Command Added" ;
-  pf:inContext d:ctx-model ;
-  pf:changes d:e-command .
+d:ev-feature-completed a pf:Event ;
+  rdfs:label "Feature Completed" ;
+  pf:inContext d:ctx-delivery ;
+  pf:changes d:e-feature .
 
-d:ev-checked-out a pf:Event ;
-  rdfs:label "Checked Out" ;
-  pf:inContext d:ctx-shop ;
-  pf:changes d:e-cart .
+d:ev-graph-changed a pf:Event ;
+  rdfs:label "Graph Changed" ;
+  pf:inContext d:ctx-view ;
+  pf:changes d:e-viewgraph .
+
+d:ev-repo-initialized a pf:Event ;
+  rdfs:label "Repository Initialized" ;
+  pf:inContext d:ctx-composition ;
+  pf:changes d:e-product .
+
+d:ev-verification-run a pf:Event ;
+  rdfs:label "Verification Run" ;
+  pf:inContext d:ctx-verification ;
+  pf:changes d:e-verdict .
+
+d:ev-view-refreshed a pf:Event ;
+  rdfs:label "View Refreshed" ;
+  pf:inContext d:ctx-view ;
+  pf:changes d:e-viewgraph .
+
+d:ev-what-finalized a pf:Event ;
+  rdfs:label "What Finalized" ;
+  pf:inContext d:ctx-composition ;
+  pf:changes d:e-product .
+
+d:ev-what-validated a pf:Event ;
+  rdfs:label "What Validated" ;
+  pf:inContext d:ctx-verification ;
+  pf:changes d:e-verdict .
+
+d:ev-workunit-dispatched a pf:Event ;
+  rdfs:label "Work Unit Dispatched" ;
+  pf:inContext d:ctx-realisation ;
+  pf:changes d:e-workunit .
+
+d:rm-cart a pf:ReadModel ;
+  rdfs:label "Cart Summary" ;
+  pf:projects d:e-cart .
+
+d:rm-conformance-report a pf:ReadModel ;
+  rdfs:label "Conformance Report" ;
+  pf:projects d:e-product ;
+  pf:projects d:e-verdict ;
+  pf:projects d:e-verification .
 
 d:rm-context-bundle a pf:ReadModel ;
   rdfs:label "Context Bundle" ;
@@ -995,61 +1017,50 @@ d:rm-context-bundle a pf:ReadModel ;
   pf:projects d:e-topdecision ;
   pf:projects d:e-verification .
 
+d:rm-decision-view a pf:ReadModel ;
+  rdfs:label "Decision View" ;
+  pf:projects d:e-principle ;
+  pf:projects d:e-topdecision .
+
 d:rm-feature-status a pf:ReadModel ;
   rdfs:label "Feature Status / Checklist" ;
   pf:projects d:e-feature ;
   pf:projects d:e-verdict .
 
-d:rm-conformance-report a pf:ReadModel ;
-  rdfs:label "Conformance Report" ;
-  pf:projects d:e-verdict ;
-  pf:projects d:e-product ;
-  pf:projects d:e-verification .
+d:rm-init-summary a pf:ReadModel ;
+  rdfs:label "Init Summary" ;
+  pf:projects d:e-layoutmodel ;
+  pf:projects d:e-product .
 
 d:rm-open-questions a pf:ReadModel ;
   rdfs:label "Open Questions" ;
-  pf:projects d:e-entity ;
   pf:projects d:e-boundedcontext ;
+  pf:projects d:e-entity ;
   pf:projects d:e-relation .
-
-d:rm-init-summary a pf:ReadModel ;
-  rdfs:label "Init Summary" ;
-  pf:projects d:e-product ;
-  pf:projects d:e-layoutmodel .
 
 d:rm-product-status a pf:ReadModel ;
   rdfs:label "Product Status Overview" ;
-  pf:projects d:e-product ;
   pf:projects d:e-feature ;
+  pf:projects d:e-product ;
   pf:projects d:e-release ;
   pf:projects d:e-verdict .
-
-d:rm-decision-view a pf:ReadModel ;
-  rdfs:label "Decision View" ;
-  pf:projects d:e-topdecision ;
-  pf:projects d:e-principle .
 
 d:rm-view-graph a pf:ReadModel ;
   rdfs:label "View Graph Projection" ;
   pf:projects d:e-viewgraph .
 
-d:rm-cart a pf:ReadModel ;
-  rdfs:label "Cart Summary" ;
-  pf:projects d:e-cart .
+d:wf-two-lane-canvas a pf:WireframeStep ;
+  rdfs:label "Two-Lane Canvas" ;
+  pf:displays d:rm-view-graph .
 
-d:ws-run-implement a pf:WireframeStep ;
-  rdfs:label "Run `product implement FT-XXX`" ;
-  pf:triggers d:cmd-implement-feature ;
-  pf:displays d:rm-context-bundle .
-
-d:ws-view-checklist a pf:WireframeStep ;
-  rdfs:label "View regenerated checklist / feature status" ;
-  pf:displays d:rm-feature-status .
-
-d:ws-run-conformance a pf:WireframeStep ;
-  rdfs:label "Run `product conformance check`" ;
-  pf:triggers d:cmd-check-conformance ;
-  pf:displays d:rm-conformance-report .
+d:ws-checkout a pf:WireframeStep ;
+  rdfs:label "Checkout Screen" ;
+  pf:surfaces [ pf:projection d:rm-cart ; pf:typedAs d:aio-cart-list ] ;
+  pf:offers [ pf:command d:cmd-checkout ; pf:typedAs d:aio-pay-button ] ;
+  pf:mustSatisfy d:wcag-contrast ;
+  pf:mustSatisfy d:wcag-label ;
+  pf:triggers d:cmd-checkout ;
+  pf:displays d:rm-cart .
 
 d:ws-facilitate a pf:WireframeStep ;
   rdfs:label "Facilitator captures artifacts; reviews open questions" ;
@@ -1060,6 +1071,21 @@ d:ws-finalize a pf:WireframeStep ;
   rdfs:label "Run finalize to export conformant Turtle + provenance" ;
   pf:triggers d:cmd-finalize-session .
 
+d:ws-run-accept a pf:WireframeStep ;
+  rdfs:label "Run `product adr status ADR-XXX accepted`" ;
+  pf:triggers d:cmd-accept-decision ;
+  pf:displays d:rm-decision-view .
+
+d:ws-run-conformance a pf:WireframeStep ;
+  rdfs:label "Run `product conformance check`" ;
+  pf:triggers d:cmd-check-conformance ;
+  pf:displays d:rm-conformance-report .
+
+d:ws-run-implement a pf:WireframeStep ;
+  rdfs:label "Run `product implement FT-XXX`" ;
+  pf:triggers d:cmd-implement-feature ;
+  pf:displays d:rm-context-bundle .
+
 d:ws-run-init a pf:WireframeStep ;
   rdfs:label "Run `product init`" ;
   pf:triggers d:cmd-init-repo ;
@@ -1069,122 +1095,106 @@ d:ws-run-status a pf:WireframeStep ;
   rdfs:label "Run `product status`" ;
   pf:displays d:rm-product-status .
 
-d:ws-run-accept a pf:WireframeStep ;
-  rdfs:label "Run `product adr status ADR-XXX accepted`" ;
-  pf:triggers d:cmd-accept-decision ;
-  pf:displays d:rm-decision-view .
+d:ws-view-checklist a pf:WireframeStep ;
+  rdfs:label "View regenerated checklist / feature status" ;
+  pf:displays d:rm-feature-status .
 
-d:wf-two-lane-canvas a pf:WireframeStep ;
-  rdfs:label "Two-Lane Canvas" ;
-  pf:displays d:rm-view-graph .
-
-d:ws-checkout a pf:WireframeStep ;
-  rdfs:label "Checkout Screen" ;
-  pf:surfaces d:rm-cart ;
-  pf:typedAs d:aio-cart-list ;
-  pf:offers d:cmd-checkout ;
-  pf:typedAs d:aio-pay-button ;
-  pf:mustSatisfy d:wcag-label ;
-  pf:mustSatisfy d:wcag-contrast ;
-  pf:triggers d:cmd-checkout ;
-  pf:displays d:rm-cart .
-
-d:flow-implement-loop a pf:Flow ;
-  rdfs:label "Implement Loop (spec → code → done)" ;
-  pf:contains d:ws-run-implement ;
-  pf:contains d:cmd-implement-feature ;
-  pf:contains d:ev-context-assembled ;
-  pf:contains d:ev-workunit-dispatched ;
-  pf:contains d:cmd-verify-feature ;
-  pf:contains d:ev-verification-run ;
-  pf:contains d:ev-feature-completed ;
-  pf:contains d:rm-feature-status ;
-  pf:contains d:ws-view-checklist ;
-  pf:systemOf d:product-cli .
-
-d:flow-conformance a pf:Flow ;
-  rdfs:label "Check Conformance" ;
-  pf:contains d:ws-run-conformance ;
-  pf:contains d:cmd-check-conformance ;
-  pf:contains d:ev-conformance-evaluated ;
-  pf:contains d:rm-conformance-report ;
+d:flow-accept-decision a pf:Flow ;
+  rdfs:label "Accept a Decision (ADR → accepted)" ;
+  pf:contains d:cmd-accept-decision ;
+  pf:contains d:ev-decision-accepted ;
+  pf:contains d:rm-decision-view ;
+  pf:contains d:ws-run-accept ;
   pf:systemOf d:product-cli .
 
 d:flow-capture-what a pf:Flow ;
   rdfs:label "Capture the What (this session)" ;
-  pf:contains d:ws-facilitate ;
   pf:contains d:cmd-add-bounded-context ;
-  pf:contains d:ev-context-added ;
   pf:contains d:cmd-add-entity ;
-  pf:contains d:ev-entity-added ;
-  pf:contains d:rm-open-questions ;
-  pf:contains d:cmd-validate-what ;
-  pf:contains d:ev-what-validated ;
-  pf:contains d:ws-finalize ;
   pf:contains d:cmd-finalize-session ;
+  pf:contains d:cmd-validate-what ;
+  pf:contains d:ev-context-added ;
+  pf:contains d:ev-entity-added ;
   pf:contains d:ev-what-finalized ;
+  pf:contains d:ev-what-validated ;
+  pf:contains d:rm-open-questions ;
+  pf:contains d:ws-facilitate ;
+  pf:contains d:ws-finalize ;
+  pf:systemOf d:product-cli .
+
+d:flow-conformance a pf:Flow ;
+  rdfs:label "Check Conformance" ;
+  pf:contains d:cmd-check-conformance ;
+  pf:contains d:ev-conformance-evaluated ;
+  pf:contains d:rm-conformance-report ;
+  pf:contains d:ws-run-conformance ;
+  pf:systemOf d:product-cli .
+
+d:flow-implement-loop a pf:Flow ;
+  rdfs:label "Implement Loop (spec → code → done)" ;
+  pf:contains d:cmd-implement-feature ;
+  pf:contains d:cmd-verify-feature ;
+  pf:contains d:ev-context-assembled ;
+  pf:contains d:ev-feature-completed ;
+  pf:contains d:ev-verification-run ;
+  pf:contains d:ev-workunit-dispatched ;
+  pf:contains d:rm-feature-status ;
+  pf:contains d:ws-run-implement ;
+  pf:contains d:ws-view-checklist ;
   pf:systemOf d:product-cli .
 
 d:flow-init a pf:Flow ;
   rdfs:label "Initialize Repository (init + agent-init)" ;
-  pf:contains d:ws-run-init ;
-  pf:contains d:cmd-init-repo ;
-  pf:contains d:ev-repo-initialized ;
   pf:contains d:cmd-agent-init ;
+  pf:contains d:cmd-init-repo ;
   pf:contains d:ev-agent-context-initialized ;
+  pf:contains d:ev-repo-initialized ;
   pf:contains d:rm-init-summary ;
-  pf:systemOf d:product-cli .
-
-d:flow-status a pf:Flow ;
-  rdfs:label "Product Status Overview (read-only)" ;
-  pf:contains d:ws-run-status ;
-  pf:contains d:rm-product-status ;
-  pf:systemOf d:product-cli .
-
-d:flow-accept-decision a pf:Flow ;
-  rdfs:label "Accept a Decision (ADR → accepted)" ;
-  pf:contains d:ws-run-accept ;
-  pf:contains d:cmd-accept-decision ;
-  pf:contains d:ev-decision-accepted ;
-  pf:contains d:rm-decision-view ;
+  pf:contains d:ws-run-init ;
   pf:systemOf d:product-cli .
 
 d:flow-live-update a pf:Flow ;
   rdfs:label "Live Update" ;
-  pf:contains d:ev-graph-changed ;
   pf:contains d:cmd-refetch-graph ;
   pf:contains d:cmd-render-view ;
+  pf:contains d:ev-graph-changed ;
   pf:contains d:ev-view-refreshed ;
   pf:systemOf d:product-view .
 
 d:flow-model-session a pf:Flow ;
   rdfs:label "Model with the event model, view both" ;
-  pf:contains d:ws-facilitate ;
   pf:contains d:cmd-add-bounded-context ;
-  pf:contains d:ev-context-added ;
-  pf:contains d:cmd-add-entity ;
-  pf:contains d:ev-entity-added ;
-  pf:contains d:cmd-add-event ;
-  pf:contains d:ev-event-added ;
   pf:contains d:cmd-add-command ;
-  pf:contains d:ev-command-added ;
+  pf:contains d:cmd-add-entity ;
+  pf:contains d:cmd-add-event ;
   pf:contains d:cmd-render-view ;
+  pf:contains d:ev-command-added ;
+  pf:contains d:ev-context-added ;
+  pf:contains d:ev-entity-added ;
+  pf:contains d:ev-event-added ;
   pf:contains d:ev-view-refreshed ;
+  pf:contains d:ws-facilitate ;
+  pf:systemOf d:product-cli .
+
+d:flow-status a pf:Flow ;
+  rdfs:label "Product Status Overview (read-only)" ;
+  pf:contains d:rm-product-status ;
+  pf:contains d:ws-run-status ;
   pf:systemOf d:product-cli .
 
 d:aio-cart-list a pf:Aio ;
   rdfs:label "Cart List" ;
   pf:means "display the line items" .
 
-d:aio-quantity a pf:Aio ;
-  rdfs:label "Quantity Stepper" ;
-  pf:means "adjust an integer count" ;
-  pf:mustSatisfy d:wcag-label .
-
 d:aio-pay-button a pf:Aio ;
   rdfs:label "Pay Button" ;
   pf:means "commit the purchase" ;
   pf:mustSatisfy d:wcag-contrast .
+
+d:aio-quantity a pf:Aio ;
+  rdfs:label "Quantity Stepper" ;
+  pf:means "adjust an integer count" ;
+  pf:mustSatisfy d:wcag-label .
 
 d:cou-mobile a pf:ContextOfUse ;
   rdfs:label "Mobile Web" ;
@@ -1195,23 +1205,32 @@ d:app-shop a pf:ApplicationRoot ;
   rdfs:label "Shop App" ;
   pf:navigatesFromRoot d:ws-checkout .
 
-d:wcag-label a pf:WcagCriterion ;
-  rdfs:label "3.3.2 Labels or Instructions" ;
-  pf:level "A" ;
-  pf:satisfied false .
-
 d:wcag-contrast a pf:WcagCriterion ;
   rdfs:label "1.4.3 Contrast (Minimum)" ;
   pf:level "AA" ;
   pf:satisfied false .
 
+d:wcag-label a pf:WcagCriterion ;
+  rdfs:label "3.3.2 Labels or Instructions" ;
+  pf:level "A" ;
+  pf:satisfied false .
+
 d:ds-shop a pf:DesignSystem ;
   rdfs:label "Shop Design System" ;
+  pf:hasCio d:cio-button ;
   pf:hasCio d:cio-list ;
   pf:hasCio d:cio-stepper ;
-  pf:hasCio d:cio-button ;
   pf:hasToken "color/accent" ;
   pf:hasToken "space/md" .
+
+d:cio-button a pf:Cio ;
+  rdfs:label "PrimaryButton" .
+
+d:cio-list a pf:Cio ;
+  rdfs:label "ItemList" .
+
+d:cio-stepper a pf:Cio ;
+  rdfs:label "NumberStepper" .
 
 d:rr-list a pf:ReificationRule ;
   pf:reifies d:aio-cart-list ;
@@ -1219,24 +1238,17 @@ d:rr-list a pf:ReificationRule ;
   pf:toCio d:cio-list ;
   pf:rationale "lists render as ItemList on mobile" .
 
-d:rr-qty a pf:ReificationRule ;
-  pf:reifies d:aio-quantity ;
-  pf:inContext d:cou-mobile ;
-  pf:toCio d:cio-stepper ;
-  pf:rationale "quantity uses a NumberStepper on mobile" .
-
 d:rr-pay a pf:ReificationRule ;
   pf:reifies d:aio-pay-button ;
   pf:inContext d:cou-mobile ;
   pf:toCio d:cio-button ;
   pf:rationale "primary action is a PrimaryButton" .
 
-d:sys-shop a pf:System ;
-  rdfs:label "Bookstore Demo" ;
-  pf:systemKind "application" ;
-  pf:purpose "the seeded bookstore What model used for demos and workshops" ;
-  pf:targetsClass "gui" ;
-  pf:rootsAt d:app-shop .
+d:rr-qty a pf:ReificationRule ;
+  pf:reifies d:aio-quantity ;
+  pf:inContext d:cou-mobile ;
+  pf:toCio d:cio-stepper ;
+  pf:rationale "quantity uses a NumberStepper on mobile" .
 
 d:product-cli a pf:System ;
   rdfs:label "Product CLI" ;
@@ -1251,20 +1263,22 @@ d:product-view a pf:System ;
   pf:targetsPlatform "web" ;
   pf:targetsClass "gui" .
 
-d:t-implement a pf:Trigger ;
-  rdfs:label "User runs implement" ;
-  pf:source "user" ;
-  pf:issues d:cmd-implement-feature .
+d:sys-shop a pf:System ;
+  rdfs:label "Bookstore Demo" ;
+  pf:systemKind "application" ;
+  pf:purpose "the seeded bookstore What model used for demos and workshops" ;
+  pf:targetsClass "gui" ;
+  pf:rootsAt d:app-shop .
 
-d:t-verify a pf:Trigger ;
-  rdfs:label "User runs verify" ;
+d:t-accept-decision a pf:Trigger ;
+  rdfs:label "User accepts a decision" ;
   pf:source "user" ;
-  pf:issues d:cmd-verify-feature .
+  pf:issues d:cmd-accept-decision .
 
-d:t-check-conformance a pf:Trigger ;
-  rdfs:label "User runs conformance check" ;
+d:t-add-command a pf:Trigger ;
+  rdfs:label "User adds a command" ;
   pf:source "user" ;
-  pf:issues d:cmd-check-conformance .
+  pf:issues d:cmd-add-command .
 
 d:t-add-context a pf:Trigger ;
   rdfs:label "User adds a bounded context" ;
@@ -1276,45 +1290,40 @@ d:t-add-entity a pf:Trigger ;
   pf:source "user" ;
   pf:issues d:cmd-add-entity .
 
-d:t-validate-what a pf:Trigger ;
-  rdfs:label "User validates the What" ;
+d:t-add-event a pf:Trigger ;
+  rdfs:label "User adds an event" ;
   pf:source "user" ;
-  pf:issues d:cmd-validate-what .
-
-d:t-finalize a pf:Trigger ;
-  rdfs:label "User finalizes the session" ;
-  pf:source "user" ;
-  pf:issues d:cmd-finalize-session .
-
-d:t-init a pf:Trigger ;
-  rdfs:label "User initializes the repo" ;
-  pf:source "user" ;
-  pf:issues d:cmd-init-repo .
+  pf:issues d:cmd-add-event .
 
 d:t-agent-init a pf:Trigger ;
   rdfs:label "User generates agent context" ;
   pf:source "user" ;
   pf:issues d:cmd-agent-init .
 
-d:t-accept-decision a pf:Trigger ;
-  rdfs:label "User accepts a decision" ;
+d:t-check-conformance a pf:Trigger ;
+  rdfs:label "User runs conformance check" ;
   pf:source "user" ;
-  pf:issues d:cmd-accept-decision .
-
-d:t-add-event a pf:Trigger ;
-  rdfs:label "User adds an event" ;
-  pf:source "user" ;
-  pf:issues d:cmd-add-event .
-
-d:t-add-command a pf:Trigger ;
-  rdfs:label "User adds a command" ;
-  pf:source "user" ;
-  pf:issues d:cmd-add-command .
+  pf:issues d:cmd-check-conformance .
 
 d:t-checkout a pf:Trigger ;
   rdfs:label "Shopper checks out" ;
   pf:source "user" ;
   pf:issues d:cmd-checkout .
+
+d:t-finalize a pf:Trigger ;
+  rdfs:label "User finalizes the session" ;
+  pf:source "user" ;
+  pf:issues d:cmd-finalize-session .
+
+d:t-implement a pf:Trigger ;
+  rdfs:label "User runs implement" ;
+  pf:source "user" ;
+  pf:issues d:cmd-implement-feature .
+
+d:t-init a pf:Trigger ;
+  rdfs:label "User initializes the repo" ;
+  pf:source "user" ;
+  pf:issues d:cmd-init-repo .
 
 d:t-refetch a pf:Trigger ;
   rdfs:label "Graph changed → refetch" ;
@@ -1328,12 +1337,13 @@ d:t-render a pf:Trigger ;
   pf:issues d:cmd-render-view ;
   pf:watches d:rm-view-graph .
 
-d:cio-list a pf:Cio ;
-  rdfs:label "ItemList" .
+d:t-validate-what a pf:Trigger ;
+  rdfs:label "User validates the What" ;
+  pf:source "user" ;
+  pf:issues d:cmd-validate-what .
 
-d:cio-stepper a pf:Cio ;
-  rdfs:label "NumberStepper" .
-
-d:cio-button a pf:Cio ;
-  rdfs:label "PrimaryButton" .
+d:t-verify a pf:Trigger ;
+  rdfs:label "User runs verify" ;
+  pf:source "user" ;
+  pf:issues d:cmd-verify-feature .
 

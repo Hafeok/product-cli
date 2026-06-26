@@ -1,0 +1,21 @@
+id: view-serializer-rm-view-graph
+schema: 'shape: the DomainGraph -> ViewGraph serializer with per-node model lane tags'
+prompt: 'Produce the DomainGraph -> ViewGraph serializer with per-node model lane tags at ''product-core/src/pf/viz.rs'' for task type ''serve-web-view'' (rm-view-graph). Apply: slice-plus-adapter, native-checker.'
+model: code
+context:
+  derived_from:
+  - behaviour:rm-view-graph
+  - app-contract:product-cli-app
+  frozen: true
+  hash: sha256:27da5dafc10d074302db5312a3a6ee3c6a79f85ccd1e6f9b2c8f8fc8d09ec55c
+produces:
+  artifact: the DomainGraph -> ViewGraph serializer with per-node model lane tags
+  path: product-core/src/pf/viz.rs
+applies:
+- slice-plus-adapter
+- native-checker
+trace:
+  what: rm-view-graph
+  why:
+  - slice-plus-adapter
+  - native-checker

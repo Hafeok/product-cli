@@ -1,0 +1,19 @@
+id: view-watcher-rm-view-graph
+schema: 'shape: a notify watcher feeding the SSE change channel'
+prompt: 'Produce a notify watcher feeding the SSE change channel at ''product-mcp/src/watch.rs'' for task type ''serve-web-view'' (rm-view-graph). Apply: filesystem-change-source.'
+model: code
+context:
+  derived_from:
+  - view-routes
+  - behaviour:wf-two-lane-canvas
+  frozen: true
+  hash: sha256:33006505b08d4b63e14892b433deac4a976044a88533d5766732b995e111f075
+produces:
+  artifact: a notify watcher feeding the SSE change channel
+  path: product-mcp/src/watch.rs
+applies:
+- filesystem-change-source
+trace:
+  what: rm-view-graph
+  why:
+  - filesystem-change-source

@@ -1,0 +1,18 @@
+id: tool-def-e-command
+schema: 'shape: ToolDef (name + JSON inputSchema)'
+prompt: 'Produce ToolDef (name + JSON inputSchema) for task type ''add-mcp-tool'' (e-command). Apply: mcp-tool-surface.'
+model: reasoning
+context:
+  derived_from:
+  - domain:e-command
+  - app-contract:product-cli-app
+  frozen: true
+  hash: sha256:c5a0374e8503643875fe5dbb2af234793e27c8ab17deafc5ff50636d436793dd
+produces:
+  artifact: ToolDef (name + JSON inputSchema)
+applies:
+- mcp-tool-surface
+trace:
+  what: e-command
+  why:
+  - mcp-tool-surface

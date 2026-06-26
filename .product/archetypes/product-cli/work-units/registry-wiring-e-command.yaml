@@ -1,0 +1,13 @@
+id: registry-wiring-e-command
+schema: 'shape: dispatch arm wiring the tool into the registry'
+prompt: Produce dispatch arm wiring the tool into the registry for task type 'add-mcp-tool' (e-command).
+model: code
+context:
+  derived_from:
+  - handler
+  frozen: true
+  hash: sha256:e9417b4f719f2bff606e8278c8363b3dc159b8523c5bc562d95b997c8ad2f59d
+produces:
+  artifact: dispatch arm wiring the tool into the registry
+trace:
+  what: e-command

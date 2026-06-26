@@ -1,0 +1,18 @@
+id: cli-adapter-e-entity
+schema: 'shape: product-cli/src/commands/<concept>.rs'
+prompt: 'Produce product-cli/src/commands/<concept>.rs for task type ''implement-slice'' (e-entity). Apply: slice-plus-adapter.'
+model: code
+context:
+  derived_from:
+  - core-slice
+  - behaviour:validate,show
+  frozen: true
+  hash: sha256:4f97f80668d8be2500f2b1abbd369854dd39682de2488cdc359907cb0a2e4ce3
+produces:
+  artifact: product-cli/src/commands/<concept>.rs
+applies:
+- slice-plus-adapter
+trace:
+  what: e-entity
+  why:
+  - slice-plus-adapter

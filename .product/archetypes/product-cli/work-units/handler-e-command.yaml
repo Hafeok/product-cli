@@ -1,0 +1,20 @@
+id: handler-e-command
+schema: 'shape: handler returning { ok, node, violations }'
+prompt: 'Produce handler returning { ok, node, violations } for task type ''add-mcp-tool'' (e-command). Apply: mcp-tool-surface, slice-plus-adapter.'
+model: code
+context:
+  derived_from:
+  - tool-def
+  - app-contract:product-cli-app
+  frozen: true
+  hash: sha256:e43af4c78e19ad9cb19834df9896c5ed7917c20d3454fdd5fd4f483daa1c7a3e
+produces:
+  artifact: handler returning { ok, node, violations }
+applies:
+- mcp-tool-surface
+- slice-plus-adapter
+trace:
+  what: e-command
+  why:
+  - mcp-tool-surface
+  - slice-plus-adapter
