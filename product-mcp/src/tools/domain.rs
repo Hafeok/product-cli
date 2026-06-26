@@ -61,7 +61,45 @@ fn read_inspect_tools() -> Vec<ToolDef> {
     ]
 }
 
+/// The typed node fields shared by `product_domain_new` and `product_domain_edit`.
+///
+/// Declaring every field (not just `kind`/`id`) lets a schema-typed MCP client
+/// encode array fields (`emits`, `projects`, `steps`, `glossary`) and the
+/// `is_aggregate_root` boolean with their real JSON type rather than as strings
+/// the server's strict deserializer would reject.
+fn node_field_props() -> serde_json::Map<String, serde_json::Value> {
+    let strings = [
+        "label", "context", "definition", "identity", "changes", "targets",
+        "from", "to", "cardinality", "rationale", "purpose", "statement",
+        "applies_to", "concept_a", "concept_b", "triggers", "displays",
+        "source", "issues", "watches", "system", "product",
+    ];
+    let string_arrays = ["emits", "projects", "steps", "glossary"];
+    let mut props = serde_json::Map::new();
+    for key in strings {
+        props.insert(key.to_string(), serde_json::json!({"type": "string"}));
+    }
+    for key in string_arrays {
+        props.insert(key.to_string(), serde_json::json!({"type": "array", "items": {"type": "string"}}));
+    }
+    props.insert("is_aggregate_root".to_string(), serde_json::json!({"type": "boolean"}));
+    props.insert("attributes".to_string(), serde_json::json!({
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {"name": {"type": "string"}, "type": {"type": "string"}},
+            "required": ["name"]
+        }
+    }));
+    props
+}
+
 fn write_tools() -> Vec<ToolDef> {
+    let mut new_props = node_field_props();
+    new_props.insert("kind".to_string(), serde_json::json!({"type": "string", "description": "entity | context | event | command | relation | …"}));
+    new_props.insert("id".to_string(), serde_json::json!({"type": "string"}));
+    let mut edit_props = node_field_props();
+    edit_props.insert("id".to_string(), serde_json::json!({"type": "string"}));
     vec![
         ToolDef {
             name: "product_domain_new".to_string(),
@@ -69,11 +107,7 @@ fn write_tools() -> Vec<ToolDef> {
             requires_write: true,
             input_schema: serde_json::json!({
                 "type": "object",
-                "properties": {
-                    "kind": {"type": "string", "description": "entity | context | event | command | relation | …"},
-                    "id": {"type": "string"},
-                    "product": {"type": "string"}
-                },
+                "properties": new_props,
                 "required": ["kind", "id"]
             }),
         },
@@ -83,7 +117,7 @@ fn write_tools() -> Vec<ToolDef> {
             requires_write: true,
             input_schema: serde_json::json!({
                 "type": "object",
-                "properties": {"id": {"type": "string"}, "product": {"type": "string"}},
+                "properties": edit_props,
                 "required": ["id"]
             }),
         },
