@@ -317,10 +317,21 @@ d:e-workunit a pf:Entity ;
   pf:inContext d:ctx-realisation ;
   pf:isAggregateRoot "true" .
 
+d:e-session a pf:Entity ;
+  rdfs:label "Workshop Session" ;
+  pf:definition "A phase-gated facilitation run over an isolated copy of the spec. It starts in the What phase, advances strictly forward What→How→Build under an optional cap, and on finalize validates the draft graph then promotes it into the canonical .product workspace." ;
+  pf:inContext d:ctx-composition ;
+  pf:isAggregateRoot "true" .
+
 d:vo-modelkind a pf:ValueObject ;
   rdfs:label "Model Kind" ;
   pf:inContext d:ctx-view ;
   pf:definition "An enumerated tag — domain | event — derived from a node's source NodeKind; it assigns the node to exactly one Model Lane." .
+
+d:vo-session-phase a pf:ValueObject ;
+  rdfs:label "Session Phase" ;
+  pf:inContext d:ctx-composition ;
+  pf:definition "An ordered mode — what | how | build (What < How < Build) — that gates which tool families a session may use. A session begins in What and advances strictly forward, optionally capped by an until phase." .
 
 d:r-decider-entity a pf:Relation ;
   rdfs:label "decides for" ;
@@ -644,6 +655,20 @@ d:rel-workunit-typedby-tasktype a pf:Relation ;
   pf:cardinality "many-to-one" ;
   pf:rationale "§5: a work unit is dispatched and accepted per a task-type definition (dual-read: dispatch input = capture form = acceptance criteria); one task type governs many work units." .
 
+d:rel-session-inphase-phase a pf:Relation ;
+  rdfs:label "current mode" ;
+  pf:from d:e-session ;
+  pf:to d:vo-session-phase ;
+  pf:cardinality "one-to-one" ;
+  pf:rationale "A session is always in exactly one phase — what, how, or build — which gates the tool families it may use. The phase advances strictly forward." .
+
+d:rel-session-drafts-product a pf:Relation ;
+  rdfs:label "drafts" ;
+  pf:from d:e-session ;
+  pf:to d:e-product ;
+  pf:cardinality "one-to-one" ;
+  pf:rationale "A session edits exactly one product's What/How graph in an isolated workspace copy, promoting it into the canonical .product on finalize." .
+
 d:i-decider-rejects a pf:Invariant ;
   pf:statement "A Decider must have at least one reachable rejection — it must enforce an invariant, or it should not exist (§3.3 Decider justification)." ;
   pf:appliesTo d:e-decider .
@@ -876,7 +901,8 @@ d:cmd-finalize-session a pf:Command ;
   rdfs:label "Finalize Session" ;
   pf:inContext d:ctx-composition ;
   pf:targets d:e-product ;
-  pf:emits d:ev-what-finalized .
+  pf:emits d:ev-what-finalized ;
+  pf:emits d:ev-session-finalized .
 
 d:cmd-implement-feature a pf:Command ;
   rdfs:label "Implement Feature" ;
@@ -915,6 +941,30 @@ d:cmd-verify-feature a pf:Command ;
   pf:targets d:e-feature ;
   pf:emits d:ev-feature-completed ;
   pf:emits d:ev-verification-run .
+
+d:cmd-start-session a pf:Command ;
+  rdfs:label "Start Session" ;
+  pf:inContext d:ctx-composition ;
+  pf:targets d:e-session ;
+  pf:emits d:ev-session-started .
+
+d:cmd-resume-session a pf:Command ;
+  rdfs:label "Resume Session" ;
+  pf:inContext d:ctx-composition ;
+  pf:targets d:e-session ;
+  pf:emits d:ev-session-resumed .
+
+d:cmd-advance-phase a pf:Command ;
+  rdfs:label "Advance Phase" ;
+  pf:inContext d:ctx-composition ;
+  pf:targets d:e-session ;
+  pf:emits d:ev-phase-advanced .
+
+d:cmd-open-live-view a pf:Command ;
+  rdfs:label "Open Live View" ;
+  pf:inContext d:ctx-view ;
+  pf:targets d:e-viewgraph ;
+  pf:emits d:ev-live-view-opened .
 
 d:ev-agent-context-initialized a pf:Event ;
   rdfs:label "Agent Context Initialized" ;
@@ -1001,6 +1051,31 @@ d:ev-workunit-dispatched a pf:Event ;
   pf:inContext d:ctx-realisation ;
   pf:changes d:e-workunit .
 
+d:ev-session-started a pf:Event ;
+  rdfs:label "Session Started" ;
+  pf:inContext d:ctx-composition ;
+  pf:changes d:e-session .
+
+d:ev-phase-advanced a pf:Event ;
+  rdfs:label "Phase Advanced" ;
+  pf:inContext d:ctx-composition ;
+  pf:changes d:e-session .
+
+d:ev-session-finalized a pf:Event ;
+  rdfs:label "Session Finalized" ;
+  pf:inContext d:ctx-composition ;
+  pf:changes d:e-session .
+
+d:ev-live-view-opened a pf:Event ;
+  rdfs:label "Live View Opened" ;
+  pf:inContext d:ctx-view ;
+  pf:changes d:e-viewgraph .
+
+d:ev-session-resumed a pf:Event ;
+  rdfs:label "Session Resumed" ;
+  pf:inContext d:ctx-composition ;
+  pf:changes d:e-session .
+
 d:rm-cart a pf:ReadModel ;
   rdfs:label "Cart Summary" ;
   pf:projects d:e-cart .
@@ -1048,6 +1123,10 @@ d:rm-product-status a pf:ReadModel ;
 d:rm-view-graph a pf:ReadModel ;
   rdfs:label "View Graph Projection" ;
   pf:projects d:e-viewgraph .
+
+d:rm-session-status a pf:ReadModel ;
+  rdfs:label "Session Status" ;
+  pf:projects d:e-session .
 
 d:wf-two-lane-canvas a pf:WireframeStep ;
   rdfs:label "Two-Lane Canvas" ;
@@ -1180,6 +1259,22 @@ d:flow-status a pf:Flow ;
   rdfs:label "Product Status Overview (read-only)" ;
   pf:contains d:rm-product-status ;
   pf:contains d:ws-run-status ;
+  pf:systemOf d:product-cli .
+
+d:flow-session-lifecycle a pf:Flow ;
+  rdfs:label "Run a Session (What→How→Build)" ;
+  pf:contains d:cmd-start-session ;
+  pf:contains d:ev-session-started ;
+  pf:contains d:cmd-open-live-view ;
+  pf:contains d:ev-live-view-opened ;
+  pf:contains d:rm-session-status ;
+  pf:contains d:cmd-advance-phase ;
+  pf:contains d:ev-phase-advanced ;
+  pf:contains d:cmd-resume-session ;
+  pf:contains d:ev-session-resumed ;
+  pf:contains d:cmd-finalize-session ;
+  pf:contains d:ev-session-finalized ;
+  pf:contains d:ev-what-finalized ;
   pf:systemOf d:product-cli .
 
 d:aio-cart-list a pf:Aio ;
@@ -1346,4 +1441,25 @@ d:t-verify a pf:Trigger ;
   rdfs:label "User runs verify" ;
   pf:source "user" ;
   pf:issues d:cmd-verify-feature .
+
+d:t-start-session a pf:Trigger ;
+  rdfs:label "User starts a session" ;
+  pf:source "user" ;
+  pf:issues d:cmd-start-session .
+
+d:t-resume-session a pf:Trigger ;
+  rdfs:label "User resumes a session after exit" ;
+  pf:source "user" ;
+  pf:issues d:cmd-resume-session .
+
+d:t-advance-phase a pf:Trigger ;
+  rdfs:label "Facilitator advances to the next phase" ;
+  pf:source "user" ;
+  pf:issues d:cmd-advance-phase .
+
+d:t-open-view a pf:Trigger ;
+  rdfs:label "After a session becomes active → open the live web view" ;
+  pf:source "automated" ;
+  pf:issues d:cmd-open-live-view ;
+  pf:watches d:rm-session-status .
 
