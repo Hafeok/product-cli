@@ -340,6 +340,44 @@ pf:contains a owl:ObjectProperty ;
   rdfs:comment "Membership: a feature/release contains these graph nodes; a context contains entities." .
 
 #################################################################
+#  WHAT — §3.2.1 UI interaction (typed edges)
+#
+#  A UI step's interactions are blank nodes that pair a target
+#  (a projection or a command) with the AIO it is typed_as. The
+#  blank node keeps the (target, AIO) pairing unambiguous.
+#################################################################
+
+pf:hasAttribute a owl:ObjectProperty ;
+  rdfs:label "has_attribute" ;
+  rdfs:domain pf:Entity ;
+  rdfs:comment "An entity's named attribute, carried as a blank node ([ attr_name ; attr_type ])." .
+
+pf:surfaces a owl:ObjectProperty ;
+  rdfs:label "surfaces" ;
+  rdfs:domain pf:WireframeStep ;
+  rdfs:comment "A (projection, display-AIO) the step surfaces, as a blank node carrying typed_as." .
+
+pf:offers a owl:ObjectProperty ;
+  rdfs:label "offers" ;
+  rdfs:domain pf:WireframeStep ;
+  rdfs:comment "A (command, action-AIO) the step offers, as a blank node carrying typed_as." .
+
+pf:projection a owl:ObjectProperty ;
+  rdfs:label "projection" ;
+  rdfs:range pf:ReadModel ;
+  rdfs:comment "The read model a surface interaction shows (on a pf:surfaces blank node)." .
+
+pf:command a owl:ObjectProperty ;
+  rdfs:label "command" ;
+  rdfs:range pf:Command ;
+  rdfs:comment "The command an offer interaction issues (on a pf:offers blank node)." .
+
+pf:typedAs a owl:ObjectProperty ;
+  rdfs:label "typed_as" ;
+  rdfs:range pf:Aio ;
+  rdfs:comment "§3.2.1 A UI step's interaction is typed against an Abstract Interaction Object (an AIO), never a concrete control (a CIO)." .
+
+#################################################################
 #  COMMON DATATYPE PROPERTIES
 #################################################################
 
@@ -355,3 +393,7 @@ pf:statement a owl:DatatypeProperty ; rdfs:label "statement" ;
 pf:verificationKind a owl:ObjectProperty ; rdfs:label "verification_kind" ; rdfs:range pf:VerificationKind .
 pf:conformanceLevel a owl:DatatypeProperty ; rdfs:label "conformance_level" ;
   rdfs:comment "Described | Realised | Verified | Delivered." ; rdfs:range rdfs:Literal .
+pf:attrName a owl:DatatypeProperty ; rdfs:label "attr_name" ;
+  rdfs:comment "The name of an entity attribute (on a pf:hasAttribute blank node)." ; rdfs:range rdfs:Literal .
+pf:attrType a owl:DatatypeProperty ; rdfs:label "attr_type" ;
+  rdfs:comment "The optional declared type of an entity attribute." ; rdfs:range rdfs:Literal .

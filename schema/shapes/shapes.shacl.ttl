@@ -25,7 +25,16 @@ pf:EntityShape a sh:NodeShape ;
   sh:property [
     sh:path pf:inContext ; sh:minCount 1 ; sh:class pf:BoundedContext ;
     sh:message "§3.1 An entity must belong to exactly one bounded context (never a flat model)." ;
-    sh:maxCount 1 ] .
+    sh:maxCount 1 ] ;
+  sh:property [
+    sh:path pf:hasAttribute ; sh:node pf:AttributeShape ;
+    sh:message "§3.1 An entity attribute (when present) must name a field (attr_name); attr_type is optional." ] .
+
+# An attribute is a blank node [ pf:attrName "…" ; pf:attrType "…"? ].
+pf:AttributeShape a sh:NodeShape ;
+  sh:property [
+    sh:path pf:attrName ; sh:minCount 1 ;
+    sh:message "§3.1 An entity attribute must name a field." ] .
 
 pf:RelationShape a sh:NodeShape ;
   sh:targetClass pf:Relation ;
@@ -82,6 +91,38 @@ pf:ReadModelShape a sh:NodeShape ;
   sh:property [
     sh:path pf:projects ; sh:minCount 1 ;
     sh:message "§3.2 A read model must project at least one entity/event (read-model provenance: no ghost views)." ] .
+
+####################  WHAT — §3.2.1 UI layer  ###################
+#  A UI step's interactions are blank nodes pairing a target with
+#  the AIO it is typed_as: pf:surfaces [ pf:projection … ;
+#  pf:typedAs … ] and pf:offers [ pf:command … ; pf:typedAs … ].
+#  The §3.2.1 rule: every interaction is typed against an AIO,
+#  never a concrete control (a CIO).
+
+pf:WireframeStepShape a sh:NodeShape ;
+  sh:targetClass pf:WireframeStep ;
+  sh:property [
+    sh:path pf:surfaces ; sh:node pf:SurfaceShape ;
+    sh:message "§3.2.1 A surfaced projection must be typed against an AIO." ] ;
+  sh:property [
+    sh:path pf:offers ; sh:node pf:OfferShape ;
+    sh:message "§3.2.1 An offered command must be typed against an AIO." ] .
+
+pf:SurfaceShape a sh:NodeShape ;
+  sh:property [
+    sh:path pf:projection ; sh:minCount 1 ; sh:class pf:ReadModel ;
+    sh:message "§3.2.1 A surface interaction must show a real projection (read model)." ] ;
+  sh:property [
+    sh:path pf:typedAs ; sh:minCount 1 ; sh:class pf:Aio ;
+    sh:message "§3.2.1 A UI step's interactions must be typed against an Abstract Interaction Object (an AIO), never a concrete control (a CIO)." ] .
+
+pf:OfferShape a sh:NodeShape ;
+  sh:property [
+    sh:path pf:command ; sh:minCount 1 ; sh:class pf:Command ;
+    sh:message "§3.2.1 An offer interaction must issue a real command." ] ;
+  sh:property [
+    sh:path pf:typedAs ; sh:minCount 1 ; sh:class pf:Aio ;
+    sh:message "§3.2.1 A UI step's interactions must be typed against an Abstract Interaction Object (an AIO), never a concrete control (a CIO)." ] .
 
 #########################  HOW — §4  ############################
 #  The How conformance shapes (decisions, principles, patterns,
