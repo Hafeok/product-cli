@@ -4,14 +4,14 @@
 use serde::{Deserialize, Serialize};
 
 /// §3.2.1 — one (projection, display-AIO) the step surfaces.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Surface {
     pub projection: String,
     pub aio: String,
 }
 
 /// §3.2.1 — one (command, action-AIO) the step offers.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Offer {
     pub command: String,
     pub aio: String,
@@ -19,7 +19,7 @@ pub struct Offer {
 
 /// §3.2.1 — what a surfaced projection's state *means to the user*, or a
 /// `waiver` (with reason) for an ignorable state. Exactly one is set.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct StateMeaning {
     pub projection: String,
     pub state: String,
@@ -34,7 +34,7 @@ pub struct StateMeaning {
 /// projections it `surfaces` and commands it `offers`, each through an AIO, and
 /// the steps it `transitions_to`. `intent` is the one permitted free-text
 /// residue.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct WireframeStep {
     pub id: String,
     pub label: String,
@@ -68,7 +68,7 @@ pub struct WireframeStep {
 
 /// §3.2 — an ordered behaviour assembling steps into a timeline. §3.2.4 — a
 /// named connected subgraph of the page graph with a declared `entry_page`.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Flow {
     pub id: String,
     pub label: String,
@@ -82,7 +82,7 @@ pub struct Flow {
 
 /// §3.2.4 — the distinguished node of the page graph; its `navigates_from_root`
 /// out-edges are the global destinations (a page is "top-level" iff linked here).
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct ApplicationRoot {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -95,7 +95,7 @@ pub struct ApplicationRoot {
 /// to. It owns a `root` and its flows but shares the domain model, so a What may
 /// declare several systems over one domain (a customer app + an admin website),
 /// each a distinct surface with its own root, flows, and target contexts.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct System {
     pub id: String,
     pub label: String,
@@ -121,7 +121,7 @@ pub struct System {
 /// that reads a View and issues a command with no human in the loop). The
 /// Automation and Translation patterns are an automated trigger that `watches` a
 /// View; a Translation additionally reads from one source system.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Trigger {
     pub id: String,
     pub label: String,
@@ -144,7 +144,7 @@ pub struct Trigger {
 /// TUI). A *recorded* gap that carries a rationale, never a silent omission —
 /// the same honesty as tagging a WCAG criterion manual or naming the Polanyi
 /// floor: the framework records the boundary instead of papering over it.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct UnreifiableRule {
     pub id: String,
     pub aio: String,
@@ -157,7 +157,7 @@ pub struct UnreifiableRule {
 /// §3.2.2 — an Abstract Interaction Object: a named, modality-independent kind
 /// of interaction a UI step is typed against. The closed core lives in
 /// `ids::CORE_AIOS`; this node registers an adopter's additional AIOs.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Aio {
     pub id: String,
     pub label: String,
@@ -171,7 +171,7 @@ pub struct Aio {
 /// §3.2.2 — a declared context of use (form factor, modality, …) — a What-side
 /// fact carrying no realisation; the parameter reification rules are written
 /// against.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct ContextOfUse {
     pub id: String,
     pub label: String,
@@ -183,7 +183,7 @@ pub struct ContextOfUse {
 
 /// §3.2.3 — an ingested WCAG 2.2 success criterion (`verification`:
 /// machine/assisted/manual; `level`: A/AA/AAA; `satisfied`: the machine gate).
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct WcagCriterion {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -199,14 +199,14 @@ pub struct WcagCriterion {
 /// §3.2.1 — a content reference: standing authored words a step carries, by key
 /// with a declared role (heading/body/empty-message/error-message/help/legal) —
 /// never a literal string.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct ContentRef {
     pub key: String,
     pub role: String,
 }
 
 /// §4.6 — one resolution in a content store: a (key, locale) → string mapping.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Resolution {
     pub key: String,
     pub locale: String,
@@ -215,7 +215,7 @@ pub struct Resolution {
 
 /// §4.6 — the swappable provider of words. Declares the `locales` it covers and
 /// the `resolutions` for (key, locale) pairs.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct ContentStore {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -227,7 +227,7 @@ pub struct ContentStore {
 }
 
 /// §3.2.3 — a dated, attributed record that a non-machine criterion was met.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Attestation {
     pub id: String,
     pub step: String,
@@ -238,7 +238,7 @@ pub struct Attestation {
 
 /// §4.5 — the design system: the closed CIO catalog + token surface a screen
 /// composes from (`cios`, `tokens`).
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct DesignSystem {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -250,7 +250,7 @@ pub struct DesignSystem {
 }
 
 /// §4.5 — a Concrete Interaction Object: an on-system component an AIO reifies to.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Cio {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -258,7 +258,7 @@ pub struct Cio {
 }
 
 /// §4.5 — a design token (colour, spacing, typography, …).
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Token {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -266,7 +266,7 @@ pub struct Token {
 }
 
 /// §4.5 — a reify(AIO, context) → CIO rule with rationale (the UX reasoning).
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct ReificationRule {
     pub id: String,
     pub aio: String,

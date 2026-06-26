@@ -140,6 +140,43 @@ pub const CORE_AIOS: [&str; 10] = [
 ];
 
 impl NodeKind {
+    /// Every node kind, in declaration order. The single enumeration the rest
+    /// of the code drives from (schema generation, completeness tests) so a new
+    /// kind is added in one place. A `match self` over `NodeKind` is
+    /// compiler-checked exhaustive, so a kind added here that any consumer
+    /// forgets to handle is a compile error, not a silent gap.
+    pub fn all() -> [NodeKind; 27] {
+        [
+            Self::BoundedContext,
+            Self::Entity,
+            Self::ValueObject,
+            Self::Relation,
+            Self::Invariant,
+            Self::ContextMapping,
+            Self::Command,
+            Self::Event,
+            Self::ReadModel,
+            Self::WireframeStep,
+            Self::Flow,
+            Self::Aio,
+            Self::ContextOfUse,
+            Self::ApplicationRoot,
+            Self::WcagCriterion,
+            Self::Attestation,
+            Self::ContentStore,
+            Self::DesignSystem,
+            Self::Cio,
+            Self::Token,
+            Self::ReificationRule,
+            Self::ReferenceSet,
+            Self::DataShape,
+            Self::ProductionDataset,
+            Self::System,
+            Self::Trigger,
+            Self::UnreifiableRule,
+        ]
+    }
+
     /// The `pf:` class local name as emitted in Turtle / the ontology.
     pub fn class_name(self) -> &'static str {
         match self {

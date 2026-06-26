@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 /// §3.1 — constitutive **reference data**: a named, governed set of values the
 /// behaviour depends on (valid shipping methods, tax categories). It is part of
 /// the What; `concept` is the entity/value-object it is reference data for.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct ReferenceSet {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -25,7 +25,7 @@ pub struct ReferenceSet {
 /// §3.1 — one field constraint within a [`DataShape`]: a `field` that may be
 /// `required` (present + non-null) and/or constrained to a [`ReferenceSet`]'s
 /// membership (`reference_set`). The SHACL-property side of the structure.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct EnumConstraint {
     pub field: String,
     pub reference_set: String,
@@ -34,7 +34,7 @@ pub struct EnumConstraint {
 /// §3.1 — a datatype constraint: a `field` whose value must be of `datatype`
 /// (`string` · `integer` · `number` · `boolean` · `date`). Catches type drift
 /// the structure side cannot otherwise see.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct TypeConstraint {
     pub field: String,
     pub datatype: String,
@@ -45,7 +45,7 @@ pub struct TypeConstraint {
 /// fields production records must carry; `enums` constrains fields to a declared
 /// reference set; `types` constrains fields to a datatype. Production data is
 /// validated against it as an oracle (§6.3).
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct DataShape {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -66,7 +66,7 @@ pub struct DataShape {
 /// §3.1 — a **production dataset**: the oracle the structure is checked against.
 /// Not specification; `shape` names the [`DataShape`] it `conforms_to_shape`,
 /// and `source` points at the populated records (a JSON file of objects).
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct ProductionDataset {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]

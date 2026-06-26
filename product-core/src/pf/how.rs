@@ -202,4 +202,44 @@ mod tests {
         let back = HowContract::from_yaml(&c.to_yaml().expect("yaml")).expect("reparse");
         assert_eq!(c, back);
     }
+
+    #[test]
+    fn round_trips_yaml_significant_characters() {
+        // Regression for the ` #` truncation: a scalar carrying a comment
+        // indicator (and `:`/leading `-`/brackets) must survive to_yaml →
+        // from_yaml. A plain-style serializer would lose everything past ` #`.
+        let nasty = "an assert_cmd-driven #[test] fn tc_XXX in tests: a - b [c] {d}";
+        let mut c = HowContract::scaffold("special");
+        c.patterns = vec![Pattern { id: "p0".to_string(), shape: nasty.to_string(), ..Default::default() }];
+        let back = HowContract::from_yaml(&c.to_yaml().expect("yaml")).expect("reparse");
+        assert_eq!(back.patterns[0].shape, nasty, "a ` #` scalar must not truncate to a comment");
+        assert_eq!(c, back);
+    }
+
+    use proptest::prelude::*;
+
+    proptest! {
+        /// Universal serialization invariant: for ANY contract text the writer
+        /// must quote whatever it needs so `parse(serialize(x)) == x`. This
+        /// replaces hand-picked example strings with a property over the class —
+        /// every YAML-significant character is covered, not the ones we guessed.
+        #[test]
+        fn any_contract_text_round_trips(
+            text in proptest::collection::vec(
+                proptest::sample::select("abZ09 #:-[]{}*&!|>%@\"'\\,./()".chars().collect::<Vec<char>>()),
+                0..48,
+            ).prop_map(|cs| cs.into_iter().collect::<String>().trim().to_string()),
+        ) {
+            let mut c = HowContract::scaffold("prop");
+            c.patterns = vec![Pattern { id: "p0".to_string(), shape: text.clone(), ..Default::default() }];
+            c.top_decisions = vec![TopDecision {
+                id: "d0".to_string(),
+                decision: text.clone(),
+                rationale: text.clone(),
+                ..Default::default()
+            }];
+            let back = HowContract::from_yaml(&c.to_yaml().expect("yaml")).expect("reparse");
+            prop_assert_eq!(c, back);
+        }
+    }
 }

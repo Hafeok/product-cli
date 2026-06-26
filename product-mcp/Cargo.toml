@@ -21,6 +21,7 @@ product-core = { path = "../product-core" }
 serde      = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_yaml = "0.9"
+schemars   = "0.8"
 tokio      = { version = "1", features = ["full"] }
 axum       = { version = "0.7", features = ["macros"] }
 tower-http = { version = "0.5", features = ["cors"] }

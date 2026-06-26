@@ -29,6 +29,7 @@ fd-lock    = "4"
 libc       = "0.2"
 notify     = { version = "6", default-features = false, features = ["macos_kqueue"] }
 cel-interpreter = "0.10.0"
+schemars   = "0.8"
 
 [dev-dependencies]
 tempfile  = "3"

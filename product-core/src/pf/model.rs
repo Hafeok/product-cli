@@ -8,7 +8,7 @@ pub use super::model_data::*;
 pub use super::model_ui::*;
 
 /// A named attribute of an entity (e.g. `email: string`).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, schemars::JsonSchema)]
 pub struct Attribute {
     pub name: String,
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
@@ -16,7 +16,7 @@ pub struct Attribute {
 }
 
 /// §3.1 — a region within which every term has exactly one meaning.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct BoundedContext {
     pub id: String,
     pub label: String,
@@ -27,7 +27,7 @@ pub struct BoundedContext {
 }
 
 /// §3.1 — a domain concept with identity, placed in one bounded context.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Entity {
     pub id: String,
     pub label: String,
@@ -42,7 +42,7 @@ pub struct Entity {
 }
 
 /// §3.1 — a domain concept without identity (e.g. Money, Address).
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct ValueObject {
     pub id: String,
     pub label: String,
@@ -52,7 +52,7 @@ pub struct ValueObject {
 }
 
 /// §3.1 — a typed link between two entities, carrying cardinality + rationale.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Relation {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -64,7 +64,7 @@ pub struct Relation {
 }
 
 /// §3.1 — a rule that must always hold, stated as a checkable constraint.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Invariant {
     pub id: String,
     pub statement: String,
@@ -75,7 +75,7 @@ pub struct Invariant {
 }
 
 /// §3.1 — an explicit correspondence between concepts in two contexts.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct ContextMapping {
     pub id: String,
     pub concept_a: String,
@@ -86,7 +86,7 @@ pub struct ContextMapping {
 }
 
 /// §3.2 — an intent that causes events; targets an aggregate.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Command {
     pub id: String,
     pub label: String,
@@ -96,7 +96,7 @@ pub struct Command {
 }
 
 /// §3.2 — a past-tense fact; changes a real entity.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Event {
     pub id: String,
     pub label: String,
@@ -106,7 +106,7 @@ pub struct Event {
 
 /// §3.2 — a view; projects entities/events. §3.2 state space — `present` plus
 /// any of `loading`/`empty`/`failed` it can exhibit (declared in `states`).
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct ReadModel {
     pub id: String,
     pub label: String,
@@ -119,7 +119,7 @@ pub struct ReadModel {
 /// The whole What graph: the typed nodes captured in a session. Ordered
 /// `Vec`s preserve insertion order for stable Turtle output. Graphs are
 /// workshop-sized, so linear lookup is fine.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct DomainGraph {
     #[serde(default)]
     pub contexts: Vec<BoundedContext>,
