@@ -1013,3 +1013,92 @@ fn tc_1028_render_contract_resolves_content_and_rejects_unknown_flow() {
     assert!(bad.stderr.contains("ghost"), "stderr:\n{}", bad.stderr);
 }
 
+
+// --- What→How→Build session (phase-gated MCP workflow) ---
+
+#[test]
+fn tc_workflow_session_phases_gate_the_tool_surface() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+
+    // Scaffold a session without launching an agent.
+    let start = h.run(&["session", "start", "--no-launch", "bookstore"]);
+    start.assert_exit(0);
+    start.assert_stdout_contains("Scaffolded session");
+
+    // The workspace is an isolated copy of `.product` and carries a journal.
+    let list = h.run(&["session", "list"]);
+    list.assert_exit(0);
+    let id = list.stdout.split_whitespace().next().expect("session id").to_string();
+    assert!(id.starts_with("bookstore-"), "list:\n{}", list.stdout);
+    assert!(h.exists(&format!(".product/sessions/{id}/workflow.json")), "journal missing");
+    assert!(
+        h.exists(&format!(".product/sessions/{id}/ws/.product/author-domain/bookstore/bookstore.ttl")),
+        "draft graph not seeded",
+    );
+
+    // Drive the phase-gated server over stdio.
+    let reqs = [
+        r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#,
+        r#"{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}"#,
+        r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"product_build_run","arguments":{"deliverable":"x"}}}"#,
+        r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"product_workflow_advance","arguments":{}}}"#,
+        r#"{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"product_workflow_advance","arguments":{}}}"#,
+        r#"{"jsonrpc":"2.0","id":6,"method":"tools/list","params":{}}"#,
+    ].join("\n") + "\n";
+    let out = h.run_with_stdin(&["mcp", "--workflow", "--session", &id, "--repo", "."], &reqs);
+    out.assert_exit(0);
+
+    // initialize advertises dynamic tool lists.
+    out.assert_stdout_contains("\"listChanged\":true");
+    // What phase exposes the domain tools and the controls.
+    out.assert_stdout_contains("product_domain_new");
+    out.assert_stdout_contains("product_workflow_advance");
+    // The Build tool is rejected in the What phase.
+    out.assert_stdout_contains("belongs to the build phase");
+    // Advancing fires a list_changed notification.
+    out.assert_stdout_contains("notifications/tools/list_changed");
+    // Once in Build, the build tool is advertised.
+    out.assert_stdout_contains("product_build_run");
+}
+
+#[test]
+fn tc_workflow_show_reports_phase_and_journey() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["session", "start", "--no-launch", "--until", "how", "bookstore"]).assert_exit(0);
+    let id = h.run(&["session", "list"]).stdout.split_whitespace().next().unwrap().to_string();
+
+    let show = h.run(&["session", "show", &id]);
+    show.assert_exit(0);
+    let v: serde_json::Value = serde_json::from_str(&show.stdout).expect("valid JSON");
+    assert_eq!(v["phase"], "what");
+    assert_eq!(v["until"], "how");
+    assert_eq!(v["finalized"], false);
+}
+
+#[test]
+fn tc_workflow_finalize_promotes_isolated_draft_to_canonical() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["session", "start", "--no-launch", "bookstore"]).assert_exit(0);
+    let id = h.run(&["session", "list"]).stdout.split_whitespace().next().unwrap().to_string();
+
+    // Author a new context into the draft, then finalize to promote it.
+    let add = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_domain_new","arguments":{"kind":"context","id":"Shipping","label":"Shipping","definition":"Delivery"}}}"#;
+    h.run_with_stdin(&["mcp", "--workflow", "--session", &id, "--repo", ".", "--write"], &format!("{add}\n"))
+        .assert_exit(0);
+
+    // Isolation: the write is in the draft, not yet in the canonical graph.
+    let canonical = ".product/author-domain/bookstore/bookstore.ttl";
+    let draft = format!(".product/sessions/{id}/ws/.product/author-domain/bookstore/bookstore.ttl");
+    assert!(h.read(&draft).contains("Shipping"), "draft should hold the new context");
+    assert!(!h.read(canonical).contains("Shipping"), "canonical must stay untouched before finalize");
+
+    // Finalize validates the draft and promotes it.
+    let fin = r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_session_finalize","arguments":{}}}"#;
+    let out = h.run_with_stdin(&["mcp", "--workflow", "--session", &id, "--repo", ".", "--write"], &format!("{fin}\n"));
+    out.assert_exit(0);
+    out.assert_stdout_contains("\\\"ok\\\": true");
+    assert!(h.read(canonical).contains("Shipping"), "canonical must hold the promoted context after finalize");
+}

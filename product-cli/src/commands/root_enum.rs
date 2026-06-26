@@ -138,6 +138,12 @@ pub enum Commands {
         /// Enable write tools (overrides product.toml mcp.write)
         #[arg(long)]
         write: bool,
+        /// Phase-gate the tool surface for a What→How→Build session
+        #[arg(long)]
+        workflow: bool,
+        /// Drive the named workflow session (implies --workflow)
+        #[arg(long)]
+        session: Option<String>,
     },
     /// Preview profiles (§11/§12) — validate a design-system or content-store manifest
     Preview {
@@ -163,6 +169,11 @@ pub enum Commands {
         id: String,
         #[arg(long)]
         product: Option<String>,
+    },
+    /// What→How→Build session — start, list, show, and resume a guided session
+    Session {
+        #[command(subcommand)]
+        command: SessionCommands,
     },
     /// Delivery slice — a saved pointer to a section of the event model
     Slice {

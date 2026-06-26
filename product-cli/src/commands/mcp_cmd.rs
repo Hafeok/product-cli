@@ -6,6 +6,7 @@ use std::path::PathBuf;
 
 use super::BoxResult;
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn handle_mcp(
     http: bool,
     port: u16,
@@ -13,6 +14,8 @@ pub(crate) fn handle_mcp(
     token: Option<String>,
     repo: Option<String>,
     write_flag: bool,
+    workflow: bool,
+    session: Option<String>,
 ) -> BoxResult {
     // Resolve the repo root + config in one shot. When `--repo` is supplied,
     // walk the canonical → alias → legacy discovery order against that root
@@ -31,13 +34,16 @@ pub(crate) fn handle_mcp(
     // --write flag overrides mcp.write from the config file.
     let write_enabled = write_flag || mcp_cfg.map(|m| m.write).unwrap_or(false);
 
+    // `--session` implies workflow mode (one phase-gated session per process).
+    let workflow = workflow || session.is_some();
+
     if http {
         let cors_origins = mcp_cfg
             .map(|m| m.cors_origins.clone())
             .unwrap_or_default();
-        serve_http_blocking(repo_root, write_enabled, port, bind, token, cors_origins)?;
+        serve_http_blocking(repo_root, write_enabled, port, bind, token, cors_origins, workflow, session)?;
     } else {
-        run_stdio(repo_root, write_enabled)?;
+        run_stdio(repo_root, write_enabled, session)?;
     }
 
     Ok(())

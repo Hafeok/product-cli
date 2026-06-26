@@ -1,0 +1,358 @@
+//! Phase-gated workflow transport — drive one What → How → Build session.
+//!
+//! Wraps the stateless [`ToolRegistry`] with a disk-backed
+//! [`WorkflowSession`]: `tools/list` is filtered to the current phase, calls to
+//! out-of-phase tools are rejected, and the session-control tools advance the
+//! phase or promote the isolated draft graph into the canonical `.ttl`. The
+//! session dispatches every tool into its own workspace copy of `.product`, so
+//! the canonical graph is untouched until `product_session_finalize`.
+
+use std::path::PathBuf;
+
+use product_core::author;
+use product_core::author::domain::session_dir;
+use product_core::pf::session::DomainSession;
+use product_core::pf::workflow::{Phase, WorkflowSession};
+use serde_json::{json, Value};
+
+use super::registry::ToolRegistry;
+use super::tools::ToolDef;
+use super::{JsonRpcRequest, JsonRpcResponse};
+
+/// The per-session context resolved by the transport for each call.
+pub struct WorkflowCtx {
+    /// Directory holding `workflow.json` (`.product/sessions/<id>/`).
+    pub session_root: PathBuf,
+    /// The isolated `.product` workspace root tools dispatch against.
+    pub workspace: PathBuf,
+    /// The canonical repo root that `finalize` promotes the draft into.
+    pub canonical: PathBuf,
+}
+
+impl WorkflowCtx {
+    /// The on-disk layout for a session id under the canonical repo root.
+    pub fn resolve(canonical: &std::path::Path, session_id: &str) -> Self {
+        let session_root = canonical.join(".product").join("sessions").join(session_id);
+        let workspace = session_root.join("ws");
+        Self { session_root, workspace, canonical: canonical.to_path_buf() }
+    }
+}
+
+/// A JSON-RPC response plus any server-initiated notifications to flush after it
+/// (e.g. `notifications/tools/list_changed` on a phase advance).
+pub struct Outgoing {
+    pub response: Option<JsonRpcResponse>,
+    pub notifications: Vec<Value>,
+}
+
+impl Outgoing {
+    fn resp(r: JsonRpcResponse) -> Self {
+        Self { response: Some(r), notifications: Vec::new() }
+    }
+    fn silent() -> Self {
+        Self { response: None, notifications: Vec::new() }
+    }
+}
+
+const CONTROL_TOOLS: [&str; 3] =
+    ["product_workflow_status", "product_workflow_advance", "product_session_finalize"];
+
+/// The home phase a tool belongs to, by name prefix (the single source of truth
+/// for gating; control tools are handled separately and are always visible).
+pub fn phase_of(name: &str) -> Phase {
+    const WHAT: [&str; 4] =
+        ["product_domain_", "product_decider_", "product_projector_", "product_primitive_"];
+    const HOW: [&str; 5] = [
+        "product_how_",
+        "product_archetype_",
+        "product_cell_",
+        "product_work_unit_",
+        "product_worker_",
+    ];
+    if WHAT.iter().any(|p| name.starts_with(p)) {
+        Phase::What
+    } else if HOW.iter().any(|p| name.starts_with(p)) {
+        Phase::How
+    } else {
+        // slice / deliverable / release / build_run
+        Phase::Build
+    }
+}
+
+/// A tool is callable in `current` if it is home to that phase, or it is a
+/// read-only tool from an earlier phase (so earlier work stays inspectable).
+pub fn is_visible(tool: &ToolDef, current: Phase) -> bool {
+    let home = phase_of(&tool.name);
+    home == current || (home < current && !tool.requires_write)
+}
+
+/// The session-control tool definitions, advertised in every phase.
+fn control_tools() -> Vec<ToolDef> {
+    vec![
+        ToolDef {
+            name: "product_workflow_status".into(),
+            description: "Show the current workflow phase, how far the session may advance, the tools available now, and the journey so far.".into(),
+            requires_write: false,
+            input_schema: json!({"type": "object", "properties": {}}),
+        },
+        ToolDef {
+            name: "product_workflow_advance".into(),
+            description: "Advance the session to the next phase (What→How→Build), or jump to a named phase via `to`. Returns the tools now available.".into(),
+            requires_write: true,
+            input_schema: json!({"type": "object", "properties": {"to": {"type": "string", "description": "what | how | build"}}}),
+        },
+        ToolDef {
+            name: "product_session_finalize".into(),
+            description: "Validate the draft What graph and, if conformant, promote the session's isolated workspace into the canonical `.product` graph.".into(),
+            requires_write: true,
+            input_schema: json!({"type": "object", "properties": {}}),
+        },
+    ]
+}
+
+fn now() -> String {
+    chrono::Utc::now().to_rfc3339()
+}
+
+fn load_session(ctx: &WorkflowCtx) -> Result<WorkflowSession, String> {
+    WorkflowSession::load(&ctx.session_root).map_err(|e| format!("{e}"))
+}
+
+/// The tools callable in the given phase: the filtered families plus controls.
+fn visible_tools(registry: &ToolRegistry, phase: Phase) -> Vec<&ToolDef> {
+    registry.tool_list().iter().filter(|t| is_visible(t, phase)).collect()
+}
+
+fn tool_json(t: &ToolDef) -> Value {
+    json!({ "name": t.name, "description": t.description, "inputSchema": t.input_schema })
+}
+
+/// Entry point: handle one JSON-RPC request in workflow mode.
+pub fn handle(registry: &ToolRegistry, request: &JsonRpcRequest, ctx: &WorkflowCtx) -> Outgoing {
+    if request.method.starts_with("notifications/") {
+        return Outgoing::silent();
+    }
+    match request.method.as_str() {
+        "initialize" => Outgoing::resp(initialize(request)),
+        "tools/list" => Outgoing::resp(tools_list(registry, request, ctx)),
+        "tools/call" => tools_call(registry, request, ctx),
+        other => Outgoing::resp(JsonRpcResponse::error(
+            request.id.clone(),
+            -32601,
+            &format!("Method not found: {other}"),
+        )),
+    }
+}
+
+fn initialize(request: &JsonRpcRequest) -> JsonRpcResponse {
+    JsonRpcResponse::success(
+        request.id.clone(),
+        json!({
+            "protocolVersion": "2024-11-05",
+            "capabilities": { "tools": { "listChanged": true } },
+            "serverInfo": { "name": "product", "version": env!("CARGO_PKG_VERSION") },
+        }),
+    )
+}
+
+fn tools_list(registry: &ToolRegistry, request: &JsonRpcRequest, ctx: &WorkflowCtx) -> JsonRpcResponse {
+    let phase = load_session(ctx).map(|s| s.phase).unwrap_or(Phase::What);
+    let mut tools: Vec<Value> = visible_tools(registry, phase).iter().map(|t| tool_json(t)).collect();
+    tools.extend(control_tools().iter().map(tool_json));
+    JsonRpcResponse::success(request.id.clone(), json!({ "tools": tools }))
+}
+
+fn tools_call(registry: &ToolRegistry, request: &JsonRpcRequest, ctx: &WorkflowCtx) -> Outgoing {
+    let id = request.id.clone();
+    let name = request.params.get("name").and_then(|v| v.as_str()).unwrap_or_default().to_string();
+    let args = request.params.get("arguments").cloned().unwrap_or(json!({}));
+
+    if CONTROL_TOOLS.contains(&name.as_str()) {
+        return control_call(registry, &name, &args, ctx, id);
+    }
+
+    // Gate: the tool must be visible in the current phase.
+    let session = match load_session(ctx) {
+        Ok(s) => s,
+        Err(e) => return Outgoing::resp(JsonRpcResponse::error(id, -32603, &e)),
+    };
+    let Some(tool) = registry.tool_list().iter().find(|t| t.name == name) else {
+        return Outgoing::resp(JsonRpcResponse::error(id, -32603, &format!("Tool not found: {name}")));
+    };
+    if !is_visible(tool, session.phase) {
+        let msg = format!(
+            "Tool '{name}' belongs to the {} phase, but this session is in the {} phase. Advance with product_workflow_advance.",
+            phase_of(&name), session.phase
+        );
+        return Outgoing::resp(JsonRpcResponse::error(id, -32603, &msg));
+    }
+
+    let result = registry.call_tool_at(&name, &args, &ctx.workspace);
+    if name == "product_build_run" {
+        if let Ok(ref v) = result {
+            record_build(&session, ctx, v);
+        }
+    }
+    Outgoing::resp(call_response(id, result))
+}
+
+fn call_response(id: Option<Value>, result: Result<Value, String>) -> JsonRpcResponse {
+    match result {
+        Ok(v) => JsonRpcResponse::success(id, json!({
+            "content": [{ "type": "text", "text": serde_json::to_string_pretty(&v).unwrap_or_default() }]
+        })),
+        Err(e) => JsonRpcResponse::error(id, -32603, &e),
+    }
+}
+
+/// Persist the build verdict onto the session record (best-effort).
+fn record_build(session: &WorkflowSession, ctx: &WorkflowCtx, result: &Value) {
+    if let Some(verdict) = result.get("verdict").filter(|v| !v.is_null()) {
+        if let Ok(v) = serde_json::from_value(verdict.clone()) {
+            let mut s = session.clone();
+            s.record_build(v);
+            let _ = s.save(&ctx.session_root);
+        }
+    }
+}
+
+// --- session-control tools -------------------------------------------------
+
+fn control_call(registry: &ToolRegistry, name: &str, args: &Value, ctx: &WorkflowCtx, id: Option<Value>) -> Outgoing {
+    match name {
+        "product_workflow_status" => Outgoing::resp(call_response(id, status(registry, ctx))),
+        "product_workflow_advance" => advance(registry, args, ctx, id),
+        "product_session_finalize" => Outgoing::resp(call_response(id, finalize(ctx))),
+        _ => Outgoing::resp(JsonRpcResponse::error(id, -32603, &format!("unknown control tool: {name}"))),
+    }
+}
+
+fn status(registry: &ToolRegistry, ctx: &WorkflowCtx) -> Result<Value, String> {
+    let session = load_session(ctx)?;
+    let mut available: Vec<String> = visible_tools(registry, session.phase).iter().map(|t| t.name.clone()).collect();
+    available.extend(CONTROL_TOOLS.iter().map(|s| s.to_string()));
+    let mut out = session.status_json();
+    if let Value::Object(ref mut m) = out {
+        m.insert("availableTools".into(), json!(available));
+        m.insert("hint".into(), json!(phase_hint(session.phase)));
+    }
+    Ok(out)
+}
+
+fn phase_hint(phase: Phase) -> String {
+    match phase {
+        Phase::What => "Author the domain/event model with product_domain_*, product_decider_*, product_projector_*. Advance to How when the What graph validates.".into(),
+        Phase::How => "Define the How contract and delivery slices with product_how_*, product_slice_*, product_archetype_*. Advance to Build when the architecture is set.".into(),
+        Phase::Build => "Run product_build_run on a deliverable. Call product_session_finalize to promote the draft graph into the canonical spec.".into(),
+    }
+}
+
+fn advance(registry: &ToolRegistry, args: &Value, ctx: &WorkflowCtx, id: Option<Value>) -> Outgoing {
+    let mut session = match load_session(ctx) {
+        Ok(s) => s,
+        Err(e) => return Outgoing::resp(JsonRpcResponse::error(id, -32603, &e)),
+    };
+    let to = match args.get("to").and_then(|v| v.as_str()) {
+        Some(s) => match Phase::parse(s) {
+            Ok(p) => Some(p),
+            Err(e) => return Outgoing::resp(JsonRpcResponse::error(id, -32603, &format!("{e}"))),
+        },
+        None => None,
+    };
+    let from = session.phase;
+    let target = match session.advance(to, now()) {
+        Ok(p) => p,
+        Err(e) => return Outgoing::resp(JsonRpcResponse::error(id, -32603, &format!("{e}"))),
+    };
+    if let Err(e) = session.save(&ctx.session_root) {
+        return Outgoing::resp(JsonRpcResponse::error(id, -32603, &format!("{e}")));
+    }
+    let now_available: Vec<String> = visible_tools(registry, target).iter().map(|t| t.name.clone()).collect();
+    let result = Ok(json!({
+        "from": from, "to": target,
+        "nowAvailable": now_available,
+        "hint": phase_hint(target),
+    }));
+    Outgoing {
+        response: Some(call_response(id, result)),
+        notifications: vec![json!({ "jsonrpc": "2.0", "method": "notifications/tools/list_changed" })],
+    }
+}
+
+/// Validate the draft What graph; on conformance, promote the workspace into the
+/// canonical `.product` and mark the session finalized.
+fn finalize(ctx: &WorkflowCtx) -> Result<Value, String> {
+    let mut session = load_session(ctx)?;
+    let product = session.product.clone();
+    let draft_dir = session_dir(&ctx.workspace, &product);
+    let draft = DomainSession::load(&draft_dir).map_err(|e| format!("no draft What graph: {e}"))?;
+    let fin = draft.finalize(now());
+    if !fin.ok {
+        return Ok(json!({ "ok": false, "violations": fin.violations }));
+    }
+
+    // Promote the whole isolated workspace into the canonical .product.
+    let ws_product = ctx.workspace.join(".product");
+    let canonical_product = ctx.canonical.join(".product");
+    author::copy_tree(&ws_product, &canonical_product, &["sessions", "build"])
+        .map_err(|e| format!("promote failed: {e}"))?;
+
+    // Belt-and-suspenders: write the validated .ttl + provenance to canonical.
+    let canon_dir = session_dir(&ctx.canonical, &product);
+    let mut written = vec![];
+    if let Some(ttl) = fin.turtle {
+        let p = canon_dir.join(format!("{product}.ttl"));
+        product_core::fileops::write_file_atomic(&p, &ttl).map_err(|e| format!("{e}"))?;
+        written.push(p.display().to_string());
+    }
+    if let Some(prov) = fin.provenance {
+        if let Ok(text) = serde_json::to_string_pretty(&prov) {
+            let p = canon_dir.join(format!("{product}.provenance.json"));
+            product_core::fileops::write_file_atomic(&p, &text).map_err(|e| format!("{e}"))?;
+            written.push(p.display().to_string());
+        }
+    }
+
+    session.finalized = true;
+    session.save(&ctx.session_root).map_err(|e| format!("{e}"))?;
+    Ok(json!({ "ok": true, "product": product, "promotedTo": canonical_product.display().to_string(), "written": written }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn tool(name: &str, write: bool) -> ToolDef {
+        ToolDef { name: name.into(), description: String::new(), requires_write: write, input_schema: json!({}) }
+    }
+
+    #[test]
+    fn phase_of_maps_families() {
+        assert_eq!(phase_of("product_domain_new"), Phase::What);
+        assert_eq!(phase_of("product_decider_validate"), Phase::What);
+        assert_eq!(phase_of("product_how_show"), Phase::How);
+        assert_eq!(phase_of("product_work_unit_show"), Phase::How);
+        assert_eq!(phase_of("product_slice_new"), Phase::Build);
+        assert_eq!(phase_of("product_build_run"), Phase::Build);
+    }
+
+    #[test]
+    fn write_tools_lock_to_their_home_phase() {
+        let new = tool("product_domain_new", true);
+        let show = tool("product_domain_show", false);
+        // In What, both What tools are visible.
+        assert!(is_visible(&new, Phase::What));
+        assert!(is_visible(&show, Phase::What));
+        // In How, the What read stays but the What write is locked.
+        assert!(is_visible(&show, Phase::How));
+        assert!(!is_visible(&new, Phase::How));
+    }
+
+    #[test]
+    fn later_phase_tools_hidden_earlier() {
+        let build = tool("product_build_run", true);
+        assert!(!is_visible(&build, Phase::What));
+        assert!(!is_visible(&build, Phase::How));
+        assert!(is_visible(&build, Phase::Build));
+    }
+}

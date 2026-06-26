@@ -2,6 +2,7 @@
 
 use clap::Subcommand;
 use product_core::author;
+use product_core::pf::workflow::Phase;
 
 use super::BoxResult;
 
@@ -67,7 +68,16 @@ fn handle_domain(cmd: AuthorCommands) -> BoxResult {
     let cli_str = cli.unwrap_or_else(|| "claude".to_string());
     let agent_cli = author::AgentCli::parse(&cli_str)?;
     let root = std::env::current_dir()?;
-    author::domain::start_session(&product, agent_cli, seed.as_deref(), &root)?;
+    let _ = seed; // the session workspace seeds the draft from canonical `.product`.
+
+    // Generalized (ADR): `author domain` is now a What-capped What→How→Build
+    // session. The phase-gated server exposes the What tools; advancing past
+    // What is disabled by the `until` cap.
+    println!("note: `author domain` now starts a What-capped session (see `product session`).");
+    let now = chrono::Utc::now();
+    let id = format!("{product}-{}", now.format("%Y%m%d-%H%M%S"));
+    author::workflow::scaffold(&root, &id, &product, &cli_str, Phase::What, now.to_rfc3339())?;
+    author::workflow::launch(&id, &product, agent_cli, &root)?;
     Ok(())
 }
 

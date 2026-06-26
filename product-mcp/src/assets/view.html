@@ -31,6 +31,14 @@
   #modes { display:flex; gap:0; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
   #modes button { background:none; border:0; color:var(--muted); font:inherit; font-size:12px; padding:4px 12px; cursor:pointer; }
   #modes button.on { background:var(--line); color:var(--text); }
+  #phasebar { display:none; align-items:center; gap:5px; }
+  #phasebar .step { font-size:11px; font-weight:600; padding:3px 11px; border-radius:12px; background:var(--line); color:var(--muted); transition:all .2s; }
+  #phasebar .step.done { background:#14532d; color:#86efac; }
+  #phasebar .step.cur { color:#fff; box-shadow:0 0 0 2px rgba(255,255,255,.18); }
+  #phasebar .arr { color:var(--muted); font-size:10px; }
+  #sessmeta { font-size:11px; color:var(--muted); margin-left:4px; }
+  #sessmeta .draft { color:#fbbf24; font-weight:700; }
+  #sessmeta .final { color:#86efac; font-weight:700; }
   #filters { display:flex; flex-wrap:wrap; gap:10px; margin-left:auto; font-size:12px; color:var(--muted); }
   #filters label { display:flex; align-items:center; gap:4px; cursor:pointer; }
   .lane-head { display:flex; }
@@ -66,6 +74,12 @@
 <body>
 <header>
   <h1>What Graph — Live View</h1>
+  <div id="phasebar">
+    <span class="step" data-p="what">What</span><span class="arr">›</span>
+    <span class="step" data-p="how">How</span><span class="arr">›</span>
+    <span class="step" data-p="build">Build</span>
+    <span id="sessmeta"></span>
+  </div>
   <span id="live"><span id="dot"></span><span id="status">connecting…</span></span>
   <div id="modes">
     <button data-mode="timeline">Timeline</button>
@@ -92,12 +106,38 @@ let mode = localStorage.getItem('viewMode') || 'timeline';
 function el(tag, attrs){ const n=document.createElementNS(NS,tag); for(const k in attrs) n.setAttribute(k,attrs[k]); return n; }
 function trim(s,n){ return s.length>n ? s.slice(0,n-1)+'…' : s; }
 
+// Follow a specific session when the page is opened as `/?session=<id>`; the
+// server otherwise falls back to its own `--session` scope.
+const SID = new URLSearchParams(location.search).get('session');
+const SQ = SID ? ('?session=' + encodeURIComponent(SID)) : '';
+
 async function load(){
   let g;
-  try { const r = await fetch('/api/graph'); if(!r.ok) throw new Error(await r.text()); g = await r.json(); }
+  try { const r = await fetch('/api/graph'+SQ); if(!r.ok) throw new Error(await r.text()); g = await r.json(); }
   catch(e){ document.getElementById('empty').style.display='block'; document.getElementById('empty').textContent=String(e.message||e); return; }
   last = g; document.getElementById('empty').style.display = g.nodes.length ? 'none':'block';
   buildFilters(g); render(g);
+}
+
+// --- session phase banner: show which part of What→How→Build we're in ---
+const PHASES=['what','how','build'];
+const PHASE_COLOR={what:'#2563eb',how:'#d97706',build:'#16a34a'};
+async function loadSession(){
+  let s; try{ const r=await fetch('/api/session'+SQ); s=await r.json(); }catch(e){ return; }
+  const bar=document.getElementById('phasebar');
+  if(!s || !s.active){ bar.style.display='none'; document.title='What Graph — Live View'; return; }
+  bar.style.display='flex';
+  const cur=PHASES.indexOf(s.phase), until=PHASES.indexOf(s.until);
+  for(const st of bar.querySelectorAll('.step')){
+    const i=PHASES.indexOf(st.dataset.p);
+    st.classList.toggle('done', i<cur);
+    st.classList.toggle('cur', i===cur);
+    st.style.background = i===cur ? PHASE_COLOR[s.phase] : '';
+    st.style.opacity = i>until ? '.35' : '1';   // dim phases past the session's cap
+  }
+  document.getElementById('sessmeta').innerHTML =
+    `· ${s.id} · ` + (s.finalized ? '<span class="final">finalized</span>' : '<span class="draft">DRAFT</span>');
+  document.title = `${s.phase.toUpperCase()} · ${s.id} — What Graph`;
 }
 
 function setMode(m){
@@ -314,7 +354,7 @@ function showPanel(n){
 function connect(){
   const dot=document.getElementById('dot'), st=document.getElementById('status');
   const es=new EventSource('/api/events');
-  const onTick=()=>{ dot.classList.add('flash'); setTimeout(()=>dot.classList.remove('flash'),300); load(); };
+  const onTick=()=>{ dot.classList.add('flash'); setTimeout(()=>dot.classList.remove('flash'),300); load(); loadSession(); };
   es.onopen=()=>{ st.textContent='live'; };
   es.addEventListener('changed', onTick);   // server emits a named "changed" event
   es.onmessage=onTick;                        // fallback for default-typed events
@@ -323,7 +363,7 @@ function connect(){
 
 for(const b of document.querySelectorAll('#modes button')) b.onclick=()=>setMode(b.dataset.mode);
 setMode(mode);
-load(); connect();
+load(); loadSession(); connect();
 window.addEventListener('resize',()=>last&&render(last));
 </script>
 </body>

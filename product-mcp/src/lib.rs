@@ -8,6 +8,8 @@
 
 pub mod registry;
 pub mod domain;
+pub mod workflow;
+mod build_handler;
 mod decider_handlers;
 mod projector_handlers;
 mod primitive_handlers;
@@ -36,6 +38,7 @@ use std::path::PathBuf;
 
 /// Run the HTTP MCP server, blocking on a fresh tokio runtime. Wraps
 /// `run_http` so the CLI adapter does not need its own `tokio` dependency.
+#[allow(clippy::too_many_arguments)]
 pub fn serve_http_blocking(
     repo_root: PathBuf,
     write_enabled: bool,
@@ -43,11 +46,13 @@ pub fn serve_http_blocking(
     bind: &str,
     token: Option<String>,
     cors_origins: Vec<String>,
+    workflow: bool,
+    session: Option<String>,
 ) -> Result<(), ProductError> {
     let rt = tokio::runtime::Runtime::new().map_err(|e| {
         ProductError::IoError(format!("Failed to create tokio runtime: {}", e))
     })?;
-    rt.block_on(run_http(repo_root, write_enabled, port, bind, token, cors_origins))
+    rt.block_on(run_http(repo_root, write_enabled, port, bind, token, cors_origins, workflow, session))
 }
 
 #[cfg(test)]

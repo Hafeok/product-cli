@@ -30,6 +30,7 @@ mod output;
 mod preview;
 mod release;
 mod seam;
+mod session;
 mod shared;
 mod slice;
 mod work_unit;
@@ -50,6 +51,7 @@ pub use self::how::HowCommands;
 pub use self::lsp::LspCommands;
 pub use self::preview::PreviewCommands;
 pub use self::release::ReleaseCommands;
+pub use self::session::SessionCommands;
 pub use self::slice::SliceCommands;
 
 mod root_enum;

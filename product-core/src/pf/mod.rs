@@ -75,9 +75,11 @@ pub mod wcag22;
 pub mod work_unit;
 pub mod work_unit_validate;
 pub mod worker;
+pub mod workflow;
 
 pub use how::HowContract;
 pub use model::DomainGraph;
 pub use ops::OpResult;
 pub use session::{DomainSession, Finalized};
 pub use validate::Violation;
+pub use workflow::{Phase, WorkflowSession};

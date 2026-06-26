@@ -31,20 +31,39 @@ impl ToolRegistry {
         &self.tools
     }
 
-    /// Handle a tool call. Returns JSON result or error.
+    /// Handle a tool call against the registry's repo root.
     pub fn call_tool(&self, name: &str, args: &Value) -> std::result::Result<Value, String> {
+        let repo_root = self.repo_root.clone();
+        self.call_tool_at(name, args, &repo_root)
+    }
+
+    /// Handle a tool call against an explicit repo root (used by the workflow
+    /// transport, where each session dispatches into its own workspace).
+    pub fn call_tool_at(&self, name: &str, args: &Value, repo_root: &Path) -> std::result::Result<Value, String> {
         let tool = self.tools.iter().find(|t| t.name == name)
             .ok_or_else(|| format!("Tool not found: {}", name))?;
         if tool.requires_write && !self.write_enabled {
             return Err("Write tools are disabled. Set mcp.write = true in product.toml".to_string());
         }
+        if name == "product_build_run" {
+            return crate::build_handler::run(args, repo_root);
+        }
         let _lock = if tool.requires_write {
-            Some(product_core::fileops::RepoLock::acquire(&self.repo_root)
+            Some(product_core::fileops::RepoLock::acquire(repo_root)
                 .map_err(|e| format!("{}", e))?)
         } else {
             None
         };
-        dispatch_tool(name, args, &self.repo_root)
+        dispatch_tool(name, args, repo_root)
+    }
+
+    /// Handle a JSON-RPC request in workflow mode against a session context.
+    pub fn handle_jsonrpc_workflow(
+        &self,
+        request: &JsonRpcRequest,
+        ctx: &crate::workflow::WorkflowCtx,
+    ) -> crate::workflow::Outgoing {
+        crate::workflow::handle(self, request, ctx)
     }
 
     /// Handle a JSON-RPC request. Returns `None` for notifications.

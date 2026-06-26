@@ -1,5 +1,6 @@
 //! MCP tool definitions — the What/How framework-graph tool schemas.
 
+mod build;
 mod decider;
 mod projector;
 mod primitive;
@@ -27,5 +28,6 @@ pub fn build_tool_list() -> Vec<ToolDef> {
     tools.extend(primitive::all());
     tools.extend(delivery::all());
     tools.extend(legacy_pf::all());
+    tools.extend(build::all());
     tools
 }
