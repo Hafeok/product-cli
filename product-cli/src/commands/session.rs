@@ -103,6 +103,10 @@ fn show(id: &str) -> BoxResult {
     let session = WorkflowSession::load(&session_root)
         .map_err(|_| format!("no session '{id}' under {}", root.display()))?;
     println!("{}", serde_json::to_string_pretty(&session.status_json())?);
+    // Surface the live view URL when the session's view is running.
+    if let Ok(url) = std::fs::read_to_string(session_root.join(author::workflow::VIEW_URL_FILE)) {
+        println!("live view: {}", url.trim());
+    }
     Ok(())
 }
 

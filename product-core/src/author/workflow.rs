@@ -70,9 +70,17 @@ pub fn launch(session_id: &str, product: &str, cli: AgentCli, canonical_root: &P
 
     // Bring up the live view, pinned to this session, for the run's duration.
     // Each session picks its own free port so concurrent sessions don't clash.
+    // The agent CLI takes over the terminal, so we open the browser ourselves
+    // and record the URL (recoverable via `product session show`).
+    let root = session_root(canonical_root, session_id);
     let mut view = spawn_view(session_id, canonical_root);
     if let Some((_, port)) = view.as_ref() {
-        println!("  Live view: http://127.0.0.1:{port}/?session={session_id}");
+        let url = format!("http://127.0.0.1:{port}/?session={session_id}");
+        let _ = std::fs::write(root.join(VIEW_URL_FILE), &url);
+        println!("  Live view: {url}");
+        // Give the server a moment to bind, then open the browser.
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        open_browser(&url);
     }
     println!();
 
@@ -84,8 +92,23 @@ pub fn launch(session_id: &str, product: &str, cli: AgentCli, canonical_root: &P
         let _ = child.kill();
         let _ = child.wait();
     }
+    let _ = std::fs::remove_file(root.join(VIEW_URL_FILE)); // the view is gone now
     report(status, cli, &tmp);
     Ok(())
+}
+
+/// The file (under the session dir) holding the live view URL while it runs.
+pub const VIEW_URL_FILE: &str = "view-url.txt";
+
+/// Open `url` with the system's default browser, best-effort across
+/// Linux/WSL/macOS. Hands the URL to the default handler; the first opener that
+/// launches wins, silent if none exist.
+fn open_browser(url: &str) {
+    for opener in ["xdg-open", "open", "wslview"] {
+        if Command::new(opener).arg(url).stdout(Stdio::null()).stderr(Stdio::null()).spawn().is_ok() {
+            return;
+        }
+    }
 }
 
 /// Ask the OS for a free TCP port on loopback (bind to :0, read the assignment,
