@@ -43,6 +43,12 @@ pub enum Commands {
         /// Token budget — escalation stops once total tokens reach it
         #[arg(long)]
         budget: Option<u64>,
+        /// Emit a self-contained SPMC prompt for a Claude Code -p session instead of dispatching
+        #[arg(long = "emit-spmc")]
+        emit_spmc: bool,
+        /// Where to write the SPMC (`-` for stdout); default .product/build/<id>.spmc.md
+        #[arg(long)]
+        out: Option<std::path::PathBuf>,
         #[arg(long)]
         product: Option<String>,
     },

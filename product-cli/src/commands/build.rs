@@ -6,6 +6,7 @@
 //! visible in one place.
 
 use product_core::pf::build::assemble;
+use product_core::pf::build_spmc::emit_session_spmc;
 use product_core::pf::build_metrics::{BuildSession, FileChange, Verdict};
 use product_core::pf::capability::Capability;
 use product_core::pf::decider::Decider;
@@ -34,14 +35,14 @@ pub(crate) struct Gates {
     pub budget: Option<u64>,
 }
 
-pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: bool, gates: Gates, product: Option<String>) -> BoxResult {
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: bool, gates: Gates, emit_spmc: bool, out: Option<PathBuf>, product: Option<String>) -> BoxResult {
     let mut d = super::deliverable::load(deliverable)?;
     let slice = super::deliverable::load_slice(&d.slice)?;
     let graph = super::deliverable::load_graph(product.clone())?;
     let deciders = super::deliverable::load_deciders();
     let how = load_how();
     let p = product.clone().or_else(super::shared::default_product_name).unwrap_or_else(|| "product".to_string());
-    let context = assemble(&d, &slice, &graph, how.as_ref(), &deciders, &p);
 
     // Resolve the worker by role → capability (the SPMC Model layer). The §5
     // parallel unit is the work unit (from `cell dispatch`); absent any, the
@@ -50,6 +51,11 @@ pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: 
     let ladder = super::worker::ladder(&super::worker::load_catalog(), role);
     let units = load_work_units();
 
+    if emit_spmc {
+        return emit(deliverable, &d, &slice, &graph, how.as_ref(), &deciders, &units, &p, out);
+    }
+
+    let context = assemble(&d, &slice, &graph, how.as_ref(), &deciders, &p);
     if dry_run {
         print_dry_run(&context, role, &ladder, &units, jobs, gates, &d);
     } else {
@@ -61,6 +67,28 @@ pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: 
     if !dry_run {
         finish_session(&fd);
     }
+    Ok(())
+}
+
+/// Write (or print, with `--out -`) the self-contained SPMC prompt a Claude Code
+/// `-p` session uses to realise the whole deliverable in-repo and self-verify.
+#[allow(clippy::too_many_arguments)]
+fn emit(deliverable: &str, d: &Deliverable, slice: &Slice, graph: &DomainGraph, how: Option<&HowContract>, deciders: &[Decider], units: &[WorkUnit], product: &str, out: Option<PathBuf>) -> BoxResult {
+    let spmc = emit_session_spmc(d, slice, graph, how, deciders, units, product);
+    if out.as_deref().map(Path::as_os_str) == Some(std::ffi::OsStr::new("-")) {
+        print!("{spmc}");
+        return Ok(());
+    }
+    let path = out.unwrap_or_else(|| {
+        super::shared::domain_root().join(".product").join("build").join(format!("{deliverable}.spmc.md"))
+    });
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(&path, &spmc)?;
+    println!("Wrote SPMC → {}", path.display());
+    println!("Hand it to a Claude Code session (from the repo root):");
+    println!("  claude -p \"$(cat {})\"", path.display());
     Ok(())
 }
 

@@ -48,6 +48,9 @@ impl ToolRegistry {
         if name == "product_build_run" {
             return crate::build_handler::run(args, repo_root);
         }
+        if name == "product_build_emit" {
+            return crate::build_handler::emit(args, repo_root);
+        }
         let _lock = if tool.requires_write {
             Some(product_core::fileops::RepoLock::acquire(repo_root)
                 .map_err(|e| format!("{}", e))?)

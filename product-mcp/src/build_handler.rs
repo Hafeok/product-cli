@@ -55,6 +55,36 @@ pub fn run(args: &Value, repo_root: &Path) -> Result<Value, String> {
     }))
 }
 
+/// Emit the self-contained SPMC prompt for the deliverable (the `--emit-spmc`
+/// artifact a Claude Code `-p` session consumes), captured from the CLI's stdout.
+pub fn emit(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let deliverable = args
+        .get("deliverable")
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| "missing required arg: deliverable".to_string())?;
+    let exe = std::env::current_exe().map_err(|e| format!("cannot locate product binary: {e}"))?;
+    let mut cli = vec![deliverable.to_string(), "--emit-spmc".into(), "--out".into(), "-".into()];
+    if let Some(p) = args.get("product").and_then(|v| v.as_str()) {
+        cli.push("--product".into());
+        cli.push(p.to_string());
+    }
+    let output = Command::new(&exe)
+        .arg("build")
+        .args(&cli)
+        .current_dir(repo_root)
+        .output()
+        .map_err(|e| format!("failed to spawn `product build --emit-spmc`: {e}"))?;
+    if !output.status.success() {
+        return Err(String::from_utf8_lossy(&output.stderr).to_string());
+    }
+    Ok(json!({
+        "ok": true,
+        "deliverable": deliverable,
+        "spmc": String::from_utf8_lossy(&output.stdout).to_string(),
+    }))
+}
+
 /// Translate the JSON args into `product build` CLI flags (mirrors the `Build`
 /// subcommand: `--lsp` opt-in, `--no-verify` opt-out).
 fn build_args(deliverable: &str, args: &Value) -> Vec<String> {

@@ -39,8 +39,15 @@ units, gate it with verifications, and finalize.
    It returns the assembled SPMC context, the worker + parallel run plan, the
    verify plan, and the gate status — **with no worker dispatched**. Review it
    before spending a real run.
-5. **Real build** — `product_build_run deliverable=<d>`. Dispatches the worker per
-   the role bindings, writes artifacts, runs the gates.
+5. **Build it** — two ways:
+   - **In-process worker:** `product_build_run deliverable=<d>` dispatches the
+     worker per the role bindings, writes artifacts, runs the gates.
+   - **Hand it to a Claude Code session:** `product_build_emit deliverable=<d>`
+     returns a self-contained SPMC prompt (frozen What/How/Behaviour/Acceptance +
+     the work-unit build plan in order + the verify commands). Save it and run
+     `claude -p "$(cat <file>)"` from the repo root, or `product build <d>
+     --emit-spmc` to write `.product/build/<d>.spmc.md` directly. The agent builds
+     every artifact at its declared path and makes the verify commands pass.
 6. **Acceptance verdicts** — bind a runner so the build auto-verifies a criterion:
    `product_deliverable_runner id=<d> criterion=<c> runner=cargo-test args="<test
    filter>"` (or `runner=shell args="<command>"`). Then the §6 verify step runs it

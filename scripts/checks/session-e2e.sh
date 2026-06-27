@@ -55,12 +55,16 @@ run "slice new"               "$PRODUCT" slice new place-order --anchor PlaceOrd
 run "deliverable new"         "$PRODUCT" deliverable new place-order --slice place-order --accept "handler-exists: a PlaceOrder handler writes OrderPlaced for Order"
 run "deliverable runner"      "$PRODUCT" deliverable runner place-order handler-exists --runner cargo-test --args "tc_place_order_handler"
 run "build --dry-run"         "$PRODUCT" build place-order --dry-run
+run "build --emit-spmc"       "$PRODUCT" build place-order --emit-spmc --out "$T/spmc.md"
 
 phase "assertions"
 "$PRODUCT" build place-order --dry-run >"$T/build.out" 2>&1 || true
 assert_file "build run-plan uses the dispatched work unit (handler-order)" "$T/build.out" "handler-order"
 assert_file "build gate reports domain conformance" "$T/build.out" "domain Order: conformant"
 assert_file "acceptance criterion carries its bound runner (cargo test)" "$T/build.out" "handler-exists: cargo test"
+assert_file "emitted SPMC carries the Claude Code operating contract" "$T/spmc.md" "Operating contract"
+assert_file "emitted SPMC lists the work unit in its build plan" "$T/spmc.md" "handler-order"
+assert_file "emitted SPMC carries the verify command" "$T/spmc.md" "cargo test tc_place_order_handler"
 grep -q "handler-order" "$T/build.out" || { echo "  --- run plan was: ---"; grep -A4 "run plan" "$T/build.out" | sed 's/^/        /'; echo "  --- work-units on disk: ---"; ls .product/work-units/ 2>&1 | sed 's/^/        /'; }
 
 printf '\n'
