@@ -131,6 +131,7 @@ fn dispatch_tool(name: &str, args: &Value, repo_root: &Path) -> Result<Value, St
         .or_else(|| dispatch_delivery(name, args, repo_root))
         .or_else(|| dispatch_framework_read(name, args, repo_root))
         .or_else(|| dispatch_framework_write(name, args, repo_root))
+        .or_else(|| dispatch_framework_scaffold(name, args, repo_root))
         .unwrap_or_else(|| Err(format!("Tool handler not implemented: {}", name)))
 }
 
@@ -212,6 +213,18 @@ fn dispatch_framework_write(name: &str, args: &Value, repo_root: &Path) -> Optio
         "product_how_init" => fw::handle_how_init(args, repo_root),
         "product_how_add" => fw::handle_how_add(args, repo_root),
         "product_how_set" => fw::handle_how_set(args, repo_root),
+        _ => return None,
+    })
+}
+
+/// §4/§5 — scaffold the delivery architecture: archetype, cell, work-unit.
+fn dispatch_framework_scaffold(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
+    use super::framework_scaffold_handlers as fs;
+    Some(match name {
+        "product_archetype_init" => fs::handle_archetype_init(args, repo_root),
+        "product_cell_init" => fs::handle_cell_init(args, repo_root),
+        "product_cell_dispatch" => fs::handle_cell_dispatch(args, repo_root),
+        "product_work_unit_init" => fs::handle_work_unit_init(args, repo_root),
         _ => return None,
     })
 }

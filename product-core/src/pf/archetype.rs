@@ -53,6 +53,27 @@ impl Archetype {
         Ok(Self { name: name.to_string(), how, layout, cells })
     }
 
+    /// Scaffold a new archetype directory: a starter How contract, a layout
+    /// model, and one example cell. Returns the written file paths. Shared by the
+    /// CLI (`product archetype init`) and the MCP tool so the skeleton is laid
+    /// down from one place and cannot drift between the two surfaces.
+    pub fn scaffold(dir: &Path, name: &str) -> Result<Vec<String>> {
+        let cells = dir.join("cells");
+        std::fs::create_dir_all(&cells)
+            .map_err(|e| ProductError::Internal(format!("create {}: {e}", cells.display())))?;
+        let files = [
+            (dir.join("how-contract.yaml"), HowContract::scaffold(name).to_yaml()?),
+            (dir.join("layout.yaml"), LayoutModel::scaffold(name).to_yaml()?),
+            (cells.join("example-task.yaml"), TaskType::scaffold("example-task", name).to_yaml()?),
+        ];
+        let mut written = Vec::new();
+        for (path, text) in files {
+            crate::fileops::write_file_atomic(&path, &text)?;
+            written.push(path.display().to_string());
+        }
+        Ok(written)
+    }
+
     /// Validate the whole archetype. `domain` enables cells' `domain:X`
     /// cross-checks against the captured What graph.
     pub fn validate(&self, domain: Option<&DomainGraph>) -> Vec<Violation> {

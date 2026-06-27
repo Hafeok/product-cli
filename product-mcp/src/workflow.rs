@@ -332,6 +332,9 @@ mod tests {
         assert_eq!(phase_of("product_decider_validate"), Phase::What);
         assert_eq!(phase_of("product_how_show"), Phase::How);
         assert_eq!(phase_of("product_how_add"), Phase::How);
+        assert_eq!(phase_of("product_archetype_init"), Phase::How);
+        assert_eq!(phase_of("product_cell_dispatch"), Phase::How);
+        assert_eq!(phase_of("product_work_unit_init"), Phase::How);
         assert_eq!(phase_of("product_work_unit_show"), Phase::How);
         assert_eq!(phase_of("product_slice_new"), Phase::Build);
         assert_eq!(phase_of("product_build_run"), Phase::Build);

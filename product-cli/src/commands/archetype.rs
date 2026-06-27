@@ -9,10 +9,7 @@
 use clap::Subcommand;
 use product_core::author::domain::session_dir;
 use product_core::pf::archetype::Archetype;
-use product_core::pf::cell::TaskType;
-use product_core::pf::how::HowContract;
 use product_core::pf::how_validate::has_blocking;
-use product_core::pf::layout::LayoutModel;
 use product_core::pf::model::DomainGraph;
 use product_core::pf::session::DomainSession;
 use std::path::PathBuf;
@@ -170,14 +167,10 @@ fn init(name: &str, force: bool) -> BoxResult {
     if dir.exists() && !force {
         return Err(format!("{} already exists — pass --force to overwrite", dir.display()).into());
     }
-    std::fs::create_dir_all(dir.join("cells"))?;
-    std::fs::write(dir.join("how-contract.yaml"), HowContract::scaffold(name).to_yaml()?)?;
-    std::fs::write(dir.join("layout.yaml"), LayoutModel::scaffold(name).to_yaml()?)?;
-    std::fs::write(
-        dir.join("cells").join("example-task.yaml"),
-        TaskType::scaffold("example-task", name).to_yaml()?,
-    )?;
+    let written = Archetype::scaffold(&dir, name)?;
     println!("Scaffolded archetype '{name}' at {}", dir.display());
-    println!("  how-contract.yaml, layout.yaml, cells/example-task.yaml");
+    for w in &written {
+        println!("  {w}");
+    }
     Ok(())
 }
