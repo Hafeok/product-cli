@@ -242,7 +242,7 @@ fn status(registry: &ToolRegistry, ctx: &WorkflowCtx) -> Result<Value, String> {
 fn phase_hint(phase: Phase) -> String {
     match phase {
         Phase::What => "Author the domain/event model with product_domain_*, product_decider_*, product_projector_*. Advance to How when the What graph validates.".into(),
-        Phase::How => "Define the How contract and delivery slices with product_how_*, product_slice_*, product_archetype_*. Advance to Build when the architecture is set.".into(),
+        Phase::How => "Author the How: product_how_init scaffolds the contract, product_how_add / product_how_set build the Why cascade (decisions → principles → patterns) plus the application/infrastructure contracts. Inspect with product_archetype_* / product_work_unit_*. Advance to Build when the architecture is set.".into(),
         Phase::Build => "Run product_build_run on a deliverable. Call product_session_finalize to promote the draft graph into the canonical spec.".into(),
     }
 }
@@ -331,6 +331,7 @@ mod tests {
         assert_eq!(phase_of("product_domain_new"), Phase::What);
         assert_eq!(phase_of("product_decider_validate"), Phase::What);
         assert_eq!(phase_of("product_how_show"), Phase::How);
+        assert_eq!(phase_of("product_how_add"), Phase::How);
         assert_eq!(phase_of("product_work_unit_show"), Phase::How);
         assert_eq!(phase_of("product_slice_new"), Phase::Build);
         assert_eq!(phase_of("product_build_run"), Phase::Build);
@@ -346,6 +347,17 @@ mod tests {
         // In How, the What read stays but the What write is locked.
         assert!(is_visible(&show, Phase::How));
         assert!(!is_visible(&new, Phase::How));
+    }
+
+    #[test]
+    fn how_authoring_writes_live_only_in_how() {
+        let add = tool("product_how_add", true);
+        // Hidden while still authoring the What…
+        assert!(!is_visible(&add, Phase::What));
+        // …live in How…
+        assert!(is_visible(&add, Phase::How));
+        // …and frozen once the architecture is set and Build begins.
+        assert!(!is_visible(&add, Phase::Build));
     }
 
     #[test]

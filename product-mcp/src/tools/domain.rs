@@ -1,6 +1,6 @@
 //! Domain (What) graph tool definitions — CLI↔MCP parity for `domain` (FT-119).
 
-use super::ToolDef;
+use super::{schema_props, ToolDef};
 
 /// Every `product_domain_*` tool (read + write; gating is per-`ToolDef`).
 pub(super) fn all() -> Vec<ToolDef> {
@@ -59,21 +59,6 @@ fn read_inspect_tools() -> Vec<ToolDef> {
             }),
         },
     ]
-}
-
-/// The JSON-Schema `properties` object for one node struct, generated from the
-/// struct itself via `schemars`. The struct is the single source of truth, so
-/// `emits`/`projects`/`steps` come out typed as arrays and `is_aggregate_root`
-/// as a boolean — a schema-typed MCP client then encodes them correctly.
-fn schema_props<T: schemars::JsonSchema>() -> serde_json::Map<String, serde_json::Value> {
-    let generator = schemars::gen::SchemaSettings::draft07()
-        .with(|s| s.inline_subschemas = true)
-        .into_generator();
-    let root = generator.into_root_schema_for::<T>();
-    serde_json::to_value(root)
-        .ok()
-        .and_then(|v| v.get("properties").and_then(|p| p.as_object()).cloned())
-        .unwrap_or_default()
 }
 
 /// Map a node kind to its struct's generated field schema. The `match` is

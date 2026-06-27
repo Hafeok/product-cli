@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use crate::error::{ProductError, Result};
 
 /// §4.1 — a foundational choice carrying rationale.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct TopDecision {
     pub id: String,
     pub decision: String,
@@ -27,7 +27,7 @@ pub struct TopDecision {
 }
 
 /// §4.1 — a rule a top decision licenses, stated checkably.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Principle {
     pub id: String,
     pub statement: String,
@@ -40,7 +40,7 @@ pub struct Principle {
 }
 
 /// §4.1 — a concrete shape that realises principles; what a work unit emits.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Pattern {
     pub id: String,
     pub shape: String,
@@ -53,7 +53,7 @@ pub struct Pattern {
 }
 
 /// §4.2 — one checkable statement of the application contract.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct ContractStatement {
     pub id: String,
     pub statement: String,
@@ -62,7 +62,7 @@ pub struct ContractStatement {
 }
 
 /// §4.2 — invariant code-shaping decisions, stable across instances.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct ApplicationContract {
     pub id: String,
     pub language: String,
@@ -81,7 +81,7 @@ pub struct ApplicationContract {
 }
 
 /// §4.2 — one concrete infrastructure resource choice.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Resource {
     pub id: String,
     pub kind: String,
@@ -93,7 +93,7 @@ pub struct Resource {
 }
 
 /// §4.2 — concrete runtime choices; frozen; must satisfy the app contract.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct InfrastructureContract {
     pub id: String,
     pub satisfies: String,
@@ -104,7 +104,7 @@ pub struct InfrastructureContract {
 }
 
 /// §4.4 — a published interface generated from the domain model.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct InterfaceContract {
     pub id: String,
     pub surface: String,
@@ -114,7 +114,7 @@ pub struct InterfaceContract {
 }
 
 /// An archetype's complete How (§4).
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct HowContract {
     pub archetype: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]

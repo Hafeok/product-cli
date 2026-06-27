@@ -130,6 +130,7 @@ fn dispatch_tool(name: &str, args: &Value, repo_root: &Path) -> Result<Value, St
     dispatch_what(name, args, repo_root)
         .or_else(|| dispatch_delivery(name, args, repo_root))
         .or_else(|| dispatch_framework_read(name, args, repo_root))
+        .or_else(|| dispatch_framework_write(name, args, repo_root))
         .unwrap_or_else(|| Err(format!("Tool handler not implemented: {}", name)))
 }
 
@@ -200,6 +201,17 @@ fn dispatch_framework_read(name: &str, args: &Value, repo_root: &Path) -> Option
         "product_work_unit_validate" => f::handle_work_unit_validate(args, repo_root),
         "product_worker_list" => f::handle_worker_list(args, repo_root),
         "product_worker_resolve" => f::handle_worker_resolve(args, repo_root),
+        _ => return None,
+    })
+}
+
+/// §4 — How authoring: scaffold + build the Why cascade and contracts.
+fn dispatch_framework_write(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
+    use super::framework_write_handlers as fw;
+    Some(match name {
+        "product_how_init" => fw::handle_how_init(args, repo_root),
+        "product_how_add" => fw::handle_how_add(args, repo_root),
+        "product_how_set" => fw::handle_how_set(args, repo_root),
         _ => return None,
     })
 }
