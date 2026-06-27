@@ -19,7 +19,11 @@ version = 2
 # usually a maintainer mistake, not a security issue, and resolving them
 # requires a `cargo update` we may not want on the same PR).
 yanked = "warn"
-ignore = []
+# RUSTSEC-2024-0436: `paste` is unmaintained. It is a build-time proc-macro
+# pulled in transitively by cel-interpreter (the CEL evaluator under pf/rules)
+# — no runtime exposure and no upstream replacement available. Revisit if
+# cel-interpreter drops it or a maintained fork lands.
+ignore = ["RUSTSEC-2024-0436"]
 
 # ---------------------------------------------------------------------------
 # Licenses — explicit allow-list. New license types require a deliberate PR.
@@ -55,6 +59,9 @@ crate = "ring"
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
+# Intra-workspace `path` deps (product-core/product-mcp) carry no version and
+# would otherwise trip the wildcard ban — they are first-party, not crates.io.
+allow-wildcard-paths = true
 highlight = "all"
 
 # Explicitly banned crates with rationale.

@@ -17,8 +17,8 @@ path = "src/main.rs"
 workspace = true
 
 [dependencies]
-product-core = { path = "../product-core" }
-product-mcp  = { path = "../product-mcp" }
+product-core = { path = "../product-core", version = "0.3.0" }
+product-mcp  = { path = "../product-mcp", version = "0.3.0" }
 clap          = { version = "4", features = ["derive", "env"] }
 clap_complete = "4"
 serde         = { version = "1", features = ["derive"] }
