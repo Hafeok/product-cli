@@ -1,5 +1,5 @@
 name = "product-cli"
-version = "0.3.0"
+version = "0.3.1"
 schema-version = "1"
 
 [product]
