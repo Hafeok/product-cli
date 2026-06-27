@@ -235,6 +235,18 @@ fn skills_install_global_honors_home() {
 }
 
 #[test]
+fn install_hooks_gates_on_a_live_command() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["install-hooks"]).assert_exit(0);
+
+    let hook = h.read(".git/hooks/pre-commit");
+    assert!(hook.contains("product domain validate"), "pre-commit gates on the What graph:\n{hook}");
+    // Regression: the pivot removed `adr`; the hook must not invoke a dead command.
+    assert!(!hook.contains("adr review"), "hook must not reference the removed adr command");
+}
+
+#[test]
 fn tc_994_seed_and_list_the_core_aio_set() {
     let h = Harness::new();
     // The closed-core AIO vocabulary (§3.2.2) is always recognised.

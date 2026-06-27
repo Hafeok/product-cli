@@ -14,9 +14,11 @@ pub(crate) fn handle_install_hooks() -> BoxResult {
     std::fs::create_dir_all(&hooks_dir)?;
 
     let hook_path = hooks_dir.join("pre-commit");
+    // Block a commit when the captured What graph is no longer conformant.
+    // (`domain validate` exits 1 on any §3.1/§3.2 violation, 0 otherwise.)
     let hook_content = "#!/bin/sh\n\
         # Installed by `product install-hooks`\n\
-        exec product adr review --staged\n";
+        exec product domain validate\n";
     fileops::write_file_atomic(&hook_path, hook_content)?;
 
     // Make executable (Unix)
