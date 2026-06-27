@@ -1,0 +1,10 @@
+id: session-start
+anchors:
+- cmd-start-session
+- ev-session-started
+- e-session
+- vo-session-workspace
+- vo-session-phase
+- rm-session-status
+- t-start-session
+depth: 1

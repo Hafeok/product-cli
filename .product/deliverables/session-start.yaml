@@ -1,0 +1,21 @@
+id: session-start
+slice: session-start
+acceptance:
+- id: ws-copies-canonical
+  statement: The isolated session workspace ws/.product is a copy of the canonical .product graph after start
+  status: pending
+- id: canonical-untouched
+  statement: The canonical .product graph is unchanged by a session start
+  status: pending
+- id: session-fields-set
+  statement: A started session has non-empty session-id, until-cap, and started-at fields
+  status: pending
+- id: starts-in-what
+  statement: A started session is in phase what immediately after start
+  status: pending
+- id: start-event-once
+  statement: Session Started is recorded exactly once per successful start
+  status: pending
+- id: status-shows-workspace
+  statement: rm-session-status output includes the session workspace path and promote-state
+  status: pending
