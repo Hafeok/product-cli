@@ -1,32 +1,37 @@
 # GitHub Actions CI workflow for the Product CLI
-# Gates PRs on: graph check, tests, clippy, benchmarks
+# Gates PRs on: build, tests, clippy, conventions, supply-chain, benchmarks
 #
-# Usage: copy this file to .github/workflows/product-ci.yml in your repo
+# This is a Cargo workspace (product-core / product-mcp / product-cli / xtask);
+# the binary is named `product` but lives in the `product-cli` package.
 
 name: Product CI
 
 on:
   pull_request:
     paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'benches/**'
+      - 'product-core/**'
+      - 'product-mcp/**'
+      - 'product-cli/**'
+      - 'xtask/**'
       - 'docs/**'
-      - 'product.toml'
+      - 'conventions/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
+      - 'deny.toml'
       - 'rust-toolchain.toml'
       - '.github/workflows/product-ci.yml'
   push:
     branches: [main]
     paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'benches/**'
+      - 'product-core/**'
+      - 'product-mcp/**'
+      - 'product-cli/**'
+      - 'xtask/**'
       - 'docs/**'
-      - 'product.toml'
+      - 'conventions/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
+      - 'deny.toml'
       - 'rust-toolchain.toml'
       - '.github/workflows/product-ci.yml'
 
@@ -52,17 +57,18 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Build
-        run: cargo build -p product
+        run: cargo build --workspace
 
       - name: Tests (all binaries)
-        # --no-fail-fast runs every test binary (lib, integration, sessions,
-        # property, code_quality, doc) and reports the full result set rather
-        # than stopping at the first failing binary. Matches the `cargo t`
-        # alias defined in .cargo/config.toml.
-        run: cargo test -p product --no-fail-fast
+        # --no-fail-fast runs every test binary (lib, integration, framework,
+        # property, code_quality) and reports the full result set rather than
+        # stopping at the first failing binary. Matches the `cargo t` alias
+        # defined in .cargo/config.toml.
+        run: cargo test --workspace --no-fail-fast
 
       - name: Clippy
-        run: cargo clippy --workspace -- -D clippy::unwrap_used -D warnings
+        # Zero-unwrap policy (#![deny(clippy::unwrap_used)] across the workspace).
+        run: cargo clippy --workspace -- -D warnings -D clippy::unwrap_used
 
       - name: Convention check (xtask)
         # Enforces every CTX rule registered under xtask/src/checks/.
@@ -76,24 +82,12 @@ jobs:
 
       - name: Supply-chain check (cargo-deny)
         # Enforces deny.toml — license allow-list, advisory database, banned
-        # crates, and source restrictions. See conventions/docs/CTX-DEPS.md.
+        # crates, and source restrictions.
         uses: EmbarkStudios/cargo-deny-action@v2
         with:
           command: check
           arguments: --workspace
 
-      - name: Graph check
-        run: |
-          # Exits 0 (clean), 2 (warnings only) = pass
-          # Exits 1 (errors) = fail
-          cargo run -p product -- graph check || [ $? -eq 2 ]
-
-      - name: Graph check JSON
-        run: |
-          # Capture JSON output (discard cargo stderr); allow exit 2 (warnings-only)
-          cargo run -p product -- graph check --format json 2>/dev/null > /tmp/graph-check.json || [ $? -eq 2 ]
-          # Verify the output is valid JSON
-          python3 -c "import sys,json; json.load(open('/tmp/graph-check.json'))"
-
       - name: Benchmarks
-        run: cargo bench -p product --bench graph_bench
+        # Compile-and-run the framework-graph bench (lives in product-core).
+        run: cargo bench -p product-core --bench graph_bench
