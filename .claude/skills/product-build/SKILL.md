@@ -28,9 +28,13 @@ units, gate it with verifications, and finalize.
    the statement must be a **checkable predicate, not a judgement** — e.g.
    `"ws-copies-canonical: ws/.product is a copy of canonical after start"`, not
    "the start works well". Non-predicate criteria are rejected.
-3. **Work units** — make sure the slice actually has work units. If none target
-   it, `product_build_run` falls back to *unrelated* units. Produce the right ones
-   with `product_cell_dispatch` (bind the cell's slots to the slice's entities).
+3. **Work units must already exist.** `product_build_run` consumes the §5 work
+   units for the slice; if none target it, it falls back to *unrelated* units.
+   Work units are produced in the **How phase** by `product_cell_dispatch` (bind
+   the cell's slots to the slice's entities) — and that tool **freezes once you're
+   in Build** (phases are forward-only). So dispatch every unit your deliverables
+   will need *before* advancing from How. If you reach Build and one is missing,
+   you cannot dispatch here — finalize and fix in a fresh pass.
 4. **Dry-run the build first** — `product_build_run deliverable=<d> dry_run=true`.
    It returns the assembled SPMC context, the worker + parallel run plan, the
    verify plan, and the gate status — **with no worker dispatched**. Review it

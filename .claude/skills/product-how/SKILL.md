@@ -65,6 +65,9 @@ contract in-loop and returns its `violations`.
 
 When set, advance: `product_workflow_advance` → **Build** (use **product-build**).
 **Note:** How *writes freeze* once you enter Build — finish the architecture here.
+In particular, **`product_cell_dispatch` is a How tool**: dispatch the work units
+your Build deliverables will consume *before* advancing — you cannot dispatch in
+Build, and `product_build_run` falls back to unrelated units if a slice has none.
 
 ## Worked micro-example
 
