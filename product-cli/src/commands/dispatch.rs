@@ -4,8 +4,8 @@ use clap::Command as ClapCommand;
 
 use super::{
     archetype, author, build, cell, completions, decider, deliverable, domain, guide, hooks, how,
-    init, lsp, mcp_cmd, preview, primitive, projector, release, render, seam, session, slice,
-    work_unit, worker, BoxResult, Commands,
+    init, lsp, mcp_cmd, preview, primitive, projector, release, render, seam, session, skills,
+    slice, work_unit, worker, BoxResult, Commands,
 };
 
 pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapCommand) -> BoxResult {
@@ -19,6 +19,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Lsp { command } => lsp::handle_lsp(command),
         Commands::Mcp { .. } => dispatch_mcp(command),
         Commands::Session { command } => session::handle_session(command),
+        Commands::Skills { command } => skills::handle_skills(command),
         Commands::Seam { id, product } => seam::handle_seam(id, product),
         // Product-Framework families route through a sub-dispatcher (keeps this match small).
         c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Primitive { .. } | Commands::Deliverable { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Preview { .. } | Commands::Release { .. } | Commands::Slice { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
@@ -65,6 +66,7 @@ fn dispatch_init(command: Commands) -> BoxResult {
         legacy_layout,
         path,
         demo,
+        no_skills,
     } = command
     else {
         unreachable!("dispatch_init called with non-Init variant")
@@ -80,6 +82,7 @@ fn dispatch_init(command: Commands) -> BoxResult {
         legacy_layout,
         path,
         demo,
+        no_skills,
     )
 }
 

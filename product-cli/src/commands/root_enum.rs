@@ -116,6 +116,9 @@ pub enum Commands {
         /// Seed a worked example (the bookstore What model) for demos and workshops
         #[arg(long)]
         demo: bool,
+        /// Skip writing the bundled What→How→Build skills into `.claude/skills/`
+        #[arg(long)]
+        no_skills: bool,
     },
     /// Install git hooks and scaffolding
     InstallHooks,
@@ -180,6 +183,11 @@ pub enum Commands {
     Session {
         #[command(subcommand)]
         command: SessionCommands,
+    },
+    /// Claude Code skills — install the bundled What→How→Build phase guides
+    Skills {
+        #[command(subcommand)]
+        command: SkillsCommands,
     },
     /// Delivery slice — a saved pointer to a section of the event model
     Slice {

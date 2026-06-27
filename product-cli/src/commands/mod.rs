@@ -32,6 +32,7 @@ mod release;
 mod seam;
 mod session;
 mod shared;
+mod skills;
 mod slice;
 mod work_unit;
 mod worker;
@@ -52,6 +53,7 @@ pub use self::lsp::LspCommands;
 pub use self::preview::PreviewCommands;
 pub use self::release::ReleaseCommands;
 pub use self::session::SessionCommands;
+pub use self::skills::SkillsCommands;
 pub use self::slice::SliceCommands;
 
 mod root_enum;

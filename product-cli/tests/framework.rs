@@ -194,6 +194,47 @@ fn tc_1020_init_demo_seeds_a_conformant_bookstore() {
 }
 
 #[test]
+fn init_writes_the_bundled_workflow_skills() {
+    let h = Harness::new_bare();
+    let out = h.run(&["init", "--yes", "--name", "bookstore"]);
+    out.assert_exit(0);
+    // The four phase-guide skills land under .claude/skills/ and are listed.
+    for name in ["product-session", "product-what", "product-how", "product-build"] {
+        let path = format!(".claude/skills/{name}/SKILL.md");
+        assert!(h.exists(&path), "{path} should exist after init\nstdout:\n{}", out.stdout);
+        assert!(h.read(&path).contains(&format!("name: {name}")), "{name} carries its frontmatter");
+    }
+}
+
+#[test]
+fn init_no_skills_opts_out() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--no-skills"]).assert_exit(0);
+    assert!(!h.exists(".claude/skills/product-session/SKILL.md"), "--no-skills should skip the skills");
+}
+
+#[test]
+fn skills_install_writes_into_an_existing_repo() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--no-skills"]).assert_exit(0);
+    let out = h.run(&["skills", "install"]);
+    out.assert_exit(0);
+    out.assert_stdout_contains("product-how");
+    assert!(h.exists(".claude/skills/product-build/SKILL.md"));
+}
+
+#[test]
+fn skills_install_global_honors_home() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--no-skills"]).assert_exit(0);
+    // --global writes under $HOME/.claude/skills; point HOME at the temp dir.
+    let home = h.dir.path().to_string_lossy().to_string();
+    let out = h.run_with_env(&["skills", "install", "--global"], &[("HOME", &home)]);
+    out.assert_exit(0);
+    assert!(h.exists(".claude/skills/product-what/SKILL.md"), "global install lands under $HOME");
+}
+
+#[test]
 fn tc_994_seed_and_list_the_core_aio_set() {
     let h = Harness::new();
     // The closed-core AIO vocabulary (§3.2.2) is always recognised.

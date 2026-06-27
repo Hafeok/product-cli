@@ -24,6 +24,7 @@ pub(crate) fn handle_init(
     legacy_layout: bool,
     path: Option<PathBuf>,
     demo: bool,
+    no_skills: bool,
 ) -> BoxResult {
     let target_dir = resolve_target_dir(path.as_deref())?;
     let layout: &Layout = if legacy_layout { &LEGACY } else { &CANONICAL };
@@ -80,6 +81,15 @@ pub(crate) fn handle_init(
     fileops::write_file_atomic(&config_path, &toml_content)?;
     println!("Created:");
     println!("  {}", layout.config);
+
+    if !no_skills {
+        let base = target_dir.join(".claude").join("skills");
+        // Don't clobber a user's existing skill edits on re-init (overwrite = false).
+        let written = super::skills::write_skills(&base, false)?;
+        for name in &written {
+            println!("  .claude/skills/{name}/SKILL.md");
+        }
+    }
 
     if demo {
         let n = product_core::demo::seed_bookstore(&target_dir, &project_name)?;

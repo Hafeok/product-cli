@@ -34,6 +34,12 @@ $ product mcp --http                  # MCP server + a live Event-Modeling web v
 cargo install --path product-cli
 ```
 
+The binary ships with the What→How→Build **Claude Code skills** baked in.
+`product init` writes them into `.claude/skills/` of the new repo (pass
+`--no-skills` to opt out); `product skills install` (re)installs them, and
+`product skills install --global` puts them in `~/.claude/skills/` for every
+project. Start a fresh Claude Code session to pick them up, then `/product-session`.
+
 ## 60-second tour
 
 ```bash
