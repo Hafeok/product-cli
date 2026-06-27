@@ -136,6 +136,76 @@ pub fn handle_how_set(args: &Value, repo_root: &Path) -> Result<Value, String> {
     finish(repo_root, &c, &id, set)
 }
 
+/// Remove a Why-cascade element or contract part by id.
+pub fn handle_how_rm(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let id = req_str(args, "id")?;
+    let mut c = load_how(repo_root)?;
+    let removed = edit::remove(&mut c, &id).map_err(|e| format!("{e}"))?;
+    save_how(repo_root, &c)?;
+    let violations = validate_how(&c);
+    let ok = !violations.iter().any(|v| v.severity == "violation");
+    Ok(json!({ "ok": ok, "id": id, "removed": removed, "violations": violations }))
+}
+
+/// Overlay the provided fields onto an existing element, then re-type it. Keeps
+/// any field the caller did not mention (a patch, like product_domain_edit).
+fn patch<T: Serialize + DeserializeOwned>(current: &T, args: &Value) -> Result<T, String> {
+    let mut base = to_val(current)?;
+    if let (Value::Object(b), Value::Object(incoming)) = (&mut base, args) {
+        for (k, v) in incoming {
+            if k == "element" || k == "target" {
+                continue;
+            }
+            b.insert(k.clone(), v.clone());
+        }
+    }
+    serde_json::from_value(base).map_err(|e| format!("invalid fields: {e}"))
+}
+
+/// Patch an existing Why-cascade element by id (decision | principle | pattern |
+/// interface), keeping unmentioned fields.
+pub fn handle_how_edit(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let element = req_str(args, "element")?;
+    let id = req_str(args, "id")?;
+    let mut c = load_how(repo_root)?;
+    let edited = match element.as_str() {
+        "decision" => {
+            let cur = c.top_decisions.iter().find(|x| x.id == id).ok_or_else(|| miss(&id))?;
+            let next: TopDecision = patch(cur, args)?;
+            edit::replace_decision(&mut c, next.clone()).map_err(|e| format!("{e}"))?;
+            to_val(&next)?
+        }
+        "principle" => {
+            let cur = c.principles.iter().find(|x| x.id == id).ok_or_else(|| miss(&id))?;
+            let next: Principle = patch(cur, args)?;
+            edit::replace_principle(&mut c, next.clone()).map_err(|e| format!("{e}"))?;
+            to_val(&next)?
+        }
+        "pattern" => {
+            let cur = c.patterns.iter().find(|x| x.id == id).ok_or_else(|| miss(&id))?;
+            let next: Pattern = patch(cur, args)?;
+            edit::replace_pattern(&mut c, next.clone()).map_err(|e| format!("{e}"))?;
+            to_val(&next)?
+        }
+        "interface" => {
+            let cur = c.interface_contracts.iter().find(|x| x.id == id).ok_or_else(|| miss(&id))?;
+            let next: InterfaceContract = patch(cur, args)?;
+            edit::replace_interface(&mut c, next.clone()).map_err(|e| format!("{e}"))?;
+            to_val(&next)?
+        }
+        other => {
+            return Err(format!(
+                "unknown element '{other}' — product_how_edit handles decision | principle | pattern | interface (set contracts with product_how_set)"
+            ))
+        }
+    };
+    finish(repo_root, &c, &id, edited)
+}
+
+fn miss(id: &str) -> String {
+    format!("no How element with id {id:?} to edit")
+}
+
 #[cfg(test)]
 #[path = "framework_write_handlers_tests.rs"]
 mod tests;

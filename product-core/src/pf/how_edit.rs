@@ -88,6 +88,68 @@ pub fn set_infra_contract(c: &mut HowContract, mut i: InfrastructureContract) {
     c.infrastructure_contract = Some(i);
 }
 
+fn missing(id: &str) -> ProductError {
+    ProductError::NotFound(format!("no How element with id {:?}", id))
+}
+
+/// Remove a Why-cascade element or a nested contract part by id. Returns the
+/// kind label removed; errors if no element carries that id.
+pub fn remove(c: &mut HowContract, id: &str) -> Result<&'static str> {
+    if let Some(i) = c.top_decisions.iter().position(|d| d.id == id) {
+        c.top_decisions.remove(i);
+        return Ok("decision");
+    }
+    if let Some(i) = c.principles.iter().position(|p| p.id == id) {
+        c.principles.remove(i);
+        return Ok("principle");
+    }
+    if let Some(i) = c.patterns.iter().position(|p| p.id == id) {
+        c.patterns.remove(i);
+        return Ok("pattern");
+    }
+    if let Some(i) = c.interface_contracts.iter().position(|x| x.id == id) {
+        c.interface_contracts.remove(i);
+        return Ok("interface");
+    }
+    if let Some(i) = c.application_contract.statements.iter().position(|s| s.id == id) {
+        c.application_contract.statements.remove(i);
+        return Ok("app-statement");
+    }
+    if let Some(infra) = c.infrastructure_contract.as_mut() {
+        if let Some(i) = infra.resources.iter().position(|r| r.id == id) {
+            infra.resources.remove(i);
+            return Ok("resource");
+        }
+    }
+    Err(missing(id))
+}
+
+/// Replace an existing Why-cascade element in place, matched by id. Errors if no
+/// element of that kind carries the id (use `add_*` to create a new one).
+pub fn replace_decision(c: &mut HowContract, d: TopDecision) -> Result<()> {
+    let i = c.top_decisions.iter().position(|x| x.id == d.id).ok_or_else(|| missing(&d.id))?;
+    c.top_decisions[i] = d;
+    Ok(())
+}
+
+pub fn replace_principle(c: &mut HowContract, p: Principle) -> Result<()> {
+    let i = c.principles.iter().position(|x| x.id == p.id).ok_or_else(|| missing(&p.id))?;
+    c.principles[i] = p;
+    Ok(())
+}
+
+pub fn replace_pattern(c: &mut HowContract, p: Pattern) -> Result<()> {
+    let i = c.patterns.iter().position(|x| x.id == p.id).ok_or_else(|| missing(&p.id))?;
+    c.patterns[i] = p;
+    Ok(())
+}
+
+pub fn replace_interface(c: &mut HowContract, i: InterfaceContract) -> Result<()> {
+    let idx = c.interface_contracts.iter().position(|x| x.id == i.id).ok_or_else(|| missing(&i.id))?;
+    c.interface_contracts[idx] = i;
+    Ok(())
+}
+
 pub fn add_resource(c: &mut HowContract, r: Resource) -> Result<()> {
     let infra = c.infrastructure_contract.as_mut().ok_or_else(|| {
         ProductError::ConfigError(

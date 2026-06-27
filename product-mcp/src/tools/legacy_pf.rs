@@ -21,6 +21,14 @@ fn write(name: &str, description: &str, props: serde_json::Value, required: serd
     }
 }
 
+/// Work-unit edit fields, generated from the `WorkUnit` struct (schema-single-
+/// source) plus the `file` selector, so the patch schema cannot drift.
+fn work_unit_edit_props() -> serde_json::Value {
+    let mut props = super::schema_props::<product_core::pf::work_unit::WorkUnit>();
+    props.insert("file".to_string(), serde_json::json!({"type": "string"}));
+    serde_json::Value::Object(props)
+}
+
 pub(super) fn all() -> Vec<ToolDef> {
     let named = serde_json::json!({"name": {"type": "string"}, "product": {"type": "string"}});
     let none = serde_json::json!({});
@@ -48,6 +56,8 @@ pub(super) fn all() -> Vec<ToolDef> {
         read("product_work_unit_validate", "Validate the work unit against the What graph + How contract.", serde_json::json!({"product": {"type": "string"}}), serde_json::json!([])),
         write("product_work_unit_init", "Scaffold a starter §5 work unit at .product/work-unit.yaml. Returns { ok, id, written }.",
             serde_json::json!({"id": {"type": "string"}, "file": {"type": "string"}, "force": {"type": "boolean"}}), serde_json::json!(["id"])),
+        write("product_work_unit_edit", "Patch the work unit at .product/work-unit.yaml — overlay the given fields (prompt, model, applies, produces, …), keeping the rest. Returns { ok, id, written }.",
+            work_unit_edit_props(), serde_json::json!([])),
         // worker (capability catalog)
         read("product_worker_list", "List the worker capabilities + role bindings.", none, serde_json::json!([])),
         read("product_worker_resolve", "Resolve a role to its capability, applying escalation triggers.",

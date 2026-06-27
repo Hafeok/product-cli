@@ -213,6 +213,8 @@ fn dispatch_framework_write(name: &str, args: &Value, repo_root: &Path) -> Optio
         "product_how_init" => fw::handle_how_init(args, repo_root),
         "product_how_add" => fw::handle_how_add(args, repo_root),
         "product_how_set" => fw::handle_how_set(args, repo_root),
+        "product_how_edit" => fw::handle_how_edit(args, repo_root),
+        "product_how_rm" => fw::handle_how_rm(args, repo_root),
         _ => return None,
     })
 }
@@ -225,6 +227,7 @@ fn dispatch_framework_scaffold(name: &str, args: &Value, repo_root: &Path) -> Op
         "product_cell_init" => fs::handle_cell_init(args, repo_root),
         "product_cell_dispatch" => fs::handle_cell_dispatch(args, repo_root),
         "product_work_unit_init" => fs::handle_work_unit_init(args, repo_root),
+        "product_work_unit_edit" => fs::handle_work_unit_edit(args, repo_root),
         _ => return None,
     })
 }

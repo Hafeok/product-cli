@@ -52,6 +52,25 @@ fn cell_dispatch_reports_unbound_required_slots() {
 }
 
 #[test]
+fn work_unit_edit_patches_an_existing_unit() {
+    let r = repo();
+    let root = r.path();
+    handle_work_unit_init(&json!({"id": "complete-task-handler"}), root).expect("init");
+
+    // Patch the model; the id and other fields must survive.
+    let out = handle_work_unit_edit(&json!({"model": "claude-code"}), root).expect("edit");
+    assert_eq!(out["ok"], json!(true));
+    assert_eq!(out["id"], json!("complete-task-handler"));
+
+    let show = crate::framework_read_handlers::handle_work_unit_show(&json!({}), root).expect("show");
+    assert_eq!(show["id"], json!("complete-task-handler"));
+
+    // Editing with no work unit present is an error.
+    let empty = repo();
+    assert!(handle_work_unit_edit(&json!({"model": "x"}), empty.path()).is_err());
+}
+
+#[test]
 fn archetype_init_lays_down_the_skeleton() {
     let r = repo();
     let root = r.path();

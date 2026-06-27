@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::error::{ProductError, Result};
 
 /// C of SPMC — the frozen, declared input.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Context {
     pub derived_from: Vec<String>,
     #[serde(default)]
@@ -20,7 +20,7 @@ pub struct Context {
 }
 
 /// The single artifact this unit produces.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Produces {
     pub artifact: String,
     /// The exact repository path the artifact lands at. Authoritative — the
@@ -31,7 +31,7 @@ pub struct Produces {
 }
 
 /// The rationale trace the unit's output carries.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Trace {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub what: Option<String>,
@@ -44,7 +44,7 @@ pub struct Trace {
 }
 
 /// A work unit (SPMC, §5).
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct WorkUnit {
     pub id: String,
     pub schema: String,

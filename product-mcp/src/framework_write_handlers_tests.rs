@@ -84,3 +84,43 @@ fn add_requires_an_existing_contract() {
     // No init → no contract to add to.
     assert!(handle_how_add(&json!({"element": "principle", "id": "p", "statement": "s"}), r.path()).is_err());
 }
+
+#[test]
+fn edit_patches_fields_and_keeps_the_rest() {
+    let r = repo();
+    let root = r.path();
+    handle_how_init(&json!({"archetype": "demo-cli"}), root).expect("init");
+    handle_how_add(
+        &json!({"element": "decision", "id": "d-lang", "decision": "Use Rust", "rationale": "safety"}),
+        root,
+    )
+    .expect("add");
+
+    // Patch only the rationale; the decision text must survive.
+    let out = handle_how_edit(
+        &json!({"element": "decision", "id": "d-lang", "rationale": "zero-cost + safety"}),
+        root,
+    )
+    .expect("edit");
+    assert_eq!(out["element"]["decision"], json!("Use Rust"));
+    assert_eq!(out["element"]["rationale"], json!("zero-cost + safety"));
+
+    // Editing a missing id is an error.
+    assert!(handle_how_edit(&json!({"element": "decision", "id": "nope", "rationale": "x"}), root).is_err());
+}
+
+#[test]
+fn rm_removes_by_id() {
+    let r = repo();
+    let root = r.path();
+    handle_how_init(&json!({"archetype": "demo-cli"}), root).expect("init");
+    handle_how_add(&json!({"element": "pattern", "id": "p-slice", "shape": "pure slice"}), root).expect("add");
+
+    let out = handle_how_rm(&json!({"id": "p-slice"}), root).expect("rm");
+    assert_eq!(out["removed"], json!("pattern"));
+    let show = crate::framework_read_handlers::handle_how_show(&json!({}), root).expect("show");
+    assert_eq!(show["patterns"], json!(0));
+
+    // Removing an unknown id is an error.
+    assert!(handle_how_rm(&json!({"id": "ghost"}), root).is_err());
+}

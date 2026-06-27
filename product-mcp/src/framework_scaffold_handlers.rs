@@ -68,6 +68,27 @@ pub fn handle_cell_init(args: &Value, repo_root: &Path) -> Result<Value, String>
     Ok(json!({ "ok": true, "id": id, "archetype": archetype, "written": path.display().to_string() }))
 }
 
+/// Patch the work unit at .product/work-unit.yaml (or `file`) — overlay the
+/// provided fields, keeping any field the caller did not mention.
+pub fn handle_work_unit_edit(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let path = file_arg(args, repo_root, "work-unit.yaml");
+    let text = std::fs::read_to_string(&path)
+        .map_err(|_| format!("no work unit at {} — scaffold one with product_work_unit_init", path.display()))?;
+    let current = WorkUnit::from_yaml(&text).map_err(|e| format!("{e}"))?;
+    let mut base = serde_json::to_value(&current).map_err(|e| format!("{e}"))?;
+    if let (Value::Object(b), Value::Object(incoming)) = (&mut base, args) {
+        for (k, v) in incoming {
+            if k == "file" || k == "product" {
+                continue;
+            }
+            b.insert(k.clone(), v.clone());
+        }
+    }
+    let updated: WorkUnit = serde_json::from_value(base).map_err(|e| format!("invalid fields: {e}"))?;
+    write_yaml(&path, &updated.to_yaml().map_err(|e| format!("{e}"))?)?;
+    Ok(json!({ "ok": true, "id": updated.id, "written": path.display().to_string() }))
+}
+
 /// Dispatch the cell at .product/cell.yaml into concrete §5 work units, bound to
 /// the captured What graph, written under .product/work-units/.
 pub fn handle_cell_dispatch(args: &Value, repo_root: &Path) -> Result<Value, String> {

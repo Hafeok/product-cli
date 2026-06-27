@@ -42,14 +42,18 @@ fn how_field_props() -> serde_json::Map<String, Value> {
     props
 }
 
-pub(super) fn all() -> Vec<ToolDef> {
-    let mut add_props = how_field_props();
-    add_props.insert("element".to_string(), serde_json::json!({"type": "string", "description": "decision | principle | pattern | interface | app-statement | resource"}));
-    add_props.insert("id".to_string(), serde_json::json!({"type": "string"}));
+/// The how-element field union plus a `<selector>` enum key and `id`.
+fn selector_props(selector: &str, choices: &str) -> Value {
+    let mut props = how_field_props();
+    props.insert(selector.to_string(), serde_json::json!({"type": "string", "description": choices}));
+    props.insert("id".to_string(), serde_json::json!({"type": "string"}));
+    Value::Object(props)
+}
 
-    let mut set_props = how_field_props();
-    set_props.insert("target".to_string(), serde_json::json!({"type": "string", "description": "app-contract | infra-contract"}));
-    set_props.insert("id".to_string(), serde_json::json!({"type": "string"}));
+pub(super) fn all() -> Vec<ToolDef> {
+    let add_props = selector_props("element", "decision | principle | pattern | interface | app-statement | resource");
+    let set_props = selector_props("target", "app-contract | infra-contract");
+    let edit_props = selector_props("element", "decision | principle | pattern | interface");
 
     vec![
         write(
@@ -61,14 +65,26 @@ pub(super) fn all() -> Vec<ToolDef> {
         write(
             "product_how_add",
             "Add a Why-cascade element or contract part — `element` (decision | principle | pattern | interface | app-statement | resource) + `id` plus the element's fields. Validated in-loop; returns { ok, id, element, violations }.",
-            Value::Object(add_props),
+            add_props,
             serde_json::json!(["element", "id"]),
         ),
         write(
             "product_how_set",
             "Set a singleton contract — `target` (app-contract | infra-contract) + `id` plus its fields. Validated in-loop; returns { ok, id, element, violations }.",
-            Value::Object(set_props),
+            set_props,
             serde_json::json!(["target", "id"]),
+        ),
+        write(
+            "product_how_edit",
+            "Patch a Why-cascade element by `element` (decision | principle | pattern | interface) + `id`, keeping unmentioned fields. Validated in-loop; returns { ok, id, element, violations }.",
+            edit_props,
+            serde_json::json!(["element", "id"]),
+        ),
+        write(
+            "product_how_rm",
+            "Remove a Why-cascade element or contract part by `id`. Re-validated in-loop; returns { ok, id, removed, violations }.",
+            serde_json::json!({"id": {"type": "string"}}),
+            serde_json::json!(["id"]),
         ),
     ]
 }
