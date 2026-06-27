@@ -157,6 +157,72 @@ pub fn handle_deliverable_accept(args: &Value, repo_root: &Path) -> Result<Value
     Ok(json!({ "ok": true, "id": id, "criterion": criterion, "status": status }))
 }
 
+pub fn handle_deliverable_runner(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let id = req_str(args, "id")?;
+    let criterion = req_str(args, "criterion")?;
+    let runner = req_str(args, "runner")?; // "cargo-test" | "shell"
+    if runner != "cargo-test" && runner != "shell" {
+        return Err(format!("unknown runner '{runner}' — use cargo-test or shell"));
+    }
+    let runner_args = args.get("args").and_then(|v| v.as_str())
+        .map(str::to_string).filter(|s| !s.trim().is_empty());
+    let mut d = load_yaml(&deliverables_dir(repo_root), &id, Deliverable::from_yaml)?;
+    let c = d.acceptance.iter_mut().find(|c| c.id == criterion)
+        .ok_or_else(|| format!("no acceptance criterion '{criterion}' on '{id}'"))?;
+    c.runner = Some(runner.clone());
+    c.runner_args = runner_args.clone();
+    std::fs::write(deliverables_dir(repo_root).join(format!("{id}.yaml")), d.to_yaml().map_err(|e| format!("{e}"))?)
+        .map_err(|e| format!("{e}"))?;
+    Ok(json!({ "ok": true, "id": id, "criterion": criterion, "runner": runner, "runner_args": runner_args }))
+}
+
+#[cfg(test)]
+mod runner_tests {
+    use super::*;
+    use product_core::pf::deliverable::AcceptanceCriterion;
+
+    fn repo_with_deliverable() -> tempfile::TempDir {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let dd = deliverables_dir(dir.path());
+        std::fs::create_dir_all(&dd).expect("mkdir");
+        let d = Deliverable {
+            id: "d1".into(),
+            slice: "s1".into(),
+            acceptance: vec![AcceptanceCriterion {
+                id: "c1".into(),
+                statement: "x holds".into(),
+                status: "pending".into(),
+                runner: None,
+                runner_args: None,
+            }],
+        };
+        std::fs::write(dd.join("d1.yaml"), d.to_yaml().expect("yaml")).expect("write");
+        dir
+    }
+
+    #[test]
+    fn runner_binds_persists_and_validates() {
+        let r = repo_with_deliverable();
+        let root = r.path();
+
+        let out = handle_deliverable_runner(
+            &json!({"id": "d1", "criterion": "c1", "runner": "cargo-test", "args": "tc_x"}),
+            root,
+        )
+        .expect("bind");
+        assert_eq!(out["runner"], json!("cargo-test"));
+        assert_eq!(out["runner_args"], json!("tc_x"));
+
+        let d = load_yaml(&deliverables_dir(root), "d1", Deliverable::from_yaml).expect("reload");
+        assert_eq!(d.acceptance[0].runner.as_deref(), Some("cargo-test"));
+        assert_eq!(d.acceptance[0].runner_args.as_deref(), Some("tc_x"));
+
+        // Unknown runner and unknown criterion are both rejected.
+        assert!(handle_deliverable_runner(&json!({"id": "d1", "criterion": "c1", "runner": "make"}), root).is_err());
+        assert!(handle_deliverable_runner(&json!({"id": "d1", "criterion": "ghost", "runner": "shell", "args": "true"}), root).is_err());
+    }
+}
+
 pub fn handle_deliverable_done(args: &Value, repo_root: &Path) -> Result<Value, String> {
     let d = load_yaml(&deliverables_dir(repo_root), &req_str(args, "name")?, Deliverable::from_yaml)?;
     let slice = load_yaml(&slices_dir(repo_root), &d.slice, Slice::from_yaml)?;

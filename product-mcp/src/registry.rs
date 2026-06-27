@@ -177,6 +177,7 @@ fn dispatch_delivery(name: &str, args: &Value, repo_root: &Path) -> Option<Resul
         "product_deliverable_done" => d::handle_deliverable_done(args, repo_root),
         "product_deliverable_new" => d::handle_deliverable_new(args, repo_root),
         "product_deliverable_accept" => d::handle_deliverable_accept(args, repo_root),
+        "product_deliverable_runner" => d::handle_deliverable_runner(args, repo_root),
         "product_release_list" => d::handle_release_list(args, repo_root),
         "product_release_show" => d::handle_release_show(args, repo_root),
         "product_release_done" => d::handle_release_done(args, repo_root),

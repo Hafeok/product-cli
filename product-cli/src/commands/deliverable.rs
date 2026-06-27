@@ -52,6 +52,19 @@ pub enum DeliverableCommands {
         #[arg(long)]
         force: bool,
     },
+    /// Bind a verification runner to an acceptance criterion (§6)
+    Runner {
+        /// The deliverable id
+        id: String,
+        /// The acceptance criterion id
+        criterion: String,
+        /// The runner: cargo-test | shell
+        #[arg(long)]
+        runner: String,
+        /// Runner args — a test filter for cargo-test, a command line for shell
+        #[arg(long = "args")]
+        args: Option<String>,
+    },
     /// Show a deliverable
     Show {
         /// The deliverable id (filename stem)
@@ -62,6 +75,7 @@ pub enum DeliverableCommands {
 pub(crate) fn handle_deliverable(cmd: DeliverableCommands) -> BoxResult {
     match cmd {
         DeliverableCommands::Accept { id, criterion, pass, fail } => accept(&id, &criterion, pass, fail),
+        DeliverableCommands::Runner { id, criterion, runner, args } => set_runner(&id, &criterion, &runner, args),
         DeliverableCommands::Done { name, product } => done(&name, product),
         DeliverableCommands::List {} => list(),
         DeliverableCommands::New { id, slice, accept, force } => new(&id, &slice, accept, force),
@@ -126,6 +140,29 @@ fn accept(id: &str, criterion: &str, pass: bool, fail: bool) -> BoxResult {
     let status = c.status.clone();
     std::fs::write(dir().join(format!("{id}.yaml")), d.to_yaml()?)?;
     println!("deliverable '{id}': acceptance '{criterion}' → {status}");
+    Ok(())
+}
+
+/// Known verification runners (mirrors `pf::verify`). Binding an unknown runner
+/// is pointless — the §6 verifier would skip it — so reject it here.
+fn known_runner(runner: &str) -> bool {
+    runner == "cargo-test" || runner == "shell"
+}
+
+fn set_runner(id: &str, criterion: &str, runner: &str, args: Option<String>) -> BoxResult {
+    if !known_runner(runner) {
+        return Err(format!("unknown runner '{runner}' — use cargo-test or shell").into());
+    }
+    let mut d = load(id)?;
+    {
+        let Some(c) = d.acceptance.iter_mut().find(|c| c.id == criterion) else {
+            return Err(format!("no acceptance criterion '{criterion}' on deliverable '{id}'").into());
+        };
+        c.runner = Some(runner.to_string());
+        c.runner_args = args.filter(|s| !s.trim().is_empty());
+    }
+    save(&d)?;
+    println!("deliverable '{id}': acceptance '{criterion}' → runner '{runner}'");
     Ok(())
 }
 
@@ -225,7 +262,11 @@ fn show(name: &str) -> BoxResult {
     } else {
         println!("acceptance:");
         for a in &d.acceptance {
-            println!("  - {}: {}", a.id, a.statement);
+            let runner = a.runner.as_ref().map(|r| {
+                let args = a.runner_args.as_ref().map(|x| format!(" {x}")).unwrap_or_default();
+                format!("  [{r}{args}]")
+            }).unwrap_or_default();
+            println!("  - {} [{}]: {}{}", a.id, a.status, a.statement, runner);
         }
     }
     Ok(())

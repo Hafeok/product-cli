@@ -41,10 +41,12 @@ units, gate it with verifications, and finalize.
    before spending a real run.
 5. **Real build** — `product_build_run deliverable=<d>`. Dispatches the worker per
    the role bindings, writes artifacts, runs the gates.
-6. **Acceptance verdicts** — `product_deliverable_accept id=<d> criterion=<c>
-   status=passing|failing`; `product_deliverable_done` computes whether the
-   deliverable is done (§7.2). Criteria with a runner are auto-checked; others are
-   recorded manually.
+6. **Acceptance verdicts** — bind a runner so the build auto-verifies a criterion:
+   `product_deliverable_runner id=<d> criterion=<c> runner=cargo-test args="<test
+   filter>"` (or `runner=shell args="<command>"`). Then the §6 verify step runs it
+   and records the verdict. Without a runner, record manually with
+   `product_deliverable_accept id=<d> criterion=<c> status=passing|failing`.
+   `product_deliverable_done` computes whether the deliverable is done (§7.2).
 7. **Release (optional)** — `product_release_new` groups deliverables;
    `product_release_done` checks the cut is closed (no dangling dependency).
 8. **Finalize** — `product_session_finalize` validates the What and promotes the

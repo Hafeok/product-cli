@@ -42,6 +42,9 @@ pub(super) fn all() -> Vec<ToolDef> {
         write("product_deliverable_accept", "Record an acceptance criterion's verdict (status: passing | failing).",
             serde_json::json!({"id": {"type": "string"}, "criterion": {"type": "string"}, "status": {"type": "string"}}),
             serde_json::json!(["id", "criterion", "status"])),
+        write("product_deliverable_runner", "Bind a §6 verification runner to an acceptance criterion so the build auto-verifies it. `runner`: cargo-test (args = test filter) | shell (args = command).",
+            serde_json::json!({"id": {"type": "string"}, "criterion": {"type": "string"}, "runner": {"type": "string"}, "args": {"type": "string"}}),
+            serde_json::json!(["id", "criterion", "runner"])),
         // release
         read("product_release_list", "List releases.", serde_json::json!({}), serde_json::json!([])),
         read("product_release_show", "Show a release.", named.clone(), serde_json::json!(["name"])),
