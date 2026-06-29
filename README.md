@@ -69,9 +69,12 @@ product guide                         # where you are + the next step
 
 `product mcp --http` starts the MCP server (framework tools: `product_domain_*`,
 `product_decider_*`, `product_projector_*`, …) and serves a live web view at `/`
-that renders the active What graph as an Event-Modeling swimlane timeline
-(triggers / commands / views over per-aggregate event streams), with a two-lane
-structural mode and live SSE refresh.
+that renders the active What graph across three connected views — **Systems**
+(the product → systems & journeys map, §3.0), **Domain** (one bounded context as
+an ER graph, §3.1), and **Flows** (a system's event-model as Event-Modeling
+swimlanes — triggers / commands / views over per-aggregate event streams, §3.2).
+A node detail panel, the What→How→Build phase stepper, dark/light theme and live
+SSE refresh round it out.
 
 ## Build & test
 

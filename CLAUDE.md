@@ -135,7 +135,9 @@ Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
   pinned accepted/rejected/escalate vocabulary. Schemas: `schema/json/build-seam/`.
 
 The reference What lives in `.product/author-domain/product-cli/`; the live web
-view (`product mcp --http`, then open `/`) renders it as an Event-Modeling timeline.
+view (`product mcp --http`, then open `/`) renders it across three connected
+views — Systems (§3.0), Domain ER (§3.1) and Flows / Event-Modeling swimlanes
+(§3.2) — projected from `/api/graph` (`pf::viz`) and live-refreshed over SSE.
 
 ## Key Conventions
 
