@@ -65,10 +65,18 @@ pub enum NodeKind {
     /// §4.5 — a declared (AIO, interaction class) pair that cannot honestly be
     /// reified — a recorded coverage gap with a rationale, not a silent omission.
     UnreifiableRule,
+    /// §3.0 — the product: the root of the What, owning domains + systems.
+    Product,
+    /// §3.0.1 — a journey: a product-level composition of single-system flows
+    /// linked at Translation crossings.
+    Journey,
+    /// §3.6 — a quality demand: a checkable non-functional requirement (a runtime
+    /// bound or an architectural constraint) located on the element it scopes.
+    QualityDemand,
 }
 
 /// Every node kind, in declaration order (for `list`/iteration).
-pub const ALL_KINDS: [NodeKind; 27] = [
+pub const ALL_KINDS: [NodeKind; 30] = [
     NodeKind::BoundedContext,
     NodeKind::Entity,
     NodeKind::ValueObject,
@@ -96,6 +104,9 @@ pub const ALL_KINDS: [NodeKind; 27] = [
     NodeKind::System,
     NodeKind::Trigger,
     NodeKind::UnreifiableRule,
+    NodeKind::Product,
+    NodeKind::Journey,
+    NodeKind::QualityDemand,
 ];
 
 /// Built-in WCAG 2.2 criteria seed: (id, level, verification-type, name). An
@@ -145,7 +156,7 @@ impl NodeKind {
     /// kind is added in one place. A `match self` over `NodeKind` is
     /// compiler-checked exhaustive, so a kind added here that any consumer
     /// forgets to handle is a compile error, not a silent gap.
-    pub fn all() -> [NodeKind; 27] {
+    pub fn all() -> [NodeKind; 30] {
         [
             Self::BoundedContext,
             Self::Entity,
@@ -174,6 +185,9 @@ impl NodeKind {
             Self::System,
             Self::Trigger,
             Self::UnreifiableRule,
+            Self::Product,
+            Self::Journey,
+            Self::QualityDemand,
         ]
     }
 
@@ -207,6 +221,9 @@ impl NodeKind {
             Self::System => "System",
             Self::Trigger => "Trigger",
             Self::UnreifiableRule => "UnreifiableRule",
+            Self::Product => "Product",
+            Self::Journey => "Journey",
+            Self::QualityDemand => "QualityDemand",
         }
     }
 
@@ -240,6 +257,9 @@ impl NodeKind {
             Self::System => "system",
             Self::Trigger => "trigger",
             Self::UnreifiableRule => "unreifiable-rule",
+            Self::Product => "product",
+            Self::Journey => "journey",
+            Self::QualityDemand => "quality-demand",
         }
     }
 

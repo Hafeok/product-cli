@@ -64,7 +64,10 @@ pub fn emit(args: &Value, repo_root: &Path) -> Result<Value, String> {
         .filter(|s| !s.is_empty())
         .ok_or_else(|| "missing required arg: deliverable".to_string())?;
     let exe = std::env::current_exe().map_err(|e| format!("cannot locate product binary: {e}"))?;
-    let mut cli = vec![deliverable.to_string(), "--emit-spmc".into(), "--out".into(), "-".into()];
+    // §5.1 — `seam: true` emits the build-seam envelopes instead of the SPMC prompt.
+    let seam = args.get("seam").and_then(|v| v.as_bool()).unwrap_or(false);
+    let emit_flag = if seam { "--emit-seam" } else { "--emit-spmc" };
+    let mut cli = vec![deliverable.to_string(), emit_flag.into(), "--out".into(), "-".into()];
     if let Some(p) = args.get("product").and_then(|v| v.as_str()) {
         cli.push("--product".into());
         cli.push(p.to_string());
@@ -74,15 +77,37 @@ pub fn emit(args: &Value, repo_root: &Path) -> Result<Value, String> {
         .args(&cli)
         .current_dir(repo_root)
         .output()
-        .map_err(|e| format!("failed to spawn `product build --emit-spmc`: {e}"))?;
+        .map_err(|e| format!("failed to spawn `product build {emit_flag}`: {e}"))?;
     if !output.status.success() {
         return Err(String::from_utf8_lossy(&output.stderr).to_string());
+    }
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    if seam {
+        // The emitted envelopes are a JSON array; return them parsed.
+        let units: Value = serde_json::from_str(stdout.trim())
+            .map_err(|e| format!("emitted seam envelopes were not valid JSON: {e}"))?;
+        return Ok(json!({ "ok": true, "deliverable": deliverable, "units": units }));
     }
     Ok(json!({
         "ok": true,
         "deliverable": deliverable,
-        "spmc": String::from_utf8_lossy(&output.stdout).to_string(),
+        "spmc": stdout,
     }))
+}
+
+/// §5.1 — validate an inbound build-seam verdict event passed inline as `event`.
+pub fn verdict(args: &Value, _repo_root: &Path) -> Result<Value, String> {
+    let event = args.get("event").ok_or_else(|| "missing required arg: event".to_string())?;
+    match product_core::pf::build_seam::validate_verdict(event) {
+        Ok(ev) => Ok(json!({
+            "ok": true,
+            "event_id": ev.event_id,
+            "unit_ref": ev.unit_ref,
+            "bundle_hash": ev.bundle_hash,
+            "verdict": serde_json::to_value(ev.verdict).unwrap_or(Value::Null),
+        })),
+        Err(e) => Ok(json!({ "ok": false, "error": format!("{e}") })),
+    }
 }
 
 /// Translate the JSON args into `product build` CLI flags (mirrors the `Build`

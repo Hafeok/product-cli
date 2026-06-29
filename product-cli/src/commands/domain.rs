@@ -18,6 +18,7 @@ use serde_json::json;
 use std::path::{Path, PathBuf};
 
 use super::domain_fields::NodeFields;
+use super::domain_fields_v16::V16Fields;
 use super::BoxResult;
 
 pub(super) type Resolved = Result<(String, PathBuf), Box<dyn std::error::Error>>;
@@ -63,6 +64,8 @@ pub enum DomainCommands {
         id: String,
         #[command(flatten)]
         fields: NodeFields,
+        #[command(flatten)]
+        v16: V16Fields,
         #[arg(long)]
         product: Option<String>,
     },
@@ -87,6 +90,8 @@ pub enum DomainCommands {
         id: String,
         #[command(flatten)]
         fields: NodeFields,
+        #[command(flatten)]
+        v16: V16Fields,
         #[arg(long)]
         product: Option<String>,
     },
@@ -133,8 +138,8 @@ pub(crate) fn handle_domain_cmd(cmd: DomainCommands) -> BoxResult {
         DomainCommands::Data { dataset, product, no_record } => super::domain_data::run(dataset, product, no_record),
         DomainCommands::List { kind, product } => list(kind, product),
         DomainCommands::Show { id, product } => show(id, product),
-        DomainCommands::New { kind, id, fields, product } => new(kind, id, fields, product),
-        DomainCommands::Edit { id, fields, product } => edit_node(id, fields, product),
+        DomainCommands::New { kind, id, fields, v16, product } => new(kind, id, fields, v16, product),
+        DomainCommands::Edit { id, fields, v16, product } => edit_node(id, fields, v16, product),
         DomainCommands::Rm { id, product } => rm(id, product),
         DomainCommands::Validate { product, strict } => validate_cmd(product, strict),
         DomainCommands::Export { product } => export(product),
@@ -226,20 +231,24 @@ fn now() -> String {
     chrono::Utc::now().to_rfc3339()
 }
 
-fn new(kind: String, id: String, fields: NodeFields, product: Option<String>) -> BoxResult {
+fn new(kind: String, id: String, fields: NodeFields, v16: V16Fields, product: Option<String>) -> BoxResult {
     let (p, dir) = resolve(product)?;
     let kind = NodeKind::parse(&kind)?;
     let mut session = DomainSession::load(&dir)
         .unwrap_or(DomainSession::start(&p, None, vec![], None, now())?);
-    let result = create(&mut session, kind, &id, &fields.to_map());
+    let mut map = fields.to_map();
+    v16.merge_into(&mut map);
+    let result = create(&mut session, kind, &id, &map);
     session.save(&dir)?;
     report("Created", &id, result)
 }
 
-fn edit_node(id: String, fields: NodeFields, product: Option<String>) -> BoxResult {
+fn edit_node(id: String, fields: NodeFields, v16: V16Fields, product: Option<String>) -> BoxResult {
     let (_, dir) = resolve(product)?;
     let mut session = load(&dir)?;
-    let result = edit(&mut session, &id, &fields.to_map());
+    let mut map = fields.to_map();
+    v16.merge_into(&mut map);
+    let result = edit(&mut session, &id, &map);
     session.save(&dir)?;
     report("Updated", &id, result)
 }
@@ -316,6 +325,14 @@ fn validate_cmd(product: Option<String>, strict: bool) -> BoxResult {
     let mut violations = validate::validate_graph(&session.graph);
     if strict {
         violations.extend(product_core::pf::rules_pattern::pattern_conformance(&session.graph));
+        // §3.6 — if a How contract is present, an architectural demand's
+        // `constrains` must bind a real How element (cross-artifact check).
+        let how_path = super::shared::domain_root().join(".product").join("how-contract.yaml");
+        if let Ok(text) = std::fs::read_to_string(&how_path) {
+            if let Ok(how) = product_core::pf::how::HowContract::from_yaml(&text) {
+                violations.extend(product_core::pf::validate_product::constrains_bind_how(&session.graph, &how));
+            }
+        }
     }
     if violations.is_empty() {
         let mode = if strict { " (strict)" } else { "" };

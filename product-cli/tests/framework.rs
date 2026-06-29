@@ -1155,3 +1155,131 @@ fn tc_workflow_finalize_promotes_isolated_draft_to_canonical() {
     out.assert_stdout_contains("\\\"ok\\\": true");
     assert!(h.read(canonical).contains("Shipping"), "canonical must hold the promoted context after finalize");
 }
+
+// --- §3.0/§3.0.1/§3.6 the product-boundary node family (1.6.0) -------------
+
+#[test]
+fn tc_1030_product_journey_quality_demand_and_journey_conformance() {
+    let h = Harness::new(); // seeds the bookstore demo (product `bookstore`)
+
+    // Build a minimal multi-flow slice with a Translation trigger.
+    h.run(&["domain", "new", "context", "checkout", "--label", "Checkout"]).assert_exit(0);
+    h.run(&["domain", "new", "entity", "order", "--context", "checkout",
+        "--label", "Order", "--definition", "a customer order"]).assert_exit(0);
+    h.run(&["domain", "new", "system", "sys-shop", "--label", "Shop",
+        "--system-kind", "application", "--purpose", "store",
+        "--references-domain", "checkout"]).assert_exit(0);
+    h.run(&["domain", "new", "event", "ev-fulfilled", "--context", "checkout",
+        "--label", "Fulfilled", "--changes", "order"]).assert_exit(0);
+    h.run(&["domain", "new", "command", "cmd-fulfil", "--label", "Fulfil",
+        "--context", "checkout", "--targets", "order", "--emits", "ev-fulfilled"]).assert_exit(0);
+    h.run(&["domain", "new", "read-model", "rm-orders", "--label", "Orders",
+        "--projects", "ev-fulfilled"]).assert_exit(0);
+    h.run(&["domain", "new", "trigger", "tr-trans", "--label", "Translate",
+        "--trigger-source", "automated", "--issues", "cmd-fulfil",
+        "--watches", "rm-orders", "--translates-from", "sys-shop"]).assert_exit(0);
+    h.run(&["domain", "new", "flow", "flow-a", "--label", "Shop flow", "--system", "sys-shop"]).assert_exit(0);
+    h.run(&["domain", "new", "flow", "flow-b", "--label", "Admin flow", "--system", "sys-shop"]).assert_exit(0);
+
+    // §3.0 — a product root owning the domain + system, carrying a What-version.
+    h.run(&["domain", "new", "product", "acme", "--label", "Acme",
+        "--purpose", "the acme product", "--owns-domain", "checkout",
+        "--owns-system", "sys-shop", "--what-version", "1.0.0"]).assert_exit(0);
+    let pl = h.run(&["domain", "list", "product"]);
+    pl.assert_exit(0);
+    assert!(pl.stdout.contains("acme"), "product should be listed:\n{}", pl.stdout);
+    let show = h.run(&["domain", "show", "acme"]);
+    show.assert_exit(0);
+    assert!(show.stdout.contains("1.0.0") && show.stdout.contains("sys-shop"),
+        "product show carries version + owned system:\n{}", show.stdout);
+
+    // §3.6 — a runtime-bound quality demand requires a telemetry source.
+    h.run(&["domain", "new", "quality-demand", "qd-bad", "--label", "X",
+        "--demand-kind", "runtime-bound", "--bound", "p99<=200ms", "--scopes", "sys-shop"])
+        .assert_exit(1);
+    h.run(&["domain", "new", "quality-demand", "qd-lat", "--label", "Latency",
+        "--demand-kind", "runtime-bound", "--bound", "p99<=200ms",
+        "--scopes", "sys-shop", "--measured-by", "prod-telemetry"]).assert_exit(0);
+    // An architectural constraint binds the How, not telemetry.
+    h.run(&["domain", "new", "quality-demand", "qd-res", "--label", "Residency",
+        "--demand-kind", "architectural", "--bound", "EU only",
+        "--scopes", "sys-shop", "--constrains", "DEC-residency"]).assert_exit(0);
+
+    // §3.0.1 — a journey crossing via a Translation passes journey conformance.
+    h.run(&["domain", "new", "journey", "jrny", "--label", "Order to fulfil",
+        "--owner", "acme", "--composes-flow", "flow-a,flow-b", "--crosses-via", "tr-trans"])
+        .assert_exit(0);
+    let strict = h.run(&["domain", "validate", "--strict"]);
+    strict.assert_exit(0);
+    assert!(strict.stdout.contains("conformant"), "strict validate clean:\n{}", strict.stdout);
+
+    // A crossing that is NOT a Translation is a journey-conformance finding.
+    h.run(&["domain", "new", "trigger", "tr-plain", "--label", "Plain",
+        "--trigger-source", "user", "--issues", "cmd-fulfil"]).assert_exit(0);
+    h.run(&["domain", "edit", "jrny", "--crosses-via", "tr-plain"]).assert_exit(0);
+    let bad = h.run(&["domain", "validate", "--strict"]);
+    bad.assert_exit(1);
+    assert!(bad.stderr.contains("Journey conformance"),
+        "non-Translation crossing fails journey conformance:\n{}", bad.stderr);
+}
+
+// --- §7.3 versions and direction (1.6.0) -----------------------------------
+
+#[test]
+fn tc_1031_how_versions_and_target_direction() {
+    let h = Harness::new();
+    // A node to anchor a slice on.
+    h.run(&["domain", "new", "context", "Catalog", "--label", "Catalog"]).assert_exit(0);
+
+    // §7.3 — the How carries its own version and the What-version it realises.
+    h.run(&["how", "init"]).assert_exit(0);
+    h.run(&["how", "set", "version", "--id", "1.3.0"]).assert_exit(0);
+    h.run(&["how", "set", "realises-version", "--id", "2.0"]).assert_exit(0);
+    let hs = h.run(&["how", "show"]);
+    hs.assert_exit(0);
+    assert!(hs.stdout.contains("1.3.0") && hs.stdout.contains("What 2.0"),
+        "how show carries both versions:\n{}", hs.stdout);
+
+    // A target version is a declared partition of feature-slices (deliverables).
+    h.run(&["slice", "new", "sl-1", "--anchor", "Catalog"]).assert_exit(0);
+    h.run(&["deliverable", "new", "del-1", "--slice", "sl-1", "--accept", "ac1:the catalog ships"]).assert_exit(0);
+    h.run(&["target", "new", "v2", "--version", "2.0", "--slice", "del-1"]).assert_exit(0);
+    let ts = h.run(&["target", "show", "v2"]);
+    ts.assert_exit(0);
+    assert!(ts.stdout.contains("What 2.0") && ts.stdout.contains("del-1"),
+        "target show carries version + members:\n{}", ts.stdout);
+
+    // Direction is the computed gap: an unrealised member is in the distance.
+    let dir = h.run(&["target", "direction", "v2"]);
+    dir.assert_exit(1); // del-1 is not done yet
+    assert!(dir.stdout.contains("unrealised") && dir.stdout.contains("del-1"),
+        "direction reports the unrealised slice:\n{}", dir.stdout);
+
+    // A target naming a non-deliverable member is rejected.
+    h.run(&["target", "new", "bad", "--slice", "nope"]).assert_exit(1);
+}
+
+// --- §5.1 the Build seam — verdict validation (1.6.0) ----------------------
+
+#[test]
+fn tc_1032_build_seam_verdict_validation() {
+    let h = Harness::new();
+    // A well-formed verdict event validates (the worked-example shape).
+    h.write("verdict-good.json", r#"{
+        "event_id": "ev-9f81", "emitted_at": "2026-06-26T02:14:08Z",
+        "unit_ref": "wu-0007", "bundle_hash": "b3d1f2a9",
+        "verdict": "accepted", "next_consequence": "advance",
+        "executor_extension": { "kind": "spark", "tier_ran": "coder-medium" }
+    }"#);
+    let good = h.run(&["verdict", "verdict-good.json"]);
+    good.assert_exit(0);
+    assert!(good.stdout.contains("valid verdict") && good.stdout.contains("accepted"),
+        "a conforming verdict validates:\n{}", good.stdout);
+
+    // An off-vocabulary verdict is rejected (the §6.2 vocabulary is pinned).
+    h.write("verdict-bad.json", r#"{ "event_id": "e", "emitted_at": "t", "unit_ref": "u", "bundle_hash": "h", "verdict": "maybe" }"#);
+    let bad = h.run(&["verdict", "verdict-bad.json"]);
+    bad.assert_exit(1);
+    assert!(bad.stderr.contains("accepted") && bad.stderr.contains("escalate"),
+        "the verdict vocabulary is reported:\n{}", bad.stderr);
+}

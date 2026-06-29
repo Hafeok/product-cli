@@ -52,9 +52,9 @@ pub enum HowCommands {
         #[arg(long)]
         file: Option<PathBuf>,
     },
-    /// Set a singleton contract: app-contract | infra-contract (with --id)
+    /// Set a singleton: app-contract | infra-contract | version | realises-version (--id is the value)
     Set {
-        /// One of: app-contract, infra-contract
+        /// One of: app-contract, infra-contract, version, realises-version
         target: String,
         /// The contract id
         #[arg(long)]
@@ -151,7 +151,11 @@ fn set(target: String, id: String, fields: super::how_fields::HowFields, file: O
     match target.as_str() {
         "app-contract" => edit::set_app_contract(&mut c, fields.app_contract(&id)),
         "infra-contract" => edit::set_infra_contract(&mut c, fields.infra_contract(&id)),
-        other => return Err(format!("unknown target {other:?} — use app-contract or infra-contract").into()),
+        // §7.3 — the How's own version and the What-version it realises; `--id`
+        // carries the version string.
+        "version" => c.version = Some(id.clone()),
+        "realises-version" => c.realises_version = Some(id.clone()),
+        other => return Err(format!("unknown target {other:?} — use app-contract, infra-contract, version, or realises-version").into()),
     }
     save(&c, &file)?;
     println!("Set {target} '{id}'");
@@ -188,6 +192,9 @@ fn show(file: Option<PathBuf>) -> BoxResult {
     println!("archetype: {}", c.archetype);
     if let Some(v) = &c.version {
         println!("version:   {v}");
+    }
+    if let Some(v) = &c.realises_version {
+        println!("realises:  What {v}");
     }
     println!("application-contract: {} ({})", c.application_contract.id, c.application_contract.language);
     println!("  statements: {}", c.application_contract.statements.len());

@@ -17,6 +17,7 @@ mod dispatch;
 mod domain;
 mod domain_data;
 mod domain_fields;
+mod domain_fields_v16;
 mod domain_rows;
 mod guide;
 mod hooks;
@@ -34,6 +35,8 @@ mod session;
 mod shared;
 mod skills;
 mod slice;
+mod target;
+mod verdict;
 mod work_unit;
 mod worker;
 
@@ -55,6 +58,7 @@ pub use self::release::ReleaseCommands;
 pub use self::session::SessionCommands;
 pub use self::skills::SkillsCommands;
 pub use self::slice::SliceCommands;
+pub use self::target::TargetCommands;
 
 mod root_enum;
 pub use root_enum::Commands;

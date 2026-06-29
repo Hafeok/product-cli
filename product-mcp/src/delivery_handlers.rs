@@ -9,6 +9,7 @@ use product_core::pf::deliverable::{validate_deliverable, AcceptanceCriterion, D
 use product_core::pf::done::{feature_done, release_done};
 use product_core::pf::release::{validate_release, Release};
 use product_core::pf::slice::{validate_slice, Slice};
+use product_core::pf::target::{direction, validate_target, Target};
 use serde_json::{json, Value};
 
 use crate::pf_mcp::{graph_of, ids_in, load_yaml, pdir, product_of, req_str};
@@ -16,6 +17,7 @@ use crate::pf_mcp::{graph_of, ids_in, load_yaml, pdir, product_of, req_str};
 fn slices_dir(r: &Path) -> PathBuf { pdir(r).join("slices") }
 fn deliverables_dir(r: &Path) -> PathBuf { pdir(r).join("deliverables") }
 fn releases_dir(r: &Path) -> PathBuf { pdir(r).join("releases") }
+fn targets_dir(r: &Path) -> PathBuf { pdir(r).join("targets") }
 fn deciders_dir(r: &Path) -> PathBuf { pdir(r).join("deciders") }
 
 fn id_set(dir: &Path) -> BTreeSet<String> {
@@ -268,6 +270,46 @@ pub fn handle_release_done(args: &Value, repo_root: &Path) -> Result<Value, Stri
     Ok(json!({ "id": rd.id, "done": rd.done, "closed": rd.closed(),
         "members": rd.members.iter().map(|m| json!({"id": m.id, "done": m.done})).collect::<Vec<_>>(),
         "open_edges": rd.open_edges.iter().map(|(n, d)| json!({"node": n, "depends_on_excluded": d})).collect::<Vec<_>>() }))
+}
+
+// --- §7.3 target versions + direction -------------------------------------
+
+pub fn handle_target_list(_args: &Value, repo_root: &Path) -> Result<Value, String> {
+    Ok(json!({ "targets": ids_in(&targets_dir(repo_root)) }))
+}
+pub fn handle_target_show(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let t = load_yaml(&targets_dir(repo_root), &req_str(args, "name")?, Target::from_yaml)?;
+    serde_json::to_value(&t).map_err(|e| format!("{e}"))
+}
+pub fn handle_target_new(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let id = req_str(args, "id")?;
+    let t = Target { id: id.clone(), version: args.get("version").and_then(|v| v.as_str()).map(String::from),
+        in_target: str_array(args, "slices") };
+    let problems = validate_target(&t, &id_set(&deliverables_dir(repo_root)));
+    if !problems.is_empty() {
+        return Ok(json!({ "ok": false, "violations": problems }));
+    }
+    let force = args.get("force").and_then(|v| v.as_bool()).unwrap_or(false);
+    write_new(&targets_dir(repo_root), &id, t.to_yaml().map_err(|e| format!("{e}"))?, force)?;
+    Ok(json!({ "ok": true, "id": id }))
+}
+pub fn handle_target_direction(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let t = load_yaml(&targets_dir(repo_root), &req_str(args, "name")?, Target::from_yaml)?;
+    let graph = graph_of(args, repo_root)?;
+    let deciders = load_deciders(repo_root);
+    let projectors = load_projectors(repo_root);
+    let conformed = conformed_set(repo_root);
+    let mut done = std::collections::BTreeMap::new();
+    for m in &t.in_target {
+        if let Ok(d) = load_yaml(&deliverables_dir(repo_root), m, Deliverable::from_yaml) {
+            if let Ok(s) = load_yaml(&slices_dir(repo_root), &d.slice, Slice::from_yaml) {
+                done.insert(m.clone(), feature_done(&d, &s, &graph, &deciders, &conformed, &projectors).done);
+            }
+        }
+    }
+    let dir = direction(&t, &done);
+    Ok(json!({ "id": t.id, "version": dir.version, "total": dir.total,
+        "unrealised": dir.unrealised, "progress": dir.progress() }))
 }
 
 #[cfg(test)]

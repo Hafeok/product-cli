@@ -33,6 +33,7 @@ Two evaluation modes:
 | **SPEC-HOW-5** | Decisions record rejected alternatives | Checked | Each ADR documents the alternatives it rejected. |
 | **SPEC-DERIVE-3** | No undeclared product decisions | Checked | Significant decisions are captured as ADRs, not left implicit in code. |
 | **EXEC-CLOSE-4** | Output judged before acceptance | Checked | No artifact is accepted without a verdict — verification gates closure. |
+| **EXEC-SEAM-1** | Build seam — work-unit emission contract | By construction | The boundary between the specification and execution pillars ([§5.1](product-framework-open.md#51-the-build-seam--the-work-unit-emission-contract)): a work unit is emitted **by value with a content-hash identity** and a **self-describing verdict event** returns from the executor — the producer holding no knowledge of any consumer, so either pillar is swappable while both honour the seam. |
 
 ## Relationship to the framework graph
 

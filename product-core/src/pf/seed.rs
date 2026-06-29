@@ -48,6 +48,9 @@ pub fn from_turtle(turtle: &str) -> Result<DomainGraph> {
     parse_systems(&store, &mut g)?;
     parse_triggers(&store, &mut g)?;
     parse_unreifiable(&store, &mut g)?;
+    parse_products(&store, &mut g)?;
+    parse_journeys(&store, &mut g)?;
+    parse_quality_demands(&store, &mut g)?;
     super::seed_ui::parse_ui(&store, &mut g)?;
     super::seed_data::parse_data(&store, &mut g)?;
     super::seed_canon::canonicalize(&mut g);
@@ -78,15 +81,63 @@ fn parse_triggers(store: &Store, g: &mut DomainGraph) -> Result<()> {
     Ok(())
 }
 
+// §3.0/§3.0.1/§3.6 — the product-boundary nodes.
+fn parse_products(store: &Store, g: &mut DomainGraph) -> Result<()> {
+    let domains = multi(store, "pf:Product", "pf:ownsDomain")?;
+    let systems = multi(store, "pf:Product", "pf:ownsSystem")?;
+    for row in select(store, "?s ?label ?purpose ?ver",
+        "?s a pf:Product . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:purpose ?purpose } OPTIONAL { ?s pf:versionedAs ?ver }")? {
+        let id = local(row.get("s"));
+        g.products.push(Product {
+            owns_domain: domains.get(&id).cloned().unwrap_or_default(),
+            owns_system: systems.get(&id).cloned().unwrap_or_default(),
+            id: id.clone(), label: lit(row.get("label")), purpose: lit(row.get("purpose")),
+            version: opt(row.get("ver")).map(|_| lit(row.get("ver"))),
+        });
+    }
+    Ok(())
+}
+
+fn parse_journeys(store: &Store, g: &mut DomainGraph) -> Result<()> {
+    let flows = multi(store, "pf:Journey", "pf:composesFlow")?;
+    let crossings = multi(store, "pf:Journey", "pf:crossesVia")?;
+    for row in select(store, "?s ?label ?product",
+        "?s a pf:Journey . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:journeyOf ?product }")? {
+        let id = local(row.get("s"));
+        g.journeys.push(Journey {
+            composes_flow: flows.get(&id).cloned().unwrap_or_default(),
+            crosses_via: crossings.get(&id).cloned().unwrap_or_default(),
+            id: id.clone(), label: lit(row.get("label")), product: local(row.get("product")),
+        });
+    }
+    Ok(())
+}
+
+fn parse_quality_demands(store: &Store, g: &mut DomainGraph) -> Result<()> {
+    for row in select(store, "?s ?label ?kind ?bound ?scopes ?measured ?constrains",
+        "?s a pf:QualityDemand . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:demandKind ?kind } OPTIONAL { ?s pf:bound ?bound } OPTIONAL { ?s pf:scopes ?scopes } OPTIONAL { ?s pf:measuredBy ?measured } OPTIONAL { ?s pf:constrains ?constrains }")? {
+        g.quality_demands.push(QualityDemand {
+            id: local(row.get("s")), label: lit(row.get("label")),
+            kind: lit(row.get("kind")), bound: lit(row.get("bound")),
+            scopes: local(row.get("scopes")),
+            measured_by: opt(row.get("measured")).map(|_| lit(row.get("measured"))),
+            constrains: opt(row.get("constrains")).map(|_| local(row.get("constrains"))),
+        });
+    }
+    Ok(())
+}
+
 fn parse_systems(store: &Store, g: &mut DomainGraph) -> Result<()> {
     let platforms = multi(store, "pf:System", "pf:targetsPlatform")?;
     let classes = multi(store, "pf:System", "pf:targetsClass")?;
+    let domains = multi(store, "pf:System", "pf:referencesDomain")?;
     for row in select(store, "?s ?label ?kind ?purpose ?root",
         "?s a pf:System . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:systemKind ?kind } OPTIONAL { ?s pf:purpose ?purpose } OPTIONAL { ?s pf:rootsAt ?root }")? {
         let id = local(row.get("s"));
         g.systems.push(System {
             target_platforms: platforms.get(&id).cloned().unwrap_or_default(),
             target_classes: classes.get(&id).cloned().unwrap_or_default(),
+            references_domain: domains.get(&id).cloned().unwrap_or_default(),
             id: id.clone(), label: lit(row.get("label")),
             kind: lit(row.get("kind")), purpose: lit(row.get("purpose")),
             root: opt(row.get("root")).map(|_| local(row.get("root"))),

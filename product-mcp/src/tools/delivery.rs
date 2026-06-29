@@ -48,9 +48,16 @@ pub(super) fn all() -> Vec<ToolDef> {
         // release
         read("product_release_list", "List releases.", serde_json::json!({}), serde_json::json!([])),
         read("product_release_show", "Show a release.", named.clone(), serde_json::json!(["name"])),
-        read("product_release_done", "Compute whether a release is done — members done + cut closed (§7.2).", named, serde_json::json!(["name"])),
+        read("product_release_done", "Compute whether a release is done — members done + cut closed (§7.2).", named.clone(), serde_json::json!(["name"])),
         write("product_release_new", "Create a release grouping delivery features.",
             serde_json::json!({"id": {"type": "string"}, "features": {"type": "array", "items": {"type": "string"}}, "force": {"type": "boolean"}}),
             serde_json::json!(["id", "features"])),
+        // target version (§7.3)
+        read("product_target_list", "List target versions.", serde_json::json!({}), serde_json::json!([])),
+        read("product_target_show", "Show a target version.", named.clone(), serde_json::json!(["name"])),
+        read("product_target_direction", "Compute the gap to a target — the unrealised feature-slices (§7.3).", named, serde_json::json!(["name"])),
+        write("product_target_new", "Declare a target version as a set of feature-slices (deliverables), some not yet realised.",
+            serde_json::json!({"id": {"type": "string"}, "version": {"type": "string"}, "slices": {"type": "array", "items": {"type": "string"}}, "force": {"type": "boolean"}}),
+            serde_json::json!(["id", "slices"])),
     ]
 }

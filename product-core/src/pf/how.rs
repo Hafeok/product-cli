@@ -117,8 +117,12 @@ pub struct InterfaceContract {
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct HowContract {
     pub archetype: String,
+    /// §7.3 — the How's own semantic version (the realisation's version).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
+    /// §7.3 — the What-version this How realises (`realises What 2.1`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub realises_version: Option<String>,
     #[serde(default)]
     pub top_decisions: Vec<TopDecision>,
     #[serde(default)]
@@ -139,6 +143,16 @@ impl HowContract {
     pub fn from_yaml(text: &str) -> Result<Self> {
         serde_yaml::from_str(text)
             .map_err(|e| ProductError::ConfigError(format!("invalid how-contract YAML: {}", e)))
+    }
+
+    /// True if `id` names a Why-cascade element (decision/principle/pattern/interface).
+    /// The resolution target for an architectural quality demand's `constrains` (§3.6).
+    pub fn has_element(&self, id: &str) -> bool {
+        self.top_decisions.iter().any(|d| d.id == id)
+            || self.principles.iter().any(|p| p.id == id)
+            || self.patterns.iter().any(|p| p.id == id)
+            || self.interface_contracts.iter().any(|i| i.id == id)
+            || self.application_contract.id == id
     }
 
     /// Serialize the contract back to YAML.

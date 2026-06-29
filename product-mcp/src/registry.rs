@@ -51,6 +51,9 @@ impl ToolRegistry {
         if name == "product_build_emit" {
             return crate::build_handler::emit(args, repo_root);
         }
+        if name == "product_build_verdict" {
+            return crate::build_handler::verdict(args, repo_root);
+        }
         let _lock = if tool.requires_write {
             Some(product_core::fileops::RepoLock::acquire(repo_root)
                 .map_err(|e| format!("{}", e))?)
@@ -185,6 +188,10 @@ fn dispatch_delivery(name: &str, args: &Value, repo_root: &Path) -> Option<Resul
         "product_release_show" => d::handle_release_show(args, repo_root),
         "product_release_done" => d::handle_release_done(args, repo_root),
         "product_release_new" => d::handle_release_new(args, repo_root),
+        "product_target_list" => d::handle_target_list(args, repo_root),
+        "product_target_show" => d::handle_target_show(args, repo_root),
+        "product_target_direction" => d::handle_target_direction(args, repo_root),
+        "product_target_new" => d::handle_target_new(args, repo_root),
         _ => return None,
     })
 }

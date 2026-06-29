@@ -55,6 +55,7 @@ fn system_round_trips_with_flow_ownership() {
         id: "sys-shop".into(), label: "Acme Shop".into(), kind: "application".into(),
         purpose: "consumer e-commerce".into(), target_platforms: vec!["ios".into(), "web".into()],
         target_classes: vec!["gui".into()], root: Some("root-shop".into()),
+        references_domain: vec![],
     });
     g.flows.push(Flow { id: "checkout".into(), label: "Checkout".into(), steps: vec![], system: Some("sys-shop".into()), ..Default::default() });
 
@@ -121,7 +122,7 @@ fn max_behaviour(g: &mut DomainGraph) {
     g.events.push(Event { id: "ev2".into(), label: "Also".into(), context: "ctx".into(), changes: "ent".into() });
     g.read_models.push(ReadModel { id: "rm".into(), label: "View".into(), projects: vec!["ent".into(), "ev".into()], states: vec!["loading".into(), "empty".into()] });
     g.flows.push(Flow { id: "flow".into(), label: "Journey".into(), steps: vec!["step".into()], entry_page: Some("step".into()), system: Some("sys".into()) });
-    g.systems.push(System { id: "sys".into(), label: "App".into(), kind: "application".into(), purpose: "do things".into(), target_platforms: vec!["web".into()], target_classes: vec!["gui".into()], root: Some("root".into()) });
+    g.systems.push(System { id: "sys".into(), label: "App".into(), kind: "application".into(), purpose: "do things".into(), target_platforms: vec!["web".into()], target_classes: vec!["gui".into()], root: Some("root".into()), references_domain: vec![] });
     g.triggers.push(Trigger { id: "trig".into(), label: "Init".into(), source: "automated".into(), issues: "cmd".into(), watches: Some("rm".into()), translates_from: Some("sys".into()) });
 }
 

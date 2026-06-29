@@ -5,7 +5,7 @@ use clap::Command as ClapCommand;
 use super::{
     archetype, author, build, cell, completions, decider, deliverable, domain, guide, hooks, how,
     init, lsp, mcp_cmd, preview, primitive, projector, release, render, seam, session, skills,
-    slice, work_unit, worker, BoxResult, Commands,
+    slice, target, verdict, work_unit, worker, BoxResult, Commands,
 };
 
 pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapCommand) -> BoxResult {
@@ -21,8 +21,9 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Session { command } => session::handle_session(command),
         Commands::Skills { command } => skills::handle_skills(command),
         Commands::Seam { id, product } => seam::handle_seam(id, product),
+        Commands::Verdict { file } => verdict::handle_verdict(file),
         // Product-Framework families route through a sub-dispatcher (keeps this match small).
-        c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Primitive { .. } | Commands::Deliverable { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Preview { .. } | Commands::Release { .. } | Commands::Slice { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
+        c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Primitive { .. } | Commands::Deliverable { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Preview { .. } | Commands::Release { .. } | Commands::Slice { .. } | Commands::Target { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
     }
 }
 
@@ -40,6 +41,7 @@ fn dispatch_pf(command: Commands) -> BoxResult {
         Commands::Preview { command } => preview::handle_preview(command),
         Commands::Release { command } => release::handle_release(command),
         Commands::Slice { command } => slice::handle_slice(command),
+        Commands::Target { command } => target::handle_target(command),
         Commands::WorkUnit { command } => work_unit::handle_work_unit(command),
         Commands::Worker { command } => worker::handle_worker(command),
         _ => unreachable!("dispatch_pf called with non-pf variant"),
@@ -47,11 +49,11 @@ fn dispatch_pf(command: Commands) -> BoxResult {
 }
 
 fn dispatch_build(command: Commands) -> BoxResult {
-    let Commands::Build { deliverable, role, jobs, dry_run, lsp, no_verify, max_rounds, budget, emit_spmc, out, product } = command else {
+    let Commands::Build { deliverable, role, jobs, dry_run, lsp, no_verify, max_rounds, budget, emit_spmc, emit_seam, out, product } = command else {
         unreachable!("dispatch_build called with non-Build variant")
     };
     let gates = build::Gates { lsp, verify: !no_verify, max_rounds, budget };
-    build::handle_build(&deliverable, &role, jobs, dry_run, gates, emit_spmc, out, product)
+    build::handle_build(&deliverable, &role, jobs, dry_run, gates, emit_spmc, emit_seam, out, product)
 }
 
 fn dispatch_init(command: Commands) -> BoxResult {

@@ -30,7 +30,7 @@ pub struct Violation {
 }
 
 impl Violation {
-    fn new(focus: &str, path: &str, message: &str) -> Self {
+    pub(super) fn new(focus: &str, path: &str, message: &str) -> Self {
         Self {
             focus: focus.to_string(),
             path: path.to_string(),
@@ -89,6 +89,7 @@ pub fn validate_graph(graph: &DomainGraph) -> Vec<Violation> {
     for u in &graph.unreifiable_rules {
         check_unreifiable(u, graph, &mut v);
     }
+    super::validate_product::check_all(graph, &mut v);
     v.extend(super::rules_data::data_cross_refs(graph));
     v.extend(run_rules(&ui_projection(graph), what_rules()));
     v.extend(run_rules(&ui_projection(graph), super::rules_ui::ui_rules()));
@@ -153,6 +154,9 @@ fn check_local_shape(graph: &DomainGraph, id: &str, v: &mut Vec<Violation>) {
         }
         Some(NodeKind::UnreifiableRule) => {
             if let Some(u) = graph.unreifiable_rules.iter().find(|n| n.id == id) { check_unreifiable(u, graph, v); }
+        }
+        Some(NodeKind::Product | NodeKind::Journey | NodeKind::QualityDemand) => {
+            super::validate_product::check_local(graph, id, v);
         }
         // Event/Command cross-references are graph rules (below); ValueObject,
         // WireframeStep have no blocking shape.

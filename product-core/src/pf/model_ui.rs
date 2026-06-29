@@ -114,6 +114,10 @@ pub struct System {
     /// §3.2.4 — the ApplicationRoot its page graph roots at.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub root: Option<String>,
+    /// §3.0/§3.2.5 — the whole domains (bounded contexts) this system references.
+    /// A system references domains; it does not own them (the product does, §3.0).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub references_domain: Vec<String>,
 }
 
 /// §3.2.0 — a Trigger: what initiates a command. Its `source` is exactly one of

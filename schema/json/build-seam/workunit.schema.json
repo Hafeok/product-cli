@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hafeok.github.io/product-framework/build-seam/workunit.schema.json",
+  "title": "WorkUnit",
+  "description": "The message emitted by the specification side across the Build seam (spec §5.1). Travels BY VALUE: the SPMC bundle is inlined in full, with every reference resolved, so the executor resolves nothing by calling back. The universal envelope below is what every conforming executor must understand; stack-specific structure (capability tiers, escalation ladders, sealed interior DAGs, etc.) lives in `executor_extension`, which the framework neither reads nor mandates.",
+  "type": "object",
+  "required": ["unit_ref", "bundle_hash", "bundle", "acceptance_class"],
+  "additionalProperties": false,
+  "properties": {
+    "unit_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Opaque identifier for this unit. The executor treats it as a label, NOT a pointer into the specification side's graph. Echoed back on the verdict so a consumer can match verdict to unit without shared state."
+    },
+    "parent_lineage": {
+      "type": "string",
+      "description": "Opaque lineage tag carried solely so a verdict can be rolled up to the larger deliverable it belongs to. Opaque to the executor; echoed back on the verdict. Optional: a unit with no larger parent may omit it."
+    },
+    "bundle_hash": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Content hash of `bundle` as emitted. This IS the unit's identity. Present even though the bundle travels by value, because the verdict needs it and because it makes a future migration to by-reference transport additive, not breaking (move the body to a content-addressed store, keep the hash). The emitter MUST ensure this equals the hash of `bundle` at emit time."
+    },
+    "bundle": {
+      "type": "object",
+      "description": "The frozen SPMC bundle (spec §5) — the Input Contract, fully self-contained. The four axes are named in this framework's terms; an executor reads `schema`, `prompt`, and `context` to produce the artifact, and matches `model` to a capability it can supply. No element may require a callback to read: if the executor would ever need to resolve a reference live, the unit is not frozen and MUST NOT be emitted.",
+      "required": ["schema", "prompt", "model", "context"],
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "description": "The shape of the output the unit must produce: the artifact's type and its versioned acceptance criteria. What 'one artifact' is checked against (spec §5, §6.1).",
+          "type": "object"
+        },
+        "prompt": {
+          "description": "The single bounded transformation the unit performs — the unit's 'single purpose' (spec §5). Free-form to the framework; meaningful to the executor's producer.",
+          "type": "object"
+        },
+        "model": {
+          "description": "What should produce the artifact: the capability the unit is intended for, declared abstractly. The executor matches this to a resident producer (spec §5.1). The framework does not enumerate capability values — an executor's catalog is its own concern; the framework only requires that the unit declares the capability it needs.",
+          "type": "object"
+        },
+        "context": {
+          "description": "The frozen, resolved input the unit reads: every What concept and How principle it depends on, referenced by pointer and resolved/inlined. The axis the reproducibility guarantee rests on — freeze the context, and the same input yields the same output (spec §5, §5.1).",
+          "type": "object"
+        }
+      }
+    },
+    "acceptance_class": {
+      "type": "string",
+      "enum": ["auto-commit-if-green", "needs-verdict"],
+      "description": "Tells a CONSUMER whether an `accepted` verdict may auto-commit without human review (`auto-commit-if-green`) or must be surfaced for a human (`needs-verdict`). The executor passes it through unchanged; it does not interpret deliverable-level meaning. A consumer-facing, framework-level field — universal because every executor must carry it even though none acts on it."
+    },
+    "executor_extension": {
+      "type": "object",
+      "description": "THE ONE OPAQUE SLOT. Stack-specific structure a particular execution framework needs — capability tiers, escalation-ladder position, sealed interior dependency graphs, batching hints, and so on — lives here. The framework NEITHER reads NOR mandates anything inside it. Its presence means an executor never needs the universal schema reopened to carry its own model. A `kind` discriminator is recommended so a consumer can tell which executor produced it, but the contents are otherwise unconstrained.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Optional discriminator naming the execution framework whose structure this slot carries (e.g. a reverse-DNS or short name). Lets a consumer recognise the extension's shape without the framework defining it."
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

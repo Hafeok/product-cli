@@ -1480,3 +1480,29 @@ d:t-open-view a pf:Trigger ;
   pf:issues d:cmd-open-live-view ;
   pf:watches d:rm-session-status .
 
+d:pf-product a pf:Product ;
+  rdfs:label "Product CLI" ;
+  pf:purpose "a Rust CLI and MCP server for the Product Framework What/How graph" ;
+  pf:ownsDomain d:ctx-composition ;
+  pf:ownsDomain d:ctx-contracts ;
+  pf:ownsDomain d:ctx-delivery ;
+  pf:ownsDomain d:ctx-model ;
+  pf:ownsDomain d:ctx-realisation ;
+  pf:ownsDomain d:ctx-shop ;
+  pf:ownsDomain d:ctx-verification ;
+  pf:ownsDomain d:ctx-view ;
+  pf:ownsDomain d:ctx-why ;
+  pf:ownsSystem d:product-cli ;
+  pf:ownsSystem d:product-view ;
+  pf:ownsSystem d:sys-shop ;
+  pf:versionedAs "1.0.0" .
+
+d:qd-validate-latency a pf:QualityDemand ;
+  rdfs:label "Validate latency" ;
+  pf:demandKind "runtime-bound" ;
+  pf:bound "domain validate --strict completes < 2s on the reference graph" ;
+  pf:scopes d:product-cli ;
+  pf:measuredBy "ci-timing" .
+
+d:product-cli pf:boundedBy d:qd-validate-latency .
+

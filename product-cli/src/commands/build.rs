@@ -36,7 +36,7 @@ pub(crate) struct Gates {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: bool, gates: Gates, emit_spmc: bool, out: Option<PathBuf>, product: Option<String>) -> BoxResult {
+pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: bool, gates: Gates, emit_spmc: bool, emit_seam: bool, out: Option<PathBuf>, product: Option<String>) -> BoxResult {
     let mut d = super::deliverable::load(deliverable)?;
     let slice = super::deliverable::load_slice(&d.slice)?;
     let graph = super::deliverable::load_graph(product.clone())?;
@@ -54,6 +54,9 @@ pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: 
     if emit_spmc {
         return emit(deliverable, &d, &slice, &graph, how.as_ref(), &deciders, &units, &p, out);
     }
+    if emit_seam {
+        return emit_seam_envelopes(deliverable, &units, out);
+    }
 
     let context = assemble(&d, &slice, &graph, how.as_ref(), &deciders, &p);
     if dry_run {
@@ -67,6 +70,33 @@ pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: 
     if !dry_run {
         finish_session(&fd);
     }
+    Ok(())
+}
+
+/// §5.1 — emit the deliverable's work units as build-seam envelopes (a JSON
+/// array): each travels by value with its content-hash identity, ready for any
+/// executor honouring the seam. The deliverable id is the `parent_lineage`.
+fn emit_seam_envelopes(deliverable: &str, units: &[WorkUnit], out: Option<PathBuf>) -> BoxResult {
+    use product_core::pf::build_seam::{to_seam_envelope, AcceptanceClass};
+    if units.is_empty() {
+        return Err(format!("no work units to emit for '{deliverable}' — dispatch cells first (`product cell dispatch`)").into());
+    }
+    let envelopes = units.iter()
+        .map(|wu| to_seam_envelope(wu, AcceptanceClass::NeedsVerdict, Some(deliverable)))
+        .collect::<Result<Vec<_>, _>>()?;
+    let json = serde_json::to_string_pretty(&envelopes)?;
+    if out.as_deref().map(Path::as_os_str) == Some(std::ffi::OsStr::new("-")) {
+        println!("{json}");
+        return Ok(());
+    }
+    let path = out.unwrap_or_else(|| {
+        super::shared::domain_root().join(".product").join("build").join(format!("{deliverable}.seam.json"))
+    });
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(&path, &json)?;
+    println!("Wrote {} build-seam work unit(s) → {}", envelopes.len(), path.display());
     Ok(())
 }
 

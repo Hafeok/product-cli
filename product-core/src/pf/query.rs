@@ -71,6 +71,12 @@ pub fn node_value(graph: &DomainGraph, id: &str) -> Option<Value> {
     find!(graph.read_models);
     find!(graph.wireframe_steps);
     find!(graph.flows);
+    find!(graph.systems);
+    find!(graph.triggers);
+    find!(graph.unreifiable_rules);
+    find!(graph.products);
+    find!(graph.journeys);
+    find!(graph.quality_demands);
     None
 }
 

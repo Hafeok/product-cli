@@ -1,4 +1,5 @@
 archetype: product-cli
+realises_version: 1.0.0
 top_decisions:
 - id: slice-adapter
   decision: 'Pure pf:: domain slices in product-core; thin CLI adapters in product-cli/src/commands'

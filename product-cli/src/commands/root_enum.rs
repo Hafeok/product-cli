@@ -46,6 +46,9 @@ pub enum Commands {
         /// Emit a self-contained SPMC prompt for a Claude Code -p session instead of dispatching
         #[arg(long = "emit-spmc")]
         emit_spmc: bool,
+        /// Emit the work units as §5.1 build-seam envelopes (by value + content-hash) instead of dispatching
+        #[arg(long = "emit-seam")]
+        emit_seam: bool,
         /// Where to write the SPMC (`-` for stdout); default .product/build/<id>.spmc.md
         #[arg(long)]
         out: Option<std::path::PathBuf>,
@@ -193,6 +196,16 @@ pub enum Commands {
     Slice {
         #[command(subcommand)]
         command: SliceCommands,
+    },
+    /// Target version (§7.3) — a future partition of feature-slices + its gap
+    Target {
+        #[command(subcommand)]
+        command: TargetCommands,
+    },
+    /// Verdict (§5.1) — validate a build-seam verdict event the executor emitted
+    Verdict {
+        /// Path to the verdict event JSON
+        file: PathBuf,
     },
     /// Work units (SPMC) — validate, show, and scaffold
     WorkUnit {

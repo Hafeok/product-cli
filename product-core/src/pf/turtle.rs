@@ -5,7 +5,7 @@
 //! namespace; instances live under a per-product namespace `d:`.
 
 use super::model::DomainGraph;
-use super::{turtle_data as data, turtle_ui as ui};
+use super::{turtle_data as data, turtle_product as product_ttl, turtle_ui as ui};
 
 const PF: &str = "https://productframework.org/ns#";
 
@@ -40,6 +40,9 @@ pub fn to_turtle(graph: &DomainGraph, product: &str) -> String {
     graph.systems.iter().for_each(|s| emit_system(&mut out, s));
     graph.triggers.iter().for_each(|t| emit_trigger(&mut out, t));
     graph.unreifiable_rules.iter().for_each(|u| ui::emit_unreifiable(&mut out, u));
+    graph.products.iter().for_each(|p| product_ttl::emit_product(&mut out, p));
+    graph.journeys.iter().for_each(|j| product_ttl::emit_journey(&mut out, j));
+    graph.quality_demands.iter().for_each(|q| product_ttl::emit_quality_demand(&mut out, q));
     out
 }
 
@@ -127,6 +130,9 @@ fn emit_system(out: &mut String, s: &super::model::System) {
     }
     if let Some(r) = &s.root {
         out.push_str(&format!(" ;\n  pf:rootsAt d:{}", r));
+    }
+    for d in &s.references_domain {
+        out.push_str(&format!(" ;\n  pf:referencesDomain d:{}", d));
     }
     out.push_str(" .\n\n");
 }

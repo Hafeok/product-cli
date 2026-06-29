@@ -95,6 +95,9 @@ fn props_for(kind: product_core::pf::ids::NodeKind) -> serde_json::Map<String, s
         K::System => schema_props::<System>(),
         K::Trigger => schema_props::<Trigger>(),
         K::UnreifiableRule => schema_props::<UnreifiableRule>(),
+        K::Product => schema_props::<Product>(),
+        K::Journey => schema_props::<Journey>(),
+        K::QualityDemand => schema_props::<QualityDemand>(),
     }
 }
 

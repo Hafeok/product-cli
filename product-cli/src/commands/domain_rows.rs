@@ -98,7 +98,9 @@ fn plain_rows(g: &DomainGraph, filter: Option<NodeKind>) -> Vec<(String, String,
             filter.is_none_or(|f| f == *k)
                 && matches!(k,
                     NodeKind::WcagCriterion | NodeKind::Attestation | NodeKind::ContentStore
-                    | NodeKind::DesignSystem | NodeKind::Cio | NodeKind::Token)
+                    | NodeKind::DesignSystem | NodeKind::Cio | NodeKind::Token
+                    | NodeKind::System | NodeKind::Trigger | NodeKind::UnreifiableRule
+                    | NodeKind::Product | NodeKind::Journey | NodeKind::QualityDemand)
         })
         .map(|(id, k)| (k.cli_name().to_string(), id, String::new()))
         .collect()

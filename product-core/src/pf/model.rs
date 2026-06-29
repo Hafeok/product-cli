@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use super::ids::NodeKind;
 
 pub use super::model_data::*;
+pub use super::model_product::*;
 pub use super::model_ui::*;
 
 /// A named attribute of an entity (e.g. `email: string`).
@@ -175,6 +176,12 @@ pub struct DomainGraph {
     pub triggers: Vec<Trigger>,
     #[serde(default)]
     pub unreifiable_rules: Vec<UnreifiableRule>,
+    #[serde(default)]
+    pub products: Vec<Product>,
+    #[serde(default)]
+    pub journeys: Vec<Journey>,
+    #[serde(default)]
+    pub quality_demands: Vec<QualityDemand>,
 }
 
 impl DomainGraph {
@@ -224,6 +231,9 @@ impl DomainGraph {
             ("System", self.systems.len()),
             ("Trigger", self.triggers.len()),
             ("UnreifiableRule", self.unreifiable_rules.len()),
+            ("Product", self.products.len()),
+            ("Journey", self.journeys.len()),
+            ("QualityDemand", self.quality_demands.len()),
         ]
     }
 
@@ -262,6 +272,9 @@ impl DomainGraph {
         self.systems.iter().for_each(|n| out.push((n.id.clone(), NodeKind::System)));
         self.triggers.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Trigger)));
         self.unreifiable_rules.iter().for_each(|n| out.push((n.id.clone(), NodeKind::UnreifiableRule)));
+        self.products.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Product)));
+        self.journeys.iter().for_each(|n| out.push((n.id.clone(), NodeKind::Journey)));
+        self.quality_demands.iter().for_each(|n| out.push((n.id.clone(), NodeKind::QualityDemand)));
         out
     }
 }

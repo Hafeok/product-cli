@@ -75,6 +75,8 @@ product-cli/         # The `product` binary. Depends on product-core +
     decider.rs       #     §3.3 Decider derive/validate/simulate
     projector.rs     #     §3.4 Projector derive/validate
     build.rs · how.rs · slice.rs · seam.rs · preview.rs · …
+    target.rs        #     §7.3 target version + computed direction/gap
+    verdict.rs       #     §5.1 build-seam verdict-event validation
   tests/
     framework.rs            # assert_cmd-driven framework CLI scenarios (~44)
     code_quality_tests.rs   # fitness gates (walk every member src/)
@@ -105,12 +107,16 @@ Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
 `.product/`:
 
 - **Author the What** — `product domain new <kind> <id> …` captures domain nodes
-  (entity, command, event, read-model, ui-step, system, trigger, …);
+  (entity, command, event, read-model, ui-step, system, trigger, **product**
+  (§3.0 root owning domains+systems), **journey** (§3.0.1 cross-system flow
+  composition), **quality-demand** (§3.6 runtime-bound / architectural NFR), …);
   `product domain show/list` inspects them; `product domain export` emits Turtle.
 - **Validate** — `product domain validate` runs the per-node §3.1/§3.2 shapes;
   `product domain validate --strict` adds the graph-level completeness checks
   (flow ownership §3.2.5, the Command pattern §3.2.0, view consumption §3.4, the
-  unreifiable seam §4.5).
+  unreifiable seam §4.5, **journey conformance §3.0.1** — every crossing a
+  Translation — and, when a How contract is present, that an architectural
+  quality demand's `constrains` binds a real How element §3.6).
 - **Make behaviour executable** — `product decider derive <aggregate>` derives a
   Decider's signature from the event model; `product decider validate <id>` runs
   the §3.3 drift rules + the state/Decider justification detectors;
@@ -118,6 +124,15 @@ Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
   read-model peer.
 - **Realise it** — `product how`, `product slice`, `product build`, `product seam`,
   `product preview` cover the How contract, delivery slices, and the screen seam.
+  `product how set version|realises-version --id <v>` carries the §7.3 semantic
+  versions (a How declares which What-version it realises).
+- **Direction (§7.3)** — `product target new <id> --version <v> --slice <deliverable>…`
+  declares a future partition of feature-slices; `product target direction <id>`
+  computes the gap (the unrealised members) — a query over the graph, not prose.
+- **Build seam (§5.1)** — `product build <deliverable> --emit-seam` emits the work
+  units as build-seam envelopes (by value + content-hash identity, the outbound
+  half); `product verdict <file>` validates an inbound verdict event against the
+  pinned accepted/rejected/escalate vocabulary. Schemas: `schema/json/build-seam/`.
 
 The reference What lives in `.product/author-domain/product-cli/`; the live web
 view (`product mcp --http`, then open `/`) renders it as an Event-Modeling timeline.

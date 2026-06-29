@@ -5,7 +5,10 @@ use super::ToolDef;
 /// The `product_build_run` tool: the Build-phase entry point that runs the
 /// deliverable build to completion and returns its gate/session report.
 pub(super) fn all() -> Vec<ToolDef> {
-    vec![
+    vec![run_tool(), emit_tool(), verdict_tool()]
+}
+
+fn run_tool() -> ToolDef {
         ToolDef {
             name: "product_build_run".to_string(),
             description: "Run a deliverable build (§5): assemble the SPMC context, dispatch the worker, run the LSP + verify gates, and return the gate/session report. Long-running; blocks until the build completes.".to_string(),
@@ -25,19 +28,37 @@ pub(super) fn all() -> Vec<ToolDef> {
                 },
                 "required": ["deliverable"]
             }),
-        },
+        }
+}
+
+fn emit_tool() -> ToolDef {
         ToolDef {
             name: "product_build_emit".to_string(),
-            description: "Emit a self-contained SPMC prompt for a Claude Code -p session: the frozen What/How/Behaviour/Acceptance context plus the work-unit build plan (in dependency order) and the verify commands the agent must pass. Returns { ok, deliverable, spmc } — hand `spmc` to `claude -p`.".to_string(),
+            description: "Emit a self-contained SPMC prompt for a Claude Code -p session: the frozen What/How/Behaviour/Acceptance context plus the work-unit build plan (in dependency order) and the verify commands the agent must pass. Returns { ok, deliverable, spmc }. With `seam: true`, instead emits the §5.1 build-seam envelopes (work units by value with a content-hash identity) as { ok, deliverable, units }.".to_string(),
             requires_write: false,
             input_schema: serde_json::json!({
                 "type": "object",
                 "properties": {
                     "deliverable": {"type": "string", "description": "The deliverable id to emit an SPMC for"},
+                    "seam": {"type": "boolean", "description": "Emit §5.1 build-seam envelopes instead of an SPMC prompt"},
                     "product": {"type": "string"}
                 },
                 "required": ["deliverable"]
             }),
-        },
-    ]
+        }
+}
+
+fn verdict_tool() -> ToolDef {
+        ToolDef {
+            name: "product_build_verdict".to_string(),
+            description: "Validate an inbound §5.1 build-seam verdict event against the contract (required fields, the pinned accepted/rejected/escalate vocabulary, no fields outside the envelope but `executor_extension`). Pass the event object as `event`. Returns { ok, … } or { ok: false, error }.".to_string(),
+            requires_write: false,
+            input_schema: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "event": {"type": "object", "description": "The verdict event JSON to validate"}
+                },
+                "required": ["event"]
+            }),
+        }
 }

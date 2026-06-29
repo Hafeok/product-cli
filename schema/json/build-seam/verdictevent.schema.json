@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hafeok.github.io/product-framework/build-seam/verdictevent.schema.json",
+  "title": "VerdictEvent",
+  "description": "The message emitted by the execution side across the Build seam (spec §5.1), to an event stream, when a unit reaches a verdict. SELF-DESCRIBING: a consumer that never observed the emission can reconcile it from the event alone. The executor emits and is done — it does not wait, retry, or know who listens (the producer holds no knowledge of any consumer). The universal envelope below is what every conforming executor must emit; stack-specific evidence (per-cell results, tier actually run, etc.) lives in `executor_extension`, which a consumer may ignore.",
+  "type": "object",
+  "required": ["event_id", "emitted_at", "unit_ref", "bundle_hash", "verdict"],
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for this emitted event."
+    },
+    "emitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the executor emitted the verdict (RFC 3339 / ISO 8601). A verdict emitted while no consumer is listening sits in the stream until one next reads it — temporal decoupling — so the timestamp is the emit time, not a consume time."
+    },
+    "unit_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Echoes the WorkUnit's `unit_ref`, letting a consumer match the verdict to the unit with no shared state."
+    },
+    "parent_lineage": {
+      "type": "string",
+      "description": "Echoes the WorkUnit's `parent_lineage` (if it carried one), enabling a consumer to roll the verdict up to its deliverable. Omitted if the unit carried none."
+    },
+    "bundle_hash": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The exact frozen bundle this verdict ran against — equal to the WorkUnit's `bundle_hash`. Closes the loop: every verdict is attributable to an immutable input, so provenance is reproducible (spec §5.1, §6 success criteria)."
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["accepted", "rejected", "escalate"],
+      "description": "The verdict, drawn from the Execution Contract / framework verdict vocabulary (spec §6.2) — a declared artifact, never a boolean in an exit code. `accepted`: the artifact met its schema and gates. `rejected`: it did not. `escalate`: the executor could not reach an accept/reject under its current capability and recommends a consumer re-dispatch at greater capability."
+    },
+    "next_consequence": {
+      "type": "string",
+      "enum": ["advance", "halt", "retry", "escalate"],
+      "description": "The Transition Contract consequence the executor applied or recommends (spec §6.2, §7). Optional: a consumer may act on `verdict` alone. When present, it binds verdict to its declared next step — e.g. `escalate` signals that re-dispatch at greater capability is the recommended move, which the consumer (not the executor) decides to perform."
+    },
+    "executor_extension": {
+      "type": "object",
+      "description": "THE ONE OPAQUE SLOT. Stack-specific evidence a particular execution framework produces — per-cell or per-step results from walking a sealed interior, the capability/tier actually run, heterogeneity metrics, timing, and so on — lives here. A consumer MAY ignore it entirely and act on `verdict` alone; it is present for audit and for executors that want to surface their interior. The framework neither reads nor mandates its contents. A `kind` discriminator is recommended.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Optional discriminator naming the execution framework whose evidence this slot carries; should match the WorkUnit's `executor_extension.kind`."
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

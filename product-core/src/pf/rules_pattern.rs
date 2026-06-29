@@ -28,7 +28,26 @@ pub fn pattern_conformance(graph: &DomainGraph) -> Vec<Violation> {
     command_pattern(graph, &mut v);
     view_consumed(graph, &mut v);
     unreifiable_seam(graph, &mut v);
+    journey_conformance(graph, &mut v);
     v
+}
+
+/// §3.0.1 — journey conformance: a journey may hop between systems only through a
+/// Translation (§3.2.0). Every `crosses_via` must resolve to a Translation trigger
+/// (one that reads from a source system); any other crossing — a direct screen
+/// reference, a shared table, an assumed call — is a finding.
+fn journey_conformance(graph: &DomainGraph, v: &mut Vec<Violation>) {
+    for j in &graph.journeys {
+        for tid in &j.crosses_via {
+            match graph.triggers.iter().find(|t| &t.id == tid) {
+                None => v.push(finding(&j.id, "crosses_via", &format!(
+                    "§3.0.1 Journey conformance: crossing '{tid}' does not resolve to a declared Trigger."))),
+                Some(t) if t.translates_from.is_none() => v.push(finding(&j.id, "crosses_via", &format!(
+                    "§3.0.1 Journey conformance: crossing '{tid}' is not a Translation — every cross-system crossing must read from a source system (§3.2.0)."))),
+                Some(_) => {}
+            }
+        }
+    }
 }
 
 /// §3.2.5 — a flow belongs to exactly one system. Strict: every flow names one.
