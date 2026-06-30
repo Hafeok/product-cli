@@ -167,15 +167,19 @@ async fn session_handler(
     axum::extract::Query(q): axum::extract::Query<SessionQuery>,
 ) -> axum::Json<serde_json::Value> {
     match resolve_session(&state.repo_root, state.session.as_deref(), q.session.as_deref()) {
-        Some((id, s)) => axum::Json(serde_json::json!({
-            "active": true,
-            "id": id,
-            "product": s.product,
-            "phase": s.phase,
-            "until": s.until,
-            "finalized": s.finalized,
-            "history": s.history,
-        })),
+        Some((id, s)) => {
+            // In progress → the view renders this session's isolated draft, not
+            // canonical (see `project_graph`); flag it and how far it has drifted.
+            let draft = !s.finalized;
+            let mut payload = serde_json::json!({ "active": true, "id": &id, "product": &s.product,
+                "phase": &s.phase, "until": &s.until, "finalized": s.finalized, "history": &s.history, "draft": draft });
+            if draft {
+                let nodes = |g: std::result::Result<ViewGraph, String>| g.ok().map(|g| g.nodes.len());
+                if let Some(n) = nodes(project_graph(&state.repo_root, Some(&(id.clone(), s.clone())))) { payload["draftNodes"] = n.into(); }
+                if let Some(n) = nodes(project_graph(&state.repo_root, None)) { payload["canonNodes"] = n.into(); }
+            }
+            axum::Json(payload)
+        }
         None => axum::Json(serde_json::json!({ "active": false })),
     }
 }

@@ -100,7 +100,25 @@ fn maximal() -> DomainGraph {
     max_behaviour(&mut g);
     max_ui(&mut g);
     max_data(&mut g);
+    max_boundary(&mut g);
     g
+}
+
+/// §3.0–§3.6 product boundary — the product root, a journey, a quality demand.
+fn max_boundary(g: &mut DomainGraph) {
+    g.products.push(Product {
+        id: "prod".into(), label: "Product".into(), purpose: "the thing".into(),
+        owns_domain: vec!["ctx".into()], owns_system: vec!["sys".into()], version: Some("1.0.0".into()),
+    });
+    g.journeys.push(Journey {
+        id: "jrn".into(), label: "End to end".into(), product: "prod".into(),
+        composes_flow: vec!["flow".into()], crosses_via: vec!["trig".into()],
+    });
+    g.quality_demands.push(QualityDemand {
+        id: "qd".into(), label: "Fast checkout".into(), kind: "runtime-bound".into(),
+        bound: "p99 ≤ 200ms".into(), scopes: "sys".into(),
+        measured_by: Some("telemetry:checkout".into()), constrains: None,
+    });
 }
 
 fn max_structure(g: &mut DomainGraph) {
@@ -173,6 +191,20 @@ fn full_graph_round_trips_losslessly() {
     assert_eq!(parsed, expected, "every field must survive a Turtle round-trip");
     // re-export of the parsed graph is byte-stable (canonical order is a fixpoint).
     assert_eq!(to_turtle(&parsed, "demo"), to_turtle(&expected, "demo"));
+}
+
+/// The round-trip guard above is only as exhaustive as `maximal()`. This makes
+/// that exhaustiveness self-enforcing: a new node kind added to `DomainGraph`
+/// (hence to `counts()`) that is *not* also populated in `maximal()` leaves a
+/// zero-count kind here, failing this test by name — so it can never silently
+/// escape the round-trip / canonicalization coverage the way product, journey
+/// and quality-demand once did. Wiring a kind through emit + parse + canon is
+/// then proven by `full_graph_round_trips_losslessly`.
+#[test]
+fn maximal_populates_every_node_kind() {
+    let empty: Vec<&str> = maximal().counts().into_iter()
+        .filter(|(_, n)| *n == 0).map(|(k, _)| k).collect();
+    assert!(empty.is_empty(), "maximal() must hold ≥1 of every node kind; missing: {empty:?}");
 }
 
 #[test]

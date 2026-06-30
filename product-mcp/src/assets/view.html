@@ -1,370 +1,733 @@
 <!DOCTYPE html>
 <!--
-  Live What-Graph view (FT: ctx-view). Fully self-contained: no CDN, no build
-  step — served from the product-mcp binary via include_str!. Two render modes,
-  switched from the header and remembered in localStorage:
+  Live What-Graph view. Fully self-contained: no CDN, no build step, no
+  external fonts — served from the product-mcp binary via include_str!. It
+  reproduces the "product-cli What views" design handoff as three connected,
+  data-driven graph views over the live /api/graph projection:
 
-    • Timeline  — an Event-Modeling swimlane reading left→right: a UI/trigger
-      lane on top, a command (blue) / view (green) lane below it, and one amber
-      "stream" lane per aggregate at the bottom holding its orange events. A
-      Building-Blocks legend sits in the left gutter.
-    • Two-lane  — the structural §3.1 domain | §3.2 event split, with bridge
-      edges crossing the divider.
+    • Systems — the product → systems & journeys map (§3.0): a product owns
+      domains + systems; systems reference domains; journeys cross systems via
+      a Translation.
+    • Domain  — one bounded context as an ER graph (§3.1): aggregates,
+      entities, value-objects and invariants, colour-coded, with relations and
+      invariant governance.
+    • Flows   — one system's event-model flows (§3.2) as Event-Modeling
+      swimlanes: Triggers/UI · Commands·Views · per-aggregate event streams.
 
-  Both live-refresh from /api/events (SSE 'changed').
+  Tabs, theme (dark "graph" / light "blueprint") and density are remembered in
+  localStorage. Everything live-refreshes from /api/events (SSE 'changed'); the
+  phase stepper follows /api/session.
+
+  The Event-Modeling semantic palette is load-bearing: command = blue,
+  view = green, event = amber, trigger = violet, ui-step = dashed neutral,
+  bridge / journey = magenta. Never recolour those.
 -->
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>What Graph — Live View</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M5 6 H27 L24.3 12.2 H7.7 Z' fill='%233b82f6'/%3E%3Cpath d='M7.9 13.1 H24.1 L21.6 19.1 H10.4 Z' fill='%23f59e0b'/%3E%3Cpath d='M10.6 20 H21.4 L18.9 26 H13.1 Z' fill='%2322c55e'/%3E%3C/svg%3E" />
 <style>
-  :root { --domain:#2563eb; --event:#d97706; --bridge:#db2777; --bg:#0f172a; --panel:#1e293b; --line:#475569; --text:#e2e8f0; --muted:#94a3b8;
-          --cmd:#2563eb; --view:#16a34a; --evt:#f59e0b; --ui:#e2e8f0; --stream:rgba(245,158,11,.07); }
-  * { box-sizing: border-box; }
-  body { margin:0; font:14px/1.4 system-ui, sans-serif; background:var(--bg); color:var(--text); }
-  header { display:flex; align-items:center; gap:16px; padding:10px 16px; background:var(--panel); border-bottom:1px solid var(--line); }
-  header h1 { font-size:15px; margin:0; font-weight:600; }
-  #live { display:flex; align-items:center; gap:6px; color:var(--muted); font-size:12px; }
-  #dot { width:9px; height:9px; border-radius:50%; background:#22c55e; transition:background .2s; }
-  #dot.flash { background:#fde047; }
-  #modes { display:flex; gap:0; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
-  #modes button { background:none; border:0; color:var(--muted); font:inherit; font-size:12px; padding:4px 12px; cursor:pointer; }
-  #modes button.on { background:var(--line); color:var(--text); }
-  #phasebar { display:none; align-items:center; gap:5px; }
-  #phasebar .step { font-size:11px; font-weight:600; padding:3px 11px; border-radius:12px; background:var(--line); color:var(--muted); transition:all .2s; }
-  #phasebar .step.done { background:#14532d; color:#86efac; }
-  #phasebar .step.cur { color:#fff; box-shadow:0 0 0 2px rgba(255,255,255,.18); }
-  #phasebar .arr { color:var(--muted); font-size:10px; }
-  #sessmeta { font-size:11px; color:var(--muted); margin-left:4px; }
-  #sessmeta .draft { color:#fbbf24; font-weight:700; }
-  #sessmeta .final { color:#86efac; font-weight:700; }
-  #filters { display:flex; flex-wrap:wrap; gap:10px; margin-left:auto; font-size:12px; color:var(--muted); }
-  #filters label { display:flex; align-items:center; gap:4px; cursor:pointer; }
-  .lane-head { display:flex; }
-  .lane-head div { flex:1; text-align:center; padding:6px; font-weight:600; letter-spacing:.04em; }
-  .lane-head .d { color:var(--domain); }
-  .lane-head .e { color:var(--event); }
-  #wrap { position:relative; overflow-x:auto; }
-  svg { display:block; }
-  .ctx-label { fill:var(--muted); font-size:11px; font-weight:600; letter-spacing:.03em; }
-  .node rect { rx:5; stroke-width:1.5; cursor:pointer; }
-  .node text { fill:var(--text); font-size:11px; pointer-events:none; }
-  .edge { stroke:var(--line); fill:none; stroke-width:1.2; }
-  .edge.bridge { stroke:var(--bridge); stroke-dasharray:5 3; stroke-width:1.6; }
-  .flow { stroke:#64748b; fill:none; stroke-width:1.4; marker-end:url(#arrow); opacity:.55; }
-  .xlink { stroke:#38bdf8; fill:none; stroke-width:1.4; marker-end:url(#arrow); opacity:0; transition:opacity .12s; }
-  .xlink.show { opacity:.9; }
-  .node:hover rect { filter:brightness(1.25); }
-  .lane-bg { stroke:none; }
-  .lane-name { fill:var(--evt); font-size:11px; font-weight:600; opacity:.85; }
-  .row-name { fill:#cbd5e1; font-size:11px; font-weight:700; letter-spacing:.02em; }
-  .legend-title { fill:var(--text); font-size:11px; font-weight:700; letter-spacing:.04em; }
-  .legend-cap { fill:var(--muted); font-size:10px; }
-  #panel { position:fixed; top:54px; right:0; width:300px; max-height:80vh; overflow:auto; background:var(--panel);
-           border:1px solid var(--line); border-radius:8px 0 0 8px; padding:14px; display:none; }
-  #panel h2 { margin:0 0 4px; font-size:14px; }
-  #panel .k { color:var(--muted); font-size:12px; }
-  #panel dt { color:var(--muted); font-size:11px; margin-top:8px; }
-  #panel dd { margin:2px 0 0; word-break:break-word; }
-  #panel button { margin-top:12px; background:none; border:1px solid var(--line); color:var(--text); border-radius:5px; padding:4px 8px; cursor:pointer; }
-  #empty { padding:40px; text-align:center; color:var(--muted); }
+/* ── design-system tokens (embedded, no @import) ───────────────────────────*/
+:root{
+  --slate-950:#0b1220; --slate-900:#0f172a; --slate-800:#1e293b; --slate-700:#334155;
+  --slate-600:#475569; --slate-500:#64748b; --slate-400:#94a3b8; --slate-300:#cbd5e1;
+  --slate-200:#e2e8f0; --slate-100:#f1f5f9; --slate-50:#f8fafc; --white:#fff;
+  --blue-700:#1763b6; --blue-600:#2563eb; --blue-500:#3b82f6; --blue-400:#60a5fa; --blue-100:#d6e6f6;
+  /* load-bearing Event-Modeling semantic palette */
+  --em-command:#2563eb; --em-view:#16a34a; --em-event:#f59e0b; --em-event-deep:#d97706;
+  --em-trigger:#7c3aed; --em-trigger-soft:#a78bfa; --em-bridge:#db2777;
+  --kind-entity:#1d4ed8; --kind-value-object:#3b82f6; --kind-invariant:#6366f1;
+  --ok-bg:#14532d;
+  --conf-described:#94a3b8; --conf-realised:#2563eb; --conf-verified:#16a34a; --conf-delivered:#7c3aed;
+  --font-sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono','SF Mono',ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;
+  --radius:5px; --radius-md:8px; --radius-pill:999px;
+  --shadow-graph:0 8px 28px rgba(0,0,0,.45);
+  --ease:cubic-bezier(.2,0,0,1); --dur-fast:120ms; --dur:200ms;
+  /* dark "graph" surface aliases (default) */
+  --bg:var(--slate-900); --surface:var(--slate-800); --surface-2:var(--slate-700);
+  --surface-sunken:var(--slate-950); --text:var(--slate-200); --text-muted:var(--slate-400);
+  --text-faint:var(--slate-500); --border:var(--slate-600); --border-soft:var(--slate-700);
+  --focus-ring:var(--blue-400);
+}
+/* light "blueprint" surface — invert the slate ramp so the same components read
+   as ink-on-paper. The EM semantic colours are untouched. */
+[data-surface="blueprint"]{
+  --slate-950:#fff; --slate-900:#f3f7fb; --slate-800:#fff; --slate-700:#d8e4ef;
+  --slate-600:#b9cee0; --slate-500:#6f93b3; --slate-400:#51708c; --slate-300:#2f4a63;
+  --slate-200:#122b42; --slate-100:#0b1f33; --slate-50:#0b1f33;
+  /* re-declare the semantic aliases *in this scope* so they substitute the
+     blueprint slate ramp — a var() inside a custom property is resolved where
+     the property is declared, so overriding the ramp alone is not enough. */
+  --bg:var(--slate-900); --surface:var(--slate-800); --surface-2:var(--slate-700);
+  --surface-sunken:#e9f1f8; --text:var(--slate-200); --text-muted:var(--slate-400);
+  --text-faint:var(--slate-500); --border:var(--slate-600); --border-soft:var(--slate-700);
+  --focus-ring:var(--blue-600); --shadow-graph:0 8px 28px rgba(11,31,51,.14);
+}
+*,*::before,*::after{box-sizing:border-box;}
+html,body{margin:0;height:100%;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:14px;
+  line-height:1.5;-webkit-font-smoothing:antialiased;}
+#app{height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--text);}
+
+/* header */
+header{display:flex;align-items:center;gap:16px;padding:10px 18px;background:var(--surface);
+  border-bottom:1px solid var(--border);flex-wrap:wrap;flex:none;}
+.logo{display:flex;align-items:center;gap:9px;}
+.logo svg{display:block;}
+.logo .wm{font-family:var(--font-mono);font-size:18px;font-weight:600;letter-spacing:-.01em;color:var(--text);}
+.logo .wm span{color:var(--slate-500);font-weight:400;}
+.chip-cmd{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);
+  border:1px solid var(--border);border-radius:4px;padding:2px 8px;}
+#live{display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:12px;font-family:var(--font-mono);}
+#dot{width:8px;height:8px;border-radius:50%;background:#22c55e;transition:background .2s;}
+#dot.flash{background:#fde047;}
+#stepper{display:none;align-items:center;gap:5px;}
+#stepper .step{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.04em;
+  padding:3px 12px;border-radius:var(--radius-pill);background:var(--surface-2);color:var(--text-muted);transition:all var(--dur) var(--ease);}
+#stepper .step.done{background:var(--ok-bg);color:#86efac;}
+#stepper .step.cur{color:#fff;box-shadow:0 0 0 2px color-mix(in srgb,var(--text) 16%,transparent);}
+#stepper .arr{color:var(--text-faint);font-family:var(--font-mono);font-size:11px;}
+#sessmeta{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-left:2px;}
+#sessmeta .draft{color:#fbbf24;font-weight:700;} #sessmeta .final{color:#86efac;font-weight:700;}
+#tabs{margin-left:auto;display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden;}
+#tabs button{background:transparent;border:0;color:var(--text-muted);font-family:var(--font-mono);
+  font-size:12px;padding:5px 15px;cursor:pointer;}
+#tabs button.on{background:var(--surface-2);color:var(--slate-100);}
+
+/* bars */
+.bar{display:flex;align-items:center;gap:8px;padding:7px 18px;flex:none;
+  background:var(--bg);border-bottom:1px solid var(--border-soft);font-family:var(--font-mono);font-size:12px;}
+.crumb{color:var(--blue-400);cursor:pointer;} .crumb.active{color:var(--slate-100);font-weight:600;cursor:default;}
+.crumb-sep{color:var(--slate-600);} .bar .ref{margin-left:auto;color:var(--slate-600);}
+.bar select{font-family:var(--font-mono);font-size:12px;background:var(--surface);color:var(--text);
+  border:1px solid var(--border);border-radius:5px;padding:3px 8px;cursor:pointer;}
+#filters{display:flex;gap:16px;flex-wrap:wrap;color:var(--text-muted);}
+#filters label{display:flex;align-items:center;gap:6px;cursor:pointer;}
+#filters .sw{width:9px;height:9px;border-radius:2px;}
+.chips{display:flex;gap:7px;flex-wrap:wrap;}
+.flowchip{display:inline-flex;align-items:center;gap:7px;cursor:pointer;background:transparent;color:var(--text-muted);
+  border:1px solid var(--border-soft);border-radius:6px;font-family:var(--font-sans);font-size:12.5px;font-weight:500;padding:5px 11px;}
+.flowchip.on{background:var(--surface-2);color:var(--slate-100);border-color:var(--slate-500);}
+
+/* canvas */
+#canvas{position:relative;flex:1;min-height:0;overflow:auto;}
+.cv-pad{position:relative;}
+svg{display:block;overflow:visible;}
+.elabel{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.04em;}
+
+/* node cards (HTML, absolutely positioned over an SVG edge layer) */
+.gnode{position:absolute;cursor:pointer;box-sizing:border-box;}
+.card{width:100%;height:100%;box-sizing:border-box;border-radius:var(--radius-md);background:var(--surface);
+  border:1.5px solid var(--border);box-shadow:var(--shadow-graph);overflow:hidden;}
+.card.sel{border-color:var(--blue-400);box-shadow:0 0 0 3px color-mix(in srgb,var(--blue-400) 30%,transparent);}
+.eyebrow{font-family:var(--font-mono);font-size:8.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;}
+.tag{font-family:var(--font-mono);font-size:9.5px;border:1px solid var(--border-soft);border-radius:3px;padding:1px 6px;white-space:nowrap;}
+
+/* legend + detail panel */
+.legend{position:absolute;left:16px;bottom:14px;display:flex;gap:13px;flex-wrap:wrap;z-index:5;
+  background:color-mix(in srgb,var(--bg) 82%,transparent);padding:7px 12px;border-radius:6px;border:1px solid var(--border-soft);}
+.legend span{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10px;color:var(--text-muted);}
+.legend .sw{width:11px;height:11px;border-radius:3px;}
+#panel{position:absolute;top:12px;right:12px;bottom:12px;width:300px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;box-shadow:var(--shadow-graph);
+  z-index:8;overflow:auto;display:none;}
+#panel .ktag{display:inline-flex;align-items:center;font-family:var(--font-mono);font-weight:600;font-size:9.5px;
+  letter-spacing:.12em;text-transform:uppercase;color:#0b1120;border-radius:3px;padding:2px 8px;}
+#panel h2{margin:8px 0 2px;font-size:16px;font-family:var(--font-sans);color:var(--slate-100);}
+#panel dl{margin:10px 0 0;} #panel .row{margin-top:10px;}
+#panel dt{color:var(--text-muted);font-size:10px;font-family:var(--font-mono);letter-spacing:.12em;text-transform:uppercase;}
+#panel dd{margin:3px 0 0;font-size:12px;font-family:var(--font-mono);color:var(--slate-200);line-height:1.45;word-break:break-word;}
+#panel .act{margin-top:14px;width:100%;background:var(--blue-600);border:1px solid var(--blue-500);color:#fff;
+  border-radius:5px;padding:8px 12px;cursor:pointer;font-family:var(--font-mono);font-size:11.5px;}
+#panel .close{margin-top:16px;background:none;border:1px solid var(--border);color:var(--slate-300);
+  border-radius:5px;padding:5px 12px;cursor:pointer;font-family:var(--font-mono);font-size:11px;}
+.confdot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block;}
+
+/* tweaks panel */
+#tweaks{position:absolute;right:14px;bottom:14px;z-index:9;font-family:var(--font-mono);}
+#tweaks .gear{width:34px;height:34px;border-radius:var(--radius-pill);border:1px solid var(--border);
+  background:var(--surface);color:var(--text-muted);cursor:pointer;font-size:15px;box-shadow:var(--shadow-graph);}
+#tweaks .body{display:none;position:absolute;right:0;bottom:42px;width:210px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;box-shadow:var(--shadow-graph);}
+#tweaks.open .body{display:block;}
+#tweaks .sec{font-size:9.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-faint);margin:10px 0 6px;}
+#tweaks .sec:first-child{margin-top:0;}
+#tweaks .opt{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--text-muted);margin:6px 0;}
+#tweaks .seg{display:flex;border:1px solid var(--border-soft);border-radius:5px;overflow:hidden;}
+#tweaks .seg button{background:transparent;border:0;color:var(--text-muted);font-family:var(--font-mono);font-size:10.5px;padding:3px 8px;cursor:pointer;}
+#tweaks .seg button.on{background:var(--surface-2);color:var(--slate-100);}
+#tweaks input[type=checkbox]{accent-color:var(--blue-500);}
+
+/* in-progress session draft notice */
+#draftbar{display:none;align-items:center;gap:9px;padding:6px 18px;flex:none;font-family:var(--font-mono);
+  font-size:11.5px;color:#fde68a;background:color-mix(in srgb,#fbbf24 13%,var(--bg));
+  border-bottom:1px solid color-mix(in srgb,#fbbf24 40%,transparent);box-shadow:inset 3px 0 0 #fbbf24;}
+#draftbar .dt{font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#fbbf24;}
+#draftbar .dm{color:var(--text-muted);}
+#draftbar .dg{margin-left:auto;color:#fcd34d;}
+
+#empty{padding:48px;text-align:center;color:var(--text-muted);font-family:var(--font-mono);}
+code{font-family:var(--font-mono);background:var(--surface-sunken);padding:1px 5px;border-radius:3px;}
 </style>
 </head>
 <body>
-<header>
-  <h1>What Graph — Live View</h1>
-  <div id="phasebar">
-    <span class="step" data-p="what">What</span><span class="arr">›</span>
-    <span class="step" data-p="how">How</span><span class="arr">›</span>
-    <span class="step" data-p="build">Build</span>
-    <span id="sessmeta"></span>
+<div id="app" data-surface="graph">
+  <header>
+    <div class="logo">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-label="Product Framework mark">
+        <path d="M5 6 H27 L24.3 12.2 H7.7 Z" fill="#3b82f6"></path>
+        <path d="M7.9 13.1 H24.1 L21.6 19.1 H10.4 Z" fill="#f59e0b"></path>
+        <path d="M10.6 20 H21.4 L18.9 26 H13.1 Z" fill="#22c55e"></path>
+      </svg>
+      <span class="wm">product<span> framework</span></span>
+    </div>
+    <span class="chip-cmd">product mcp --http</span>
+    <div id="stepper">
+      <span class="step" data-p="what">What</span><span class="arr">›</span>
+      <span class="step" data-p="how">How</span><span class="arr">›</span>
+      <span class="step" data-p="build">Build</span>
+      <span id="sessmeta"></span>
+    </div>
+    <span id="live"><span id="dot"></span><span id="status">connecting…</span></span>
+    <div id="tabs">
+      <button data-tab="systems">Systems</button>
+      <button data-tab="domain">Domain</button>
+      <button data-tab="flows">Flows</button>
+    </div>
+  </header>
+  <div id="draftbar"></div>
+  <div class="bar" id="crumbbar"></div>
+  <div class="bar" id="subbar" style="display:none"></div>
+  <div id="canvas">
+    <div class="cv-pad" id="cvpad"></div>
+    <div id="empty" style="display:none"></div>
+    <aside id="panel"></aside>
+    <div id="tweaks">
+      <div class="body" id="tweaksBody"></div>
+      <button class="gear" id="tweaksGear" title="display options">⚙</button>
+    </div>
   </div>
-  <span id="live"><span id="dot"></span><span id="status">connecting…</span></span>
-  <div id="modes">
-    <button data-mode="timeline">Timeline</button>
-    <button data-mode="lanes">Two-lane</button>
-  </div>
-  <div id="filters"></div>
-</header>
-<div class="lane-head" id="laneHead" style="display:none"><div class="d">DOMAIN MODEL · §3.1 structure</div><div class="e">EVENT MODEL · §3.2 behaviour</div></div>
-<div id="wrap"><svg id="svg"></svg><div id="empty" style="display:none">No What graph yet — capture one with <code>product domain new …</code></div></div>
-<aside id="panel"></aside>
+</div>
 <script>
-// Two-lane (structural) palette — domain blue/indigo, event amber.
-const KIND_COLOR = {
-  entity:'#1d4ed8', 'value-object':'#3b82f6', invariant:'#6366f1',
-  command:'#ea580c', event:'#d97706', 'read-model':'#ca8a04', 'ui-step':'#a16207', flow:'#854d0e',
-};
-// Event-Modeling palette — command blue, view green, event orange, UI white.
-const EM_COLOR = { 'ui-step':'var(--ui)', trigger:'#a78bfa', command:'var(--cmd)', 'read-model':'var(--view)', event:'var(--evt)' };
 const NS='http://www.w3.org/2000/svg';
-let hidden = new Set();   // kinds toggled off
-let last = null;          // last fetched graph
-let mode = localStorage.getItem('viewMode') || 'timeline';
+const $=id=>document.getElementById(id);
+function h(tag,attrs,...kids){const n=document.createElement(tag);apply(n,attrs);add(n,kids);return n;}
+function s(tag,attrs,...kids){const n=document.createElementNS(NS,tag);
+  for(const k in(attrs||{})){const v=attrs[k];if(v==null)continue;
+    if(k==='style'&&typeof v==='object')Object.assign(n.style,v);
+    else if(k.startsWith('on'))n[k.toLowerCase()]=v;
+    else n.setAttribute(k,v);}
+  add(n,kids);return n;}
+function apply(n,attrs){for(const k in(attrs||{})){const v=attrs[k];if(v==null)continue;
+  if(k==='style')Object.assign(n.style,v);else if(k==='class')n.className=v;else if(k.startsWith('on'))n[k.toLowerCase()]=v;
+  else if(k==='html')n.innerHTML=v;else n.setAttribute(k,v);}}
+function add(n,kids){for(const k of kids.flat()){if(k==null||k===false)continue;
+  n.appendChild(typeof k==='string'||typeof k==='number'?document.createTextNode(String(k)):k);}}
+function trim(t,n){t=t||'';return t.length>n?t.slice(0,n-1)+'…':t;}
+// compact ER cardinality so relation labels stay clear of the cards
+const CARD={'one-to-one':'1:1','one-to-many':'1:N','many-to-one':'N:1','many-to-many':'N:N'};
+function card(c){return CARD[c]||c;}
 
-function el(tag, attrs){ const n=document.createElementNS(NS,tag); for(const k in attrs) n.setAttribute(k,attrs[k]); return n; }
-function trim(s,n){ return s.length>n ? s.slice(0,n-1)+'…' : s; }
+/* ── load-bearing palette ──────────────────────────────────────────────────*/
+const EM={command:'var(--em-command)',view:'var(--em-view)','read-model':'var(--em-view)',
+  event:'var(--em-event)',trigger:'var(--em-trigger)','ui-step':'var(--slate-400)'};
+const EM_ABBR={command:'CMD',view:'VIEW','read-model':'VIEW',event:'EVT',trigger:'TRIG','ui-step':'UI'};
+const DOMC={aggregate:'var(--kind-entity)',entity:'var(--blue-500)','value-object':'var(--blue-400)',
+  invariant:'var(--kind-invariant)',external:'var(--slate-400)'};
+const FILTER_KINDS=['trigger','ui-step','command','view','event'];
+const FILTER_COLOR={trigger:'var(--em-trigger)','ui-step':'var(--slate-400)',command:'var(--em-command)',view:'var(--em-view)',event:'var(--em-event)'};
 
-// Follow a specific session when the page is opened as `/?session=<id>`; the
-// server otherwise falls back to its own `--session` scope.
-const SID = new URLSearchParams(location.search).get('session');
-const SQ = SID ? ('?session=' + encodeURIComponent(SID)) : '';
+/* ── app state ─────────────────────────────────────────────────────────────*/
+const SID=new URLSearchParams(location.search).get('session');
+const SQ=SID?('?session='+encodeURIComponent(SID)):'';
+const ST={
+  graph:null, tab:localStorage.getItem('viewTab')||'systems',
+  surface:localStorage.getItem('viewSurface')||'graph',
+  density:localStorage.getItem('viewDensity')||'comfortable',
+  showConf:localStorage.getItem('viewConf')!=='0',
+  ctxId:null, systemId:null, flowId:null,
+  sel:{systems:null,domain:null,flows:null}, hidden:new Set(),
+};
+
+/* derived model from the flat /api/graph projection */
+function derive(g){
+  const byId={}; for(const n of g.nodes) byId[n.id]=n;
+  const out=k=>g.edges.filter(e=>e.kind===k);
+  const product=g.nodes.find(n=>n.kind==='product')||null;
+  const systems=g.nodes.filter(n=>n.kind==='system');
+  const journeys=g.nodes.filter(n=>n.kind==='journey');
+  const domains=g.contexts.slice();
+  // a system's flows (system-of: flow → system)
+  const sysFlows={}; for(const e of out('system-of')){(sysFlows[e.to]=sysFlows[e.to]||[]).push(e.from);}
+  // a system references domains
+  const sysRefs={}; for(const e of out('references')){(sysRefs[e.from]=sysRefs[e.from]||[]).push(e.to);}
+  return {byId,product,systems,journeys,domains,sysFlows,sysRefs};
+}
+
+/* ── geometry helpers (shared.jsx anchor/curve, vanilla) ───────────────────*/
+function anchor(b,tx,ty){const dx=tx-b.x,dy=ty-b.y;if(!dx&&!dy)return{x:b.x,y:b.y};
+  const sx=dx===0?Infinity:(b.w/2)/Math.abs(dx),sy=dy===0?Infinity:(b.h/2)/Math.abs(dy),k=Math.min(sx,sy);
+  return{x:b.x+dx*k,y:b.y+dy*k};}
+function curve(a,b){const dx=b.x-a.x,dy=b.y-a.y;
+  if(Math.abs(dy)>=Math.abs(dx)){const my=(a.y+b.y)/2;return`M${a.x},${a.y} C${a.x},${my} ${b.x},${my} ${b.x},${b.y}`;}
+  const mx=(a.x+b.x)/2;return`M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}`;}
+
+function edgeLayer(w,hgt,edges,pos,showLabels){
+  const defs=s('defs',{},
+    s('marker',{id:'arr',viewBox:'0 0 10 10',refX:'8.5',refY:'5',markerWidth:'6.5',markerHeight:'6.5','orient':'auto-start-reverse'},
+      s('path',{d:'M0,0 L10,5 L0,10 z',fill:'var(--slate-500)'})),
+    s('marker',{id:'arrmag',viewBox:'0 0 10 10',refX:'8.5',refY:'5',markerWidth:'6.5',markerHeight:'6.5','orient':'auto-start-reverse'},
+      s('path',{d:'M0,0 L10,5 L0,10 z',fill:'var(--em-bridge)'})));
+  const svg=s('svg',{width:w,height:hgt,style:{position:'absolute',inset:0,pointerEvents:'none'}},defs);
+  for(const e of edges){const A=pos[e.from],B=pos[e.to];if(!A||!B)continue;
+    const a=anchor(A,B.x,B.y),b=anchor(B,A.x,A.y),mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    const g1=s('g',{style:{opacity:e.opacity==null?1:e.opacity,transition:'opacity 140ms var(--ease)'}});
+    g1.appendChild(s('path',{d:curve(a,b),fill:'none',stroke:e.stroke||'var(--slate-600)','stroke-width':e.width||1.5,
+      'stroke-dasharray':e.dash||null,'marker-end':e.arrow===false?null:(e.marker==='mag'?'url(#arrmag)':'url(#arr)')}));
+    if(showLabels&&e.label){const lw=e.label.length*6.2+10;
+      g1.appendChild(s('rect',{x:mx-lw/2,y:my-8,rx:3,width:lw,height:16,fill:'var(--bg)',opacity:.95}));
+      g1.appendChild(s('text',{x:mx,y:my+3.5,'text-anchor':'middle',class:'elabel',fill:e.labelColor||'var(--slate-400)'},e.label));}
+    svg.appendChild(g1);}
+  return svg;
+}
+function confDot(level){const c=`var(--conf-${level||'described'})`;
+  return h('span',{class:'confdot',title:'conformance: '+(level||'described'),
+    style:{background:c,boxShadow:`0 0 0 3px color-mix(in srgb,${c} 22%,transparent)`}});}
+
+/* ── SYSTEMS view ──────────────────────────────────────────────────────────*/
+function viewSystems(M){
+  const pad=$('cvpad'); const W=Math.max($('canvas').clientWidth,860);
+  const cx=W/2;
+  const pos={}, cards=[]; let y=40;
+  // product hero (only when one is captured — otherwise don't reserve the space)
+  if(M.product){const pw=Math.min(420,W-80),ph=96;
+    pos[M.product.id]={x:cx,y:y+ph/2,w:pw,h:ph};
+    cards.push(productCard(M.product,pw,ph,pos[M.product.id])); y+=ph+56;}
+  // domains — wrap to fit the viewport width instead of overflowing off-screen
+  const dw=170,dh=80;
+  const dl=wrapLayout(M.domains,dw,dh,22,16,W,y);
+  dl.pos.forEach((p,i)=>{const d=M.domains[i];
+    pos['ctx:'+d.id]={x:p.x,y:p.y,w:dw,h:dh}; cards.push(domainCard(d,dw,dh,pos['ctx:'+d.id]));});
+  if(M.domains.length)y+=dl.height+64;
+  // systems — same wrap treatment
+  const sw=300,sh=164;
+  const sl=wrapLayout(M.systems,sw,sh,26,22,W,y);
+  sl.pos.forEach((p,i)=>{const sy0=M.systems[i];
+    pos[sy0.id]={x:p.x,y:p.y,w:sw,h:sh}; cards.push(systemCard(M,sy0,sw,sh,pos[sy0.id]));});
+  y+=sl.height;
+  const H=Math.max(y+(M.journeys.length?120:48),$('canvas').clientHeight);
+  // edges
+  const E=[],sl5='var(--slate-500)',sl6='var(--slate-600)';
+  if(M.product){for(const e of ST.graph.edges){if(e.from!==M.product.id)continue;
+    if(e.kind==='owns-domain')E.push({from:e.from,to:'ctx:'+e.to,stroke:sl6,width:1.4});
+    if(e.kind==='owns-system')E.push({from:e.from,to:e.to,stroke:sl5,width:1.6,label:'owns',labelColor:'var(--slate-400)'});}}
+  for(const sy0 of M.systems)for(const d of (M.sysRefs[sy0.id]||[]))
+    E.push({from:sy0.id,to:'ctx:'+d,stroke:sl5,width:1.3,dash:'5 4',opacity:.6});
+  pad.appendChild(edgeLayer(W,H,E,pos,true));
+  // journeys (magenta brackets below)
+  if(M.journeys.length){const jsvg=s('svg',{width:W,height:H,style:{position:'absolute',inset:0,pointerEvents:'none'}});
+    let jy=y+34;
+    for(const j of M.journeys){const tr=ST.graph.edges.filter(e=>e.from===j.id&&e.kind==='crosses').map(e=>e.to).join(', ');
+      jsvg.appendChild(s('g',{transform:`translate(${cx},${jy})`},
+        s('rect',{x:-200,y:-15,rx:5,width:400,height:30,fill:'var(--bg)',stroke:'var(--em-bridge)','stroke-opacity':.5}),
+        s('text',{x:0,y:-2,'text-anchor':'middle',style:'font-family:var(--font-mono);font-size:10px;font-weight:600;fill:var(--em-bridge)'},'journey · '+j.label),
+        tr?s('text',{x:0,y:10,'text-anchor':'middle',style:'font-family:var(--font-mono);font-size:8px;fill:var(--slate-400)'},'crosses via '+trim(tr,52)):null));
+      jy+=40;}
+    pad.appendChild(jsvg);}
+  for(const c of cards)pad.appendChild(c);
+  pad.style.width=W+'px'; pad.style.height=H+'px';
+}
+// lay items out left→right, wrapping to a new row when the viewport runs out,
+// each row centred. Returns per-item centre {x,y} and the total block height.
+function wrapLayout(items,w,hgt,gapX,gapY,W,y0){const n=items.length;if(!n)return{pos:[],height:0};
+  const per=Math.max(1,Math.floor((W-72+gapX)/(w+gapX)));
+  const rows=Math.ceil(n/per);
+  const out=items.map((_,i)=>{const r=Math.floor(i/per),inRow=Math.min(per,n-r*per);
+    const total=inRow*w+(inRow-1)*gapX,rx0=Math.max(40+w/2,(W-total)/2+w/2),c=i-r*per;
+    return{x:rx0+c*(w+gapX),y:y0+r*(hgt+gapY)+hgt/2};});
+  return{pos:out,height:rows*hgt+(rows-1)*gapY};}
+function place(box){return{position:'absolute',left:(box.x-box.w/2)+'px',top:(box.y-box.h/2)+'px',width:box.w+'px',height:box.h+'px'};}
+function productCard(p,w,hgt,box){
+  const sel=ST.sel.systems===p.id;
+  return h('div',{class:'gnode',style:place(box),onclick:()=>selectNode('systems',p.id)},
+    h('div',{class:'card'+(sel?' sel':''),style:{display:'flex',gap:'12px',alignItems:'center',padding:'12px 14px'}},
+      h('div',{html:'<svg width="40" height="40" viewBox="0 0 32 32"><path d="M5 6 H27 L24.3 12.2 H7.7 Z" fill="#3b82f6"></path><path d="M7.9 13.1 H24.1 L21.6 19.1 H10.4 Z" fill="#f59e0b"></path><path d="M10.6 20 H21.4 L18.9 26 H13.1 Z" fill="#22c55e"></path></svg>',style:{flex:'none'}}),
+      h('div',{style:{minWidth:0}},
+        h('div',{style:{display:'flex',alignItems:'center',gap:'8px'}},
+          h('span',{style:{fontWeight:700,fontSize:'17px',color:'var(--slate-100)'}},p.label),
+          h('span',{style:{fontFamily:'var(--font-mono)',fontSize:'10px',color:'var(--slate-500)'}},'product · '+p.id),
+          ST.showConf?confDot('verified'):null),
+        h('div',{style:{fontSize:'12px',color:'var(--text-muted)',marginTop:'3px',lineHeight:1.35}},trim(p.purpose,120)),
+        h('div',{style:{display:'flex',gap:'6px',marginTop:'7px',flexWrap:'wrap'}},
+          ...(p.tags||[]).map(t=>h('span',{class:'tag',style:{color:'var(--blue-400)'}},t))))));
+}
+function domainCard(d,w,hgt,box){const sel=ST.sel.systems==='ctx:'+d.id;
+  return h('div',{class:'gnode',style:place(box),onclick:()=>selectNode('systems','ctx:'+d.id)},
+    h('div',{class:'card'+(sel?' sel':''),style:{background:'color-mix(in srgb,var(--kind-entity) 14%,var(--bg))',
+      border:'1.5px solid '+(sel?'var(--blue-400)':'var(--kind-entity)'),padding:'9px 12px',boxShadow:'none'}},
+      h('div',{style:{display:'flex',alignItems:'center',gap:'7px'}},
+        h('span',{class:'eyebrow',style:{color:'var(--blue-400)'}},'domain'),
+        ST.showConf?confDot('realised'):null),
+      h('div',{style:{fontWeight:600,fontSize:'14px',color:'var(--slate-100)',marginTop:'1px'}},trim(d.label,22)),
+      h('div',{style:{fontFamily:'var(--font-mono)',fontSize:'9px',color:'var(--text-muted)',marginTop:'2px',
+        overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},(d.glossary||[]).slice(0,4).join(' · '))));
+}
+function systemCard(M,sy,w,hgt,box){const sel=ST.sel.systems===sy.id;
+  const flows=M.sysFlows[sy.id]||[]; const dense=ST.density==='compact';
+  return h('div',{class:'gnode',style:place(box),onclick:()=>selectNode('systems',sy.id)},
+    h('div',{class:'card'+(sel?' sel':''),style:{display:'flex',flexDirection:'column'}},
+      h('div',{style:{padding:dense?'9px 13px':'11px 14px',borderBottom:'1px solid var(--border-soft)'}},
+        h('div',{style:{display:'flex',alignItems:'center',gap:'8px'}},
+          h('span',{style:{fontWeight:700,fontSize:'15px',color:'var(--slate-100)'}},sy.label),
+          h('span',{style:{fontFamily:'var(--font-mono)',fontSize:'9.5px',color:'var(--slate-500)'}},sy.context||'system'),
+          h('span',{style:{marginLeft:'auto',display:'flex',gap:'6px',alignItems:'center'}},
+            ST.showConf?confDot('verified'):null)),
+        h('div',{style:{fontSize:'11.5px',color:'var(--text-muted)',marginTop:'3px'}},trim(sy.purpose,86))),
+      h('div',{style:{padding:dense?'8px 13px':'10px 14px',display:'flex',flexDirection:'column',gap:'7px',flex:1}},
+        h('div',{style:{display:'flex',gap:'5px',flexWrap:'wrap'}},
+          ...(sy.tags||[]).map(t=>h('span',{class:'tag',style:{color:'var(--slate-300)',background:'var(--bg)'}},t))),
+        (!dense&&sy.fields&&sy.fields.length)?h('div',{style:{fontFamily:'var(--font-mono)',fontSize:'9.5px',color:'var(--slate-500)',lineHeight:1.5}},
+          ...sy.fields.slice(0,2).map(d=>h('div',{},'· '+trim(d,40)))):null),
+      h('button',{style:{border:0,borderTop:'1px solid var(--border-soft)',background:'var(--bg)',color:'var(--blue-400)',
+        fontFamily:'var(--font-mono)',fontSize:'11px',padding:'8px 14px',cursor:'pointer',textAlign:'left',
+        display:'flex',justifyContent:'space-between',alignItems:'center'},
+        onclick:ev=>{ev.stopPropagation();openSystem(sy.id);}},
+        h('span',{},flows.length+' event-model flow'+(flows.length===1?'':'s')),
+        h('span',{style:{color:'var(--slate-300)'}},'open →'))));
+}
+
+/* ── DOMAIN view (one context, ER graph) ───────────────────────────────────*/
+function viewDomain(M){
+  const ctx=ST.ctxId||(M.domains[0]&&M.domains[0].id); ST.ctxId=ctx;
+  const g=ST.graph;
+  const nodes=g.nodes.filter(n=>n.context===ctx&&['entity','value-object','invariant'].includes(n.kind));
+  if(!nodes.length){showEmpty('No structural nodes in this context yet.');return;}
+  const ids=new Set(nodes.map(n=>n.id));
+  const kindOf=n=>n.kind==='entity'?(n.aggregate?'aggregate':'entity'):n.kind;
+  // columns left→right by kind; stack within a column
+  const COLS=[['aggregate','aggregates'],['entity','entities'],['value-object','value objects'],['invariant','invariants']];
+  const colNodes=COLS.map(([k])=>nodes.filter(n=>kindOf(n)===k));
+  const colW=292, x0=196, padTop=70, vgap=18;
+  const pos={}, cards=[]; let maxY=0;
+  COLS.forEach(([k],ci)=>{let y=padTop;const cx=x0+ci*colW;
+    for(const n of colNodes[ci]){const fh=Math.max(2,(n.fields||[]).length);const ht=44+fh*15;
+      pos[n.id]={x:cx,y:y+ht/2,w:200,h:ht}; cards.push(erCard(n,kindOf(n),pos[n.id])); y+=ht+vgap; maxY=Math.max(maxY,y);}});
+  const W=Math.max($('canvas').clientWidth,x0+COLS.length*colW); const H=Math.max(maxY+60,$('canvas').clientHeight);
+  // edges within the context
+  const E=[];
+  for(const e of g.edges){if(!ids.has(e.from)||!ids.has(e.to))continue;
+    if(e.kind==='relation')E.push({from:e.from,to:e.to,stroke:'var(--slate-500)',width:1.6,
+      label:(e.label||'')+(e.card?'  '+card(e.card):''),labelColor:'var(--slate-400)'});
+    else if(e.kind==='applies-to')E.push({from:e.from,to:e.to,stroke:'var(--kind-invariant)',dash:'4 4',width:1.4,label:'governs',labelColor:'var(--em-trigger-soft)'});}
+  // cross-context relations (to a node outside this context) → magenta stub label only
+  $('cvpad').appendChild(edgeLayer(W,H,E,pos,true));
+  for(const c of cards)$('cvpad').appendChild(c);
+  $('cvpad').appendChild(domainLegend());
+  $('cvpad').style.width=W+'px'; $('cvpad').style.height=H+'px';
+}
+function erCard(n,kind,box){const c=DOMC[kind]||'var(--slate-400)';const sel=ST.sel.domain===n.id;
+  const isInv=kind==='invariant',isVO=kind==='value-object';
+  const KL={aggregate:'aggregate',entity:'entity','value-object':'value object',invariant:'invariant'};
+  return h('div',{class:'gnode',style:place(box),onclick:()=>selectNode('domain',n.id)},
+    h('div',{style:{width:'100%',height:'100%',boxSizing:'border-box',overflow:'hidden',
+      background:isInv?'var(--bg)':`color-mix(in srgb,${c} 13%,var(--bg))`,
+      border:`1.5px ${isInv||isVO?'dashed':'solid'} ${sel?'var(--blue-400)':c}`,
+      borderRadius:isVO?'12px':'6px',boxShadow:sel?'0 0 0 3px color-mix(in srgb,var(--blue-400) 30%,transparent)':'none'}},
+      h('div',{style:{padding:'7px 11px 6px',borderBottom:isInv?'none':'1px solid var(--border-soft)'}},
+        h('div',{style:{display:'flex',alignItems:'center',gap:'6px'}},
+          h('span',{class:'eyebrow',style:{fontSize:'8px',color:c}},KL[kind]||kind)),
+        h('div',{style:{fontFamily:isInv?'var(--font-mono)':'var(--font-sans)',fontWeight:isInv?600:700,
+          fontSize:isInv?'12px':'14px',color:'var(--slate-100)',marginTop:'1px'}},trim(n.label,24))),
+      h('div',{style:{padding:'6px 11px 8px'}},
+        ...(n.fields||[]).map(f=>h('div',{style:{fontFamily:'var(--font-mono)',fontSize:'9.5px',
+          color:isInv?c:'var(--text-muted)',lineHeight:1.55}},trim(f,30))))));
+}
+function domainLegend(){const items=[['aggregate',DOMC.aggregate],['entity',DOMC.entity],['value object',DOMC['value-object']],['invariant',DOMC.invariant]];
+  return h('div',{class:'legend'},...items.map(([l,c])=>h('span',{},
+    h('span',{class:'sw',style:{background:`color-mix(in srgb,${c} 22%,transparent)`,border:`1.5px solid ${c}`}}),l)));
+}
+
+/* ── FLOWS view (one system's event-model flows) ───────────────────────────*/
+function flowMembers(g,flowId){
+  const stepIds=g.edges.filter(e=>e.from===flowId&&e.kind==='step').map(e=>e.to);
+  const byId={};g.nodes.forEach(n=>byId[n.id]=n);
+  const anchors=stepIds.filter(id=>byId[id]&&['command','read-model'].includes(byId[id].kind));
+  const member=new Set(anchors); stepIds.forEach(id=>{if(byId[id])member.add(id);});
+  const ek=k=>g.edges.filter(e=>e.kind===k);
+  for(const e of ek('emits'))if(member.has(e.from))member.add(e.to);          // command emits event
+  for(const e of ek('issues'))if(member.has(e.to))member.add(e.from);          // trigger issues command
+  for(const e of ek('triggers'))if(member.has(e.to))member.add(e.from);        // ui triggers command
+  for(const e of ek('displays'))if(member.has(e.to))member.add(e.from);        // ui displays view
+  return {member,anchorOrder:anchors,byId};
+}
+function viewFlows(M){
+  const sys=M.systems.find(s=>s.id===ST.systemId)||M.systems[0]; if(!sys){showEmpty('No systems captured yet.');return;}
+  ST.systemId=sys.id;
+  const flows=(M.sysFlows[sys.id]||[]);
+  if(!flows.length){showEmpty('No flows in this system yet.');return;}
+  if(!flows.includes(ST.flowId))ST.flowId=flows[0];
+  const g=ST.graph; const flowId=ST.flowId;
+  const {member,anchorOrder,byId}=flowMembers(g,flowId);
+  let nodes=[...member].map(id=>byId[id]).filter(Boolean).filter(n=>!ST.hidden.has(n.kind==='read-model'?'view':n.kind));
+  if(!nodes.length){showEmpty('No behaviour captured in this flow yet.');return;}
+  const live=id=>member.has(id)&&nodes.some(n=>n.id===id);
+  const ek=k=>g.edges.filter(e=>e.kind===k&&live(e.from)&&live(e.to));
+  const emits=ek('emits'),issues=ek('issues'),triggers=ek('triggers'),displays=ek('displays'),changes=g.edges.filter(e=>e.kind==='changes');
+  // streams = aggregate each event changes
+  const streamOf={};for(const e of changes)streamOf[e.from]=e.to;
+  const isAnchor=n=>n.kind==='command'||n.kind==='read-model';
+  const colOf={};let col=0;const take=id=>{if(colOf[id]===undefined&&byId[id]&&isAnchor(byId[id]))colOf[id]=col++;};
+  for(const id of anchorOrder)take(id); for(const n of nodes)if(isAnchor(n))take(n.id);
+  const emitBy={};for(const e of emits)emitBy[e.to]=e.from;
+  for(const n of nodes)if(n.kind==='event'){const c=colOf[emitBy[n.id]];colOf[n.id]=c!==undefined?c:col++;}
+  const trigCmd={};for(const e of triggers)trigCmd[e.from]=e.to;
+  const dispView={};for(const e of displays)dispView[e.from]=e.to;
+  const issueCmd={};for(const e of issues)issueCmd[e.from]=e.to;
+  for(const n of nodes)if(n.kind==='ui-step'){const c=colOf[trigCmd[n.id]]??colOf[dispView[n.id]];colOf[n.id]=c!==undefined?c:col++;}
+  for(const n of nodes)if(n.kind==='trigger'){const c=colOf[issueCmd[n.id]];colOf[n.id]=c!==undefined?c:col++;}
+  const ncols=Math.max(1,col);
+  const evNodes=nodes.filter(n=>n.kind==='event');
+  let streamIds=[];for(const ev of evNodes){const st=streamOf[ev.id]||'—';if(!streamIds.includes(st))streamIds.push(st);}
+  const firstCol={};for(const ev of evNodes){const st=streamOf[ev.id]||'—',c=colOf[ev.id]||0;firstCol[st]=Math.min(firstCol[st]??1e9,c);}
+  streamIds.sort((a,b)=>(firstCol[a]-firstCol[b])||a.localeCompare(b));
+  const streamRow=Object.fromEntries(streamIds.map((x,i)=>[x,i]));
+  // geometry
+  const dense=ST.density==='compact';
+  const GUT=190,COLW=224,NW=190,uiH=dense?38:42,cvH=46,stackH=50,uiGap=uiH+8;
+  const colX=c=>GUT+c*COLW+COLW/2;
+  // the top (Triggers / UI) lane is as tall as its busiest column, so a column
+  // carrying both a trigger and a ui-step stacks them instead of overlapping.
+  const topCount={};for(const n of nodes)if(n.kind==='ui-step'||n.kind==='trigger'){const c=colOf[n.id]||0;topCount[c]=(topCount[c]||0)+1;}
+  const uiRows=Math.max(1,...Object.values(topCount),1);
+  const pad=20,uiBandH=uiRows*uiGap,uiY=pad+uiH/2,cvY=pad+uiBandH+22+cvH/2,streamTop=cvY+cvH/2+24;
+  const cellCount={};for(const ev of evNodes){const k=streamRow[streamOf[ev.id]||'—']+':'+(colOf[ev.id]||0);cellCount[k]=(cellCount[k]||0)+1;}
+  const laneStack=streamIds.map((_,i)=>{let m=1;for(const k in cellCount)if(k.startsWith(i+':'))m=Math.max(m,cellCount[k]);return m;});
+  const laneH=laneStack.map(m=>20+m*stackH); const laneY0=[];{let y=streamTop;for(const hh of laneH){laneY0.push(y);y+=hh;}}
+  const totalH=streamTop+laneH.reduce((a,b)=>a+b,0)+pad;
+  const W=Math.max($('canvas').clientWidth,GUT+ncols*COLW+40);
+  const byCell={},pos={};
+  for(const n of nodes){const c=colOf[n.id]||0;let y;
+    if(n.kind==='ui-step'||n.kind==='trigger'){const k='ui'+c;const i=byCell[k]||0;byCell[k]=i+1;y=uiY+i*uiGap;}
+    else if(n.kind==='event'){const r=streamRow[streamOf[n.id]||'—'];const k='e'+c+':'+r;const i=byCell[k]||0;byCell[k]=i+1;y=laneY0[r]+10+cvH/2+i*stackH;}
+    else{const k='cv'+c;const i=byCell[k]||0;byCell[k]=i+1;y=cvY+i*16;}
+    pos[n.id]={x:colX(c),y,w:NW,h:n.kind==='ui-step'||n.kind==='trigger'?uiH:cvH};}
+  // lane backgrounds
+  const pad0=$('cvpad');
+  const bg=s('svg',{width:W,height:totalH,style:{position:'absolute',inset:0,pointerEvents:'none'}});
+  bg.appendChild(s('rect',{x:GUT,y:pad-6,width:W-GUT,height:uiBandH+12,fill:'rgba(148,163,184,.05)'}));
+  bg.appendChild(s('rect',{x:GUT,y:cvY-cvH/2-6,width:W-GUT,height:cvH+12,fill:'rgba(37,99,235,.05)'}));
+  gut(bg,'Triggers / UI',pad+uiBandH/2,false); gut(bg,'Commands · Views',cvY,false);
+  streamIds.forEach((st,i)=>{bg.appendChild(s('rect',{x:GUT,y:laneY0[i],width:W-GUT,height:laneH[i]-6,fill:'rgba(245,158,11,.06)'}));
+    bg.appendChild(s('line',{x1:GUT,y1:laneY0[i],x2:W,y2:laneY0[i],stroke:'var(--border-soft)','stroke-width':1}));
+    gut(bg,labelOf(st),laneY0[i]+(laneH[i]-6)/2,true);});
+  bg.appendChild(s('line',{x1:GUT,y1:0,x2:GUT,y2:totalH,stroke:'var(--slate-700)'}));
+  pad0.appendChild(bg);
+  // edges: spine (issues/triggers/emits) always; cross (projects via stream feeds, displays) lighter
+  const E=[];
+  for(const e of issues)E.push({from:e.from,to:e.to,stroke:'var(--slate-500)',width:1.5,opacity:.62,arrow:true});
+  for(const e of triggers)E.push({from:e.from,to:e.to,stroke:'var(--slate-500)',width:1.5,opacity:.62,arrow:true});
+  for(const e of emits)E.push({from:e.from,to:e.to,stroke:'var(--slate-500)',width:1.5,opacity:.62,arrow:true});
+  for(const e of displays)E.push({from:e.from,to:e.to,stroke:'#38bdf8',width:1.5,dash:'5 3',opacity:.4,arrow:true});
+  // event → view feeds: a read-model that projects the event's stream
+  const projects=g.edges.filter(e=>e.kind==='projects');
+  for(const ev of evNodes){const st=streamOf[ev.id];if(!st)continue;
+    for(const p of projects)if(p.to===st&&live(p.from))E.push({from:ev.id,to:p.from,stroke:'#38bdf8',width:1.5,dash:'5 3',opacity:.4,arrow:true});}
+  pad0.appendChild(edgeLayer(W,totalH,E,pos,false));
+  // nodes
+  for(const n of nodes)pad0.appendChild(emNode(n,pos[n.id]));
+  pad0.style.width=W+'px'; pad0.style.height=totalH+'px';
+  function labelOf(id){const c=(g.contexts||[]).find(x=>x.id===id);return c?c.label:(id==='—'?'(unbound)':id);}
+}
+function gut(svg,txt,y,stream){const t=s('text',{x:190-14,y,'text-anchor':'end','dominant-baseline':'middle',
+  style:`font-family:var(--font-mono);font-size:11px;font-weight:${stream?600:700};letter-spacing:.02em;fill:${stream?'var(--em-event)':'var(--slate-300)'}`},trim(txt,22));svg.appendChild(t);}
+function emNode(n,box){const kind=n.kind==='read-model'?'view':n.kind;const c=EM[n.kind]||EM[kind]||'#888';
+  const fill=kind!=='ui-step';const sel=ST.sel.flows===n.id;
+  const wrap=h('div',{class:'gnode',style:place(box),
+    onmouseenter:()=>highlight(n.id,true),onmouseleave:()=>highlight(n.id,false),onclick:()=>selectNode('flows',n.id)});
+  wrap.dataset.id=n.id;
+  const short=n.kind==='ui-step'||n.kind==='trigger';
+  wrap.appendChild(h('div',{style:{width:'100%',height:'100%',boxSizing:'border-box',display:'flex',flexDirection:'column',
+    justifyContent:'center',padding:'5px 11px',borderRadius:'var(--radius)',overflow:'hidden',
+    background:fill?c:'var(--surface-sunken)',border:`1.5px ${fill?'solid':'dashed'} ${c}`,
+    color:fill?'#0b1120':'var(--text)',
+    boxShadow:sel?'0 0 0 2px var(--bg),0 0 0 4px var(--focus-ring)':'none',transition:'filter var(--dur-fast)'}},
+    h('span',{style:{fontFamily:'var(--font-mono)',fontSize:'8px',fontWeight:600,letterSpacing:'.12em',
+      textTransform:'uppercase',color:fill?'rgba(11,17,32,.62)':c}},EM_ABBR[n.kind]||'NODE'),
+    h('span',{style:{fontSize:'12px',fontWeight:600,lineHeight:1.2,
+      overflow:'hidden',textOverflow:'ellipsis',display:'-webkit-box','-webkit-box-orient':'vertical',
+      '-webkit-line-clamp':short?'1':'2',whiteSpace:short?'nowrap':'normal'}},trim(n.label,short?22:26))));
+  return wrap;
+}
+function highlight(id,on){for(const el of document.querySelectorAll('.gnode[data-id]'))
+  if(el.dataset.id===id)el.style.filter=on?'brightness(1.08)':'none';}
+
+/* ── detail panel ──────────────────────────────────────────────────────────*/
+function selectNode(tab,id){ST.sel[tab]=(ST.sel[tab]===id?null:id);renderPanel();}
+function ktag(label,color){return h('span',{class:'ktag',style:{background:color}},label);}
+function renderPanel(){
+  const p=$('panel'); const tab=ST.tab; const id=ST.sel[tab];
+  if(!id){p.style.display='none';return;}
+  const g=ST.graph; const n=g.nodes.find(x=>x.id===id)||(id.startsWith('ctx:')?{ctx:id.slice(4)}:null);
+  let tagEl,title,rows=[],action=null;
+  if(id.startsWith('ctx:')){const d=g.contexts.find(c=>c.id===id.slice(4));if(!d){p.style.display='none';return;}
+    tagEl=ktag('domain','var(--kind-entity)');title=d.label;
+    rows=[['ubiquitous language',(d.glossary||[]).join(' · ')],['purpose',d.purpose||'—']];
+    action={label:'open domain graph →',fn:()=>{ST.ctxId=d.id;setTab('domain');}};}
+  else if(n){const outs=g.edges.filter(e=>e.from===id),ins=g.edges.filter(e=>e.to===id);
+    const line=(e,dir)=>dir==='out'?`→ ${e.label||e.kind} ${e.to}`:`← ${e.from} (${e.kind})`;
+    const colorFor={product:'var(--blue-400)',system:'var(--slate-300)',entity:'var(--kind-entity)',
+      'value-object':'var(--blue-400)',invariant:'var(--kind-invariant)',command:'var(--em-command)',
+      event:'var(--em-event)','read-model':'var(--em-view)',trigger:'var(--em-trigger)','ui-step':'var(--slate-400)',
+      flow:'var(--em-event)',journey:'var(--em-bridge)'};
+    tagEl=ktag(n.kind+(n.aggregate?' · root':''),colorFor[n.kind]||'var(--slate-300)');title=n.label;
+    rows=[['id',n.id]];
+    if(n.purpose)rows.push(['purpose',n.purpose]);
+    if(n.context&&n.kind!=='system')rows.push(['context',n.context]);
+    if(n.kind==='system'&&n.context)rows.push(['kind',n.context]);
+    if(n.tags&&n.tags.length)rows.push([n.kind==='system'?'platforms / classes':'tags',n.tags.join(' · ')]);
+    if(n.fields&&n.fields.length)rows.push([n.kind==='invariant'?'rule':n.kind==='system'?'quality demands':'fields',n.fields]);
+    if(outs.length)rows.push(['out',outs.slice(0,12).map(e=>line(e,'out'))]);
+    if(ins.length)rows.push(['in',ins.slice(0,12).map(e=>line(e,'in'))]);
+    if(n.kind==='system')action={label:'open event-model flows →',fn:()=>openSystem(n.id)};
+  } else {p.style.display='none';return;}
+  p.innerHTML=''; p.style.display='block'; p.appendChild(tagEl);
+  p.appendChild(h('h2',{},title));
+  const dl=h('dl',{});
+  for(const [k,v] of rows){if(v==null||v==='')continue;const vals=Array.isArray(v)?v:[v];
+    dl.appendChild(h('div',{class:'row'},h('dt',{},k),...vals.map(t=>h('dd',{},String(t)))));}
+  p.appendChild(dl);
+  if(action)p.appendChild(h('button',{class:'act',onclick:action.fn},action.label));
+  p.appendChild(h('button',{class:'close',onclick:()=>{ST.sel[tab]=null;p.style.display='none';}},'× close'));
+}
+
+/* ── shell: tabs, bars, tweaks ─────────────────────────────────────────────*/
+function setTab(t){ST.tab=t;localStorage.setItem('viewTab',t);
+  for(const b of document.querySelectorAll('#tabs button'))b.classList.toggle('on',b.dataset.tab===t);
+  render();}
+function openSystem(id){ST.systemId=id;ST.sel.flows=null;setTab('flows');}
+function showEmpty(msg){$('cvpad').innerHTML='';$('empty').style.display='block';$('empty').innerHTML=msg;}
+function renderBars(M){
+  const cb=$('crumbbar');cb.innerHTML='';
+  const crumb=(label,active,fn)=>h('span',{class:'crumb'+(active?' active':''),onclick:active?null:fn},label);
+  const sep=()=>h('span',{class:'crumb-sep'},'›');
+  const prod=M.product?M.product.label:'product';
+  cb.appendChild(crumb(prod,ST.tab==='systems',()=>setTab('systems')));
+  let ref='';
+  if(ST.tab==='systems')ref='product → systems & journeys · §3.0';
+  if(ST.tab==='domain'){const d=M.domains.find(x=>x.id===ST.ctxId)||M.domains[0];
+    cb.appendChild(sep());cb.appendChild(crumb(d?d.label:'domain',true));ref='domain entities & relations · §3.1';}
+  if(ST.tab==='flows'){const sy=M.systems.find(x=>x.id===ST.systemId)||M.systems[0];
+    cb.appendChild(sep());cb.appendChild(crumb(sy?sy.label:'system',true));ref='event-model flows · §3.2';}
+  cb.appendChild(h('span',{class:'ref'},ref));
+  // sub-bar
+  const sb=$('subbar');sb.innerHTML='';sb.style.display='none';
+  if(ST.tab==='domain'&&M.domains.length){sb.style.display='flex';
+    sb.appendChild(h('span',{style:{color:'var(--slate-500)'}},'bounded context'));
+    const sel=h('select',{onchange:e=>{ST.ctxId=e.target.value;ST.sel.domain=null;render();}},
+      ...M.domains.map(d=>h('option',{value:d.id,selected:d.id===(ST.ctxId||M.domains[0].id)?'selected':null},d.label)));
+    sb.appendChild(sel);}
+  if(ST.tab==='flows'){const sy=M.systems.find(x=>x.id===ST.systemId)||M.systems[0];const flows=sy?(M.sysFlows[sy.id]||[]):[];
+    if(flows.length){sb.style.display='flex';
+      sb.appendChild(h('span',{style:{color:'var(--slate-500)',fontSize:'10px',letterSpacing:'.12em',textTransform:'uppercase'}},'flows in '+(sy?sy.label:'')));
+      const chips=h('div',{class:'chips'});
+      for(const fid of flows){const fn=ST.graph.nodes.find(n=>n.id===fid);
+        chips.appendChild(h('button',{class:'flowchip'+(fid===ST.flowId?' on':''),onclick:()=>{ST.flowId=fid;ST.sel.flows=null;render();}},
+          fn?trim(fn.label,40):fid));}
+      sb.appendChild(chips);
+      // filters
+      const fbox=h('div',{id:'filters',style:{marginLeft:'auto'}});
+      for(const k of FILTER_KINDS){const cb2=h('input',{type:'checkbox',checked:!ST.hidden.has(k)?'checked':null,
+        onchange:()=>{ST.hidden.has(k)?ST.hidden.delete(k):ST.hidden.add(k);render();}});
+        fbox.appendChild(h('label',{},cb2,h('span',{class:'sw',style:{background:FILTER_COLOR[k]}}),k));}
+      sb.appendChild(fbox);}}
+}
+function renderTweaks(){
+  const b=$('tweaksBody');b.innerHTML='';
+  const seg=(opts,cur,fn)=>{const d=h('div',{class:'seg'});
+    for(const[v,l]of opts)d.appendChild(h('button',{class:cur===v?'on':'',onclick:()=>fn(v)},l));return d;};
+  b.appendChild(h('div',{class:'sec'},'Surface'));
+  b.appendChild(h('div',{class:'opt'},'Theme',seg([['graph','dark'],['blueprint','light']],ST.surface,v=>{
+    ST.surface=v;localStorage.setItem('viewSurface',v);$('app').setAttribute('data-surface',v);renderTweaks();render();})));
+  b.appendChild(h('div',{class:'opt'},'Density',seg([['compact','compact'],['comfortable','comfy']],ST.density,v=>{
+    ST.density=v;localStorage.setItem('viewDensity',v);renderTweaks();render();})));
+  b.appendChild(h('div',{class:'sec'},'Overlays'));
+  const cf=h('input',{type:'checkbox',checked:ST.showConf?'checked':null,onchange:e=>{
+    ST.showConf=e.target.checked;localStorage.setItem('viewConf',ST.showConf?'1':'0');render();}});
+  b.appendChild(h('div',{class:'opt'},'Conformance',cf));
+}
+
+/* ── render ────────────────────────────────────────────────────────────────*/
+function render(){
+  if(!ST.graph){return;}
+  const M=derive(ST.graph);
+  if(!ST.graph.nodes.length){renderBars(M);showEmpty('No What graph yet — capture one with <code>product domain new …</code>');return;}
+  $('empty').style.display='none';
+  $('cvpad').innerHTML=''; $('canvas').scrollTop=0;
+  renderBars(M);
+  if(ST.tab==='systems')viewSystems(M);
+  else if(ST.tab==='domain')viewDomain(M);
+  else viewFlows(M);
+  renderPanel();
+}
 
 async function load(){
-  let g;
-  try { const r = await fetch('/api/graph'+SQ); if(!r.ok) throw new Error(await r.text()); g = await r.json(); }
-  catch(e){ document.getElementById('empty').style.display='block'; document.getElementById('empty').textContent=String(e.message||e); return; }
-  last = g; document.getElementById('empty').style.display = g.nodes.length ? 'none':'block';
-  buildFilters(g); render(g);
+  try{const r=await fetch('/api/graph'+SQ);if(!r.ok)throw new Error(await r.text());ST.graph=await r.json();}
+  catch(e){showEmpty(String(e.message||e));return;}
+  render();
 }
 
-// --- session phase banner: show which part of What→How→Build we're in ---
-const PHASES=['what','how','build'];
-const PHASE_COLOR={what:'#2563eb',how:'#d97706',build:'#16a34a'};
+/* When the view follows an in-progress session it renders that session's
+   isolated draft, not the canonical graph — flag it, and show how far the draft
+   has drifted (canonical nodes the draft doesn't carry, e.g. authored after the
+   session began). */
+function renderDraftbar(s0){
+  const b=$('draftbar');
+  if(!s0.draft){b.style.display='none';return;}
+  const ahead=(typeof s0.canonNodes==='number'&&typeof s0.draftNodes==='number')?s0.canonNodes-s0.draftNodes:null;
+  b.innerHTML='';
+  b.appendChild(h('span',{class:'dt'},'session draft'));
+  b.appendChild(h('span',{class:'dm'},'showing this session’s isolated working copy ('+s0.phase+' phase) — not the canonical graph. Finalize to promote.'));
+  if(ahead&&ahead>0)
+    b.appendChild(h('span',{class:'dg'},'canonical has '+ahead+' node'+(ahead===1?'':'s')+' the draft doesn’t'));
+  b.style.display='flex';
+}
+
+/* session phase stepper */
+const PHASES=['what','how','build'];const PHASE_COLOR={what:'var(--em-command)',how:'var(--em-event-deep)',build:'var(--em-view)'};
 async function loadSession(){
-  let s; try{ const r=await fetch('/api/session'+SQ); s=await r.json(); }catch(e){ return; }
-  const bar=document.getElementById('phasebar');
-  if(!s || !s.active){ bar.style.display='none'; document.title='What Graph — Live View'; return; }
+  let s0;try{const r=await fetch('/api/session'+SQ);s0=await r.json();}catch(e){return;}
+  const bar=$('stepper');
+  if(!s0||!s0.active){bar.style.display='none';$('draftbar').style.display='none';document.title='What Graph — Live View';return;}
   bar.style.display='flex';
-  const cur=PHASES.indexOf(s.phase), until=PHASES.indexOf(s.until);
-  for(const st of bar.querySelectorAll('.step')){
-    const i=PHASES.indexOf(st.dataset.p);
-    st.classList.toggle('done', i<cur);
-    st.classList.toggle('cur', i===cur);
-    st.style.background = i===cur ? PHASE_COLOR[s.phase] : '';
-    st.style.opacity = i>until ? '.35' : '1';   // dim phases past the session's cap
-  }
-  document.getElementById('sessmeta').innerHTML =
-    `· ${s.id} · ` + (s.finalized ? '<span class="final">finalized</span>' : '<span class="draft">DRAFT</span>');
-  document.title = `${s.phase.toUpperCase()} · ${s.id} — What Graph`;
-}
-
-function setMode(m){
-  mode=m; localStorage.setItem('viewMode',m);
-  for(const b of document.querySelectorAll('#modes button')) b.classList.toggle('on', b.dataset.mode===m);
-  document.getElementById('laneHead').style.display = m==='lanes' ? 'flex':'none';
-  if(last){ buildFilters(last); render(last); }
-}
-
-function render(g){ mode==='lanes' ? renderLanes(g) : renderTimeline(g); }
-
-function buildFilters(g){
-  const box = document.getElementById('filters');
-  // timeline only renders behavioural kinds — don't offer toggles that do nothing.
-  const TL=new Set(['command','event','read-model','ui-step','trigger']);
-  const kinds = [...new Set(g.nodes.map(n=>n.kind))].filter(k=>mode==='lanes'||TL.has(k)).sort();
-  box.innerHTML='';
-  for(const k of kinds){
-    const lab=document.createElement('label');
-    const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!hidden.has(k);
-    cb.onchange=()=>{ cb.checked?hidden.delete(k):hidden.add(k); render(last); };
-    const c = (mode==='lanes' ? KIND_COLOR[k] : (EM_COLOR[k]||'').replace('var(--ui)','#e2e8f0').replace('var(--cmd)','#2563eb').replace('var(--view)','#16a34a').replace('var(--evt)','#f59e0b')) || '#888';
-    const sw=document.createElement('span'); sw.style.cssText=`width:9px;height:9px;border-radius:2px;background:${c}`;
-    lab.append(cb,sw,document.createTextNode(k)); box.appendChild(lab);
-  }
-}
-
-function defs(svg){
-  const d=el('defs',{});
-  const m=el('marker',{id:'arrow',viewBox:'0 0 10 10',refX:'9',refY:'5',markerWidth:'6',markerHeight:'6',orient:'auto-start-reverse'});
-  m.appendChild(el('path',{d:'M0,0 L10,5 L0,10 z',fill:'#94a3b8'}));
-  d.appendChild(m); svg.appendChild(d);
-}
-
-// ── Timeline (Event-Modeling swimlanes) ──────────────────────────────────────
-// One column per slice (command or view), ordered by flow sequence. A UI lane
-// sits on top, the command (blue) / view (green) lane below it, and one amber
-// stream lane per aggregate at the bottom holds that aggregate's orange events
-// directly under the command that emits them. Spine connectors (ui→command,
-// command→event) run vertically inside a column; cross-links (event→view, etc.)
-// stay hidden until a node is hovered, so the default read is clean.
-function renderTimeline(g){
-  const svg=document.getElementById('svg'); svg.innerHTML=''; defs(svg);
-  const nodes=g.nodes.filter(n=>!hidden.has(n.kind));
-  const byId=Object.fromEntries(nodes.map(n=>[n.id,n]));
-  const live=id=>byId[id]!==undefined;
-  const ek=k=>g.edges.filter(e=>e.kind===k && live(e.from) && live(e.to));
-  const triggers=ek('triggers'), emits=ek('emits'), changes=ek('changes'), issues=ek('issues'), watches=ek('watches'),
-        projects=g.edges.filter(e=>e.kind==='projects'), displays=ek('displays'), transitions=ek('transitions');
-  const ctxLabel=Object.fromEntries((g.contexts||[]).map(c=>[c.id,c.label]));
-
-  // stream (aggregate) each event lives in = the entity it `changes`.
-  const streamOf={}; for(const e of changes) streamOf[e.from]=e.to;
-  let streamIds=[];
-  for(const ev of nodes.filter(n=>n.kind==='event')){ const s=streamOf[ev.id]||'—'; if(!streamIds.includes(s)) streamIds.push(s); }
-
-  // ── columns: one per anchor (command or view), in flow-step order. ──
-  const isAnchor=n=>n.kind==='command'||n.kind==='read-model';
-  const colOf={}; let col=0;
-  const take=id=>{ if(colOf[id]===undefined && byId[id] && isAnchor(byId[id])) colOf[id]=col++; };
-  for(const e of g.edges) if(e.kind==='step') take(e.to);   // flow order first
-  for(const n of nodes) if(isAnchor(n)) take(n.id);          // then any leftovers
-  // events inherit their emitting command's column; orphans get their own.
-  const emittedBy={}; for(const e of emits) emittedBy[e.to]=e.from;
-  for(const n of nodes) if(n.kind==='event'){ const c=colOf[emittedBy[n.id]]; colOf[n.id]=c!==undefined?c:col++; }
-  // ui inherits the column of the command it triggers / view it displays;
-  // a Trigger inherits the column of the command it issues (§3.2.0).
-  const trigCmd={}; for(const e of triggers) trigCmd[e.from]=e.to;
-  const dispView={}; for(const e of displays) dispView[e.from]=e.to;
-  const issuedCmd={}; for(const e of issues) issuedCmd[e.from]=e.to;
-  for(const n of nodes) if(n.kind==='ui-step'){ const c=colOf[trigCmd[n.id]]??colOf[dispView[n.id]]; colOf[n.id]=c!==undefined?c:col++; }
-  for(const n of nodes) if(n.kind==='trigger'){ const c=colOf[issuedCmd[n.id]]; colOf[n.id]=c!==undefined?c:col++; }
-  const ncols=Math.max(1,col);
-  const behav=nodes.filter(n=>['ui-step','trigger','command','read-model','event'].includes(n.kind));
-  const evNodes=nodes.filter(n=>n.kind==='event');
-
-  // order lanes by the leftmost column they carry an event in (active first).
-  const firstCol={}; for(const ev of evNodes){ const s=streamOf[ev.id]||'—', c=colOf[ev.id]||0; firstCol[s]=Math.min(firstCol[s]??1e9,c); }
-  streamIds.sort((a,b)=>(firstCol[a]-firstCol[b])||a.localeCompare(b));
-  const streamRow=Object.fromEntries(streamIds.map((s,i)=>[s,i]));
-
-  // ── geometry ──
-  const gutterW=190, colW=180, boxW=150, boxH=34, uiH=34, pad=20, stackH=boxH+8;
-  const colX=c=>gutterW+colW/2+c*colW;                    // column centre
-  const uiY=pad+uiH/2, cvY=uiY+uiH/2+18+boxH/2, streamTop=cvY+boxH/2+22;
-  // each lane is as tall as its busiest cell (events that share a column stack).
-  const cellCount={}; for(const ev of evNodes){ const k=(streamRow[streamOf[ev.id]||'—'])+':'+(colOf[ev.id]||0); cellCount[k]=(cellCount[k]||0)+1; }
-  const laneStack=streamIds.map((s,i)=>{ let m=1; for(const c2 in cellCount) if(c2.startsWith(i+':')) m=Math.max(m,cellCount[c2]); return m; });
-  const laneH=laneStack.map(m=>16+m*stackH);
-  const laneY0=[]; { let y=streamTop; for(const h of laneH){ laneY0.push(y); y+=h; } }
-  const totalH=streamTop+laneH.reduce((a,b)=>a+b,0)+pad;
-  const W=Math.max(svg.parentNode.clientWidth, gutterW+ncols*colW+pad);
-
-  // ── lane backgrounds + gutter labels ──
-  // header band tints (ui + command/view) so the two top rows read as lanes too.
-  svg.appendChild(el('rect',{x:gutterW,y:pad-6,width:W-gutterW,height:uiH+12,fill:'rgba(148,163,184,.05)',class:'lane-bg'}));
-  svg.appendChild(el('rect',{x:gutterW,y:cvY-boxH/2-6,width:W-gutterW,height:boxH+12,fill:'rgba(37,99,235,.05)',class:'lane-bg'}));
-  gutterText('Triggers / UI',uiY); gutterText('Commands · Views',cvY);
-  streamIds.forEach((s,i)=>{
-    svg.appendChild(el('rect',{x:gutterW,y:laneY0[i],width:W-gutterW,height:laneH[i]-6,fill:'var(--stream)',class:'lane-bg'}));
-    svg.appendChild(el('line',{x1:gutterW,y1:laneY0[i],x2:W,y2:laneY0[i],stroke:'#1e293b','stroke-width':'1'}));
-    gutterText(ctxLabel[s]||(s==='—'?'(unbound)':s), laneY0[i]+(laneH[i]-6)/2, true);
-  });
-  function gutterText(txt,y,stream){ const t=el('text',{x:gutterW-12,y,class:stream?'lane-name':'row-name'});
-    t.setAttribute('text-anchor','end'); t.setAttribute('dominant-baseline','middle'); t.textContent=trim(txt,22); svg.appendChild(t); }
-
-  // ── place nodes (events stack vertically when several share a cell) ──
-  const pos={}; const cell={};
-  for(const n of behav){
-    const c=colOf[n.id]||0; let y;
-    if(n.kind==='ui-step'||n.kind==='trigger'){ const k='ui'+c; const i=cell[k]||0; cell[k]=i+1; y=uiY+i*15; }
-    else if(n.kind==='event'){ const r=streamRow[streamOf[n.id]||'—']; const k='e'+c+':'+r; const i=cell[k]||0; cell[k]=i+1; y=laneY0[r]+8+boxH/2+i*stackH; }
-    else { const k='cv'+c; const i=cell[k]||0; cell[k]=i+1; y=cvY+i*16; }
-    pos[n.id]={x:colX(c),y};
-  }
-
-  // ── connectors: spine drawn always; cross-links hidden, shown on hover ──
-  const xref=[];   // {path, from, to}
-  const path=(e,cls)=>{ const a=pos[e.from],b=pos[e.to]; if(!a||!b) return null;
-    const my=(a.y+b.y)/2; const p=el('path',{class:cls,d:`M${a.x},${a.y} C${a.x},${my} ${b.x},${my} ${b.x},${b.y}`}); svg.appendChild(p); return p; };
-  for(const e of triggers) path(e,'flow');
-  for(const e of issues) path(e,'flow');
-  for(const e of emits) path(e,'flow');
-  // event → view (feeds), ui → view (displays), trigger → watched view: cross-links.
-  const feeds=[];
-  for(const ev of nodes){ if(ev.kind!=='event') continue; const s=streamOf[ev.id]; if(!s) continue;
-    for(const p of projects) if(p.to===s && live(p.from)) feeds.push({from:ev.id,to:p.from}); }
-  for(const e of feeds.concat(displays).concat(transitions).concat(watches)){ const p=path(e,'xlink'); if(p) xref.push({p,from:e.from,to:e.to}); }
-
-  // ── nodes ──
-  for(const n of behav){
-    const p=pos[n.id]; if(!p) continue;
-    const isUI=n.kind==='ui-step', isTop=isUI||n.kind==='trigger', h=isTop?uiH-6:boxH, c=EM_COLOR[n.kind]||'#888';
-    const grp=el('g',{class:'node'}); grp.dataset.id=n.id;
-    const rect=el('rect',{x:p.x-boxW/2,y:p.y-h/2,width:boxW,height:h});
-    if(isUI){ rect.setAttribute('fill','#0b1220'); rect.setAttribute('stroke',c); rect.setAttribute('stroke-dasharray','3 2'); }
-    else { rect.setAttribute('fill',c); rect.setAttribute('fill-opacity','.9'); rect.setAttribute('stroke',c); }
-    grp.appendChild(rect);
-    const t=el('text',{x:p.x,y:p.y+3}); t.setAttribute('text-anchor','middle');
-    t.textContent=trim(n.label||n.id,Math.floor(boxW/6.2));
-    if(n.kind==='command'||n.kind==='read-model'||n.kind==='event'||n.kind==='trigger') t.setAttribute('fill','#0b1120');
-    grp.appendChild(t);
-    grp.style.cursor='pointer'; grp.onclick=()=>showPanel(n);
-    grp.onmouseenter=()=>highlight(n.id,true); grp.onmouseleave=()=>highlight(n.id,false);
-    svg.appendChild(grp);
-  }
-  function highlight(id,on){ for(const x of xref) if(x.from===id||x.to===id) x.p.classList.toggle('show',on); }
-
-  drawLegend(svg,gutterW,totalH);
-  if(!behav.length){ const t=el('text',{x:W/2,y:totalH/2,class:'lane-name'}); t.setAttribute('text-anchor','middle');
-    t.textContent='No behaviour captured yet — add commands, events, read-models.'; svg.appendChild(t); }
-  svg.setAttribute('width',W); svg.setAttribute('height',totalH); svg.setAttribute('viewBox',`0 0 ${W} ${totalH}`);
-}
-
-// Building-Blocks legend, drawn across the top of the left gutter.
-function drawLegend(svg,gutterW,h){
-  svg.appendChild(el('line',{x1:gutterW,y1:0,x2:gutterW,y2:h,stroke:'#334155'}));
-}
-
-// ── Two-lane (structural §3.1 | §3.2) ────────────────────────────────────────
-// Each lane is a context-grouped vertical stack; bridges cross the divider.
-function renderLanes(g){
-  const svg=document.getElementById('svg'); svg.innerHTML='';
-  const W=svg.parentNode.clientWidth||1200, laneW=W/2, padX=70, rowH=46, ctxGap=26, boxW=Math.min(220, laneW-padX*1.4);
-  const ctxLabel = Object.fromEntries((g.contexts||[]).map(c=>[c.id,c.label]));
-  const nodes=g.nodes.filter(n=>!hidden.has(n.kind));
-  const pos={};   // id -> {x,y}
-  let maxY=0;
-
-  for(const [lane, cx] of [['domain', laneW*0.5],['event', laneW*1.5]]){
-    const mine=nodes.filter(n=>n.model===lane);
-    const groups={}; for(const n of mine){ (groups[n.context||'—'] ||= []).push(n); }
-    let y=50;
-    for(const ctx of Object.keys(groups).sort()){
-      if(ctx!=='—'){ const t=el('text',{x:cx-boxW/2,y:y-6,class:'ctx-label'}); t.textContent=(ctxLabel[ctx]||ctx); svg.appendChild(t); }
-      for(const n of groups[ctx]){
-        pos[n.id]={x:cx,y:y+14};
-        y+=rowH;
-      }
-      y+=ctxGap;
-    }
-    maxY=Math.max(maxY,y);
-  }
-
-  for(const e of g.edges){
-    const a=pos[e.from], b=pos[e.to]; if(!a||!b) continue;
-    const mx=(a.x+b.x)/2;
-    const p=el('path',{class:'edge'+(e.bridge?' bridge':''), d:`M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}`});
-    svg.appendChild(p);
-  }
-  svg.appendChild(el('line',{x1:laneW,y1:0,x2:laneW,y2:maxY+20,stroke:'#334155','stroke-dasharray':'4 4'}));
-  for(const n of nodes){
-    const p=pos[n.id]; if(!p) continue;
-    const g1=el('g',{class:'node'}); g1.style.cursor='pointer';
-    const c=KIND_COLOR[n.kind]||'#888';
-    g1.appendChild(el('rect',{x:p.x-boxW/2,y:p.y-15,width:boxW,height:28,fill:c+'22',stroke:c}));
-    const t=el('text',{x:p.x-boxW/2+8,y:p.y+3}); t.textContent=trim(n.label||n.id,Math.floor(boxW/6.5)); g1.appendChild(t);
-    g1.onclick=()=>showPanel(n); svg.appendChild(g1);
-  }
-  svg.setAttribute('width',W); svg.setAttribute('height', maxY+30); svg.setAttribute('viewBox',`0 0 ${W} ${maxY+30}`);
-}
-
-function showPanel(n){
-  const p=document.getElementById('panel'); p.style.display='block';
-  const ins=last.edges.filter(e=>e.to===n.id), outs=last.edges.filter(e=>e.from===n.id);
-  const line=(e,dir)=>`${dir==='out'?'→ '+e.to:'← '+e.from} <span class="k">(${e.kind}${e.bridge?', bridge':''})</span>`;
-  p.innerHTML=`<h2>${n.label||n.id}</h2><div class="k">${n.kind}${n.model?' · '+n.model+' lane':''}${n.context?' · '+n.context:''}</div>
-    <dl><dt>id</dt><dd>${n.id}</dd>
-    ${outs.length?`<dt>out</dt><dd>${outs.map(e=>line(e,'out')).join('<br>')}</dd>`:''}
-    ${ins.length?`<dt>in</dt><dd>${ins.map(e=>line(e,'in')).join('<br>')}</dd>`:''}</dl>
-    <button onclick="document.getElementById('panel').style.display='none'">close</button>`;
+  renderDraftbar(s0);
+  const cur=PHASES.indexOf(s0.phase),until=PHASES.indexOf(s0.until);
+  for(const st of bar.querySelectorAll('.step')){const i=PHASES.indexOf(st.dataset.p);
+    st.classList.toggle('done',i<cur);st.classList.toggle('cur',i===cur);
+    st.style.background=i===cur?PHASE_COLOR[s0.phase]:'';st.style.opacity=i>until?'.35':'1';}
+  $('sessmeta').innerHTML=`· ${s0.id} · `+(s0.finalized?'<span class="final">finalized</span>':'<span class="draft">DRAFT</span>');
+  document.title=`${s0.phase.toUpperCase()} · ${s0.id} — What Graph`;
 }
 
 function connect(){
-  const dot=document.getElementById('dot'), st=document.getElementById('status');
+  const dot=$('dot'),st=$('status');
   const es=new EventSource('/api/events');
-  const onTick=()=>{ dot.classList.add('flash'); setTimeout(()=>dot.classList.remove('flash'),300); load(); loadSession(); };
-  es.onopen=()=>{ st.textContent='live'; };
-  es.addEventListener('changed', onTick);   // server emits a named "changed" event
-  es.onmessage=onTick;                        // fallback for default-typed events
-  es.onerror=()=>{ st.textContent='reconnecting…'; };
+  const tick=()=>{dot.classList.add('flash');setTimeout(()=>dot.classList.remove('flash'),300);load();loadSession();};
+  es.onopen=()=>{st.textContent='live';};
+  es.addEventListener('changed',tick); es.onmessage=tick;
+  es.onerror=()=>{st.textContent='reconnecting…';};
 }
 
-for(const b of document.querySelectorAll('#modes button')) b.onclick=()=>setMode(b.dataset.mode);
-setMode(mode);
-load(); loadSession(); connect();
-window.addEventListener('resize',()=>last&&render(last));
+/* boot */
+$('app').setAttribute('data-surface',ST.surface);
+for(const b of document.querySelectorAll('#tabs button'))b.onclick=()=>setTab(b.dataset.tab);
+$('tweaksGear').onclick=()=>$('tweaks').classList.toggle('open');
+renderTweaks();
+setTab(ST.tab);
+load();loadSession();connect();
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>ST.graph&&render(),120);});
 </script>
 </body>
 </html>
