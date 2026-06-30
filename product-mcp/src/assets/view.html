@@ -161,6 +161,14 @@ svg{display:block;overflow:visible;}
 #tweaks .seg button.on{background:var(--surface-2);color:var(--slate-100);}
 #tweaks input[type=checkbox]{accent-color:var(--blue-500);}
 
+/* in-progress session draft notice */
+#draftbar{display:none;align-items:center;gap:9px;padding:6px 18px;flex:none;font-family:var(--font-mono);
+  font-size:11.5px;color:#fde68a;background:color-mix(in srgb,#fbbf24 13%,var(--bg));
+  border-bottom:1px solid color-mix(in srgb,#fbbf24 40%,transparent);box-shadow:inset 3px 0 0 #fbbf24;}
+#draftbar .dt{font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#fbbf24;}
+#draftbar .dm{color:var(--text-muted);}
+#draftbar .dg{margin-left:auto;color:#fcd34d;}
+
 #empty{padding:48px;text-align:center;color:var(--text-muted);font-family:var(--font-mono);}
 code{font-family:var(--font-mono);background:var(--surface-sunken);padding:1px 5px;border-radius:3px;}
 </style>
@@ -190,6 +198,7 @@ code{font-family:var(--font-mono);background:var(--surface-sunken);padding:1px 5
       <button data-tab="flows">Flows</button>
     </div>
   </header>
+  <div id="draftbar"></div>
   <div class="bar" id="crumbbar"></div>
   <div class="bar" id="subbar" style="display:none"></div>
   <div id="canvas">
@@ -670,13 +679,30 @@ async function load(){
   render();
 }
 
+/* When the view follows an in-progress session it renders that session's
+   isolated draft, not the canonical graph — flag it, and show how far the draft
+   has drifted (canonical nodes the draft doesn't carry, e.g. authored after the
+   session began). */
+function renderDraftbar(s0){
+  const b=$('draftbar');
+  if(!s0.draft){b.style.display='none';return;}
+  const ahead=(typeof s0.canonNodes==='number'&&typeof s0.draftNodes==='number')?s0.canonNodes-s0.draftNodes:null;
+  b.innerHTML='';
+  b.appendChild(h('span',{class:'dt'},'session draft'));
+  b.appendChild(h('span',{class:'dm'},'showing this session’s isolated working copy ('+s0.phase+' phase) — not the canonical graph. Finalize to promote.'));
+  if(ahead&&ahead>0)
+    b.appendChild(h('span',{class:'dg'},'canonical has '+ahead+' node'+(ahead===1?'':'s')+' the draft doesn’t'));
+  b.style.display='flex';
+}
+
 /* session phase stepper */
 const PHASES=['what','how','build'];const PHASE_COLOR={what:'var(--em-command)',how:'var(--em-event-deep)',build:'var(--em-view)'};
 async function loadSession(){
   let s0;try{const r=await fetch('/api/session'+SQ);s0=await r.json();}catch(e){return;}
   const bar=$('stepper');
-  if(!s0||!s0.active){bar.style.display='none';document.title='What Graph — Live View';return;}
+  if(!s0||!s0.active){bar.style.display='none';$('draftbar').style.display='none';document.title='What Graph — Live View';return;}
   bar.style.display='flex';
+  renderDraftbar(s0);
   const cur=PHASES.indexOf(s0.phase),until=PHASES.indexOf(s0.until);
   for(const st of bar.querySelectorAll('.step')){const i=PHASES.indexOf(st.dataset.p);
     st.classList.toggle('done',i<cur);st.classList.toggle('cur',i===cur);
