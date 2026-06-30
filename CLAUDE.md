@@ -86,7 +86,7 @@ docs/
   two-pillars-conformance.md  # The conformance clause set
   examples/ · workshop/       # Worked examples + workshop runbook
 .product/
-  config.toml          # Repo config
+  config.toml          # Repo config (`[author].cli` sets the default session CLI: claude|copilot)
   author-domain/       # The captured What graphs (e.g. product-cli — the example What)
   deciders/ · slices/ · work-units/ · deliverables/ · archetypes/
 ```

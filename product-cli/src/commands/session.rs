@@ -51,7 +51,10 @@ pub(crate) fn handle_session(cmd: SessionCommands) -> BoxResult {
 
 fn start(product: Option<String>, cli: Option<String>, until: &str, no_launch: bool) -> BoxResult {
     let product = resolve_product(product)?;
-    let cli_str = cli.unwrap_or_else(|| "claude".to_string());
+    // Precedence: --cli flag > repo [author].cli > global [author].cli > claude.
+    let cli_str = cli
+        .or_else(super::shared::default_author_cli)
+        .unwrap_or_else(|| "claude".to_string());
     let agent_cli = author::AgentCli::parse(&cli_str)?;
     let until = Phase::parse(until)?;
     let root = std::env::current_dir()?;

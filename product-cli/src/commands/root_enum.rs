@@ -122,6 +122,10 @@ pub enum Commands {
         /// Skip writing the bundled What→How→Build skills into `.claude/skills/`
         #[arg(long)]
         no_skills: bool,
+        /// Default agent CLI for `product session start`: claude | copilot
+        /// (writes `[author].cli`)
+        #[arg(long, value_name = "CLI")]
+        cli: Option<String>,
     },
     /// Install git hooks and scaffolding
     InstallHooks,

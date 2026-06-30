@@ -64,8 +64,10 @@ fn handle_domain(cmd: AuthorCommands) -> BoxResult {
         return Ok(());
     }
 
-    // Resolve the agent CLI from the flag, otherwise default to claude.
-    let cli_str = cli.unwrap_or_else(|| "claude".to_string());
+    // Resolve the agent CLI: --cli flag > repo [author].cli > global > claude.
+    let cli_str = cli
+        .or_else(super::shared::default_author_cli)
+        .unwrap_or_else(|| "claude".to_string());
     let agent_cli = author::AgentCli::parse(&cli_str)?;
     let root = std::env::current_dir()?;
     let _ = seed; // the session workspace seeds the draft from canonical `.product`.

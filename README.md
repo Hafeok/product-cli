@@ -40,6 +40,29 @@ The binary ships with the What→How→Build **Claude Code skills** baked in.
 `product skills install --global` puts them in `~/.claude/skills/` for every
 project. Start a fresh Claude Code session to pick them up, then `/product-session`.
 
+## Choosing the agent CLI
+
+`product session start` (and `product author domain`) host the What→How→Build
+session in an agent CLI — **Claude Code** or **GitHub Copilot CLI**. The CLI is
+resolved in this order:
+
+1. the `--cli claude|copilot` flag, else
+2. the repo's `[author].cli` in `.product/config.toml`, else
+3. the global user default in `$XDG_CONFIG_HOME/product/config.toml`
+   (or `~/.config/product/config.toml`), else
+4. `claude`.
+
+```toml
+# .product/config.toml — make this repo default to Copilot CLI
+[author]
+cli = "copilot"
+```
+
+Scaffold it on a new repo with `product init --cli copilot`, or set a personal
+default for every repo by putting the same `[author]` block in
+`~/.config/product/config.toml`. With a default configured, `product session
+start` needs no `--cli` flag.
+
 ## 60-second tour
 
 ```bash
