@@ -28,6 +28,17 @@ pub(crate) fn default_product_name() -> Option<String> {
     (!name.is_empty()).then_some(name)
 }
 
+/// The configured default agent CLI for authoring sessions: the repo's
+/// `[author].cli` if discoverable, otherwise the global user config's. Returns
+/// `None` when neither is set, leaving the caller to fall back to the built-in
+/// `claude` default. The `--cli` flag takes precedence over this.
+pub(crate) fn default_author_cli() -> Option<String> {
+    ProductConfig::discover()
+        .ok()
+        .and_then(|(config, _)| config.author_cli())
+        .or_else(product_core::config::load_global_author_cli)
+}
+
 /// Resolve the repo root for domain-graph commands: the discovered product
 /// root, else the current directory.
 pub(crate) fn domain_root() -> PathBuf {

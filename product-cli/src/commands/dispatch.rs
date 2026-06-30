@@ -69,6 +69,7 @@ fn dispatch_init(command: Commands) -> BoxResult {
         path,
         demo,
         no_skills,
+        cli,
     } = command
     else {
         unreachable!("dispatch_init called with non-Init variant")
@@ -85,6 +86,7 @@ fn dispatch_init(command: Commands) -> BoxResult {
         path,
         demo,
         no_skills,
+        cli,
     )
 }
 

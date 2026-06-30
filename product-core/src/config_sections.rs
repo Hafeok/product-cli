@@ -13,6 +13,15 @@ pub struct ProductSection {
     pub responsibility: Option<String>,
 }
 
+/// `[author]` section — authoring-session defaults.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthorSection {
+    /// Default agent CLI to host `product session start`: `claude` | `copilot`.
+    /// Overridden by the `--cli` flag; validated by `AgentCli::parse`.
+    #[serde(default)]
+    pub cli: Option<String>,
+}
+
 /// `[mcp]` section — MCP server settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpConfig {

@@ -25,7 +25,12 @@ pub(crate) fn handle_init(
     path: Option<PathBuf>,
     demo: bool,
     no_skills: bool,
+    cli: Option<String>,
 ) -> BoxResult {
+    // Validate the agent CLI choice up front so a typo fails before we write.
+    if let Some(c) = &cli {
+        product_core::author::AgentCli::parse(c)?;
+    }
     let target_dir = resolve_target_dir(path.as_deref())?;
     let layout: &Layout = if legacy_layout { &LEGACY } else { &CANONICAL };
     let config_path = target_dir.join(layout.config);
@@ -71,6 +76,7 @@ pub(crate) fn handle_init(
         &domains,
         mcp_write,
         mcp_port,
+        cli.as_deref(),
     );
 
     if let Some(parent) = config_path.parent() {

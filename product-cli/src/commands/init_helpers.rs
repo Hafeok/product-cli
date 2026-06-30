@@ -149,6 +149,7 @@ pub(crate) fn build_toml(
     domains: &[(String, String)],
     mcp_write: bool,
     mcp_port: u16,
+    author_cli: Option<&str>,
 ) -> String {
     let domains_section = if domains.is_empty() {
         String::new()
@@ -183,18 +184,53 @@ pub(crate) fn build_toml(
         format!("[domains]\n{domains_section}\n")
     };
 
+    // `[author].cli` — the default agent CLI for `product session start`.
+    // Active when a value is supplied; commented otherwise for discoverability.
+    let author_block = match author_cli.map(str::trim).filter(|c| !c.is_empty()) {
+        Some(c) => format!(
+            "[author]\n# default agent CLI for `product session start`: claude | copilot\ncli = \"{c}\"\n\n"
+        ),
+        None => "[author]\n# default agent CLI for `product session start`: claude | copilot\n# cli = \"claude\"\n\n".to_string(),
+    };
+
     format!(
         r#"name = "{name}"
 schema-version = "1"
 
-{product}{domains}[mcp]
+{product}{domains}{author}[mcp]
 write = {mcp_write}
 port = {mcp_port}
 "#,
         name = project_name,
         product = product_section,
         domains = domains_block,
+        author = author_block,
         mcp_write = mcp_write,
         mcp_port = mcp_port,
     )
+}
+
+#[cfg(test)]
+mod author_block_tests {
+    use super::build_toml;
+    use product_core::config::ProductConfig;
+
+    #[test]
+    fn cli_some_emits_active_author_block_and_parses() {
+        let toml = build_toml("app", None, &[], false, 7777, Some("copilot"));
+        assert!(toml.contains("[author]"));
+        assert!(toml.contains("cli = \"copilot\""));
+        let config: ProductConfig = toml::from_str(&toml).expect("valid config");
+        assert_eq!(config.author_cli().as_deref(), Some("copilot"));
+    }
+
+    #[test]
+    fn cli_none_emits_commented_author_block() {
+        let toml = build_toml("app", None, &[], false, 7777, None);
+        assert!(toml.contains("[author]"));
+        assert!(toml.contains("# cli = \"claude\""));
+        // Commented out → no active default.
+        let config: ProductConfig = toml::from_str(&toml).expect("valid config");
+        assert_eq!(config.author_cli(), None);
+    }
 }
