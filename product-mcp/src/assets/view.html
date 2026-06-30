@@ -27,6 +27,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>What Graph — Live View</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M5 6 H27 L24.3 12.2 H7.7 Z' fill='%233b82f6'/%3E%3Cpath d='M7.9 13.1 H24.1 L21.6 19.1 H10.4 Z' fill='%23f59e0b'/%3E%3Cpath d='M10.6 20 H21.4 L18.9 26 H13.1 Z' fill='%2322c55e'/%3E%3C/svg%3E" />
 <style>
 /* ── design-system tokens (embedded, no @import) ───────────────────────────*/
 :root{
@@ -217,6 +218,9 @@ function apply(n,attrs){for(const k in(attrs||{})){const v=attrs[k];if(v==null)c
 function add(n,kids){for(const k of kids.flat()){if(k==null||k===false)continue;
   n.appendChild(typeof k==='string'||typeof k==='number'?document.createTextNode(String(k)):k);}}
 function trim(t,n){t=t||'';return t.length>n?t.slice(0,n-1)+'…':t;}
+// compact ER cardinality so relation labels stay clear of the cards
+const CARD={'one-to-one':'1:1','one-to-many':'1:N','many-to-one':'N:1','many-to-many':'N:N'};
+function card(c){return CARD[c]||c;}
 
 /* ── load-bearing palette ──────────────────────────────────────────────────*/
 const EM={command:'var(--em-command)',view:'var(--em-view)','read-model':'var(--em-view)',
@@ -275,7 +279,7 @@ function edgeLayer(w,hgt,edges,pos,showLabels){
     g1.appendChild(s('path',{d:curve(a,b),fill:'none',stroke:e.stroke||'var(--slate-600)','stroke-width':e.width||1.5,
       'stroke-dasharray':e.dash||null,'marker-end':e.arrow===false?null:(e.marker==='mag'?'url(#arrmag)':'url(#arr)')}));
     if(showLabels&&e.label){const lw=e.label.length*6.2+10;
-      g1.appendChild(s('rect',{x:mx-lw/2,y:my-8,rx:3,width:lw,height:16,fill:'var(--bg)',opacity:.86}));
+      g1.appendChild(s('rect',{x:mx-lw/2,y:my-8,rx:3,width:lw,height:16,fill:'var(--bg)',opacity:.95}));
       g1.appendChild(s('text',{x:mx,y:my+3.5,'text-anchor':'middle',class:'elabel',fill:e.labelColor||'var(--slate-400)'},e.label));}
     svg.appendChild(g1);}
   return svg;
@@ -288,20 +292,24 @@ function confDot(level){const c=`var(--conf-${level||'described'})`;
 function viewSystems(M){
   const pad=$('cvpad'); const W=Math.max($('canvas').clientWidth,860);
   const cx=W/2;
-  const pos={}, cards=[];
-  // product (top, centred)
-  const pw=Math.min(420,W-80), ph=96, py=70;
-  if(M.product){pos[M.product.id]={x:cx,y:py+ph/2,w:pw,h:ph};
-    cards.push(productCard(M.product,pw,ph,pos[M.product.id]));}
-  // domains row
-  const dw=170,dh=80,dgap=22,dy=py+ph+96;
-  rowLayout(M.domains,dw,dgap,W).forEach((x,i)=>{const d=M.domains[i];
-    pos['ctx:'+d.id]={x,y:dy+dh/2,w:dw,h:dh}; cards.push(domainCard(d,dw,dh,pos['ctx:'+d.id]));});
-  // systems row
-  const sw=300,sh=164,sgap=26,syy=dy+dh+118;
-  rowLayout(M.systems,sw,sgap,W).forEach((x,i)=>{const sy0=M.systems[i];
-    pos[sy0.id]={x,y:syy+sh/2,w:sw,h:sh}; cards.push(systemCard(M,sy0,sw,sh,pos[sy0.id]));});
-  const H=syy+sh+ (M.journeys.length?150:70);
+  const pos={}, cards=[]; let y=40;
+  // product hero (only when one is captured — otherwise don't reserve the space)
+  if(M.product){const pw=Math.min(420,W-80),ph=96;
+    pos[M.product.id]={x:cx,y:y+ph/2,w:pw,h:ph};
+    cards.push(productCard(M.product,pw,ph,pos[M.product.id])); y+=ph+56;}
+  // domains — wrap to fit the viewport width instead of overflowing off-screen
+  const dw=170,dh=80;
+  const dl=wrapLayout(M.domains,dw,dh,22,16,W,y);
+  dl.pos.forEach((p,i)=>{const d=M.domains[i];
+    pos['ctx:'+d.id]={x:p.x,y:p.y,w:dw,h:dh}; cards.push(domainCard(d,dw,dh,pos['ctx:'+d.id]));});
+  if(M.domains.length)y+=dl.height+64;
+  // systems — same wrap treatment
+  const sw=300,sh=164;
+  const sl=wrapLayout(M.systems,sw,sh,26,22,W,y);
+  sl.pos.forEach((p,i)=>{const sy0=M.systems[i];
+    pos[sy0.id]={x:p.x,y:p.y,w:sw,h:sh}; cards.push(systemCard(M,sy0,sw,sh,pos[sy0.id]));});
+  y+=sl.height;
+  const H=Math.max(y+(M.journeys.length?120:48),$('canvas').clientHeight);
   // edges
   const E=[],sl5='var(--slate-500)',sl6='var(--slate-600)';
   if(M.product){for(const e of ST.graph.edges){if(e.from!==M.product.id)continue;
@@ -312,7 +320,7 @@ function viewSystems(M){
   pad.appendChild(edgeLayer(W,H,E,pos,true));
   // journeys (magenta brackets below)
   if(M.journeys.length){const jsvg=s('svg',{width:W,height:H,style:{position:'absolute',inset:0,pointerEvents:'none'}});
-    let jy=syy+sh+34;
+    let jy=y+34;
     for(const j of M.journeys){const tr=ST.graph.edges.filter(e=>e.from===j.id&&e.kind==='crosses').map(e=>e.to).join(', ');
       jsvg.appendChild(s('g',{transform:`translate(${cx},${jy})`},
         s('rect',{x:-200,y:-15,rx:5,width:400,height:30,fill:'var(--bg)',stroke:'var(--em-bridge)','stroke-opacity':.5}),
@@ -323,9 +331,15 @@ function viewSystems(M){
   for(const c of cards)pad.appendChild(c);
   pad.style.width=W+'px'; pad.style.height=H+'px';
 }
-function rowLayout(items,w,gap,W){const n=items.length;if(!n)return[];
-  const total=n*w+(n-1)*gap; let x0=Math.max(40+w/2,(W-total)/2+w/2);
-  return items.map((_,i)=>x0+i*(w+gap));}
+// lay items out left→right, wrapping to a new row when the viewport runs out,
+// each row centred. Returns per-item centre {x,y} and the total block height.
+function wrapLayout(items,w,hgt,gapX,gapY,W,y0){const n=items.length;if(!n)return{pos:[],height:0};
+  const per=Math.max(1,Math.floor((W-72+gapX)/(w+gapX)));
+  const rows=Math.ceil(n/per);
+  const out=items.map((_,i)=>{const r=Math.floor(i/per),inRow=Math.min(per,n-r*per);
+    const total=inRow*w+(inRow-1)*gapX,rx0=Math.max(40+w/2,(W-total)/2+w/2),c=i-r*per;
+    return{x:rx0+c*(w+gapX),y:y0+r*(hgt+gapY)+hgt/2};});
+  return{pos:out,height:rows*hgt+(rows-1)*gapY};}
 function place(box){return{position:'absolute',left:(box.x-box.w/2)+'px',top:(box.y-box.h/2)+'px',width:box.w+'px',height:box.h+'px'};}
 function productCard(p,w,hgt,box){
   const sel=ST.sel.systems===p.id;
@@ -387,7 +401,7 @@ function viewDomain(M){
   // columns left→right by kind; stack within a column
   const COLS=[['aggregate','aggregates'],['entity','entities'],['value-object','value objects'],['invariant','invariants']];
   const colNodes=COLS.map(([k])=>nodes.filter(n=>kindOf(n)===k));
-  const colW=246, x0=150, padTop=70, vgap=18;
+  const colW=292, x0=196, padTop=70, vgap=18;
   const pos={}, cards=[]; let maxY=0;
   COLS.forEach(([k],ci)=>{let y=padTop;const cx=x0+ci*colW;
     for(const n of colNodes[ci]){const fh=Math.max(2,(n.fields||[]).length);const ht=44+fh*15;
@@ -397,7 +411,7 @@ function viewDomain(M){
   const E=[];
   for(const e of g.edges){if(!ids.has(e.from)||!ids.has(e.to))continue;
     if(e.kind==='relation')E.push({from:e.from,to:e.to,stroke:'var(--slate-500)',width:1.6,
-      label:(e.label||'')+(e.card?'  '+e.card:''),labelColor:'var(--slate-400)'});
+      label:(e.label||'')+(e.card?'  '+card(e.card):''),labelColor:'var(--slate-400)'});
     else if(e.kind==='applies-to')E.push({from:e.from,to:e.to,stroke:'var(--kind-invariant)',dash:'4 4',width:1.4,label:'governs',labelColor:'var(--em-trigger-soft)'});}
   // cross-context relations (to a node outside this context) → magenta stub label only
   $('cvpad').appendChild(edgeLayer(W,H,E,pos,true));
@@ -473,7 +487,7 @@ function viewFlows(M){
   const streamRow=Object.fromEntries(streamIds.map((x,i)=>[x,i]));
   // geometry
   const dense=ST.density==='compact';
-  const GUT=190,COLW=224,NW=190,uiH=dense?34:38,cvH=44,stackH=50,uiGap=uiH+8;
+  const GUT=190,COLW=224,NW=190,uiH=dense?38:42,cvH=46,stackH=50,uiGap=uiH+8;
   const colX=c=>GUT+c*COLW+COLW/2;
   // the top (Triggers / UI) lane is as tall as its busiest column, so a column
   // carrying both a trigger and a ui-step stacks them instead of overlapping.
@@ -525,14 +539,17 @@ function emNode(n,box){const kind=n.kind==='read-model'?'view':n.kind;const c=EM
   const wrap=h('div',{class:'gnode',style:place(box),
     onmouseenter:()=>highlight(n.id,true),onmouseleave:()=>highlight(n.id,false),onclick:()=>selectNode('flows',n.id)});
   wrap.dataset.id=n.id;
+  const short=n.kind==='ui-step'||n.kind==='trigger';
   wrap.appendChild(h('div',{style:{width:'100%',height:'100%',boxSizing:'border-box',display:'flex',flexDirection:'column',
-    justifyContent:'center',padding:'6px 11px',borderRadius:'var(--radius)',
+    justifyContent:'center',padding:'5px 11px',borderRadius:'var(--radius)',overflow:'hidden',
     background:fill?c:'var(--surface-sunken)',border:`1.5px ${fill?'solid':'dashed'} ${c}`,
     color:fill?'#0b1120':'var(--text)',
     boxShadow:sel?'0 0 0 2px var(--bg),0 0 0 4px var(--focus-ring)':'none',transition:'filter var(--dur-fast)'}},
     h('span',{style:{fontFamily:'var(--font-mono)',fontSize:'8px',fontWeight:600,letterSpacing:'.12em',
       textTransform:'uppercase',color:fill?'rgba(11,17,32,.62)':c}},EM_ABBR[n.kind]||'NODE'),
-    h('span',{style:{fontSize:'12px',fontWeight:600,lineHeight:1.2}},trim(n.label,26))));
+    h('span',{style:{fontSize:'12px',fontWeight:600,lineHeight:1.2,
+      overflow:'hidden',textOverflow:'ellipsis',display:'-webkit-box','-webkit-box-orient':'vertical',
+      '-webkit-line-clamp':short?'1':'2',whiteSpace:short?'nowrap':'normal'}},trim(n.label,short?22:26))));
   return wrap;
 }
 function highlight(id,on){for(const el of document.querySelectorAll('.gnode[data-id]'))
