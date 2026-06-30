@@ -17,6 +17,24 @@ pub(super) fn canonicalize(g: &mut DomainGraph) {
     canon_behaviour(g);
     canon_ui(g);
     canon_data(g);
+    canon_boundary(g);
+}
+
+/// §3.0–§3.6 product boundary — products, journeys, quality demands. Each owns
+/// or composes other nodes by id; those id lists come back from SPARQL
+/// unordered, so they are sorted here like every other multi-valued field.
+fn canon_boundary(g: &mut DomainGraph) {
+    g.products.sort_by(|a, b| a.id.cmp(&b.id));
+    g.products.iter_mut().for_each(|p| {
+        p.owns_domain.sort();
+        p.owns_system.sort();
+    });
+    g.journeys.sort_by(|a, b| a.id.cmp(&b.id));
+    g.journeys.iter_mut().for_each(|j| {
+        j.composes_flow.sort();
+        j.crosses_via.sort();
+    });
+    g.quality_demands.sort_by(|a, b| a.id.cmp(&b.id));
 }
 
 /// §3.1 structure — contexts, entities, value objects, relations, invariants,

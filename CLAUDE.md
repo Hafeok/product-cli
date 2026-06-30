@@ -201,6 +201,25 @@ exit-code semantics `CmdResult` can't express, or is a trivial wrapper
 4. Keep the first `//!` doc line free of the word "and" (SRP fitness test)
 5. Keep every file under 400 lines (file-length fitness test)
 
+## Adding a New Node Kind (pf graph)
+
+A node kind lives in **five hand-maintained parallel enumerations** — miss one
+and the kind silently vanishes on a Turtle round-trip (which `finalize` and the
+`from_spec` reload depend on), with no error. When adding a kind to
+`DomainGraph`, wire **all** of:
+
+1. the struct field on `DomainGraph` (`pf/model*.rs`) and its `counts()` row;
+2. Turtle **emit** (`pf/turtle*.rs`);
+3. seed **parse** (`pf/seed*.rs`) — emit and parse must be symmetric;
+4. `seed_canon::canonicalize` — sort the new list (and any id-list fields), or
+   re-export churns and the byte-stability test fails;
+5. `pf/viz.rs` if the kind should render in the web view.
+
+The guard: `pf/seed_tests.rs::maximal()` builds one node of **every** kind and
+`full_graph_round_trips_losslessly` proves emit→parse→canon is lossless, while
+`maximal_populates_every_node_kind` fails by name if a kind is added to
+`counts()` but not to `maximal()` — so steps 1–4 cannot be silently skipped.
+
 ## Test Organization
 
 - **Unit tests**: `#[cfg(test)] mod tests` (or a `#[path] mod tests` sibling) at the bottom of each `pf/` source file — the real framework-graph coverage.
