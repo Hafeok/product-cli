@@ -1,8 +1,9 @@
-//! Delivery-feature pointers — one slice plus acceptance (§7.1).
+//! Deliverables — one feature plus acceptance (§7.1).
 //!
-//! `product deliverable {new,list,show}` manages the framework's delivery
-//! features (named `deliverable` because `product feature` owns the legacy
-//! FT-XXX graph). A deliverable points at one slice and restates no behaviour.
+//! `product deliverable {new,list,show}` manages the shippable units of
+//! delivery. A deliverable points at one feature (the §7.1 subgraph, authored
+//! with `product feature`) and adds acceptance criteria — it restates no
+//! behaviour; "done" is computed over the feature's footprint (§7.2).
 
 use clap::Subcommand;
 use product_core::author::domain::session_dir;
@@ -11,7 +12,7 @@ use product_core::pf::deliverable::{validate_deliverable, AcceptanceCriterion, D
 use product_core::pf::done::{feature_done, FeatureDone};
 use product_core::pf::model::DomainGraph;
 use product_core::pf::session::DomainSession;
-use product_core::pf::slice::Slice;
+use product_core::pf::feature::Feature;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
@@ -39,13 +40,13 @@ pub enum DeliverableCommands {
     },
     /// List the deliverables under .product/deliverables/
     List {},
-    /// Create a deliverable pointing at one slice
+    /// Create a deliverable pointing at one feature
     New {
         /// The deliverable id (e.g. place-order)
         id: String,
-        /// The slice this deliverable ships
-        #[arg(long)]
-        slice: String,
+        /// The feature (§7.1) this deliverable ships
+        #[arg(long = "feature", alias = "slice")]
+        feature: String,
         /// An acceptance criterion as "id:statement"; repeatable
         #[arg(long = "accept")]
         accept: Vec<String>,
@@ -78,7 +79,7 @@ pub(crate) fn handle_deliverable(cmd: DeliverableCommands) -> BoxResult {
         DeliverableCommands::Runner { id, criterion, runner, args } => set_runner(&id, &criterion, &runner, args),
         DeliverableCommands::Done { name, product } => done(&name, product),
         DeliverableCommands::List {} => list(),
-        DeliverableCommands::New { id, slice, accept, force } => new(&id, &slice, accept, force),
+        DeliverableCommands::New { id, feature, accept, force } => new(&id, &feature, accept, force),
         DeliverableCommands::Show { name } => show(&name),
     }
 }
@@ -93,10 +94,10 @@ pub(super) fn load_graph(product: Option<String>) -> Result<DomainGraph, Box<dyn
         .graph)
 }
 
-/// Load a slice pointer by id.
-pub(super) fn load_slice(id: &str) -> Result<Slice, Box<dyn std::error::Error>> {
-    let path = slices_dir().join(format!("{id}.yaml"));
-    Ok(Slice::from_yaml(&std::fs::read_to_string(&path).map_err(|_| format!("slice '{id}' not found at {}", path.display()))?)?)
+/// Load a feature pointer by id.
+pub(super) fn load_feature(id: &str) -> Result<Feature, Box<dyn std::error::Error>> {
+    let path = features_dir().join(format!("{id}.yaml"));
+    Ok(Feature::from_yaml(&std::fs::read_to_string(&path).map_err(|_| format!("feature '{id}' not found at {}", path.display()))?)?)
 }
 
 /// Load every Decider under .product/deliverables' sibling deciders/ dir.
@@ -168,9 +169,9 @@ fn set_runner(id: &str, criterion: &str, runner: &str, args: Option<String>) -> 
 
 fn done(name: &str, product: Option<String>) -> BoxResult {
     let d = load(name)?;
-    let slice = load_slice(&d.slice)?;
+    let feature = load_feature(&d.feature)?;
     let graph = load_graph(product)?;
-    let fd = feature_done(&d, &slice, &graph, &load_deciders(), &super::decider::conformed_set(), &load_projectors());
+    let fd = feature_done(&d, &feature, &graph, &load_deciders(), &super::decider::conformed_set(), &load_projectors());
     print_feature_done(&fd);
     if fd.done {
         Ok(())
@@ -195,8 +196,8 @@ fn dir() -> PathBuf {
     super::shared::domain_root().join(".product").join("deliverables")
 }
 
-fn slices_dir() -> PathBuf {
-    super::shared::domain_root().join(".product").join("slices")
+fn features_dir() -> PathBuf {
+    super::shared::domain_root().join(".product").join("features")
 }
 
 /// The set of artifact ids (filename stems) under a directory.
@@ -233,9 +234,9 @@ pub(super) fn load(name: &str) -> Result<Deliverable, Box<dyn std::error::Error>
     Ok(Deliverable::from_yaml(&text)?)
 }
 
-fn new(id: &str, slice: &str, accept: Vec<String>, force: bool) -> BoxResult {
-    let deliverable = Deliverable { id: id.to_string(), slice: slice.to_string(), acceptance: parse_acceptance(accept) };
-    let problems = validate_deliverable(&deliverable, &ids_in(&slices_dir()));
+fn new(id: &str, feature: &str, accept: Vec<String>, force: bool) -> BoxResult {
+    let deliverable = Deliverable { id: id.to_string(), feature: feature.to_string(), acceptance: parse_acceptance(accept) };
+    let problems = validate_deliverable(&deliverable, &ids_in(&features_dir()));
     if !problems.is_empty() {
         for v in &problems {
             eprintln!("  - [{}] {}: {}", v.focus, v.path, v.message);
@@ -249,14 +250,14 @@ fn new(id: &str, slice: &str, accept: Vec<String>, force: bool) -> BoxResult {
         return Err(format!("{} already exists — pass --force to overwrite", path.display()).into());
     }
     std::fs::write(&path, deliverable.to_yaml()?)?;
-    println!("Created deliverable '{id}' → slice '{slice}' ({} acceptance criteria)", deliverable.acceptance.len());
+    println!("Created deliverable '{id}' → feature '{feature}' ({} acceptance criteria)", deliverable.acceptance.len());
     Ok(())
 }
 
 fn show(name: &str) -> BoxResult {
     let d = load(name)?;
     println!("deliverable: {}", d.id);
-    println!("slice: {}", d.slice);
+    println!("feature: {}", d.feature);
     if d.acceptance.is_empty() {
         println!("acceptance: (none)");
     } else {
@@ -275,7 +276,7 @@ fn show(name: &str) -> BoxResult {
 fn list() -> BoxResult {
     let ids = ids_in(&dir());
     if ids.is_empty() {
-        println!("(no deliverables — create one with `product deliverable new <id> --slice <slice>`)");
+        println!("(no deliverables — create one with `product deliverable new <id> --feature <feature>`)");
     }
     for id in ids {
         println!("{id}");

@@ -70,7 +70,7 @@ pub enum Commands {
         #[command(subcommand)]
         command: DeciderCommands,
     },
-    /// Delivery feature — one slice plus its acceptance (§7.1)
+    /// Deliverable — one feature plus its acceptance (§7.1)
     Deliverable {
         #[command(subcommand)]
         command: DeliverableCommands,
@@ -79,6 +79,11 @@ pub enum Commands {
     Domain {
         #[command(subcommand)]
         command: DomainCommands,
+    },
+    /// Delivery feature — a saved pointer to a subgraph of the event model (§7.1)
+    Feature {
+        #[command(subcommand)]
+        command: FeatureCommands,
     },
     /// Onboarding — where you are in the framework journey and the next step
     Guide,
@@ -196,12 +201,7 @@ pub enum Commands {
         #[command(subcommand)]
         command: SkillsCommands,
     },
-    /// Delivery slice — a saved pointer to a section of the event model
-    Slice {
-        #[command(subcommand)]
-        command: SliceCommands,
-    },
-    /// Target version (§7.3) — a future partition of feature-slices + its gap
+    /// Target version (§7.3) — a future partition of features + its gap
     Target {
         #[command(subcommand)]
         command: TargetCommands,

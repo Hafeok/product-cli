@@ -1,6 +1,6 @@
 //! Build orchestrator (§5) — the new-flow analog of `implement`.
 //!
-//! Assembles the SPMC frozen context for a deliverable (the What slice, the How
+//! Assembles the SPMC frozen context for a deliverable (the What feature, the How
 //! to apply, the Decider oracle, the acceptance), optionally spawns an agent to
 //! produce the artifact, then reports the §7.2 `done` verdict so the gates are
 //! visible in one place.
@@ -15,7 +15,7 @@ use product_core::pf::done::{feature_done, FeatureDone};
 use product_core::pf::how::HowContract;
 use product_core::pf::model::DomainGraph;
 use product_core::pf::run::run_parallel;
-use product_core::pf::slice::Slice;
+use product_core::pf::feature::Feature;
 use product_core::pf::verify;
 use product_core::pf::work_unit::WorkUnit;
 use std::path::{Path, PathBuf};
@@ -38,7 +38,7 @@ pub(crate) struct Gates {
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: bool, gates: Gates, emit_spmc: bool, emit_seam: bool, out: Option<PathBuf>, product: Option<String>) -> BoxResult {
     let mut d = super::deliverable::load(deliverable)?;
-    let slice = super::deliverable::load_slice(&d.slice)?;
+    let feature = super::deliverable::load_feature(&d.feature)?;
     let graph = super::deliverable::load_graph(product.clone())?;
     let deciders = super::deliverable::load_deciders();
     let how = load_how();
@@ -52,13 +52,13 @@ pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: 
     let units = load_work_units();
 
     if emit_spmc {
-        return emit(deliverable, &d, &slice, &graph, how.as_ref(), &deciders, &units, &p, out);
+        return emit(deliverable, &d, &feature, &graph, how.as_ref(), &deciders, &units, &p, out);
     }
     if emit_seam {
         return emit_seam_envelopes(deliverable, &units, out);
     }
 
-    let context = assemble(&d, &slice, &graph, how.as_ref(), &deciders, &p);
+    let context = assemble(&d, &feature, &graph, how.as_ref(), &deciders, &p);
     if dry_run {
         print_dry_run(&context, role, &ladder, &units, jobs, gates, &d);
     } else {
@@ -66,7 +66,7 @@ pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: 
         dispatch_live(deliverable, &context, &ladder, &units, jobs, gates, &mut d)?;
     }
     println!("\n--- Gate status ---");
-    let fd = report_gates(&d, &slice, &graph, &deciders);
+    let fd = report_gates(&d, &feature, &graph, &deciders);
     if !dry_run {
         finish_session(&fd);
     }
@@ -103,8 +103,8 @@ fn emit_seam_envelopes(deliverable: &str, units: &[WorkUnit], out: Option<PathBu
 /// Write (or print, with `--out -`) the self-contained SPMC prompt a Claude Code
 /// `-p` session uses to realise the whole deliverable in-repo and self-verify.
 #[allow(clippy::too_many_arguments)]
-fn emit(deliverable: &str, d: &Deliverable, slice: &Slice, graph: &DomainGraph, how: Option<&HowContract>, deciders: &[Decider], units: &[WorkUnit], product: &str, out: Option<PathBuf>) -> BoxResult {
-    let spmc = emit_session_spmc(d, slice, graph, how, deciders, units, product);
+fn emit(deliverable: &str, d: &Deliverable, feature: &Feature, graph: &DomainGraph, how: Option<&HowContract>, deciders: &[Decider], units: &[WorkUnit], product: &str, out: Option<PathBuf>) -> BoxResult {
+    let spmc = emit_session_spmc(d, feature, graph, how, deciders, units, product);
     if out.as_deref().map(Path::as_os_str) == Some(std::ffi::OsStr::new("-")) {
         print!("{spmc}");
         return Ok(());
@@ -140,7 +140,7 @@ fn finish_session(fd: &FeatureDone) {
     summarize_session(&session);
 }
 
-/// Print the session's cost + outcome metrics for the feature slice.
+/// Print the session's cost + outcome metrics for the feature.
 fn summarize_session(s: &BuildSession) {
     println!("\n--- Session ---");
     println!("  verdict: {} ({}/{} checks)", if s.verdict.done { "DONE" } else { "not done" }, s.verdict.passing, s.verdict.total);
@@ -390,8 +390,8 @@ fn load_how() -> Option<HowContract> {
         .find_map(|p| std::fs::read_to_string(p).ok().and_then(|t| HowContract::from_yaml(&t).ok()))
 }
 
-fn report_gates(d: &Deliverable, slice: &Slice, graph: &DomainGraph, deciders: &[Decider]) -> FeatureDone {
-    let fd = feature_done(d, slice, graph, deciders, &super::decider::conformed_set(), &super::deliverable::load_projectors());
+fn report_gates(d: &Deliverable, feature: &Feature, graph: &DomainGraph, deciders: &[Decider]) -> FeatureDone {
+    let fd = feature_done(d, feature, graph, deciders, &super::decider::conformed_set(), &super::deliverable::load_projectors());
     super::deliverable::print_feature_done(&fd);
     fd
 }

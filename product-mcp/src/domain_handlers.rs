@@ -50,13 +50,30 @@ fn req_str(args: &Value, key: &str) -> Result<String, String> {
         .ok_or_else(|| format!("missing required argument '{}'", key))
 }
 
-/// The argument object minus the routing keys, used as a node field map.
+/// The argument object minus the routing keys, used as a node field map, with
+/// the CLI-parity `kind` aliases normalized onto the struct field.
 fn field_map(args: &Value, drop: &[&str]) -> Map<String, Value> {
     let mut m = args.as_object().cloned().unwrap_or_default();
     for k in drop {
         m.remove(*k);
     }
+    normalize_kind_aliases(&mut m);
     m
+}
+
+/// Map the surface aliases `system_kind` / `mapping_kind` onto the struct field
+/// `kind`, which the top-level `kind` node-type router shadows (a caller cannot
+/// pass a raw `kind` for a System sub-kind — it is consumed as the router and
+/// dropped). Mirrors product-cli `NodeFields::to_map` (`--system-kind` /
+/// `--mapping-kind` both write the field-map key `kind`). Without this a system
+/// cannot be created conformant via MCP: §3.2.5 requires the sub-kind, and it
+/// has no other way in.
+fn normalize_kind_aliases(m: &mut Map<String, Value>) {
+    for alias in ["system_kind", "mapping_kind"] {
+        if let Some(v) = m.remove(alias) {
+            m.entry("kind".to_string()).or_insert(v);
+        }
+    }
 }
 
 fn now() -> String {

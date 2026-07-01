@@ -3,8 +3,8 @@
 //! A pure, serializable record of what a `product build` run cost: every model
 //! call (capability, gate, token usage), the files it touched, and the final
 //! `done` verdict. The CLI collects calls into this during a build, then
-//! persists + summarizes it (`.product/build/<id>.session.json`), so a feature
-//! slice's implementation has an auditable cost + outcome record.
+//! persists + summarizes it (`.product/build/<id>.session.json`), so a
+//! feature's implementation has an auditable cost + outcome record.
 
 use std::collections::{BTreeMap, HashSet};
 

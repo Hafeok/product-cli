@@ -118,16 +118,27 @@ fn node_field_props() -> serde_json::Map<String, serde_json::Value> {
     props
 }
 
+/// The top-level `kind` is the node-type router, so it shadows the `kind`
+/// *struct field* that `System` (§3.2.5) and `ContextMapping` (§3.1) carry.
+/// Expose that field under un-shadowed aliases the handler maps back to `kind`
+/// (parity with the CLI's `--system-kind` / `--mapping-kind`).
+fn add_kind_aliases(props: &mut serde_json::Map<String, serde_json::Value>) {
+    props.insert("system_kind".to_string(), serde_json::json!({"type": "string", "description": "§3.2.5 system sub-kind: application | website | service | cli | …"}));
+    props.insert("mapping_kind".to_string(), serde_json::json!({"type": "string", "description": "§3.1 context-mapping kind (e.g. shared-kernel, customer-supplier, …)"}));
+}
+
 fn write_tools() -> Vec<ToolDef> {
     let mut new_props = node_field_props();
     new_props.insert("kind".to_string(), serde_json::json!({"type": "string", "description": "entity | context | event | command | relation | …"}));
     new_props.insert("id".to_string(), serde_json::json!({"type": "string"}));
+    add_kind_aliases(&mut new_props);
     let mut edit_props = node_field_props();
     edit_props.insert("id".to_string(), serde_json::json!({"type": "string"}));
+    add_kind_aliases(&mut edit_props);
     vec![
         ToolDef {
             name: "product_domain_new".to_string(),
-            description: "Create a What-graph node: `kind` + `id` plus the node's fields (label, context, definition, changes, targets, emits, …). Validated in-loop; returns { ok, node, violations }.".to_string(),
+            description: "Create a What-graph node: `kind` + `id` plus the node's fields (label, context, definition, changes, targets, emits, …). A system must set `system_kind` (§3.2.5). On a validation failure nothing is persisted (atomic) — supply every field the node's shape requires in the one call. Validated in-loop; returns { ok, node, violations }.".to_string(),
             requires_write: true,
             input_schema: serde_json::json!({
                 "type": "object",
@@ -191,6 +202,15 @@ mod tests {
             .and_then(|t| t.as_str());
         assert_eq!(agg, Some("boolean"), "is_aggregate_root must be a boolean");
         assert!(props.len() > 25, "expected the union of all node fields, got {}", props.len());
+    }
+
+    #[test]
+    fn kind_aliases_are_exposed_so_a_system_sub_kind_is_reachable() {
+        // BUG 1: the top-level `kind` shadows the System/ContextMapping `kind`
+        // field; the aliases are how a schema-typed client reaches it.
+        let props = new_schema_props();
+        assert_eq!(props.get("system_kind").and_then(|f| f.get("type")).and_then(|t| t.as_str()), Some("string"));
+        assert_eq!(props.get("mapping_kind").and_then(|f| f.get("type")).and_then(|t| t.as_str()), Some("string"));
     }
 
     #[test]

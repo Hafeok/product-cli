@@ -71,15 +71,16 @@ fn mcp_config_json(product: &str, dir: &Path, root: &Path, seed: Option<&Path>) 
         args.push("--seed".to_string());
         args.push(s.display().to_string());
     }
-    let config = serde_json::json!({
-        "mcpServers": {
-            "product-author-domain": {
-                "command": exe.display().to_string(),
-                "args": args,
-                "cwd": root.display().to_string()
-            }
-        }
-    });
+    let mut servers = serde_json::Map::new();
+    servers.insert(
+        super::MCP_SERVER_NAME.to_string(),
+        serde_json::json!({
+            "command": exe.display().to_string(),
+            "args": args,
+            "cwd": root.display().to_string()
+        }),
+    );
+    let config = serde_json::json!({ "mcpServers": servers });
     serde_json::to_string(&config).unwrap_or_default()
 }
 
@@ -90,10 +91,11 @@ fn launch_claude(prompt_file: &Path, mcp_json: &str, root: &Path) -> std::io::Re
     // no domain tools at all. Instead, allow Read + the domain MCP server and
     // block the direct file/shell mutators so all graph writes flow through
     // MCP. `--strict-mcp-config` keeps the main `product mcp` server out.
+    let allowed = format!("Read,{}", super::claude_tools_glob());
     Command::new("claude")
         .args([
             "--system-prompt-file", &prompt_file.display().to_string(),
-            "--allowedTools", "Read,mcp__product-author-domain__*",
+            "--allowedTools", &allowed,
             "--disallowedTools", "Bash,Edit,Write,NotebookEdit",
             "--mcp-config", mcp_json,
             "--strict-mcp-config",
@@ -103,7 +105,8 @@ fn launch_claude(prompt_file: &Path, mcp_json: &str, root: &Path) -> std::io::Re
 }
 
 fn launch_copilot(prompt: &str, mcp_json: &str, root: &Path) -> std::io::Result<std::process::ExitStatus> {
-    let allowed = "read,glob,grep,list,view,product-author-domain";
+    let allowed = format!("read,glob,grep,list,view,{}", super::MCP_SERVER_NAME);
+    let allowed = allowed.as_str();
     Command::new("copilot")
         .args([
             "-i", prompt,

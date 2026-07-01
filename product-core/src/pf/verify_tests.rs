@@ -14,7 +14,7 @@ fn crit(id: &str, runner: Option<&str>, args: Option<&str>) -> AcceptanceCriteri
 }
 
 fn deliv(acceptance: Vec<AcceptanceCriterion>) -> Deliverable {
-    Deliverable { id: "d1".to_string(), slice: "s1".to_string(), acceptance }
+    Deliverable { id: "d1".to_string(), feature: "s1".to_string(), acceptance }
 }
 
 #[test]

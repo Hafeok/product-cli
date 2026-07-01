@@ -1,7 +1,7 @@
 //! Release — a coherent set of delivery features (§7.1).
 //!
 //! A release groups the deliverables that ship together. It is a partition of
-//! the What (via its deliverables' slices), not a free-floating milestone. The
+//! the What (via its deliverables' features), not a free-floating milestone. The
 //! `done` predicate and the "cut is closed" check (§7.2) are a separate
 //! increment; this module validates membership resolves.
 

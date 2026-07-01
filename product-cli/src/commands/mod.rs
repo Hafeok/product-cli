@@ -34,7 +34,7 @@ mod seam;
 mod session;
 mod shared;
 mod skills;
-mod slice;
+mod feature;
 mod target;
 mod verdict;
 mod work_unit;
@@ -57,7 +57,7 @@ pub use self::preview::PreviewCommands;
 pub use self::release::ReleaseCommands;
 pub use self::session::SessionCommands;
 pub use self::skills::SkillsCommands;
-pub use self::slice::SliceCommands;
+pub use self::feature::FeatureCommands;
 pub use self::target::TargetCommands;
 
 mod root_enum;

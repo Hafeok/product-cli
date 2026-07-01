@@ -2,13 +2,13 @@
 
 use super::*;
 use crate::pf::deliverable::AcceptanceCriterion;
-use crate::pf::slice::Slice;
+use crate::pf::feature::Feature;
 use crate::pf::work_unit::{Context, Produces, WorkUnit};
 
 fn deliverable(runner: Option<&str>) -> Deliverable {
     Deliverable {
         id: "place-order".into(),
-        slice: "place-order".into(),
+        feature: "place-order".into(),
         acceptance: vec![AcceptanceCriterion {
             id: "handler-exists".into(),
             statement: "a handler writes OrderPlaced".into(),
@@ -33,8 +33,8 @@ fn unit(id: &str, path: &str) -> WorkUnit {
 }
 
 fn spmc_with(runner: Option<&str>, units: &[WorkUnit]) -> String {
-    let slice = Slice { id: "place-order".into(), anchors: vec![], depth: None };
-    emit_session_spmc(&deliverable(runner), &slice, &DomainGraph::default(), None, &[], units, "bookstore")
+    let feature = Feature { id: "place-order".into(), anchors: vec![], depth: None };
+    emit_session_spmc(&deliverable(runner), &feature, &DomainGraph::default(), None, &[], units, "bookstore")
 }
 
 #[test]

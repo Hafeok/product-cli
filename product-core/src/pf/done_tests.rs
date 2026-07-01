@@ -21,21 +21,21 @@ fn graph() -> DomainGraph {
     g
 }
 
-fn slice() -> Slice {
-    Slice { id: "order-slice".into(), anchors: vec!["Order".into()], depth: Some(2) }
+fn feature() -> Feature {
+    Feature { id: "order-feature".into(), anchors: vec!["Order".into()], depth: Some(2) }
 }
 
 fn deliverable(status: &str) -> Deliverable {
     Deliverable {
         id: "place-order".into(),
-        slice: "order-slice".into(),
+        feature: "order-feature".into(),
         acceptance: vec![AcceptanceCriterion { id: "a1".into(), statement: "an order can be placed".into(), status: status.into(), runner: None, runner_args: None }],
     }
 }
 
 #[test]
 fn pending_acceptance_blocks_done() {
-    let fd = feature_done(&deliverable("pending"), &slice(), &graph(), &[], &none(), &[]);
+    let fd = feature_done(&deliverable("pending"), &feature(), &graph(), &[], &none(), &[]);
     assert!(!fd.done);
     assert!(fd.checks.iter().any(|c| c.kind == "acceptance" && !c.passing));
     // domain checks for the in-scope elements pass
@@ -44,7 +44,7 @@ fn pending_acceptance_blocks_done() {
 
 #[test]
 fn passing_acceptance_with_conformant_scope_is_done() {
-    let fd = feature_done(&deliverable("passing"), &slice(), &graph(), &[], &none(), &[]);
+    let fd = feature_done(&deliverable("passing"), &feature(), &graph(), &[], &none(), &[]);
     assert!(fd.done, "{:?}", fd.checks);
     assert_eq!(fd.progress(), 1.0);
 }
@@ -61,7 +61,7 @@ fn an_unsound_decider_blocks_done() {
         scenarios: vec![],
         ..Default::default()
     };
-    let fd = feature_done(&deliverable("passing"), &slice(), &graph(), std::slice::from_ref(&dec), &none(), &[]);
+    let fd = feature_done(&deliverable("passing"), &feature(), &graph(), std::slice::from_ref(&dec), &none(), &[]);
     assert!(!fd.done);
     assert!(fd.checks.iter().any(|c| c.kind == "behavioural-sim" && !c.passing));
 }
@@ -84,12 +84,12 @@ fn an_in_scope_decider_must_be_conformed_for_done() {
         ..Default::default()
     };
     // not conformed yet → done blocked on behavioural-conform
-    let fd = feature_done(&deliverable("passing"), &slice(), &graph(), std::slice::from_ref(&dec), &none(), &[]);
+    let fd = feature_done(&deliverable("passing"), &feature(), &graph(), std::slice::from_ref(&dec), &none(), &[]);
     assert!(!fd.done);
     assert!(fd.checks.iter().any(|c| c.kind == "behavioural-conform" && !c.passing));
     // conformed → done
     let conformed: BTreeSet<String> = ["order-decider".to_string()].into_iter().collect();
-    let fd2 = feature_done(&deliverable("passing"), &slice(), &graph(), std::slice::from_ref(&dec), &conformed, &[]);
+    let fd2 = feature_done(&deliverable("passing"), &feature(), &graph(), std::slice::from_ref(&dec), &conformed, &[]);
     assert!(fd2.done, "{:?}", fd2.checks);
 }
 
@@ -110,9 +110,9 @@ fn an_open_cut_is_detected() {
 
 #[test]
 fn release_done_requires_members_done_and_closed() {
-    let members = vec![(deliverable("passing"), slice())];
+    let members = vec![(deliverable("passing"), feature())];
     let rd = release_done("R1", &members, &graph(), &[], &none(), &[]);
-    // member is done; the slice (depth 2 from Order) covers Sales/OrderPlaced/
+    // member is done; the feature (depth 2 from Order) covers Sales/OrderPlaced/
     // PlaceOrder → closed
     assert!(rd.done, "members {:?} open {:?}", rd.members, rd.open_edges);
     assert!(rd.closed());

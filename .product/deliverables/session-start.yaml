@@ -1,5 +1,5 @@
 id: session-start
-slice: session-start
+feature: session-start
 acceptance:
 - id: ws-copies-canonical
   statement: The isolated session workspace ws/.product is a copy of the canonical .product graph after start

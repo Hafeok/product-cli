@@ -152,23 +152,25 @@ fn mcp_config_json(session_id: &str, canonical_root: &Path) -> String {
         canonical_root.display().to_string(),
         "--write".to_string(),
     ];
-    let config = serde_json::json!({
-        "mcpServers": {
-            "product-workflow": {
-                "command": exe.display().to_string(),
-                "args": args,
-                "cwd": canonical_root.display().to_string()
-            }
-        }
-    });
+    let mut servers = serde_json::Map::new();
+    servers.insert(
+        super::MCP_SERVER_NAME.to_string(),
+        serde_json::json!({
+            "command": exe.display().to_string(),
+            "args": args,
+            "cwd": canonical_root.display().to_string()
+        }),
+    );
+    let config = serde_json::json!({ "mcpServers": servers });
     serde_json::to_string(&config).unwrap_or_default()
 }
 
 fn launch_claude(prompt_file: &Path, mcp_json: &str, root: &Path) -> std::io::Result<std::process::ExitStatus> {
+    let allowed = format!("Read,{}", super::claude_tools_glob());
     Command::new("claude")
         .args([
             "--system-prompt-file", &prompt_file.display().to_string(),
-            "--allowedTools", "Read,mcp__product-workflow__*",
+            "--allowedTools", &allowed,
             "--disallowedTools", "Bash,Edit,Write,NotebookEdit",
             "--mcp-config", mcp_json,
             "--strict-mcp-config",
@@ -178,7 +180,8 @@ fn launch_claude(prompt_file: &Path, mcp_json: &str, root: &Path) -> std::io::Re
 }
 
 fn launch_copilot(prompt: &str, mcp_json: &str, root: &Path) -> std::io::Result<std::process::ExitStatus> {
-    let allowed = "read,glob,grep,list,view,product-workflow";
+    let allowed = format!("read,glob,grep,list,view,{}", super::MCP_SERVER_NAME);
+    let allowed = allowed.as_str();
     Command::new("copilot")
         .args([
             "-i", prompt,

@@ -1,7 +1,7 @@
 //! Shared helpers for the Product-Framework MCP handlers (delivery + decider).
 //!
 //! These mirror the CLI adapters' loading against `repo_root/.product/…` so the
-//! framework families (`decider`, `slice`, `deliverable`, `release`) expose the
+//! framework families (`decider`, `feature`, `deliverable`, `release`) expose the
 //! same functionality over MCP as on the CLI.
 
 use std::path::{Path, PathBuf};

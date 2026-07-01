@@ -4,7 +4,7 @@ use super::{FrameworkState, Guidance, NextStep, Stage};
 
 /// Decide where the user is and what to do next. Pure — no I/O.
 ///
-/// The stages form a strict order (What → conformant What → How → slice →
+/// The stages form a strict order (What → conformant What → How → feature →
 /// deliverable → build); the first unmet step is the current stage, so the
 /// guidance always points at the single next move.
 pub fn guide(state: &FrameworkState) -> Guidance {
@@ -25,8 +25,8 @@ fn stage_of(s: &FrameworkState) -> Stage {
         Stage::FixWhat
     } else if !s.has_how {
         Stage::AuthorHow
-    } else if s.slices == 0 {
-        Stage::CarveSlice
+    } else if s.features == 0 {
+        Stage::CarveFeature
     } else if s.deliverables == 0 {
         Stage::WrapDeliverable
     } else {
@@ -45,10 +45,10 @@ fn headline(s: &FrameworkState, stage: Stage) -> String {
             "Your What is conformant ({} nodes). Now describe the How that realises it.",
             s.what_total
         ),
-        Stage::CarveSlice => "The How is scaffolded. Carve a delivery slice over your event model.".into(),
+        Stage::CarveFeature => "The How is scaffolded. Carve a delivery feature over your event model.".into(),
         Stage::WrapDeliverable => format!(
-            "You have {} slice(s). Wrap one as a deliverable with its acceptance.",
-            s.slices
+            "You have {} feature(s). Wrap one as a deliverable with its acceptance.",
+            s.features
         ),
         Stage::BuildIt => format!(
             "You have {} deliverable(s). Make behaviour executable, then build.",
@@ -62,8 +62,8 @@ fn concept(stage: Stage) -> &'static str {
         Stage::CaptureWhat => "The What is your product's meaning: bounded contexts, the entities inside them, and the behaviour — the commands users issue and the events those cause. It is agreed before any How.",
         Stage::FixWhat => "The What is type-checked: every event must change a real entity, every command must target an aggregate and emit an event. Violations mean behaviour references structure that does not exist.",
         Stage::AuthorHow => "The How realises the What without changing its meaning: decisions and principles (the Why), contracts, and the repository layout model. Same What can drive several Hows.",
-        Stage::CarveSlice => "A slice is a named, buildable section of the event model — an anchor (a command, context, or flow) plus its neighbourhood — the unit a deliverable is built from.",
-        Stage::WrapDeliverable => "A deliverable is one slice plus its acceptance criteria; it is 'done' (§7.2) only when every criterion has a passing verdict.",
+        Stage::CarveFeature => "A feature is a named subgraph of the event model (§7.1) — an anchor (a command, context, or flow) plus its neighbourhood — the unit a deliverable is built from.",
+        Stage::WrapDeliverable => "A deliverable is one feature plus its acceptance criteria; it is 'done' (§7.2) only when every criterion has a passing verdict.",
         Stage::BuildIt => "Where behaviour is interesting, a Decider makes it executable and is simulated sound before any code. `build` then assembles the frozen SPMC context and runs the realisation against the verification gates.",
     }
 }
@@ -88,7 +88,7 @@ fn next_steps(s: &FrameworkState, stage: Stage) -> Vec<NextStep> {
             "product how init",
             "Scaffold a starter how-contract.yaml, then `product how add decision|principle|...`.",
         )],
-        Stage::CarveSlice => carve_slice_step(s),
+        Stage::CarveFeature => carve_feature_step(s),
         Stage::WrapDeliverable => wrap_deliverable_step(s),
         Stage::BuildIt => vec![
             NextStep::new(
@@ -103,19 +103,19 @@ fn next_steps(s: &FrameworkState, stage: Stage) -> Vec<NextStep> {
     }
 }
 
-fn carve_slice_step(s: &FrameworkState) -> Vec<NextStep> {
+fn carve_feature_step(s: &FrameworkState) -> Vec<NextStep> {
     let anchor = s.first_command.as_deref().unwrap_or("<command|context|flow>");
     vec![NextStep::new(
-        format!("product slice new <id> --anchor {anchor}"),
-        "Anchor a slice at a node in your event model (e.g. --anchor a command id).",
+        format!("product feature new <id> --anchor {anchor}"),
+        "Anchor a feature at a node in your event model (e.g. --anchor a command id).",
     )]
 }
 
 fn wrap_deliverable_step(s: &FrameworkState) -> Vec<NextStep> {
-    let slice = s.first_slice.as_deref().unwrap_or("<slice-id>");
+    let feature = s.first_feature.as_deref().unwrap_or("<feature-id>");
     vec![NextStep::new(
-        format!("product deliverable new <id> --slice {slice}"),
-        "Wrap a slice as a deliverable, then `product deliverable accept` its criteria.",
+        format!("product deliverable new <id> --feature {feature}"),
+        "Wrap a feature as a deliverable, then `product deliverable accept` its criteria.",
     )]
 }
 
@@ -125,7 +125,7 @@ fn progress(s: &FrameworkState) -> Vec<(String, bool)> {
         ("Captured a What model".into(), s.what_total > 0),
         ("What is conformant".into(), s.what_total > 0 && s.violations == 0),
         ("How contract scaffolded".into(), s.has_how),
-        ("Delivery slice carved".into(), s.slices > 0),
+        ("Delivery feature carved".into(), s.features > 0),
         ("Deliverable wrapped".into(), s.deliverables > 0),
     ]
 }

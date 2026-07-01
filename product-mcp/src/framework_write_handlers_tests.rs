@@ -79,6 +79,25 @@ fn set_replaces_the_application_contract() {
 }
 
 #[test]
+fn set_carries_the_section_7_3_versions() {
+    let r = repo();
+    let root = r.path();
+    handle_how_init(&json!({"archetype": "demo-cli"}), root).expect("init");
+
+    // §7.3 — `id` carries the version string, mirroring the CLI's `--id`.
+    let v = handle_how_set(&json!({"target": "version", "id": "1.4.0"}), root).expect("set version");
+    assert_eq!(v["element"]["version"], json!("1.4.0"));
+    let rv = handle_how_set(&json!({"target": "realises-version", "id": "3.2.0"}), root)
+        .expect("set realises-version");
+    assert_eq!(rv["element"]["realisesVersion"], json!("3.2.0"));
+
+    // Both land on the persisted contract (CLI↔MCP parity for `product how set`).
+    let c = load_how(root).expect("reload");
+    assert_eq!(c.version.as_deref(), Some("1.4.0"));
+    assert_eq!(c.realises_version.as_deref(), Some("3.2.0"));
+}
+
+#[test]
 fn add_requires_an_existing_contract() {
     let r = repo();
     // No init → no contract to add to.

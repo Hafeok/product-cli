@@ -98,7 +98,7 @@ fn handle_initialize(request: &JsonRpcRequest) -> JsonRpcResponse {
     JsonRpcResponse::success(request.id.clone(), serde_json::json!({
         "protocolVersion": "2024-11-05",
         "capabilities": { "tools": {} },
-        "serverInfo": { "name": "product", "version": env!("CARGO_PKG_VERSION") },
+        "serverInfo": { "name": product_core::author::MCP_SERVER_NAME, "version": env!("CARGO_PKG_VERSION") },
     }))
 }
 
@@ -174,10 +174,10 @@ fn dispatch_what(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Va
 fn dispatch_delivery(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
     use super::delivery_handlers as d;
     Some(match name {
-        "product_slice_list" => d::handle_slice_list(args, repo_root),
-        "product_slice_show" => d::handle_slice_show(args, repo_root),
-        "product_slice_context" => d::handle_slice_context(args, repo_root),
-        "product_slice_new" => d::handle_slice_new(args, repo_root),
+        "product_feature_list" => d::handle_feature_list(args, repo_root),
+        "product_feature_show" => d::handle_feature_show(args, repo_root),
+        "product_feature_context" => d::handle_feature_context(args, repo_root),
+        "product_feature_new" => d::handle_feature_new(args, repo_root),
         "product_deliverable_list" => d::handle_deliverable_list(args, repo_root),
         "product_deliverable_show" => d::handle_deliverable_show(args, repo_root),
         "product_deliverable_done" => d::handle_deliverable_done(args, repo_root),

@@ -127,9 +127,19 @@ pub fn handle_how_set(args: &Value, repo_root: &Path) -> Result<Value, String> {
             edit::set_infra_contract(&mut c, i.clone());
             to_val(&i)?
         }
+        // §7.3 — the How's own version and the What-version it realises. `id`
+        // carries the version string (mirrors the CLI's `--id`).
+        "version" => {
+            c.version = Some(id.clone());
+            json!({ "version": id })
+        }
+        "realises-version" => {
+            c.realises_version = Some(id.clone());
+            json!({ "realisesVersion": id })
+        }
         other => {
             return Err(format!(
-                "unknown target '{other}' — one of app-contract | infra-contract"
+                "unknown target '{other}' — one of app-contract | infra-contract | version | realises-version"
             ))
         }
     };

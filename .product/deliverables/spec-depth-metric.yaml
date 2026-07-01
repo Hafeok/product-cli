@@ -1,5 +1,5 @@
 id: spec-depth-metric
-slice: spec-depth-metric
+feature: spec-depth-metric
 acceptance:
 - id: spec-depth-struct
   statement: BuildSession carries a SpecDepth{nodes,depth,acceptance,deciders,context_tokens} record that round-trips through JSON
