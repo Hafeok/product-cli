@@ -865,12 +865,6 @@ d:map-verification-why a pf:ContextMapping ;
   pf:mappingKind "customer-supplier" ;
   pf:rationale "Verification enforces principles authored in The Why; the principle's checkable statement is the contract between them. The Why is the supplier of statements, Verification the customer that proves they hold." .
 
-d:cmd-accept-decision a pf:Command ;
-  rdfs:label "Accept Decision" ;
-  pf:inContext d:ctx-why ;
-  pf:targets d:e-topdecision ;
-  pf:emits d:ev-decision-accepted .
-
 d:cmd-add-bounded-context a pf:Command ;
   rdfs:label "Add Bounded Context" ;
   pf:inContext d:ctx-model ;
@@ -901,12 +895,6 @@ d:cmd-agent-init a pf:Command ;
   pf:targets d:e-product ;
   pf:emits d:ev-agent-context-initialized .
 
-d:cmd-check-conformance a pf:Command ;
-  rdfs:label "Check Conformance" ;
-  pf:inContext d:ctx-verification ;
-  pf:targets d:e-product ;
-  pf:emits d:ev-conformance-evaluated .
-
 d:cmd-checkout a pf:Command ;
   rdfs:label "Checkout" ;
   pf:inContext d:ctx-shop ;
@@ -919,13 +907,6 @@ d:cmd-finalize-session a pf:Command ;
   pf:targets d:e-product ;
   pf:emits d:ev-what-finalized ;
   pf:emits d:ev-session-finalized .
-
-d:cmd-implement-feature a pf:Command ;
-  rdfs:label "Implement Feature" ;
-  pf:inContext d:ctx-realisation ;
-  pf:targets d:e-feature ;
-  pf:emits d:ev-context-assembled ;
-  pf:emits d:ev-workunit-dispatched .
 
 d:cmd-init-repo a pf:Command ;
   rdfs:label "Initialize Repository" ;
@@ -950,13 +931,6 @@ d:cmd-validate-what a pf:Command ;
   pf:inContext d:ctx-verification ;
   pf:targets d:e-product ;
   pf:emits d:ev-what-validated .
-
-d:cmd-verify-feature a pf:Command ;
-  rdfs:label "Verify Feature" ;
-  pf:inContext d:ctx-verification ;
-  pf:targets d:e-feature ;
-  pf:emits d:ev-feature-completed ;
-  pf:emits d:ev-verification-run .
 
 d:cmd-start-session a pf:Command ;
   rdfs:label "Start Session" ;
@@ -997,25 +971,10 @@ d:ev-command-added a pf:Event ;
   pf:inContext d:ctx-model ;
   pf:changes d:e-command .
 
-d:ev-conformance-evaluated a pf:Event ;
-  rdfs:label "Conformance Evaluated" ;
-  pf:inContext d:ctx-verification ;
-  pf:changes d:e-verdict .
-
 d:ev-context-added a pf:Event ;
   rdfs:label "Bounded Context Added" ;
   pf:inContext d:ctx-model ;
   pf:changes d:e-boundedcontext .
-
-d:ev-context-assembled a pf:Event ;
-  rdfs:label "Context Bundle Assembled" ;
-  pf:inContext d:ctx-realisation ;
-  pf:changes d:e-workunit .
-
-d:ev-decision-accepted a pf:Event ;
-  rdfs:label "Decision Accepted" ;
-  pf:inContext d:ctx-why ;
-  pf:changes d:e-topdecision .
 
 d:ev-entity-added a pf:Event ;
   rdfs:label "Entity Added" ;
@@ -1027,11 +986,6 @@ d:ev-event-added a pf:Event ;
   pf:inContext d:ctx-model ;
   pf:changes d:e-event .
 
-d:ev-feature-completed a pf:Event ;
-  rdfs:label "Feature Completed" ;
-  pf:inContext d:ctx-delivery ;
-  pf:changes d:e-feature .
-
 d:ev-graph-changed a pf:Event ;
   rdfs:label "Graph Changed" ;
   pf:inContext d:ctx-view ;
@@ -1041,11 +995,6 @@ d:ev-repo-initialized a pf:Event ;
   rdfs:label "Repository Initialized" ;
   pf:inContext d:ctx-composition ;
   pf:changes d:e-product .
-
-d:ev-verification-run a pf:Event ;
-  rdfs:label "Verification Run" ;
-  pf:inContext d:ctx-verification ;
-  pf:changes d:e-verdict .
 
 d:ev-view-refreshed a pf:Event ;
   rdfs:label "View Refreshed" ;
@@ -1061,11 +1010,6 @@ d:ev-what-validated a pf:Event ;
   rdfs:label "What Validated" ;
   pf:inContext d:ctx-verification ;
   pf:changes d:e-verdict .
-
-d:ev-workunit-dispatched a pf:Event ;
-  rdfs:label "Work Unit Dispatched" ;
-  pf:inContext d:ctx-realisation ;
-  pf:changes d:e-workunit .
 
 d:ev-session-started a pf:Event ;
   rdfs:label "Session Started" ;
@@ -1096,28 +1040,6 @@ d:rm-cart a pf:ReadModel ;
   rdfs:label "Cart Summary" ;
   pf:projects d:e-cart .
 
-d:rm-conformance-report a pf:ReadModel ;
-  rdfs:label "Conformance Report" ;
-  pf:projects d:e-product ;
-  pf:projects d:e-verdict ;
-  pf:projects d:e-verification .
-
-d:rm-context-bundle a pf:ReadModel ;
-  rdfs:label "Context Bundle" ;
-  pf:projects d:e-feature ;
-  pf:projects d:e-topdecision ;
-  pf:projects d:e-verification .
-
-d:rm-decision-view a pf:ReadModel ;
-  rdfs:label "Decision View" ;
-  pf:projects d:e-principle ;
-  pf:projects d:e-topdecision .
-
-d:rm-feature-status a pf:ReadModel ;
-  rdfs:label "Feature Status / Checklist" ;
-  pf:projects d:e-feature ;
-  pf:projects d:e-verdict .
-
 d:rm-init-summary a pf:ReadModel ;
   rdfs:label "Init Summary" ;
   pf:projects d:e-layoutmodel ;
@@ -1128,13 +1050,6 @@ d:rm-open-questions a pf:ReadModel ;
   pf:projects d:e-boundedcontext ;
   pf:projects d:e-entity ;
   pf:projects d:e-relation .
-
-d:rm-product-status a pf:ReadModel ;
-  rdfs:label "Product Status Overview" ;
-  pf:projects d:e-feature ;
-  pf:projects d:e-product ;
-  pf:projects d:e-release ;
-  pf:projects d:e-verdict .
 
 d:rm-view-graph a pf:ReadModel ;
   rdfs:label "View Graph Projection" ;
@@ -1167,41 +1082,10 @@ d:ws-finalize a pf:WireframeStep ;
   rdfs:label "Run finalize to export conformant Turtle + provenance" ;
   pf:triggers d:cmd-finalize-session .
 
-d:ws-run-accept a pf:WireframeStep ;
-  rdfs:label "Run `product adr status ADR-XXX accepted`" ;
-  pf:triggers d:cmd-accept-decision ;
-  pf:displays d:rm-decision-view .
-
-d:ws-run-conformance a pf:WireframeStep ;
-  rdfs:label "Run `product conformance check`" ;
-  pf:triggers d:cmd-check-conformance ;
-  pf:displays d:rm-conformance-report .
-
-d:ws-run-implement a pf:WireframeStep ;
-  rdfs:label "Run `product implement FT-XXX`" ;
-  pf:triggers d:cmd-implement-feature ;
-  pf:displays d:rm-context-bundle .
-
 d:ws-run-init a pf:WireframeStep ;
   rdfs:label "Run `product init`" ;
   pf:triggers d:cmd-init-repo ;
   pf:displays d:rm-init-summary .
-
-d:ws-run-status a pf:WireframeStep ;
-  rdfs:label "Run `product status`" ;
-  pf:displays d:rm-product-status .
-
-d:ws-view-checklist a pf:WireframeStep ;
-  rdfs:label "View regenerated checklist / feature status" ;
-  pf:displays d:rm-feature-status .
-
-d:flow-accept-decision a pf:Flow ;
-  rdfs:label "Accept a Decision (ADR → accepted)" ;
-  pf:contains d:cmd-accept-decision ;
-  pf:contains d:ev-decision-accepted ;
-  pf:contains d:rm-decision-view ;
-  pf:contains d:ws-run-accept ;
-  pf:systemOf d:product-cli .
 
 d:flow-capture-what a pf:Flow ;
   rdfs:label "Capture the What (this session)" ;
@@ -1216,27 +1100,6 @@ d:flow-capture-what a pf:Flow ;
   pf:contains d:rm-open-questions ;
   pf:contains d:ws-facilitate ;
   pf:contains d:ws-finalize ;
-  pf:systemOf d:product-cli .
-
-d:flow-conformance a pf:Flow ;
-  rdfs:label "Check Conformance" ;
-  pf:contains d:cmd-check-conformance ;
-  pf:contains d:ev-conformance-evaluated ;
-  pf:contains d:rm-conformance-report ;
-  pf:contains d:ws-run-conformance ;
-  pf:systemOf d:product-cli .
-
-d:flow-implement-loop a pf:Flow ;
-  rdfs:label "Implement Loop (spec → code → done)" ;
-  pf:contains d:cmd-implement-feature ;
-  pf:contains d:cmd-verify-feature ;
-  pf:contains d:ev-context-assembled ;
-  pf:contains d:ev-feature-completed ;
-  pf:contains d:ev-verification-run ;
-  pf:contains d:ev-workunit-dispatched ;
-  pf:contains d:rm-feature-status ;
-  pf:contains d:ws-run-implement ;
-  pf:contains d:ws-view-checklist ;
   pf:systemOf d:product-cli .
 
 d:flow-init a pf:Flow ;
@@ -1270,12 +1133,6 @@ d:flow-model-session a pf:Flow ;
   pf:contains d:ev-event-added ;
   pf:contains d:ev-view-refreshed ;
   pf:contains d:ws-facilitate ;
-  pf:systemOf d:product-cli .
-
-d:flow-status a pf:Flow ;
-  rdfs:label "Product Status Overview (read-only)" ;
-  pf:contains d:rm-product-status ;
-  pf:contains d:ws-run-status ;
   pf:systemOf d:product-cli .
 
 d:flow-session-lifecycle a pf:Flow ;
@@ -1382,11 +1239,6 @@ d:sys-shop a pf:System ;
   pf:targetsClass "gui" ;
   pf:rootsAt d:app-shop .
 
-d:t-accept-decision a pf:Trigger ;
-  rdfs:label "User accepts a decision" ;
-  pf:source "user" ;
-  pf:issues d:cmd-accept-decision .
-
 d:t-add-command a pf:Trigger ;
   rdfs:label "User adds a command" ;
   pf:source "user" ;
@@ -1412,11 +1264,6 @@ d:t-agent-init a pf:Trigger ;
   pf:source "user" ;
   pf:issues d:cmd-agent-init .
 
-d:t-check-conformance a pf:Trigger ;
-  rdfs:label "User runs conformance check" ;
-  pf:source "user" ;
-  pf:issues d:cmd-check-conformance .
-
 d:t-checkout a pf:Trigger ;
   rdfs:label "Shopper checks out" ;
   pf:source "user" ;
@@ -1426,11 +1273,6 @@ d:t-finalize a pf:Trigger ;
   rdfs:label "User finalizes the session" ;
   pf:source "user" ;
   pf:issues d:cmd-finalize-session .
-
-d:t-implement a pf:Trigger ;
-  rdfs:label "User runs implement" ;
-  pf:source "user" ;
-  pf:issues d:cmd-implement-feature .
 
 d:t-init a pf:Trigger ;
   rdfs:label "User initializes the repo" ;
@@ -1453,11 +1295,6 @@ d:t-validate-what a pf:Trigger ;
   rdfs:label "User validates the What" ;
   pf:source "user" ;
   pf:issues d:cmd-validate-what .
-
-d:t-verify a pf:Trigger ;
-  rdfs:label "User runs verify" ;
-  pf:source "user" ;
-  pf:issues d:cmd-verify-feature .
 
 d:t-start-session a pf:Trigger ;
   rdfs:label "User starts a session" ;
