@@ -1,6 +1,6 @@
 [package]
 name = "product-cli"
-version = "0.3.1"
+version = "0.4.0"
 edition = "2021"
 authors = ["PiCloud Contributors"]
 license = "Apache-2.0"
@@ -17,8 +17,8 @@ path = "src/main.rs"
 workspace = true
 
 [dependencies]
-product-core = { path = "../product-core", version = "0.3.1" }
-product-mcp  = { path = "../product-mcp", version = "0.3.1" }
+product-core = { path = "../product-core", version = "0.4.0" }
+product-mcp  = { path = "../product-mcp", version = "0.4.0" }
 clap          = { version = "4", features = ["derive", "env"] }
 clap_complete = "4"
 serde         = { version = "1", features = ["derive"] }
