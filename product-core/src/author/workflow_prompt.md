@@ -8,9 +8,15 @@ the tools available now, and the next step. When a phase is complete, call
 
 The phases:
 
-1. **What** — capture the domain and event model. Use `product_domain_*` to add
-   entities, commands, events, read-models, and UI steps; `product_decider_*`
-   and `product_projector_*` to make behaviour executable. Validate with
+1. **What** — capture the domain and event model, in dependency order:
+   **domains → systems → flows**. Model the domain first (bounded contexts,
+   entities, commands, events, read-models — the hardest part, and everything
+   references it); then name the **systems** (§3.2.5) that reference those
+   domains; then the **flows** that belong to them (a flow cannot exist without a
+   system). Every node is one `product_domain_new` call — there is no per-kind
+   tool: systems are `kind=system` with `system_kind` (service | application |
+   website | cli), flows are `kind=flow` with `system=<id>`. `product_decider_*`
+   and `product_projector_*` make behaviour executable. Validate with
    `product_domain_validate`. Advance when the What graph is conformant.
 
 2. **How** — define the architecture contract. Use `product_how_*`,

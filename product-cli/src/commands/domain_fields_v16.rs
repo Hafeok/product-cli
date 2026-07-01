@@ -35,6 +35,9 @@ pub struct V16Fields {
     /// §3.6 quality-demand kind (`runtime-bound` or `architectural`)
     #[arg(long = "demand-kind")]
     demand_kind: Option<String>,
+    /// §4.5 design-token kind (`colour` | `spacing` | `typography` | …)
+    #[arg(long = "token-kind")]
+    token_kind: Option<String>,
     /// §3.6 the checkable bound or constraint (e.g. `p99 latency ≤ 200ms`)
     #[arg(long = "bound")]
     bound: Option<String>,
@@ -61,6 +64,7 @@ impl V16Fields {
         if let Some(v) = &self.composes_flow { put("composes_flow", json!(v)); }
         if let Some(v) = &self.crosses_via { put("crosses_via", json!(v)); }
         if let Some(v) = &self.demand_kind { put("kind", json!(v)); }
+        if let Some(v) = &self.token_kind { put("kind", json!(v)); }
         if let Some(v) = &self.bound { put("bound", json!(v)); }
         if let Some(v) = &self.scopes { put("scopes", json!(v)); }
         if let Some(v) = &self.measured_by { put("measured_by", json!(v)); }

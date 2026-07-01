@@ -96,6 +96,29 @@ fn system_new_accepts_a_sub_kind_via_alias() {
 }
 
 #[test]
+fn quality_demand_kind_sets_via_alias() {
+    // The demand_kind alias closes the same `kind`-overload gap as system_kind
+    // (a §3.6 quality demand stores its kind in the shadowed `kind` field).
+    let r = repo();
+    let root = r.path();
+
+    // No demand_kind → non-conformant, rolls back.
+    let bare = handle_domain_new(
+        &json!({"kind":"quality-demand","id":"q-x","bound":"p99 ≤ 200ms","scopes":"sys-x"}),
+        root,
+    ).unwrap();
+    assert_eq!(bare["ok"], json!(false));
+
+    // With demand_kind the create is conformant and the kind lands on `kind`.
+    let ok = handle_domain_new(
+        &json!({"kind":"quality-demand","id":"q-x","demand_kind":"runtime-bound","bound":"p99 ≤ 200ms","scopes":"sys-x","measured_by":"otel"}),
+        root,
+    ).unwrap();
+    assert_eq!(ok["ok"], json!(true));
+    assert_eq!(handle_domain_show(&json!({"id":"q-x"}), root).unwrap()["node"]["kind"], json!("runtime-bound"));
+}
+
+#[test]
 fn product_owns_edges_persist_on_new_and_edit() {
     // Finding 2: relation fields persist; owns_domain/owns_system live on the
     // PRODUCT node (§3.0), not the system. Guards against the reported "ghost".

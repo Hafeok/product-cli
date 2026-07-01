@@ -3,17 +3,21 @@ name: product-what
 description: >
   Guide authoring the What — the domain model (§3.1) and event model (§3.2) —
   inside a product session's What phase: bounded contexts, entities, value
-  objects, commands, events, read-models, triggers, flows, plus Deciders (§3.3)
-  and Projectors (§3.4). Use when the session is in the What phase or the user
-  says "model the domain", "add an entity/command/event", "derive the decider",
-  or "validate the what".
+  objects, commands, events, read-models, triggers, systems, flows, plus Deciders
+  (§3.3) and Projectors (§3.4). Use when the session is in the What phase or the
+  user says "model the domain", "add an entity/command/event", "add a system",
+  "derive the decider", or "validate the what".
 ---
 
 # Product Session — the What phase
 
 Author the **What**: one graph with two lanes — **domain** (structure, §3.1) and
-**event** (behaviour, §3.2) — with bridge edges crossing between them. Start from
-behaviour (the flow is the unit of value); the structure follows.
+**event** (behaviour, §3.2) — with bridge edges crossing between them.
+
+**Author in dependency order: domains → systems → flows.** The domain is the
+hardest part and everything references it, so get it right first; then name the
+**systems** that reference those domains; only then the **flows** — because a
+flow belongs to exactly one system (§3.2.5) and cannot exist without it.
 
 **Precondition:** call `product_workflow_status`; `phase` must be `what`. If not,
 use **product-session** to advance/route.
@@ -34,12 +38,16 @@ use **product-session** to advance/route.
    → `kind=read-model` (`projects`).
 6. **Triggers (§3.2.0)** — what's the *source* (user | external | automated)
    issuing each command? → `kind=trigger` (`source`, `issues`).
-7. **Flows (§3.2.5)** — chain trigger → command → event → read-model into named
-   flows and assign **system ownership**. → `kind=flow` (`steps`, `system`).
-8. **Deciders (§3.3)** — make behaviour executable:
+7. **Systems (§3.2.5)** — name the surfaces that reference the domains (an app,
+   website, service, or CLI), *before* any flow — a flow belongs to exactly one
+   system. → `kind=system` (`system_kind`, `purpose`, `references_domain`).
+8. **Flows (§3.2.4)** — chain trigger → command → event → read-model into named
+   flows and assign **system ownership** to a system from step 7. → `kind=flow`
+   (`steps`, `system`).
+9. **Deciders (§3.3)** — make behaviour executable:
    `product_decider_derive <aggregate>` → `product_decider_validate <id>` →
    `product_decider_simulate`.
-9. **Projectors (§3.4)** — the read-model peer:
+10. **Projectors (§3.4)** — the read-model peer:
    `product_projector_derive` → `product_projector_validate`.
 
 Inspect anytime: `product_domain_list`, `product_domain_show <id>`,
@@ -59,9 +67,11 @@ When `validate` is green, advance: `product_workflow_advance` → **How** (use
 
 ## Worked micro-example
 
-A one-flow slice: `trigger t-x (source=user, issues=cmd-x)` → `command cmd-x
-(targets=e-thing, emits=ev-x)` → `event ev-x (changes=e-thing)` → `entity e-thing
-(is_aggregate_root)` → `flow f-x (steps=[cmd-x, ev-x], system=sys-a)`. Six
-`product_domain_new` calls, then `product_domain_validate`.
+A one-flow slice, in order — domain first, then the system, then the flow:
+`entity e-thing (is_aggregate_root)` → `command cmd-x (targets=e-thing,
+emits=ev-x)` → `event ev-x (changes=e-thing)` → `trigger t-x (source=user,
+issues=cmd-x)` → `system sys-a (system_kind=service)` → `flow f-x (steps=[cmd-x,
+ev-x], system=sys-a)`. Six `product_domain_new` calls, then
+`product_domain_validate`.
 
 Guardrails: see **product-session** (locked session; `author-domain` is user data).

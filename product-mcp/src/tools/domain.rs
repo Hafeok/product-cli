@@ -119,12 +119,14 @@ fn node_field_props() -> serde_json::Map<String, serde_json::Value> {
 }
 
 /// The top-level `kind` is the node-type router, so it shadows the `kind`
-/// *struct field* that `System` (§3.2.5) and `ContextMapping` (§3.1) carry.
-/// Expose that field under un-shadowed aliases the handler maps back to `kind`
-/// (parity with the CLI's `--system-kind` / `--mapping-kind`).
+/// *struct field* that `System` (§3.2.5), `ContextMapping` (§3.1), `QualityDemand`
+/// (§3.6), and `Token` (§4.5) carry. Expose that field under the un-shadowed
+/// aliases the handler maps back to `kind`, driven by the single [`KIND_ALIASES`]
+/// table so schema and handler cannot disagree, nor drift as kinds are added.
 fn add_kind_aliases(props: &mut serde_json::Map<String, serde_json::Value>) {
-    props.insert("system_kind".to_string(), serde_json::json!({"type": "string", "description": "§3.2.5 system sub-kind: application | website | service | cli | …"}));
-    props.insert("mapping_kind".to_string(), serde_json::json!({"type": "string", "description": "§3.1 context-mapping kind (e.g. shared-kernel, customer-supplier, …)"}));
+    for a in product_core::pf::kind_alias::KIND_ALIASES {
+        props.insert(a.alias.to_string(), serde_json::json!({"type": "string", "description": a.description}));
+    }
 }
 
 fn write_tools() -> Vec<ToolDef> {
@@ -205,12 +207,30 @@ mod tests {
     }
 
     #[test]
-    fn kind_aliases_are_exposed_so_a_system_sub_kind_is_reachable() {
-        // BUG 1: the top-level `kind` shadows the System/ContextMapping `kind`
-        // field; the aliases are how a schema-typed client reaches it.
+    fn every_shadowed_kind_field_has_an_alias() {
+        // The pattern guard: any node kind whose struct carries a `kind` field is
+        // shadowed by the node-type router, so it MUST have a KIND_ALIASES entry —
+        // else its kind is unreachable through product_domain_new. Fails by name
+        // when a new shadowed-`kind` kind is added without an alias.
+        use product_core::pf::ids::NodeKind;
+        use product_core::pf::kind_alias::KIND_ALIASES;
+        for kind in NodeKind::all() {
+            if props_for(kind).contains_key("kind") {
+                assert!(
+                    KIND_ALIASES.iter().any(|a| a.kind == kind),
+                    "{kind:?} has a shadowed `kind` field but no KIND_ALIASES entry in pf::ids"
+                );
+            }
+        }
+        // …and every alias must actually surface in the new-node schema.
         let props = new_schema_props();
-        assert_eq!(props.get("system_kind").and_then(|f| f.get("type")).and_then(|t| t.as_str()), Some("string"));
-        assert_eq!(props.get("mapping_kind").and_then(|f| f.get("type")).and_then(|t| t.as_str()), Some("string"));
+        for a in KIND_ALIASES {
+            assert_eq!(
+                props.get(a.alias).and_then(|f| f.get("type")).and_then(|t| t.as_str()),
+                Some("string"),
+                "alias {} missing from the product_domain_new schema", a.alias
+            );
+        }
     }
 
     #[test]

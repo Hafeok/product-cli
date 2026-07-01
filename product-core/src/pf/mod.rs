@@ -35,6 +35,7 @@ pub mod lsp;
 pub mod how_turtle;
 pub mod how_validate;
 pub mod ids;
+pub mod kind_alias;
 pub mod data_check;
 pub mod build_seam;
 pub mod model;

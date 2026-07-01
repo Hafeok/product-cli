@@ -241,7 +241,7 @@ fn status(registry: &ToolRegistry, ctx: &WorkflowCtx) -> Result<Value, String> {
 
 fn phase_hint(phase: Phase) -> String {
     match phase {
-        Phase::What => "Author the domain/event model with product_domain_*, product_decider_*, product_projector_*. Advance to How when the What graph validates.".into(),
+        Phase::What => "Author the domain/event model in dependency order — domains → systems → flows: model the domain first (the hardest, and everything references it), then the systems that reference it, then the flows that belong to them (a flow cannot exist without a system, §3.2.5). Every node is a product_domain_new call — there is no per-kind tool: systems → kind=system with system_kind=service|application|website|cli; flows → kind=flow with system=<id>; the product's What-version → kind=product with version=<v>. Make behaviour executable with product_decider_* / product_projector_*. Advance to How (where product_how_set carries the §7.3 realises-version) when product_domain_validate is green.".into(),
         Phase::How => "Author the How: product_how_init scaffolds the contract, product_how_add / product_how_set build the Why cascade (decisions → principles → patterns) plus the application/infrastructure contracts. Inspect with product_archetype_* / product_work_unit_*. Advance to Build when the architecture is set.".into(),
         Phase::Build => "Run product_build_run on a deliverable. Call product_session_finalize to promote the draft graph into the canonical spec.".into(),
     }
