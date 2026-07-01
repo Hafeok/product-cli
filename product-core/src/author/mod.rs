@@ -7,6 +7,30 @@ use std::path::Path;
 
 use crate::error::{ProductError, Result};
 
+/// The MCP registry name this CLI is published under (`io.github.<owner>/<repo>`).
+///
+/// Used as the `mcpServers` config key when wiring a session server into the
+/// Claude or Copilot CLI, so a locally-launched session names the server exactly
+/// as the github.com MCP registry does — which is also the raw token Copilot
+/// matches in `--available-tools` / `--allow-tool`.
+pub const MCP_SERVER_NAME: &str = "io.github.Hafeok/product-cli";
+
+/// The Claude Code `--allowedTools` glob selecting [`MCP_SERVER_NAME`]'s tools.
+///
+/// Claude derives MCP tool names as `mcp__<server>__<tool>`, replacing every
+/// character outside `[A-Za-z0-9_-]` in the server name with `_`; the allow glob
+/// must match that sanitized prefix, so `io.github.Hafeok/product-cli` becomes
+/// `mcp__io_github_Hafeok_product-cli__*`. (Copilot, by contrast, matches the raw
+/// name.) Get this wrong and the glob matches nothing — leaving the agent with no
+/// MCP tools, silently.
+pub fn claude_tools_glob() -> String {
+    let sanitized: String = MCP_SERVER_NAME
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() || c == '_' || c == '-' { c } else { '_' })
+        .collect();
+    format!("mcp__{sanitized}__*")
+}
+
 /// Recursively copy `src` into `dst`, creating `dst` as needed. Top-level
 /// entries whose file name is in `skip` are not copied (used to keep a session
 /// workspace from recursing into `.product/sessions` or copying `build`
@@ -72,5 +96,22 @@ impl std::fmt::Display for AgentCli {
             Self::Claude => write!(f, "claude"),
             Self::Copilot => write!(f, "copilot"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn server_name_is_the_registry_reverse_dns_name() {
+        assert_eq!(MCP_SERVER_NAME, "io.github.Hafeok/product-cli");
+    }
+
+    #[test]
+    fn claude_glob_matches_claudes_sanitized_tool_prefix() {
+        // Claude replaces every char outside [A-Za-z0-9_-] in the server name
+        // with `_` when it builds `mcp__<server>__<tool>`; the `-` survives.
+        assert_eq!(claude_tools_glob(), "mcp__io_github_Hafeok_product-cli__*");
     }
 }

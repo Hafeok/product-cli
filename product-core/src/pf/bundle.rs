@@ -2,7 +2,7 @@
 //!
 //! The domain analog of `context::bundle_feature`: given a focus node (an
 //! entity, bounded context, flow, …) and a traversal depth, gather the
-//! reachable slice of the captured What graph and render an LLM-ready markdown
+//! reachable subgraph of the captured What graph and render an LLM-ready markdown
 //! bundle — the focus node in full, then its neighbourhood grouped by kind.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
@@ -16,7 +16,7 @@ pub fn bundle(graph: &DomainGraph, id: &str, depth: usize, product: &str) -> Opt
     bundle_many(graph, &[id.to_string()], depth, product)
 }
 
-/// Assemble one bundle over the union of several focus nodes — a saved slice of
+/// Assemble one bundle over the union of several focus nodes — a saved feature of
 /// the event model (§7.1). Absent anchors are skipped; `None` if none resolve.
 pub fn bundle_many(graph: &DomainGraph, anchors: &[String], depth: usize, product: &str) -> Option<String> {
     let present: Vec<&String> = anchors.iter().filter(|a| graph.kind_of(a).is_some()).collect();
@@ -61,8 +61,8 @@ pub fn bundle_many(graph: &DomainGraph, anchors: &[String], depth: usize, produc
     Some(out)
 }
 
-/// The set of nodes covered by a slice — the union of each anchor's reachable
-/// set to `depth` hops. (§7 delivery: a slice's in-scope elements.)
+/// The set of nodes covered by a feature — the union of each anchor's reachable
+/// set to `depth` hops. (§7 delivery: a feature's in-scope elements.)
 pub fn covered(graph: &DomainGraph, anchors: &[String], depth: usize) -> BTreeSet<String> {
     let mut set = BTreeSet::new();
     for a in anchors {

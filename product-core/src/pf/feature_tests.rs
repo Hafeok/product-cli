@@ -1,4 +1,4 @@
-//! Tests for delivery-slice validation + context assembly.
+//! Tests for delivery-feature validation + context assembly.
 
 use super::*;
 use crate::pf::model::*;
@@ -15,32 +15,32 @@ fn sample() -> DomainGraph {
 
 #[test]
 fn yaml_round_trips() {
-    let s = Slice { id: "place-order".into(), anchors: vec!["PlaceOrderFlow".into()], depth: Some(3) };
-    assert_eq!(Slice::from_yaml(&s.to_yaml().expect("to")).expect("from"), s);
+    let s = Feature { id: "place-order".into(), anchors: vec!["PlaceOrderFlow".into()], depth: Some(3) };
+    assert_eq!(Feature::from_yaml(&s.to_yaml().expect("to")).expect("from"), s);
 }
 
 #[test]
 fn an_empty_anchor_list_is_a_violation() {
-    let s = Slice { id: "x".into(), anchors: vec![], depth: None };
-    assert!(validate_slice(&s, &sample()).iter().any(|v| v.path == "anchors"));
+    let s = Feature { id: "x".into(), anchors: vec![], depth: None };
+    assert!(validate_feature(&s, &sample()).iter().any(|v| v.path == "anchors"));
 }
 
 #[test]
 fn a_dangling_anchor_is_a_violation() {
-    let s = Slice { id: "x".into(), anchors: vec!["Ghost".into()], depth: None };
-    assert!(validate_slice(&s, &sample()).iter().any(|v| v.path == "anchors" && v.message.contains("Ghost")));
+    let s = Feature { id: "x".into(), anchors: vec!["Ghost".into()], depth: None };
+    assert!(validate_feature(&s, &sample()).iter().any(|v| v.path == "anchors" && v.message.contains("Ghost")));
 }
 
 #[test]
-fn a_resolving_slice_passes() {
-    let s = Slice { id: "po".into(), anchors: vec!["PlaceOrderFlow".into()], depth: None };
-    assert!(validate_slice(&s, &sample()).is_empty());
+fn a_resolving_feature_passes() {
+    let s = Feature { id: "po".into(), anchors: vec!["PlaceOrderFlow".into()], depth: None };
+    assert!(validate_feature(&s, &sample()).is_empty());
 }
 
 #[test]
 fn context_assembles_the_flow_closure() {
-    let s = Slice { id: "po".into(), anchors: vec!["PlaceOrderFlow".into()], depth: None };
-    let bundle = slice_context(&s, &sample(), s.depth(), "demo").expect("bundle");
+    let s = Feature { id: "po".into(), anchors: vec!["PlaceOrderFlow".into()], depth: None };
+    let bundle = feature_context(&s, &sample(), s.depth(), "demo").expect("bundle");
     // the flow is the focus; its steps + their entities/contexts are pulled in
     assert!(bundle.contains("PlaceOrderFlow"));
     assert!(bundle.contains("PlaceOrder"));
@@ -50,7 +50,7 @@ fn context_assembles_the_flow_closure() {
 
 #[test]
 fn multiple_anchors_union_into_one_bundle() {
-    let s = Slice { id: "two".into(), anchors: vec!["Sales".into(), "Order".into()], depth: Some(1) };
-    let bundle = slice_context(&s, &sample(), s.depth(), "demo").expect("bundle");
+    let s = Feature { id: "two".into(), anchors: vec!["Sales".into(), "Order".into()], depth: Some(1) };
+    let bundle = feature_context(&s, &sample(), s.depth(), "demo").expect("bundle");
     assert!(bundle.contains("focus≜Sales:BoundedContext, Order:Entity"));
 }

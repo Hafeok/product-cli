@@ -37,12 +37,15 @@ fn pending() -> String {
     "pending".to_string()
 }
 
-/// A delivery feature: a pointer to one slice plus its acceptance criteria.
+/// A deliverable: the shippable unit — a pointer to one feature (§7.1 subgraph)
+/// plus its acceptance criteria.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Deliverable {
     pub id: String,
-    /// The single slice this deliverable ships.
-    pub slice: String,
+    /// The single feature (§7.1) this deliverable ships. `alias = "slice"` keeps
+    /// pre-rename `.product/deliverables/*.yaml` (written with `slice:`) loadable.
+    #[serde(alias = "slice")]
+    pub feature: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub acceptance: Vec<AcceptanceCriterion>,
 }
@@ -59,16 +62,16 @@ impl Deliverable {
     }
 }
 
-/// Validate a deliverable: it must name a slice that resolves (against the set
-/// of known slice ids), and each acceptance criterion must be a checkable
+/// Validate a deliverable: it must name a feature that resolves (against the set
+/// of known feature ids), and each acceptance criterion must be a checkable
 /// statement.
-pub fn validate_deliverable(d: &Deliverable, known_slices: &BTreeSet<String>) -> Vec<Violation> {
+pub fn validate_deliverable(d: &Deliverable, known_features: &BTreeSet<String>) -> Vec<Violation> {
     let mut out = Vec::new();
-    if d.slice.trim().is_empty() {
-        out.push(v(&d.id, "slice", "§7.1 A deliverable must point at exactly one slice."));
-    } else if !known_slices.contains(&d.slice) {
-        out.push(v(&d.id, "slice",
-            &format!("§7.1 slice '{}' is not a saved slice — create it with `product slice new`.", d.slice)));
+    if d.feature.trim().is_empty() {
+        out.push(v(&d.id, "feature", "§7.1 A deliverable must point at exactly one feature."));
+    } else if !known_features.contains(&d.feature) {
+        out.push(v(&d.id, "feature",
+            &format!("§7.1 feature '{}' is not a saved feature — create it with `product feature new`.", d.feature)));
     }
     for a in &d.acceptance {
         if a.statement.trim().is_empty() {

@@ -1,7 +1,7 @@
 //! Releases — a coherent set of delivery features (§7.1).
 //!
 //! `product release {new,list,show}` groups deliverables that ship together. A
-//! release is a partition of the What via its deliverables' slices, validated so
+//! release is a partition of the What via its deliverables' features, validated so
 //! every member resolves to a real deliverable.
 
 use clap::Subcommand;
@@ -55,7 +55,7 @@ fn done(name: &str, product: Option<String>) -> BoxResult {
     let mut members = Vec::new();
     for f in &release.features {
         let d = super::deliverable::load(f)?;
-        let s = super::deliverable::load_slice(&d.slice)?;
+        let s = super::deliverable::load_feature(&d.feature)?;
         members.push((d, s));
     }
     let rd = release_done(&release.id, &members, &graph, &deciders, &super::decider::conformed_set(), &super::deliverable::load_projectors());

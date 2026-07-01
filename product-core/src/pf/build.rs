@@ -1,7 +1,7 @@
 //! SPMC build-context assembly for a deliverable (§5).
 //!
 //! Assembles the *frozen Context* an agent needs to realise one delivery
-//! feature: the What slice it ships, the How to apply by pointer, the Decider
+//! feature: the What subgraph it ships, the How to apply by pointer, the Decider
 //! oracle its behaviour must match, and the acceptance it must satisfy. The
 //! agent re-derives nothing — the hard reasoning is upstream (§5).
 
@@ -10,26 +10,26 @@ use super::decider::Decider;
 use super::deliverable::Deliverable;
 use super::how::HowContract;
 use super::model::DomainGraph;
-use super::slice::Slice;
+use super::feature::Feature;
 
 /// Assemble the SPMC frozen context (markdown) for a deliverable.
 pub fn assemble(
     d: &Deliverable,
-    slice: &Slice,
+    feature: &Feature,
     graph: &DomainGraph,
     how: Option<&HowContract>,
     deciders: &[Decider],
     product: &str,
 ) -> String {
-    let scope = covered(graph, &slice.anchors, slice.depth());
+    let scope = covered(graph, &feature.anchors, feature.depth());
     let mut out = String::new();
-    out.push_str(&format!("# Build Context: {} — slice `{}`\n\n", d.id, d.slice));
+    out.push_str(&format!("# Build Context: {} — feature `{}`\n\n", d.id, d.feature));
     out.push_str("⟦Ω:SPMC⟧ Frozen context. Produce one artifact; reference the What/How by pointer; do not re-decide them.\n\n---\n\n");
 
-    out.push_str("## What — the slice to realise\n\n");
-    match bundle_many(graph, &slice.anchors, slice.depth(), product) {
+    out.push_str("## What — the feature to realise\n\n");
+    match bundle_many(graph, &feature.anchors, feature.depth(), product) {
         Some(b) => out.push_str(&b),
-        None => out.push_str("_(slice resolves to no nodes)_\n"),
+        None => out.push_str("_(feature resolves to no nodes)_\n"),
     }
     out.push_str("\n---\n\n");
 

@@ -1228,7 +1228,7 @@ fn tc_1030_product_journey_quality_demand_and_journey_conformance() {
 #[test]
 fn tc_1031_how_versions_and_target_direction() {
     let h = Harness::new();
-    // A node to anchor a slice on.
+    // A node to anchor a feature on.
     h.run(&["domain", "new", "context", "Catalog", "--label", "Catalog"]).assert_exit(0);
 
     // §7.3 — the How carries its own version and the What-version it realises.
@@ -1240,10 +1240,10 @@ fn tc_1031_how_versions_and_target_direction() {
     assert!(hs.stdout.contains("1.3.0") && hs.stdout.contains("What 2.0"),
         "how show carries both versions:\n{}", hs.stdout);
 
-    // A target version is a declared partition of feature-slices (deliverables).
-    h.run(&["slice", "new", "sl-1", "--anchor", "Catalog"]).assert_exit(0);
-    h.run(&["deliverable", "new", "del-1", "--slice", "sl-1", "--accept", "ac1:the catalog ships"]).assert_exit(0);
-    h.run(&["target", "new", "v2", "--version", "2.0", "--slice", "del-1"]).assert_exit(0);
+    // A target version is a declared partition of features (deliverables).
+    h.run(&["feature", "new", "sl-1", "--anchor", "Catalog"]).assert_exit(0);
+    h.run(&["deliverable", "new", "del-1", "--feature", "sl-1", "--accept", "ac1:the catalog ships"]).assert_exit(0);
+    h.run(&["target", "new", "v2", "--version", "2.0", "--feature", "del-1"]).assert_exit(0);
     let ts = h.run(&["target", "show", "v2"]);
     ts.assert_exit(0);
     assert!(ts.stdout.contains("What 2.0") && ts.stdout.contains("del-1"),
@@ -1253,10 +1253,10 @@ fn tc_1031_how_versions_and_target_direction() {
     let dir = h.run(&["target", "direction", "v2"]);
     dir.assert_exit(1); // del-1 is not done yet
     assert!(dir.stdout.contains("unrealised") && dir.stdout.contains("del-1"),
-        "direction reports the unrealised slice:\n{}", dir.stdout);
+        "direction reports the unrealised feature:\n{}", dir.stdout);
 
     // A target naming a non-deliverable member is rejected.
-    h.run(&["target", "new", "bad", "--slice", "nope"]).assert_exit(1);
+    h.run(&["target", "new", "bad", "--feature", "nope"]).assert_exit(1);
 }
 
 // --- §5.1 the Build seam — verdict validation (1.6.0) ----------------------

@@ -1,5 +1,5 @@
 id: ship-ctx-view-live
-slice: ctx-view-live
+feature: ctx-view-live
 acceptance:
 - id: view-derivation-verified
   statement: GET /api/graph reflects the on-disk What graph on every request

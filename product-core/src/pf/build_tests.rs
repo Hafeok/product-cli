@@ -14,16 +14,16 @@ fn graph() -> DomainGraph {
 
 #[test]
 fn assembles_the_spmc_sections() {
-    let slice = Slice { id: "order-slice".into(), anchors: vec!["Order".into()], depth: Some(2) };
+    let feature = Feature { id: "order-feature".into(), anchors: vec!["Order".into()], depth: Some(2) };
     let d = Deliverable {
         id: "place-order".into(),
-        slice: "order-slice".into(),
+        feature: "order-feature".into(),
         acceptance: vec![AcceptanceCriterion { id: "a1".into(), statement: "an order can be placed".into(), status: "pending".into(), runner: None, runner_args: None }],
     };
-    let ctx = assemble(&d, &slice, &graph(), None, &[], "demo");
+    let ctx = assemble(&d, &feature, &graph(), None, &[], "demo");
     assert!(ctx.contains("Build Context: place-order"));
     assert!(ctx.contains("## What"));
-    assert!(ctx.contains("PlaceOrder"));      // the slice subgraph is included
+    assert!(ctx.contains("PlaceOrder"));      // the feature subgraph is included
     assert!(ctx.contains("## How"));
     assert!(ctx.contains("## Behaviour"));
     assert!(ctx.contains("## Acceptance"));

@@ -74,7 +74,7 @@ pub fn phase_of(name: &str) -> Phase {
     } else if HOW.iter().any(|p| name.starts_with(p)) {
         Phase::How
     } else {
-        // slice / deliverable / release / build_run
+        // feature / deliverable / release / build_run
         Phase::Build
     }
 }
@@ -150,7 +150,7 @@ fn initialize(request: &JsonRpcRequest) -> JsonRpcResponse {
         json!({
             "protocolVersion": "2024-11-05",
             "capabilities": { "tools": { "listChanged": true } },
-            "serverInfo": { "name": "product", "version": env!("CARGO_PKG_VERSION") },
+            "serverInfo": { "name": product_core::author::MCP_SERVER_NAME, "version": env!("CARGO_PKG_VERSION") },
         }),
     )
 }
@@ -336,7 +336,7 @@ mod tests {
         assert_eq!(phase_of("product_cell_dispatch"), Phase::How);
         assert_eq!(phase_of("product_work_unit_init"), Phase::How);
         assert_eq!(phase_of("product_work_unit_show"), Phase::How);
-        assert_eq!(phase_of("product_slice_new"), Phase::Build);
+        assert_eq!(phase_of("product_feature_new"), Phase::Build);
         assert_eq!(phase_of("product_build_run"), Phase::Build);
     }
 

@@ -13,12 +13,16 @@ The phases:
    and `product_projector_*` to make behaviour executable. Validate with
    `product_domain_validate`. Advance when the What graph is conformant.
 
-2. **How** — define the architecture contract and delivery decomposition. Use
-   `product_how_*`, `product_archetype_*`, `product_cell_*`, and
-   `product_slice_*`. Advance when the How contract is set.
+2. **How** — define the architecture contract. Use `product_how_*`,
+   `product_archetype_*`, `product_cell_*`, and `product_work_unit_*` (a work
+   unit is the atomic slice — a single pattern instance). Advance when the How
+   contract is set.
 
-3. **Build** — realise a deliverable. Use `product_build_run` to assemble the
-   context, dispatch a worker, and run the gates. Review the returned report.
+3. **Build** — partition the What into shippable features and realise them. A
+   **feature** is a subgraph of one or more flows (§7.1); author them with
+   `product_feature_*`, group them into `product_deliverable_*` /
+   `product_release_*`, then run `product_build_run` to assemble the context,
+   dispatch a worker, and run the gates. Review the returned report.
 
 When the work is done, call `product_session_finalize`. This validates the draft
 What graph and promotes this session's isolated workspace into the canonical

@@ -5,7 +5,7 @@ use clap::Command as ClapCommand;
 use super::{
     archetype, author, build, cell, completions, decider, deliverable, domain, guide, hooks, how,
     init, lsp, mcp_cmd, preview, primitive, projector, release, render, seam, session, skills,
-    slice, target, verdict, work_unit, worker, BoxResult, Commands,
+    feature, target, verdict, work_unit, worker, BoxResult, Commands,
 };
 
 pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapCommand) -> BoxResult {
@@ -23,7 +23,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Seam { id, product } => seam::handle_seam(id, product),
         Commands::Verdict { file } => verdict::handle_verdict(file),
         // Product-Framework families route through a sub-dispatcher (keeps this match small).
-        c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Primitive { .. } | Commands::Deliverable { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Preview { .. } | Commands::Release { .. } | Commands::Slice { .. } | Commands::Target { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
+        c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Primitive { .. } | Commands::Deliverable { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Preview { .. } | Commands::Release { .. } | Commands::Feature { .. } | Commands::Target { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
     }
 }
 
@@ -40,7 +40,7 @@ fn dispatch_pf(command: Commands) -> BoxResult {
         Commands::How { command } => how::handle_how(command),
         Commands::Preview { command } => preview::handle_preview(command),
         Commands::Release { command } => release::handle_release(command),
-        Commands::Slice { command } => slice::handle_slice(command),
+        Commands::Feature { command } => feature::handle_feature(command),
         Commands::Target { command } => target::handle_target(command),
         Commands::WorkUnit { command } => work_unit::handle_work_unit(command),
         Commands::Worker { command } => worker::handle_worker(command),

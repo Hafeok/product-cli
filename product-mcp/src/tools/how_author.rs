@@ -52,7 +52,7 @@ fn selector_props(selector: &str, choices: &str) -> Value {
 
 pub(super) fn all() -> Vec<ToolDef> {
     let add_props = selector_props("element", "decision | principle | pattern | interface | app-statement | resource");
-    let set_props = selector_props("target", "app-contract | infra-contract");
+    let set_props = selector_props("target", "app-contract | infra-contract | version | realises-version");
     let edit_props = selector_props("element", "decision | principle | pattern | interface");
 
     vec![
@@ -70,7 +70,7 @@ pub(super) fn all() -> Vec<ToolDef> {
         ),
         write(
             "product_how_set",
-            "Set a singleton contract — `target` (app-contract | infra-contract) + `id` plus its fields. Validated in-loop; returns { ok, id, element, violations }.",
+            "Set a singleton — `target` (app-contract | infra-contract) + `id` plus its fields, or a §7.3 version (version | realises-version) where `id` carries the version string. Validated in-loop; returns { ok, id, element, violations }.",
             set_props,
             serde_json::json!(["target", "id"]),
         ),

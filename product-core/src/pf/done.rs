@@ -16,7 +16,7 @@ use super::deliverable::Deliverable;
 use super::model::DomainGraph;
 use super::projector::Projector;
 use super::projector_sim;
-use super::slice::Slice;
+use super::feature::Feature;
 use super::validate::validate_graph;
 
 /// One sub-verification contributing to a deliverable's done verdict.
@@ -51,13 +51,13 @@ impl FeatureDone {
 /// in-scope Decider must both simulate sound+complete *and* be conformed.
 pub fn feature_done(
     d: &Deliverable,
-    slice: &Slice,
+    feature: &Feature,
     graph: &DomainGraph,
     deciders: &[Decider],
     conformed: &BTreeSet<String>,
     projectors: &[Projector],
 ) -> FeatureDone {
-    let scope = covered(graph, &slice.anchors, slice.depth());
+    let scope = covered(graph, &feature.anchors, feature.depth());
     let mut checks = Vec::new();
     domain_checks(graph, &scope, &mut checks);
     behavioural_checks(deciders, &scope, conformed, &mut checks);
@@ -167,7 +167,7 @@ impl ReleaseDone {
 }
 
 /// Compute `release_done`: all member features done AND the cut is closed.
-pub fn release_done(id: &str, members: &[(Deliverable, Slice)], graph: &DomainGraph, deciders: &[Decider], conformed: &BTreeSet<String>, projectors: &[Projector]) -> ReleaseDone {
+pub fn release_done(id: &str, members: &[(Deliverable, Feature)], graph: &DomainGraph, deciders: &[Decider], conformed: &BTreeSet<String>, projectors: &[Projector]) -> ReleaseDone {
     let mut union = BTreeSet::new();
     let mut feature_results = Vec::new();
     for (d, s) in members {

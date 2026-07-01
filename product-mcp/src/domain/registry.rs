@@ -104,7 +104,7 @@ fn initialize(request: &JsonRpcRequest) -> JsonRpcResponse {
     JsonRpcResponse::success(request.id.clone(), serde_json::json!({
         "protocolVersion": "2024-11-05",
         "capabilities": { "tools": {} },
-        "serverInfo": { "name": "product-author-domain", "version": env!("CARGO_PKG_VERSION") },
+        "serverInfo": { "name": product_core::author::MCP_SERVER_NAME, "version": env!("CARGO_PKG_VERSION") },
     }))
 }
 

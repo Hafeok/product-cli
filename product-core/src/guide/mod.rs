@@ -2,11 +2,11 @@
 //! What → How → Delivery journey and the exact next command to run.
 //!
 //! The framework graph (bounded contexts, entities, events, commands, read
-//! models, deciders, the How contract, slices, deliverables) has all its
+//! models, deciders, the How contract, features, deliverables) has all its
 //! machinery but no on-ramp: each command stands alone and nothing connects
 //! them. `guide` is the spine — it probes the graph's state and returns the
 //! current [`Stage`] plus the concrete next step(s), papering over the
-//! authoring papercuts (relations required up front, `slice --anchor`).
+//! authoring papercuts (relations required up front, `feature --anchor`).
 
 use std::path::Path;
 
@@ -33,15 +33,15 @@ pub struct FrameworkState {
     pub read_models: usize,
     /// Blocking conformance violations in the What graph (0 = conformant).
     pub violations: usize,
-    /// An example command id, for a concrete `slice --anchor` suggestion.
+    /// An example command id, for a concrete `feature --anchor` suggestion.
     pub first_command: Option<String>,
     /// A How contract (`how-contract.yaml`) is present and parses.
     pub has_how: bool,
     pub deciders: usize,
     pub projectors: usize,
-    pub slices: usize,
-    /// An example slice id, for a concrete `deliverable --slice` suggestion.
-    pub first_slice: Option<String>,
+    pub features: usize,
+    /// An example feature id, for a concrete `deliverable --feature` suggestion.
+    pub first_feature: Option<String>,
     pub deliverables: usize,
     pub releases: usize,
 }
@@ -75,8 +75,8 @@ impl FrameworkState {
             has_how,
             deciders: count_yaml(&pdir.join("deciders")),
             projectors: count_yaml(&pdir.join("projectors")),
-            slices: count_yaml(&pdir.join("slices")),
-            first_slice: first_yaml_stem(&pdir.join("slices")),
+            features: count_yaml(&pdir.join("features")),
+            first_feature: first_yaml_stem(&pdir.join("features")),
             deliverables: count_yaml(&pdir.join("deliverables")),
             releases: count_yaml(&pdir.join("releases")),
         }
@@ -115,7 +115,7 @@ fn probe_what(graph: Option<&crate::pf::model::DomainGraph>) -> WhatProbe {
 }
 
 /// The stem of the first `*.yaml` file directly under `dir` (sorted for
-/// determinism), or `None`. Used to name a concrete slice in guidance.
+/// determinism), or `None`. Used to name a concrete feature in guidance.
 fn first_yaml_stem(dir: &Path) -> Option<String> {
     let mut names: Vec<String> = std::fs::read_dir(dir)
         .ok()?
@@ -138,9 +138,9 @@ pub enum Stage {
     FixWhat,
     /// What is conformant; no How contract yet.
     AuthorHow,
-    /// How exists; no delivery slice carved.
-    CarveSlice,
-    /// A slice exists; no deliverable wraps it.
+    /// How exists; no delivery feature carved.
+    CarveFeature,
+    /// A feature exists; no deliverable wraps it.
     WrapDeliverable,
     /// A deliverable exists — make behaviour executable and build.
     BuildIt,

@@ -66,7 +66,7 @@ pub mod seed_canon;
 pub mod seed_data;
 pub mod seed_ui;
 pub mod session;
-pub mod slice;
+pub mod feature;
 pub mod sparql_rules;
 pub mod target;
 pub mod turtle;

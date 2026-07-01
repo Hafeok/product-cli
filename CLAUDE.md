@@ -3,16 +3,18 @@
 ## What is this project?
 
 Product is a Rust CLI and MCP server for the **Product Framework** — the open
-What/How specification graph (`docs/product-framework-open.md`). It captures and
-verifies a product's *What* (domain model, event model, Deciders, Projectors,
-systems, triggers, UI/AIO model) and *How* (contracts, reification, delivery),
-all under `.product/`. The reference What lives in
+What/How specification graph (`docs/product-framework-open.md`, currently
+v1.6.1). It captures and verifies a product's *What* (domain model, event model,
+Deciders, Projectors, systems, triggers, UI/AIO model) and *How* (contracts,
+reification, delivery), all under `.product/`. The reference What lives in
 `.product/author-domain/product-cli/`.
 
 > **Graph-only.** This repo was pivoted to the framework graph alone. The former
-> FT/ADR/TC knowledge-graph tool (the `feature`/`adr`/`test`/`gap`/`drift`/
-> `conformance`/`implement`/`verify` commands, `docs/{features,adrs,tests}`, and
-> the meta-graph engine) has been removed. Don't reach for those commands or dirs.
+> FT/ADR/TC knowledge-graph tool (the `adr`/`test`/`gap`/`drift`/`conformance`/
+> `implement`/`verify` commands, `docs/{features,adrs,tests}`, and the meta-graph
+> engine) has been removed. Don't reach for those commands or dirs. Note the
+> current `product feature` command is unrelated — it is the §7.1 **delivery
+> feature** (see *Vocabulary* below), not the old FT-XXX artifact.
 
 ## Build & Test
 
@@ -27,12 +29,12 @@ the first failing binary and skips the rest. The `t` alias is `test
 --no-fail-fast` (`.cargo/config.toml`): it runs every test binary and reports
 the complete result set at the end.
 
-Suite composition (~420 tests):
+Suite composition (~500 tests):
 
 | Binary | What it covers |
 |---|---|
 | `cargo test -p product-core --lib` | pf unit tests (the framework graph, in `#[cfg(test)] mod tests`) |
-| `cargo test -p product-mcp` | MCP registry + framework tool handlers |
+| `cargo test -p product-mcp` | MCP registry + framework tool handlers (stateless + phase-gated session) |
 | `--test framework` | `assert_cmd`-driven framework CLI scenarios (`tests/framework.rs`) |
 | `--test code_quality_tests` | fitness gates: file length ≤ 400, function length, SRP, module structure |
 | `product-core/tests/property` | `proptest` over fileops/init |
@@ -61,12 +63,14 @@ product-core/        # Pure library: the `pf/` framework graph (domain model,
   Cargo.toml         #   event model, Deciders, Projectors, systems, triggers,
   src/lib.rs         #   UI/AIO model, How contract, validate/turtle/seed/rules),
   src/pf/            #   plus guide, demo, error, fileops, parse, io, config.
-  src/pf/<slice>/    #   NO clap / axum / tower-http. `[lib] name = "product_core"`
+  src/pf/<mod>/      #   NO clap / axum / tower-http. `[lib] name = "product_core"`
+  src/author/        #   Session launch: domain-capture + the phase-gated workflow
   tests/property/    #   proptest over fileops/init
 product-mcp/         # MCP server (stdio + HTTP via axum). Depends on
   Cargo.toml         #   product-core. Re-exports `ToolRegistry`,
   src/lib.rs         #   `run_stdio`, `run_http`, `serve_http_blocking`.
-  src/...            #   framework tool handlers (domain/decider/projector/…)
+  src/registry.rs    #   stateless tool dispatch (domain/decider/projector/…)
+  src/workflow.rs    #   phase-gated session transport (What→How→Build gating)
 product-cli/         # The `product` binary. Depends on product-core +
   src/main.rs        #   product-mcp. Owns clap, the commands/ adapter layer,
   src/commands/      #   and the framework integration tests.
@@ -74,7 +78,7 @@ product-cli/         # The `product` binary. Depends on product-core +
     domain.rs        #     What-graph CRUD + `validate [--strict]`
     decider.rs       #     §3.3 Decider derive/validate/simulate
     projector.rs     #     §3.4 Projector derive/validate
-    build.rs · how.rs · slice.rs · seam.rs · preview.rs · …
+    build.rs · how.rs · feature.rs · seam.rs · preview.rs · session.rs · …
     target.rs        #     §7.3 target version + computed direction/gap
     verdict.rs       #     §5.1 build-seam verdict-event validation
   tests/
@@ -82,13 +86,15 @@ product-cli/         # The `product` binary. Depends on product-core +
     code_quality_tests.rs   # fitness gates (walk every member src/)
 xtask/                # Workspace convention enforcement (`cargo xtask check`)
 docs/
-  product-framework-open.md   # The open framework spec (What/How/Delivery)
+  product-framework-open.md   # The open framework spec (What/How/Delivery), a
+                              #   mirror of ../product-framework (patch build-seam
+                              #   links back to schema/json/build-seam/ on re-sync)
   two-pillars-conformance.md  # The conformance clause set
   examples/ · workshop/       # Worked examples + workshop runbook
 .product/
   config.toml          # Repo config (`[author].cli` sets the default session CLI: claude|copilot)
   author-domain/       # The captured What graphs (e.g. product-cli — the example What)
-  deciders/ · slices/ · work-units/ · deliverables/ · archetypes/
+  deciders/ · features/ · work-units/ · deliverables/ · archetypes/ · sessions/
 ```
 
 **Downstream consumers** (e.g. `decision-cli`) should add only:
@@ -101,16 +107,43 @@ product-core = { path = "../product-cli/product-core" }   # or a git rev
 This buys the `pf/` framework graph and `ProductError` without
 pulling in `clap`, `axum`, `tower-http`, or the `product` binary.
 
+## Vocabulary — three senses of "slice" (don't conflate them)
+
+The framework (§7.1) fixes the delivery containment **feature ⊇ flow ⊇ slice**.
+The word "slice" is overloaded across the repo — keep the three apart:
+
+- **§7.1 feature** — a *reference to a subgraph* of one or more flows: the
+  `Feature` struct (`pf/feature.rs`), the `product feature` command, the
+  `product_feature_*` MCP tools, stored under `.product/features/*.yaml`. This is
+  the delivery unit that was formerly (mis)named "slice". A **deliverable** wraps
+  a feature and adds shippable acceptance/runner; a **release** partitions
+  deliverables.
+- **atomic slice = work unit (§5, §3.2.0)** — a single pattern instance
+  (Trigger → Command → Decider → Events, or a View + the events it reads): the
+  `product_work_unit_*` tools, stored under `.product/work-units/`. A flow is a
+  connected chain of these.
+- **vertical slice (architecture)** — the *module-organization* pattern below
+  ("Slice + Adapter"): a pure `pf/` module + a thin CLI adapter. Nothing to do
+  with delivery; it is how the code is laid out.
+
+Back-compat: the old `slice` on-disk key and CLI/MCP argument still load —
+`Deliverable.feature` carries `#[serde(alias = "slice")]`, CLI `--feature` has
+`alias = "slice"`, and the delivery MCP handlers fall back to the `slice`/`slices`
+keys.
+
 ## Working with the framework graph
 
 Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
 `.product/`:
 
 - **Author the What** — `product domain new <kind> <id> …` captures domain nodes
-  (entity, command, event, read-model, ui-step, system, trigger, **product**
+  (entity, command, event, read-model, ui-step, **system**, trigger, **product**
   (§3.0 root owning domains+systems), **journey** (§3.0.1 cross-system flow
   composition), **quality-demand** (§3.6 runtime-bound / architectural NFR), …);
   `product domain show/list` inspects them; `product domain export` emits Turtle.
+  A **system** must also declare its §3.2.5 sub-kind: `product domain new system
+  <id> --system-kind service|application|website|cli --purpose … ` (the top-level
+  `<kind>` selects the node *type*; `--system-kind` sets the system's own `kind`).
 - **Validate** — `product domain validate` runs the per-node §3.1/§3.2 shapes;
   `product domain validate --strict` adds the graph-level completeness checks
   (flow ownership §3.2.5, the Command pattern §3.2.0, view consumption §3.4, the
@@ -122,12 +155,14 @@ Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
   the §3.3 drift rules + the state/Decider justification detectors;
   `product decider simulate` runs its scenarios. `product projector …` is the §3.4
   read-model peer.
-- **Realise it** — `product how`, `product slice`, `product build`, `product seam`,
-  `product preview` cover the How contract, delivery slices, and the screen seam.
+- **Realise it** — `product how`, `product feature`, `product build`, `product seam`,
+  `product preview` cover the How contract, delivery features, and the screen seam.
+  `product feature new <id> --anchor <node>…` saves a §7.1 feature (a subgraph
+  pointer; its build-context is *assembled from the model*, never restated).
   `product how set version|realises-version --id <v>` carries the §7.3 semantic
   versions (a How declares which What-version it realises).
-- **Direction (§7.3)** — `product target new <id> --version <v> --slice <deliverable>…`
-  declares a future partition of feature-slices; `product target direction <id>`
+- **Direction (§7.3)** — `product target new <id> --version <v> --feature <deliverable>…`
+  declares a future partition of features; `product target direction <id>`
   computes the gap (the unrealised members) — a query over the graph, not prose.
 - **Build seam (§5.1)** — `product build <deliverable> --emit-seam` emits the work
   units as build-seam envelopes (by value + content-hash identity, the outbound
@@ -139,36 +174,77 @@ view (`product mcp --http`, then open `/`) renders it across three connected
 views — Systems (§3.0), Domain ER (§3.1) and Flows / Event-Modeling swimlanes
 (§3.2) — projected from `/api/graph` (`pf::viz`) and live-refreshed over SSE.
 
+## Phase-gated session (What → How → Build)
+
+`product session start <product>` (or `product mcp --workflow --session <id>`)
+launches a **phase-gated** authoring session: the agent CLI (`[author].cli` —
+claude or copilot) drives the graph *only through MCP tools*, against an isolated
+workspace copy of `.product`. The transport (`product-mcp/src/workflow.rs`) gates
+the tool surface by phase — `tools/list` shows only the current phase's family,
+and out-of-phase calls are rejected:
+
+- **What** — `product_domain_*`, `product_decider_*`, `product_projector_*`,
+  `product_primitive_*`.
+- **How** — `product_how_*`, `product_archetype_*`, `product_cell_*`,
+  `product_work_unit_*` (the atomic slice), `product_worker_*`.
+- **Build** — `product_feature_*`, `product_deliverable_*`, `product_release_*`,
+  `product_target_*`, `product_build_run`.
+
+Read-only tools from an earlier phase stay callable; writes lock to their home
+phase (`phase_of` in `workflow.rs` is the single source of truth). Three control
+tools are visible in every phase: `product_workflow_status`,
+`product_workflow_advance`, and `product_session_finalize` — which validates the
+draft What and, if conformant, promotes the isolated workspace into the canonical
+`.product`. Nothing touches canonical until finalize.
+
 ## Key Conventions
 
 - **No unwrap**: `#![deny(clippy::unwrap_used)]` — use `?`, `.ok_or()`, `.unwrap_or_default()`, or match
 - **Error model**: All errors go through `ProductError` in `error.rs` — each variant maps to a specific exit code
-- **Atomic writes**: File writes use `fileops::atomic_write()` with advisory locking
+- **Atomic writes**: File writes use `fileops::atomic_write()` with advisory locking. MCP write-tool handlers hold a `RepoLock`; a validation failure rolls back the whole node (no partial writes — supply every shape-required field in one call)
 - **Graph is derived**: No persistent graph store. The What graph is held in a session and serialized to Turtle/YAML under `.product/`
 - **Pure `pf/`**: every file in `product-core/src/pf/` depends only on `crate::error` — the framework graph is self-contained
 
+### CLI ↔ MCP parity
+
+Every `product_*` MCP tool mirrors a `product` subcommand and must accept the
+same fields. Two gotchas the current code encodes — preserve them:
+
+- **The `kind` overload.** `product_domain_new` uses the top-level `kind` arg to
+  *route the node type* and drops it from the field map, but `System` (§3.2.5) and
+  `ContextMapping` (§3.1) each carry a real `kind` *struct field*. The router
+  shadows the field, so those sub-kinds arrive via the aliases `system_kind` /
+  `mapping_kind` (mirroring the CLI's `--system-kind` / `--mapping-kind`),
+  normalized back to `kind` in `domain_handlers::normalize_kind_aliases`. Any new
+  field whose name collides with a routing key needs the same alias treatment.
+- **Singletons via `product_how_set`.** `target` is one of
+  `app-contract | infra-contract | version | realises-version`; for the two §7.3
+  versions the `id` arg carries the version string (CLI `--id`).
+
 ## Architecture Pattern — Slice + Adapter
 
-The codebase is organised as vertical slices, each with a pure domain module
-in `product-core` and a thin CLI adapter in `product-cli/src/commands/`.
-This separation keeps business logic unit-testable without tempdirs, print
-capture, or `cargo run`, and lets sibling CLIs (`decision-cli`) reuse the
-slice library without inheriting the CLI surface (FT-107).
+The codebase is organised as vertical slices (module organization — *not* the
+§7.1 delivery feature), each with a pure domain module in `product-core` and a
+thin CLI adapter in `product-cli/src/commands/`. This separation keeps business
+logic unit-testable without tempdirs, print capture, or `cargo run`, and lets
+sibling CLIs (`decision-cli`) reuse the slice library without inheriting the CLI
+surface (FT-107).
 
-**Slice modules (`product-core/src/<slice>/`)** — pure, testable:
+**Slice modules (`product-core/src/<mod>/`)** — pure, testable:
 - `plan_*` / `build_*` functions take current state + user input, return a
   struct describing the intended change. No I/O, no println, no exit.
 - `apply_*` functions take a plan struct and perform the minimal I/O
   (`fileops::write_file_atomic`, `write_batch_atomic`) needed to commit it.
 - `render_*` functions turn result structs into text strings. JSON rendering
   is derived from `serde::Serialize` on the plan / result types.
-- Unit tests (`src/<slice>/tests.rs`) exercise the pure functions directly.
+- Unit tests (`src/<mod>/tests.rs`) exercise the pure functions directly.
 
-Reference slices (`product-core/src/pf/`):
-- `pf/feature/`-style modules don't exist; the slices are the framework kinds —
-  e.g. `pf/decider*` (derive/validate/simulate the §3.3 Decider),
-  `pf/projector*` (§3.4), `pf/slice*`, `pf/how*`, `pf/seam*`, and the `domain`
-  CRUD pipeline (`pf/edit.rs` → `pf/validate.rs` → `pf/turtle.rs`/`pf/seed.rs`).
+Reference modules (`product-core/src/pf/`) — the vertical slices are the
+framework kinds:
+- e.g. `pf/decider*` (derive/validate/simulate the §3.3 Decider),
+  `pf/projector*` (§3.4), `pf/feature*` (§7.1 delivery feature), `pf/how*`,
+  `pf/seam*`, and the `domain` CRUD pipeline (`pf/edit.rs` → `pf/validate.rs` →
+  `pf/turtle.rs`/`pf/seed.rs`).
 
 **Command adapters (`product-cli/src/commands/<cmd>.rs`)** — thin:
 - A read/write adapter returns `CmdResult = Result<Output, ProductError>`; it
@@ -186,20 +262,17 @@ exit-code semantics `CmdResult` can't express, or is a trivial wrapper
 ## Adding a New Command
 
 1. Add the clap subcommand in `src/commands/<cmd>.rs` and the variant in
-   `commands/root_enum.rs`; declare the module in `commands/mod.rs`.
+   `commands/root_enum.rs` (keep the variant list sorted — the
+   `cli_subcommands_are_sorted` fitness gate enforces it); declare the module in
+   `commands/mod.rs`.
 2. If the command has non-trivial logic, create a slice at `product-core/src/pf/<cmd>*`.
 3. Implement the handler as a thin adapter.
 4. Wire into `commands/dispatch.rs`.
 5. Add unit tests on the pure slice functions (a `pf/<cmd>_tests.rs` sibling).
 6. Add a framework integration test in `product-cli/tests/framework.rs` with `assert_cmd`.
-
-## Adding a New Module
-
-1. Create `src/foo.rs` (or `src/foo/mod.rs` for a multi-file slice)
-2. Add `pub mod foo;` in `src/lib.rs`
-3. Consume from command adapters via `use product_lib::foo;`
-4. Keep the first `//!` doc line free of the word "and" (SRP fitness test)
-5. Keep every file under 400 lines (file-length fitness test)
+7. If the command mutates the graph, add the mirror `product_<cmd>_*` MCP tool
+   (schema in `product-mcp/src/tools/`, handler in `product-mcp/src/`, dispatch in
+   `registry.rs`) and place it in the right session phase via `workflow::phase_of`.
 
 ## Adding a New Node Kind (pf graph)
 
@@ -220,16 +293,20 @@ The guard: `pf/seed_tests.rs::maximal()` builds one node of **every** kind and
 `maximal_populates_every_node_kind` fails by name if a kind is added to
 `counts()` but not to `maximal()` — so steps 1–4 cannot be silently skipped.
 
+Delivery artifacts (features, deliverables, releases, targets, work units) are
+**not** graph node kinds — they are standalone YAML under `.product/`, so they do
+not touch these five enumerations.
+
 ## Test Organization
 
 - **Unit tests**: `#[cfg(test)] mod tests` (or a `#[path] mod tests` sibling) at the bottom of each `pf/` source file — the real framework-graph coverage.
 - **Framework integration tests**: `product-cli/tests/framework.rs` using `assert_cmd` + a temp-dir `Harness` (`init --demo` → `domain`/`decider`/…).
-- **Fitness gates**: `product-cli/tests/code_quality_tests.rs` (file length ≤ 400, function length, SRP, module structure).
+- **Fitness gates**: `product-cli/tests/code_quality_tests.rs` (file length ≤ 400, function length, SRP, module structure, sorted subcommands).
 - **Property tests**: `product-core/tests/property/` using `proptest` (fileops/init).
 
 ## Documentation System
 
-- **Framework spec** (source of truth): `docs/product-framework-open.md` — the open standard for What/How/Delivery, §-numbered.
+- **Framework spec** (source of truth): `docs/product-framework-open.md` — the open standard for What/How/Delivery, §-numbered. It mirrors the canonical `../product-framework`; on re-sync, patch the build-seam links back to `schema/json/build-seam/` (the framework repo keeps them under `preview/build-seam/`).
 - **Conformance clauses**: `docs/two-pillars-conformance.md`.
 - **Examples + workshop**: `docs/examples/`, `docs/workshop/`, `docs/workshop-runbook.md`.
 

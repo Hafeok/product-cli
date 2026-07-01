@@ -7,7 +7,7 @@ describing a software product as one connected, machine-readable graph: the
 **What** (domain model + event model — entities, commands, events, read models,
 UI steps typed against Abstract Interaction Objects, *systems*, *triggers*,
 *Deciders*, *Projectors*), the **How** (contracts, the screen-composition /
-reification model, delivery slices), and the typed links between them. The graph
+reification model, delivery features), and the typed links between them. The graph
 can drive generation, gate verification, and explain itself — so "describe this
 system" is a query, not a stale document.
 
@@ -82,8 +82,8 @@ product guide                         # where you are + the next step
 - **What** — `product domain …` captures the domain + event model; `product
   decider …` (§3.3) and `product projector …` (§3.4) make behaviour and read
   models executable; `product primitive …` (§3.5) names irreducible algorithms.
-- **How** — `product how`, `product slice`, `product build`, `product seam`,
-  `product preview` cover the How contract, delivery slices, the screen seam, and
+- **How** — `product how`, `product feature`, `product build`, `product seam`,
+  `product preview` cover the How contract, delivery features, the screen seam, and
   the §11/§12 design-system / content-store preview profiles.
 - Everything is validated against the framework's SHACL shapes + SPARQL rules;
   the captured What serializes to Turtle (`product domain export`).

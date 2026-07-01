@@ -1,5 +1,5 @@
 id: session-escalated
-slice: spec-depth-metric
+feature: spec-depth-metric
 acceptance:
 - id: escalated-predicate
   statement: BuildSession::escalated() is true exactly when the calls used more than one distinct capability

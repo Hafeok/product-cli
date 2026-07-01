@@ -32,18 +32,18 @@ fn conformant_what_without_how_says_author_how() {
 }
 
 #[test]
-fn how_without_slice_says_carve_slice() {
-    let s = FrameworkState { what_total: 6, has_how: true, slices: 0, ..state() };
+fn how_without_feature_says_carve_feature() {
+    let s = FrameworkState { what_total: 6, has_how: true, features: 0, ..state() };
     let g = guide(&s);
-    assert_eq!(g.stage, Stage::CarveSlice);
-    assert!(g.next_steps[0].command.contains("slice new"));
+    assert_eq!(g.stage, Stage::CarveFeature);
+    assert!(g.next_steps[0].command.contains("feature new"));
     assert!(g.next_steps[0].command.contains("--anchor"));
 }
 
 #[test]
-fn carve_slice_names_a_real_command_when_known() {
+fn carve_feature_names_a_real_command_when_known() {
     let s = FrameworkState {
-        what_total: 6, has_how: true, slices: 0,
+        what_total: 6, has_how: true, features: 0,
         first_command: Some("PlaceOrder".into()), ..state()
     };
     let g = guide(&s);
@@ -52,27 +52,27 @@ fn carve_slice_names_a_real_command_when_known() {
 }
 
 #[test]
-fn slice_without_deliverable_says_wrap() {
-    let s = FrameworkState { what_total: 6, has_how: true, slices: 1, deliverables: 0, ..state() };
+fn feature_without_deliverable_says_wrap() {
+    let s = FrameworkState { what_total: 6, has_how: true, features: 1, deliverables: 0, ..state() };
     let g = guide(&s);
     assert_eq!(g.stage, Stage::WrapDeliverable);
     assert!(g.next_steps[0].command.contains("deliverable new"));
 }
 
 #[test]
-fn wrap_deliverable_names_a_real_slice_when_known() {
+fn wrap_deliverable_names_a_real_feature_when_known() {
     let s = FrameworkState {
-        what_total: 6, has_how: true, slices: 1, deliverables: 0,
-        first_slice: Some("checkout".into()), ..state()
+        what_total: 6, has_how: true, features: 1, deliverables: 0,
+        first_feature: Some("checkout".into()), ..state()
     };
     let g = guide(&s);
-    assert!(g.next_steps[0].command.contains("--slice checkout"),
-        "should name the real slice, got: {}", g.next_steps[0].command);
+    assert!(g.next_steps[0].command.contains("--feature checkout"),
+        "should name the real feature, got: {}", g.next_steps[0].command);
 }
 
 #[test]
 fn deliverable_present_says_build() {
-    let s = FrameworkState { what_total: 6, has_how: true, slices: 1, deliverables: 1, ..state() };
+    let s = FrameworkState { what_total: 6, has_how: true, features: 1, deliverables: 1, ..state() };
     let g = guide(&s);
     assert_eq!(g.stage, Stage::BuildIt);
     assert!(g.next_steps.iter().any(|n| n.command.contains("build")));

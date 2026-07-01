@@ -1,9 +1,9 @@
-//! Target version — a declared future partition of feature-slices (§7.3).
+//! Target version — a declared future partition of features (§7.3).
 //!
-//! A target names a What-version goal as a set of deliverables (feature-slices),
+//! A target names a What-version goal as a set of deliverables (features),
 //! some not yet realised. Direction is the computed gap: the unrealised members.
 //! It is a query over the graph against a declared target, never roadmap prose —
-//! a goal that cannot be written as a named set of slices is not yet specified.
+//! a goal that cannot be written as a named set of features is not yet specified.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -13,7 +13,7 @@ use crate::error::{ProductError, Result};
 
 use super::validate::Violation;
 
-/// A target version: the set of deliverable ids (feature-slices) that constitute
+/// A target version: the set of deliverable ids (features) that constitute
 /// a future What-version, some of which may not be realised yet.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Target {
@@ -21,7 +21,7 @@ pub struct Target {
     /// §7.3 — the What-version this target constitutes (e.g. `2.0`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
-    /// §7.3 — the feature-slices (deliverable ids) in this target's partition.
+    /// §7.3 — the features (deliverable ids) in this target's partition.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub in_target: Vec<String>,
 }
@@ -57,7 +57,7 @@ impl Direction {
     }
 }
 
-/// `distance(target) = { slice ∈ target.partition : not feature_done(slice) }`.
+/// `distance(target) = { f ∈ target.partition : not feature_done(f) }`.
 /// `done` maps each member to its computed `feature_done` verdict; a member
 /// absent from the map (no deliverable, never computed) counts as unrealised.
 pub fn direction(t: &Target, done: &BTreeMap<String, bool>) -> Direction {
@@ -70,13 +70,13 @@ pub fn direction(t: &Target, done: &BTreeMap<String, bool>) -> Direction {
     Direction { version: t.version.clone(), total: t.in_target.len(), unrealised }
 }
 
-/// Validate a target: it must name at least one feature-slice, and every member
+/// Validate a target: it must name at least one feature, and every member
 /// must resolve to a known deliverable.
 pub fn validate_target(t: &Target, known_deliverables: &BTreeSet<String>) -> Vec<Violation> {
     let mut out = Vec::new();
     if t.in_target.is_empty() {
         out.push(v(&t.id, "in_target",
-            "§7.3 A target version must name at least one feature-slice — a goal that cannot be written as a named set of slices is not yet specified."));
+            "§7.3 A target version must name at least one feature — a goal that cannot be written as a named set of features is not yet specified."));
     }
     for m in &t.in_target {
         if !known_deliverables.contains(m) {
@@ -124,7 +124,7 @@ mod tests {
     }
 
     #[test]
-    fn an_empty_target_must_name_a_slice() {
+    fn an_empty_target_must_name_a_feature() {
         let empty = Target { id: "x".into(), version: None, in_target: vec![] };
         assert!(!validate_target(&empty, &BTreeSet::new()).is_empty());
     }

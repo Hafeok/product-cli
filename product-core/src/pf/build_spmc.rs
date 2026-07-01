@@ -11,7 +11,7 @@ use super::deliverable::Deliverable;
 use super::how::HowContract;
 use super::model::DomainGraph;
 use super::schedule::layers;
-use super::slice::Slice;
+use super::feature::Feature;
 use super::verify;
 use super::work_unit::WorkUnit;
 
@@ -29,7 +29,7 @@ const CONTRACT: &str = "⟦Ω:SPMC⟧ You are a Claude Code session realising ON
 /// whole deliverable in-repo and self-verify.
 pub fn emit_session_spmc(
     d: &Deliverable,
-    slice: &Slice,
+    feature: &Feature,
     graph: &DomainGraph,
     how: Option<&HowContract>,
     deciders: &[Decider],
@@ -42,7 +42,7 @@ pub fn emit_session_spmc(
     out.push_str("\n---\n\n");
 
     // The frozen What / How / Behaviour / Acceptance context (shared with dispatch).
-    out.push_str(&assemble(d, slice, graph, how, deciders, product));
+    out.push_str(&assemble(d, feature, graph, how, deciders, product));
     out.push_str("\n\n---\n\n");
 
     out.push_str("## Build plan — produce these artifacts, in order\n\n");

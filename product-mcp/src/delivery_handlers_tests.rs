@@ -1,4 +1,4 @@
-//! Tests for the delivery MCP handlers (slice / deliverable / release).
+//! Tests for the delivery MCP handlers (feature / deliverable / release).
 
 use serde_json::json;
 use std::fs;
@@ -24,14 +24,14 @@ fn registry() -> (tempfile::TempDir, ToolRegistry) {
 fn delivery_chain_and_done_via_call_tool() {
     let (_dir, reg) = registry();
 
-    // slice → context assembles the subgraph
-    let s = reg.call_tool("product_slice_new", &json!({"id": "order-slice", "anchors": ["Order"]})).expect("slice new");
+    // feature → context assembles the subgraph
+    let s = reg.call_tool("product_feature_new", &json!({"id": "order-feature", "anchors": ["Order"]})).expect("feature new");
     assert_eq!(s["ok"], json!(true));
-    let ctx = reg.call_tool("product_slice_context", &json!({"name": "order-slice"})).expect("context");
+    let ctx = reg.call_tool("product_feature_context", &json!({"name": "order-feature"})).expect("context");
     assert!(ctx["bundle"].as_str().expect("bundle").contains("PlaceOrder"));
 
     // deliverable → pending acceptance is not done
-    reg.call_tool("product_deliverable_new", &json!({"id": "place-order", "slice": "order-slice", "acceptance": ["a1:an order can be placed"]})).expect("deliv new");
+    reg.call_tool("product_deliverable_new", &json!({"id": "place-order", "feature": "order-feature", "acceptance": ["a1:an order can be placed"]})).expect("deliv new");
     let nd = reg.call_tool("product_deliverable_done", &json!({"name": "place-order"})).expect("done");
     assert_eq!(nd["done"], json!(false));
     // record acceptance → done
@@ -47,9 +47,9 @@ fn delivery_chain_and_done_via_call_tool() {
 }
 
 #[test]
-fn slice_new_rejects_a_dangling_anchor() {
+fn feature_new_rejects_a_dangling_anchor() {
     let (_dir, reg) = registry();
-    let s = reg.call_tool("product_slice_new", &json!({"id": "bad", "anchors": ["Ghost"]})).expect("slice new");
+    let s = reg.call_tool("product_feature_new", &json!({"id": "bad", "anchors": ["Ghost"]})).expect("feature new");
     assert_eq!(s["ok"], json!(false));
 }
 
@@ -58,10 +58,10 @@ fn write_tools_are_listed_and_gated() {
     let (_dir, _reg) = registry();
     // every new tool name resolves in the registry's tool list
     let names = ToolRegistry::new(_dir.path().to_path_buf(), false);
-    for t in ["product_slice_new", "product_deliverable_new", "product_release_new", "product_decider_derive"] {
+    for t in ["product_feature_new", "product_deliverable_new", "product_release_new", "product_decider_derive"] {
         assert!(names.tool_list().iter().any(|d| d.name == t), "missing {t}");
     }
     // a write tool is refused when write is disabled
-    let err = names.call_tool("product_slice_new", &json!({"id": "x", "anchors": ["Order"]}));
+    let err = names.call_tool("product_feature_new", &json!({"id": "x", "anchors": ["Order"]}));
     assert!(err.is_err());
 }
