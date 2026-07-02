@@ -93,9 +93,17 @@ docs/
   examples/ · workshop/       # Worked examples + workshop runbook
 .product/
   config.toml          # Repo config (`[author].cli` sets the default session CLI: claude|copilot)
+  how-contract.yaml    # The canonical §4 How (hand-editable source); the self-hosted archetype refs it
   author-domain/       # The captured What graphs (e.g. product-cli — the example What)
   deciders/ · features/ · work-units/ · deliverables/ · archetypes/ · sessions/
 ```
+
+An archetype's `how-contract.yaml` may be an inline contract **or** a one-line
+`ref: <relative path>` stub pointing at a shared one — resolved by
+`HowContract::load_opt` (one hop, relative to the stub). The self-hosted
+`archetypes/product-cli/` uses `ref: ../../how-contract.yaml` so the repo has a
+single canonical How; `product archetype init` still scaffolds a full inline
+contract for a genuinely standalone archetype.
 
 **Downstream consumers** (e.g. `decision-cli`) should add only:
 

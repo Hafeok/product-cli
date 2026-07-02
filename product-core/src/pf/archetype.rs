@@ -43,9 +43,9 @@ impl Archetype {
                 name
             )));
         }
-        let how = read_opt(&dir.join("how-contract.yaml"))?
-            .map(|t| HowContract::from_yaml(&t))
-            .transpose()?;
+        // The How may be inline or a `ref:` stub pointing at a shared contract
+        // (e.g. the repo's canonical `.product/how-contract.yaml`).
+        let how = HowContract::load_opt(&dir.join("how-contract.yaml"))?;
         let layout = read_opt(&dir.join("layout.yaml"))?
             .map(|t| LayoutModel::from_yaml(&t))
             .transpose()?;

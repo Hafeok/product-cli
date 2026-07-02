@@ -138,11 +138,53 @@ pub struct HowContract {
     pub interface_contracts: Vec<InterfaceContract>,
 }
 
+/// A `how-contract.yaml` that is a pointer to another one (`ref: <relative
+/// path>`), instead of an inline contract. Lets an archetype *reference* a
+/// shared How — e.g. the self-hosted archetype points at the repo's canonical
+/// `.product/how-contract.yaml` — so the contract has a single source of truth.
+/// `deny_unknown_fields` keeps a full inline contract (which carries `archetype`
+/// / `application_contract`) from parsing as a ref.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct HowRef {
+    #[serde(rename = "ref")]
+    target: String,
+}
+
 impl HowContract {
     /// Parse a How contract from YAML text.
     pub fn from_yaml(text: &str) -> Result<Self> {
         serde_yaml::from_str(text)
             .map_err(|e| ProductError::ConfigError(format!("invalid how-contract YAML: {}", e)))
+    }
+
+    /// Load a How contract from `path`, following one `ref:` hop. A ref stub
+    /// (`ref: <relative path>`) resolves against `path`'s own directory, so an
+    /// archetype can point at a shared contract rather than duplicate it.
+    /// Returns `Ok(None)` when `path` does not exist.
+    pub fn load_opt(path: &std::path::Path) -> Result<Option<Self>> {
+        Self::load_depth(path, 0).map(Some).or_else(|e| match e {
+            ProductError::NotFound(_) => Ok(None),
+            other => Err(other),
+        })
+    }
+
+    fn load_depth(path: &std::path::Path, depth: u8) -> Result<Self> {
+        if depth > 4 {
+            return Err(ProductError::ConfigError(format!(
+                "how-contract ref chain too deep at {}", path.display())));
+        }
+        let text = match std::fs::read_to_string(path) {
+            Ok(t) => t,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound =>
+                return Err(ProductError::NotFound(format!("{}", path.display()))),
+            Err(e) => return Err(ProductError::IoError(format!("{}: {}", path.display(), e))),
+        };
+        if let Ok(r) = serde_yaml::from_str::<HowRef>(&text) {
+            let base = path.parent().unwrap_or_else(|| std::path::Path::new("."));
+            return Self::load_depth(&base.join(&r.target), depth + 1);
+        }
+        Self::from_yaml(&text)
     }
 
     /// True if `id` names a Why-cascade element (decision/principle/pattern/interface).

@@ -385,9 +385,8 @@ fn load_how() -> Option<HowContract> {
     if let Some(product) = super::shared::default_product_name() {
         candidates.push(pdir.join("archetypes").join(product).join("how-contract.yaml"));
     }
-    candidates
-        .iter()
-        .find_map(|p| std::fs::read_to_string(p).ok().and_then(|t| HowContract::from_yaml(&t).ok()))
+    // Ref-aware: an archetype's how-contract may be a `ref:` to the canonical one.
+    candidates.iter().find_map(|p| HowContract::load_opt(p).ok().flatten())
 }
 
 fn report_gates(d: &Deliverable, feature: &Feature, graph: &DomainGraph, deciders: &[Decider]) -> FeatureDone {

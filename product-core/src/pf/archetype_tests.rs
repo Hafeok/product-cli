@@ -30,6 +30,22 @@ fn loads_and_validates_a_full_archetype() {
 }
 
 #[test]
+fn how_contract_ref_resolves_to_a_shared_contract() {
+    // The archetype's how-contract.yaml is a `ref:` stub pointing at a shared
+    // contract one directory up — it must load and validate as if inline.
+    let tmp = write_archetype("example-rest-api");
+    let arch_dir = tmp.path().join("example-rest-api");
+    std::fs::write(tmp.path().join("shared-how.yaml"), HOW).expect("shared how");
+    std::fs::write(arch_dir.join("how-contract.yaml"), "ref: ../shared-how.yaml\n").expect("ref stub");
+
+    let arch = Archetype::load_from_dir(&arch_dir, "example-rest-api").expect("load");
+    assert!(arch.how.is_some(), "ref stub must resolve to the shared contract");
+    let results = arch.validate(None);
+    assert!(!has_blocking(&results), "referenced contract validates: {:?}",
+        results.iter().filter(|v| v.severity == "violation").collect::<Vec<_>>());
+}
+
+#[test]
 fn missing_how_is_a_blocking_violation() {
     let dir = tempfile::tempdir().expect("tempdir");
     let root = dir.path().join("bare");
