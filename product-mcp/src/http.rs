@@ -58,6 +58,7 @@ pub async fn run_http(
         .route("/mcp", post(mcp_handler))
         .route("/legacy", get(legacy_view_handler))
         .route("/api/graph", get(graph_handler))
+        .route("/api/pf", get(pf_handler))
         .route("/api/session", get(session_handler))
         .route("/api/events", get(events_handler))
         // The 1.7.0 explorer UI at `/`, plus every embedded asset it references
@@ -147,6 +148,19 @@ async fn graph_handler(
         .map_err(|e| (axum::http::StatusCode::NOT_FOUND, e))
 }
 
+/// `GET /api/pf` — the live `window.PF` projection (§3–§7), rebuilt from
+/// `.product/` on every request. The explorer UI at `/` merges this over its
+/// demo defaults so it reflects the graph, re-fetching on the `/api/events` SSE.
+async fn pf_handler(
+    axum::extract::State(state): axum::extract::State<Arc<AppState>>,
+    axum::extract::Query(q): axum::extract::Query<SessionQuery>,
+) -> std::result::Result<axum::Json<serde_json::Value>, (axum::http::StatusCode, String)> {
+    let session = resolve_session(&state.repo_root, state.session.as_deref(), q.session.as_deref());
+    load_domain_graph(&state.repo_root, session.as_ref())
+        .map(|g| axum::Json(super::pf_view::build_pf_view(&g, &state.repo_root)))
+        .map_err(|e| (axum::http::StatusCode::NOT_FOUND, e))
+}
+
 /// `GET /api/events` — an SSE stream that ticks whenever a `.product/` file
 /// changes, so the browser re-fetches `/api/graph`.
 async fn events_handler(
@@ -209,6 +223,18 @@ fn active_session(repo_root: &Path) -> Option<(String, WorkflowSession)> {
 /// write it directly). A followed `session` only selects which product to
 /// render; otherwise the configured product name is used.
 fn project_graph(repo_root: &Path, session: Option<&(String, WorkflowSession)>) -> std::result::Result<ViewGraph, String> {
+    let graph = load_domain_graph(repo_root, session)?;
+    let pd = repo_root.join(".product");
+    let bp = pd.join("blueprints");
+    let bp_dir = if bp.is_dir() { bp } else { pd.join("archetypes") };
+    let blueprints = du::blueprint_names(&bp_dir);
+    let units = du::load_dir(&pd.join("deployable-units"));
+    Ok(to_view_graph_with_how(&graph, &blueprints, &units))
+}
+
+/// Resolve the product (from the followed session, else config) and load its
+/// canonical What graph — the shared source for `/api/graph` and `/api/pf`.
+fn load_domain_graph(repo_root: &Path, session: Option<&(String, WorkflowSession)>) -> std::result::Result<product_core::pf::model::DomainGraph, String> {
     let configured;
     let product = match session {
         Some((_, s)) if !s.product.trim().is_empty() => s.product.trim(),
@@ -221,14 +247,9 @@ fn project_graph(repo_root: &Path, session: Option<&(String, WorkflowSession)>) 
             name
         }
     };
-    let graph = DomainSession::load(&session_dir(repo_root, product))
-        .map_err(|_| format!("no What graph for product '{product}' yet"))?;
-    let pd = repo_root.join(".product");
-    let bp = pd.join("blueprints");
-    let bp_dir = if bp.is_dir() { bp } else { pd.join("archetypes") };
-    let blueprints = du::blueprint_names(&bp_dir);
-    let units = du::load_dir(&pd.join("deployable-units"));
-    Ok(to_view_graph_with_how(&graph.graph, &blueprints, &units))
+    DomainSession::load(&session_dir(repo_root, product))
+        .map(|s| s.graph)
+        .map_err(|_| format!("no What graph for product '{product}' yet"))
 }
 
 /// Project the graph following the most-recently-active session (used by tests

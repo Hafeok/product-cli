@@ -39,7 +39,7 @@ function KindTag({ label, color }) {
 function buildDetail(view, sel, openSystem, openDomain, openFlow, openStep) {
   if (!sel) return null;
   if (view === 'systems') {
-    if (sel === 'acme') {
+    if (sel === (PF.product && PF.product.id)) {
       const p = PF.product;
       return { tag: <KindTag label="product" color="var(--blue-400)" />, title: p.name, rows: [
         { k: 'purpose', v: p.purpose }, { k: 'owns domains', v: p.ownsDomains.join(', ') },
@@ -248,8 +248,14 @@ function featureDetail(id, openFlow) {
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [view, setView] = useState('systems');
-  const [systemId, setSystemId] = useState('acme-shop');
-  const [flowId, setFlowId] = useState('flow-checkout');
+  // Defaults resolve against whatever PF holds now — the bundled demo, or the
+  // live graph merged in before first render — so live products with different
+  // ids don't dereference a stale hardcoded id.
+  const [systemId, setSystemId] = useState(() => (PF.systems[0] && PF.systems[0].id) || 'acme-shop');
+  const [flowId, setFlowId] = useState(() => {
+    const s = PF.systems[0];
+    return (s && s.flows && s.flows[0]) || Object.keys(PF.flows || {})[0] || 'flow-checkout';
+  });
   const [sel, setSel] = useState({ systems: null, domain: null, flows: null, features: null, versions: null, pages: null, aios: null, data: null, content: null });
   const [stepId, setStepId] = useState('ui-review-cart');
   const [screenId, setScreenId] = useState(null);
@@ -260,7 +266,7 @@ function App() {
   const toggleKind = (k) => setHidden(h => { const n = new Set(h); n.has(k) ? n.delete(k) : n.add(k); return n; });
   const select = (v, id) => setSel(s => ({ ...s, [v]: id }));
 
-  const openSystem = (sid) => { setSystemId(sid); setFlowId(PF.systems.find(s => s.id === sid).flows[0]); setView('flows'); };
+  const openSystem = (sid) => { const sys = PF.systems.find(s => s.id === sid); setSystemId(sid); setFlowId((sys && sys.flows && sys.flows[0]) || flowId); setView('flows'); };
   const openDomain = () => setView('domain');
   const openFlow = (fid) => {
     const sys = PF.systems.find(s => s.flows.includes(fid));
@@ -272,7 +278,7 @@ function App() {
   };
   const openPreview = (id) => { setScreenId(id); setView('screens'); };
 
-  const sysName = PF.systems.find(s => s.id === systemId).name;
+  const sysName = (PF.systems.find(s => s.id === systemId) || {}).name || '';
   const flowName = PF.flows[flowId] ? PF.flows[flowId].name : '';
   const [navOpen, setNavOpen] = useState(() => { try { return localStorage.getItem('pf-nav-open') !== '0'; } catch (e) { return true; } });
   const toggleNav = () => setNavOpen(o => { try { localStorage.setItem('pf-nav-open', o ? '0' : '1'); } catch (e) {} return !o; });
@@ -378,7 +384,7 @@ function App() {
       {/* breadcrumb + context bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 18px', flex: 'none',
         background: 'var(--slate-900)', borderBottom: '1px solid var(--slate-800)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
-        <Crumb onClick={() => setView('systems')} active={view === 'systems'}>acme</Crumb>
+        <Crumb onClick={() => setView('systems')} active={view === 'systems'}>{(PF.product && PF.product.id) || 'product'}</Crumb>
         {view === 'domain' && <><Sep /><Crumb active>Ordering</Crumb></>}
         {view === 'graph' && <><Sep /><Crumb active>One graph · everything connected</Crumb></>}
         {view === 'flows' && <><Sep /><Crumb onClick={() => setView('systems')}>{sysName}</Crumb><Sep /><Crumb active>{flowName}</Crumb></>}
@@ -545,4 +551,52 @@ function Crumb({ children, active, onClick }) {
 }
 function Sep() { return <span style={{ color: 'var(--slate-600)' }}>›</span>; }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+/* ── live wiring ───────────────────────────────────────────────────────────
+   Merge the live /api/pf projection over the bundled demo PF, then re-fetch on
+   the /api/events SSE (exactly as the legacy view refreshes). `how` and
+   `delivery` are shallow-merged so live sub-fields override while narrative
+   sub-fields the graph doesn't carry keep their sample value. When /api/pf is
+   unreachable (static hosting, no server) the demo data renders unchanged. */
+/* Which PF fields the UI currently merges from /api/pf. A field is added here
+   only once its view is data-driven (renders any product's graph, not the demo
+   layout). The Systems map (§3.0) is live; the other views still render the
+   bundled demo until they are rewritten to auto-layout live data (see the
+   /api/pf projection — the data for them is already served, keyed the same). */
+const PF_LIVE_KEYS = new Set(['product', 'domains', 'systems', 'journeys']);
+/* Objects merged one level deep (live sub-fields override, others kept). */
+const PF_LIVE_MERGE_KEYS = { how: 1, delivery: 1 };
+function applyLive(data) {
+  if (!data || typeof data !== 'object') return false;
+  for (const k in data) {
+    if (k[0] === '_' || !PF_LIVE_KEYS.has(k)) continue;
+    if (PF_LIVE_MERGE_KEYS[k] && window.PF[k] && typeof window.PF[k] === 'object') {
+      Object.assign(window.PF[k], data[k]);
+    } else {
+      window.PF[k] = data[k];
+    }
+  }
+  window.PF._live = !!data._live;
+  return true;
+}
+function fetchLive() {
+  return fetch('/api/pf').then(r => (r.ok ? r.json() : null)).then(applyLive).catch(() => false);
+}
+
+function Root() {
+  const [, bump] = useState(0);
+  React.useEffect(() => {
+    let es;
+    try {
+      es = new EventSource('/api/events');
+      es.addEventListener('changed', () => fetchLive().then(ok => { if (ok) bump(x => x + 1); }));
+    } catch (e) { /* no SSE (static hosting) — stay on the last fetch */ }
+    return () => { if (es) es.close(); };
+  }, []);
+  return <App />;
+}
+
+/* Fetch once before the first render so id defaults resolve against live data,
+   then mount. Failure falls back to the bundled demo. */
+fetchLive().finally(() => {
+  ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
+});

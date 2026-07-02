@@ -38,7 +38,12 @@ pub async fn ui_handler(uri: axum::http::Uri) -> Response {
     let path = if raw.is_empty() { "index.html" } else { raw };
     match UiAssets::get(path) {
         Some(file) => (
-            [(axum::http::header::CONTENT_TYPE, ui_content_type(path))],
+            [
+                (axum::http::header::CONTENT_TYPE, ui_content_type(path)),
+                // The view is a live tool — never serve a stale asset (the graph
+                // and the JSX both change under it).
+                (axum::http::header::CACHE_CONTROL, "no-cache"),
+            ],
             file.data.into_owned(),
         )
             .into_response(),

@@ -6,18 +6,30 @@
   const { useMemo } = React;
   const { EdgeLayer, ConfDot, FitCanvas } = window.PFUI;
 
-  const CANVAS_W = 1120, CANVAS_H = 680;
+  // Card sizes; the canvas is sized to the graph, so any product / domain /
+  // system count lays out (this view is data-driven, not curated coordinates).
+  const PROD = { w: 280, h: 96 }, DOM = { w: 176, h: 78 }, SYS = { w: 288, h: 176 };
+  const GAP = 40, MARGIN = 60;
+  const PROD_Y = 74, DOM_Y = 300, SYS_Y = 540;
 
-  function layout() {
-    // curated coordinates (x,y = node centers); arranged for orthogonal routing
-    const pos = {
-      acme: { x: 560, y: 92, w: 250, h: 92 },
-      ordering: { x: 470, y: 300, w: 156, h: 72 },
-      catalog: { x: 650, y: 300, w: 156, h: 72 },
-      'acme-shop': { x: 230, y: 503, w: 300, h: 172 },
-      'acme-admin': { x: 890, y: 503, w: 300, h: 172 },
+  // Compute node centres for the live product/domains/systems, plus the canvas
+  // size and the y of each row's connecting bus.
+  function computeLayout(product, domains, systems) {
+    const rowWidth = (n, cw) => n > 0 ? n * cw + (n - 1) * GAP : 0;
+    const wDom = rowWidth(domains.length, DOM.w);
+    const wSys = rowWidth(systems.length, SYS.w);
+    const W = Math.max(PROD.w, wDom, wSys, 640) + 2 * MARGIN;
+    const journeyBand = 0; // reserved below the systems row for journey brackets
+    const H = SYS_Y + SYS.h / 2 + 60 + journeyBand;
+    const pos = {};
+    if (product) pos[product.id] = { x: W / 2, y: PROD_Y, w: PROD.w, h: PROD.h };
+    const place = (arr, cw, ch, y) => {
+      const start = (W - rowWidth(arr.length, cw)) / 2 + cw / 2;
+      arr.forEach((n, i) => { pos[n.id] = { x: start + i * (cw + GAP), y, w: cw, h: ch }; });
     };
-    return pos;
+    place(domains, DOM.w, DOM.h, DOM_Y);
+    place(systems, SYS.w, SYS.h, SYS_Y);
+    return { pos, W, H };
   }
 
   // ---- orthogonal (Manhattan) edge renderer ----
@@ -38,9 +50,9 @@
     return d;
   }
 
-  function OrthoEdges({ edges, showLabels }) {
+  function OrthoEdges({ edges, showLabels, w, h }) {
     return (
-      <svg width={CANVAS_W} height={CANVAS_H} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'visible' }}>
+      <svg width={w} height={h} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'visible' }}>
         <defs>
           <marker id="sm-arr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
             <path d="M0,0 L10,5 L0,10 z" fill="var(--slate-500)" />
@@ -159,53 +171,84 @@
   }
 
   function SystemsMap({ onOpenSystem, selected, onSelect, showConf, showLabels, dense }) {
-    const pos = useMemo(layout, []);
-    const P = PF.product;
+    const P = PF.product || { id: '', name: '', purpose: '', direction: '', quality: '' };
+    const domains = PF.domains || [];
+    const systems = PF.systems || [];
+    const journeys = PF.journeys || [];
     const slate5 = 'var(--slate-500)', slate6 = 'var(--slate-600)';
 
-    // orthogonal edges — explicit waypoints routed through clear channels
-    const edges = [
-      // product owns domains (fork down the centre)
-      { pts: [{ x: 560, y: 138 }, { x: 560, y: 202 }, { x: 470, y: 202 }, { x: 470, y: 264 }], stroke: slate6, width: 1.4 },
-      { pts: [{ x: 560, y: 138 }, { x: 560, y: 202 }, { x: 650, y: 202 }, { x: 650, y: 264 }], stroke: slate6, width: 1.4 },
-      // product owns systems (brackets down the outside)
-      { pts: [{ x: 435, y: 92 }, { x: 230, y: 92 }, { x: 230, y: 417 }], stroke: slate5, width: 1.6, label: 'owns', lx: 230, ly: 250 },
-      { pts: [{ x: 685, y: 92 }, { x: 890, y: 92 }, { x: 890, y: 417 }], stroke: slate5, width: 1.6, label: 'owns', lx: 890, ly: 250 },
-      // shop references domains (dashed)
-      { pts: [{ x: 300, y: 417 }, { x: 300, y: 300 }, { x: 392, y: 300 }], stroke: slate5, width: 1.3, dash: '5 4', opacity: 0.6, label: 'references', lx: 300, ly: 350 },
-      { pts: [{ x: 345, y: 417 }, { x: 345, y: 362 }, { x: 650, y: 362 }, { x: 650, y: 336 }], stroke: slate5, width: 1.3, dash: '5 4', opacity: 0.6 },
-      // admin references domains (dashed)
-      { pts: [{ x: 835, y: 417 }, { x: 835, y: 374 }, { x: 470, y: 374 }, { x: 470, y: 336 }], stroke: slate5, width: 1.3, dash: '5 4', opacity: 0.6 },
-      { pts: [{ x: 880, y: 417 }, { x: 880, y: 300 }, { x: 728, y: 300 }], stroke: slate5, width: 1.3, dash: '5 4', opacity: 0.6, label: 'references', lx: 880, ly: 350 },
-    ];
+    const { pos, W, H } = useMemo(
+      () => computeLayout(P, domains, systems),
+      [P.id, domains.map(d => d.id).join(','), systems.map(s => s.id).join(',')],
+    );
 
-    // the journey — a Translation crossing the two systems (magenta, orthogonal bracket below)
-    const j = PF.journeys[0];
-    const jy = 591, jbus = 648;
-    const jPath = roundedPath([{ x: 230, y: jy }, { x: 230, y: jbus }, { x: 890, y: jbus }, { x: 890, y: jy }], 10);
+    const cx = id => (pos[id] || null);
+    const top = b => ({ x: b.x, y: b.y - b.h / 2 });
+    const bot = b => ({ x: b.x, y: b.y + b.h / 2 });
+
+    // Edges computed from the graph: product owns each domain + system, and each
+    // system references its domains (dashed). Buses sit between the rows.
+    const edges = [];
+    const ownDomBus = (PROD_Y + PROD.h / 2 + DOM_Y - DOM.h / 2) / 2;
+    const ownSysBus = DOM_Y + DOM.h / 2 + 30;
+    const refBus = DOM_Y + DOM.h / 2 + 16;
+    const pb = pos[P.id] ? bot(pos[P.id]) : null;
+    if (pb) {
+      const owned = new Set(P.ownsDomains || domains.map(d => d.id));
+      domains.filter(d => owned.has(d.id)).forEach((d, i) => {
+        const b = cx(d.id); if (!b) return;
+        edges.push({ pts: [pb, { x: pb.x, y: ownDomBus }, { x: b.x, y: ownDomBus }, top(b)], stroke: slate6, width: 1.4, label: i === 0 ? 'owns' : null, lx: (pb.x + b.x) / 2, ly: ownDomBus - 8 });
+      });
+      const ownedSys = new Set(P.ownsSystems || systems.map(s => s.id));
+      systems.filter(s => ownedSys.has(s.id)).forEach((s, i) => {
+        const b = cx(s.id); if (!b) return;
+        edges.push({ pts: [pb, { x: pb.x, y: ownSysBus }, { x: b.x, y: ownSysBus }, top(b)], stroke: slate5, width: 1.6, label: i === 0 ? 'owns' : null, lx: b.x, ly: ownSysBus - 8 });
+      });
+    }
+    systems.forEach(s => {
+      const sb = cx(s.id); if (!sb) return;
+      (s.references || []).forEach((dref, i) => {
+        const b = cx(dref); if (!b) return;
+        edges.push({ pts: [top(sb), { x: sb.x, y: refBus }, { x: b.x, y: refBus }, bot(b)], stroke: slate5, width: 1.3, dash: '5 4', opacity: 0.6, label: i === 0 ? 'references' : null, lx: (sb.x + b.x) / 2, ly: refBus + 10, arrow: false });
+      });
+    });
+
+    // Journeys — a Translation bracket below the systems it crosses.
+    const jbus0 = SYS_Y + SYS.h / 2 + 24;
+    const journeyEls = journeys.map((j, idx) => {
+      const a = cx(j.from && j.from.system), b = cx(j.to && j.to.system);
+      if (!a || !b) return null;
+      const jbus = jbus0 + idx * 34;
+      const jPath = roundedPath([{ x: a.x, y: bot(a).y }, { x: a.x, y: jbus }, { x: b.x, y: jbus }, { x: b.x, y: bot(b).y }], 10);
+      return (
+        <g key={j.id}>
+          <path d={jPath} fill="none" stroke="var(--em-bridge)" strokeWidth="1.8" strokeDasharray="2 5" strokeLinecap="round" />
+          <g transform={`translate(${(a.x + b.x) / 2}, ${jbus})`}>
+            <rect x={-170} y={-13} rx="4" width={340} height={26} fill="var(--slate-900)" stroke="var(--em-bridge)" strokeOpacity="0.5" />
+            <text x={0} y={-1} textAnchor="middle" style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, fill: 'var(--em-bridge)' }}>journey · {j.name}</text>
+            <text x={0} y={9} textAnchor="middle" style={{ fontFamily: 'var(--font-mono)', fontSize: 8, fill: 'var(--slate-400)' }}>{j.translation ? ('Translation: ' + j.translation) : 'crosses via Translation'}</text>
+          </g>
+        </g>
+      );
+    }).filter(Boolean);
+
+    const HH = H + (journeyEls.length ? journeyEls.length * 34 : 0);
 
     return (
-      <FitCanvas width={CANVAS_W} height={CANVAS_H}>
-          <OrthoEdges edges={edges} showLabels={showLabels} />
-
-          {/* journey — drawn separately, bracketed below the systems */}
-          <svg width={CANVAS_W} height={CANVAS_H} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'visible' }}>
-            <path d={jPath} fill="none" stroke="var(--em-bridge)" strokeWidth="1.8" strokeDasharray="2 5" strokeLinecap="round" />
-            <g transform={`translate(560, ${jbus})`}>
-              <rect x={-150} y={-13} rx="4" width={300} height={26} fill="var(--slate-900)" stroke="var(--em-bridge)" strokeOpacity="0.5" />
-              <text x={0} y={-1} textAnchor="middle" style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, fill: 'var(--em-bridge)' }}>journey · {j.name}</text>
-              <text x={0} y={9} textAnchor="middle" style={{ fontFamily: 'var(--font-mono)', fontSize: 8, fill: 'var(--slate-400)' }}>Translation: ev-order-placed → cmd-accept-fulfilment</text>
-            </g>
-          </svg>
-
-          {/* nodes */}
-          <Positioned box={pos.acme}><ProductNode p={P} selected={selected === 'acme'} onClick={() => onSelect('acme')} showConf={showConf} /></Positioned>
-          {PF.domains.map(d => (
+      <FitCanvas width={W} height={HH}>
+          <OrthoEdges edges={edges} showLabels={showLabels} w={W} h={HH} />
+          {journeyEls.length > 0 && (
+            <svg width={W} height={HH} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'visible' }}>{journeyEls}</svg>
+          )}
+          {pos[P.id] && (
+            <Positioned box={pos[P.id]}><ProductNode p={P} selected={selected === P.id} onClick={() => onSelect(P.id)} showConf={showConf} /></Positioned>
+          )}
+          {domains.map(d => (
             <Positioned key={d.id} box={pos[d.id]}>
               <DomainNode d={d} selected={selected === d.id} onClick={() => onSelect(d.id)} showConf={showConf} />
             </Positioned>
           ))}
-          {PF.systems.map(s => (
+          {systems.map(s => (
             <Positioned key={s.id} box={pos[s.id]}>
               <SystemNode s={s} selected={selected === s.id} onSelect={() => onSelect(s.id)} onOpen={() => onOpenSystem(s.id)} showConf={showConf} dense={dense} />
             </Positioned>
@@ -214,7 +257,10 @@
     );
   }
 
+  // Guard against a missing position (e.g. an id present in an edge but not laid
+  // out) so a single gap never white-screens the whole app.
   function Positioned({ box, children }) {
+    if (!box) return null;
     return (
       <div style={{ position: 'absolute', left: box.x - box.w / 2, top: box.y - box.h / 2, width: box.w, height: box.h, zIndex: 2 }}>
         {children}

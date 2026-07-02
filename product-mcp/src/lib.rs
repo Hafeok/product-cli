@@ -23,6 +23,7 @@ mod pf_mcp;
 pub mod stdio;
 pub mod http;
 mod http_ui;
+mod pf_view;
 pub mod watch;
 pub mod scaffold;
 pub mod tools;
