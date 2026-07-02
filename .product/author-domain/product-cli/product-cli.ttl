@@ -319,7 +319,7 @@ d:e-workunit a pf:Entity ;
 
 d:e-session a pf:Entity ;
   rdfs:label "Workshop Session" ;
-  pf:definition "A phase-gated facilitation run over an isolated copy of the spec. It starts in the What phase, advances strictly forward What→How→Build under an optional cap, and on finalize validates the draft graph then promotes it into the canonical .product workspace." ;
+  pf:definition "A phase-gated facilitation run over the canonical .product graph. It starts in the What phase, advances strictly forward What→How→Build under an optional cap, writes every authored change to the canonical graph as it happens, and on finalize validates the graph, stamps provenance, and closes." ;
   pf:inContext d:ctx-composition ;
   pf:isAggregateRoot "true" ;
   pf:identity "session-id" ;
@@ -336,11 +336,6 @@ d:vo-session-phase a pf:ValueObject ;
   rdfs:label "Session Phase" ;
   pf:inContext d:ctx-composition ;
   pf:definition "An ordered mode — what | how | build (What < How < Build) — that gates which tool families a session may use. A session begins in What and advances strictly forward, optionally capped by an until phase." .
-
-d:vo-session-workspace a pf:ValueObject ;
-  rdfs:label "Session Workspace" ;
-  pf:inContext d:ctx-composition ;
-  pf:definition "The isolated copy of the spec a session operates over — a workspace directory seeded from the canonical .product graph at start, written to freely during What/How/Build, and promoted back into the canonical workspace only on finalize. Until finalize, nothing authored here touches the canonical graph." .
 
 d:r-decider-entity a pf:Relation ;
   rdfs:label "decides for" ;
@@ -672,18 +667,11 @@ d:rel-session-inphase-phase a pf:Relation ;
   pf:rationale "A session is always in exactly one phase — what, how, or build — which gates the tool families it may use. The phase advances strictly forward." .
 
 d:rel-session-drafts-product a pf:Relation ;
-  rdfs:label "drafts" ;
+  rdfs:label "authors" ;
   pf:from d:e-session ;
   pf:to d:e-product ;
   pf:cardinality "one-to-one" ;
-  pf:rationale "A session edits exactly one product's What/How graph in an isolated workspace copy, promoting it into the canonical .product on finalize." .
-
-d:rel-session-over-workspace a pf:Relation ;
-  rdfs:label "operates over" ;
-  pf:from d:e-session ;
-  pf:to d:vo-session-workspace ;
-  pf:cardinality "one-to-one" ;
-  pf:rationale "A session is created against exactly one isolated workspace copy at start; all authoring during What/How/Build flows into that copy, which is promoted to canonical only on finalize." .
+  pf:rationale "A session authors exactly one product's What/How graph, writing the canonical .product directly; finalize validates and closes." .
 
 d:i-decider-rejects a pf:Invariant ;
   pf:statement "A Decider must have at least one reachable rejection — it must enforce an invariant, or it should not exist (§3.3 Decider justification)." ;
@@ -1057,8 +1045,7 @@ d:rm-view-graph a pf:ReadModel ;
 
 d:rm-session-status a pf:ReadModel ;
   rdfs:label "Session Status" ;
-  pf:projects d:e-session ;
-  pf:projects d:vo-session-workspace .
+  pf:projects d:e-session .
 
 d:ws-checkout a pf:WireframeStep ;
   rdfs:label "Checkout Screen" ;
