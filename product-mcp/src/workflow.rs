@@ -3,13 +3,12 @@
 //! Wraps the stateless [`ToolRegistry`] with a disk-backed
 //! [`WorkflowSession`]: `tools/list` is filtered to the current phase, calls to
 //! out-of-phase tools are rejected, and the session-control tools advance the
-//! phase or promote the isolated draft graph into the canonical `.ttl`. The
-//! session dispatches every tool into its own workspace copy of `.product`, so
-//! the canonical graph is untouched until `product_session_finalize`.
+//! phase or close the session. Every tool dispatches against the canonical
+//! `.product` graph directly — `product_session_finalize` validates it and
+//! marks the session complete.
 
 use std::path::PathBuf;
 
-use product_core::author;
 use product_core::author::domain::session_dir;
 use product_core::pf::session::DomainSession;
 use product_core::pf::workflow::{Phase, WorkflowSession};
@@ -23,9 +22,7 @@ use super::{JsonRpcRequest, JsonRpcResponse};
 pub struct WorkflowCtx {
     /// Directory holding `workflow.json` (`.product/sessions/<id>/`).
     pub session_root: PathBuf,
-    /// The isolated `.product` workspace root tools dispatch against.
-    pub workspace: PathBuf,
-    /// The canonical repo root that `finalize` promotes the draft into.
+    /// The canonical repo root every tool dispatches against.
     pub canonical: PathBuf,
 }
 
@@ -33,8 +30,7 @@ impl WorkflowCtx {
     /// The on-disk layout for a session id under the canonical repo root.
     pub fn resolve(canonical: &std::path::Path, session_id: &str) -> Self {
         let session_root = canonical.join(".product").join("sessions").join(session_id);
-        let workspace = session_root.join("ws");
-        Self { session_root, workspace, canonical: canonical.to_path_buf() }
+        Self { session_root, canonical: canonical.to_path_buf() }
     }
 }
 
@@ -103,7 +99,7 @@ fn control_tools() -> Vec<ToolDef> {
         },
         ToolDef {
             name: "product_session_finalize".into(),
-            description: "Validate the draft What graph and, if conformant, promote the session's isolated workspace into the canonical `.product` graph.".into(),
+            description: "Validate the What graph and, if conformant, stamp provenance and close the session. Writes have already landed in the canonical `.product` graph.".into(),
             requires_write: true,
             input_schema: json!({"type": "object", "properties": {}}),
         },
@@ -187,7 +183,7 @@ fn tools_call(registry: &ToolRegistry, request: &JsonRpcRequest, ctx: &WorkflowC
         return Outgoing::resp(JsonRpcResponse::error(id, -32603, &msg));
     }
 
-    let result = registry.call_tool_at(&name, &args, &ctx.workspace);
+    let result = registry.call_tool_at(&name, &args, &ctx.canonical);
     if name == "product_build_run" {
         if let Ok(ref v) = result {
             record_build(&session, ctx, v);
@@ -243,7 +239,7 @@ fn phase_hint(phase: Phase) -> String {
     match phase {
         Phase::What => "Author the domain/event model in dependency order — domains → systems → flows: model the domain first (the hardest, and everything references it), then the systems that reference it, then the flows that belong to them (a flow cannot exist without a system, §3.2.5). Every node is a product_domain_new call — there is no per-kind tool: systems → kind=system with system_kind=service|application|website|cli; flows → kind=flow with system=<id>; the product's What-version → kind=product with version=<v>. Make behaviour executable with product_decider_* / product_projector_*. Advance to How (where product_how_set carries the §7.3 realises-version) when product_domain_validate is green.".into(),
         Phase::How => "Author the How: product_how_init scaffolds the contract, product_how_add / product_how_set build the Why cascade (decisions → principles → patterns) plus the application/infrastructure contracts. Inspect with product_archetype_* / product_work_unit_*. Advance to Build when the architecture is set.".into(),
-        Phase::Build => "Run product_build_run on a deliverable. Call product_session_finalize to promote the draft graph into the canonical spec.".into(),
+        Phase::Build => "Run product_build_run on a deliverable. Call product_session_finalize to validate the graph and close the session.".into(),
     }
 }
 
@@ -279,26 +275,20 @@ fn advance(registry: &ToolRegistry, args: &Value, ctx: &WorkflowCtx, id: Option<
     }
 }
 
-/// Validate the draft What graph; on conformance, promote the workspace into the
-/// canonical `.product` and mark the session finalized.
+/// Validate the canonical What graph; on conformance, stamp provenance and mark
+/// the session finalized. The session's writes already live in canonical —
+/// finalize is a validation gate + completion record, not a promotion.
 fn finalize(ctx: &WorkflowCtx) -> Result<Value, String> {
     let mut session = load_session(ctx)?;
     let product = session.product.clone();
-    let draft_dir = session_dir(&ctx.workspace, &product);
-    let draft = DomainSession::load(&draft_dir).map_err(|e| format!("no draft What graph: {e}"))?;
-    let fin = draft.finalize(now());
+    let canon_dir = session_dir(&ctx.canonical, &product);
+    let graph = DomainSession::load(&canon_dir).map_err(|e| format!("no What graph: {e}"))?;
+    let fin = graph.finalize(now());
     if !fin.ok {
         return Ok(json!({ "ok": false, "violations": fin.violations }));
     }
 
-    // Promote the whole isolated workspace into the canonical .product.
-    let ws_product = ctx.workspace.join(".product");
-    let canonical_product = ctx.canonical.join(".product");
-    author::copy_tree(&ws_product, &canonical_product, &["sessions", "build"])
-        .map_err(|e| format!("promote failed: {e}"))?;
-
-    // Belt-and-suspenders: write the validated .ttl + provenance to canonical.
-    let canon_dir = session_dir(&ctx.canonical, &product);
+    // Stamp the validated .ttl + provenance (the completion artifact).
     let mut written = vec![];
     if let Some(ttl) = fin.turtle {
         let p = canon_dir.join(format!("{product}.ttl"));
@@ -315,7 +305,7 @@ fn finalize(ctx: &WorkflowCtx) -> Result<Value, String> {
 
     session.finalized = true;
     session.save(&ctx.session_root).map_err(|e| format!("{e}"))?;
-    Ok(json!({ "ok": true, "product": product, "promotedTo": canonical_product.display().to_string(), "written": written }))
+    Ok(json!({ "ok": true, "product": product, "written": written }))
 }
 
 #[cfg(test)]

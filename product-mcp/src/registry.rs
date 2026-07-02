@@ -38,7 +38,7 @@ impl ToolRegistry {
     }
 
     /// Handle a tool call against an explicit repo root (used by the workflow
-    /// transport, where each session dispatches into its own workspace).
+    /// transport to dispatch against the canonical repo it was launched for).
     pub fn call_tool_at(&self, name: &str, args: &Value, repo_root: &Path) -> std::result::Result<Value, String> {
         let tool = self.tools.iter().find(|t| t.name == name)
             .ok_or_else(|| format!("Tool not found: {}", name))?;

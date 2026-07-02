@@ -26,7 +26,7 @@ units, gate it with verifications, and finalize.
    acceptance=["<id>: <statement>", …]`.
    **§7.2 (the gotcha):** each criterion is the literal form `id: statement`, and
    the statement must be a **checkable predicate, not a judgement** — e.g.
-   `"ws-copies-canonical: ws/.product is a copy of canonical after start"`, not
+   `"journal-created: .product/sessions/<id>/workflow.json exists after start"`, not
    "the start works well". Non-predicate criteria are rejected.
 3. **Work units must already exist.** `product_build_run` consumes the §5 work
    units for the slice; if none target it, it falls back to *unrelated* units.
@@ -56,10 +56,10 @@ units, gate it with verifications, and finalize.
    `product_deliverable_done` computes whether the deliverable is done (§7.2).
 7. **Release (optional)** — `product_release_new` groups deliverables;
    `product_release_done` checks the cut is closed (no dangling dependency).
-8. **Finalize** — `product_session_finalize` validates the What and promotes the
-   workspace into canonical `.product/`. The What graph + How promote; in-session
-   slices/deliverables may not — recreate canonical delivery artifacts outside the
-   session if you need them persisted.
+8. **Finalize** — `product_session_finalize` validates the What, stamps
+   provenance, and closes the session. Everything authored in the session (the
+   What graph, How, and delivery artifacts alike) is already in canonical
+   `.product/` — finalize is the conformance gate, not a promotion.
 
 ## The gate
 

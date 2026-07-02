@@ -1,10 +1,11 @@
 //! What → How → Build session launch.
 //!
-//! Scaffolds an isolated session workspace (a copy of `.product`) plus its
-//! `workflow.json` journal, then launches the agent CLI against the phase-gated
-//! `product mcp --workflow` server. The generalisation of [`super::domain`] to
-//! the full lifecycle: the server gates the tool surface by phase, and the
-//! draft graph is promoted to canonical only on `product_session_finalize`.
+//! Scaffolds a session's `workflow.json` journal, then launches the agent CLI
+//! against the phase-gated `product mcp --workflow` server. The generalisation
+//! of [`super::domain`] to the full lifecycle: the server gates the tool
+//! surface by phase while every tool writes the canonical `.product` graph
+//! directly; `product_session_finalize` validates the graph and closes the
+//! session.
 
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
@@ -13,7 +14,7 @@ use super::AgentCli;
 use crate::error::{ProductError, Result};
 use crate::pf::workflow::{Phase, WorkflowSession};
 
-/// Where a session's journal + workspace live under the canonical repo.
+/// Where a session's journal lives under the canonical repo.
 pub fn session_root(canonical_root: &Path, session_id: &str) -> PathBuf {
     canonical_root.join(".product").join("sessions").join(session_id)
 }
@@ -23,9 +24,8 @@ pub fn render_prompt(product: &str) -> String {
     include_str!("workflow_prompt.md").replace("{{PRODUCT}}", product)
 }
 
-/// Create the session journal + isolated `.product` workspace. Returns the
-/// session root. The workspace is a copy of canonical `.product` (minus
-/// `sessions`/`build`), so the draft What graph is seeded from canonical.
+/// Create the session journal. Returns the session root. The session works
+/// directly on the canonical `.product` graph — there is no workspace copy.
 pub fn scaffold(
     canonical_root: &Path,
     session_id: &str,
@@ -35,17 +35,6 @@ pub fn scaffold(
     now: String,
 ) -> Result<PathBuf> {
     let root = session_root(canonical_root, session_id);
-    let ws_product = root.join("ws").join(".product");
-    super::copy_tree(&canonical_root.join(".product"), &ws_product, &["sessions", "build"])?;
-
-    // Legacy layout: a root product.toml lives outside .product.
-    let root_toml = canonical_root.join("product.toml");
-    if root_toml.is_file() {
-        if let Ok(text) = std::fs::read_to_string(&root_toml) {
-            crate::fileops::write_file_atomic(&root.join("ws").join("product.toml"), &text)?;
-        }
-    }
-
     let session = WorkflowSession::new(session_id, product, cli, until, now);
     session.save(&root)?;
     Ok(root)
@@ -199,7 +188,7 @@ fn report(status: std::io::Result<std::process::ExitStatus>, cli: AgentCli, prom
     match status {
         Ok(s) if s.success() => {
             println!();
-            println!("Session complete. If you ran `product_session_finalize`, the draft was promoted to the canonical spec.");
+            println!("Session complete. All authored changes are in the canonical spec; `product_session_finalize` validated and closed the session.");
         }
         Ok(s) => eprintln!("Agent exited with status: {}", s),
         Err(e) => {
@@ -231,7 +220,7 @@ mod tests {
     }
 
     #[test]
-    fn scaffold_seeds_workspace_and_journal() {
+    fn scaffold_writes_journal_without_workspace() {
         let tmp = tempfile::tempdir().expect("tempdir");
         let root = tmp.path();
         std::fs::create_dir_all(root.join(".product/author-domain/demo")).expect("mkdir");
@@ -240,8 +229,8 @@ mod tests {
 
         let sr = scaffold(root, "demo-1", "demo", "claude", Phase::Build, "t0".into()).expect("scaffold");
         assert!(sr.join("workflow.json").is_file());
-        assert!(sr.join("ws/.product/config.toml").is_file());
-        assert!(sr.join("ws/.product/author-domain/demo/demo.ttl").is_file());
+        // Sessions edit canonical directly — no isolated workspace copy.
+        assert!(!sr.join("ws").exists());
 
         let loaded = WorkflowSession::load(&sr).expect("load");
         assert_eq!(loaded.id, "demo-1");

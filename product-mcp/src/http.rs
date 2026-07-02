@@ -167,19 +167,8 @@ async fn session_handler(
     axum::extract::Query(q): axum::extract::Query<SessionQuery>,
 ) -> axum::Json<serde_json::Value> {
     match resolve_session(&state.repo_root, state.session.as_deref(), q.session.as_deref()) {
-        Some((id, s)) => {
-            // In progress → the view renders this session's isolated draft, not
-            // canonical (see `project_graph`); flag it and how far it has drifted.
-            let draft = !s.finalized;
-            let mut payload = serde_json::json!({ "active": true, "id": &id, "product": &s.product,
-                "phase": &s.phase, "until": &s.until, "finalized": s.finalized, "history": &s.history, "draft": draft });
-            if draft {
-                let nodes = |g: std::result::Result<ViewGraph, String>| g.ok().map(|g| g.nodes.len());
-                if let Some(n) = nodes(project_graph(&state.repo_root, Some(&(id.clone(), s.clone())))) { payload["draftNodes"] = n.into(); }
-                if let Some(n) = nodes(project_graph(&state.repo_root, None)) { payload["canonNodes"] = n.into(); }
-            }
-            axum::Json(payload)
-        }
+        Some((id, s)) => axum::Json(serde_json::json!({ "active": true, "id": &id, "product": &s.product,
+            "phase": &s.phase, "until": &s.until, "finalized": s.finalized, "history": &s.history })),
         None => axum::Json(serde_json::json!({ "active": false })),
     }
 }
@@ -215,26 +204,25 @@ fn active_session(repo_root: &Path) -> Option<(String, WorkflowSession)> {
     Some((pick.1.clone(), pick.2.clone()))
 }
 
-/// Project the What graph for the client. While the followed `session` is in
-/// progress its isolated draft is shown (the live in-progress work); otherwise
-/// the canonical graph.
+/// Project the What graph for the client — always the canonical graph (sessions
+/// write it directly). A followed `session` only selects which product to
+/// render; otherwise the configured product name is used.
 fn project_graph(repo_root: &Path, session: Option<&(String, WorkflowSession)>) -> std::result::Result<ViewGraph, String> {
-    if let Some((id, s)) = session {
-        if !s.finalized {
-            let ws = repo_root.join(".product").join("sessions").join(id).join("ws");
-            if let Ok(draft) = DomainSession::load(&session_dir(&ws, &s.product)) {
-                return Ok(to_view_graph(&draft.graph));
+    let configured;
+    let product = match session {
+        Some((_, s)) if !s.product.trim().is_empty() => s.product.trim(),
+        _ => {
+            configured = ProductConfig::load_from_root(repo_root).map_err(|e| e.to_string())?;
+            let name = configured.name.trim();
+            if name.is_empty() {
+                return Err("no product configured (set `name` in product.toml)".to_string());
             }
+            name
         }
-    }
-    let cfg = ProductConfig::load_from_root(repo_root).map_err(|e| e.to_string())?;
-    let product = cfg.name.trim();
-    if product.is_empty() {
-        return Err("no product configured (set `name` in product.toml)".to_string());
-    }
-    let session = DomainSession::load(&session_dir(repo_root, product))
+    };
+    let graph = DomainSession::load(&session_dir(repo_root, product))
         .map_err(|_| format!("no What graph for product '{product}' yet"))?;
-    Ok(to_view_graph(&session.graph))
+    Ok(to_view_graph(&graph.graph))
 }
 
 /// Project the graph following the most-recently-active session (used by tests
@@ -329,39 +317,27 @@ mod tests {
         assert!(v2.nodes.iter().any(|n| n.id == "Item"), "new node appears without restart (no cache)");
     }
 
-    /// While a session is in progress the view reflects its isolated draft, not
-    /// the canonical graph; once finalized it falls back to canonical.
+    /// Sessions write the canonical graph directly — the view renders canonical
+    /// whether or not a session is in progress (no draft indirection).
     #[test]
-    fn view_prefers_active_session_draft() {
+    fn view_renders_canonical_during_session() {
         use product_core::author::workflow;
-        use product_core::pf::workflow::{Phase, WorkflowSession};
+        use product_core::pf::workflow::Phase;
 
         let tmp = tempfile::tempdir().expect("tempdir");
         let root = tmp.path();
         std::fs::create_dir_all(root.join(".product")).expect("mkdir");
         std::fs::write(root.join(".product/config.toml"), "name = \"demo\"\n").expect("config");
-        save_graph(root, &["Order"]); // canonical: Order only
+        save_graph(root, &["Order"]);
 
-        // Scaffold a session (copies canonical → ws) and add Item to the draft.
+        // Scaffold a session (journal only) and write a node to canonical, as
+        // the workflow transport now does.
         workflow::scaffold(root, "demo-1", "demo", "claude", Phase::Build, "t".into()).expect("scaffold");
-        let ws = root.join(".product/sessions/demo-1/ws");
-        let mut draft = DomainSession::load(&session_dir(&ws, "demo")).expect("draft");
-        draft.graph.entities.push(Entity {
-            id: "Item".into(), label: "Item".into(), context: "ctx".into(), definition: "d".into(),
-            ..Default::default()
-        });
-        draft.save(&session_dir(&ws, "demo")).expect("save draft");
+        save_graph(root, &["Order", "Item"]);
 
-        // The view shows the draft's Item while the session is unfinalized.
+        // The view shows the canonical graph, session in progress or not.
         let v = load_view(root).expect("load_view");
-        assert!(v.nodes.iter().any(|n| n.id == "Item"), "view reflects in-progress draft");
-
-        // After finalize the view falls back to canonical (no Item).
-        let mut s = WorkflowSession::load(&root.join(".product/sessions/demo-1")).expect("session");
-        s.finalized = true;
-        s.save(&root.join(".product/sessions/demo-1")).expect("save session");
-        let v2 = load_view(root).expect("reload");
-        assert!(!v2.nodes.iter().any(|n| n.id == "Item"), "finalized session falls back to canonical");
+        assert!(v.nodes.iter().any(|n| n.id == "Item"), "view renders canonical during a session");
     }
 
     /// The view follows the *specific* session it is scoped to (or queried),

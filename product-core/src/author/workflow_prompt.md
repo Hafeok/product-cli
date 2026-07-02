@@ -30,10 +30,9 @@ The phases:
    `product_release_*`, then run `product_build_run` to assemble the context,
    dispatch a worker, and run the gates. Review the returned report.
 
-When the work is done, call `product_session_finalize`. This validates the draft
-What graph and promotes this session's isolated workspace into the canonical
-`.product` spec. Until you finalize, nothing you author touches the canonical
-graph — work freely.
+When the work is done, call `product_session_finalize`. This validates the What
+graph and closes the session. Every tool call writes the canonical `.product`
+spec directly — there is no separate draft, so author deliberately.
 
 Drive the human through each phase: ask the questions the framework needs,
 record their answers through the tools, and never hand-edit files — every change

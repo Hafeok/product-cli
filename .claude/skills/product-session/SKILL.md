@@ -12,11 +12,13 @@ description: >
 
 # Product Session — the launcher
 
-A **session** is a phase-gated facilitation run over an *isolated copy* of
-`.product/`. It starts in **What**, advances strictly forward **What → How →
-Build** (optionally capped), and on **finalize** validates the draft and promotes
-the workspace into the canonical `.product/`. Nothing touches canonical until
-finalize. The phase **gates which tools exist** — an out-of-phase tool call errors.
+A **session** is a phase-gated facilitation run that writes the **canonical
+`.product/` graph directly** (the session record is just a `workflow.json`
+journal). It starts in **What**, advances strictly forward **What → How →
+Build** (optionally capped), and on **finalize** validates the graph and closes
+the session. Every write lands in canonical as it happens — there is no draft
+or rollback. The phase **gates which tools exist** — an out-of-phase tool call
+errors.
 
 ## Starting a session
 
@@ -50,10 +52,10 @@ in Build), so finish a phase before leaving it.
 
 ## Finalizing
 
-`product_session_finalize` validates the draft What and, if conformant, promotes
-the isolated workspace into the canonical `.product/`. It writes canonical files —
-treat it as the commit point. Build-phase artifacts (slices/deliverables created
-in-session) may not promote; the What graph + How always do.
+`product_session_finalize` validates the What and, if conformant, stamps
+provenance and marks the session complete. Writes have already landed in the
+canonical `.product/` throughout the session — finalize is the conformance gate
+and completion record, not a promotion step.
 
 ## Guardrails (apply in every phase)
 

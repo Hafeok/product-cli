@@ -70,7 +70,7 @@ fn handle_domain(cmd: AuthorCommands) -> BoxResult {
         .unwrap_or_else(|| "claude".to_string());
     let agent_cli = author::AgentCli::parse(&cli_str)?;
     let root = std::env::current_dir()?;
-    let _ = seed; // the session workspace seeds the draft from canonical `.product`.
+    let _ = seed; // sessions edit the canonical `.product` graph directly.
 
     // Generalized (ADR): `author domain` is now a What-capped What→How→Build
     // session. The phase-gated server exposes the What tools; advancing past

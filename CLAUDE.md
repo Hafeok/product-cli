@@ -178,10 +178,11 @@ views — Systems (§3.0), Domain ER (§3.1) and Flows / Event-Modeling swimlane
 
 `product session start <product>` (or `product mcp --workflow --session <id>`)
 launches a **phase-gated** authoring session: the agent CLI (`[author].cli` —
-claude or copilot) drives the graph *only through MCP tools*, against an isolated
-workspace copy of `.product`. The transport (`product-mcp/src/workflow.rs`) gates
-the tool surface by phase — `tools/list` shows only the current phase's family,
-and out-of-phase calls are rejected:
+claude or copilot) drives the graph *only through MCP tools*, writing the
+**canonical `.product` graph directly** (no workspace copy — the session record
+is just `workflow.json` under `.product/sessions/<id>/`). The transport
+(`product-mcp/src/workflow.rs`) gates the tool surface by phase — `tools/list`
+shows only the current phase's family, and out-of-phase calls are rejected:
 
 - **What** — `product_domain_*`, `product_decider_*`, `product_projector_*`,
   `product_primitive_*`.
@@ -194,8 +195,9 @@ Read-only tools from an earlier phase stay callable; writes lock to their home
 phase (`phase_of` in `workflow.rs` is the single source of truth). Three control
 tools are visible in every phase: `product_workflow_status`,
 `product_workflow_advance`, and `product_session_finalize` — which validates the
-draft What and, if conformant, promotes the isolated workspace into the canonical
-`.product`. Nothing touches canonical until finalize.
+What and, if conformant, stamps provenance and closes the session. Writes land
+in canonical as they happen (`RepoLock` serializes them); there is no draft
+rollback — an abandoned session's edits stay in the graph.
 
 ## Key Conventions
 

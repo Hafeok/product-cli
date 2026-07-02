@@ -1,8 +1,8 @@
 //! What → How → Build sessions — start, list, show, resume.
 //!
-//! `start` scaffolds an isolated session workspace and launches the agent CLI
-//! against the phase-gated `product mcp --workflow` server; the agent walks the
-//! lifecycle and promotes the draft to the canonical spec on finalize.
+//! `start` scaffolds a session journal and launches the agent CLI against the
+//! phase-gated `product mcp --workflow` server; the agent walks the lifecycle
+//! writing the canonical spec directly, and finalize validates + closes.
 
 use clap::Subcommand;
 use product_core::author;
@@ -24,7 +24,7 @@ pub enum SessionCommands {
         /// The session id
         id: String,
     },
-    /// Start a What→How→Build session: scaffold the workspace and launch the agent
+    /// Start a What→How→Build session: scaffold the journal and launch the agent
     Start {
         /// The product to author (defaults to the repo's configured name)
         product: Option<String>,

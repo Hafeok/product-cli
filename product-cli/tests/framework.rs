@@ -1079,16 +1079,13 @@ fn tc_workflow_session_phases_gate_the_tool_surface() {
     start.assert_exit(0);
     start.assert_stdout_contains("Scaffolded session");
 
-    // The workspace is an isolated copy of `.product` and carries a journal.
+    // The session carries a journal only — no workspace copy.
     let list = h.run(&["session", "list"]);
     list.assert_exit(0);
     let id = list.stdout.split_whitespace().next().expect("session id").to_string();
     assert!(id.starts_with("bookstore-"), "list:\n{}", list.stdout);
     assert!(h.exists(&format!(".product/sessions/{id}/workflow.json")), "journal missing");
-    assert!(
-        h.exists(&format!(".product/sessions/{id}/ws/.product/author-domain/bookstore/bookstore.ttl")),
-        "draft graph not seeded",
-    );
+    assert!(!h.exists(&format!(".product/sessions/{id}/ws")), "no workspace copy is scaffolded");
 
     // Drive the phase-gated server over stdio.
     let reqs = [
@@ -1131,29 +1128,30 @@ fn tc_workflow_show_reports_phase_and_journey() {
 }
 
 #[test]
-fn tc_workflow_finalize_promotes_isolated_draft_to_canonical() {
+fn tc_workflow_writes_land_canonical_and_finalize_validates() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
     h.run(&["session", "start", "--no-launch", "bookstore"]).assert_exit(0);
     let id = h.run(&["session", "list"]).stdout.split_whitespace().next().unwrap().to_string();
 
-    // Author a new context into the draft, then finalize to promote it.
+    // A session write lands in the canonical graph immediately — no workspace.
     let add = r#"{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"product_domain_new","arguments":{"kind":"context","id":"Shipping","label":"Shipping","definition":"Delivery"}}}"#;
     h.run_with_stdin(&["mcp", "--workflow", "--session", &id, "--repo", ".", "--write"], &format!("{add}\n"))
         .assert_exit(0);
 
-    // Isolation: the write is in the draft, not yet in the canonical graph.
     let canonical = ".product/author-domain/bookstore/bookstore.ttl";
-    let draft = format!(".product/sessions/{id}/ws/.product/author-domain/bookstore/bookstore.ttl");
-    assert!(h.read(&draft).contains("Shipping"), "draft should hold the new context");
-    assert!(!h.read(canonical).contains("Shipping"), "canonical must stay untouched before finalize");
+    assert!(h.read(canonical).contains("Shipping"), "canonical must hold the new context immediately");
+    assert!(!h.exists(&format!(".product/sessions/{id}/ws")), "no workspace copy is scaffolded");
 
-    // Finalize validates the draft and promotes it.
+    // Finalize validates the canonical graph, stamps provenance, and closes.
     let fin = r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"product_session_finalize","arguments":{}}}"#;
     let out = h.run_with_stdin(&["mcp", "--workflow", "--session", &id, "--repo", ".", "--write"], &format!("{fin}\n"));
     out.assert_exit(0);
     out.assert_stdout_contains("\\\"ok\\\": true");
-    assert!(h.read(canonical).contains("Shipping"), "canonical must hold the promoted context after finalize");
+    assert!(h.read(&format!(".product/sessions/{id}/workflow.json")).contains("\"finalized\": true"),
+        "finalize must mark the session complete");
+    assert!(h.exists(".product/author-domain/bookstore/bookstore.provenance.json"),
+        "finalize stamps provenance at canonical");
 }
 
 // --- §3.0/§3.0.1/§3.6 the product-boundary node family (1.6.0) -------------
