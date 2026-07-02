@@ -1060,10 +1060,6 @@ d:rm-session-status a pf:ReadModel ;
   pf:projects d:e-session ;
   pf:projects d:vo-session-workspace .
 
-d:wf-two-lane-canvas a pf:WireframeStep ;
-  rdfs:label "Two-Lane Canvas" ;
-  pf:displays d:rm-view-graph .
-
 d:ws-checkout a pf:WireframeStep ;
   rdfs:label "Checkout Screen" ;
   pf:surfaces [ pf:projection d:rm-cart ; pf:typedAs d:aio-cart-list ] ;
@@ -1086,6 +1082,60 @@ d:ws-run-init a pf:WireframeStep ;
   rdfs:label "Run `product init`" ;
   pf:triggers d:cmd-init-repo ;
   pf:displays d:rm-init-summary .
+
+d:ws-systems a pf:WireframeStep ;
+  rdfs:label "Systems View" ;
+  pf:intent "the §3.0 boundary map: product, domains, systems, journeys" ;
+  pf:surfaces [ pf:projection d:rm-view-graph ; pf:typedAs d:aio-systems-map ] ;
+  pf:surfaces [ pf:projection d:rm-view-graph ; pf:typedAs d:aio-node-detail ] ;
+  pf:surfaces [ pf:projection d:rm-view-graph ; pf:typedAs d:aio-live-indicator ] ;
+  pf:offers [ pf:command d:cmd-render-view ; pf:typedAs d:aio-nav-tabs ] ;
+  pf:transitionsTo d:ws-domain-er ;
+  pf:transitionsTo d:ws-flows ;
+  pf:mustSatisfy d:wcag-view-contrast ;
+  pf:mustSatisfy d:wcag-view-keyboard ;
+  pf:mustSatisfy d:wcag-view-focus ;
+  pf:style "em/bridge" ;
+  pf:style "theme/dark" ;
+  pf:style "theme/light" .
+
+d:ws-domain-er a pf:WireframeStep ;
+  rdfs:label "Domain ER View" ;
+  pf:intent "the §3.1 structure of one bounded context" ;
+  pf:surfaces [ pf:projection d:rm-view-graph ; pf:typedAs d:aio-domain-er ] ;
+  pf:surfaces [ pf:projection d:rm-view-graph ; pf:typedAs d:aio-node-detail ] ;
+  pf:surfaces [ pf:projection d:rm-view-graph ; pf:typedAs d:aio-live-indicator ] ;
+  pf:offers [ pf:command d:cmd-render-view ; pf:typedAs d:aio-nav-tabs ] ;
+  pf:offers [ pf:command d:cmd-render-view ; pf:typedAs d:aio-context-selector ] ;
+  pf:transitionsTo d:ws-systems ;
+  pf:transitionsTo d:ws-flows ;
+  pf:mustSatisfy d:wcag-view-contrast ;
+  pf:mustSatisfy d:wcag-view-keyboard ;
+  pf:mustSatisfy d:wcag-view-focus ;
+  pf:style "theme/dark" ;
+  pf:style "theme/light" .
+
+d:ws-flows a pf:WireframeStep ;
+  rdfs:label "Flows View" ;
+  pf:intent "the §3.2 event model of one flow as swimlanes" ;
+  pf:surfaces [ pf:projection d:rm-view-graph ; pf:typedAs d:aio-swimlanes ] ;
+  pf:surfaces [ pf:projection d:rm-view-graph ; pf:typedAs d:aio-node-detail ] ;
+  pf:surfaces [ pf:projection d:rm-view-graph ; pf:typedAs d:aio-live-indicator ] ;
+  pf:offers [ pf:command d:cmd-render-view ; pf:typedAs d:aio-nav-tabs ] ;
+  pf:offers [ pf:command d:cmd-render-view ; pf:typedAs d:aio-flow-chips ] ;
+  pf:offers [ pf:command d:cmd-render-view ; pf:typedAs d:aio-kind-filter ] ;
+  pf:transitionsTo d:ws-systems ;
+  pf:transitionsTo d:ws-domain-er ;
+  pf:mustSatisfy d:wcag-view-contrast ;
+  pf:mustSatisfy d:wcag-view-keyboard ;
+  pf:mustSatisfy d:wcag-view-focus ;
+  pf:mustSatisfy d:wcag-view-status ;
+  pf:style "em/command" ;
+  pf:style "em/view" ;
+  pf:style "em/event" ;
+  pf:style "em/trigger" ;
+  pf:style "theme/dark" ;
+  pf:style "theme/light" .
 
 d:flow-capture-what a pf:Flow ;
   rdfs:label "Capture the What (this session)" ;
@@ -1151,6 +1201,16 @@ d:flow-session-lifecycle a pf:Flow ;
   pf:contains d:ev-what-finalized ;
   pf:systemOf d:product-cli .
 
+d:flow-explore-views a pf:Flow ;
+  rdfs:label "Open the live view and explore" ;
+  pf:contains d:cmd-open-live-view ;
+  pf:contains d:ev-live-view-opened ;
+  pf:contains d:rm-view-graph ;
+  pf:contains d:ws-systems ;
+  pf:contains d:ws-domain-er ;
+  pf:contains d:ws-flows ;
+  pf:systemOf d:product-view .
+
 d:aio-cart-list a pf:Aio ;
   rdfs:label "Cart List" ;
   pf:means "display the line items" .
@@ -1165,14 +1225,72 @@ d:aio-quantity a pf:Aio ;
   pf:means "adjust an integer count" ;
   pf:mustSatisfy d:wcag-label .
 
+d:aio-systems-map a pf:Aio ;
+  rdfs:label "Systems Map" ;
+  pf:means "survey the product boundary: domains, systems, journeys" ;
+  pf:mustSatisfy d:wcag-view-contrast .
+
+d:aio-domain-er a pf:Aio ;
+  rdfs:label "Domain ER Canvas" ;
+  pf:means "read one bounded context's structure: aggregates, entities, value objects, invariants" ;
+  pf:mustSatisfy d:wcag-view-contrast .
+
+d:aio-swimlanes a pf:Aio ;
+  rdfs:label "Event-Model Swimlanes" ;
+  pf:means "read one flow as trigger/command/view/event lanes over time" ;
+  pf:mustSatisfy d:wcag-view-contrast .
+
+d:aio-node-detail a pf:Aio ;
+  rdfs:label "Node Detail" ;
+  pf:means "inspect one node's fields and edges" ;
+  pf:mustSatisfy d:wcag-view-contrast .
+
+d:aio-nav-tabs a pf:Aio ;
+  rdfs:label "View Tabs" ;
+  pf:means "switch between the Systems, Domain and Flows views" ;
+  pf:mustSatisfy d:wcag-view-keyboard ;
+  pf:mustSatisfy d:wcag-view-focus .
+
+d:aio-context-selector a pf:Aio ;
+  rdfs:label "Context Selector" ;
+  pf:means "choose which bounded context the ER shows" ;
+  pf:mustSatisfy d:wcag-view-keyboard ;
+  pf:mustSatisfy d:wcag-view-focus .
+
+d:aio-flow-chips a pf:Aio ;
+  rdfs:label "Flow Chips" ;
+  pf:means "choose which flow the swimlanes show" ;
+  pf:mustSatisfy d:wcag-view-keyboard ;
+  pf:mustSatisfy d:wcag-view-focus .
+
+d:aio-kind-filter a pf:Aio ;
+  rdfs:label "Kind Filter" ;
+  pf:means "toggle node kinds in and out of the swimlanes" ;
+  pf:mustSatisfy d:wcag-view-keyboard ;
+  pf:mustSatisfy d:wcag-view-focus .
+
+d:aio-live-indicator a pf:Aio ;
+  rdfs:label "Live Indicator" ;
+  pf:means "announce that the graph changed and the view refreshed" ;
+  pf:mustSatisfy d:wcag-view-status .
+
 d:cou-mobile a pf:ContextOfUse ;
   rdfs:label "Mobile Web" ;
   pf:dimension "form-factor" ;
   pf:contextValue "mobile" .
 
+d:cou-desktop a pf:ContextOfUse ;
+  rdfs:label "Desktop Web" ;
+  pf:dimension "form-factor" ;
+  pf:contextValue "desktop" .
+
 d:app-shop a pf:ApplicationRoot ;
   rdfs:label "Shop App" ;
   pf:navigatesFromRoot d:ws-checkout .
+
+d:app-view a pf:ApplicationRoot ;
+  rdfs:label "Live What-Graph View" ;
+  pf:navigatesFromRoot d:ws-systems .
 
 d:wcag-contrast a pf:WcagCriterion ;
   rdfs:label "1.4.3 Contrast (Minimum)" ;
@@ -1184,6 +1302,30 @@ d:wcag-label a pf:WcagCriterion ;
   pf:level "A" ;
   pf:satisfied false .
 
+d:wcag-view-contrast a pf:WcagCriterion ;
+  rdfs:label "1.4.3 Contrast (Minimum)" ;
+  pf:level "AA" ;
+  pf:verification "machine" ;
+  pf:satisfied false .
+
+d:wcag-view-keyboard a pf:WcagCriterion ;
+  rdfs:label "2.1.1 Keyboard" ;
+  pf:level "A" ;
+  pf:verification "manual" ;
+  pf:satisfied false .
+
+d:wcag-view-focus a pf:WcagCriterion ;
+  rdfs:label "2.4.7 Focus Visible" ;
+  pf:level "AA" ;
+  pf:verification "assisted" ;
+  pf:satisfied false .
+
+d:wcag-view-status a pf:WcagCriterion ;
+  rdfs:label "4.1.3 Status Messages" ;
+  pf:level "AA" ;
+  pf:verification "assisted" ;
+  pf:satisfied false .
+
 d:ds-shop a pf:DesignSystem ;
   rdfs:label "Shop Design System" ;
   pf:hasCio d:cio-button ;
@@ -1191,6 +1333,24 @@ d:ds-shop a pf:DesignSystem ;
   pf:hasCio d:cio-stepper ;
   pf:hasToken "color/accent" ;
   pf:hasToken "space/md" .
+
+d:ds-view a pf:DesignSystem ;
+  rdfs:label "Live View Design System" ;
+  pf:hasCio d:cio-tab ;
+  pf:hasCio d:cio-card ;
+  pf:hasCio d:cio-swimlane ;
+  pf:hasCio d:cio-detail-panel ;
+  pf:hasCio d:cio-dropdown ;
+  pf:hasCio d:cio-chip ;
+  pf:hasCio d:cio-checkbox ;
+  pf:hasCio d:cio-live-dot ;
+  pf:hasToken "em/command" ;
+  pf:hasToken "em/view" ;
+  pf:hasToken "em/event" ;
+  pf:hasToken "em/trigger" ;
+  pf:hasToken "em/bridge" ;
+  pf:hasToken "theme/dark" ;
+  pf:hasToken "theme/light" .
 
 d:cio-button a pf:Cio ;
   rdfs:label "PrimaryButton" .
@@ -1200,6 +1360,30 @@ d:cio-list a pf:Cio ;
 
 d:cio-stepper a pf:Cio ;
   rdfs:label "NumberStepper" .
+
+d:cio-tab a pf:Cio ;
+  rdfs:label "TabBar" .
+
+d:cio-card a pf:Cio ;
+  rdfs:label "NodeCard" .
+
+d:cio-swimlane a pf:Cio ;
+  rdfs:label "SwimlaneBand" .
+
+d:cio-detail-panel a pf:Cio ;
+  rdfs:label "DetailSidebar" .
+
+d:cio-dropdown a pf:Cio ;
+  rdfs:label "SelectDropdown" .
+
+d:cio-chip a pf:Cio ;
+  rdfs:label "FilterChip" .
+
+d:cio-checkbox a pf:Cio ;
+  rdfs:label "Checkbox" .
+
+d:cio-live-dot a pf:Cio ;
+  rdfs:label "LiveStatusDot" .
 
 d:rr-list a pf:ReificationRule ;
   pf:reifies d:aio-cart-list ;
@@ -1219,6 +1403,60 @@ d:rr-qty a pf:ReificationRule ;
   pf:toCio d:cio-stepper ;
   pf:rationale "quantity uses a NumberStepper on mobile" .
 
+d:rr-view-tabs a pf:ReificationRule ;
+  pf:reifies d:aio-nav-tabs ;
+  pf:inContext d:cou-desktop ;
+  pf:toCio d:cio-tab ;
+  pf:rationale "view switching is a persistent tab bar on desktop" .
+
+d:rr-view-map a pf:ReificationRule ;
+  pf:reifies d:aio-systems-map ;
+  pf:inContext d:cou-desktop ;
+  pf:toCio d:cio-card ;
+  pf:rationale "systems render as wrapped node cards" .
+
+d:rr-view-er a pf:ReificationRule ;
+  pf:reifies d:aio-domain-er ;
+  pf:inContext d:cou-desktop ;
+  pf:toCio d:cio-card ;
+  pf:rationale "ER members render as columned node cards with relation edges" .
+
+d:rr-view-lanes a pf:ReificationRule ;
+  pf:reifies d:aio-swimlanes ;
+  pf:inContext d:cou-desktop ;
+  pf:toCio d:cio-swimlane ;
+  pf:rationale "the event model reads as horizontal swimlane bands" .
+
+d:rr-view-detail a pf:ReificationRule ;
+  pf:reifies d:aio-node-detail ;
+  pf:inContext d:cou-desktop ;
+  pf:toCio d:cio-detail-panel ;
+  pf:rationale "node inspection opens a right sidebar, keeping the canvas visible" .
+
+d:rr-view-context a pf:ReificationRule ;
+  pf:reifies d:aio-context-selector ;
+  pf:inContext d:cou-desktop ;
+  pf:toCio d:cio-dropdown ;
+  pf:rationale "context choice is a compact dropdown in the sub-bar" .
+
+d:rr-view-chips a pf:ReificationRule ;
+  pf:reifies d:aio-flow-chips ;
+  pf:inContext d:cou-desktop ;
+  pf:toCio d:cio-chip ;
+  pf:rationale "flows within a system are one-click chips" .
+
+d:rr-view-filter a pf:ReificationRule ;
+  pf:reifies d:aio-kind-filter ;
+  pf:inContext d:cou-desktop ;
+  pf:toCio d:cio-checkbox ;
+  pf:rationale "kind toggles are checkboxes with visible state" .
+
+d:rr-view-live a pf:ReificationRule ;
+  pf:reifies d:aio-live-indicator ;
+  pf:inContext d:cou-desktop ;
+  pf:toCio d:cio-live-dot ;
+  pf:rationale "liveness is a pulsing dot plus an aria-live announcement" .
+
 d:product-cli a pf:System ;
   rdfs:label "Product CLI" ;
   pf:systemKind "cli" ;
@@ -1230,7 +1468,8 @@ d:product-view a pf:System ;
   pf:systemKind "application" ;
   pf:purpose "the live Event-Modeling web view served over the MCP HTTP server" ;
   pf:targetsPlatform "web" ;
-  pf:targetsClass "gui" .
+  pf:targetsClass "gui" ;
+  pf:rootsAt d:app-view .
 
 d:sys-shop a pf:System ;
   rdfs:label "Bookstore Demo" ;
