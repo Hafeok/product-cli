@@ -1573,7 +1573,7 @@ d:pf-product a pf:Product ;
   pf:ownsSystem d:product-cli ;
   pf:ownsSystem d:product-view ;
   pf:ownsSystem d:sys-shop ;
-  pf:versionedAs "1.0.0" .
+  pf:versionedAs "1.1.0" .
 
 d:j-author-and-watch a pf:Journey ;
   rdfs:label "Author the What and watch it live" ;

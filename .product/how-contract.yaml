@@ -1,5 +1,6 @@
 archetype: product-cli
-realises_version: 1.0.0
+version: 1.1.0
+realises_version: 1.1.0
 top_decisions:
 - id: slice-adapter
   decision: 'Pure pf:: domain slices in product-core; thin CLI adapters in product-cli/src/commands'
@@ -125,7 +126,7 @@ patterns:
   enforced_by:
   - view-derivation-verified
 - id: two-lane-view
-  shape: an fcose relativePlacement constraint pinning domain left-of event, contexts as paired compound boxes, bridges crossing the divider, vendored Cytoscape embedded via include_str!
+  shape: 'superseded two-lane canvas, evolved into the three-view page: Systems (§3.0), Domain ER (§3.1) and Flows swimlanes (§3.2) on one self-contained embedded page (include_str!), the domain/event partition preserved as the Domain vs Flows views with bridge edges (id kept for archetype/work-unit references)'
   realizes:
   - model-separation
   applied_by:
@@ -173,4 +174,34 @@ infrastructure_contract:
   - id: binary
     kind: release
     choice: cargo-dist GitHub release
-interface_contracts: []
+interface_contracts:
+- id: cli-surface
+  surface: the product CLI subcommand tree (domain/decider/projector/how/feature/build/seam/session/target/verdict/...)
+  standard: clap-derived POSIX CLI; JSON via --format json
+  derived_from:
+  - cmd-add-bounded-context
+  - cmd-add-entity
+  - cmd-add-command
+  - cmd-add-event
+  - cmd-validate-what
+  - cmd-init-repo
+- id: mcp-tools
+  surface: the product_* MCP tool families, phase-gated in workflow sessions
+  standard: MCP JSON-RPC 2.0 over stdio and HTTP
+  derived_from:
+  - cmd-add-bounded-context
+  - cmd-add-entity
+  - cmd-add-command
+  - cmd-add-event
+  - cmd-start-session
+  - cmd-advance-phase
+  - cmd-finalize-session
+- id: http-view
+  surface: GET / (live view), /api/graph, /api/events (SSE), /api/session
+  standard: HTTP + Server-Sent Events
+  derived_from:
+  - rm-view-graph
+  - cmd-open-live-view
+  - cmd-refetch-graph
+  - cmd-render-view
+  - ev-graph-changed
