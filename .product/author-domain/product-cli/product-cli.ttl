@@ -1522,7 +1522,8 @@ d:t-refetch a pf:Trigger ;
   rdfs:label "Graph changed → refetch" ;
   pf:source "automated" ;
   pf:issues d:cmd-refetch-graph ;
-  pf:watches d:rm-view-graph .
+  pf:watches d:rm-view-graph ;
+  pf:translatesFrom d:product-cli .
 
 d:t-render a pf:Trigger ;
   rdfs:label "After refetch → re-render" ;
@@ -1554,7 +1555,8 @@ d:t-open-view a pf:Trigger ;
   rdfs:label "After a session becomes active → open the live web view" ;
   pf:source "automated" ;
   pf:issues d:cmd-open-live-view ;
-  pf:watches d:rm-session-status .
+  pf:watches d:rm-session-status ;
+  pf:translatesFrom d:product-cli .
 
 d:pf-product a pf:Product ;
   rdfs:label "Product CLI" ;
@@ -1572,6 +1574,20 @@ d:pf-product a pf:Product ;
   pf:ownsSystem d:product-view ;
   pf:ownsSystem d:sys-shop ;
   pf:versionedAs "1.0.0" .
+
+d:j-author-and-watch a pf:Journey ;
+  rdfs:label "Author the What and watch it live" ;
+  pf:journeyOf d:pf-product ;
+  pf:composesFlow d:flow-capture-what ;
+  pf:composesFlow d:flow-live-update ;
+  pf:crossesVia d:t-refetch .
+
+d:j-run-session-live a pf:Journey ;
+  rdfs:label "Run a session with the live view following" ;
+  pf:journeyOf d:pf-product ;
+  pf:composesFlow d:flow-session-lifecycle ;
+  pf:composesFlow d:flow-explore-views ;
+  pf:crossesVia d:t-open-view .
 
 d:qd-validate-latency a pf:QualityDemand ;
   rdfs:label "Validate latency" ;
