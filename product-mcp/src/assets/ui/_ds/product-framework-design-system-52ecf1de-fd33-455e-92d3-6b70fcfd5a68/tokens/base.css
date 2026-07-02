@@ -1,0 +1,36 @@
+/* ============================================================
+   BASE — light element resets that pick up the tokens.
+   Kept minimal: the design system is token-first, not a CSS framework.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+code, pre, kbd, samp { font-family: var(--font-mono); }
+
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+::selection { background: var(--accent-wash); color: var(--ink); }
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-sm);
+}
+
+hr {
+  border: 0;
+  border-top: var(--bw-hair) solid var(--border-soft);
+  margin: var(--space-6) 0;
+}

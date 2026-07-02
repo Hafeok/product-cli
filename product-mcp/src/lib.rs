@@ -22,6 +22,7 @@ mod framework_write_handlers;
 mod pf_mcp;
 pub mod stdio;
 pub mod http;
+mod http_ui;
 pub mod watch;
 pub mod scaffold;
 pub mod tools;

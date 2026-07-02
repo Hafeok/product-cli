@@ -1,0 +1,54 @@
+/* ============================================================
+   EFFECTS — radius, borders, shadows, motion
+   ------------------------------------------------------------
+   Two shadow languages:
+     • DRAFTING — a hard, offset, un-blurred shadow in accent-wash.
+       The blueprint signature; reads like ink offset on paper.
+     • ELEVATION — soft neutral shadows for the dark graph surface
+       (panels, hovered nodes).
+   Borders are thin (1–1.5px) and frequently DASHED — construction
+   lines, AIO placeholders, flow dividers. Corners are TIGHT.
+   ============================================================ */
+
+:root {
+  /* ---- Radius — tight, technical ---- */
+  --radius-xs: 2px;   /* tags, chips, swatches */
+  --radius-sm: 3px;
+  --radius:    5px;   /* default — graph nodes, buttons */
+  --radius-md: 8px;   /* panels, dialogs */
+  --radius-lg: 10px;  /* device frame */
+  --radius-pill: 999px;
+
+  /* ---- Border widths ---- */
+  --bw-hair: 1px;
+  --bw:      1.5px;   /* the standard drawn rule */
+  --bw-bold: 2px;     /* emphasis / primary */
+
+  /* Dashed construction line (use as: border: var(--bw) dashed var(--border-soft)) */
+  --dash: 3px 2px; /* @kind other */
+  --dash-wide: 5px 3px; /* @kind other */
+
+  /* ---- DRAFTING shadow — hard offset, no blur (blueprint) ---- */
+  --shadow-draft:    6px 6px 0 var(--accent-wash);
+  --shadow-draft-sm: 3px 3px 0 var(--accent-wash);
+
+  /* ---- ELEVATION shadows — soft (dark graph + light panels) ---- */
+  --shadow-1: 0 1px 2px rgba(11,31,51,.08);
+  --shadow-2: 0 4px 12px rgba(11,31,51,.12);
+  --shadow-3: 0 12px 32px rgba(11,31,51,.18);
+  --shadow-graph: 0 8px 28px rgba(0,0,0,.45);
+
+  /* Focus ring */
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus-ring);
+  --ring-inset: inset 0 0 0 2px var(--focus-ring);
+
+  /* ---- Motion — restrained, mechanical. No bounce. ---- */
+  --ease:       cubic-bezier(.2, 0, 0, 1); /* @kind other */
+  --ease-out:   cubic-bezier(0, 0, .2, 1); /* @kind other */
+  --dur-fast:   120ms; /* @kind other */
+  --dur:        200ms; /* @kind other */
+  --dur-slow:   320ms; /* @kind other */
+
+  /* node press = brightness/translate, never scale-bounce */
+  --press-translate: translateY(1px); /* @kind other */
+}

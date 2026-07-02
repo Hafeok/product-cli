@@ -1,0 +1,6 @@
+<svg width="266" height="32" viewBox="0 0 266 32" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Product Framework">
+  <path d="M5 6 H27 L24.3 12.2 H7.7 Z" fill="#3b82f6"></path>
+  <path d="M7.9 13.1 H24.1 L21.6 19.1 H10.4 Z" fill="#f59e0b"></path>
+  <path d="M10.6 20 H21.4 L18.9 26 H13.1 Z" fill="#22c55e"></path>
+  <text x="40" y="22" font-family="&#39;IBM Plex Mono&#39;,&#39;SF Mono&#39;,ui-monospace,monospace" font-size="20" font-weight="600" letter-spacing="-0.01em" fill="#e2e8f0">product<tspan fill="#64748b" font-weight="400"> framework</tspan></text>
+</svg>

@@ -28,6 +28,7 @@ tower-http = { version = "0.5", features = ["cors"] }
 chrono     = { version = "0.4", features = ["serde"] }
 notify     = "6"
 tokio-stream = { version = "0.1", features = ["sync"] }
+rust-embed = "8"
 
 [dev-dependencies]
 tempfile = "3"

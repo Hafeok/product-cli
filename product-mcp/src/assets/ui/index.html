@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>product-cli — What views</title>
+<link rel="icon" type="image/svg+xml" href="assets/logo-mark.svg">
+
+
+<link rel="stylesheet" href="_ds/product-framework-design-system-52ecf1de-fd33-455e-92d3-6b70fcfd5a68/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/product-framework-design-system-52ecf1de-fd33-455e-92d3-6b70fcfd5a68/tokens/colors.css">
+<link rel="stylesheet" href="_ds/product-framework-design-system-52ecf1de-fd33-455e-92d3-6b70fcfd5a68/tokens/typography.css">
+<link rel="stylesheet" href="_ds/product-framework-design-system-52ecf1de-fd33-455e-92d3-6b70fcfd5a68/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/product-framework-design-system-52ecf1de-fd33-455e-92d3-6b70fcfd5a68/tokens/effects.css">
+<link rel="stylesheet" href="_ds/product-framework-design-system-52ecf1de-fd33-455e-92d3-6b70fcfd5a68/tokens/base.css">
+<link rel="stylesheet" href="_ds/product-framework-design-system-52ecf1de-fd33-455e-92d3-6b70fcfd5a68/styles.css">
+
+<style>
+  html, body { margin: 0; height: 100%; background: var(--slate-900); }
+  #root { height: 100%; }
+
+  /* Blueprint (light) surface — invert the slate ramp the dark tool is built on,
+     so the same components read as ink-on-paper. EM semantic colours are untouched. */
+  [data-surface="blueprint"] {
+    --slate-950: #ffffff;
+    --slate-900: #f3f7fb;  /* canvas / deepest bg → drafting paper */
+    --slate-800: #ffffff;  /* panels / header */
+    --slate-700: #d8e4ef;  /* hairlines */
+    --slate-600: #b9cee0;  /* borders */
+    --slate-500: #6f93b3;  /* drawn rules / muted lines */
+    --slate-400: #51708c;  /* muted text */
+    --slate-300: #2f4a63;
+    --slate-200: #122b42;  /* body text */
+    --slate-100: #0b1f33;  /* headings */
+  }
+  [data-surface="blueprint"] { background: var(--slate-900) !important; color: var(--slate-200); }
+</style>
+
+<!-- React + Babel vendored locally (offline; no CDN). Served from src/assets/ui/vendor. -->
+<script src="vendor/react.js"></script>
+<script src="vendor/react-dom.js"></script>
+<script src="vendor/babel.js"></script>
+
+<script src="_ds/product-framework-design-system-52ecf1de-fd33-455e-92d3-6b70fcfd5a68/_ds_bundle.js"></script>
+<script src="data.js"></script>
+<script src="data-ui.js"></script>
+<script src="data-how.js"></script>
+<script src="data-graph.js"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="shared.jsx"></script>
+<script type="text/babel" src="SystemsMap.jsx"></script>
+<script type="text/babel" src="DomainGraph.jsx"></script>
+<script type="text/babel" src="FlowsTimeline.jsx"></script>
+<script type="text/babel" src="FeaturesView.jsx"></script>
+<script type="text/babel" src="VersionsView.jsx"></script>
+<script type="text/babel" src="PageGraphView.jsx"></script>
+<script type="text/babel" src="UIStepsView.jsx"></script>
+<script type="text/babel" src="ScreenPreview.jsx"></script>
+<script type="text/babel" src="AIOCatalogView.jsx"></script>
+<script type="text/babel" src="DataView.jsx"></script>
+<script type="text/babel" src="ContentView.jsx"></script>
+<script type="text/babel" src="DecidersView.jsx"></script>
+<script type="text/babel" src="ScenariosView.jsx"></script>
+<script type="text/babel" src="HowViews.jsx"></script>
+<script type="text/babel" src="HowProcessView.jsx"></script>
+<script type="text/babel" src="GraphView.jsx"></script>
+<script type="text/babel" src="BuildViews.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+</body>
+</html>

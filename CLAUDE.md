@@ -186,10 +186,21 @@ Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
   half); `product verdict <file>` validates an inbound verdict event against the
   pinned accepted/rejected/escalate vocabulary. Schemas: `schema/json/build-seam/`.
 
-The reference What lives in `.product/author-domain/product-cli/`; the live web
-view (`product mcp --http`, then open `/`) renders it across three connected
-views — Systems (§3.0), Domain ER (§3.1) and Flows / Event-Modeling swimlanes
-(§3.2) — projected from `/api/graph` (`pf::viz`) and live-refreshed over SSE.
+The reference What lives in `.product/author-domain/product-cli/`. `product mcp
+--http` serves two web views:
+
+- **`/`** — the **1.7.0 explorer** (a React app embedded from
+  `product-mcp/src/assets/ui/`, served via a `rust_embed` fallback in
+  `http_ui.rs`; React + Babel vendored under `vendor/` so it needs no CDN or
+  build step, transpiled in-browser). Six sections — The Graph (§2·§9), The What
+  (§3), UI (§3.2), The How (§4, incl. **blueprints + DeployableUnits**), Build
+  (§5–6), Delivery (§7, incl. **versions**). *Currently driven by the bundled
+  `window.PF` demo data (`assets/ui/data*.js`), not live-wired to `/api/graph`
+  yet — that is the follow-up pass.*
+- **`/legacy`** — the original self-contained **live** 3-view page (Systems §3.0,
+  Domain ER §3.1, Flows / Event-Modeling swimlanes §3.2), projected from
+  `/api/graph` (`pf::viz`, gaining a §4 How lane in 1.7.0) and live-refreshed
+  over SSE. This is the graph-connected view until the explorer is wired.
 
 ## Phase-gated session (What → How → Build)
 

@@ -56,10 +56,13 @@ pub async fn run_http(
 
     let app = Router::new()
         .route("/mcp", post(mcp_handler))
-        .route("/", get(index_handler))
+        .route("/legacy", get(legacy_view_handler))
         .route("/api/graph", get(graph_handler))
         .route("/api/session", get(session_handler))
         .route("/api/events", get(events_handler))
+        // The 1.7.0 explorer UI at `/`, plus every embedded asset it references
+        // (data*.js, *.jsx, _ds/**, vendor/**, assets/**) via the fallback.
+        .fallback(get(ui_handler))
         .with_state(state.clone());
 
     let app = with_cors(app, &cors_origins);
@@ -124,10 +127,7 @@ async fn mcp_handler(
     }
 }
 
-/// `GET /` — the embedded two-lane view page (no build step, no CDN).
-async fn index_handler() -> axum::response::Html<&'static str> {
-    axum::response::Html(include_str!("assets/view.html"))
-}
+use super::http_ui::{legacy_view_handler, ui_handler};
 
 /// A `?session=<id>` query selecting which session the view follows.
 #[derive(serde::Deserialize, Default)]

@@ -1,0 +1,124 @@
+/* ============================================================
+   COLOR — The Product Framework
+   ------------------------------------------------------------
+   Two coupled surfaces drive the palette:
+     • the LIGHT "blueprint" — the schematic spec/preview surface
+       (paper, ink, drafting blue). Looks like a technical drawing.
+     • the DARK "graph" — the live Event-Modeling view (slate canvas,
+       luminous semantic nodes).
+   The spine of the brand is the EVENT-MODELING SEMANTIC palette:
+   every construct in a What-graph has a fixed colour, and that
+   mapping is load-bearing — never recolour a command, a view, an
+   event, a trigger, or a bridge.
+   ============================================================ */
+
+:root {
+  /* ---- Neutral · slate ramp (the dark-graph canvas + UI text) ---- */
+  --slate-950: #0b1220;
+  --slate-900: #0f172a;
+  --slate-800: #1e293b;
+  --slate-700: #334155;
+  --slate-600: #475569;
+  --slate-500: #64748b;
+  --slate-400: #94a3b8;
+  --slate-300: #cbd5e1;
+  --slate-200: #e2e8f0;
+  --slate-100: #f1f5f9;
+  --slate-50:  #f8fafc;
+  --white:     #ffffff;
+
+  /* ---- Blueprint · ink + paper (the light schematic surface) ---- */
+  --ink:        #0b1f33;  /* near-black navy — blueprint ink, headings */
+  --ink-soft:   #3a5570;
+  --paper:      #f3f7fb;  /* drafting paper */
+  --paper-2:    #e9f1f8;  /* recessed panel */
+  --blueprint-line:      #7da3c4;  /* drawn rule */
+  --blueprint-line-soft: #c7d9e8;  /* faint construction line */
+
+  /* ---- Brand blue (drafting / domain) ---- */
+  --blue-700: #1763b6;  /* deep "spec ink" blue — blueprint accent */
+  --blue-600: #2563eb;  /* primary brand blue (command + domain) */
+  --blue-500: #3b82f6;
+  --blue-400: #60a5fa;
+  --blue-100: #d6e6f6;  /* accent wash on paper */
+
+  /* ============================================================
+     EVENT-MODELING SEMANTIC PALETTE — load-bearing.
+     These colours ARE the vocabulary of a What-graph. Each maps a
+     construct to a hue used identically in both light and dark
+     surfaces. Do not reassign.
+     ============================================================ */
+  --em-command:   #2563eb;  /* Command — blue. "a decision is asked for" */
+  --em-view:      #16a34a;  /* View / Read-model — green. "something is shown" */
+  --em-event:     #f59e0b;  /* Event — amber. "a fact that happened" */
+  --em-event-deep:#d97706;  /* amber, on light surfaces */
+  --em-trigger:   #7c3aed;  /* Trigger — violet. "what set it off" */
+  --em-trigger-soft:#a78bfa;
+  --em-ui:        #0b1220;  /* UI step — neutral, dashed outline */
+  --em-bridge:    #db2777;  /* Bridge / What→How link — magenta */
+
+  /* Structural (two-lane §3.1|§3.2) domain kinds */
+  --kind-entity:        #1d4ed8;
+  --kind-value-object:  #3b82f6;
+  --kind-invariant:     #6366f1;
+  --kind-read-model:    #ca8a04;
+  --kind-ui-step:       #a16207;
+  --kind-flow:          #854d0e;
+
+  /* ---- Status / feedback ---- */
+  --ok:    #16a34a;   /* verified / green */
+  --ok-bg: #14532d;
+  --warn:  #9a5b00;   /* draft / divergence */
+  --warn-bg:#fbbf24;
+  --error: #dc2626;
+  --info:  #2563eb;
+
+  /* ---- Conformance levels (cumulative ladder) ---- */
+  --conf-described: #94a3b8;
+  --conf-realised:  #2563eb;
+  --conf-verified:  #16a34a;
+  --conf-delivered: #7c3aed;
+
+  /* ============================================================
+     SEMANTIC ALIASES — default surface is the LIGHT blueprint.
+     Switch to the dark graph canvas with [data-surface="graph"]
+     (or .surface-graph) on a wrapping element.
+     ============================================================ */
+  --bg:            var(--paper);
+  --surface:       var(--white);
+  --surface-2:     var(--paper-2);
+  --surface-sunken:var(--paper-2);
+  --text:          var(--ink);
+  --text-muted:    var(--ink-soft);
+  --text-faint:    #5b7790;
+  --border:        var(--blueprint-line);
+  --border-soft:   var(--blueprint-line-soft);
+  --accent:        var(--blue-700);
+  --accent-text:   var(--white);
+  --accent-wash:   var(--blue-100);
+  --focus-ring:    var(--blue-600);
+  --link:          var(--blue-700);
+  --code-bg:       var(--paper-2);
+}
+
+/* ---- Dark "graph" surface — the live Event-Modeling canvas ---- */
+[data-surface="graph"], .surface-graph {
+  --bg:            var(--slate-900);
+  --surface:       var(--slate-800);
+  --surface-2:     var(--slate-700);
+  --surface-sunken:var(--slate-950);
+  --text:          var(--slate-200);
+  --text-muted:    var(--slate-400);
+  --text-faint:    var(--slate-500);
+  --border:        var(--slate-600);
+  --border-soft:   var(--slate-700);
+  --accent:        var(--blue-600);
+  --accent-text:   var(--white);
+  --accent-wash:   rgba(37,99,235,.12);
+  --focus-ring:    var(--blue-400);
+  --link:          var(--blue-400);
+  --code-bg:       var(--slate-950);
+  --em-event:      #f59e0b;
+  background: var(--bg);
+  color: var(--text);
+}
