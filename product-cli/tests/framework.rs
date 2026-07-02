@@ -1262,12 +1262,15 @@ fn tc_1031_how_versions_and_target_direction() {
 #[test]
 fn tc_1032_build_seam_verdict_validation() {
     let h = Harness::new();
-    // A well-formed verdict event validates (the worked-example shape).
+    // A well-formed CANONICAL verdict event validates (contract kebab-case, with
+    // tier-ran / cell-results / next-consequence). An executor's extra per-cell
+    // fields (e.g. `passed`) are tolerated; the top-level envelope is closed.
     h.write("verdict-good.json", r#"{
-        "event_id": "ev-9f81", "emitted_at": "2026-06-26T02:14:08Z",
-        "unit_ref": "wu-0007", "bundle_hash": "b3d1f2a9",
-        "verdict": "accepted", "next_consequence": "advance",
-        "executor_extension": { "kind": "spark", "tier_ran": "coder-medium" }
+        "event-id": "ev-9f81", "emitted-at": "2026-06-26T02:14:08Z",
+        "unit-ref": "wu-0007", "parent-deliverable": "del-refunds", "bundle-hash": "sha256:b3d1f2a9",
+        "verdict": "accepted", "tier-ran": "coder-medium",
+        "cell-results": [ { "cell-id": "wu-0007", "verdict": "accepted", "passed": true } ],
+        "next-consequence": "advance"
     }"#);
     let good = h.run(&["verdict", "verdict-good.json"]);
     good.assert_exit(0);
@@ -1275,7 +1278,11 @@ fn tc_1032_build_seam_verdict_validation() {
         "a conforming verdict validates:\n{}", good.stdout);
 
     // An off-vocabulary verdict is rejected (the §6.2 vocabulary is pinned).
-    h.write("verdict-bad.json", r#"{ "event_id": "e", "emitted_at": "t", "unit_ref": "u", "bundle_hash": "h", "verdict": "maybe" }"#);
+    h.write("verdict-bad.json", r#"{
+        "event-id": "e", "emitted-at": "t", "unit-ref": "u", "parent-deliverable": "d",
+        "bundle-hash": "h", "verdict": "maybe", "tier-ran": "x",
+        "cell-results": [], "next-consequence": "advance"
+    }"#);
     let bad = h.run(&["verdict", "verdict-bad.json"]);
     bad.assert_exit(1);
     assert!(bad.stderr.contains("accepted") && bad.stderr.contains("escalate"),

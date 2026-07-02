@@ -51,7 +51,7 @@ fn emit_tool() -> ToolDef {
 fn verdict_tool() -> ToolDef {
         ToolDef {
             name: "product_build_verdict".to_string(),
-            description: "Validate an inbound §5.1 build-seam verdict event against the contract (required fields, the pinned accepted/rejected/escalate vocabulary, no fields outside the envelope but `executor_extension`). Pass the event object as `event`. Returns { ok, … } or { ok: false, error }.".to_string(),
+            description: "Validate an inbound §5.1 build-seam verdict event against the canonical contract (required fields event-id/emitted-at/unit-ref/parent-deliverable/bundle-hash/verdict/tier-ran/cell-results/next-consequence, the pinned accepted/rejected/escalate vocabulary, a closed top-level envelope). Pass the event object as `event`. Returns { ok, … } or { ok: false, error }.".to_string(),
             requires_write: false,
             input_schema: serde_json::json!({
                 "type": "object",

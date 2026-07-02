@@ -4,6 +4,7 @@ mod archetype;
 mod author;
 mod build;
 mod build_guard;
+mod build_seam_emit;
 mod build_lsp;
 mod build_session;
 mod build_verify;

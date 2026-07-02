@@ -38,6 +38,7 @@ pub mod ids;
 pub mod kind_alias;
 pub mod data_check;
 pub mod build_seam;
+pub mod build_seam_convert;
 pub mod model;
 pub mod model_data;
 pub mod model_product;

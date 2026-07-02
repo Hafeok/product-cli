@@ -1,8 +1,10 @@
 //! Build-seam verdict validation (§5.1) — the inbound half of the seam.
 //!
-//! `product verdict <file>` checks that a verdict event a executor emitted
-//! conforms to the contract: required fields, the pinned §6.2 verdict vocabulary,
-//! and nothing outside the envelope but the one opaque `executor_extension` slot.
+//! `product verdict <file>` checks that a verdict event an executor emitted
+//! conforms to the canonical contract: required fields (`event-id`, `emitted-at`,
+//! `unit-ref`, `parent-deliverable`, `bundle-hash`, `verdict`, `tier-ran`,
+//! `cell-results`, `next-consequence`), the pinned §6.2 verdict vocabulary, and a
+//! closed top-level envelope (per-cell results may carry executor-specific extras).
 
 use std::path::PathBuf;
 
