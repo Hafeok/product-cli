@@ -1,7 +1,7 @@
 id: serve-web-view
 name: "Serve a live web view of a graph"
 family: integration
-archetype: product-cli
+blueprint: product-cli
 classification: supporting
 applies_when: "exposing a read-only, live-updating browser view of a graph over the running MCP HTTP server"
 does_not_apply_when: "a static one-off export, or a view the existing read tools already cover"

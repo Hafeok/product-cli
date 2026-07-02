@@ -11,7 +11,8 @@ use product_core::author::domain::session_dir;
 use product_core::config::ProductConfig;
 use product_core::error::{ProductError, Result};
 use product_core::pf::session::DomainSession;
-use product_core::pf::viz::{to_view_graph, ViewGraph};
+use product_core::pf::deployable_unit as du;
+use product_core::pf::viz::{to_view_graph_with_how, ViewGraph};
 use product_core::pf::workflow::{workflow_path, WorkflowSession};
 
 use super::registry::ToolRegistry;
@@ -222,7 +223,12 @@ fn project_graph(repo_root: &Path, session: Option<&(String, WorkflowSession)>) 
     };
     let graph = DomainSession::load(&session_dir(repo_root, product))
         .map_err(|_| format!("no What graph for product '{product}' yet"))?;
-    Ok(to_view_graph(&graph.graph))
+    let pd = repo_root.join(".product");
+    let bp = pd.join("blueprints");
+    let bp_dir = if bp.is_dir() { bp } else { pd.join("archetypes") };
+    let blueprints = du::blueprint_names(&bp_dir);
+    let units = du::load_dir(&pd.join("deployable-units"));
+    Ok(to_view_graph_with_how(&graph.graph, &blueprints, &units))
 }
 
 /// Project the graph following the most-recently-active session (used by tests

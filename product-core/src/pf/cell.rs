@@ -87,8 +87,8 @@ pub struct TaskType {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub family: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub archetype: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "archetype")]
+    pub blueprint: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub classification: Option<String>,
     pub applies_when: String,
@@ -116,11 +116,11 @@ impl TaskType {
     }
 
     /// A scaffold task type for `product cell init`.
-    pub fn scaffold(id: &str, archetype: &str) -> Self {
+    pub fn scaffold(id: &str, blueprint: &str) -> Self {
         Self {
             id: id.to_string(),
             name: id.to_string(),
-            archetype: Some(archetype.to_string()),
+            blueprint: Some(blueprint.to_string()),
             applies_when: "TODO: when this task type applies.".to_string(),
             slots: vec![Slot {
                 name: "entity".to_string(),
@@ -160,7 +160,7 @@ mod tests {
     fn parses_the_bundled_example() {
         let t = TaskType::from_yaml(EXAMPLE).expect("parse");
         assert_eq!(t.id, "add-crud-resource");
-        assert_eq!(t.archetype.as_deref(), Some("example-rest-api"));
+        assert_eq!(t.blueprint.as_deref(), Some("example-rest-api"));
         assert_eq!(t.slots.len(), 5);
         assert_eq!(t.cells.len(), 4);
         assert_eq!(t.audits.len(), 3);

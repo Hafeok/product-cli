@@ -3,9 +3,9 @@
 use clap::Command as ClapCommand;
 
 use super::{
-    archetype, author, build, cell, completions, decider, deliverable, domain, guide, hooks, how,
-    init, lsp, mcp_cmd, preview, primitive, projector, release, render, seam, session, skills,
-    feature, target, verdict, work_unit, worker, BoxResult, Commands,
+    author, blueprint, build, cell, completions, decider, deliverable, deployable_unit, domain,
+    guide, hooks, how, init, lsp, mcp_cmd, preview, primitive, projector, release, render, seam,
+    session, skills, feature, target, verdict, work_unit, worker, BoxResult, Commands,
 };
 
 pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapCommand) -> BoxResult {
@@ -23,19 +23,20 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Seam { id, product } => seam::handle_seam(id, product),
         Commands::Verdict { file } => verdict::handle_verdict(file),
         // Product-Framework families route through a sub-dispatcher (keeps this match small).
-        c @ (Commands::Archetype { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Primitive { .. } | Commands::Deliverable { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Preview { .. } | Commands::Release { .. } | Commands::Feature { .. } | Commands::Target { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
+        c @ (Commands::Blueprint { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Primitive { .. } | Commands::Deliverable { .. } | Commands::DeployableUnit { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Preview { .. } | Commands::Release { .. } | Commands::Feature { .. } | Commands::Target { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
     }
 }
 
 /// Sub-dispatcher for the Product-Framework command families.
 fn dispatch_pf(command: Commands) -> BoxResult {
     match command {
-        Commands::Archetype { command } => archetype::handle_archetype(command),
+        Commands::Blueprint { command } => blueprint::handle_blueprint(command),
         Commands::Cell { command } => cell::handle_cell(command),
         Commands::Decider { command } => decider::handle_decider(command),
         Commands::Projector { command } => projector::handle_projector(command),
         Commands::Primitive { command } => primitive::handle_primitive(command),
         Commands::Deliverable { command } => deliverable::handle_deliverable(command),
+        Commands::DeployableUnit { command } => deployable_unit::handle_deployable_unit(command),
         Commands::Domain { command } => domain::handle_domain_cmd(command),
         Commands::How { command } => how::handle_how(command),
         Commands::Preview { command } => preview::handle_preview(command),

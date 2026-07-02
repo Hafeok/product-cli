@@ -1,11 +1,11 @@
-archetype: example-rest-api
+blueprint: example-rest-api
 version: "1.0"
 
 top_decisions:
   - id: aspire-apphost-in-root
     decision: "The Aspire AppHost project lives at the solution root."
     rationale: "It is the composition root; it must reference and orchestrate every service."
-    applies_when: "Any multi-service .NET solution in this archetype."
+    applies_when: "Any multi-service .NET solution in this blueprint."
     does_not_apply_when: "A single-service library with no orchestration."
     licenses: [explicit-composition-root]
     enforced_by: [layout-conformance]

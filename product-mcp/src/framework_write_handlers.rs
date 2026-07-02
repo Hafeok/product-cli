@@ -51,9 +51,9 @@ fn finish(repo_root: &Path, c: &HowContract, id: &str, element: Value) -> Result
     Ok(json!({ "ok": ok, "id": id, "element": element, "violations": violations }))
 }
 
-/// Scaffold a fresh How contract keyed to an archetype (or the `product` arg).
+/// Scaffold a fresh How contract keyed to a blueprint (or the `product` arg).
 pub fn handle_how_init(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let archetype = req_str(args, "archetype").or_else(|_| req_str(args, "product"))?;
+    let blueprint = req_str(args, "blueprint").or_else(|_| req_str(args, "product"))?;
     let path = how_path(repo_root);
     if path.exists() {
         return Err(format!(
@@ -61,9 +61,9 @@ pub fn handle_how_init(args: &Value, repo_root: &Path) -> Result<Value, String> 
             path.display()
         ));
     }
-    let c = HowContract::scaffold(&archetype);
+    let c = HowContract::scaffold(&blueprint);
     save_how(repo_root, &c)?;
-    Ok(json!({ "ok": true, "created": path.display().to_string(), "archetype": archetype }))
+    Ok(json!({ "ok": true, "created": path.display().to_string(), "blueprint": blueprint }))
 }
 
 /// Add a Why-cascade element or a contract part to the How contract.

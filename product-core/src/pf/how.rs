@@ -1,4 +1,4 @@
-//! How-contract model — an archetype's §4 architecture (the Why plus contracts).
+//! How-contract model — a blueprint's §4 architecture (the Why plus contracts).
 //!
 //! The file-based authoring surface for the How layer: the Why cascade (top
 //! decisions → principles → patterns), the application + infrastructure
@@ -113,10 +113,11 @@ pub struct InterfaceContract {
     pub derived_from: Vec<String>,
 }
 
-/// An archetype's complete How (§4).
+/// A blueprint's complete How (§4).
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct HowContract {
-    pub archetype: String,
+    #[serde(alias = "archetype")]
+    pub blueprint: String,
     /// §7.3 — the How's own semantic version (the realisation's version).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
@@ -139,10 +140,10 @@ pub struct HowContract {
 }
 
 /// A `how-contract.yaml` that is a pointer to another one (`ref: <relative
-/// path>`), instead of an inline contract. Lets an archetype *reference* a
-/// shared How — e.g. the self-hosted archetype points at the repo's canonical
+/// path>`), instead of an inline contract. Lets a blueprint *reference* a
+/// shared How — e.g. the self-hosted blueprint points at the repo's canonical
 /// `.product/how-contract.yaml` — so the contract has a single source of truth.
-/// `deny_unknown_fields` keeps a full inline contract (which carries `archetype`
+/// `deny_unknown_fields` keeps a full inline contract (which carries `blueprint`
 /// / `application_contract`) from parsing as a ref.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -160,7 +161,7 @@ impl HowContract {
 
     /// Load a How contract from `path`, following one `ref:` hop. A ref stub
     /// (`ref: <relative path>`) resolves against `path`'s own directory, so an
-    /// archetype can point at a shared contract rather than duplicate it.
+    /// blueprint can point at a shared contract rather than duplicate it.
     /// Returns `Ok(None)` when `path` does not exist.
     pub fn load_opt(path: &std::path::Path) -> Result<Option<Self>> {
         Self::load_depth(path, 0).map(Some).or_else(|e| match e {
@@ -204,12 +205,12 @@ impl HowContract {
     }
 
     /// A scaffold contract for `product how init`.
-    pub fn scaffold(archetype: &str) -> Self {
+    pub fn scaffold(blueprint: &str) -> Self {
         Self {
-            archetype: archetype.to_string(),
+            blueprint: blueprint.to_string(),
             version: Some("0.1".to_string()),
             application_contract: ApplicationContract {
-                id: format!("{archetype}-app-contract"),
+                id: format!("{blueprint}-app-contract"),
                 language: "TODO".to_string(),
                 statements: vec![ContractStatement {
                     id: "example-statement".to_string(),
@@ -232,7 +233,7 @@ mod tests {
     #[test]
     fn parses_the_bundled_example() {
         let c = HowContract::from_yaml(EXAMPLE).expect("parse");
-        assert_eq!(c.archetype, "example-rest-api");
+        assert_eq!(c.blueprint, "example-rest-api");
         assert_eq!(c.top_decisions.len(), 2);
         assert_eq!(c.principles.len(), 3);
         assert_eq!(c.patterns.len(), 3);
@@ -254,7 +255,7 @@ mod tests {
     #[test]
     fn scaffold_is_parseable() {
         let c = HowContract::scaffold("rest-api");
-        assert_eq!(c.archetype, "rest-api");
+        assert_eq!(c.blueprint, "rest-api");
         let back = HowContract::from_yaml(&c.to_yaml().expect("yaml")).expect("reparse");
         assert_eq!(c, back);
     }

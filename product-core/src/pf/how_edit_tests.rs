@@ -4,7 +4,7 @@ use super::*;
 use crate::pf::how_validate::{has_blocking, validate_how};
 
 fn empty() -> HowContract {
-    HowContract { archetype: "demo".into(), ..Default::default() }
+    HowContract { blueprint: "demo".into(), ..Default::default() }
 }
 
 #[test]

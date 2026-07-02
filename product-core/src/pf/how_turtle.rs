@@ -12,10 +12,10 @@ use super::how::HowContract;
 
 const PF: &str = "https://productframework.org/ns#";
 
-/// Project a How contract to Turtle under a per-archetype namespace.
+/// Project a How contract to Turtle under a per-blueprint namespace.
 pub fn how_to_turtle(c: &HowContract) -> String {
     let mut out = String::new();
-    prefixes(&mut out, &c.archetype);
+    prefixes(&mut out, &c.blueprint);
     for d in &c.top_decisions {
         out.push_str(&format!("d:{} a pf:TopDecision ;\n  pf:rationale {}", d.id, lit(&d.rationale)));
         // Emit every licenses edge as authored — dangling ones (target is no
@@ -52,9 +52,9 @@ pub fn how_to_turtle(c: &HowContract) -> String {
     out
 }
 
-fn prefixes(out: &mut String, archetype: &str) {
+fn prefixes(out: &mut String, blueprint: &str) {
     out.push_str(&format!("@prefix pf: <{}> .\n", PF));
-    out.push_str(&format!("@prefix d: <https://productframework.org/archetype/{}#> .\n", slug(archetype)));
+    out.push_str(&format!("@prefix d: <https://productframework.org/blueprint/{}#> .\n", slug(blueprint)));
     out.push_str("@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n\n");
 }
 

@@ -1,30 +1,30 @@
-//! Archetype aggregate — a reusable pre-filled How for a system shape.
+//! Blueprint aggregate — a reusable pre-filled How for a system shape.
 //!
-//! An archetype assembles the three §4/§5 parts for one system shape: its How
+//! A blueprint assembles the three §4/§5 parts for one system shape: its How
 //! contract (the Why cascade + the two contracts + interfaces), its repository
 //! layout model, and the task types (cells) it dispatches. This module loads
 //! the parts from a directory and validates the whole assembly — each part
 //! against its own shapes, plus the cross-part coherence (cells belong to the
-//! archetype; the How's layout reference resolves; cells apply real patterns).
+//! blueprint; the How's layout reference resolves; cells apply real patterns).
 
 use std::path::Path;
 
 use crate::error::{ProductError, Result};
 
-use super::archetype_turtle::archetype_to_turtle;
+use super::blueprint_turtle::blueprint_to_turtle;
 use super::cell::TaskType;
 use super::cell_validate::validate_cell;
 use super::how::HowContract;
 use super::how_validate::validate_how;
 use super::layout::{validate_layout, LayoutModel};
 use super::model::DomainGraph;
-use super::rules_how::archetype_rules;
+use super::rules_how::blueprint_rules;
 use super::sparql_rules::run_rules;
 use super::validate::Violation;
 
-/// An assembled archetype.
+/// An assembled blueprint.
 #[derive(Debug, Clone, Default)]
-pub struct Archetype {
+pub struct Blueprint {
     pub name: String,
     pub how: Option<HowContract>,
     pub layout: Option<LayoutModel>,
@@ -32,13 +32,13 @@ pub struct Archetype {
     pub cells: Vec<(String, TaskType)>,
 }
 
-impl Archetype {
-    /// Load an archetype from `<dir>`: `how-contract.yaml`, `layout.yaml`, and
+impl Blueprint {
+    /// Load a blueprint from `<dir>`: `how-contract.yaml`, `layout.yaml`, and
     /// every `cells/*.yaml`.
     pub fn load_from_dir(dir: &Path, name: &str) -> Result<Self> {
         if !dir.is_dir() {
             return Err(ProductError::NotFound(format!(
-                "no archetype directory at {} — scaffold one with `product archetype init {}`",
+                "no blueprint directory at {} — scaffold one with `product blueprint init {}`",
                 dir.display(),
                 name
             )));
@@ -53,9 +53,9 @@ impl Archetype {
         Ok(Self { name: name.to_string(), how, layout, cells })
     }
 
-    /// Scaffold a new archetype directory: a starter How contract, a layout
+    /// Scaffold a new blueprint directory: a starter How contract, a layout
     /// model, and one example cell. Returns the written file paths. Shared by the
-    /// CLI (`product archetype init`) and the MCP tool so the skeleton is laid
+    /// CLI (`product blueprint init`) and the MCP tool so the skeleton is laid
     /// down from one place and cannot drift between the two surfaces.
     pub fn scaffold(dir: &Path, name: &str) -> Result<Vec<String>> {
         let cells = dir.join("cells");
@@ -74,13 +74,13 @@ impl Archetype {
         Ok(written)
     }
 
-    /// Validate the whole archetype. `domain` enables cells' `domain:X`
+    /// Validate the whole blueprint. `domain` enables cells' `domain:X`
     /// cross-checks against the captured What graph.
     pub fn validate(&self, domain: Option<&DomainGraph>) -> Vec<Violation> {
         let mut out = Vec::new();
         match &self.how {
-            None => out.push(blocking("archetype", "how",
-                "§4 An archetype must declare a How contract (how-contract.yaml).")),
+            None => out.push(blocking("blueprint", "how",
+                "§4 A blueprint must declare a How contract (how-contract.yaml).")),
             Some(how) => {
                 tag("how", validate_how(how), &mut out);
                 self.check_layout_reference(how, &mut out);
@@ -88,12 +88,12 @@ impl Archetype {
         }
         if let Some(layout) = &self.layout {
             tag("layout", validate_layout(layout), &mut out);
-            self.check_layout_archetype(layout, &mut out);
+            self.check_layout_blueprint(layout, &mut out);
             self.check_enforces_resolve(&mut out);
         }
         for (src, cell) in &self.cells {
             tag(src, validate_cell(cell, domain, self.how.as_ref()), &mut out);
-            self.check_cell_archetype(src, cell, &mut out);
+            self.check_cell_blueprint(src, cell, &mut out);
         }
         out
     }
@@ -101,7 +101,7 @@ impl Archetype {
     fn check_layout_reference(&self, how: &HowContract, out: &mut Vec<Violation>) {
         if how.layout_model.is_some() && self.layout.is_none() {
             out.push(warning("how", "layout_model",
-                "the How references a layout_model but no layout.yaml was found in the archetype."));
+                "the How references a layout_model but no layout.yaml was found in the blueprint."));
         }
     }
 
@@ -112,28 +112,28 @@ impl Archetype {
     /// native field-walk, so the constraint lives in the graph.
     fn check_enforces_resolve(&self, out: &mut Vec<Violation>) {
         let Some(how) = &self.how else { return };
-        let ttl = archetype_to_turtle(how, self.layout.as_ref());
-        for mut v in run_rules(&ttl, archetype_rules()) {
+        let ttl = blueprint_to_turtle(how, self.layout.as_ref());
+        for mut v in run_rules(&ttl, blueprint_rules()) {
             v.focus = format!("layout/{}", v.focus);
             out.push(v);
         }
     }
 
-    fn check_layout_archetype(&self, layout: &LayoutModel, out: &mut Vec<Violation>) {
-        if let Some(a) = &layout.archetype {
+    fn check_layout_blueprint(&self, layout: &LayoutModel, out: &mut Vec<Violation>) {
+        if let Some(a) = &layout.blueprint {
             if a != &self.name {
-                out.push(warning("layout", "archetype",
-                    &format!("layout declares archetype '{a}' but lives under '{}'.", self.name)));
+                out.push(warning("layout", "blueprint",
+                    &format!("layout declares blueprint '{a}' but lives under '{}'.", self.name)));
             }
         }
     }
 
-    fn check_cell_archetype(&self, src: &str, cell: &TaskType, out: &mut Vec<Violation>) {
-        match &cell.archetype {
+    fn check_cell_blueprint(&self, src: &str, cell: &TaskType, out: &mut Vec<Violation>) {
+        match &cell.blueprint {
             Some(a) if a == &self.name => {}
-            Some(a) => out.push(warning(src, "archetype",
-                &format!("task type declares archetype '{a}' but lives under '{}'.", self.name))),
-            None => out.push(warning(src, "archetype", "task type declares no archetype.")),
+            Some(a) => out.push(warning(src, "blueprint",
+                &format!("task type declares blueprint '{a}' but lives under '{}'.", self.name))),
+            None => out.push(warning(src, "blueprint", "task type declares no blueprint.")),
         }
     }
 }
@@ -193,5 +193,5 @@ fn sev(focus: &str, path: &str, message: &str, severity: &str) -> Violation {
 }
 
 #[cfg(test)]
-#[path = "archetype_tests.rs"]
+#[path = "blueprint_tests.rs"]
 mod tests;

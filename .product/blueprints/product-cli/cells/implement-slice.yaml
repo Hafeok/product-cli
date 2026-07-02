@@ -1,7 +1,7 @@
 id: implement-slice
 name: "Implement a vertical slice"
 family: application
-archetype: product-cli
+blueprint: product-cli
 classification: supporting
 applies_when: "adding a new pf domain concept with a CLI command over it"
 does_not_apply_when: "a change that does not introduce a new slice; edit in place"

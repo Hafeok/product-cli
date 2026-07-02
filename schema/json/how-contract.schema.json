@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://productframework.org/schema/how-contract.schema.json",
-  "title": "How Contract (an archetype's How)",
-  "description": "Framework §4. The file-based authoring surface for an archetype's How: the Why cascade (top decisions -> principles -> patterns), the application and infrastructure contracts, a reference to the repository layout model (§4.3), and the interface contracts (industry standards, §4.4). Mirrors the SHACL How shapes: a top decision requires rationale; a pattern must realise a principle; an infrastructure contract must satisfy the application contract; interface contracts are derived from the domain model.",
+  "title": "How Contract (an blueprint's How)",
+  "description": "Framework §4. The file-based authoring surface for an blueprint's How: the Why cascade (top decisions -> principles -> patterns), the application and infrastructure contracts, a reference to the repository layout model (§4.3), and the interface contracts (industry standards, §4.4). Mirrors the SHACL How shapes: a top decision requires rationale; a pattern must realise a principle; an infrastructure contract must satisfy the application contract; interface contracts are derived from the domain model.",
   "type": "object",
-  "required": ["archetype", "application_contract"],
+  "required": ["blueprint", "application_contract"],
   "additionalProperties": false,
   "properties": {
-    "archetype": { "type": "string", "description": "The archetype this How belongs to (e.g. rest-api)." },
+    "blueprint": { "type": "string", "description": "The blueprint this How belongs to (e.g. rest-api)." },
     "version": { "type": "string" },
 
     "top_decisions": {
@@ -65,7 +65,7 @@
 
     "application_contract": {
       "type": "object",
-      "description": "§4.2 The invariant code-shaping decisions. Stable across instances of the archetype. Each statement must be checkable.",
+      "description": "§4.2 The invariant code-shaping decisions. Stable across instances of the blueprint. Each statement must be checkable.",
       "required": ["id", "language", "statements"],
       "additionalProperties": false,
       "properties": {

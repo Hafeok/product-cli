@@ -7,7 +7,7 @@
 #  Example: a tiny "To-Do" product, modelled conformantly.
 #  Generic and non-proprietary — it demonstrates the schema and
 #  validates against ../shapes/shapes.shacl.ttl. It ships no
-#  real archetype or verification content.
+#  real blueprint or verification content.
 #################################################################
 
 #  --- WHAT: domain model (structure) ---

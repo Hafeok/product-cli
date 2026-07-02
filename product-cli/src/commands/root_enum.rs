@@ -8,15 +8,16 @@ use super::*;
 #[derive(Subcommand)]
 #[allow(clippy::large_enum_variant)] // subcommand enums vary widely in size; inherent spread
 pub enum Commands {
-    /// Archetype (How + layout + cells) — assemble and validate
-    Archetype {
-        #[command(subcommand)]
-        command: ArchetypeCommands,
-    },
     /// Start a graph-aware authoring session
     Author {
         #[command(subcommand)]
         command: AuthorCommands,
+    },
+    /// Blueprint (How + layout + cells) — assemble and validate
+    #[command(visible_alias = "archetype")]
+    Blueprint {
+        #[command(subcommand)]
+        command: BlueprintCommands,
     },
     /// Build a deliverable — assemble the SPMC context, dispatch a worker, report done (§5)
     Build {
@@ -74,6 +75,11 @@ pub enum Commands {
     Deliverable {
         #[command(subcommand)]
         command: DeliverableCommands,
+    },
+    /// DeployableUnit (§4/§4.2) — the concrete artifact a blueprint produces for a system
+    DeployableUnit {
+        #[command(subcommand)]
+        command: DeployableUnitCommands,
     },
     /// Domain (What) graph — list, show, and CRUD over captured artifacts
     Domain {

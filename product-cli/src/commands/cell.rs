@@ -3,7 +3,7 @@
 //! `product cell {validate,show,list,init}` operates on a §5 task-type
 //! definition (a YAML file). `validate` cross-checks it against the captured
 //! What graph (a cell's `domain:…` inputs must resolve to real entities) and
-//! the archetype's How contract (a cell's `applies` must name real patterns) —
+//! the blueprint's How contract (a cell's `applies` must name real patterns) —
 //! so cells are built from the domain model, not free-floating.
 
 use clap::Subcommand;
@@ -41,9 +41,9 @@ pub enum CellCommands {
     Init {
         /// The task-type id (e.g. add-crud-resource)
         id: String,
-        /// The home archetype (defaults to the repo product name)
+        /// The home blueprint (defaults to the repo product name)
         #[arg(long)]
-        archetype: Option<String>,
+        blueprint: Option<String>,
         #[arg(long)]
         file: Option<PathBuf>,
         #[arg(long)]
@@ -77,7 +77,7 @@ pub(crate) fn handle_cell(cmd: CellCommands) -> BoxResult {
         CellCommands::Show { file } => show(file),
         CellCommands::List { kind, file } => list(kind, file),
         CellCommands::Dispatch { file, binds, product, out, print } => dispatch(file, binds, product, out, print),
-        CellCommands::Init { id, archetype, file, force } => init(id, archetype, file, force),
+        CellCommands::Init { id, blueprint, file, force } => init(id, blueprint, file, force),
     }
 }
 
@@ -142,7 +142,7 @@ fn load_domain(product: Option<String>) -> Option<DomainGraph> {
     DomainSession::load(&dir).ok().map(|s| s.graph)
 }
 
-/// Best-effort load of the archetype's How contract for cross-validation.
+/// Best-effort load of the blueprint's How contract for cross-validation.
 fn load_how() -> Option<HowContract> {
     let p = super::shared::domain_root().join(".product").join("how-contract.yaml");
     std::fs::read_to_string(p).ok().and_then(|t| HowContract::from_yaml(&t).ok())
@@ -179,8 +179,8 @@ fn validate(file: Option<PathBuf>, product: Option<String>) -> BoxResult {
 fn show(file: Option<PathBuf>) -> BoxResult {
     let t = load(file)?;
     println!("task-type: {} — {}", t.id, t.name);
-    if let Some(a) = &t.archetype {
-        println!("archetype: {a}");
+    if let Some(a) = &t.blueprint {
+        println!("blueprint: {a}");
     }
     if let Some(c) = &t.classification {
         println!("classification: {c}");
@@ -211,17 +211,17 @@ fn list(kind: String, file: Option<PathBuf>) -> BoxResult {
     Ok(())
 }
 
-fn init(id: String, archetype: Option<String>, file: Option<PathBuf>, force: bool) -> BoxResult {
+fn init(id: String, blueprint: Option<String>, file: Option<PathBuf>, force: bool) -> BoxResult {
     let p = path(file);
     if p.exists() && !force {
         return Err(format!("{} already exists — pass --force to overwrite", p.display()).into());
     }
-    let arch = archetype.or_else(super::shared::default_product_name).unwrap_or_else(|| "archetype".to_string());
+    let arch = blueprint.or_else(super::shared::default_product_name).unwrap_or_else(|| "blueprint".to_string());
     let task = TaskType::scaffold(&id, &arch);
     if let Some(parent) = p.parent() {
         std::fs::create_dir_all(parent)?;
     }
     std::fs::write(&p, task.to_yaml()?)?;
-    println!("Scaffolded task type '{id}' (archetype '{arch}') at {}", p.display());
+    println!("Scaffolded task type '{id}' (blueprint '{arch}') at {}", p.display());
     Ok(())
 }

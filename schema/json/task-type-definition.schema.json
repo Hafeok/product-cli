@@ -10,7 +10,7 @@
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "Stable identifier, e.g. add-crud-resource." },
     "name": { "type": "string" },
     "family": { "type": "string", "description": "Grouping, e.g. application / infrastructure / integration." },
-    "archetype": { "type": "string", "description": "Home archetype (first home; may be reusable)." },
+    "blueprint": { "type": "string", "description": "Home blueprint (first home; may be reusable)." },
     "classification": {
       "type": "string",
       "description": "Tactical-DDD placement, drives event-model depth and dispatchability.",
@@ -68,7 +68,7 @@
           "id": { "type": "string" },
           "kind": {
             "type": "string",
-            "enum": ["layout-conformance", "internal-coherence", "contract-conformance", "seam", "domain-conformance", "behavioural-conformance", "cross-archetype"]
+            "enum": ["layout-conformance", "internal-coherence", "contract-conformance", "seam", "domain-conformance", "behavioural-conformance", "cross-blueprint"]
           },
           "checks": { "type": "string", "description": "What the audit verifies." },
           "protects": { "type": "string", "description": "The slot or principle this audit backs." }

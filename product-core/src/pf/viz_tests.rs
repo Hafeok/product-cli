@@ -89,3 +89,24 @@ fn bridges_run_event_to_domain_only() {
         }
     }
 }
+
+#[test]
+fn how_lane_projects_blueprints_and_deployable_units() {
+    use crate::pf::deployable_unit::{DeployableUnit, DeploymentIdentity};
+    let units = vec![DeployableUnit {
+        id: "shop-ios".into(),
+        built_from: "rn-app".into(),
+        deploys_system: vec!["sys".into()],
+        environment: Some("production".into()),
+        identity: DeploymentIdentity { bundle_id: Some("com.acme.shop".into()), ..Default::default() },
+    }];
+    let v = to_view_graph_with_how(&sample(), &["rn-app".to_string()], &units);
+    // Blueprint + deployable-unit nodes land in the how lane.
+    assert!(v.nodes.iter().any(|n| n.id == "bp:rn-app" && n.kind == "blueprint" && n.model == HOW));
+    assert!(v.nodes.iter().any(|n| n.id == "shop-ios" && n.kind == "deployable-unit" && n.model == HOW));
+    // built-from (unit→blueprint) and deploys (unit→system §3.2.5) edges.
+    assert!(v.edges.iter().any(|e| e.from == "shop-ios" && e.to == "bp:rn-app" && e.kind == "built-from"));
+    assert!(v.edges.iter().any(|e| e.from == "shop-ios" && e.to == "sys" && e.kind == "deploys"));
+    // The plain What projection carries no how-lane nodes (additive, opt-in).
+    assert!(to_view_graph(&sample()).nodes.iter().all(|n| n.model != HOW));
+}

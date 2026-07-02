@@ -1,9 +1,9 @@
-//! SPARQL conformance rules for the How layer — contracts, archetypes, layout.
+//! SPARQL conformance rules for the How layer — contracts, blueprints, layout.
 //!
 //! Each rule mirrors a `sh:SPARQLConstraint` in `schema/shapes/how.shacl.ttl`:
 //! the crown trace rule plus the cross-reference checks (`licenses`, `realizes`,
 //! `conformsTo`, `realized_by`, layout `enforces`) that every edge must resolve.
-//! These replace the native field-walks in `how_validate`/`archetype`; the
+//! These replace the native field-walks in `how_validate`/`blueprint`; the
 //! presence/cardinality checks stay native there.
 
 use super::sparql_rules::SparqlRule;
@@ -153,8 +153,8 @@ pub fn how_rules() -> &'static [SparqlRule] {
     ]
 }
 
-/// The rules over an assembled archetype's combined (How + layout) projection.
-pub fn archetype_rules() -> &'static [SparqlRule] {
+/// The rules over an assembled blueprint's combined (How + layout) projection.
+pub fn blueprint_rules() -> &'static [SparqlRule] {
     &[ENFORCES_RESOLVES]
 }
 
@@ -163,7 +163,7 @@ mod tests {
     use super::super::sparql_rules::run_rules;
     use super::*;
 
-    const PREFIXES: &str = "@prefix pf: <https://productframework.org/ns#> .\n@prefix d: <https://productframework.org/archetype/x#> .\n";
+    const PREFIXES: &str = "@prefix pf: <https://productframework.org/ns#> .\n@prefix d: <https://productframework.org/blueprint/x#> .\n";
 
     #[test]
     fn trace_truth_passes_when_enforced() {

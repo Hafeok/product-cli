@@ -1,4 +1,4 @@
-//! Tests for the framework read handlers (archetype / cell / how / work-unit).
+//! Tests for the framework read handlers (blueprint / cell / how / work-unit).
 
 use serde_json::json;
 use std::fs;
@@ -22,7 +22,7 @@ fn registry() -> (tempfile::TempDir, ToolRegistry) {
     fs::write(p.join("how-contract.yaml"), HOW).expect("how");
     fs::write(p.join("cell.yaml"), CELL).expect("cell");
     fs::write(p.join("work-unit.yaml"), WORK_UNIT).expect("wu");
-    let arch = p.join("archetypes/example-rest-api");
+    let arch = p.join("blueprints/example-rest-api");
     fs::create_dir_all(arch.join("cells")).expect("mkdir arch");
     fs::write(arch.join("how-contract.yaml"), HOW).expect("a how");
     fs::write(arch.join("layout.yaml"), LAYOUT).expect("a layout");
@@ -40,14 +40,14 @@ fn how_show_validate_export() {
 }
 
 #[test]
-fn archetype_list_show_validate() {
+fn blueprint_list_show_validate() {
     let (_d, reg) = registry();
-    let listed = reg.call_tool("product_archetype_list", &json!({})).expect("list");
-    assert!(listed["archetypes"].as_array().unwrap().iter().any(|v| v == "example-rest-api"));
-    let shown = reg.call_tool("product_archetype_show", &json!({"name": "example-rest-api"})).expect("show");
+    let listed = reg.call_tool("product_blueprint_list", &json!({})).expect("list");
+    assert!(listed["blueprints"].as_array().unwrap().iter().any(|v| v == "example-rest-api"));
+    let shown = reg.call_tool("product_blueprint_show", &json!({"name": "example-rest-api"})).expect("show");
     assert_eq!(shown["how"], json!(true));
     // validate returns a verdict (warnings allowed; no blocking)
-    assert!(reg.call_tool("product_archetype_validate", &json!({"name": "example-rest-api"})).expect("validate").get("ok").is_some());
+    assert!(reg.call_tool("product_blueprint_validate", &json!({"name": "example-rest-api"})).expect("validate").get("ok").is_some());
 }
 
 #[test]

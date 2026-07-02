@@ -12,12 +12,15 @@ use std::collections::HashMap;
 
 use serde::Serialize;
 
+use super::deployable_unit::DeployableUnit;
 use super::model::DomainGraph;
 
 /// The `domain` lane — §3.1 structural kinds.
 pub const DOMAIN: &str = "domain";
 /// The `event` lane — §3.2 behavioural kinds.
 pub const EVENT: &str = "event";
+/// The `how` lane — §4 realisation kinds (blueprint, deployable-unit).
+pub const HOW: &str = "how";
 
 fn is_false(b: &bool) -> bool {
     !*b
@@ -120,11 +123,24 @@ fn re(from: &str, to: &str, kind: &str) -> RawEdge {
 /// Bridges are computed last, once every node's lane is known, so the
 /// `event->domain` direction is enforced uniformly.
 pub fn to_view_graph(g: &DomainGraph) -> ViewGraph {
+    to_view_graph_with_how(g, &[], &[])
+}
+
+/// Project a [`DomainGraph`] plus the §4 How realisation — the `blueprints`
+/// (by name) and `deployable_units` — into one renderable [`ViewGraph`]. The
+/// How nodes land in the [`HOW`] lane, so the What-only views ignore them while
+/// a How/explorer view can render `built-from` and `deploys` edges (§4/§4.2).
+pub fn to_view_graph_with_how(
+    g: &DomainGraph,
+    blueprints: &[String],
+    deployable_units: &[DeployableUnit],
+) -> ViewGraph {
     let mut nodes: Vec<ViewNode> = Vec::new();
     let mut edges: Vec<RawEdge> = Vec::new();
     push_domain(g, &mut nodes, &mut edges);
     push_event(g, &mut nodes, &mut edges);
     push_product(g, &mut nodes, &mut edges);
+    push_how(blueprints, deployable_units, &mut nodes, &mut edges);
 
     let lane: HashMap<&str, &str> = nodes.iter().map(|n| (n.id.as_str(), n.model.as_str())).collect();
     let contexts = g
@@ -208,6 +224,35 @@ fn push_domain(g: &DomainGraph, nodes: &mut Vec<ViewNode>, edges: &mut Vec<RawEd
             label: m.kind.clone().unwrap_or_default(),
             ..Default::default()
         });
+    }
+}
+
+/// §4 realisation — blueprints (reusable How) and the DeployableUnits they are
+/// instantiated as, with `built-from` (unit→blueprint) and `deploys`
+/// (unit→system §3.2.5) edges. All in the [`HOW`] lane.
+fn push_how(
+    blueprints: &[String],
+    units: &[DeployableUnit],
+    nodes: &mut Vec<ViewNode>,
+    edges: &mut Vec<RawEdge>,
+) {
+    for b in blueprints {
+        let id = format!("bp:{b}");
+        nodes.push(node(&id, b, "blueprint", HOW, ""));
+    }
+    for u in units {
+        let mut n = node(&u.id, &u.id, "deployable-unit", HOW, "");
+        if let Some(env) = &u.environment {
+            n.fields.push(format!("env: {env}"));
+        }
+        for id in [&u.identity.domain_name, &u.identity.bundle_id, &u.identity.runtime].into_iter().flatten() {
+            n.fields.push(id.clone());
+        }
+        nodes.push(n);
+        edges.push(re(&u.id, &format!("bp:{}", u.built_from), "built-from"));
+        for sys in &u.deploys_system {
+            edges.push(re(&u.id, sys, "deploys"));
+        }
     }
 }
 

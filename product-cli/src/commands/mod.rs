@@ -1,6 +1,6 @@
 //! Command dispatch module — subcommand enums, run(), shared helpers.
 
-mod archetype;
+mod blueprint;
 mod author;
 mod build;
 mod build_guard;
@@ -14,6 +14,7 @@ mod decider;
 mod primitive;
 mod projector;
 mod deliverable;
+mod deployable_unit;
 mod dispatch;
 mod domain;
 mod domain_data;
@@ -44,13 +45,14 @@ mod worker;
 pub(crate) use self::output::render_result as render;
 pub(crate) use self::shared::acquire_write_lock;
 
-pub use self::archetype::ArchetypeCommands;
+pub use self::blueprint::BlueprintCommands;
 pub use self::author::AuthorCommands;
 pub use self::cell::CellCommands;
 pub use self::decider::DeciderCommands;
 pub use self::primitive::PrimitiveCommands;
 pub use self::projector::ProjectorCommands;
 pub use self::deliverable::DeliverableCommands;
+pub use self::deployable_unit::DeployableUnitCommands;
 pub use self::domain::DomainCommands;
 pub use self::how::HowCommands;
 pub use self::lsp::LspCommands;

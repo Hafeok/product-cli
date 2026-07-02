@@ -1,7 +1,7 @@
 id: add-crud-resource
 name: "CRUD resource"
 family: application
-archetype: example-rest-api
+blueprint: example-rest-api
 classification: supporting-or-generic
 applies_when: "create/read/update/delete over a single entity, with filter/sort/page reads and validated writes."
 does_not_apply_when: "needs domain computation beyond validation, full history, or multi-aggregate transactions — route to a core task type or the broad worker."

@@ -14,6 +14,7 @@ mod decider_handlers;
 mod projector_handlers;
 mod primitive_handlers;
 mod delivery_handlers;
+mod deployable_unit_handlers;
 mod domain_handlers;
 mod framework_read_handlers;
 mod framework_scaffold_handlers;

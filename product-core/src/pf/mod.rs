@@ -6,8 +6,8 @@
 //! export + seed, the open-questions facilitation driver, and the session
 //! container that the domain MCP server drives. Pure library — no MCP, no CLI.
 
-pub mod archetype;
-pub mod archetype_turtle;
+pub mod blueprint;
+pub mod blueprint_turtle;
 pub mod build;
 pub mod build_metrics;
 pub mod build_spmc;
@@ -22,6 +22,7 @@ pub mod decider_logic;
 pub mod decider_sim;
 pub mod decider_turtle;
 pub mod deliverable;
+pub mod deployable_unit;
 pub mod dispatch;
 pub mod done;
 pub mod edit;

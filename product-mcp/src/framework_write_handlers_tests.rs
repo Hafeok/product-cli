@@ -12,20 +12,20 @@ fn init_scaffolds_a_contract_and_refuses_to_clobber() {
     let r = repo();
     let root = r.path();
 
-    let init = handle_how_init(&json!({"archetype": "demo-cli"}), root).expect("init");
+    let init = handle_how_init(&json!({"blueprint": "demo-cli"}), root).expect("init");
     assert_eq!(init["ok"], json!(true));
-    assert_eq!(init["archetype"], json!("demo-cli"));
+    assert_eq!(init["blueprint"], json!("demo-cli"));
     assert!(how_path(root).exists());
 
     // A second init must not overwrite an existing contract.
-    assert!(handle_how_init(&json!({"archetype": "demo-cli"}), root).is_err());
+    assert!(handle_how_init(&json!({"blueprint": "demo-cli"}), root).is_err());
 }
 
 #[test]
 fn add_builds_the_why_cascade_and_rejects_duplicates() {
     let r = repo();
     let root = r.path();
-    handle_how_init(&json!({"archetype": "demo-cli"}), root).expect("init");
+    handle_how_init(&json!({"blueprint": "demo-cli"}), root).expect("init");
 
     let d = handle_how_add(
         &json!({"element": "decision", "id": "d-lang", "decision": "Use Rust", "rationale": "zero-cost + safety"}),
@@ -62,7 +62,7 @@ fn add_builds_the_why_cascade_and_rejects_duplicates() {
 fn set_replaces_the_application_contract() {
     let r = repo();
     let root = r.path();
-    handle_how_init(&json!({"archetype": "demo-cli"}), root).expect("init");
+    handle_how_init(&json!({"blueprint": "demo-cli"}), root).expect("init");
 
     let a = handle_how_set(
         &json!({"target": "app-contract", "id": "demo-app", "language": "Rust"}),
@@ -82,7 +82,7 @@ fn set_replaces_the_application_contract() {
 fn set_carries_the_section_7_3_versions() {
     let r = repo();
     let root = r.path();
-    handle_how_init(&json!({"archetype": "demo-cli"}), root).expect("init");
+    handle_how_init(&json!({"blueprint": "demo-cli"}), root).expect("init");
 
     // §7.3 — `id` carries the version string, mirroring the CLI's `--id`.
     let v = handle_how_set(&json!({"target": "version", "id": "1.4.0"}), root).expect("set version");
@@ -108,7 +108,7 @@ fn add_requires_an_existing_contract() {
 fn edit_patches_fields_and_keeps_the_rest() {
     let r = repo();
     let root = r.path();
-    handle_how_init(&json!({"archetype": "demo-cli"}), root).expect("init");
+    handle_how_init(&json!({"blueprint": "demo-cli"}), root).expect("init");
     handle_how_add(
         &json!({"element": "decision", "id": "d-lang", "decision": "Use Rust", "rationale": "safety"}),
         root,
@@ -132,7 +132,7 @@ fn edit_patches_fields_and_keeps_the_rest() {
 fn rm_removes_by_id() {
     let r = repo();
     let root = r.path();
-    handle_how_init(&json!({"archetype": "demo-cli"}), root).expect("init");
+    handle_how_init(&json!({"blueprint": "demo-cli"}), root).expect("init");
     handle_how_add(&json!({"element": "pattern", "id": "p-slice", "shape": "pure slice"}), root).expect("add");
 
     let out = handle_how_rm(&json!({"id": "p-slice"}), root).expect("rm");

@@ -1,5 +1,5 @@
 version: "1.0"
-archetype: product-cli
+blueprint: product-cli
 allowlist: true
 layout:
   # --- allowlist: where each kind of thing legally lives (the skeleton) ---
@@ -12,7 +12,7 @@ layout:
     rationale: "thin CLI adapters live in product-cli/src/commands"
     enforces: [slice-cohesion]
 
-  # --- must-exist: the spine an archetype needs (proactive, fires on absence) ---
+  # --- must-exist: the spine a blueprint needs (proactive, fires on absence) ---
   - id: what-shapes-required
     must_exist: "schema/shapes/shapes.shacl.ttl"
     cardinality: "exactly 1"

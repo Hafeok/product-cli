@@ -35,11 +35,11 @@ pf:Artifact a owl:Class ;
 pf:Product a owl:Class ;
   rdfs:subClassOf pf:Artifact ;
   rdfs:label "Product" ;
-  rdfs:comment "The top: a composition of archetype instances sharing one domain model (framework §Composition / Product layer)." .
+  rdfs:comment "The top: a composition of blueprint instances sharing one domain model (framework §Composition / Product layer)." .
 
-pf:Archetype a owl:Class ;
+pf:Blueprint a owl:Class ;
   rdfs:subClassOf pf:Artifact ;
-  rdfs:label "Archetype" ;
+  rdfs:label "Blueprint" ;
   rdfs:comment "A reusable, pre-filled How for a recurring system shape. A product realises one or more." .
 
 #################################################################
@@ -241,7 +241,7 @@ pf:contractConformance    a pf:VerificationKind ; rdfs:label "contract-conforman
 pf:seam                   a pf:VerificationKind ; rdfs:label "seam" .
 pf:domainConformance      a pf:VerificationKind ; rdfs:label "domain-conformance" .
 pf:behaviouralConformance a pf:VerificationKind ; rdfs:label "behavioural-conformance" .
-pf:crossArchetype         a pf:VerificationKind ; rdfs:label "cross-archetype" .
+pf:crossBlueprint         a pf:VerificationKind ; rdfs:label "cross-blueprint" .
 
 pf:Verdict a owl:Class ;
   rdfs:label "Verdict" ;
@@ -332,8 +332,8 @@ pf:mapsTo a owl:ObjectProperty ;
 pf:realisedBy a owl:ObjectProperty ;
   rdfs:label "realised_by" ;
   rdfs:domain pf:BoundedContext ;
-  rdfs:range pf:Archetype ;
-  rdfs:comment "Which archetype instance realises this context (composition)." .
+  rdfs:range pf:Blueprint ;
+  rdfs:comment "Which blueprint instance realises this context (composition)." .
 
 pf:contains a owl:ObjectProperty ;
   rdfs:label "contains" ;

@@ -8,7 +8,7 @@
   "additionalProperties": false,
   "properties": {
     "version": { "type": "string", "description": "Layout model version." },
-    "archetype": { "type": "string", "description": "The archetype this layout belongs to (optional at framework level)." },
+    "blueprint": { "type": "string", "description": "The blueprint this layout belongs to (optional at framework level)." },
     "allowlist": {
       "type": "boolean", "default": true,
       "description": "Allowlist semantics. When true (the default and recommended), a file matching no allow rule fails (no-orphans)."

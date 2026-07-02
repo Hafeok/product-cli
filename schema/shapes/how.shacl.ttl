@@ -72,7 +72,7 @@ pf:RepositoryLayoutModelShape a sh:NodeShape ;
   sh:targetClass pf:RepositoryLayoutModel ;
   sh:property [
     sh:path pf:derivedFrom ; sh:minCount 0 ;
-    sh:message "§4.3 A layout model belongs to an archetype's How; its rules are validated by layout-model.schema.json." ] .
+    sh:message "§4.3 A layout model belongs to an blueprint's How; its rules are validated by layout-model.schema.json." ] .
 
 #####################  §4.4 — interface contracts  ##############
 

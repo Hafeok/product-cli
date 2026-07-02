@@ -58,8 +58,8 @@ pub(super) fn all() -> Vec<ToolDef> {
     vec![
         write(
             "product_how_init",
-            "Scaffold a fresh How contract for an archetype at .product/how-contract.yaml. Returns { ok, created }.",
-            serde_json::json!({"archetype": {"type": "string"}, "product": {"type": "string"}}),
+            "Scaffold a fresh How contract for a blueprint at .product/how-contract.yaml. Returns { ok, created }.",
+            serde_json::json!({"blueprint": {"type": "string"}, "product": {"type": "string"}}),
             serde_json::json!([]),
         ),
         write(

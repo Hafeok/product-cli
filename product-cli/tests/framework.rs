@@ -1288,3 +1288,62 @@ fn tc_1032_build_seam_verdict_validation() {
     assert!(bad.stderr.contains("accepted") && bad.stderr.contains("escalate"),
         "the verdict vocabulary is reported:\n{}", bad.stderr);
 }
+
+#[test]
+fn tc_1070_deployable_unit_instantiates_a_blueprint_for_a_system() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // A system to deploy (§3.2.5).
+    h.run(&[
+        "domain", "new", "system", "sys-shop", "--label", "Acme Shop",
+        "--system-kind", "application", "--purpose", "consumer e-commerce",
+    ])
+    .assert_exit(0);
+    // A blueprint to instantiate (the reusable How).
+    h.run(&["blueprint", "init", "rn-hexagonal-app"]).assert_exit(0);
+
+    // §4.2 — a unit with no deployment identity is rejected.
+    h.run(&[
+        "deployable-unit", "new", "shop-ios", "--built-from", "rn-hexagonal-app", "--system", "sys-shop",
+    ])
+    .assert_exit(1)
+    .assert_stderr_contains("§4.2");
+
+    // §3.2.5 — deploys_system must resolve to a real System node.
+    h.run(&[
+        "deployable-unit", "new", "shop-ios", "--built-from", "rn-hexagonal-app",
+        "--system", "ghost", "--bundle-id", "com.acme.shop",
+    ])
+    .assert_exit(1)
+    .assert_stderr_contains("§3.2.5");
+
+    // §4 — built_from must resolve to a known blueprint.
+    h.run(&[
+        "deployable-unit", "new", "shop-ios", "--built-from", "no-such-blueprint",
+        "--system", "sys-shop", "--bundle-id", "com.acme.shop",
+    ])
+    .assert_exit(1)
+    .assert_stderr_contains("blueprint");
+
+    // A well-formed unit is created, shown, validated, and listed.
+    h.run(&[
+        "deployable-unit", "new", "shop-ios", "--built-from", "rn-hexagonal-app",
+        "--system", "sys-shop", "--environment", "production", "--bundle-id", "com.acme.shop",
+    ])
+    .assert_exit(0)
+    .assert_stdout_contains("Created deployable unit 'shop-ios'");
+    assert!(h.exists(".product/deployable-units/shop-ios.yaml"), "unit persisted under .product/");
+    h.run(&["deployable-unit", "validate", "shop-ios"]).assert_exit(0).assert_stdout_contains("conformant");
+    h.run(&["deployable-unit", "list"]).assert_stdout_contains("shop-ios");
+}
+
+#[test]
+fn tc_1071_archetype_is_a_back_compat_alias_for_blueprint() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // The renamed command scaffolds a blueprint under the canonical dir…
+    h.run(&["blueprint", "init", "shape"]).assert_exit(0);
+    assert!(h.exists(".product/blueprints/shape/how-contract.yaml"), "blueprint lands under .product/blueprints/");
+    // …and the legacy `archetype` alias still drives the same surface.
+    h.run(&["archetype", "list"]).assert_exit(0).assert_stdout_contains("shape");
+}

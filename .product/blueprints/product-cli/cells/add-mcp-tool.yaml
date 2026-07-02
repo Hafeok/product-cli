@@ -1,7 +1,7 @@
 id: add-mcp-tool
 name: "Add an MCP tool"
 family: integration
-archetype: product-cli
+blueprint: product-cli
 classification: supporting
 applies_when: "exposing a domain operation as an MCP tool"
 does_not_apply_when: "a read that the existing read tools already cover"

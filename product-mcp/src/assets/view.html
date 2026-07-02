@@ -255,7 +255,9 @@ function derive(g){
   const sysFlows={}; for(const e of out('system-of')){(sysFlows[e.to]=sysFlows[e.to]||[]).push(e.from);}
   // a system references domains
   const sysRefs={}; for(const e of out('references')){(sysRefs[e.from]=sysRefs[e.from]||[]).push(e.to);}
-  return {byId,product,systems,journeys,domains,sysFlows,sysRefs};
+  // §4/§4.2 — the DeployableUnits a blueprint is instantiated as, per system (deploys: unit → system)
+  const sysUnits={}; for(const e of out('deploys')){(sysUnits[e.to]=sysUnits[e.to]||[]).push(e.from);}
+  return {byId,product,systems,journeys,domains,sysFlows,sysRefs,sysUnits};
 }
 
 /* ── geometry helpers (shared.jsx anchor/curve, vanilla) ───────────────────*/
@@ -368,6 +370,7 @@ function domainCard(d,w,hgt,box){const sel=ST.sel.systems==='ctx:'+d.id;
 }
 function systemCard(M,sy,w,hgt,box){const sel=ST.sel.systems===sy.id;
   const flows=M.sysFlows[sy.id]||[]; const dense=ST.density==='compact';
+  const units=M.sysUnits[sy.id]||[];
   return h('div',{class:'gnode',style:place(box),onclick:()=>selectNode('systems',sy.id)},
     h('div',{class:'card'+(sel?' sel':''),style:{display:'flex',flexDirection:'column'}},
       h('div',{style:{padding:dense?'9px 13px':'11px 14px',borderBottom:'1px solid var(--border-soft)'}},
@@ -381,7 +384,10 @@ function systemCard(M,sy,w,hgt,box){const sel=ST.sel.systems===sy.id;
         h('div',{style:{display:'flex',gap:'5px',flexWrap:'wrap'}},
           ...(sy.tags||[]).map(t=>h('span',{class:'tag',style:{color:'var(--slate-300)',background:'var(--bg)'}},t))),
         (!dense&&sy.fields&&sy.fields.length)?h('div',{style:{fontFamily:'var(--font-mono)',fontSize:'9.5px',color:'var(--slate-500)',lineHeight:1.5}},
-          ...sy.fields.slice(0,2).map(d=>h('div',{},'· '+trim(d,40)))):null),
+          ...sy.fields.slice(0,2).map(d=>h('div',{},'· '+trim(d,40)))):null,
+        units.length?h('div',{style:{fontFamily:'var(--font-mono)',fontSize:'9.5px',color:'var(--slate-400)',lineHeight:1.5},
+          title:'DeployableUnits instantiated for this system (§4.2)'},
+          '▲ '+units.length+' deployable unit'+(units.length===1?'':'s')+': '+trim(units.join(', '),52)):null),
       h('button',{style:{border:0,borderTop:'1px solid var(--border-soft)',background:'var(--bg)',color:'var(--blue-400)',
         fontFamily:'var(--font-mono)',fontSize:'11px',padding:'8px 14px',cursor:'pointer',textAlign:'left',
         display:'flex',justifyContent:'space-between',alignItems:'center'},

@@ -63,8 +63,8 @@ impl LayoutRule {
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct LayoutModel {
     pub version: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub archetype: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "archetype")]
+    pub blueprint: Option<String>,
     #[serde(default = "default_true")]
     pub allowlist: bool,
     pub layout: Vec<LayoutRule>,
@@ -85,10 +85,10 @@ impl LayoutModel {
             .map_err(|e| ProductError::Internal(format!("serialize layout-model: {}", e)))
     }
 
-    pub fn scaffold(archetype: &str) -> Self {
+    pub fn scaffold(blueprint: &str) -> Self {
         Self {
             version: "0.1".to_string(),
-            archetype: Some(archetype.to_string()),
+            blueprint: Some(blueprint.to_string()),
             allowlist: true,
             layout: vec![LayoutRule {
                 id: "no-orphans".to_string(),

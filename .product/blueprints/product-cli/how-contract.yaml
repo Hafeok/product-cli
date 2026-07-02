@@ -1,0 +1,5 @@
+# The self-hosted blueprint reuses the repo's canonical How as its own — a
+# single source of truth. Resolved by HowContract::load_opt (one ref hop,
+# relative to this file). To make this a standalone blueprint instead, replace
+# this stub with an inline how-contract (see `product blueprint init`).
+ref: ../../how-contract.yaml

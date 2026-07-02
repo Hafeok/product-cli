@@ -1,14 +1,14 @@
-//! MCP write handlers that scaffold the delivery architecture — archetypes,
-//! cells, work units (CLI↔MCP parity for `product archetype/cell/work-unit init`
+//! MCP write handlers that scaffold the delivery architecture — blueprints,
+//! cells, work units (CLI↔MCP parity for `product blueprint/cell/work-unit init`
 //! plus `product cell dispatch`).
 //!
 //! Each scaffold reuses the same core constructors the CLI uses
-//! (`Archetype::scaffold`, `TaskType::scaffold`, `WorkUnit::scaffold`,
+//! (`Blueprint::scaffold`, `TaskType::scaffold`, `WorkUnit::scaffold`,
 //! `dispatch`), so the two surfaces lay down identical artifacts.
 
 use std::path::{Path, PathBuf};
 
-use product_core::pf::archetype::Archetype;
+use product_core::pf::blueprint::Blueprint;
 use product_core::pf::cell::TaskType;
 use product_core::pf::dispatch::dispatch;
 use product_core::pf::work_unit::WorkUnit;
@@ -58,14 +58,14 @@ pub fn handle_work_unit_init(args: &Value, repo_root: &Path) -> Result<Value, St
 /// Scaffold a starter task-type (cell) at .product/cell.yaml (or `file`).
 pub fn handle_cell_init(args: &Value, repo_root: &Path) -> Result<Value, String> {
     let id = req_str(args, "id")?;
-    let archetype = opt(args, "archetype").unwrap_or_else(|| "archetype".to_string());
+    let blueprint = opt(args, "blueprint").unwrap_or_else(|| "blueprint".to_string());
     let path = file_arg(args, repo_root, "cell.yaml");
     if path.exists() && !force(args) {
         return Err(format!("{} already exists — pass force=true to overwrite", path.display()));
     }
-    let text = TaskType::scaffold(&id, &archetype).to_yaml().map_err(|e| format!("{e}"))?;
+    let text = TaskType::scaffold(&id, &blueprint).to_yaml().map_err(|e| format!("{e}"))?;
     write_yaml(&path, &text)?;
-    Ok(json!({ "ok": true, "id": id, "archetype": archetype, "written": path.display().to_string() }))
+    Ok(json!({ "ok": true, "id": id, "blueprint": blueprint, "written": path.display().to_string() }))
 }
 
 /// Patch the work unit at .product/work-unit.yaml (or `file`) — overlay the
@@ -111,17 +111,17 @@ pub fn handle_cell_dispatch(args: &Value, repo_root: &Path) -> Result<Value, Str
     Ok(json!({ "ok": true, "workUnits": ids, "written": written, "violations": result.violations }))
 }
 
-/// Scaffold a new archetype directory under .product/archetypes/<name>/.
-pub fn handle_archetype_init(args: &Value, repo_root: &Path) -> Result<Value, String> {
+/// Scaffold a new blueprint directory under .product/blueprints/<name>/.
+pub fn handle_blueprint_init(args: &Value, repo_root: &Path) -> Result<Value, String> {
     let name = req_str(args, "name")?;
-    let dir = pdir(repo_root).join("archetypes").join(&name);
+    let dir = pdir(repo_root).join("blueprints").join(&name);
     if dir.exists() && !force(args) {
         return Err(format!(
-            "archetype '{name}' already exists at {} — pass force=true to overwrite",
+            "blueprint '{name}' already exists at {} — pass force=true to overwrite",
             dir.display()
         ));
     }
-    let written = Archetype::scaffold(&dir, &name).map_err(|e| format!("{e}"))?;
+    let written = Blueprint::scaffold(&dir, &name).map_err(|e| format!("{e}"))?;
     Ok(json!({ "ok": true, "name": name, "written": written }))
 }
 

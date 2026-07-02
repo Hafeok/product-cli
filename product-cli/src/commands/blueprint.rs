@@ -1,14 +1,14 @@
-//! Archetype assembly inspection plus whole-archetype validation.
+//! Blueprint assembly inspection plus whole-blueprint validation.
 //!
-//! `product archetype {validate,show,list,init}` assembles an archetype from
-//! `.product/archetypes/<name>/` (its How contract, layout model, and the
+//! `product blueprint {validate,show,list,init}` assembles a blueprint from
+//! `.product/blueprints/<name>/` (its How contract, layout model, and the
 //! task-type cells under `cells/`) and validates the whole thing — each part
 //! against its shapes plus the cross-part coherence, with cells' `domain:`
 //! inputs cross-checked against the captured What graph.
 
 use clap::Subcommand;
 use product_core::author::domain::session_dir;
-use product_core::pf::archetype::Archetype;
+use product_core::pf::blueprint::Blueprint;
 use product_core::pf::how_validate::has_blocking;
 use product_core::pf::model::DomainGraph;
 use product_core::pf::session::DomainSession;
@@ -17,29 +17,29 @@ use std::path::PathBuf;
 use super::BoxResult;
 
 #[derive(Subcommand)]
-pub enum ArchetypeCommands {
-    /// Check the archetype's layout against the actual repository tree (§4.3)
+pub enum BlueprintCommands {
+    /// Check the blueprint's layout against the actual repository tree (§4.3)
     Check {
-        /// The archetype name
+        /// The blueprint name
         name: String,
     },
-    /// Scaffold a new archetype (How + layout + an example cell)
+    /// Scaffold a new blueprint (How + layout + an example cell)
     Init {
-        /// The archetype name (e.g. rest-api)
+        /// The blueprint name (e.g. rest-api)
         name: String,
         #[arg(long)]
         force: bool,
     },
-    /// List the archetypes under .product/archetypes/
+    /// List the blueprints under .product/blueprints/
     List {},
-    /// Show a summary of an assembled archetype
+    /// Show a summary of an assembled blueprint
     Show {
-        /// The archetype name
+        /// The blueprint name
         name: String,
     },
-    /// Validate the whole archetype (How + layout + cells + coherence)
+    /// Validate the whole blueprint (How + layout + cells + coherence)
     Validate {
-        /// The archetype name
+        /// The blueprint name
         name: String,
         /// Product whose What graph to cross-check cells against
         #[arg(long)]
@@ -47,24 +47,24 @@ pub enum ArchetypeCommands {
     },
 }
 
-pub(crate) fn handle_archetype(cmd: ArchetypeCommands) -> BoxResult {
+pub(crate) fn handle_blueprint(cmd: BlueprintCommands) -> BoxResult {
     match cmd {
-        ArchetypeCommands::Validate { name, product } => validate(&name, product),
-        ArchetypeCommands::Check { name } => check(&name),
-        ArchetypeCommands::Show { name } => show(&name),
-        ArchetypeCommands::List {} => list(),
-        ArchetypeCommands::Init { name, force } => init(&name, force),
+        BlueprintCommands::Validate { name, product } => validate(&name, product),
+        BlueprintCommands::Check { name } => check(&name),
+        BlueprintCommands::Show { name } => show(&name),
+        BlueprintCommands::List {} => list(),
+        BlueprintCommands::Init { name, force } => init(&name, force),
     }
 }
 
-/// Apply the archetype's layout model to the actual repository tree (§4.3
+/// Apply the blueprint's layout model to the actual repository tree (§4.3
 /// layout-conformance — the cheapest gate). `validate` checks the model is
 /// well-formed; `check` checks the repo conforms to it.
 fn check(name: &str) -> BoxResult {
     let root = super::shared::domain_root();
-    let arch = Archetype::load_from_dir(&archetypes_dir().join(name), name)?;
+    let arch = Blueprint::load_from_dir(&blueprints_dir().join(name), name)?;
     let Some(layout) = &arch.layout else {
-        println!("archetype '{name}': no layout model to check");
+        println!("blueprint '{name}': no layout model to check");
         return Ok(());
     };
     let violations = product_core::pf::layout_check::check_layout(layout, &root);
@@ -79,8 +79,18 @@ fn check(name: &str) -> BoxResult {
     Err(format!("{} layout violation(s)", violations.len()).into())
 }
 
-fn archetypes_dir() -> PathBuf {
-    super::shared::domain_root().join(".product").join("archetypes")
+fn blueprints_dir() -> PathBuf {
+    let pdir = super::shared::domain_root().join(".product");
+    let canonical = pdir.join("blueprints");
+    if canonical.exists() {
+        return canonical;
+    }
+    // Back-compat: fall back to the legacy `.product/archetypes/` if present.
+    let legacy = pdir.join("archetypes");
+    if legacy.exists() {
+        return legacy;
+    }
+    canonical
 }
 
 fn load_domain(product: Option<String>) -> Option<DomainGraph> {
@@ -89,7 +99,7 @@ fn load_domain(product: Option<String>) -> Option<DomainGraph> {
 }
 
 fn validate(name: &str, product: Option<String>) -> BoxResult {
-    let arch = Archetype::load_from_dir(&archetypes_dir().join(name), name)?;
+    let arch = Blueprint::load_from_dir(&blueprints_dir().join(name), name)?;
     let domain = load_domain(product);
     let results = arch.validate(domain.as_ref());
 
@@ -102,10 +112,10 @@ fn validate(name: &str, product: Option<String>) -> BoxResult {
         for v in &violations {
             eprintln!("  - [{}] {}: {}", v.focus, v.path, v.message);
         }
-        return Err(format!("{} archetype conformance violation(s)", violations.len()).into());
+        return Err(format!("{} blueprint conformance violation(s)", violations.len()).into());
     }
     println!(
-        "conformant — archetype '{name}': how {}, layout {}, {} cell(s) [domain: {}]",
+        "conformant — blueprint '{name}': how {}, layout {}, {} cell(s) [domain: {}]",
         yes_no(arch.how.is_some()),
         yes_no(arch.layout.is_some()),
         arch.cells.len(),
@@ -119,8 +129,8 @@ fn yes_no(b: bool) -> &'static str {
 }
 
 fn show(name: &str) -> BoxResult {
-    let arch = Archetype::load_from_dir(&archetypes_dir().join(name), name)?;
-    println!("archetype: {name}");
+    let arch = Blueprint::load_from_dir(&blueprints_dir().join(name), name)?;
+    println!("blueprint: {name}");
     if let Some(how) = &arch.how {
         println!("how-contract: {} ({} decision(s), {} principle(s), {} pattern(s))",
             how.application_contract.id, how.top_decisions.len(), how.principles.len(), how.patterns.len());
@@ -139,11 +149,11 @@ fn show(name: &str) -> BoxResult {
 }
 
 fn list() -> BoxResult {
-    let dir = archetypes_dir();
+    let dir = blueprints_dir();
     let entries = match std::fs::read_dir(&dir) {
         Ok(it) => it,
         Err(_) => {
-            println!("(no archetypes — scaffold one with `product archetype init <name>`)");
+            println!("(no blueprints — scaffold one with `product blueprint init <name>`)");
             return Ok(());
         }
     };
@@ -154,7 +164,7 @@ fn list() -> BoxResult {
         .collect();
     names.sort();
     if names.is_empty() {
-        println!("(no archetypes)");
+        println!("(no blueprints)");
     }
     for n in names {
         println!("{n}");
@@ -163,12 +173,12 @@ fn list() -> BoxResult {
 }
 
 fn init(name: &str, force: bool) -> BoxResult {
-    let dir = archetypes_dir().join(name);
+    let dir = blueprints_dir().join(name);
     if dir.exists() && !force {
         return Err(format!("{} already exists — pass --force to overwrite", dir.display()).into());
     }
-    let written = Archetype::scaffold(&dir, name)?;
-    println!("Scaffolded archetype '{name}' at {}", dir.display());
+    let written = Blueprint::scaffold(&dir, name)?;
+    println!("Scaffolded blueprint '{name}' at {}", dir.display());
     for w in &written {
         println!("  {w}");
     }

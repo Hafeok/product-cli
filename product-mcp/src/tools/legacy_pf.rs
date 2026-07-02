@@ -1,4 +1,4 @@
-//! Tool definitions for the remaining framework families — archetype, cell,
+//! Tool definitions for the remaining framework families — blueprint, cell,
 //! how, work-unit, worker (inspection plus scaffolding; CLI↔MCP parity).
 
 use super::ToolDef;
@@ -33,18 +33,18 @@ pub(super) fn all() -> Vec<ToolDef> {
     let named = serde_json::json!({"name": {"type": "string"}, "product": {"type": "string"}});
     let none = serde_json::json!({});
     vec![
-        // archetype
-        read("product_archetype_list", "List the archetypes under .product/archetypes/.", none.clone(), serde_json::json!([])),
-        read("product_archetype_show", "Show an assembled archetype's parts.", named.clone(), serde_json::json!(["name"])),
-        read("product_archetype_validate", "Validate an archetype (How + layout + cells + coherence).", named.clone(), serde_json::json!(["name"])),
-        read("product_archetype_check", "Check an archetype's layout against the repository tree (§4.3).", named.clone(), serde_json::json!(["name"])),
-        write("product_archetype_init", "Scaffold a new archetype under .product/archetypes/<name>/ (How contract + layout + an example cell). Returns { ok, name, written }.",
+        // blueprint
+        read("product_blueprint_list", "List the blueprints under .product/blueprints/.", none.clone(), serde_json::json!([])),
+        read("product_blueprint_show", "Show an assembled blueprint's parts.", named.clone(), serde_json::json!(["name"])),
+        read("product_blueprint_validate", "Validate a blueprint (How + layout + cells + coherence).", named.clone(), serde_json::json!(["name"])),
+        read("product_blueprint_check", "Check a blueprint's layout against the repository tree (§4.3).", named.clone(), serde_json::json!(["name"])),
+        write("product_blueprint_init", "Scaffold a new blueprint under .product/blueprints/<name>/ (How contract + layout + an example cell). Returns { ok, name, written }.",
             serde_json::json!({"name": {"type": "string"}, "force": {"type": "boolean"}}), serde_json::json!(["name"])),
         // cell
         read("product_cell_show", "Show the task-type cell (.product/cell.yaml).", none.clone(), serde_json::json!([])),
         read("product_cell_validate", "Validate the cell against the What graph + How contract.", serde_json::json!({"product": {"type": "string"}}), serde_json::json!([])),
-        write("product_cell_init", "Scaffold a starter task-type (cell) at .product/cell.yaml. Returns { ok, id, archetype, written }.",
-            serde_json::json!({"id": {"type": "string"}, "archetype": {"type": "string"}, "file": {"type": "string"}, "force": {"type": "boolean"}}), serde_json::json!(["id"])),
+        write("product_cell_init", "Scaffold a starter task-type (cell) at .product/cell.yaml. Returns { ok, id, blueprint, written }.",
+            serde_json::json!({"id": {"type": "string"}, "blueprint": {"type": "string"}, "file": {"type": "string"}, "force": {"type": "boolean"}}), serde_json::json!(["id"])),
         write("product_cell_dispatch", "Dispatch the cell at .product/cell.yaml into concrete §5 work units (under .product/work-units/), bound to the captured What graph. `binds` is an object {slot: value}. Returns { ok, workUnits, written, violations }.",
             serde_json::json!({"binds": {"type": "object"}, "product": {"type": "string"}}), serde_json::json!([])),
         // how

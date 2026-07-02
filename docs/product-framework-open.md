@@ -2,11 +2,11 @@
 
 **An open standard for specifying software as What, How, and Delivery.**
 
-*A conformant instantiation of the Two Pillars Specification Framework. Version 1.6.1 — open specification.*
+*A conformant instantiation of the Two Pillars Specification Framework. Version 1.7.0 — open specification.*
 
 ---
 
-> **What this is.** An **open, catalog-agnostic standard** for describing a software product as three connected models — **What** it is, **How** it is built, and how it is **Delivered** — in a form that is reproducible, verifiable, and traceable. It defines the **shapes and rules**, not any particular product. Anyone can build catalogs, archetypes, and tooling against it.
+> **What this is.** An **open, catalog-agnostic standard** for describing a software product as three connected models — **What** it is, **How** it is built, and how it is **Delivered** — in a form that is reproducible, verifiable, and traceable. It defines the **shapes and rules**, not any particular product. Anyone can build catalogs, blueprints, and tooling against it.
 >
 > It is a conformant instantiation of the **Two Pillars Specification Framework** for software; every construct maps to a named Two Pillars concept ([§8](#8-conformance-to-the-two-pillars)).
 
@@ -46,11 +46,11 @@ It rests on one chain of dependencies: **reproducibility → measurement → imp
 
 **Out of scope (deliberately)**
 
-- Any specific product, archetype, or pattern library — those are built *on* the framework, not part of it.
+- Any specific product, blueprint, or pattern library — those are built *on* the framework, not part of it.
 - Quality-criteria content (the actual audits/checks) — the framework requires that conformant verifications exist and meet a strength bar ([§6](#6-verification--the-conformance-bar)); it does not supply them.
 - Delivery cadence and team practice — the framework defines the delivery *model*, not how an organization runs it ([§7](#7-delivery--bringing-the-what-to-a-verifiable-done)).
 
-> **The open/closed line.** This framework is the **empty form and its rules**. The forms you fill in — your domain models, your reusable How (archetypes), and especially your verification libraries — are yours. The framework is designed so that adopting it never requires disclosing them.
+> **The open/closed line.** This framework is the **empty form and its rules**. The forms you fill in — your domain models, your reusable How (blueprints), and especially your verification libraries — are yours. The framework is designed so that adopting it never requires disclosing them.
 
 ---
 
@@ -446,7 +446,9 @@ This keeps quality demands inside the framework's spine rather than beside it: e
 
 ## 4. The How — realising the What
 
-The How is how code expresses the What. Wherever a system shape recurs, the How should be **captured once and reused** (an "archetype" — a reusable How). The framework defines three sub-layers and their conformance rules; it does not prescribe any particular technology, layering, or pattern.
+The How is how code expresses the What. Wherever a system shape recurs, the How should be **captured once and reused** — a **blueprint** (a reusable How; formerly termed *archetype*). A blueprint is *instantiated* to produce a **DeployableUnit**: the concrete deployable artifact — an app, a service, a CLI binary — that realises a system (§3.2.5) and carries its deployment identity (§4.2). The framework defines three sub-layers and their conformance rules; it does not prescribe any particular technology, layering, or pattern.
+
+> **Blueprint, DeployableUnit, and their mapping.** A **blueprint** is the reusable *template* of a How ("a React-Native app with a hexagonal core"); a **DeployableUnit** is a concrete *instance* of one ("the `acme-shop` iOS app, at `com.acme.shop`"). The term DeployableUnit is borrowed from DORA / DevOps, where it is the unit whose flow to production is measured — deployment frequency, lead time, change-fail rate all count *per deployable unit* — which is precisely the unit this concept names. The mapping is **1:1:1 in the common case** (one blueprint, one system, one deployable unit per environment) but may fan out: one blueprint instantiated as several deployable units (a web frontend + a backend-for-frontend), or several systems shipped as one deployable unit (a monolith). The framework lets it fan out and asks that the mapping be **declared** when it does. Two environments (staging, production) are **two DeployableUnits of the same system on the same blueprint** — which is exactly why deployment identity varies per environment (§4.2): the DeployableUnit is the node that variation attaches to. System identity is What; a DeployableUnit is How.
 
 ### 4.1 Decisions, principles, patterns — the Why, made traceable
 
@@ -470,8 +472,8 @@ WORK UNITS   reference the above by pointer; emit a rationale trace
 
 The How fixes the realisation through contracts. The framework requires that each contract be stated **checkably** — precisely enough that a verification can confirm conformance — but does not prescribe their content:
 
-- **An application contract** — the invariant code-shaping decisions (language, layering, organization, persistence model). Stable across instances of an archetype. Where the What carries Deciders (§3.3), the application contract states that **decision logic is kept in a pure, isolable core** separate from input/output — the constraint that makes behaviour verifiable against its Decider.
-- **An infrastructure/runtime contract** — the concrete runtime choices for an instance, including the system's **deployment identity** (production domain name, App Store / Play bundle identifiers, the chosen runtimes) — the concrete address of the system whose *identity and reach* the What declares (§3.2.5). May vary per deployment; once chosen, frozen. It must **satisfy** the application contract, and the satisfaction is recorded.
+- **An application contract** — the invariant code-shaping decisions (language, layering, organization, persistence model). Stable across all DeployableUnits instantiated from one blueprint. Where the What carries Deciders (§3.3), the application contract states that **decision logic is kept in a pure, isolable core** separate from input/output — the constraint that makes behaviour verifiable against its Decider.
+- **An infrastructure/runtime contract** — the concrete runtime choices for a **DeployableUnit** (§4), including its **deployment identity** (production domain name, App Store / Play bundle identifiers, the chosen runtimes) — the concrete address of the system whose *identity and reach* the What declares (§3.2.5). This is what a DeployableUnit *carries*: each DeployableUnit is one such contract, so two environments (staging, production) are two DeployableUnits with two runtime contracts over the same system and blueprint. May vary per DeployableUnit; once chosen, frozen. It must **satisfy** the application contract, and the satisfaction is recorded.
 - **The seam between them is verified.** Where application and runtime are described separately, a verification must confirm they agree (configuration, identity/permissions, resources expected vs. provided). This seam is a required verification, because nothing else makes the two halves agree.
 
 ### 4.3 The repository layout model — what files are legal where
@@ -488,7 +490,7 @@ A layout rule is expressed with **glob patterns**, because globs are the languag
 | **must-not-exist** | a forbidden file or pattern | the match is present |
 | **no-orphans** | every file matches at least one allow rule | a file matches no declared rule |
 
-**Two directions.** Most rules are *reactive* — they judge files that exist (placement, completeness, prohibition). The **must-exist** rule is *proactive* — it fires on the **absence** of a required file, asserting the tree contains the spine an archetype needs. Together, `must-exist` and `must-not-exist` let the contract state the expected shape of the tree in both directions: nothing missing, nothing forbidden.
+**Two directions.** Most rules are *reactive* — they judge files that exist (placement, completeness, prohibition). The **must-exist** rule is *proactive* — it fires on the **absence** of a required file, asserting the tree contains the spine a blueprint needs. Together, `must-exist` and `must-not-exist` let the contract state the expected shape of the tree in both directions: nothing missing, nothing forbidden.
 
 **Cardinality on presence.** A `must-exist` rule must declare how many and in what scope, or it is ambiguous: `exactly 1` (a global singleton — zero *and* two both fail), `at least 1`, or — the most useful and the ergonomic default — `1 per <scope-glob>` (quantified over each match of a parent pattern, e.g. "every feature folder must contain a test file").
 
@@ -521,7 +523,7 @@ layout:
 
 #### Allowlist semantics (the strength choice)
 
-The model is **allowlist by default**, anchored by the **no-orphans** rule: every file must match at least one declared allow rule, and a file matching none **fails**. A denylist ("these patterns are forbidden") only catches the violations you anticipated; the allowlist makes the *unanticipated* file the failure case, which is what lets a repository be *provably* in its archetype's shape rather than merely free of known sins. This is the same "by construction, not by vigilance" choice as the coherence bar (§6.1).
+The model is **allowlist by default**, anchored by the **no-orphans** rule: every file must match at least one declared allow rule, and a file matching none **fails**. A denylist ("these patterns are forbidden") only catches the violations you anticipated; the allowlist makes the *unanticipated* file the failure case, which is what lets a repository be *provably* in its blueprint's shape rather than merely free of known sins. This is the same "by construction, not by vigilance" choice as the coherence bar (§6.1).
 
 #### The two guards (required)
 
@@ -807,7 +809,7 @@ This framework is a conformant instantiation of the Two Pillars Specification Fr
 | Two Pillars concept | This framework's construct | Section |
 |---|---|---|
 | **What specification** | Product (owns domains + systems) → Domain(s) (structure + reference data + behaviour: events, Deciders, Projectors) + System(s) (surfaces referencing domains: page graph, flows, UI steps typed by AIOs + context-of-use + WCAG 2.2 criteria, target platforms) + named-algorithm primitives (the Polanyi floor) + quality demands (runtime bounds + architectural constraints) | [§3](#3-the-what--structure-and-behaviour) |
-| **How specification** | Decisions/principles/patterns + contracts (incl. repository layout model) + interface standards + screen-composition contract (reification + content resolution) | [§4](#4-the-how--realising-the-what) |
+| **How specification** | Blueprint (reusable How) instantiated as DeployableUnit(s) (the concrete deployed artifact, per environment) + decisions/principles/patterns + contracts (application + infrastructure/runtime, incl. repository layout model) + interface standards + screen-composition contract (reification + content resolution) | [§4](#4-the-how--realising-the-what) |
 | **SPMC (Schema, Prompt, Model, Context)** | Work unit: one bounded transformation, frozen input, one artifact — its frozen bundle *is* an SPMC bundle, with the four axes named in this framework's terms (§5). SPMC itself is defined by the parent Two Pillars framework; this row is the mapping, not the definition. | [§5](#5-work-units-and-the-rationale-trace) |
 | **Derivation contract** | The typed links of [§9](#9-encoding-and-the-derivation-contract) (e.g. `derived_from`, `conforms_to`, `applies`, `realizes`, `enforces`) | [§9](#9-encoding-and-the-derivation-contract) |
 | **Verification (criteria → judge → verdict)** | Verification — the required kinds and the coherence bar | [§6](#6-verification--the-conformance-bar) |
@@ -855,6 +857,7 @@ The reference encoding is **RDF** for the graph and **SHACL** for constraints; a
 | `typed_as` / `reifies` / `in_context` / `unreifiable_in` | this UI-step interaction is typed as this AIO / this CIO reifies this AIO / this reification holds in this context of use / this AIO is declared unreifiable in this interaction class — a recorded coverage gap (§3.2.2, §4.5) |
 | `must_satisfy` / `attests` | this AIO or UI step must satisfy this WCAG criterion / this dated, attributed attestation records that a non-machine criterion was evaluated and met (§3.2.3) |
 | `realizes_step` / `composes` / `binds` | this page realises this UI step / composes these design-system components / binds this control to this command or this field to this projection (§4.5) |
+| `instantiated_as` / `deploys_system` / `built_from` / `carries_identity` | this blueprint is instantiated as this DeployableUnit / this DeployableUnit deploys (realises) this system / this DeployableUnit is built from this blueprint / this DeployableUnit carries this deployment identity (domain name, bundle id, runtime), per environment (§4, §4.2) |
 | `references_content` / `resolves` / `in_locale` | this UI step or shell references this content key (with a role) / this content store resolves this key to a string / this resolution holds in this locale (§3.2.1, §4.6) |
 
 These links are what make the framework **queryable**: impact analysis ("what depends on X?"), onboarding traces ("why is this shaped this way?"), and the verification-to-principle linkage all fall out of graph queries rather than hand-maintained documents.
@@ -877,7 +880,7 @@ These links are what make the framework **queryable**: impact analysis ("what de
 12. The delivery model is in scope; delivery practice (cadence, ceremonies) is not.
 13. Conformance is claimed at the highest cumulative level satisfied (Described / Realised / Verified / Delivered).
 14. Artifacts are authored in the **order the derivation contract forces** (§2.1): system & domain structure → reference data → events & flows → Deciders & Projectors → UI & page graph → the How. Verification is interleaved (simulation before realisation; data conformance continuous), not a final phase. The forward chain is a *cycle*: the intent-reliance rate (under-specification) and the data-divergence rate (over-confidence, post-deployment) send authoring back upstream. The framework is normative about this *order*; *practice* (cadence, ceremonies, who, when) is out of scope (§7.3).
-15. The framework defines shapes and rules only. Specific products, archetypes, patterns, Decider logic, and the content of verifications are built on the framework, not part of it.
+15. The framework defines shapes and rules only. Specific products, blueprints, patterns, Decider logic, and the content of verifications are built on the framework, not part of it.
 
 ---
 

@@ -1,11 +1,11 @@
 # Worked example: product-cli describes and verifies its own How
 
 This is a dogfood of the Product-Framework toolchain (FT-109–FT-117) on
-`product-cli` itself: the repo's *What* graph, an *archetype* (How + layout +
+`product-cli` itself: the repo's *What* graph, an *blueprint* (How + layout +
 cells) describing how `product-cli` is actually built, and a dispatch that
 produces frozen SPMC work units — every layer validated by the same tools.
 
-The archetype lives at [`.product/archetypes/product-cli/`](../../.product/archetypes/product-cli/).
+The blueprint lives at [`.product/blueprints/product-cli/`](../../.product/blueprints/product-cli/).
 
 ## The four-layer verified chain
 
@@ -13,13 +13,13 @@ The archetype lives at [`.product/archetypes/product-cli/`](../../.product/arche
 $ product domain validate                 # What — §3 (Described)
 conformant — 152 node(s), 0 violations
 
-$ product archetype validate product-cli  # How + layout + cells — §4/§5 (Realised)
-conformant — archetype 'product-cli': how present, layout present, 1 cell(s) [domain: cross-checked]
+$ product blueprint validate product-cli  # How + layout + cells — §4/§5 (Realised)
+conformant — blueprint 'product-cli': how present, layout present, 1 cell(s) [domain: cross-checked]
 
 $ product cell dispatch \
-    --file .product/archetypes/product-cli/cells/implement-slice.yaml \
+    --file .product/blueprints/product-cli/cells/implement-slice.yaml \
     --bind concept=e-entity --bind operations=validate,show \
-    --out .product/archetypes/product-cli/work-units
+    --out .product/blueprints/product-cli/work-units
 Dispatched core-slice-e-entity -> …/core-slice-e-entity.yaml
 Dispatched cli-adapter-e-entity -> …/cli-adapter-e-entity.yaml
 Dispatched integration-tests-e-entity -> …/integration-tests-e-entity.yaml
@@ -33,7 +33,7 @@ Verdict: conforms to Level 3 (spec-driven) — checkable subset
 
 ## What it captures
 
-The archetype encodes `product-cli`'s real architecture as a conformant How:
+The blueprint encodes `product-cli`'s real architecture as a conformant How:
 
 - **Top decisions** — *slice + adapter* (pure `pf::` domain slices in
   product-core, thin CLI adapters in product-cli) and *native checkers*

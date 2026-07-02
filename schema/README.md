@@ -17,7 +17,7 @@ schema/
     how.shacl.ttl                  # SHACL — the complete How layer (incl. the trace-truth rule)
   json/
     layout-model.schema.json       # §4.3 repository layout model (globs, allowlist, the two guards)
-    how-contract.schema.json       # §4 an archetype's How: decisions/principles/patterns + the two contracts + interfaces
+    how-contract.schema.json       # §4 an blueprint's How: decisions/principles/patterns + the two contracts + interfaces
     task-type-definition.schema.json  # §5 the dual-read task-type definition
     work-unit.schema.json          # §5 the SPMC work-unit manifest
     delivery.schema.json           # §7 features & releases, with the done predicates
@@ -76,7 +76,7 @@ These schemas describe the **shapes** — they ship no proprietary content. In p
 `shapes.shacl.ttl` validates that verifications *exist and are well-formed*; it does not (and
 cannot) contain the verification **content** — the actual checks are the adopter's, per the
 framework's open/closed line. Likewise the examples are a toy to-do domain, not any real
-archetype.
+blueprint.
 
 ## Validating
 

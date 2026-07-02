@@ -4,7 +4,7 @@
 
 Product is a Rust CLI and MCP server for the **Product Framework** — the open
 What/How specification graph (`docs/product-framework-open.md`, currently
-v1.6.1). It captures and verifies a product's *What* (domain model, event model,
+v1.7.0). It captures and verifies a product's *What* (domain model, event model,
 Deciders, Projectors, systems, triggers, UI/AIO model) and *How* (contracts,
 reification, delivery), all under `.product/`. The reference What lives in
 `.product/author-domain/product-cli/`.
@@ -93,17 +93,18 @@ docs/
   examples/ · workshop/       # Worked examples + workshop runbook
 .product/
   config.toml          # Repo config (`[author].cli` sets the default session CLI: claude|copilot)
-  how-contract.yaml    # The canonical §4 How (hand-editable source); the self-hosted archetype refs it
+  how-contract.yaml    # The canonical §4 How (hand-editable source); the self-hosted blueprint refs it
   author-domain/       # The captured What graphs (e.g. product-cli — the example What)
-  deciders/ · features/ · work-units/ · deliverables/ · archetypes/ · sessions/
+  deciders/ · features/ · work-units/ · deliverables/ · blueprints/ ·
+  deployable-units/ · sessions/
 ```
 
-An archetype's `how-contract.yaml` may be an inline contract **or** a one-line
+A blueprint's `how-contract.yaml` may be an inline contract **or** a one-line
 `ref: <relative path>` stub pointing at a shared one — resolved by
 `HowContract::load_opt` (one hop, relative to the stub). The self-hosted
-`archetypes/product-cli/` uses `ref: ../../how-contract.yaml` so the repo has a
-single canonical How; `product archetype init` still scaffolds a full inline
-contract for a genuinely standalone archetype.
+`blueprints/product-cli/` uses `ref: ../../how-contract.yaml` so the repo has a
+single canonical How; `product blueprint init` still scaffolds a full inline
+contract for a genuinely standalone blueprint.
 
 **Downstream consumers** (e.g. `decision-cli`) should add only:
 
@@ -169,6 +170,14 @@ Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
   pointer; its build-context is *assembled from the model*, never restated).
   `product how set version|realises-version --id <v>` carries the §7.3 semantic
   versions (a How declares which What-version it realises).
+- **DeployableUnit (§4/§4.2)** — `product deployable-unit new <id> --built-from
+  <blueprint> --system <sys>… [--environment … --domain-name/--bundle-id/--runtime]`
+  declares the concrete artifact a **blueprint** (v1.7.0's rename of *archetype*)
+  is instantiated as for a system, carrying its per-environment deployment
+  identity. `validate` resolves `built_from` against `.product/blueprints/` and
+  each `deploys_system` against the What. Stored under `.product/deployable-units/`;
+  a How-phase concept (edges `instantiated_as`/`deploys_system`/`built_from`/
+  `carries_identity`). *`archetype` remains a back-compat alias everywhere.*
 - **Direction (§7.3)** — `product target new <id> --version <v> --feature <deliverable>…`
   declares a future partition of features; `product target direction <id>`
   computes the gap (the unrealised members) — a query over the graph, not prose.
@@ -194,7 +203,8 @@ shows only the current phase's family, and out-of-phase calls are rejected:
 
 - **What** — `product_domain_*`, `product_decider_*`, `product_projector_*`,
   `product_primitive_*`.
-- **How** — `product_how_*`, `product_archetype_*`, `product_cell_*`,
+- **How** — `product_how_*`, `product_blueprint_*` (alias `product_archetype_*`),
+  `product_deployable_unit_*`, `product_cell_*`,
   `product_work_unit_*` (the atomic slice), `product_worker_*`.
 - **Build** — `product_feature_*`, `product_deliverable_*`, `product_release_*`,
   `product_target_*`, `product_build_run`.

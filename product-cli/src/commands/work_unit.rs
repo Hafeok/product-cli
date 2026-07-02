@@ -69,7 +69,7 @@ fn load_domain(product: Option<String>) -> Option<DomainGraph> {
 }
 
 /// Discover the How contract to cross-check against. A dispatched unit lives
-/// under `.product/archetypes/<name>/work-units/`, so prefer its archetype's
+/// under `.product/blueprints/<name>/work-units/`, so prefer its blueprint's
 /// `how-contract.yaml`; otherwise fall back to `.product/how-contract.yaml`.
 fn load_how(file: &Option<PathBuf>) -> Option<HowContract> {
     let mut candidates: Vec<PathBuf> = Vec::new();

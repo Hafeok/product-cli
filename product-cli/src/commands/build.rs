@@ -356,9 +356,11 @@ fn load_how() -> Option<HowContract> {
     let pdir = super::shared::domain_root().join(".product");
     let mut candidates = vec![pdir.join("how-contract.yaml")];
     if let Some(product) = super::shared::default_product_name() {
+        candidates.push(pdir.join("blueprints").join(&product).join("how-contract.yaml"));
+        // Back-compat: also look under the legacy `.product/archetypes/` dir.
         candidates.push(pdir.join("archetypes").join(product).join("how-contract.yaml"));
     }
-    // Ref-aware: an archetype's how-contract may be a `ref:` to the canonical one.
+    // Ref-aware: a blueprint's how-contract may be a `ref:` to the canonical one.
     candidates.iter().find_map(|p| HowContract::load_opt(p).ok().flatten())
 }
 

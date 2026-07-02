@@ -135,6 +135,7 @@ fn handle_tools_call(request: &JsonRpcRequest, registry: &ToolRegistry) -> JsonR
 fn dispatch_tool(name: &str, args: &Value, repo_root: &Path) -> Result<Value, String> {
     dispatch_what(name, args, repo_root)
         .or_else(|| dispatch_delivery(name, args, repo_root))
+        .or_else(|| dispatch_deployable_unit(name, args, repo_root))
         .or_else(|| dispatch_framework_read(name, args, repo_root))
         .or_else(|| dispatch_framework_write(name, args, repo_root))
         .or_else(|| dispatch_framework_scaffold(name, args, repo_root))
@@ -196,14 +197,27 @@ fn dispatch_delivery(name: &str, args: &Value, repo_root: &Path) -> Option<Resul
     })
 }
 
-/// §4/§5 — How families reading .product/: archetype, cell, how, work-unit, worker.
+/// §4/§4.2 — DeployableUnit: the concrete artifact a blueprint produces.
+fn dispatch_deployable_unit(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
+    use super::deployable_unit_handlers as d;
+    Some(match name {
+        "product_deployable_unit_list" => d::handle_deployable_unit_list(args, repo_root),
+        "product_deployable_unit_show" => d::handle_deployable_unit_show(args, repo_root),
+        "product_deployable_unit_validate" => d::handle_deployable_unit_validate(args, repo_root),
+        "product_deployable_unit_new" => d::handle_deployable_unit_new(args, repo_root),
+        _ => return None,
+    })
+}
+
+/// §4/§5 — How families reading .product/: blueprint, cell, how, work-unit, worker.
 fn dispatch_framework_read(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
     use super::framework_read_handlers as f;
     Some(match name {
-        "product_archetype_list" => f::handle_archetype_list(args, repo_root),
-        "product_archetype_show" => f::handle_archetype_show(args, repo_root),
-        "product_archetype_validate" => f::handle_archetype_validate(args, repo_root),
-        "product_archetype_check" => f::handle_archetype_check(args, repo_root),
+        // Back-compat: the pre-v1.7.0 `product_archetype_*` names route to the same handlers.
+        "product_blueprint_list" | "product_archetype_list" => f::handle_blueprint_list(args, repo_root),
+        "product_blueprint_show" | "product_archetype_show" => f::handle_blueprint_show(args, repo_root),
+        "product_blueprint_validate" | "product_archetype_validate" => f::handle_blueprint_validate(args, repo_root),
+        "product_blueprint_check" | "product_archetype_check" => f::handle_blueprint_check(args, repo_root),
         "product_cell_show" => f::handle_cell_show(args, repo_root),
         "product_cell_validate" => f::handle_cell_validate(args, repo_root),
         "product_how_show" => f::handle_how_show(args, repo_root),
@@ -230,11 +244,12 @@ fn dispatch_framework_write(name: &str, args: &Value, repo_root: &Path) -> Optio
     })
 }
 
-/// §4/§5 — scaffold the delivery architecture: archetype, cell, work-unit.
+/// §4/§5 — scaffold the delivery architecture: blueprint, cell, work-unit.
 fn dispatch_framework_scaffold(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
     use super::framework_scaffold_handlers as fs;
     Some(match name {
-        "product_archetype_init" => fs::handle_archetype_init(args, repo_root),
+        // Back-compat: pre-v1.7.0 `product_archetype_init` routes to the same handler.
+        "product_blueprint_init" | "product_archetype_init" => fs::handle_blueprint_init(args, repo_root),
         "product_cell_init" => fs::handle_cell_init(args, repo_root),
         "product_cell_dispatch" => fs::handle_cell_dispatch(args, repo_root),
         "product_work_unit_init" => fs::handle_work_unit_init(args, repo_root),

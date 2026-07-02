@@ -1,9 +1,9 @@
 //! MCP read handlers for the framework families that read `.product/` artifacts:
-//! `archetype`, `cell`, `how`, `work-unit` — CLI↔MCP parity.
+//! `blueprint`, `cell`, `how`, `work-unit` — CLI↔MCP parity.
 
 use std::path::{Path, PathBuf};
 
-use product_core::pf::archetype::Archetype;
+use product_core::pf::blueprint::Blueprint;
 use product_core::pf::capability::Catalog;
 use product_core::pf::cell::TaskType;
 use product_core::pf::cell_validate::validate_cell;
@@ -21,29 +21,38 @@ fn verdict(violations: &[product_core::pf::validate::Violation]) -> Value {
     json!({ "ok": !violations.iter().any(|v| v.severity == "violation"), "violations": violations })
 }
 
-// --- archetype -------------------------------------------------------------
+// --- blueprint -------------------------------------------------------------
 
-fn archetypes_dir(r: &Path) -> PathBuf {
-    pdir(r).join("archetypes")
+fn blueprints_dir(r: &Path) -> PathBuf {
+    let canonical = pdir(r).join("blueprints");
+    if canonical.exists() {
+        return canonical;
+    }
+    // Back-compat: fall back to the legacy `.product/archetypes/` if present.
+    let legacy = pdir(r).join("archetypes");
+    if legacy.exists() {
+        return legacy;
+    }
+    canonical
 }
 
-pub fn handle_archetype_list(_args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let mut names: Vec<String> = match std::fs::read_dir(archetypes_dir(repo_root)) {
+pub fn handle_blueprint_list(_args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let mut names: Vec<String> = match std::fs::read_dir(blueprints_dir(repo_root)) {
         Ok(it) => it.flatten().filter(|e| e.path().is_dir())
             .filter_map(|e| e.file_name().into_string().ok()).collect(),
         Err(_) => Vec::new(),
     };
     names.sort();
-    Ok(json!({ "archetypes": names }))
+    Ok(json!({ "blueprints": names }))
 }
 
-fn load_archetype(repo_root: &Path, name: &str) -> Result<Archetype, String> {
-    Archetype::load_from_dir(&archetypes_dir(repo_root).join(name), name).map_err(|e| format!("{e}"))
+fn load_blueprint(repo_root: &Path, name: &str) -> Result<Blueprint, String> {
+    Blueprint::load_from_dir(&blueprints_dir(repo_root).join(name), name).map_err(|e| format!("{e}"))
 }
 
-pub fn handle_archetype_show(args: &Value, repo_root: &Path) -> Result<Value, String> {
+pub fn handle_blueprint_show(args: &Value, repo_root: &Path) -> Result<Value, String> {
     let name = req_str(args, "name")?;
-    let a = load_archetype(repo_root, &name)?;
+    let a = load_blueprint(repo_root, &name)?;
     Ok(json!({
         "name": name,
         "how": a.how.is_some(),
@@ -52,14 +61,14 @@ pub fn handle_archetype_show(args: &Value, repo_root: &Path) -> Result<Value, St
     }))
 }
 
-pub fn handle_archetype_validate(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let a = load_archetype(repo_root, &req_str(args, "name")?)?;
+pub fn handle_blueprint_validate(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let a = load_blueprint(repo_root, &req_str(args, "name")?)?;
     let domain = graph_of(args, repo_root).ok();
     Ok(verdict(&a.validate(domain.as_ref())))
 }
 
-pub fn handle_archetype_check(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let a = load_archetype(repo_root, &req_str(args, "name")?)?;
+pub fn handle_blueprint_check(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let a = load_blueprint(repo_root, &req_str(args, "name")?)?;
     let Some(layout) = &a.layout else {
         return Ok(json!({ "ok": true, "violations": [], "note": "no layout model to check" }));
     };

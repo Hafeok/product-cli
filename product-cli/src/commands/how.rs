@@ -1,6 +1,6 @@
 //! How-contract (§4 architecture) inspection plus validation commands.
 //!
-//! `product how {validate,show,list,export,init}` operates on an archetype's
+//! `product how {validate,show,list,export,init}` operates on a blueprint's
 //! How contract — a YAML file (default `.product/how-contract.yaml`). Unlike
 //! the What graph (an RDF session), the How is authored as a file and
 //! projected into the graph; these commands validate it (incl. the crown
@@ -36,9 +36,9 @@ pub enum HowCommands {
     },
     /// Scaffold a starter how-contract.yaml
     Init {
-        /// The archetype this How belongs to (e.g. rest-api)
+        /// The blueprint this How belongs to (e.g. rest-api)
         #[arg(long)]
-        archetype: Option<String>,
+        blueprint: Option<String>,
         #[arg(long)]
         file: Option<PathBuf>,
         /// Overwrite an existing file
@@ -84,7 +84,7 @@ pub(crate) fn handle_how(cmd: HowCommands) -> BoxResult {
         HowCommands::Show { file } => show(file),
         HowCommands::List { kind, file } => list(kind, file),
         HowCommands::Export { file } => export(file),
-        HowCommands::Init { archetype, file, force } => init(archetype, file, force),
+        HowCommands::Init { blueprint, file, force } => init(blueprint, file, force),
     }
 }
 
@@ -111,7 +111,7 @@ fn load_or_init(file: &Option<PathBuf>) -> Result<HowContract, Box<dyn std::erro
     match std::fs::read_to_string(&p) {
         Ok(text) => Ok(HowContract::from_yaml(&text)?),
         Err(_) => Ok(HowContract {
-            archetype: super::shared::default_product_name().unwrap_or_else(|| "archetype".to_string()),
+            blueprint: super::shared::default_product_name().unwrap_or_else(|| "blueprint".to_string()),
             ..Default::default()
         }),
     }
@@ -189,7 +189,7 @@ fn validate(file: Option<PathBuf>) -> BoxResult {
 
 fn show(file: Option<PathBuf>) -> BoxResult {
     let c = load(file)?;
-    println!("archetype: {}", c.archetype);
+    println!("blueprint: {}", c.blueprint);
     if let Some(v) = &c.version {
         println!("version:   {v}");
     }
@@ -233,14 +233,14 @@ fn export(file: Option<PathBuf>) -> BoxResult {
     Ok(())
 }
 
-fn init(archetype: Option<String>, file: Option<PathBuf>, force: bool) -> BoxResult {
+fn init(blueprint: Option<String>, file: Option<PathBuf>, force: bool) -> BoxResult {
     let p = path(file);
     if p.exists() && !force {
         return Err(format!("{} already exists — pass --force to overwrite", p.display()).into());
     }
-    let name = archetype
+    let name = blueprint
         .or_else(super::shared::default_product_name)
-        .unwrap_or_else(|| "archetype".to_string());
+        .unwrap_or_else(|| "blueprint".to_string());
     let contract = HowContract::scaffold(&name);
     if let Some(parent) = p.parent() {
         std::fs::create_dir_all(parent)?;
