@@ -1598,3 +1598,30 @@ d:qd-validate-latency a pf:QualityDemand ;
 
 d:product-cli pf:boundedBy d:qd-validate-latency .
 
+d:qd-view-latency a pf:QualityDemand ;
+  rdfs:label "Live view refresh latency" ;
+  pf:demandKind "runtime-bound" ;
+  pf:bound "the view re-renders < 1s after a .product change lands (SSE tick to fetch)" ;
+  pf:scopes d:product-view ;
+  pf:measuredBy "ci-timing" .
+
+d:product-view pf:boundedBy d:qd-view-latency .
+
+d:qd-a11y a pf:QualityDemand ;
+  rdfs:label "Live view accessibility" ;
+  pf:demandKind "architectural" ;
+  pf:bound "the live view satisfies WCAG 2.2 AA: contrast, keyboard, focus visible, status messages" ;
+  pf:scopes d:product-view ;
+  pf:constrains d:mcp-http-view .
+
+d:product-view pf:boundedBy d:qd-a11y .
+
+d:qd-atomic-write a pf:QualityDemand ;
+  rdfs:label "Atomic graph writes" ;
+  pf:demandKind "architectural" ;
+  pf:bound "no reader ever observes a partially written .product graph" ;
+  pf:scopes d:product-cli ;
+  pf:constrains d:atomic-fileops .
+
+d:product-cli pf:boundedBy d:qd-atomic-write .
+

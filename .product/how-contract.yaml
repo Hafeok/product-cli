@@ -146,6 +146,11 @@ patterns:
   - serialization-round-trips
   enforced_by:
   - how-yaml-roundtrip-proptest
+- id: atomic-fileops
+  shape: every .product write goes through fileops::atomic_write under an advisory RepoLock; validation failure rolls back the whole node
+  realizes:
+  - view-is-derived
+  - serialization-round-trips
 application_contract:
   id: product-cli-app
   language: Rust
