@@ -213,7 +213,44 @@ pub fn project_how(g: &DomainGraph, repo_root: &Path, conf: &super::conformance:
         "decisions": decisions,
         "principles": principles,
         "patterns": patterns,
+        "contracts": project_contracts(how.as_ref()),
+        "standards": project_standards(how.as_ref()),
     })
+}
+
+/// §4.2 — the application + infrastructure/runtime contracts.
+fn project_contracts(how: Option<&HowContract>) -> Value {
+    let Some(h) = how else { return json!([]) };
+    let ac = &h.application_contract;
+    let mut items: Vec<String> = Vec::new();
+    if !ac.language.is_empty() { items.push(ac.language.clone()); }
+    items.extend(ac.layering.clone());
+    items.extend(ac.feature_organization.clone());
+    items.extend(ac.persistence_model.clone());
+    items.extend(ac.statements.iter().map(|s| s.statement.clone()));
+    let mut out = vec![json!({
+        "id": ac.id, "kind": "application", "items": items, "frozen": true,
+        "scope": "stable across all DeployableUnits instantiated from the blueprint",
+    })];
+    if let Some(ic) = &h.infrastructure_contract {
+        let ritems: Vec<String> = ic.resources.iter().map(|r| format!("{}: {}", r.kind, r.choice)).collect();
+        out.push(json!({
+            "id": ic.id, "kind": "infrastructure / runtime", "items": ritems,
+            "frozen": ic.frozen, "satisfies": ic.satisfies,
+            "scope": "one per DeployableUnit — each unit is one such contract",
+        }));
+    }
+    Value::Array(out)
+}
+
+/// §4.4 — the published interface standards generated from the domain model.
+fn project_standards(how: Option<&HowContract>) -> Value {
+    let v: Vec<Value> = how
+        .map(|h| h.interface_contracts.iter().map(|i| json!({
+            "surface": i.surface, "standard": i.standard, "derived": i.derived_from.join(", "),
+        })).collect())
+        .unwrap_or_default();
+    Value::Array(v)
 }
 
 /// The blueprint node: its name, the parts it packages, and the systems it
