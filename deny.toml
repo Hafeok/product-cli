@@ -23,7 +23,19 @@ yanked = "warn"
 # pulled in transitively by cel-interpreter (the CEL evaluator under pf/rules)
 # — no runtime exposure and no upstream replacement available. Revisit if
 # cel-interpreter drops it or a maintained fork lands.
-ignore = ["RUSTSEC-2024-0436"]
+#
+# RUSTSEC-2026-0194 / RUSTSEC-2026-0195: DoS advisories in `quick-xml` <0.41
+# (quadratic duplicate-attribute check; unbounded namespace allocation in
+# `NsReader`). Both require parsing attacker-controlled XML. quick-xml reaches
+# us only transitively through oxigraph's `oxrdfxml` (RDF/XML) and `sparesults`
+# (SPARQL-Results XML) — neither path is exercised: product-core loads oxigraph
+# exclusively with `RdfFormat::Turtle` and consumes query results as native Rust
+# `QueryResults` enums (see pf/{seed,query,sparql_rules}.rs), never XML, and the
+# only bytes parsed are our own generated Turtle or the user's local `.ttl`. The
+# fix requires `quick-xml >=0.41`, but every published oxigraph/sparesults/
+# oxrdfxml release still pins `quick-xml ^0.37`, so there is no upgrade path yet.
+# Revisit when the oxigraph ecosystem moves to quick-xml >=0.41.
+ignore = ["RUSTSEC-2024-0436", "RUSTSEC-2026-0194", "RUSTSEC-2026-0195"]
 
 # ---------------------------------------------------------------------------
 # Licenses — explicit allow-list. New license types require a deliberate PR.
