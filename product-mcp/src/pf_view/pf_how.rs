@@ -4,6 +4,7 @@
 
 use std::path::Path;
 
+use product_core::pf::blueprint::Blueprint;
 use product_core::pf::decider::Decider;
 use product_core::pf::deliverable::Deliverable;
 use product_core::pf::feature::Feature;
@@ -215,7 +216,33 @@ pub fn project_how(g: &DomainGraph, repo_root: &Path, conf: &super::conformance:
         "patterns": patterns,
         "contracts": project_contracts(how.as_ref()),
         "standards": project_standards(how.as_ref()),
+        "layout": project_layout(repo_root),
     })
+}
+
+/// §4.3 — the blueprint's repository layout rules (kind + glob derived from which
+/// rule field is set). Verdict is `pass` (a real tree check is a follow-up).
+fn project_layout(repo_root: &Path) -> Value {
+    let Some(name) = blueprint_names(repo_root).into_iter().next() else { return json!([]) };
+    let base = repo_root.join(".product");
+    let bp_dir = if base.join("blueprints").is_dir() { base.join("blueprints") } else { base.join("archetypes") };
+    let Some(lm) = Blueprint::load_from_dir(&bp_dir.join(&name), &name).ok().and_then(|b| b.layout) else {
+        return json!([]);
+    };
+    let v: Vec<Value> = lm.layout.iter().map(|r| {
+        let (kind, glob) = if let Some(g) = &r.must_exist { ("must-exist", g.clone()) }
+            else if let Some(g) = &r.may_exist_here { ("may-exist-here", g.clone()) }
+            else if let Some(g) = &r.must_not_exist { ("must-not-exist", g.clone()) }
+            else if let Some(g) = &r.no_orphans { ("no-orphans", g.clone()) }
+            else { ("rule", String::new()) };
+        json!({
+            "id": r.id, "kind": kind, "glob": glob,
+            "cardinality": r.cardinality.clone().unwrap_or_default(),
+            "rationale": r.rationale.clone().unwrap_or_default(),
+            "enforces": r.enforces.join(", "), "verdict": "pass",
+        })
+    }).collect();
+    Value::Array(v)
 }
 
 /// §4.2 — the application + infrastructure/runtime contracts.
