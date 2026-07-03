@@ -562,7 +562,7 @@ function Sep() { return <span style={{ color: 'var(--slate-600)' }}>›</span>; 
    layout). The Systems map (§3.0) is live; the other views still render the
    bundled demo until they are rewritten to auto-layout live data (see the
    /api/pf projection — the data for them is already served, keyed the same). */
-const PF_LIVE_KEYS = new Set(['product', 'domains', 'systems', 'journeys', 'domain', 'flows']);
+const PF_LIVE_KEYS = new Set(['product', 'domains', 'systems', 'journeys', 'domain', 'flows', 'delivery']);
 /* Objects merged one level deep (live sub-fields override, others kept). */
 const PF_LIVE_MERGE_KEYS = { how: 1, delivery: 1 };
 function applyLive(data) {

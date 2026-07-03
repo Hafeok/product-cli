@@ -24,21 +24,23 @@
   }
 
   // ================= LADDER =================
-  const L_W = 1160, L_H = 690;
-  const WHAT_POS = { '2.0': 115, '1.1': 350, '1.0': 565 };
-  const HOW_POS = { '1.1.2': 95, '1.1.1': 235, '1.1.0': 375, '1.0.0': 565 };
+  const L_W = 1160;
   const WCARD = { x: 340, w: 306, h: 132 };
   const HCARD = { x: 820, w: 262, h: 96 };
 
   function LadderLayout({ selected, onSelect }) {
     const V = PF.delivery.versions;
+    // Data-driven: stack each axis's versions top→bottom (was hardcoded per demo
+    // version string, which no live product shares).
+    const TOP = 60, WGAP = 28, HGAP = 40;
     const pos = {};
-    V.what.forEach(w => { pos['w:' + w.v] = { x: WCARD.x, y: WHAT_POS[w.v], w: WCARD.w, h: WCARD.h }; });
-    V.how.forEach(h => { pos['h:' + h.v] = { x: HCARD.x, y: HOW_POS[h.v], w: HCARD.w, h: HCARD.h }; });
+    V.what.forEach((w, i) => { pos['w:' + w.v] = { x: WCARD.x, y: TOP + i * (WCARD.h + WGAP) + WCARD.h / 2, w: WCARD.w, h: WCARD.h }; });
+    V.how.forEach((h, i) => { pos['h:' + h.v] = { x: HCARD.x, y: TOP + i * (HCARD.h + HGAP) + HCARD.h / 2, w: HCARD.w, h: HCARD.h }; });
+    const L_H = Math.max(TOP + V.what.length * (WCARD.h + WGAP), TOP + V.how.length * (HCARD.h + HGAP), 400) + 40;
     const edges = V.how.map(h => ({
       from: 'h:' + h.v, to: 'w:' + h.realises, stroke: 'var(--em-bridge)', width: 1.4, dash: '5 4',
       marker: 'mag', label: 'realises', labelColor: 'var(--em-bridge)',
-    }));
+    })).filter(e => pos[e.to]);
 
     return (
       <FitCanvas width={L_W} height={L_H}>
@@ -162,9 +164,10 @@
 
   function PartitionLayout({ selected, onSelect, showConf }) {
     const target = PF.delivery.targets[0];
-    const members = target.partition.map(id => PF.feature(id));
+    if (!target) return <div style={{ padding: 40, color: 'var(--slate-500)', fontFamily: 'var(--font-mono)', fontSize: 13 }}>No target versions declared yet (§7.3).</div>;
+    const members = target.partition.map(id => PF.feature(id)).filter(Boolean);
     const distance = members.filter(f => !PF.featureDone(f));
-    const frac = 1 - distance.length / members.length;
+    const frac = members.length ? 1 - distance.length / members.length : 0;
 
     return (
       <div style={{ position: 'absolute', inset: 0, overflow: 'auto' }}>

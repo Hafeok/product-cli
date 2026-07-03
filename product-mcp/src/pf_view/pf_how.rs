@@ -91,11 +91,36 @@ fn feature_json(f: &Feature, deliverables: &[Deliverable], conf: &super::conform
         .find(|d| d.feature == f.id)
         .map(|d| d.acceptance.iter().map(|a| a.statement.clone()).filter(|s| !s.is_empty()).collect())
         .unwrap_or_default();
+    let level = conf.level(&f.id);
     json!({
-        "id": f.id, "name": f.id, "sub": f.id,
+        "id": f.id, "name": title_case(&f.id), "sub": f.id,
         "flows": f.anchors, "footprint": f.anchors,
-        "conformance": conf.level(&f.id), "valueAction": "", "acceptance": acceptance,
+        "conformance": level, "valueAction": "", "acceptance": acceptance,
+        "done": done_clauses(&level),
     })
+}
+
+/// The §7.2 done clauses, derived from the feature's conformance level (the graph
+/// has no per-clause verdicts, so the level stands in for all four).
+fn done_clauses(level: &str) -> Value {
+    let (fp, ver, acc) = match level {
+        "verified" | "delivered" => ("pass", "pass", "pass"),
+        "realised" => ("pass", "partial", "partial"),
+        _ => ("pending", "pending", "pending"),
+    };
+    json!({ "flows": fp, "footprint": fp, "verifications": ver, "acceptance": acc })
+}
+
+/// A readable name from a kebab/snake id ("session-start" → "Session Start").
+fn title_case(id: &str) -> String {
+    id.split(['-', '_'])
+        .filter(|s| !s.is_empty())
+        .map(|w| {
+            let mut ch = w.chars();
+            ch.next().map(|c| c.to_uppercase().collect::<String>() + ch.as_str()).unwrap_or_default()
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 /// §7.3 — the What/How semantic versions the graph declares.

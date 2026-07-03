@@ -136,10 +136,18 @@
   }
 
   function BoardLayout({ selected, onSelect, showConf, dense }) {
+    const releases = PF.delivery.releases || [];
+    // Features not in any release get a synthetic column, so the board reflects
+    // every declared feature even when no releases are cut yet.
+    const inRelease = new Set(releases.flatMap(r => r.features));
+    const loose = PF.delivery.features.filter(f => !inRelease.has(f.id)).map(f => f.id);
+    const cols = loose.length
+      ? [...releases, { id: '_unreleased', name: 'Unreleased', features: loose, closed: false, note: 'features not yet in a release cut' }]
+      : releases;
     return (
       <div style={{ position: 'absolute', inset: 0, overflow: 'auto' }}>
         <div style={{ display: 'flex', gap: 18, padding: '18px 22px 26px', minWidth: 'min-content', alignItems: 'flex-start' }}>
-          {PF.delivery.releases.map(rel => (
+          {cols.map(rel => (
             <ReleaseColumn key={rel.id} rel={rel} selected={selected} onSelect={onSelect} showConf={showConf} dense={dense} />
           ))}
         </div>
@@ -375,14 +383,16 @@
 
   // ---- the view -----------------------------------------------------------
   function FeaturesView({ layout, selected, onSelect, showConf, dense }) {
-    const [pick, setPick] = useState('checkout');
-    const active = (layout === 'board') ? selected : (selected || pick);
-    const feature = PF.feature(active) || PF.feature('checkout');
+    const first = (PF.delivery.features[0] || {}).id;
+    const [pick, setPick] = useState(first);
+    const active = (layout === 'board') ? selected : (selected || pick || first);
+    const feature = PF.feature(active) || PF.delivery.features[0];
     const choose = (id) => { setPick(id); onSelect(id); };
 
     if (layout === 'board') {
       return <BoardLayout selected={selected} onSelect={onSelect} showConf={showConf} dense={dense} />;
     }
+    if (!feature) return <div style={{ padding: 40, color: 'var(--slate-500)', fontFamily: 'var(--font-mono)', fontSize: 13 }}>No delivery features declared yet.</div>;
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
         <FeaturePicker active={feature.id} onPick={choose} showConf={showConf} />
