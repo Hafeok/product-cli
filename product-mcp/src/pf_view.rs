@@ -48,6 +48,8 @@ pub fn build_pf_view(graph: &DomainGraph, repo_root: &Path) -> Value {
     out.insert("systems".into(), project_systems(graph, &conf));
     out.insert("journeys".into(), project_journeys(graph));
     out.insert("domain".into(), project_domain_er(graph));
+    out.insert("aios".into(), project_aios(graph));
+    out.insert("wcag".into(), project_wcag(graph));
     out.insert("flows".into(), pf_flows::project_flows(graph, &conf));
     out.insert("deciders".into(), pf_how::project_deciders(repo_root, &conf));
     out.insert("projectors".into(), pf_how::project_projectors(repo_root, &conf));
@@ -201,6 +203,43 @@ fn domain_nodes(g: &DomainGraph, ctx: &str) -> Vec<Value> {
         nodes.push(json!({ "id": i.id, "kind": "invariant", "label": i.id, "sub": "invariant", "fields": [i.statement.clone()] }));
     }
     nodes
+}
+
+// --- §3.2.2 AIOs + §3.2.3 WCAG ---------------------------------------------
+
+/// The AIO catalog: each interaction object with its meaning, inherited WCAG,
+/// and per-context reification (from the §4.5 reification rules).
+fn project_aios(g: &DomainGraph) -> Value {
+    let cio_label = |id: &str| g.cios.iter().find(|c| c.id == id).and_then(|c| c.label.clone()).unwrap_or_else(|| id.to_string());
+    let ctx_label = |id: &str| g.contexts_of_use.iter().find(|c| c.id == id).map(|c| c.label.clone()).unwrap_or_else(|| id.to_string());
+    let v: Vec<Value> = g
+        .aios
+        .iter()
+        .map(|a| {
+            let mut reify = Map::new();
+            for r in g.reification_rules.iter().filter(|r| r.aio == a.id) {
+                reify.insert(ctx_label(&r.context), json!(cio_label(&r.cio)));
+            }
+            json!({
+                "id": a.id, "means": a.means.clone().unwrap_or_default(), "typedOver": "",
+                "wcag": a.must_satisfy, "reify": Value::Object(reify),
+            })
+        })
+        .collect();
+    Value::Array(v)
+}
+
+/// The WCAG criteria as a `{ id → {name, level, vtype} }` map (§3.2.3).
+fn project_wcag(g: &DomainGraph) -> Value {
+    let mut m = Map::new();
+    for w in &g.wcag_criteria {
+        m.insert(w.id.clone(), json!({
+            "name": w.label.clone().unwrap_or_else(|| w.id.clone()),
+            "level": w.level.clone().unwrap_or_default(),
+            "vtype": w.verification.clone().unwrap_or_else(|| "machine".to_string()),
+        }));
+    }
+    Value::Object(m)
 }
 
 /// The bounded context owning the most entities (falls back to the first).

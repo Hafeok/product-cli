@@ -34,7 +34,7 @@
 
         {/* reification per context — the point of the abstraction */}
         <div style={{ borderTop: '1px dashed var(--slate-700)', paddingTop: 9, display: 'grid', gap: 5 }}>
-          {[['phone', a.reify.phone], ['desktop', a.reify.desktop], ['tui', a.reify.tui]].map(([ctx, r]) => (
+          {Object.entries(a.reify || {}).map(([ctx, r]) => (
             <div key={ctx} style={{ display: 'flex', gap: 9, alignItems: 'baseline' }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.08em', color: 'var(--slate-500)',
                 width: 52, flex: 'none', textTransform: 'uppercase' }}>{ctx}</span>
