@@ -29,6 +29,7 @@ chrono     = { version = "0.4", features = ["serde"] }
 notify     = "6"
 tokio-stream = { version = "0.1", features = ["sync"] }
 rust-embed = "8"
+glob = "0.3"
 
 [dev-dependencies]
 tempfile = "3"

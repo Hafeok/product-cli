@@ -23,6 +23,7 @@ mod conformance;
 mod pf_build;
 mod pf_flows;
 mod pf_how;
+mod pf_repo;
 mod pf_ui;
 
 /// Read + parse every `*.yaml` in `<repo>/.product/<dir>` through `parse`, sorted
@@ -62,6 +63,8 @@ pub fn build_pf_view(graph: &DomainGraph, repo_root: &Path) -> Value {
     out.insert("delivery".into(), pf_how::project_delivery(graph, repo_root, &conf));
     out.insert("how".into(), pf_how::project_how(graph, repo_root, &conf));
     out.insert("workUnits".into(), pf_build::project_work_units(repo_root));
+    let product_name = graph.products.first().map(|p| p.id.clone()).unwrap_or_else(|| "repo".to_string());
+    out.insert("repoTree".into(), pf_repo::project_repo_tree(repo_root, &product_name));
     // A marker the UI can show so it is clear the view is graph-connected.
     out.insert("_live".into(), json!(true));
     Value::Object(out)
