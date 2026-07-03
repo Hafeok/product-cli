@@ -50,6 +50,8 @@ pub fn build_pf_view(graph: &DomainGraph, repo_root: &Path) -> Value {
     out.insert("domain".into(), project_domain_er(graph));
     out.insert("flows".into(), pf_flows::project_flows(graph, &conf));
     out.insert("deciders".into(), pf_how::project_deciders(repo_root, &conf));
+    out.insert("projectors".into(), pf_how::project_projectors(repo_root, &conf));
+    out.insert("scenarios".into(), pf_how::project_scenarios(repo_root, &conf));
     out.insert("delivery".into(), pf_how::project_delivery(graph, repo_root, &conf));
     out.insert("how".into(), pf_how::project_how(graph, repo_root, &conf));
     // A marker the UI can show so it is clear the view is graph-connected.

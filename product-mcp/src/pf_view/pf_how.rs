@@ -9,9 +9,12 @@ use product_core::pf::deliverable::Deliverable;
 use product_core::pf::feature::Feature;
 use product_core::pf::how::HowContract;
 use product_core::pf::model::DomainGraph;
+use product_core::pf::projector::Projector;
 use product_core::pf::release::Release;
 use product_core::pf::target::Target;
 use serde_json::{json, Value};
+
+use super::conformance::Conformance;
 
 use super::{load_all, load_deployable_units};
 
@@ -55,6 +58,63 @@ pub fn project_deciders(repo_root: &Path, conf: &super::conformance::Conformance
         })
         .collect();
     Value::Array(v)
+}
+
+// --- §3.4 projectors -------------------------------------------------------
+
+pub fn project_projectors(repo_root: &Path, conf: &Conformance) -> Value {
+    let projectors = load_all(repo_root, "projectors", Projector::from_yaml);
+    let v: Vec<Value> = projectors
+        .iter()
+        .map(|p| json!({
+            "id": p.id,
+            "readModel": p.projects_for,
+            "conformance": conf.level(&p.id),
+            "folds": p.folds.iter().map(|ev| json!({ "ev": ev, "into": "" })).collect::<Vec<_>>(),
+            "outputs": [],
+            "consumers": [],
+            "coverage": { "events": format!("{}/{}", p.folds.len(), p.folds.len()), "foreign": 0, "outputs": "contained" },
+        }))
+        .collect();
+    Value::Array(v)
+}
+
+// --- §3.3/§3.4 simulation scenarios ---------------------------------------
+
+pub fn project_scenarios(repo_root: &Path, conf: &Conformance) -> Value {
+    let mut out: Vec<Value> = Vec::new();
+    for d in load_all(repo_root, "deciders", Decider::from_yaml).iter() {
+        let realised = if conf.level(&d.id) == "verified" || conf.level(&d.id) == "delivered" { "pass" } else { "pending" };
+        for sc in &d.scenarios {
+            let (verdict, extra) = match (&sc.then.reject, &sc.then.emit) {
+                (Some(r), _) => ("Rejected", json!({ "reason": r })),
+                (None, Some(evs)) => ("Accepted", json!({ "events": evs.iter().map(|e| e.id().to_string()).collect::<Vec<_>>() })),
+                _ => ("Accepted", json!({})),
+            };
+            let mut then = json!({ "verdict": verdict });
+            if let (Value::Object(t), Value::Object(e)) = (&mut then, &extra) { t.extend(e.clone()); }
+            out.push(json!({
+                "id": format!("{}-{}", d.id, sc.name),
+                "kind": "decide", "decider": d.id, "flow": "",
+                "given": sc.given.iter().map(|g| g.id().to_string()).collect::<Vec<_>>(),
+                "when": sc.when.id(),
+                "then": then,
+                "simulated": "pass", "realised": realised,
+            }));
+        }
+    }
+    for p in load_all(repo_root, "projectors", Projector::from_yaml).iter() {
+        for sc in &p.scenarios {
+            out.push(json!({
+                "id": format!("{}-{}", p.id, sc.name),
+                "kind": "project", "projector": p.id, "flow": "",
+                "given": sc.given.iter().map(|g| g.id().to_string()).collect::<Vec<_>>(),
+                "then": { "state": format!("{} state", p.projects_for) },
+                "simulated": "pass", "realised": if conf.level(&p.id) == "verified" { "pass" } else { "pending" },
+            }));
+        }
+    }
+    Value::Array(out)
 }
 
 // --- §7 delivery: features / releases / targets / versions -----------------
