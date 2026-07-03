@@ -1,6 +1,6 @@
 [package]
 name = "product-mcp"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 authors = ["PiCloud Contributors"]
 license = "Apache-2.0"
@@ -17,7 +17,7 @@ path = "src/lib.rs"
 workspace = true
 
 [dependencies]
-product-core = { path = "../product-core", version = "0.4.0" }
+product-core = { path = "../product-core", version = "0.5.0" }
 serde      = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_yaml = "0.9"
