@@ -159,9 +159,11 @@ async fn pf_handler(
     axum::extract::Query(q): axum::extract::Query<SessionQuery>,
 ) -> std::result::Result<axum::Json<serde_json::Value>, (axum::http::StatusCode, String)> {
     let session = resolve_session(&state.repo_root, state.session.as_deref(), q.session.as_deref());
-    load_domain_graph(&state.repo_root, session.as_ref(), q.product.as_deref())
-        .map(|g| axum::Json(super::pf_view::build_pf_view(&g, &state.repo_root)))
-        .map_err(|e| (axum::http::StatusCode::NOT_FOUND, e))
+    let name = resolve_product_name(&state.repo_root, session.as_ref(), q.product.as_deref())
+        .map_err(|e| (axum::http::StatusCode::NOT_FOUND, e))?;
+    DomainSession::load(&session_dir(&state.repo_root, &name))
+        .map(|s| axum::Json(super::pf_view::build_pf_view(&s.graph, &state.repo_root, &name)))
+        .map_err(|_| (axum::http::StatusCode::NOT_FOUND, format!("no What graph for product '{name}' yet")))
 }
 
 /// `GET /api/events` — an SSE stream that ticks whenever a `.product/` file
@@ -226,7 +228,10 @@ fn active_session(repo_root: &Path) -> Option<(String, WorkflowSession)> {
 /// write it directly). A followed `session` only selects which product to
 /// render; otherwise the configured product name is used.
 fn project_graph(repo_root: &Path, session: Option<&(String, WorkflowSession)>, product_override: Option<&str>) -> std::result::Result<ViewGraph, String> {
-    let graph = load_domain_graph(repo_root, session, product_override)?;
+    let product = resolve_product_name(repo_root, session, product_override)?;
+    let graph = DomainSession::load(&session_dir(repo_root, &product))
+        .map(|s| s.graph)
+        .map_err(|_| format!("no What graph for product '{product}' yet"))?;
     let pd = repo_root.join(".product");
     let bp = pd.join("blueprints");
     let bp_dir = if bp.is_dir() { bp } else { pd.join("archetypes") };
@@ -237,18 +242,15 @@ fn project_graph(repo_root: &Path, session: Option<&(String, WorkflowSession)>, 
 
 /// Resolve the product (query override, else followed session, else config) and
 /// load its canonical What graph — the shared source for `/api/graph` + `/api/pf`.
-fn load_domain_graph(repo_root: &Path, session: Option<&(String, WorkflowSession)>, product_override: Option<&str>) -> std::result::Result<product_core::pf::model::DomainGraph, String> {
+/// Resolve the product name: query override → followed session → configured name.
+fn resolve_product_name(repo_root: &Path, session: Option<&(String, WorkflowSession)>, product_override: Option<&str>) -> std::result::Result<String, String> {
     let from_session = session.map(|(_, s)| s.product.trim()).filter(|p| !p.is_empty());
     let product = match product_override.map(str::trim).filter(|p| !p.is_empty()).or(from_session) {
         Some(p) => p.to_string(),
         None => ProductConfig::load_from_root(repo_root).map_err(|e| e.to_string())?.name.trim().to_string(),
     };
-    if product.is_empty() {
-        return Err("no product configured (set `name` in product.toml)".to_string());
-    }
-    DomainSession::load(&session_dir(repo_root, &product))
-        .map(|s| s.graph)
-        .map_err(|_| format!("no What graph for product '{product}' yet"))
+    if product.is_empty() { return Err("no product configured (set `name` in product.toml)".into()); }
+    Ok(product)
 }
 
 /// Project the graph following the most-recently-active session (used by tests

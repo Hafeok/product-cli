@@ -1,0 +1,21 @@
+version: "1"
+blueprint: acme-storefront
+allowlist: true
+layout:
+  - id: composition-root
+    must_exist: "src/app/main.ts"
+    cardinality: "exactly 1"
+    rationale: the composition root; the app is not runnable without it
+    enforces: [explicit-composition-root]
+  - id: slice-files
+    may_exist_here: "src/features/**"
+    rationale: the slice interior stays free — constrain the skeleton, not the cytoplasm
+    enforces: [closed-vocabulary]
+  - id: no-secrets
+    must_not_exist: "**/*.secrets.json"
+    rationale: secrets never live in source
+    enforces: [tokens-not-literals]
+  - id: no-orphans
+    no_orphans: "src/features/**"
+    rationale: the unanticipated file is the failure case — allowlist, not denylist
+    enforces: [closed-vocabulary]

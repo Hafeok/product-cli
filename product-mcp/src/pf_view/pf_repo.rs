@@ -46,9 +46,11 @@ fn glob_rel(root: &Path, pattern: &str) -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// Project the live repo tree (rows: `{line, dir?, rule?, verdict, note?}`).
-pub fn project_repo_tree(repo_root: &Path, product_name: &str) -> Value {
-    let Some(model) = load_layout(repo_root) else { return json!([]) };
+/// Project the live repo tree (rows: `{line, dir?, rule?, verdict, note?}`). The
+/// blueprint's layout comes from the product-scoped `base`; the files are scanned
+/// from the actual `repo_root`.
+pub fn project_repo_tree(repo_root: &Path, base: &Path, product_name: &str) -> Value {
+    let Some(model) = load_layout(base) else { return json!([]) };
 
     // file → (rule id, verdict, note). Allow rules first (may-exist / must-exist),
     // then no-orphans scopes flag anything an allow rule didn't claim.
@@ -80,9 +82,8 @@ pub fn project_repo_tree(repo_root: &Path, product_name: &str) -> Value {
     build_tree_rows(product_name, &files)
 }
 
-/// The blueprint's layout model, if any.
-fn load_layout(repo_root: &Path) -> Option<LayoutModel> {
-    let base = repo_root.join(".product");
+/// The blueprint's layout model, if any (from the product-scoped `.product` base).
+fn load_layout(base: &Path) -> Option<LayoutModel> {
     let dir = if base.join("blueprints").is_dir() { base.join("blueprints") } else { base.join("archetypes") };
     let name = std::fs::read_dir(&dir).ok()?.flatten().find(|e| e.path().is_dir())?.file_name().into_string().ok()?;
     Blueprint::load_from_dir(&dir.join(&name), &name).ok()?.layout

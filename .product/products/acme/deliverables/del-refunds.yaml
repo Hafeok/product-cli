@@ -1,0 +1,6 @@
+id: del-refunds
+feature: feat-refunds
+acceptance:
+  - id: ac-refund-1
+    statement: "ORDER-REFUND-1: refund_total not greater than paid_total"
+    status: passing

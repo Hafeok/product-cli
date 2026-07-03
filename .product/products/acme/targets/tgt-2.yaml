@@ -1,0 +1,3 @@
+id: tgt-2
+version: "2.0"
+in_target: [del-checkout, del-refunds]

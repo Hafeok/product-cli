@@ -33,18 +33,18 @@ impl Conformance {
     }
 
     /// Compute the map from the graph + `.product/` artifacts.
-    pub fn compute(g: &DomainGraph, repo_root: &Path) -> Self {
+    pub fn compute(g: &DomainGraph, base: &Path) -> Self {
         let mut c = Conformance(HashMap::new());
         c.reachable_is_realised(g);
         let (features, deliverables) = (
-            load_all(repo_root, "features", Feature::from_yaml),
-            load_all(repo_root, "deliverables", Deliverable::from_yaml),
+            load_all(base, "features", Feature::from_yaml),
+            load_all(base, "deliverables", Deliverable::from_yaml),
         );
-        let deciders = load_all(repo_root, "deciders", Decider::from_yaml);
-        let projectors = load_all(repo_root, "projectors", Projector::from_yaml);
-        let conformed = conformed_deciders(repo_root);
+        let deciders = load_all(base, "deciders", Decider::from_yaml);
+        let projectors = load_all(base, "projectors", Projector::from_yaml);
+        let conformed = conformed_deciders(base);
         c.verified_deciders(&deciders, &conformed);
-        c.done_features_are_verified(g, &features, &deliverables, &deciders, &conformed, &projectors, repo_root);
+        c.done_features_are_verified(g, &features, &deliverables, &deciders, &conformed, &projectors, base);
         c
     }
 
@@ -89,7 +89,7 @@ impl Conformance {
         deciders: &[Decider],
         conformed: &BTreeSet<String>,
         projectors: &[Projector],
-        repo_root: &Path,
+        base: &Path,
     ) {
         let mut done_feature: BTreeSet<String> = BTreeSet::new();
         for d in deliverables {
@@ -100,7 +100,7 @@ impl Conformance {
             for a in &f.anchors { self.set(a, level); }
             if fd.done { done_feature.insert(f.id.clone()); }
         }
-        for r in load_all::<Release>(repo_root, "releases", Release::from_yaml).iter() {
+        for r in load_all::<Release>(base, "releases", Release::from_yaml).iter() {
             if !r.features.is_empty() && r.features.iter().all(|df| {
                 deliverables.iter().find(|d| &d.id == df).map(|d| done_feature.contains(&d.feature)).unwrap_or(false)
             }) {
@@ -118,8 +118,8 @@ impl Conformance {
 }
 
 /// Decider ids with a recorded passing conformance verdict (`<id>.conform.json`).
-fn conformed_deciders(repo_root: &Path) -> BTreeSet<String> {
-    let dir = repo_root.join(".product").join("deciders");
+fn conformed_deciders(base: &Path) -> BTreeSet<String> {
+    let dir = base.join("deciders");
     let mut out = BTreeSet::new();
     let Ok(entries) = std::fs::read_dir(&dir) else { return out };
     for e in entries.flatten() {

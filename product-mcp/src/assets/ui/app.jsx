@@ -320,6 +320,14 @@ function App() {
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--slate-400)', fontSize: 12, fontFamily: 'var(--font-mono)' }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }} />live
         </span>
+        {(PF._products || []).length > 1 && (
+          <select value={PF._product || ''} title="switch product"
+            onChange={e => { location.search = '?product=' + encodeURIComponent(e.target.value); }}
+            style={{ fontFamily: 'var(--font-mono)', fontSize: 11, background: 'var(--slate-900)', color: 'var(--slate-200)',
+              border: '1px solid var(--slate-600)', borderRadius: 4, padding: '2px 6px', cursor: 'pointer' }}>
+            {(PF._products).map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+        )}
         <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--slate-500)' }}>
           {activeGroup ? activeGroup.label + ' · ' + activeGroup.ref : ''}
         </span>
@@ -576,6 +584,8 @@ function applyLive(data) {
     }
   }
   window.PF._live = !!data._live;
+  window.PF._product = data._product || null;
+  window.PF._products = data._products || [];
   return true;
 }
 function fetchLive() {

@@ -1,0 +1,7 @@
+id: du-shop-ios
+built_from: acme-storefront
+deploys_system: [acme-shop]
+environment: production
+identity:
+  bundle_id: com.acme.shop
+  runtime: iOS 17

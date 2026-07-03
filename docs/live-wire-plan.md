@@ -25,6 +25,19 @@ first render + on the SSE `changed` tick, merging the fields in `PF_LIVE_KEYS`.
 Every view renders (never crashes). Each remaining item becomes live the same way
 the shipped ones did: project its field → add the key to `PF_LIVE_KEYS`.
 
+## Per-product scoping + product picker
+- **Per-product artifacts.** The projection resolves a per-product base
+  `.product/products/<product>/` (falling back to the shared `.product/` for the
+  self-hosted product-cli), so a product's How/Delivery/Build artifacts —
+  blueprint, DeployableUnits, how-contract, features/deliverables/releases/
+  targets, work-units, deciders — are its own. ACME ships its own
+  `acme-storefront` blueprint + 3 DeployableUnits + why-cascade + deliverables
+  (`scripts/showcase-acme-how.sh`), so its How/Delivery views are acme-specific
+  while product-cli's stay unchanged.
+- **Product picker.** `/api/pf` + `/api/graph` take `?product=`; the banner shows
+  a picker whenever more than one product has a captured What graph, switching
+  product-cli ⇄ acme (and any future product).
+
 ## Since then
 - **Live repo-scan** for the §4.3 Layout tree (`pf_view/pf_repo.rs`) — walks the
   real repo files the blueprint's layout rules cover, attributes each to its rule,

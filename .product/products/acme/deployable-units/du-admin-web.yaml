@@ -1,0 +1,7 @@
+id: du-admin-web
+built_from: acme-storefront
+deploys_system: [acme-admin]
+environment: production
+identity:
+  domain_name: admin.acme.com
+  runtime: Node 22 / eu-west

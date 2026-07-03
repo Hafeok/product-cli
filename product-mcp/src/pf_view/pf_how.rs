@@ -19,13 +19,12 @@ use super::conformance::Conformance;
 
 use super::{load_all, load_deployable_units};
 
-fn how_contract(repo_root: &Path) -> Option<HowContract> {
-    HowContract::load_opt(&repo_root.join(".product").join("how-contract.yaml")).ok().flatten()
+fn how_contract(base: &Path) -> Option<HowContract> {
+    HowContract::load_opt(&base.join("how-contract.yaml")).ok().flatten()
 }
 
 /// Blueprint directory names under `.product/blueprints/` (or legacy `archetypes/`).
-fn blueprint_names(repo_root: &Path) -> Vec<String> {
-    let base = repo_root.join(".product");
+fn blueprint_names(base: &Path) -> Vec<String> {
     let bp = base.join("blueprints");
     let dir = if bp.is_dir() { bp } else { base.join("archetypes") };
     product_core::pf::deployable_unit::blueprint_names(&dir)
@@ -33,8 +32,8 @@ fn blueprint_names(repo_root: &Path) -> Vec<String> {
 
 // --- §3.3 deciders ---------------------------------------------------------
 
-pub fn project_deciders(repo_root: &Path, conf: &super::conformance::Conformance) -> Value {
-    let deciders = load_all(repo_root, "deciders", Decider::from_yaml);
+pub fn project_deciders(base: &Path, conf: &super::conformance::Conformance) -> Value {
+    let deciders = load_all(base, "deciders", Decider::from_yaml);
     let v: Vec<Value> = deciders
         .iter()
         .map(|d| {
@@ -63,8 +62,8 @@ pub fn project_deciders(repo_root: &Path, conf: &super::conformance::Conformance
 
 // --- §3.4 projectors -------------------------------------------------------
 
-pub fn project_projectors(repo_root: &Path, conf: &Conformance) -> Value {
-    let projectors = load_all(repo_root, "projectors", Projector::from_yaml);
+pub fn project_projectors(base: &Path, conf: &Conformance) -> Value {
+    let projectors = load_all(base, "projectors", Projector::from_yaml);
     let v: Vec<Value> = projectors
         .iter()
         .map(|p| json!({
@@ -82,9 +81,9 @@ pub fn project_projectors(repo_root: &Path, conf: &Conformance) -> Value {
 
 // --- §3.3/§3.4 simulation scenarios ---------------------------------------
 
-pub fn project_scenarios(repo_root: &Path, conf: &Conformance) -> Value {
+pub fn project_scenarios(base: &Path, conf: &Conformance) -> Value {
     let mut out: Vec<Value> = Vec::new();
-    for d in load_all(repo_root, "deciders", Decider::from_yaml).iter() {
+    for d in load_all(base, "deciders", Decider::from_yaml).iter() {
         let realised = if conf.level(&d.id) == "verified" || conf.level(&d.id) == "delivered" { "pass" } else { "pending" };
         for sc in &d.scenarios {
             let (verdict, extra) = match (&sc.then.reject, &sc.then.emit) {
@@ -104,7 +103,7 @@ pub fn project_scenarios(repo_root: &Path, conf: &Conformance) -> Value {
             }));
         }
     }
-    for p in load_all(repo_root, "projectors", Projector::from_yaml).iter() {
+    for p in load_all(base, "projectors", Projector::from_yaml).iter() {
         for sc in &p.scenarios {
             out.push(json!({
                 "id": format!("{}-{}", p.id, sc.name),
@@ -120,11 +119,11 @@ pub fn project_scenarios(repo_root: &Path, conf: &Conformance) -> Value {
 
 // --- §7 delivery: features / releases / targets / versions -----------------
 
-pub fn project_delivery(g: &DomainGraph, repo_root: &Path, conf: &super::conformance::Conformance) -> Value {
-    let features = load_all(repo_root, "features", Feature::from_yaml);
-    let deliverables = load_all(repo_root, "deliverables", Deliverable::from_yaml);
-    let releases = load_all(repo_root, "releases", Release::from_yaml);
-    let targets = load_all(repo_root, "targets", Target::from_yaml);
+pub fn project_delivery(g: &DomainGraph, base: &Path, conf: &super::conformance::Conformance) -> Value {
+    let features = load_all(base, "features", Feature::from_yaml);
+    let deliverables = load_all(base, "deliverables", Deliverable::from_yaml);
+    let releases = load_all(base, "releases", Release::from_yaml);
+    let targets = load_all(base, "targets", Target::from_yaml);
 
     let feat_json: Vec<Value> = features.iter().map(|f| feature_json(f, &deliverables, conf)).collect();
     let rel_json: Vec<Value> = releases
@@ -140,7 +139,7 @@ pub fn project_delivery(g: &DomainGraph, repo_root: &Path, conf: &super::conform
         "features": feat_json,
         "releases": rel_json,
         "targets": tgt_json,
-        "versions": project_versions(g, repo_root),
+        "versions": project_versions(g, base),
     })
 }
 
@@ -185,9 +184,9 @@ fn title_case(id: &str) -> String {
 }
 
 /// §7.3 — the What/How semantic versions the graph declares.
-fn project_versions(g: &DomainGraph, repo_root: &Path) -> Value {
+fn project_versions(g: &DomainGraph, base: &Path) -> Value {
     let what_v = g.products.first().and_then(|p| p.version.clone());
-    let how = how_contract(repo_root);
+    let how = how_contract(base);
     let what: Vec<Value> = what_v
         .iter()
         .map(|v| json!({ "v": v, "name": "current", "bump": "minor", "current": true, "status": "realised", "diff": "", "adds": [] }))
@@ -205,26 +204,25 @@ fn project_versions(g: &DomainGraph, repo_root: &Path) -> Value {
 
 // --- §4 the How: blueprint, DeployableUnits, why-cascade -------------------
 
-pub fn project_how(g: &DomainGraph, repo_root: &Path, conf: &super::conformance::Conformance) -> Value {
-    let how = how_contract(repo_root);
+pub fn project_how(g: &DomainGraph, base: &Path, conf: &super::conformance::Conformance) -> Value {
+    let how = how_contract(base);
     let (decisions, principles, patterns) = why_cascade(how.as_ref());
     json!({
-        "blueprint": project_blueprint(g, repo_root, how.as_ref(), conf),
-        "deployableUnits": project_deployable_units(repo_root),
+        "blueprint": project_blueprint(g, base, how.as_ref(), conf),
+        "deployableUnits": project_deployable_units(base),
         "decisions": decisions,
         "principles": principles,
         "patterns": patterns,
         "contracts": project_contracts(how.as_ref()),
         "standards": project_standards(how.as_ref()),
-        "layout": project_layout(repo_root),
+        "layout": project_layout(base),
     })
 }
 
 /// §4.3 — the blueprint's repository layout rules (kind + glob derived from which
 /// rule field is set). Verdict is `pass` (a real tree check is a follow-up).
-fn project_layout(repo_root: &Path) -> Value {
-    let Some(name) = blueprint_names(repo_root).into_iter().next() else { return json!([]) };
-    let base = repo_root.join(".product");
+fn project_layout(base: &Path) -> Value {
+    let Some(name) = blueprint_names(base).into_iter().next() else { return json!([]) };
     let bp_dir = if base.join("blueprints").is_dir() { base.join("blueprints") } else { base.join("archetypes") };
     let Some(lm) = Blueprint::load_from_dir(&bp_dir.join(&name), &name).ok().and_then(|b| b.layout) else {
         return json!([]);
@@ -282,8 +280,8 @@ fn project_standards(how: Option<&HowContract>) -> Value {
 
 /// The blueprint node: its name, the parts it packages, and the systems it
 /// realises (best-effort — the graph carries no explicit blueprint→system edge).
-fn project_blueprint(g: &DomainGraph, repo_root: &Path, how: Option<&HowContract>, conf: &super::conformance::Conformance) -> Value {
-    let Some(name) = blueprint_names(repo_root).into_iter().next() else { return Value::Null };
+fn project_blueprint(g: &DomainGraph, base: &Path, how: Option<&HowContract>, conf: &super::conformance::Conformance) -> Value {
+    let Some(name) = blueprint_names(base).into_iter().next() else { return Value::Null };
     let mut packages = vec![Value::from("application contract")];
     if let Some(h) = how {
         if h.layout_model.is_some() { packages.push(json!("repository layout model")); }
@@ -299,8 +297,8 @@ fn project_blueprint(g: &DomainGraph, repo_root: &Path, how: Option<&HowContract
 }
 
 /// The DeployableUnits (§4.2) declared under `.product/deployable-units/`.
-fn project_deployable_units(repo_root: &Path) -> Value {
-    let units = load_deployable_units(repo_root);
+fn project_deployable_units(base: &Path) -> Value {
+    let units = load_deployable_units(base);
     let v: Vec<Value> = units
         .iter()
         .map(|u| {

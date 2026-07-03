@@ -1,0 +1,9 @@
+id: del-checkout
+feature: feat-checkout
+acceptance:
+  - id: ac-payment-first
+    statement: payment is authorized before the order is placed
+    status: passing
+  - id: ac-cart-1
+    statement: CART-1 holds at checkout
+    status: passing

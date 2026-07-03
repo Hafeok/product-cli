@@ -9,8 +9,8 @@ use serde_json::{json, Value};
 
 use super::load_all;
 
-pub fn project_work_units(repo_root: &Path) -> Value {
-    let units = load_all(repo_root, "work-units", WorkUnit::from_yaml);
+pub fn project_work_units(base: &Path) -> Value {
+    let units = load_all(base, "work-units", WorkUnit::from_yaml);
     let v: Vec<Value> = units
         .iter()
         .map(|w| {

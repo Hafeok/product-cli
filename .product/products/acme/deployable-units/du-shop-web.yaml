@@ -1,0 +1,7 @@
+id: du-shop-web
+built_from: acme-storefront
+deploys_system: [acme-shop]
+environment: production
+identity:
+  domain_name: shop.acme.com
+  runtime: Node 22 / eu-west

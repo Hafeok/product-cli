@@ -1,0 +1,84 @@
+blueprint: acme-storefront
+version: 1.1.0
+realises_version: "1.1"
+top_decisions:
+  - id: event-sourced-ordering
+    decision: Event-source the Ordering context
+    rationale: refunds and fulfilment need full history; the event model is already the spec
+    licenses: [pure-decisions, projections-derived]
+    enforced_by: [contract-conformance]
+  - id: bind-wire-ds
+    decision: Bind every GUI screen to the wire-ds design system
+    rationale: a design system is the screen standard; inventing a UI language forfeits its components and a11y
+    licenses: [closed-vocabulary, tokens-not-literals]
+    enforced_by: [seam-verification]
+principles:
+  - id: pure-decisions
+    statement: decision logic is a pure, isolable core — no I/O in decide()
+    licensed_by: [event-sourced-ordering]
+    enforced_by: [contract-conformance]
+    realized_by: [pat-decider-module]
+  - id: projections-derived
+    statement: read models are derived by fold, never written directly
+    licensed_by: [event-sourced-ordering]
+    enforced_by: [behavioural-conformance]
+    realized_by: [pat-projector]
+  - id: closed-vocabulary
+    statement: a screen composes only components the design system defines
+    licensed_by: [bind-wire-ds]
+    enforced_by: [seam-verification]
+    realized_by: [pat-page]
+  - id: tokens-not-literals
+    statement: colour, spacing, type are token references — a literal is non-conformant
+    licensed_by: [bind-wire-ds]
+    enforced_by: [seam-verification]
+    realized_by: [pat-theme]
+patterns:
+  - id: pat-decider-module
+    shape: "one Decider module per aggregate: decide + evolve + scenarios"
+    realizes: [pure-decisions]
+    applied_by: [wu-refund-decider]
+  - id: pat-projector
+    shape: one Projector per read model, rebuildable from the log
+    realizes: [projections-derived]
+    applied_by: [wu-cart-projector]
+  - id: pat-page
+    shape: page = template + organisms from wire-ds, bound to its UI step
+    realizes: [closed-vocabulary]
+    applied_by: [wu-review-cart-page]
+  - id: pat-theme
+    shape: one theme file maps wire-ds tokens to CSS custom properties
+    realizes: [tokens-not-literals]
+    applied_by: [wu-review-cart-page]
+application_contract:
+  id: acme-app-contract
+  language: TypeScript
+  layering: [vertical slices, event store append-only]
+  persistence_model: Postgres event store
+  statements:
+    - id: pure-decide
+      statement: decision logic is pure and isolable (the Decider constraint, §3.3)
+      enforced_by: contract-conformance
+    - id: rebuildable-projections
+      statement: projections are rebuildable from the log
+      enforced_by: behavioural-conformance
+infrastructure_contract:
+  id: acme-runtime-contract
+  satisfies: acme-app-contract
+  frozen: true
+  resources:
+    - id: web-host
+      kind: domain
+      choice: shop.acme.com
+    - id: runtime
+      kind: runtime
+      choice: Node 22 / eu-west
+interface_contracts:
+  - id: if-rest
+    surface: REST interface
+    standard: OpenAPI
+    derived_from: [cmd-add-item, rm-cart-summary]
+  - id: if-events
+    surface: Event stream
+    standard: AsyncAPI
+    derived_from: [ev-order-placed]

@@ -13,7 +13,7 @@
 //! Everything is derived per request (no cache); the client re-fetches on the
 //! `/api/events` SSE, exactly as the legacy view does.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use product_core::pf::deployable_unit::DeployableUnit;
 use product_core::pf::model::DomainGraph;
@@ -26,14 +26,23 @@ mod pf_how;
 mod pf_repo;
 mod pf_ui;
 
-/// Read + parse every `*.yaml` in `<repo>/.product/<dir>` through `parse`, sorted
-/// by filename. Shared by the section projectors.
+/// The `.product` base for a product's How/Delivery/Build artifacts: a
+/// per-product `.product/products/<product>/` if it exists (so acme's blueprint,
+/// deliverables, DeployableUnits, … are its own), else the shared `.product/`
+/// (back-compat for the self-hosted product-cli, whose artifacts live at root).
+pub(crate) fn scoped_base(repo_root: &Path, product: &str) -> PathBuf {
+    let scoped = repo_root.join(".product").join("products").join(product);
+    if scoped.is_dir() { scoped } else { repo_root.join(".product") }
+}
+
+/// Read + parse every `*.yaml` in `<base>/<dir>` through `parse`, sorted by
+/// filename. `base` is the scoped `.product` dir. Shared by the projectors.
 pub(crate) fn load_all<T>(
-    repo_root: &Path,
+    base: &Path,
     dir: &str,
     parse: impl Fn(&str) -> product_core::error::Result<T>,
 ) -> Vec<T> {
-    let d = repo_root.join(".product").join(dir);
+    let d = base.join(dir);
     let mut paths: Vec<_> = match std::fs::read_dir(&d) {
         Ok(it) => it.flatten().map(|e| e.path()).filter(|p| p.extension().and_then(|s| s.to_str()) == Some("yaml")).collect(),
         Err(_) => Vec::new(),
@@ -42,9 +51,11 @@ pub(crate) fn load_all<T>(
     paths.iter().filter_map(|p| std::fs::read_to_string(p).ok()).filter_map(|t| parse(&t).ok()).collect()
 }
 
-/// Build the live `window.PF` field map from the graph + `.product/` artifacts.
-pub fn build_pf_view(graph: &DomainGraph, repo_root: &Path) -> Value {
-    let conf = conformance::Conformance::compute(graph, repo_root);
+/// Build the live `window.PF` field map for `product` from the graph + its
+/// (per-product-scoped) `.product/` artifacts.
+pub fn build_pf_view(graph: &DomainGraph, repo_root: &Path, product: &str) -> Value {
+    let base = scoped_base(repo_root, product);
+    let conf = conformance::Conformance::compute(graph, &base);
     let mut out = Map::new();
     out.insert("product".into(), project_product(graph, &conf));
     out.insert("domains".into(), project_domains(graph, &conf));
@@ -57,17 +68,31 @@ pub fn build_pf_view(graph: &DomainGraph, repo_root: &Path) -> Value {
     out.insert("stepSpecs".into(), pf_ui::project_step_specs(graph));
     out.insert("contract".into(), pf_ui::project_contract(graph));
     out.insert("flows".into(), pf_flows::project_flows(graph, &conf));
-    out.insert("deciders".into(), pf_how::project_deciders(repo_root, &conf));
-    out.insert("projectors".into(), pf_how::project_projectors(repo_root, &conf));
-    out.insert("scenarios".into(), pf_how::project_scenarios(repo_root, &conf));
-    out.insert("delivery".into(), pf_how::project_delivery(graph, repo_root, &conf));
-    out.insert("how".into(), pf_how::project_how(graph, repo_root, &conf));
-    out.insert("workUnits".into(), pf_build::project_work_units(repo_root));
-    let product_name = graph.products.first().map(|p| p.id.clone()).unwrap_or_else(|| "repo".to_string());
-    out.insert("repoTree".into(), pf_repo::project_repo_tree(repo_root, &product_name));
-    // A marker the UI can show so it is clear the view is graph-connected.
+    out.insert("deciders".into(), pf_how::project_deciders(&base, &conf));
+    out.insert("projectors".into(), pf_how::project_projectors(&base, &conf));
+    out.insert("scenarios".into(), pf_how::project_scenarios(&base, &conf));
+    out.insert("delivery".into(), pf_how::project_delivery(graph, &base, &conf));
+    out.insert("how".into(), pf_how::project_how(graph, &base, &conf));
+    out.insert("workUnits".into(), pf_build::project_work_units(&base));
+    out.insert("repoTree".into(), pf_repo::project_repo_tree(repo_root, &base, product));
+    // Markers for the UI: live-connected, the current product, and every product
+    // available (the product picker shows when there is more than one).
     out.insert("_live".into(), json!(true));
+    out.insert("_product".into(), json!(product));
+    out.insert("_products".into(), json!(list_products(repo_root)));
     Value::Object(out)
+}
+
+/// Every product with a captured What graph (dir names under author-domain/).
+pub(crate) fn list_products(repo_root: &Path) -> Vec<String> {
+    let dir = repo_root.join(".product").join("author-domain");
+    let mut names: Vec<String> = match std::fs::read_dir(&dir) {
+        Ok(it) => it.flatten().filter(|e| e.path().is_dir())
+            .filter_map(|e| e.file_name().into_string().ok()).collect(),
+        Err(_) => Vec::new(),
+    };
+    names.sort();
+    names
 }
 
 // --- §3.0 product / systems / domains / journeys ---------------------------
@@ -259,9 +284,9 @@ fn primary_context(g: &DomainGraph) -> Option<String> {
         .map(|c| c.id.clone())
 }
 
-/// Load the DeployableUnits declared under `.product/deployable-units/`.
-pub(crate) fn load_deployable_units(repo_root: &Path) -> Vec<DeployableUnit> {
-    product_core::pf::deployable_unit::load_dir(&repo_root.join(".product").join("deployable-units"))
+/// Load the DeployableUnits under `<base>/deployable-units/`.
+pub(crate) fn load_deployable_units(base: &Path) -> Vec<DeployableUnit> {
+    product_core::pf::deployable_unit::load_dir(&base.join("deployable-units"))
 }
 
 #[cfg(test)]
@@ -291,7 +316,7 @@ mod tests {
     #[test]
     fn projects_the_live_window_pf_shape() {
         let tmp = tempfile::tempdir().expect("tempdir");
-        let pf = build_pf_view(&sample(), tmp.path());
+        let pf = build_pf_view(&sample(), tmp.path(), "acme");
         // The top-level keys the UI reads are all present.
         for k in ["product", "domains", "systems", "journeys", "domain", "flows", "deciders", "delivery", "how"] {
             assert!(pf.get(k).is_some(), "missing PF field: {k}");
@@ -307,7 +332,7 @@ mod tests {
     #[test]
     fn flow_layout_assigns_lanes_and_causal_columns() {
         let tmp = tempfile::tempdir().expect("tempdir");
-        let pf = build_pf_view(&sample(), tmp.path());
+        let pf = build_pf_view(&sample(), tmp.path(), "acme");
         let flow = &pf["flows"]["flow-checkout"];
         assert_eq!(flow["system"], "shop");
         // trigger→command→event spine puts the event to the right of the command.
