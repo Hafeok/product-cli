@@ -15,13 +15,17 @@ window.PF.buildGraph = function () {
   const E = (from, to, rel) => { edges.push({ from, to, rel }); };
 
   /* ---------- WHAT ---------- */
-  N('product:acme', 'Acme Commerce', 'product', 'what', 0, 'systems');
+  // The centre node is the selected product — driven by the live PF.product
+  // projection (falls back to the bundled demo when /api/pf is unreachable).
+  const P = PF.product || { id: 'acme', name: 'Acme Commerce' };
+  const prodId = 'product:' + P.id;
+  N(prodId, P.name, 'product', 'what', 0, 'systems');
   N('domain:ordering', 'Ordering', 'domain', 'what', 1, 'domain');
-  E('product:acme', 'domain:ordering', 'owns');
+  E(prodId, 'domain:ordering', 'owns');
 
   PF.systems.forEach(s => {
     N('sys:' + s.id, s.name, 'system', 'what', 1, 'systems');
-    E('product:acme', 'sys:' + s.id, 'owns');
+    E(prodId, 'sys:' + s.id, 'owns');
     E('domain:ordering', 'sys:' + s.id, 'references');
   });
 
