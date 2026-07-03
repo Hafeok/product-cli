@@ -6,25 +6,24 @@
 first render + on the SSE `changed` tick, merging the fields in `PF_LIVE_KEYS`.
 
 **Live (verified headless against the real product-cli graph):**
-- Systems map · Domain ER · Flows · Everything (graph)  — Phase 1
-- Deciders · Scenarios · Projectors  — Phase 2
-- Features · Versions  — Phase 3
-- The How · Systems (blueprint / DeployableUnits / why-cascade) · Patterns · contracts · standards  — Phase 4
-- AIO catalog (with live reification + WCAG)  — Phase 5
-- Build · Work units (live SPMC bundles)  — Phase 6
-- Per-node conformance dots computed from real verdicts (feature_done / decider conform / release)  — Phase 0
+- Graph: Everything
+- What: Systems map · Domain ER · Flows · Deciders · Scenarios · Projectors
+- UI §3.2: AIO catalog (live reification + WCAG) · Pages (page graph) · Steps (spec sheets) · Screens (render contract)
+- How §4: Systems (blueprint / DeployableUnits / why-cascade) · Patterns · contracts · standards · **Layout rules**
+- Build §5–6: Work units (live SPMC bundles)
+- Delivery §7: Features (real §7.2 done) · Versions
+- Per-node conformance dots computed from real verdicts (feature_done / decider conform / release)
 
-**Still on demo data (remaining work — see the tables below):**
-- UI §3.2: **Steps, Pages, Screens, Content** — need `stepSpecs`, `pageGraph`,
-  `contract` (screen composition), `content`, `oracle`, `refData` projections
-  (the graph has ui-steps / application-roots / reification-rules to derive them).
-- How §4: **Layout, Composition, Reification, Process** — need `how.layout`
-  (blueprint layout.yaml + repo scan), `composition`, `manifest`, `howProcess`.
-- Build §6: **Verifications** — the §6.3 kinds are framework-universal (demo is
-  representative); per-product standings need real verification results.
+**Still on demo data — the genuine data boundary (the graph carries no such data):**
+- **Data** (refData / oracle) — 0 reference-sets / production-datasets in the graph.
+- **Content** — 0 content-stores modelled (renders live-but-empty).
+- **Composition** (§4.5 Atomic-Design narrative) · **Process** (H1–H6 companion doc) — fixed narrative, not graph-derived.
+- **Reification** (design-system manifest) — derivable from design-systems + reification-rules; not yet projected.
+- **Verifications** (§6.3) — the required kinds are framework-universal (demo is representative); per-product standings need real verification results.
+- **Layout's repo-tree pane** — needs a live repository scan against the layout rules.
 
-These render on the bundled demo (never crash); each becomes live by projecting
-its field + adding the key to `PF_LIVE_KEYS`, exactly as the shipped phases did.
+Every view renders (never crashes). Each remaining item becomes live the same way
+the shipped ones did: project its field → add the key to `PF_LIVE_KEYS`.
 
 ## North star (definition of done)
 Every view renders the real `.product/` graph, refreshes over SSE, and shows honest
