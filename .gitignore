@@ -19,3 +19,6 @@ tests/__pycache__/
 
 # build run I/O — frozen context, session metrics, logs (regenerable per `product build`)
 .product/build/
+
+# Playwright MCP scratch (headless browser profile/output)
+.playwright-mcp/
