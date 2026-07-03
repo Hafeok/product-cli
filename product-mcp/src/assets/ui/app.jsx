@@ -385,7 +385,7 @@ function App() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 18px', flex: 'none',
         background: 'var(--slate-900)', borderBottom: '1px solid var(--slate-800)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
         <Crumb onClick={() => setView('systems')} active={view === 'systems'}>{(PF.product && PF.product.id) || 'product'}</Crumb>
-        {view === 'domain' && <><Sep /><Crumb active>Ordering</Crumb></>}
+        {view === 'domain' && <><Sep /><Crumb active>{((PF.domains || []).find(d => d.id === (PF.domain || {}).contextId) || {}).name || 'Domain'}</Crumb></>}
         {view === 'graph' && <><Sep /><Crumb active>One graph · everything connected</Crumb></>}
         {view === 'flows' && <><Sep /><Crumb onClick={() => setView('systems')}>{sysName}</Crumb><Sep /><Crumb active>{flowName}</Crumb></>}
         {view === 'features' && <><Sep /><Crumb active>Delivery · Features</Crumb></>}
@@ -562,7 +562,7 @@ function Sep() { return <span style={{ color: 'var(--slate-600)' }}>›</span>; 
    layout). The Systems map (§3.0) is live; the other views still render the
    bundled demo until they are rewritten to auto-layout live data (see the
    /api/pf projection — the data for them is already served, keyed the same). */
-const PF_LIVE_KEYS = new Set(['product', 'domains', 'systems', 'journeys']);
+const PF_LIVE_KEYS = new Set(['product', 'domains', 'systems', 'journeys', 'domain', 'flows']);
 /* Objects merged one level deep (live sub-fields override, others kept). */
 const PF_LIVE_MERGE_KEYS = { how: 1, delivery: 1 };
 function applyLive(data) {

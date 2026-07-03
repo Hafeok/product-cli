@@ -6,8 +6,6 @@
   const { useMemo } = React;
   const { EdgeLayer, ConfDot, FitCanvas } = window.PFUI;
 
-  const CANVAS_W = 1120, CANVAS_H = 660;
-
   const COLOR = {
     aggregate: 'var(--kind-entity)', entity: 'var(--blue-500)',
     'value-object': 'var(--blue-400)', invariant: 'var(--kind-invariant)',
@@ -18,23 +16,32 @@
     invariant: 'invariant', external: 'external · Catalog', reference: 'reference data',
   };
 
-  // curated coordinates (x,y = center). widths fixed; heights derived from fields.
-  const PLACE = {
-    'refund-1': { x: 138, y: 150, w: 158 },
-    order:      { x: 392, y: 168, w: 206 },
-    orderno:    { x: 660, y: 110, w: 178 },
-    money:      { x: 856, y: 250, w: 178 },
-    cart:       { x: 360, y: 410, w: 178 },
-    'cart-1':   { x: 130, y: 410, w: 158 },
-    lineitem:   { x: 628, y: 452, w: 200 },
-    'cart-2':   { x: 612, y: 612, w: 158 },
-    product:    { x: 892, y: 486, w: 178 },
-    refdata:    { x: 892, y: 372, w: 178 },
-  };
+  // Data-driven layout: one column per kind (aggregates → entities → value
+  // objects → invariants → …), nodes stacked within, sized to their fields. Lays
+  // out any bounded context, not curated coordinates.
+  const KIND_ORDER = ['aggregate', 'entity', 'value-object', 'invariant', 'reference', 'external'];
 
   function nodeH(n) {
-    if (n.kind === 'invariant') return 40 + n.fields.length * 15;
-    return 46 + n.fields.length * 15;
+    const fields = (n.fields || []).length;
+    return (n.kind === 'invariant' ? 40 : 46) + fields * 15;
+  }
+
+  function placeByKind(nodes) {
+    const cols = KIND_ORDER.filter(k => nodes.some(n => n.kind === k));
+    const W = 200, GAP = 44, X0 = 40, Y0 = 46, VGAP = 20;
+    const pos = {}; let maxY = Y0;
+    cols.forEach((k, ci) => {
+      const x = X0 + ci * (W + GAP) + W / 2;
+      let y = Y0;
+      nodes.filter(n => n.kind === k).forEach(n => {
+        const h = nodeH(n);
+        pos[n.id] = { x, y: y + h / 2, w: W, h };
+        y += h + VGAP;
+      });
+      maxY = Math.max(maxY, y);
+    });
+    const width = Math.max(X0 * 2 + cols.length * (W + GAP) - GAP, 640);
+    return { pos, width, height: Math.max(maxY + 40, 320) };
   }
 
   function DomainNode({ n, selected, onClick, showConf }) {
@@ -87,12 +94,8 @@
   }
 
   function DomainGraph({ selected, onSelect, showConf, showLabels }) {
-    const D = PF.domain;
-    const pos = useMemo(() => {
-      const p = {};
-      D.nodes.forEach(n => { const pl = PLACE[n.id]; if (pl) p[n.id] = { x: pl.x, y: pl.y, w: pl.w, h: nodeH(n) }; });
-      return p;
-    }, []);
+    const D = PF.domain || { nodes: [], edges: [], contextId: '' };
+    const { pos, width: CANVAS_W, height: CANVAS_H } = useMemo(() => placeByKind(D.nodes), [D.contextId, D.nodes.length]);
 
     const edges = D.edges.map(e => {
       const base = { from: e.from, to: e.to, label: showLabels ? (e.label + (e.card ? '  ' + e.card : '')) : null };
@@ -102,14 +105,14 @@
       return { ...base, stroke: 'var(--slate-500)', width: 1.6 };
     });
 
-    const ctx = PF.domains.find(d => d.id === D.contextId);
+    const ctx = (PF.domains || []).find(d => d.id === D.contextId);
 
     return (
       <FitCanvas width={CANVAS_W} height={CANVAS_H}>
           {/* context frame label */}
           <div style={{ position: 'absolute', left: 16, top: 12, display: 'flex', alignItems: 'center', gap: 9, zIndex: 5 }}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '.1em',
-              textTransform: 'uppercase', color: 'var(--kind-entity)' }}>Ordering</span>
+              textTransform: 'uppercase', color: 'var(--kind-entity)' }}>{(ctx && ctx.name) || D.contextId || 'domain'}</span>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--slate-500)' }}>bounded context · §3.1 structure &amp; data</span>
             {showConf && ctx && <ConfDot level={ctx.conformance} size={8} />}
           </div>
