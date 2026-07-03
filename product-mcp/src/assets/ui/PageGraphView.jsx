@@ -8,34 +8,32 @@
 
   const NAV = 'var(--em-trigger)';        // navigate = interaction = violet
   const UI = 'var(--slate-400)';
-  const W = 1250, H = 780;
 
-  // fixed layout — shop above, admin below
-  const POS = {
-    'root-shop':        { x: 130, y: 235, w: 168, h: 76, root: true },
-    'ui-browse':        { x: 420, y: 105, w: 172, h: 58 },
-    'ui-product':       { x: 700, y: 105, w: 172, h: 58 },
-    'ui-review-cart':   { x: 420, y: 360, w: 172, h: 58 },
-    'ui-choose-payment':{ x: 700, y: 360, w: 172, h: 58 },
-    'ui-confirmation':  { x: 980, y: 360, w: 172, h: 58 },
-    'ui-orders':        { x: 420, y: 232, w: 172, h: 58 },
-    'ui-order-detail':  { x: 700, y: 232, w: 172, h: 58 },
-
-    'root-admin':       { x: 130, y: 640, w: 168, h: 76, root: true },
-    'ui-queue':         { x: 420, y: 578, w: 172, h: 58 },
-    'ui-ship':          { x: 700, y: 578, w: 172, h: 58 },
-    'ui-order-admin':   { x: 420, y: 702, w: 172, h: 58 },
-    'ui-issue-refund':  { x: 700, y: 702, w: 172, h: 58 },
-  };
-
-  // flow regions — drawn as tinted dashes behind the pages they partition
-  const REGIONS = [
-    { flow: 'flow-browse',   label: 'flow-browse',   x: 316, y: 62,  w: 486, h: 88 },
-    { flow: 'flow-orders',   label: 'flow-orders',   x: 316, y: 190, w: 486, h: 88 },
-    { flow: 'flow-checkout', label: 'flow-checkout', x: 316, y: 318, w: 766, h: 88 },
-    { flow: 'flow-fulfil',   label: 'flow-fulfil',   x: 316, y: 536, w: 486, h: 88 },
-    { flow: 'flow-refunds',  label: 'flow-refunds',  x: 316, y: 660, w: 486, h: 88 },
-  ];
+  // Data-driven layout: per system, the root at the left, pages in columns by
+  // navigation depth (BFS from the root), stacked in rows. Any system / page
+  // count lays out (was fixed coordinates for the acme demo).
+  function computeLayout(systems) {
+    const ROOT_W = 168, PAGE_W = 172, HP = 58, HR = 76, COLW = 250, VGAP = 22, BANDGAP = 64, X0 = 60, Y0 = 44;
+    const pos = {}; const bands = []; let y = Y0; let maxDepth = 1;
+    systems.forEach(sys => {
+      const depth = { [sys.root]: 0 };
+      let changed = true;
+      while (changed) { changed = false; sys.edges.forEach(e => { if (depth[e.from] != null && depth[e.to] == null) { depth[e.to] = depth[e.from] + 1; changed = true; } }); }
+      const cols = { 0: [sys.root] };
+      sys.pages.forEach(p => { const d = depth[p.id] != null ? depth[p.id] : 1; (cols[d] = cols[d] || []).push(p.id); });
+      const rows = Math.max(...Object.values(cols).map(a => a.length), 1);
+      Object.entries(cols).forEach(([d, ids]) => {
+        maxDepth = Math.max(maxDepth, Number(d));
+        ids.forEach((id, i) => {
+          const isRoot = id === sys.root;
+          pos[id] = { x: X0 + Number(d) * COLW + (isRoot ? ROOT_W : PAGE_W) / 2, y: y + i * (HP + VGAP) + (isRoot ? HR : HP) / 2, w: isRoot ? ROOT_W : PAGE_W, h: isRoot ? HR : HP, root: isRoot };
+        });
+      });
+      bands.push({ name: sys.name, y: y - 26 });
+      y += rows * (HP + VGAP) + BANDGAP;
+    });
+    return { pos, W: X0 + (maxDepth + 1) * COLW + 40, H: y, bands };
+  }
 
   function allSystems() { return PF.pageGraph.systems; }
   function pageName(id) {
@@ -51,6 +49,7 @@
   }
 
   function PageGraphView({ selected, onSelect, onOpenStep }) {
+    const { pos: POS, W, H, bands } = computeLayout(allSystems());
     const edges = [];
     allSystems().forEach(sys => {
       sys.edges.forEach(e => {
@@ -67,20 +66,9 @@
 
     return (
       <FitCanvas width={W} height={H}>
-        {/* system band labels */}
-        <BandLabel y={20} name="acme-shop" note="one page graph · root out-edges = primary nav (derived)" />
-        <BandLabel y={498} name="acme-admin" note="its own root, its own subgraph \u2014 shared domain, separate journey" />
-        <div style={{ position: 'absolute', left: 30, right: 30, top: 468, height: 1,
-          background: 'var(--slate-700)', zIndex: 0 }} />
-
-        {/* flow regions */}
-        {REGIONS.map(r => (
-          <div key={r.flow} style={{ position: 'absolute', left: r.x, top: r.y, width: r.w, height: r.h,
-            border: '1.5px dashed var(--slate-700)', borderRadius: 10,
-            background: 'color-mix(in srgb, var(--em-command) 4%, transparent)', zIndex: 0 }}>
-            <span style={{ position: 'absolute', top: -8, left: 14, fontFamily: 'var(--font-mono)', fontSize: 9,
-              letterSpacing: '.1em', color: 'var(--slate-500)', background: 'var(--slate-900)', padding: '0 6px' }}>{r.label}</span>
-          </div>
+        {/* per-system band labels */}
+        {bands.map(b => (
+          <BandLabel key={b.name} y={b.y} name={b.name} note="one page graph · root out-edges = primary nav (derived)" />
         ))}
 
         <EdgeLayer edges={edges} pos={POS} width={W} height={H} showLabels={true} />
@@ -88,6 +76,7 @@
         {/* roots */}
         {allSystems().map(sys => {
           const p = POS[sys.root];
+          if (!p) return null;
           const on = selected === sys.root;
           return (
             <div key={sys.root} onClick={() => onSelect(sys.root)} style={{

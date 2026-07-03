@@ -23,6 +23,7 @@ mod conformance;
 mod pf_build;
 mod pf_flows;
 mod pf_how;
+mod pf_ui;
 
 /// Read + parse every `*.yaml` in `<repo>/.product/<dir>` through `parse`, sorted
 /// by filename. Shared by the section projectors.
@@ -51,6 +52,9 @@ pub fn build_pf_view(graph: &DomainGraph, repo_root: &Path) -> Value {
     out.insert("domain".into(), project_domain_er(graph));
     out.insert("aios".into(), project_aios(graph));
     out.insert("wcag".into(), project_wcag(graph));
+    out.insert("pageGraph".into(), pf_ui::project_page_graph(graph));
+    out.insert("stepSpecs".into(), pf_ui::project_step_specs(graph));
+    out.insert("contract".into(), pf_ui::project_contract(graph));
     out.insert("flows".into(), pf_flows::project_flows(graph, &conf));
     out.insert("deciders".into(), pf_how::project_deciders(repo_root, &conf));
     out.insert("projectors".into(), pf_how::project_projectors(repo_root, &conf));
