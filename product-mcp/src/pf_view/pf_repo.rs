@@ -3,12 +3,34 @@
 //! attributes each to the allow rule that admits it (or flags it as a no-orphans
 //! failure), and emits an indented tree with per-file verdicts.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
+use std::io::Write;
 use std::path::Path;
+use std::process::{Command, Stdio};
 
 use product_core::pf::blueprint::Blueprint;
 use product_core::pf::layout::LayoutModel;
 use serde_json::{json, Value};
+
+/// The subset of `rel_paths` git ignores (batched through `git check-ignore`).
+/// Empty if git is unavailable or this is not a git work tree — the scan then
+/// degrades to showing every file with its rule verdict.
+fn git_ignored(repo_root: &Path, rel_paths: &[String]) -> HashSet<String> {
+    if rel_paths.is_empty() { return HashSet::new(); }
+    let child = Command::new("git")
+        .arg("-C").arg(repo_root)
+        .args(["check-ignore", "--stdin"])
+        .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null())
+        .spawn();
+    let Ok(mut child) = child else { return HashSet::new() };
+    if let Some(mut stdin) = child.stdin.take() {
+        let _ = stdin.write_all(rel_paths.join("\n").as_bytes());
+    }
+    match child.wait_with_output() {
+        Ok(o) => String::from_utf8_lossy(&o.stdout).lines().map(|l| l.trim().replace('\\', "/")).collect(),
+        Err(_) => HashSet::new(),
+    }
+}
 
 /// A trailing `/**` matches files as `/**/*`.
 fn norm(p: &str) -> String {
@@ -46,6 +68,14 @@ pub fn project_repo_tree(repo_root: &Path, product_name: &str) -> Value {
         }
     }
     if files.is_empty() { return json!([]); }
+
+    // Flag anything git ignores — shown, but marked, not silently admitted.
+    let paths: Vec<String> = files.keys().cloned().collect();
+    for p in git_ignored(repo_root, &paths) {
+        if let Some(v) = files.get_mut(&p) {
+            *v = (v.0.clone(), "ignored".into(), "ignored by git".into());
+        }
+    }
 
     build_tree_rows(product_name, &files)
 }
@@ -92,5 +122,24 @@ fn emit(rows: &mut Vec<Value>, kids: &BTreeMap<String, Vec<String>>, files: &BTr
         }
         let next_prefix = format!("{prefix}{}", if last { "   " } else { "│  " });
         emit(rows, kids, files, child, &next_prefix);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn git_ignore_flags_ignored_paths_only() {
+        // repo root is the workspace dir (one above this crate).
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+        let ig = git_ignored(root, &["target/x".into(), "product-mcp/src/lib.rs".into()]);
+        // a tracked source file is never ignored…
+        assert!(!ig.contains("product-mcp/src/lib.rs"));
+        // …and when git is available, the build dir is flagged (empty set only if
+        // git is absent, in which case the scan degrades gracefully).
+        if !ig.is_empty() {
+            assert!(ig.contains("target/x"), "expected target/x to be git-ignored, got {ig:?}");
+        }
     }
 }

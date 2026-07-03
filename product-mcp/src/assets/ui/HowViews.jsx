@@ -325,24 +325,26 @@
             {PF.repoTree.map((row, i) => {
               const hot = sel && row.rule === sel;
               const dim = sel && !hot;
+              const ign = row.verdict === 'ignored';
               const fail = row.verdict === 'fail';
+              const lineColor = ign ? 'var(--slate-600)' : fail ? 'var(--error, #dc2626)' : row.dir ? 'var(--slate-300)' : 'var(--slate-100)';
               return (
                 <div key={i} onClick={() => row.rule && pick(row.rule)} style={{
                   display: 'flex', alignItems: 'baseline', gap: 10, padding: '1.5px 7px 1.5px 0',
                   cursor: row.rule ? 'pointer' : 'default', borderRadius: 4,
                   background: hot ? 'color-mix(in srgb, var(--blue-400) 14%, transparent)'
                     : (fail && !sel ? 'color-mix(in srgb, var(--error, #dc2626) 10%, transparent)' : 'transparent'),
-                  opacity: dim ? 0.38 : 1, transition: 'opacity .15s var(--ease), background .15s var(--ease)',
+                  opacity: dim ? 0.38 : ign ? 0.62 : 1, transition: 'opacity .15s var(--ease), background .15s var(--ease)',
                 }}>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, whiteSpace: 'pre',
-                    color: fail ? 'var(--error, #dc2626)' : row.dir ? 'var(--slate-300)' : 'var(--slate-100)',
+                    color: lineColor, fontStyle: ign ? 'italic' : 'normal',
                     fontWeight: row.dir ? 600 : 400 }}>{row.line}</span>
                   <span style={{ marginLeft: 'auto', display: 'flex', gap: 7, alignItems: 'baseline', flex: 'none' }}>
-                    {row.note && <Mono size={8.5} color={fail ? 'var(--error, #dc2626)' : 'var(--slate-500)'}>{row.note}</Mono>}
+                    {row.note && <Mono size={8.5} color={ign ? 'var(--slate-500)' : fail ? 'var(--error, #dc2626)' : 'var(--slate-500)'}>{row.note}</Mono>}
                     {row.rule && (
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8.5, borderRadius: 3, padding: '0 6px',
-                        color: fail ? 'var(--error, #dc2626)' : KIND_COLOR[(PF.how.layout.find(r => r.id === row.rule) || {}).kind] || 'var(--slate-400)',
-                        border: `1px solid ${fail ? 'var(--error, #dc2626)' : 'var(--slate-700)'}` }}>{row.rule}</span>
+                        color: ign ? 'var(--slate-600)' : fail ? 'var(--error, #dc2626)' : KIND_COLOR[(PF.how.layout.find(r => r.id === row.rule) || {}).kind] || 'var(--slate-400)',
+                        border: `1px solid ${ign ? 'var(--slate-700)' : fail ? 'var(--error, #dc2626)' : 'var(--slate-700)'}` }}>{ign ? 'git-ignored' : row.rule}</span>
                     )}
                   </span>
                 </div>
