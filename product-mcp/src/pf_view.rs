@@ -19,21 +19,39 @@ use product_core::pf::deployable_unit::DeployableUnit;
 use product_core::pf::model::DomainGraph;
 use serde_json::{json, Map, Value};
 
+mod conformance;
 mod pf_flows;
 mod pf_how;
 
+/// Read + parse every `*.yaml` in `<repo>/.product/<dir>` through `parse`, sorted
+/// by filename. Shared by the section projectors.
+pub(crate) fn load_all<T>(
+    repo_root: &Path,
+    dir: &str,
+    parse: impl Fn(&str) -> product_core::error::Result<T>,
+) -> Vec<T> {
+    let d = repo_root.join(".product").join(dir);
+    let mut paths: Vec<_> = match std::fs::read_dir(&d) {
+        Ok(it) => it.flatten().map(|e| e.path()).filter(|p| p.extension().and_then(|s| s.to_str()) == Some("yaml")).collect(),
+        Err(_) => Vec::new(),
+    };
+    paths.sort();
+    paths.iter().filter_map(|p| std::fs::read_to_string(p).ok()).filter_map(|t| parse(&t).ok()).collect()
+}
+
 /// Build the live `window.PF` field map from the graph + `.product/` artifacts.
 pub fn build_pf_view(graph: &DomainGraph, repo_root: &Path) -> Value {
+    let conf = conformance::Conformance::compute(graph, repo_root);
     let mut out = Map::new();
-    out.insert("product".into(), project_product(graph));
-    out.insert("domains".into(), project_domains(graph));
-    out.insert("systems".into(), project_systems(graph));
+    out.insert("product".into(), project_product(graph, &conf));
+    out.insert("domains".into(), project_domains(graph, &conf));
+    out.insert("systems".into(), project_systems(graph, &conf));
     out.insert("journeys".into(), project_journeys(graph));
     out.insert("domain".into(), project_domain_er(graph));
-    out.insert("flows".into(), pf_flows::project_flows(graph));
-    out.insert("deciders".into(), pf_how::project_deciders(repo_root));
-    out.insert("delivery".into(), pf_how::project_delivery(graph, repo_root));
-    out.insert("how".into(), pf_how::project_how(graph, repo_root));
+    out.insert("flows".into(), pf_flows::project_flows(graph, &conf));
+    out.insert("deciders".into(), pf_how::project_deciders(repo_root, &conf));
+    out.insert("delivery".into(), pf_how::project_delivery(graph, repo_root, &conf));
+    out.insert("how".into(), pf_how::project_how(graph, repo_root, &conf));
     // A marker the UI can show so it is clear the view is graph-connected.
     out.insert("_live".into(), json!(true));
     Value::Object(out)
@@ -41,14 +59,9 @@ pub fn build_pf_view(graph: &DomainGraph, repo_root: &Path) -> Value {
 
 // --- §3.0 product / systems / domains / journeys ---------------------------
 
-fn project_product(g: &DomainGraph) -> Value {
+fn project_product(g: &DomainGraph, conf: &conformance::Conformance) -> Value {
     let Some(p) = g.products.first() else { return Value::Null };
-    let direction = g
-        .products
-        .first()
-        .and_then(|p| p.version.as_deref())
-        .map(|v| format!("What {v}"))
-        .unwrap_or_default();
+    let direction = p.version.as_deref().map(|v| format!("What {v}")).unwrap_or_default();
     let quality = g
         .quality_demands
         .iter()
@@ -63,11 +76,11 @@ fn project_product(g: &DomainGraph) -> Value {
         "quality": quality,
         "ownsDomains": p.owns_domain,
         "ownsSystems": p.owns_system,
-        "conformance": "verified",
+        "conformance": conf.level(&p.id),
     })
 }
 
-fn project_domains(g: &DomainGraph) -> Value {
+fn project_domains(g: &DomainGraph, conf: &conformance::Conformance) -> Value {
     let v: Vec<Value> = g
         .contexts
         .iter()
@@ -82,14 +95,14 @@ fn project_domains(g: &DomainGraph) -> Value {
                 "name": c.label,
                 "sub": "bounded context · §3.1",
                 "language": language,
-                "conformance": "realised",
+                "conformance": conf.level(&c.id),
             })
         })
         .collect();
     Value::Array(v)
 }
 
-fn project_systems(g: &DomainGraph) -> Value {
+fn project_systems(g: &DomainGraph, conf: &conformance::Conformance) -> Value {
     let v: Vec<Value> = g
         .systems
         .iter()
@@ -112,7 +125,7 @@ fn project_systems(g: &DomainGraph) -> Value {
                 "references": s.references_domain,
                 "demands": demands,
                 "flows": flows,
-                "conformance": "realised",
+                "conformance": conf.level(&s.id),
             })
         })
         .collect();

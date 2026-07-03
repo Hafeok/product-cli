@@ -11,15 +11,15 @@ use product_core::pf::model::DomainGraph;
 use serde_json::{json, Value};
 
 /// Project every flow keyed by id → the swimlane layout object.
-pub fn project_flows(g: &DomainGraph) -> Value {
+pub fn project_flows(g: &DomainGraph, conf: &super::conformance::Conformance) -> Value {
     let mut map = serde_json::Map::new();
     for f in &g.flows {
-        map.insert(f.id.clone(), project_one(g, f));
+        map.insert(f.id.clone(), project_one(g, f, conf));
     }
     Value::Object(map)
 }
 
-fn project_one(g: &DomainGraph, f: &product_core::pf::model_ui::Flow) -> Value {
+fn project_one(g: &DomainGraph, f: &product_core::pf::model_ui::Flow, conf: &super::conformance::Conformance) -> Value {
     let steps: HashSet<&str> = f.steps.iter().map(|s| s.as_str()).collect();
     let event_agg = event_streams(g, f);
     let has_command = f.steps.iter().any(|id| g.kind_of(id) == Some(NodeKind::Command));
@@ -35,7 +35,7 @@ fn project_one(g: &DomainGraph, f: &product_core::pf::model_ui::Flow) -> Value {
         "system": f.system.clone().unwrap_or_default(),
         "name": f.label,
         "pattern": if has_command { "Command + View" } else { "View" },
-        "conformance": "realised",
+        "conformance": conf.level(&f.id),
         "lanes": lanes,
         "cols": cols,
         "nodes": nodes,

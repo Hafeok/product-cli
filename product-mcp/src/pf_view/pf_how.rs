@@ -13,18 +13,7 @@ use product_core::pf::release::Release;
 use product_core::pf::target::Target;
 use serde_json::{json, Value};
 
-use super::load_deployable_units;
-
-/// Read + parse every `*.yaml` in `<repo>/.product/<dir>` through `parse`.
-fn load_all<T>(repo_root: &Path, dir: &str, parse: impl Fn(&str) -> product_core::error::Result<T>) -> Vec<T> {
-    let d = repo_root.join(".product").join(dir);
-    let mut paths: Vec<_> = match std::fs::read_dir(&d) {
-        Ok(it) => it.flatten().map(|e| e.path()).filter(|p| p.extension().and_then(|s| s.to_str()) == Some("yaml")).collect(),
-        Err(_) => Vec::new(),
-    };
-    paths.sort();
-    paths.iter().filter_map(|p| std::fs::read_to_string(p).ok()).filter_map(|t| parse(&t).ok()).collect()
-}
+use super::{load_all, load_deployable_units};
 
 fn how_contract(repo_root: &Path) -> Option<HowContract> {
     HowContract::load_opt(&repo_root.join(".product").join("how-contract.yaml")).ok().flatten()
@@ -40,7 +29,7 @@ fn blueprint_names(repo_root: &Path) -> Vec<String> {
 
 // --- §3.3 deciders ---------------------------------------------------------
 
-pub fn project_deciders(repo_root: &Path) -> Value {
+pub fn project_deciders(repo_root: &Path, conf: &super::conformance::Conformance) -> Value {
     let deciders = load_all(repo_root, "deciders", Decider::from_yaml);
     let v: Vec<Value> = deciders
         .iter()
@@ -56,7 +45,7 @@ pub fn project_deciders(repo_root: &Path) -> Value {
             json!({
                 "id": d.id,
                 "aggregate": d.decides_for,
-                "conformance": "realised",
+                "conformance": conf.level(&d.id),
                 "handles": handles,
                 "evolves": d.evolves_from,
                 "stateRead": state_read,
@@ -70,13 +59,13 @@ pub fn project_deciders(repo_root: &Path) -> Value {
 
 // --- §7 delivery: features / releases / targets / versions -----------------
 
-pub fn project_delivery(g: &DomainGraph, repo_root: &Path) -> Value {
+pub fn project_delivery(g: &DomainGraph, repo_root: &Path, conf: &super::conformance::Conformance) -> Value {
     let features = load_all(repo_root, "features", Feature::from_yaml);
     let deliverables = load_all(repo_root, "deliverables", Deliverable::from_yaml);
     let releases = load_all(repo_root, "releases", Release::from_yaml);
     let targets = load_all(repo_root, "targets", Target::from_yaml);
 
-    let feat_json: Vec<Value> = features.iter().map(|f| feature_json(f, &deliverables)).collect();
+    let feat_json: Vec<Value> = features.iter().map(|f| feature_json(f, &deliverables, conf)).collect();
     let rel_json: Vec<Value> = releases
         .iter()
         .map(|r| json!({ "id": r.id, "name": r.id, "features": r.features, "closed": true, "note": "" }))
@@ -96,7 +85,7 @@ pub fn project_delivery(g: &DomainGraph, repo_root: &Path) -> Value {
 
 /// A feature's `window.PF` shape, with acceptance pulled from the deliverable
 /// that wraps it (§7.1).
-fn feature_json(f: &Feature, deliverables: &[Deliverable]) -> Value {
+fn feature_json(f: &Feature, deliverables: &[Deliverable], conf: &super::conformance::Conformance) -> Value {
     let acceptance: Vec<String> = deliverables
         .iter()
         .find(|d| d.feature == f.id)
@@ -105,7 +94,7 @@ fn feature_json(f: &Feature, deliverables: &[Deliverable]) -> Value {
     json!({
         "id": f.id, "name": f.id, "sub": f.id,
         "flows": f.anchors, "footprint": f.anchors,
-        "conformance": "realised", "valueAction": "", "acceptance": acceptance,
+        "conformance": conf.level(&f.id), "valueAction": "", "acceptance": acceptance,
     })
 }
 
@@ -130,11 +119,11 @@ fn project_versions(g: &DomainGraph, repo_root: &Path) -> Value {
 
 // --- §4 the How: blueprint, DeployableUnits, why-cascade -------------------
 
-pub fn project_how(g: &DomainGraph, repo_root: &Path) -> Value {
+pub fn project_how(g: &DomainGraph, repo_root: &Path, conf: &super::conformance::Conformance) -> Value {
     let how = how_contract(repo_root);
     let (decisions, principles, patterns) = why_cascade(how.as_ref());
     json!({
-        "blueprint": project_blueprint(g, repo_root, how.as_ref()),
+        "blueprint": project_blueprint(g, repo_root, how.as_ref(), conf),
         "deployableUnits": project_deployable_units(repo_root),
         "decisions": decisions,
         "principles": principles,
@@ -144,7 +133,7 @@ pub fn project_how(g: &DomainGraph, repo_root: &Path) -> Value {
 
 /// The blueprint node: its name, the parts it packages, and the systems it
 /// realises (best-effort — the graph carries no explicit blueprint→system edge).
-fn project_blueprint(g: &DomainGraph, repo_root: &Path, how: Option<&HowContract>) -> Value {
+fn project_blueprint(g: &DomainGraph, repo_root: &Path, how: Option<&HowContract>, conf: &super::conformance::Conformance) -> Value {
     let Some(name) = blueprint_names(repo_root).into_iter().next() else { return Value::Null };
     let mut packages = vec![Value::from("application contract")];
     if let Some(h) = how {
@@ -153,7 +142,7 @@ fn project_blueprint(g: &DomainGraph, repo_root: &Path, how: Option<&HowContract
         packages.push(json!(format!("{} patterns", h.patterns.len())));
     }
     let instances: Vec<Value> =
-        g.systems.iter().map(|s| json!({ "sys": s.id, "conformance": "realised" })).collect();
+        g.systems.iter().map(|s| json!({ "sys": s.id, "conformance": conf.level(&s.id) })).collect();
     json!({
         "id": name, "name": name, "packages": packages, "instances": instances,
         "note": "the reusable How captured once where a system shape recurs (§4)",

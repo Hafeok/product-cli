@@ -177,5 +177,44 @@
     );
   }
 
-  Object.assign(window, { PFUI: { EdgeLayer, anchor, curve, ConfDot, DetailPanel, useHover, CONF, FitCanvas } });
+  // ---- auto-layout toolkit (data-driven views) ----------------------------
+  // Every position map is { id -> {x,y,w,h} } with x,y = node CENTER, matching
+  // EdgeLayer/FitCanvas. These let a view lay out any count of live nodes.
+  const layout = {
+    // A single horizontal row of equal cards, centred in `canvasW`.
+    row(items, { w, h, y, gap = 40, canvasW, idOf = n => n.id }) {
+      const total = items.length ? items.length * w + (items.length - 1) * gap : 0;
+      const start = (canvasW - total) / 2 + w / 2;
+      const pos = {};
+      items.forEach((n, i) => { pos[idOf(n)] = { x: start + i * (w + gap), y, w, h }; });
+      return pos;
+    },
+    // A wrapped grid of equal cards; returns { pos, width, height }.
+    grid(items, { w, h, gap = 24, cols, maxWidth = 1180, x0 = 40, y0 = 40, idOf = n => n.id }) {
+      const c = cols || Math.max(1, Math.min(items.length, Math.floor((maxWidth - x0) / (w + gap))));
+      const pos = {};
+      items.forEach((n, i) => {
+        const col = i % c, rowN = Math.floor(i / c);
+        pos[idOf(n)] = { x: x0 + col * (w + gap) + w / 2, y: y0 + rowN * (h + gap) + h / 2, w, h };
+      });
+      const rows = Math.ceil(items.length / c) || 1;
+      return { pos, width: x0 * 2 + c * (w + gap) - gap, height: y0 * 2 + rows * (h + gap) - gap };
+    },
+    // Swimlanes: nodes carry { col, lane }; lanes is [{id,label,kind}]. Columns
+    // run left→right by `col`; lanes are horizontal bands. Returns { pos, width,
+    // height, laneBands:[{lane,y,h,label,kind}] }.
+    swimlane(lanes, nodes, { colW = 150, cellW = 128, cellH = 52, laneH = 92, x0 = 150, y0 = 30, idOf = n => n.id }) {
+      const laneIndex = {}; lanes.forEach((l, i) => { laneIndex[l.id] = i; });
+      const cols = nodes.reduce((m, n) => Math.max(m, (n.col || 0) + 1), 1);
+      const pos = {};
+      nodes.forEach(n => {
+        const li = laneIndex[n.lane] != null ? laneIndex[n.lane] : 0;
+        pos[idOf(n)] = { x: x0 + (n.col || 0) * colW + cellW / 2, y: y0 + li * laneH + laneH / 2, w: cellW, h: cellH };
+      });
+      const laneBands = lanes.map((l, i) => ({ lane: l.id, label: l.label, kind: l.kind, y: y0 + i * laneH, h: laneH }));
+      return { pos, width: x0 + cols * colW + 40, height: y0 * 2 + lanes.length * laneH, laneBands };
+    },
+  };
+
+  Object.assign(window, { PFUI: { EdgeLayer, anchor, curve, elbow, ConfDot, DetailPanel, useHover, CONF, FitCanvas, layout } });
 })();
