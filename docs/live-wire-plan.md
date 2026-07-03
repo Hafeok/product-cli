@@ -1,0 +1,119 @@
+# Live-Wire Completion Plan — the 1.7.0 explorer ⇄ the live graph
+
+## Status (as implemented)
+
+`GET /api/pf` projects the live graph into `window.PF`; `app.jsx` fetches it before
+first render + on the SSE `changed` tick, merging the fields in `PF_LIVE_KEYS`.
+
+**Live (verified headless against the real product-cli graph):**
+- Systems map · Domain ER · Flows · Everything (graph)  — Phase 1
+- Deciders · Scenarios · Projectors  — Phase 2
+- Features · Versions  — Phase 3
+- The How · Systems (blueprint / DeployableUnits / why-cascade) · Patterns · contracts · standards  — Phase 4
+- AIO catalog (with live reification + WCAG)  — Phase 5
+- Build · Work units (live SPMC bundles)  — Phase 6
+- Per-node conformance dots computed from real verdicts (feature_done / decider conform / release)  — Phase 0
+
+**Still on demo data (remaining work — see the tables below):**
+- UI §3.2: **Steps, Pages, Screens, Content** — need `stepSpecs`, `pageGraph`,
+  `contract` (screen composition), `content`, `oracle`, `refData` projections
+  (the graph has ui-steps / application-roots / reification-rules to derive them).
+- How §4: **Layout, Composition, Reification, Process** — need `how.layout`
+  (blueprint layout.yaml + repo scan), `composition`, `manifest`, `howProcess`.
+- Build §6: **Verifications** — the §6.3 kinds are framework-universal (demo is
+  representative); per-product standings need real verification results.
+
+These render on the bundled demo (never crash); each becomes live by projecting
+its field + adding the key to `PF_LIVE_KEYS`, exactly as the shipped phases did.
+
+## North star (definition of done)
+Every view renders the real `.product/` graph, refreshes over SSE, and shows honest
+conformance — with **no bundled demo data consumed at runtime** (demo becomes an
+offline-only fallback). `PF_LIVE_KEYS` contains every top-level field; a contract test
+guards backend↔UI drift.
+
+## The core finding
+The new UI's views are **bespoke layouts hardcoded to the acme demo** (fixed pixel
+coordinates, demo ids — e.g. `DomainGraph` uses a `PLACE[id]` map + literal "Ordering"
+title; `SystemsMap` used `pos.acme`). They are *not* generic data-driven renderers.
+"Complete live-wire" therefore = **rewrite each view to auto-layout live data**
+(`SystemsMap` is the template) **+** project the remaining data fields.
+
+## Guiding principles
+- **Each view ships end-to-end in one slice**: project its data → rewrite the view
+  data-driven → add its key to `PF_LIVE_KEYS` → verify headless (0 console errors +
+  a live-data assertion) → commit. Never half-wire (that caused the Versions crash).
+- **Backend stays under the fitness gates**: split `pf_view/` into per-section modules
+  (`pf_flows`, `pf_how`, add `pf_ui`, `pf_build`, `pf_delivery`, `conformance`);
+  functions ≤40 stmts, files ≤400 lines.
+- **Layout once, reuse everywhere**: a shared auto-layout toolkit makes each view
+  rewrite ~40 lines, not ~150.
+
+---
+
+## Phase 0 — Foundations (unblocks all rewrites)
+| Item | Where | Notes |
+|---|---|---|
+| Layout toolkit | `assets/ui/shared.jsx` → `PFUI.layout` | `rowLayout`, `gridLayout`, `layeredColumns` (longest-path, already in `pf_flows`), `orthogonalEdges`/routing. Ported/generalized from the old `view.html`. |
+| Conformance model | new `pf_view/conformance.rs` | `conformance_of(id) -> described\|realised\|verified\|delivered` from graph + `.product` verdicts (feature_done §7.2, decider `.conform.json`, deliverable acceptance, release membership). Replaces hardcoded `"realised"`. |
+| PF contract test | `pf_view` tests | Golden test: `/api/pf` emits every key the UI reads (drift guard). |
+
+## Phase 1 — The old-view trio (Domain, Flows, Graph)
+| View | Backend | Frontend | Effort |
+|---|---|---|---|
+| Domain ER | `domain` ✅ (add all-contexts + selector) | rewrite `DomainGraph.jsx` auto-layout; read `contextId` for title | M |
+| Flows | `flows` ✅ (computed lanes/cols) | rewrite `FlowsTimeline.jsx` to consume computed layout | M |
+| Everything | ✅ (live systems/domains) | verify `GraphView`/`buildGraph`; add to allowlist | S |
+
+## Phase 2 — Behaviour (Deciders, Scenarios)
+| View | Backend | Frontend | Effort |
+|---|---|---|---|
+| Deciders | enrich `deciders`: per-command `handles` (from `logic`), real `stateRead`/`rejections`/`coverage` | rewrite `DecidersView` | M |
+| Scenarios | new: `scenarios` from each Decider's `scenarios` (+ simulate verdicts) | rewrite `ScenariosView` | M |
+
+## Phase 3 — Delivery (Features, Versions)
+| View | Backend | Frontend | Effort |
+|---|---|---|---|
+| Features | enrich `delivery.features`: friendly name, real `done` (`pf::done::feature_done`), derived footprint closure, per-clause status | rewrite `FeaturesView` | M |
+| Versions | enrich `delivery.versions` from product/how versions + targets; derive `bump`/`diff` | rewrite `VersionsView` | M |
+
+## Phase 4 — The How (§4)
+| View | Backend (`pf_how`) | Frontend | Effort |
+|---|---|---|---|
+| How · Systems | ✅ (enrich patterns.files/rules from layout; real blueprint→system) | rewrite `HowViews` blueprint/DU/cascade | M |
+| Patterns | `patterns` ✅ | rewrite | S |
+| Layout | new: `how.layout` from blueprint `layout.yaml` + `repoTree` (real repo scan vs rules) | rewrite | M |
+| Composition / Reification | new: `how.contracts`, `how.standards`, `composition`, `manifest` from app/infra contracts + design-systems + reification-rules | rewrite | L |
+| Process | new: `howProcess` (H1–H6 from binding state) | rewrite `HowProcessView` | M |
+
+## Phase 5 — UI section (§3.2) — largest; new `pf_view/pf_ui.rs`
+| View | Backend | Frontend | Effort |
+|---|---|---|---|
+| AIOs | `aios` + `aioUsage` | rewrite `AIOCatalogView` | M |
+| Steps | `stepSpecs` from wireframe-steps | rewrite `UIStepsView` | M |
+| Pages | `pageGraph` from application-roots + navigate edges | rewrite `PageGraphView` | M |
+| Screens | `contract` (screen composition) from steps + reification + cios | rewrite `ScreenPreview` | L |
+| Content | content store + `resolveContent` | rewrite `ContentView` | M |
+| (data) | `wcag`, `refData`, `oracle` from wcag-criteria / reference-sets / primitives | consumed above | M |
+
+## Phase 6 — Build (§5–6)
+| View | Backend (`pf_view/pf_build.rs`) | Frontend | Effort |
+|---|---|---|---|
+| Work units | `workUnits` from `.product/work-units/` (bundle/hash) + build verdicts | rewrite `BuildViews` | M |
+| Verifications | `verificationKinds` §6.3 + real standings | rewrite `BuildViews` | M |
+
+## Phase 7 — Completeness & hardening
+- Remove `PF_LIVE_KEYS` gate (all keys live); demo = offline fallback only.
+- Empty-state polish for every view (e.g. 0 DeployableUnits).
+- Model blueprint→system→DeployableUnit edges explicitly (graph can't currently say which blueprint realises which system).
+- SSE reconnect/backoff + indicator.
+- Contract-drift test in CI; `/api/pf` shape smoke test.
+
+## Sequencing
+`0 → 1 → 3 → 2 → 4 → 5 → 6 → 7` (Delivery before Behaviour: mostly ready + high-visibility).
+Total ≈ 20 view rewrites + ~18 projection fields + conformance/layout foundations.
+
+## Decisions (defaults, pending confirmation)
+- **Execution:** Phase 0 with review, then autonomous run through Phases 1–6, check in at phase boundaries.
+- **Conformance:** computed from real verdicts (Phase 0 `conformance.rs`).
+- **Tracking:** this doc + a tracked task list.
