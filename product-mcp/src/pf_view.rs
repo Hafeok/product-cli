@@ -20,6 +20,7 @@ use product_core::pf::model::DomainGraph;
 use serde_json::{json, Map, Value};
 
 mod conformance;
+mod pf_build;
 mod pf_flows;
 mod pf_how;
 
@@ -56,6 +57,7 @@ pub fn build_pf_view(graph: &DomainGraph, repo_root: &Path) -> Value {
     out.insert("scenarios".into(), pf_how::project_scenarios(repo_root, &conf));
     out.insert("delivery".into(), pf_how::project_delivery(graph, repo_root, &conf));
     out.insert("how".into(), pf_how::project_how(graph, repo_root, &conf));
+    out.insert("workUnits".into(), pf_build::project_work_units(repo_root));
     // A marker the UI can show so it is clear the view is graph-connected.
     out.insert("_live".into(), json!(true));
     Value::Object(out)
