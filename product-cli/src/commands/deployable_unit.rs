@@ -20,7 +20,7 @@ use super::BoxResult;
 #[derive(Subcommand)]
 pub enum DeployableUnitCommands {
     /// List the deployable units under .product/deployable-units/
-    List {},
+    List { #[arg(long)] product: Option<String> },
     /// Instantiate a blueprint as a concrete deployable unit
     New {
         /// The deployable-unit id (e.g. shop-ios)
@@ -53,6 +53,8 @@ pub enum DeployableUnitCommands {
     Show {
         /// The deployable-unit id (filename stem)
         name: String,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Validate a deployable unit (§4/§4.2 — blueprint, systems, identity)
     Validate {
@@ -66,22 +68,22 @@ pub enum DeployableUnitCommands {
 
 pub(crate) fn handle_deployable_unit(cmd: DeployableUnitCommands) -> BoxResult {
     match cmd {
-        DeployableUnitCommands::List {} => list(),
+        DeployableUnitCommands::List { product } => list(product),
         DeployableUnitCommands::New {
             id, built_from, systems, environment, domain_name, bundle_id, runtime, product, force,
         } => new(&id, built_from, systems, environment, domain_name, bundle_id, runtime, product, force),
-        DeployableUnitCommands::Show { name } => show(&name),
+        DeployableUnitCommands::Show { name, product } => show(&name, product),
         DeployableUnitCommands::Validate { name, product } => validate(&name, product),
     }
 }
 
-fn units_dir() -> PathBuf {
-    super::shared::domain_root().join(".product").join("deployable-units")
+fn units_dir(product: Option<&str>) -> PathBuf {
+    super::shared::artifact_dir(product, "deployable-units")
 }
 
 /// Prefer `.product/blueprints/`, fall back to the legacy `.product/archetypes/`.
-fn blueprints_dir() -> PathBuf {
-    let base = super::shared::domain_root().join(".product");
+fn blueprints_dir(product: Option<&str>) -> PathBuf {
+    let base = super::shared::artifact_dir(product, "");
     let blueprints = base.join("blueprints");
     if blueprints.is_dir() {
         return blueprints;
@@ -94,8 +96,8 @@ fn blueprints_dir() -> PathBuf {
 }
 
 /// The blueprint names available on disk (directory names under blueprints_dir).
-fn known_blueprints() -> Vec<String> {
-    product_core::pf::deployable_unit::blueprint_names(&blueprints_dir())
+fn known_blueprints(product: Option<&str>) -> Vec<String> {
+    product_core::pf::deployable_unit::blueprint_names(&blueprints_dir(product))
 }
 
 fn load_domain(product: Option<String>) -> Option<DomainGraph> {
@@ -103,8 +105,8 @@ fn load_domain(product: Option<String>) -> Option<DomainGraph> {
     DomainSession::load(&session_dir(&super::shared::domain_root(), &p)).ok().map(|s| s.graph)
 }
 
-fn load(name: &str) -> Result<DeployableUnit, Box<dyn std::error::Error>> {
-    let path = units_dir().join(format!("{name}.yaml"));
+fn load(name: &str, product: Option<&str>) -> Result<DeployableUnit, Box<dyn std::error::Error>> {
+    let path = units_dir(product).join(format!("{name}.yaml"));
     let text = std::fs::read_to_string(&path).map_err(|_| {
         format!("no deployable unit '{name}' at {} — create one with `product deployable-unit new`", path.display())
     })?;
@@ -130,15 +132,16 @@ fn new(
         environment,
         identity: DeploymentIdentity { domain_name, bundle_id, runtime },
     };
+    let pref = product.clone();
     let graph = load_domain(product);
-    let problems = validate_deployable_unit(&du, graph.as_ref(), &known_blueprints());
+    let problems = validate_deployable_unit(&du, graph.as_ref(), &known_blueprints(pref.as_deref()));
     if !problems.is_empty() {
         for v in &problems {
             eprintln!("  - [{}] {}: {}", v.focus, v.path, v.message);
         }
         return Err(format!("{} deployable-unit problem(s)", problems.len()).into());
     }
-    let dir = units_dir();
+    let dir = units_dir(pref.as_deref());
     std::fs::create_dir_all(&dir)?;
     let path = dir.join(format!("{id}.yaml"));
     if path.exists() && !force {
@@ -153,8 +156,8 @@ fn new(
     Ok(())
 }
 
-fn show(name: &str) -> BoxResult {
-    let du = load(name)?;
+fn show(name: &str, product: Option<String>) -> BoxResult {
+    let du = load(name, product.as_deref())?;
     println!("deployable-unit: {}", du.id);
     println!("built_from: {}", du.built_from);
     println!("deploys_system: {}", du.deploys_system.join(", "));
@@ -176,9 +179,10 @@ fn show(name: &str) -> BoxResult {
 }
 
 fn validate(name: &str, product: Option<String>) -> BoxResult {
-    let du = load(name)?;
+    let du = load(name, product.as_deref())?;
+    let pref = product.clone();
     let graph = load_domain(product);
-    let problems = validate_deployable_unit(&du, graph.as_ref(), &known_blueprints());
+    let problems = validate_deployable_unit(&du, graph.as_ref(), &known_blueprints(pref.as_deref()));
     if !problems.is_empty() {
         eprintln!("non-conformant — {} violation(s):", problems.len());
         for v in &problems {
@@ -195,8 +199,8 @@ fn validate(name: &str, product: Option<String>) -> BoxResult {
     Ok(())
 }
 
-fn list() -> BoxResult {
-    let dir = units_dir();
+fn list(product: Option<String>) -> BoxResult {
+    let dir = units_dir(product.as_deref());
     let entries = match std::fs::read_dir(&dir) {
         Ok(it) => it,
         Err(_) => {

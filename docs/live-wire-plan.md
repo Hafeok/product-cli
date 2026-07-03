@@ -25,6 +25,23 @@ first render + on the SSE `changed` tick, merging the fields in `PF_LIVE_KEYS`.
 Every view renders (never crashes). Each remaining item becomes live the same way
 the shipped ones did: project its field → add the key to `PF_LIVE_KEYS`.
 
+## Write-side per-product scoping (in progress)
+The shared resolver `product_core::pf::paths::product_base(repo_root, product)`
+is the single source of truth for both reads (the projection) and writes (CLI +
+MCP): the **root product** (product.toml name) uses `.product/`, every other
+product is scoped to `.product/products/<name>/`. Wired so far:
+- **CLI `feature` + `deployable-unit`** honour `--product`: `feature new
+  --product acme` / `deployable-unit new --product acme` write into
+  `.product/products/acme/` (validated against acme's scoped blueprint); the
+  default product stays global. (`shared::artifact_dir`.)
+- **Follow-up** (cross-module helpers — `load_deciders`/`conformed_set`/`ids_in`
+  are shared across deliverable/release/target/build): thread `--product`
+  through `deliverable`, `release`, `target`, `decider`, `projector`, `cell`,
+  `work-unit`, `blueprint`, `how`, and the MCP handler mirrors. Mechanical now
+  that `product_base` exists. Until then those commands write to the root
+  `.product/` (acme's deliverables/blueprint were authored as scoped YAML by
+  `scripts/showcase-acme-how.sh`).
+
 ## Per-product scoping + product picker
 - **Per-product artifacts.** The projection resolves a per-product base
   `.product/products/<product>/` (falling back to the shared `.product/` for the

@@ -27,7 +27,10 @@ pub enum FeatureCommands {
         depth: Option<usize>,
     },
     /// List the features under .product/features/
-    List {},
+    List {
+        #[arg(long)]
+        product: Option<String>,
+    },
     /// Create a feature pointing at subgraph(s) of the event model
     New {
         /// The feature id (e.g. place-order)
@@ -46,20 +49,22 @@ pub enum FeatureCommands {
     Show {
         /// The feature id (filename stem)
         name: String,
+        #[arg(long)]
+        product: Option<String>,
     },
 }
 
 pub(crate) fn handle_feature(cmd: FeatureCommands) -> BoxResult {
     match cmd {
         FeatureCommands::Context { name, product, depth } => context(&name, product, depth),
-        FeatureCommands::List {} => list(),
+        FeatureCommands::List { product } => list(product),
         FeatureCommands::New { id, anchors, depth, product, force } => new(&id, anchors, depth, product, force),
-        FeatureCommands::Show { name } => show(&name),
+        FeatureCommands::Show { name, product } => show(&name, product),
     }
 }
 
-fn features_dir() -> PathBuf {
-    super::shared::domain_root().join(".product").join("features")
+fn features_dir(product: Option<&str>) -> PathBuf {
+    super::shared::artifact_dir(product, "features")
 }
 
 fn load_domain(product: Option<String>) -> Result<(String, DomainGraph), Box<dyn std::error::Error>> {
@@ -71,15 +76,15 @@ fn load_domain(product: Option<String>) -> Result<(String, DomainGraph), Box<dyn
     Ok((p, session.graph))
 }
 
-fn load(name: &str) -> Result<Feature, Box<dyn std::error::Error>> {
-    let path = features_dir().join(format!("{name}.yaml"));
+fn load(name: &str, product: Option<&str>) -> Result<Feature, Box<dyn std::error::Error>> {
+    let path = features_dir(product).join(format!("{name}.yaml"));
     let text = std::fs::read_to_string(&path)
         .map_err(|_| format!("no feature '{name}' at {} — create one with `product feature new`", path.display()))?;
     Ok(Feature::from_yaml(&text)?)
 }
 
 fn new(id: &str, anchors: Vec<String>, depth: Option<usize>, product: Option<String>, force: bool) -> BoxResult {
-    let (_p, graph) = load_domain(product)?;
+    let (p, graph) = load_domain(product)?;
     let feature = Feature { id: id.to_string(), anchors, depth };
     let problems = validate_feature(&feature, &graph);
     if !problems.is_empty() {
@@ -88,7 +93,7 @@ fn new(id: &str, anchors: Vec<String>, depth: Option<usize>, product: Option<Str
         }
         return Err(format!("{} feature problem(s) — every anchor must resolve to a node", problems.len()).into());
     }
-    let dir = features_dir();
+    let dir = features_dir(Some(&p));
     std::fs::create_dir_all(&dir)?;
     let path = dir.join(format!("{id}.yaml"));
     if path.exists() && !force {
@@ -100,7 +105,7 @@ fn new(id: &str, anchors: Vec<String>, depth: Option<usize>, product: Option<Str
 }
 
 fn context(name: &str, product: Option<String>, depth: Option<usize>) -> BoxResult {
-    let feature = load(name)?;
+    let feature = load(name, product.as_deref())?;
     let (p, graph) = load_domain(product)?;
     let depth = depth.unwrap_or_else(|| feature.depth());
     let bundle = feature_context(&feature, &graph, depth, &p)
@@ -109,16 +114,16 @@ fn context(name: &str, product: Option<String>, depth: Option<usize>) -> BoxResu
     Ok(())
 }
 
-fn show(name: &str) -> BoxResult {
-    let s = load(name)?;
+fn show(name: &str, product: Option<String>) -> BoxResult {
+    let s = load(name, product.as_deref())?;
     println!("feature: {}", s.id);
     println!("anchors: {}", s.anchors.join(", "));
     println!("depth: {}", s.depth());
     Ok(())
 }
 
-fn list() -> BoxResult {
-    let dir = features_dir();
+fn list(product: Option<String>) -> BoxResult {
+    let dir = features_dir(product.as_deref());
     let entries = match std::fs::read_dir(&dir) {
         Ok(it) => it,
         Err(_) => {

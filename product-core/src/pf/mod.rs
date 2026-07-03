@@ -45,6 +45,7 @@ pub mod model_data;
 pub mod model_product;
 pub mod model_ui;
 pub mod ops;
+pub mod paths;
 pub mod primitive;
 pub mod projector;
 pub mod projector_logic;

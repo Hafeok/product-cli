@@ -26,13 +26,12 @@ mod pf_how;
 mod pf_repo;
 mod pf_ui;
 
-/// The `.product` base for a product's How/Delivery/Build artifacts: a
-/// per-product `.product/products/<product>/` if it exists (so acme's blueprint,
-/// deliverables, DeployableUnits, … are its own), else the shared `.product/`
-/// (back-compat for the self-hosted product-cli, whose artifacts live at root).
+/// The `.product` base for a product's How/Delivery/Build artifacts — the shared
+/// resolver in product-core, so reads (this projection) and writes (CLI + MCP)
+/// always agree: the root product uses `.product/`, every other product is
+/// scoped to `.product/products/<product>/`.
 pub(crate) fn scoped_base(repo_root: &Path, product: &str) -> PathBuf {
-    let scoped = repo_root.join(".product").join("products").join(product);
-    if scoped.is_dir() { scoped } else { repo_root.join(".product") }
+    product_core::pf::paths::product_base(repo_root, product)
 }
 
 /// Read + parse every `*.yaml` in `<base>/<dir>` through `parse`, sorted by

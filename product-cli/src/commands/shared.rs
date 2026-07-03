@@ -39,6 +39,16 @@ pub(crate) fn default_author_cli() -> Option<String> {
         .or_else(product_core::config::load_global_author_cli)
 }
 
+/// The on-disk directory for a product's `<kind>` artifacts (features,
+/// deliverables, deciders, work-units, …), scoped per-product: the root product
+/// uses `.product/<kind>`, every other product `.product/products/<name>/<kind>`.
+/// `product` is the command's `--product` (else the configured default).
+pub(crate) fn artifact_dir(product: Option<&str>, kind: &str) -> PathBuf {
+    let root = domain_root();
+    let name = product.map(str::to_string).or_else(default_product_name).unwrap_or_default();
+    product_core::pf::paths::product_base(&root, &name).join(kind)
+}
+
 /// Resolve the repo root for domain-graph commands: the discovered product
 /// root, else the current directory.
 pub(crate) fn domain_root() -> PathBuf {
