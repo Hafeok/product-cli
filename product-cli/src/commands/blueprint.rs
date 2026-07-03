@@ -22,20 +22,26 @@ pub enum BlueprintCommands {
     Check {
         /// The blueprint name
         name: String,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Scaffold a new blueprint (How + layout + an example cell)
     Init {
         /// The blueprint name (e.g. rest-api)
         name: String,
         #[arg(long)]
+        product: Option<String>,
+        #[arg(long)]
         force: bool,
     },
     /// List the blueprints under .product/blueprints/
-    List {},
+    List { #[arg(long)] product: Option<String> },
     /// Show a summary of an assembled blueprint
     Show {
         /// The blueprint name
         name: String,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Validate the whole blueprint (How + layout + cells + coherence)
     Validate {
@@ -50,19 +56,19 @@ pub enum BlueprintCommands {
 pub(crate) fn handle_blueprint(cmd: BlueprintCommands) -> BoxResult {
     match cmd {
         BlueprintCommands::Validate { name, product } => validate(&name, product),
-        BlueprintCommands::Check { name } => check(&name),
-        BlueprintCommands::Show { name } => show(&name),
-        BlueprintCommands::List {} => list(),
-        BlueprintCommands::Init { name, force } => init(&name, force),
+        BlueprintCommands::Check { name, product } => check(&name, product),
+        BlueprintCommands::Show { name, product } => show(&name, product),
+        BlueprintCommands::List { product } => list(product),
+        BlueprintCommands::Init { name, product, force } => init(&name, product, force),
     }
 }
 
 /// Apply the blueprint's layout model to the actual repository tree (§4.3
 /// layout-conformance — the cheapest gate). `validate` checks the model is
 /// well-formed; `check` checks the repo conforms to it.
-fn check(name: &str) -> BoxResult {
+fn check(name: &str, product: Option<String>) -> BoxResult {
     let root = super::shared::domain_root();
-    let arch = Blueprint::load_from_dir(&blueprints_dir().join(name), name)?;
+    let arch = Blueprint::load_from_dir(&blueprints_dir(product.as_deref()).join(name), name)?;
     let Some(layout) = &arch.layout else {
         println!("blueprint '{name}': no layout model to check");
         return Ok(());
@@ -79,8 +85,8 @@ fn check(name: &str) -> BoxResult {
     Err(format!("{} layout violation(s)", violations.len()).into())
 }
 
-fn blueprints_dir() -> PathBuf {
-    let pdir = super::shared::domain_root().join(".product");
+fn blueprints_dir(product: Option<&str>) -> PathBuf {
+    let pdir = super::shared::artifact_dir(product, "");
     let canonical = pdir.join("blueprints");
     if canonical.exists() {
         return canonical;
@@ -99,7 +105,7 @@ fn load_domain(product: Option<String>) -> Option<DomainGraph> {
 }
 
 fn validate(name: &str, product: Option<String>) -> BoxResult {
-    let arch = Blueprint::load_from_dir(&blueprints_dir().join(name), name)?;
+    let arch = Blueprint::load_from_dir(&blueprints_dir(product.as_deref()).join(name), name)?;
     let domain = load_domain(product);
     let results = arch.validate(domain.as_ref());
 
@@ -128,8 +134,8 @@ fn yes_no(b: bool) -> &'static str {
     if b { "present" } else { "missing" }
 }
 
-fn show(name: &str) -> BoxResult {
-    let arch = Blueprint::load_from_dir(&blueprints_dir().join(name), name)?;
+fn show(name: &str, product: Option<String>) -> BoxResult {
+    let arch = Blueprint::load_from_dir(&blueprints_dir(product.as_deref()).join(name), name)?;
     println!("blueprint: {name}");
     if let Some(how) = &arch.how {
         println!("how-contract: {} ({} decision(s), {} principle(s), {} pattern(s))",
@@ -148,8 +154,8 @@ fn show(name: &str) -> BoxResult {
     Ok(())
 }
 
-fn list() -> BoxResult {
-    let dir = blueprints_dir();
+fn list(product: Option<String>) -> BoxResult {
+    let dir = blueprints_dir(product.as_deref());
     let entries = match std::fs::read_dir(&dir) {
         Ok(it) => it,
         Err(_) => {
@@ -172,8 +178,8 @@ fn list() -> BoxResult {
     Ok(())
 }
 
-fn init(name: &str, force: bool) -> BoxResult {
-    let dir = blueprints_dir().join(name);
+fn init(name: &str, product: Option<String>, force: bool) -> BoxResult {
+    let dir = blueprints_dir(product.as_deref()).join(name);
     if dir.exists() && !force {
         return Err(format!("{} already exists — pass --force to overwrite", dir.display()).into());
     }

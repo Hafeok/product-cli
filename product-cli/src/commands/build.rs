@@ -37,10 +37,11 @@ pub(crate) struct Gates {
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: bool, gates: Gates, emit_spmc: bool, emit_seam: bool, out: Option<PathBuf>, product: Option<String>) -> BoxResult {
-    let mut d = super::deliverable::load(deliverable)?;
-    let feature = super::deliverable::load_feature(&d.feature)?;
+    let pr = product.clone();
+    let mut d = super::deliverable::load(deliverable, pr.as_deref())?;
+    let feature = super::deliverable::load_feature(&d.feature, pr.as_deref())?;
     let graph = super::deliverable::load_graph(product.clone())?;
-    let deciders = super::deliverable::load_deciders();
+    let deciders = super::deliverable::load_deciders(pr.as_deref());
     let how = load_how();
     let p = product.clone().or_else(super::shared::default_product_name).unwrap_or_else(|| "product".to_string());
 
@@ -49,7 +50,7 @@ pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: 
     // deliverable is one unit of work.
     // The capability ladder (weakest first); the fix loops climb it as rounds fail.
     let ladder = super::worker::ladder(&super::worker::load_catalog(), role);
-    let units = load_work_units();
+    let units = load_work_units(pr.as_deref());
 
     if emit_spmc {
         return emit(deliverable, &d, &feature, &graph, how.as_ref(), &deciders, &units, &p, out);
@@ -63,10 +64,10 @@ pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: 
         print_dry_run(&context, role, &ladder, &units, jobs, gates, &d);
     } else {
         super::build_session::begin(deliverable);
-        dispatch_live(deliverable, &context, &ladder, &units, jobs, gates, &mut d)?;
+        dispatch_live(deliverable, &context, &ladder, &units, jobs, gates, &mut d, pr.as_deref())?;
     }
     println!("\n--- Gate status ---");
-    let fd = report_gates(&d, &feature, &graph, &deciders);
+    let fd = report_gates(&d, &feature, &graph, &deciders, pr.as_deref());
     if !dry_run {
         finish_session(&fd);
     }
@@ -160,7 +161,8 @@ fn print_dry_run(context: &str, role: &str, ladder: &[Capability], units: &[Work
 }
 
 /// Persist the frozen context, dispatch the work, then run the LSP + verify gates.
-fn dispatch_live(deliverable: &str, context: &str, ladder: &[Capability], units: &[WorkUnit], jobs: usize, gates: Gates, d: &mut Deliverable) -> BoxResult {
+#[allow(clippy::too_many_arguments)]
+fn dispatch_live(deliverable: &str, context: &str, ladder: &[Capability], units: &[WorkUnit], jobs: usize, gates: Gates, d: &mut Deliverable, product: Option<&str>) -> BoxResult {
     let root = super::shared::domain_root();
     let cap = &ladder[0];
     let dir = root.join(".product").join("build");
@@ -183,7 +185,7 @@ fn dispatch_live(deliverable: &str, context: &str, ladder: &[Capability], units:
         super::build_lsp::run(&written, ladder, context, &root, gates.max_rounds, gates.budget);
     }
     if gates.verify {
-        super::build_verify::run(d, &written, ladder, context, &root, gates.max_rounds, gates.budget);
+        super::build_verify::run(d, &written, ladder, context, &root, gates.max_rounds, gates.budget, product);
     }
     report_changes(&written, &root);
     Ok(())
@@ -335,12 +337,12 @@ fn unit_prompt(shared: &str, wu: &WorkUnit, all: &[WorkUnit], root: &Path) -> St
     p
 }
 
-fn work_units_dir() -> PathBuf {
-    super::shared::domain_root().join(".product").join("work-units")
+fn work_units_dir(product: Option<&str>) -> PathBuf {
+    super::shared::artifact_dir(product, "work-units")
 }
 
-fn load_work_units() -> Vec<WorkUnit> {
-    let dir = work_units_dir();
+fn load_work_units(product: Option<&str>) -> Vec<WorkUnit> {
+    let dir = work_units_dir(product);
     let Ok(entries) = std::fs::read_dir(&dir) else { return Vec::new() };
     let mut units: Vec<WorkUnit> = entries
         .flatten()
@@ -364,8 +366,8 @@ fn load_how() -> Option<HowContract> {
     candidates.iter().find_map(|p| HowContract::load_opt(p).ok().flatten())
 }
 
-fn report_gates(d: &Deliverable, feature: &Feature, graph: &DomainGraph, deciders: &[Decider]) -> FeatureDone {
-    let fd = feature_done(d, feature, graph, deciders, &super::decider::conformed_set(), &super::deliverable::load_projectors());
+fn report_gates(d: &Deliverable, feature: &Feature, graph: &DomainGraph, deciders: &[Decider], product: Option<&str>) -> FeatureDone {
+    let fd = feature_done(d, feature, graph, deciders, &super::decider::conformed_set(product), &super::deliverable::load_projectors(product));
     super::deliverable::print_feature_done(&fd);
     fd
 }

@@ -17,20 +17,20 @@ use product_core::pf::how_validate::validate_how;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::{json, Value};
 
-use crate::pf_mcp::{load_yaml, pdir, req_str};
+use crate::pf_mcp::{load_yaml, pbase, req_str};
 
-fn how_path(repo_root: &Path) -> PathBuf {
-    pdir(repo_root).join("how-contract.yaml")
+fn how_path(base: &Path) -> PathBuf {
+    base.join("how-contract.yaml")
 }
 
-fn load_how(repo_root: &Path) -> Result<HowContract, String> {
-    load_yaml(&pdir(repo_root), "how-contract", HowContract::from_yaml)
+fn load_how(base: &Path) -> Result<HowContract, String> {
+    load_yaml(base, "how-contract", HowContract::from_yaml)
 }
 
-fn save_how(repo_root: &Path, c: &HowContract) -> Result<(), String> {
-    std::fs::create_dir_all(pdir(repo_root)).map_err(|e| format!("{e}"))?;
+fn save_how(base: &Path, c: &HowContract) -> Result<(), String> {
+    std::fs::create_dir_all(base).map_err(|e| format!("{e}"))?;
     let text = c.to_yaml().map_err(|e| format!("{e}"))?;
-    product_core::fileops::write_file_atomic(&how_path(repo_root), &text).map_err(|e| format!("{e}"))
+    product_core::fileops::write_file_atomic(&how_path(base), &text).map_err(|e| format!("{e}"))
 }
 
 /// Deserialize a typed element straight from the call arguments. Selector keys
@@ -44,8 +44,8 @@ fn to_val<T: Serialize>(x: &T) -> Result<Value, String> {
 }
 
 /// Persist the mutated contract, re-validate it, and shape the response.
-fn finish(repo_root: &Path, c: &HowContract, id: &str, element: Value) -> Result<Value, String> {
-    save_how(repo_root, c)?;
+fn finish(base: &Path, c: &HowContract, id: &str, element: Value) -> Result<Value, String> {
+    save_how(base, c)?;
     let violations = validate_how(c);
     let ok = !violations.iter().any(|v| v.severity == "violation");
     Ok(json!({ "ok": ok, "id": id, "element": element, "violations": violations }))
@@ -54,7 +54,8 @@ fn finish(repo_root: &Path, c: &HowContract, id: &str, element: Value) -> Result
 /// Scaffold a fresh How contract keyed to a blueprint (or the `product` arg).
 pub fn handle_how_init(args: &Value, repo_root: &Path) -> Result<Value, String> {
     let blueprint = req_str(args, "blueprint").or_else(|_| req_str(args, "product"))?;
-    let path = how_path(repo_root);
+    let base = pbase(args, repo_root);
+    let path = how_path(&base);
     if path.exists() {
         return Err(format!(
             "how-contract already exists at {} — edit it with product_how_add / product_how_set",
@@ -62,7 +63,7 @@ pub fn handle_how_init(args: &Value, repo_root: &Path) -> Result<Value, String> 
         ));
     }
     let c = HowContract::scaffold(&blueprint);
-    save_how(repo_root, &c)?;
+    save_how(&base, &c)?;
     Ok(json!({ "ok": true, "created": path.display().to_string(), "blueprint": blueprint }))
 }
 
@@ -70,7 +71,8 @@ pub fn handle_how_init(args: &Value, repo_root: &Path) -> Result<Value, String> 
 pub fn handle_how_add(args: &Value, repo_root: &Path) -> Result<Value, String> {
     let element = req_str(args, "element")?;
     let id = req_str(args, "id")?;
-    let mut c = load_how(repo_root)?;
+    let base = pbase(args, repo_root);
+    let mut c = load_how(&base)?;
     let added = match element.as_str() {
         "decision" => {
             let d: TopDecision = from_args(args)?;
@@ -108,14 +110,15 @@ pub fn handle_how_add(args: &Value, repo_root: &Path) -> Result<Value, String> {
             ))
         }
     };
-    finish(repo_root, &c, &id, added)
+    finish(&base, &c, &id, added)
 }
 
 /// Set a singleton contract (the application or infrastructure contract).
 pub fn handle_how_set(args: &Value, repo_root: &Path) -> Result<Value, String> {
     let target = req_str(args, "target")?;
     let id = req_str(args, "id")?;
-    let mut c = load_how(repo_root)?;
+    let base = pbase(args, repo_root);
+    let mut c = load_how(&base)?;
     let set = match target.as_str() {
         "app-contract" => {
             let a: ApplicationContract = from_args(args)?;
@@ -143,15 +146,16 @@ pub fn handle_how_set(args: &Value, repo_root: &Path) -> Result<Value, String> {
             ))
         }
     };
-    finish(repo_root, &c, &id, set)
+    finish(&base, &c, &id, set)
 }
 
 /// Remove a Why-cascade element or contract part by id.
 pub fn handle_how_rm(args: &Value, repo_root: &Path) -> Result<Value, String> {
     let id = req_str(args, "id")?;
-    let mut c = load_how(repo_root)?;
+    let base = pbase(args, repo_root);
+    let mut c = load_how(&base)?;
     let removed = edit::remove(&mut c, &id).map_err(|e| format!("{e}"))?;
-    save_how(repo_root, &c)?;
+    save_how(&base, &c)?;
     let violations = validate_how(&c);
     let ok = !violations.iter().any(|v| v.severity == "violation");
     Ok(json!({ "ok": ok, "id": id, "removed": removed, "violations": violations }))
@@ -177,7 +181,8 @@ fn patch<T: Serialize + DeserializeOwned>(current: &T, args: &Value) -> Result<T
 pub fn handle_how_edit(args: &Value, repo_root: &Path) -> Result<Value, String> {
     let element = req_str(args, "element")?;
     let id = req_str(args, "id")?;
-    let mut c = load_how(repo_root)?;
+    let base = pbase(args, repo_root);
+    let mut c = load_how(&base)?;
     let edited = match element.as_str() {
         "decision" => {
             let cur = c.top_decisions.iter().find(|x| x.id == id).ok_or_else(|| miss(&id))?;
@@ -209,7 +214,7 @@ pub fn handle_how_edit(args: &Value, repo_root: &Path) -> Result<Value, String> 
             ))
         }
     };
-    finish(repo_root, &c, &id, edited)
+    finish(&base, &c, &id, edited)
 }
 
 fn miss(id: &str) -> String {

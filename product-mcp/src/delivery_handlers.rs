@@ -12,39 +12,39 @@ use product_core::pf::feature::{validate_feature, Feature};
 use product_core::pf::target::{direction, validate_target, Target};
 use serde_json::{json, Value};
 
-use crate::pf_mcp::{graph_of, ids_in, load_yaml, pdir, product_of, req_str};
+use crate::pf_mcp::{graph_of, ids_in, load_yaml, pbase, product_of, req_str};
 
-fn features_dir(r: &Path) -> PathBuf { pdir(r).join("features") }
-fn deliverables_dir(r: &Path) -> PathBuf { pdir(r).join("deliverables") }
-fn releases_dir(r: &Path) -> PathBuf { pdir(r).join("releases") }
-fn targets_dir(r: &Path) -> PathBuf { pdir(r).join("targets") }
-fn deciders_dir(r: &Path) -> PathBuf { pdir(r).join("deciders") }
+fn features_dir(base: &Path) -> PathBuf { base.join("features") }
+fn deliverables_dir(base: &Path) -> PathBuf { base.join("deliverables") }
+fn releases_dir(base: &Path) -> PathBuf { base.join("releases") }
+fn targets_dir(base: &Path) -> PathBuf { base.join("targets") }
+fn deciders_dir(base: &Path) -> PathBuf { base.join("deciders") }
 
 fn id_set(dir: &Path) -> BTreeSet<String> {
     ids_in(dir).into_iter().collect()
 }
 
-fn load_deciders(repo_root: &Path) -> Vec<product_core::pf::decider::Decider> {
-    ids_in(&deciders_dir(repo_root))
+fn load_deciders(base: &Path) -> Vec<product_core::pf::decider::Decider> {
+    ids_in(&deciders_dir(base))
         .iter()
-        .filter_map(|n| load_yaml(&deciders_dir(repo_root), n, product_core::pf::decider::Decider::from_yaml).ok())
+        .filter_map(|n| load_yaml(&deciders_dir(base), n, product_core::pf::decider::Decider::from_yaml).ok())
         .collect()
 }
 
-fn projectors_dir(r: &Path) -> PathBuf {
-    pdir(r).join("projectors")
+fn projectors_dir(base: &Path) -> PathBuf {
+    base.join("projectors")
 }
 
-fn load_projectors(repo_root: &Path) -> Vec<product_core::pf::projector::Projector> {
-    ids_in(&projectors_dir(repo_root))
+fn load_projectors(base: &Path) -> Vec<product_core::pf::projector::Projector> {
+    ids_in(&projectors_dir(base))
         .iter()
-        .filter_map(|n| load_yaml(&projectors_dir(repo_root), n, product_core::pf::projector::Projector::from_yaml).ok())
+        .filter_map(|n| load_yaml(&projectors_dir(base), n, product_core::pf::projector::Projector::from_yaml).ok())
         .collect()
 }
 
 /// Decider ids with a recorded passing conformance verdict (`<id>.conform.json`).
-fn conformed_set(repo_root: &Path) -> BTreeSet<String> {
-    let dir = deciders_dir(repo_root);
+fn conformed_set(base: &Path) -> BTreeSet<String> {
+    let dir = deciders_dir(base);
     let mut out = BTreeSet::new();
     let Ok(entries) = std::fs::read_dir(&dir) else { return out };
     for e in entries.flatten() {
@@ -82,17 +82,20 @@ fn write_new(dir: &Path, id: &str, yaml: String, force: bool) -> Result<(), Stri
 
 // --- feature -----------------------------------------------------------------
 
-pub fn handle_feature_list(_args: &Value, repo_root: &Path) -> Result<Value, String> {
-    Ok(json!({ "features": ids_in(&features_dir(repo_root)) }))
+pub fn handle_feature_list(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let base = pbase(args, repo_root);
+    Ok(json!({ "features": ids_in(&features_dir(&base)) }))
 }
 
 pub fn handle_feature_show(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let s = load_yaml(&features_dir(repo_root), &req_str(args, "name")?, Feature::from_yaml)?;
+    let base = pbase(args, repo_root);
+    let s = load_yaml(&features_dir(&base), &req_str(args, "name")?, Feature::from_yaml)?;
     serde_json::to_value(&s).map_err(|e| format!("{e}"))
 }
 
 pub fn handle_feature_context(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let s = load_yaml(&features_dir(repo_root), &req_str(args, "name")?, Feature::from_yaml)?;
+    let base = pbase(args, repo_root);
+    let s = load_yaml(&features_dir(&base), &req_str(args, "name")?, Feature::from_yaml)?;
     let graph = graph_of(args, repo_root)?;
     let depth = args.get("depth").and_then(|v| v.as_u64()).map(|d| d as usize).unwrap_or_else(|| s.depth());
     let bundle = bundle_many(&graph, &s.anchors, depth, &product_of(args, repo_root)?)
@@ -101,6 +104,7 @@ pub fn handle_feature_context(args: &Value, repo_root: &Path) -> Result<Value, S
 }
 
 pub fn handle_feature_new(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let base = pbase(args, repo_root);
     let id = req_str(args, "id")?;
     let feature = Feature {
         id: id.clone(),
@@ -112,22 +116,25 @@ pub fn handle_feature_new(args: &Value, repo_root: &Path) -> Result<Value, Strin
         return Ok(json!({ "ok": false, "violations": problems }));
     }
     let force = args.get("force").and_then(|v| v.as_bool()).unwrap_or(false);
-    write_new(&features_dir(repo_root), &id, feature.to_yaml().map_err(|e| format!("{e}"))?, force)?;
+    write_new(&features_dir(&base), &id, feature.to_yaml().map_err(|e| format!("{e}"))?, force)?;
     Ok(json!({ "ok": true, "id": id }))
 }
 
 // --- deliverable -----------------------------------------------------------
 
-pub fn handle_deliverable_list(_args: &Value, repo_root: &Path) -> Result<Value, String> {
-    Ok(json!({ "deliverables": ids_in(&deliverables_dir(repo_root)) }))
+pub fn handle_deliverable_list(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let base = pbase(args, repo_root);
+    Ok(json!({ "deliverables": ids_in(&deliverables_dir(&base)) }))
 }
 
 pub fn handle_deliverable_show(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let d = load_yaml(&deliverables_dir(repo_root), &req_str(args, "name")?, Deliverable::from_yaml)?;
+    let base = pbase(args, repo_root);
+    let d = load_yaml(&deliverables_dir(&base), &req_str(args, "name")?, Deliverable::from_yaml)?;
     serde_json::to_value(&d).map_err(|e| format!("{e}"))
 }
 
 pub fn handle_deliverable_new(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let base = pbase(args, repo_root);
     let id = req_str(args, "id")?;
     let acceptance = str_array(args, "acceptance")
         .into_iter()
@@ -138,29 +145,31 @@ pub fn handle_deliverable_new(args: &Value, repo_root: &Path) -> Result<Value, S
         .collect();
     let feature = req_str(args, "feature").or_else(|_| req_str(args, "slice"))?;
     let d = Deliverable { id: id.clone(), feature, acceptance };
-    let problems = validate_deliverable(&d, &id_set(&features_dir(repo_root)));
+    let problems = validate_deliverable(&d, &id_set(&features_dir(&base)));
     if !problems.is_empty() {
         return Ok(json!({ "ok": false, "violations": problems }));
     }
     let force = args.get("force").and_then(|v| v.as_bool()).unwrap_or(false);
-    write_new(&deliverables_dir(repo_root), &id, d.to_yaml().map_err(|e| format!("{e}"))?, force)?;
+    write_new(&deliverables_dir(&base), &id, d.to_yaml().map_err(|e| format!("{e}"))?, force)?;
     Ok(json!({ "ok": true, "id": id }))
 }
 
 pub fn handle_deliverable_accept(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let base = pbase(args, repo_root);
     let id = req_str(args, "id")?;
     let criterion = req_str(args, "criterion")?;
     let status = req_str(args, "status")?; // "passing" | "failing"
-    let mut d = load_yaml(&deliverables_dir(repo_root), &id, Deliverable::from_yaml)?;
+    let mut d = load_yaml(&deliverables_dir(&base), &id, Deliverable::from_yaml)?;
     let c = d.acceptance.iter_mut().find(|c| c.id == criterion)
         .ok_or_else(|| format!("no acceptance criterion '{criterion}' on '{id}'"))?;
     c.status = status.clone();
-    std::fs::write(deliverables_dir(repo_root).join(format!("{id}.yaml")), d.to_yaml().map_err(|e| format!("{e}"))?)
+    std::fs::write(deliverables_dir(&base).join(format!("{id}.yaml")), d.to_yaml().map_err(|e| format!("{e}"))?)
         .map_err(|e| format!("{e}"))?;
     Ok(json!({ "ok": true, "id": id, "criterion": criterion, "status": status }))
 }
 
 pub fn handle_deliverable_runner(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let base = pbase(args, repo_root);
     let id = req_str(args, "id")?;
     let criterion = req_str(args, "criterion")?;
     let runner = req_str(args, "runner")?; // "cargo-test" | "shell"
@@ -169,12 +178,12 @@ pub fn handle_deliverable_runner(args: &Value, repo_root: &Path) -> Result<Value
     }
     let runner_args = args.get("args").and_then(|v| v.as_str())
         .map(str::to_string).filter(|s| !s.trim().is_empty());
-    let mut d = load_yaml(&deliverables_dir(repo_root), &id, Deliverable::from_yaml)?;
+    let mut d = load_yaml(&deliverables_dir(&base), &id, Deliverable::from_yaml)?;
     let c = d.acceptance.iter_mut().find(|c| c.id == criterion)
         .ok_or_else(|| format!("no acceptance criterion '{criterion}' on '{id}'"))?;
     c.runner = Some(runner.clone());
     c.runner_args = runner_args.clone();
-    std::fs::write(deliverables_dir(repo_root).join(format!("{id}.yaml")), d.to_yaml().map_err(|e| format!("{e}"))?)
+    std::fs::write(deliverables_dir(&base).join(format!("{id}.yaml")), d.to_yaml().map_err(|e| format!("{e}"))?)
         .map_err(|e| format!("{e}"))?;
     Ok(json!({ "ok": true, "id": id, "criterion": criterion, "runner": runner, "runner_args": runner_args }))
 }
@@ -182,11 +191,12 @@ pub fn handle_deliverable_runner(args: &Value, repo_root: &Path) -> Result<Value
 #[cfg(test)]
 mod runner_tests {
     use super::*;
+    use crate::pf_mcp::pdir;
     use product_core::pf::deliverable::AcceptanceCriterion;
 
     fn repo_with_deliverable() -> tempfile::TempDir {
         let dir = tempfile::tempdir().expect("tempdir");
-        let dd = deliverables_dir(dir.path());
+        let dd = deliverables_dir(&pdir(dir.path()));
         std::fs::create_dir_all(&dd).expect("mkdir");
         let d = Deliverable {
             id: "d1".into(),
@@ -216,7 +226,7 @@ mod runner_tests {
         assert_eq!(out["runner"], json!("cargo-test"));
         assert_eq!(out["runner_args"], json!("tc_x"));
 
-        let d = load_yaml(&deliverables_dir(root), "d1", Deliverable::from_yaml).expect("reload");
+        let d = load_yaml(&deliverables_dir(&pdir(root)), "d1", Deliverable::from_yaml).expect("reload");
         assert_eq!(d.acceptance[0].runner.as_deref(), Some("cargo-test"));
         assert_eq!(d.acceptance[0].runner_args.as_deref(), Some("tc_x"));
 
@@ -227,47 +237,52 @@ mod runner_tests {
 }
 
 pub fn handle_deliverable_done(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let d = load_yaml(&deliverables_dir(repo_root), &req_str(args, "name")?, Deliverable::from_yaml)?;
-    let feature = load_yaml(&features_dir(repo_root), &d.feature, Feature::from_yaml)?;
-    let fd = feature_done(&d, &feature, &graph_of(args, repo_root)?, &load_deciders(repo_root), &conformed_set(repo_root), &load_projectors(repo_root));
+    let base = pbase(args, repo_root);
+    let d = load_yaml(&deliverables_dir(&base), &req_str(args, "name")?, Deliverable::from_yaml)?;
+    let feature = load_yaml(&features_dir(&base), &d.feature, Feature::from_yaml)?;
+    let fd = feature_done(&d, &feature, &graph_of(args, repo_root)?, &load_deciders(&base), &conformed_set(&base), &load_projectors(&base));
     Ok(json!({ "id": fd.id, "done": fd.done, "progress": fd.progress(),
         "checks": fd.checks.iter().map(|c| json!({"kind": c.kind, "subject": c.subject, "passing": c.passing, "detail": c.detail})).collect::<Vec<_>>() }))
 }
 
 // --- release ---------------------------------------------------------------
 
-pub fn handle_release_list(_args: &Value, repo_root: &Path) -> Result<Value, String> {
-    Ok(json!({ "releases": ids_in(&releases_dir(repo_root)) }))
+pub fn handle_release_list(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let base = pbase(args, repo_root);
+    Ok(json!({ "releases": ids_in(&releases_dir(&base)) }))
 }
 
 pub fn handle_release_show(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let r = load_yaml(&releases_dir(repo_root), &req_str(args, "name")?, Release::from_yaml)?;
+    let base = pbase(args, repo_root);
+    let r = load_yaml(&releases_dir(&base), &req_str(args, "name")?, Release::from_yaml)?;
     serde_json::to_value(&r).map_err(|e| format!("{e}"))
 }
 
 pub fn handle_release_new(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let base = pbase(args, repo_root);
     let id = req_str(args, "id")?;
     let r = Release { id: id.clone(), features: str_array(args, "features") };
-    let problems = validate_release(&r, &id_set(&deliverables_dir(repo_root)));
+    let problems = validate_release(&r, &id_set(&deliverables_dir(&base)));
     if !problems.is_empty() {
         return Ok(json!({ "ok": false, "violations": problems }));
     }
     let force = args.get("force").and_then(|v| v.as_bool()).unwrap_or(false);
-    write_new(&releases_dir(repo_root), &id, r.to_yaml().map_err(|e| format!("{e}"))?, force)?;
+    write_new(&releases_dir(&base), &id, r.to_yaml().map_err(|e| format!("{e}"))?, force)?;
     Ok(json!({ "ok": true, "id": id }))
 }
 
 pub fn handle_release_done(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let r = load_yaml(&releases_dir(repo_root), &req_str(args, "name")?, Release::from_yaml)?;
+    let base = pbase(args, repo_root);
+    let r = load_yaml(&releases_dir(&base), &req_str(args, "name")?, Release::from_yaml)?;
     let graph = graph_of(args, repo_root)?;
-    let deciders = load_deciders(repo_root);
+    let deciders = load_deciders(&base);
     let mut members = Vec::new();
     for f in &r.features {
-        let d = load_yaml(&deliverables_dir(repo_root), f, Deliverable::from_yaml)?;
-        let s = load_yaml(&features_dir(repo_root), &d.feature, Feature::from_yaml)?;
+        let d = load_yaml(&deliverables_dir(&base), f, Deliverable::from_yaml)?;
+        let s = load_yaml(&features_dir(&base), &d.feature, Feature::from_yaml)?;
         members.push((d, s));
     }
-    let rd = release_done(&r.id, &members, &graph, &deciders, &conformed_set(repo_root), &load_projectors(repo_root));
+    let rd = release_done(&r.id, &members, &graph, &deciders, &conformed_set(&base), &load_projectors(&base));
     Ok(json!({ "id": rd.id, "done": rd.done, "closed": rd.closed(),
         "members": rd.members.iter().map(|m| json!({"id": m.id, "done": m.done})).collect::<Vec<_>>(),
         "open_edges": rd.open_edges.iter().map(|(n, d)| json!({"node": n, "depends_on_excluded": d})).collect::<Vec<_>>() }))
@@ -275,37 +290,41 @@ pub fn handle_release_done(args: &Value, repo_root: &Path) -> Result<Value, Stri
 
 // --- §7.3 target versions + direction -------------------------------------
 
-pub fn handle_target_list(_args: &Value, repo_root: &Path) -> Result<Value, String> {
-    Ok(json!({ "targets": ids_in(&targets_dir(repo_root)) }))
+pub fn handle_target_list(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let base = pbase(args, repo_root);
+    Ok(json!({ "targets": ids_in(&targets_dir(&base)) }))
 }
 pub fn handle_target_show(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let t = load_yaml(&targets_dir(repo_root), &req_str(args, "name")?, Target::from_yaml)?;
+    let base = pbase(args, repo_root);
+    let t = load_yaml(&targets_dir(&base), &req_str(args, "name")?, Target::from_yaml)?;
     serde_json::to_value(&t).map_err(|e| format!("{e}"))
 }
 pub fn handle_target_new(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    let base = pbase(args, repo_root);
     let id = req_str(args, "id")?;
     let mut members = str_array(args, "features");
     if members.is_empty() { members = str_array(args, "slices"); } // back-compat alias
     let t = Target { id: id.clone(), version: args.get("version").and_then(|v| v.as_str()).map(String::from),
         in_target: members };
-    let problems = validate_target(&t, &id_set(&deliverables_dir(repo_root)));
+    let problems = validate_target(&t, &id_set(&deliverables_dir(&base)));
     if !problems.is_empty() {
         return Ok(json!({ "ok": false, "violations": problems }));
     }
     let force = args.get("force").and_then(|v| v.as_bool()).unwrap_or(false);
-    write_new(&targets_dir(repo_root), &id, t.to_yaml().map_err(|e| format!("{e}"))?, force)?;
+    write_new(&targets_dir(&base), &id, t.to_yaml().map_err(|e| format!("{e}"))?, force)?;
     Ok(json!({ "ok": true, "id": id }))
 }
 pub fn handle_target_direction(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let t = load_yaml(&targets_dir(repo_root), &req_str(args, "name")?, Target::from_yaml)?;
+    let base = pbase(args, repo_root);
+    let t = load_yaml(&targets_dir(&base), &req_str(args, "name")?, Target::from_yaml)?;
     let graph = graph_of(args, repo_root)?;
-    let deciders = load_deciders(repo_root);
-    let projectors = load_projectors(repo_root);
-    let conformed = conformed_set(repo_root);
+    let deciders = load_deciders(&base);
+    let projectors = load_projectors(&base);
+    let conformed = conformed_set(&base);
     let mut done = std::collections::BTreeMap::new();
     for m in &t.in_target {
-        if let Ok(d) = load_yaml(&deliverables_dir(repo_root), m, Deliverable::from_yaml) {
-            if let Ok(s) = load_yaml(&features_dir(repo_root), &d.feature, Feature::from_yaml) {
+        if let Ok(d) = load_yaml(&deliverables_dir(&base), m, Deliverable::from_yaml) {
+            if let Ok(s) = load_yaml(&features_dir(&base), &d.feature, Feature::from_yaml) {
                 done.insert(m.clone(), feature_done(&d, &s, &graph, &deciders, &conformed, &projectors).done);
             }
         }

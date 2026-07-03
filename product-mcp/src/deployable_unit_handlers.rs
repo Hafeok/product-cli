@@ -9,19 +9,19 @@ use product_core::pf::deployable_unit::{
 };
 use serde_json::{json, Value};
 
-use crate::pf_mcp::{graph_of, ids_in, load_yaml, pdir, req_str};
+use crate::pf_mcp::{graph_of, ids_in, load_yaml, pbase, req_str};
 
-fn units_dir(r: &Path) -> PathBuf {
-    pdir(r).join("deployable-units")
+fn units_dir(base: &Path) -> PathBuf {
+    base.join("deployable-units")
 }
 
-/// Prefer `.product/blueprints/`, fall back to the legacy `.product/archetypes/`.
-fn blueprints_dir(r: &Path) -> PathBuf {
-    let blueprints = pdir(r).join("blueprints");
+/// Prefer `<base>/blueprints/`, fall back to the legacy `<base>/archetypes/`.
+fn blueprints_dir(base: &Path) -> PathBuf {
+    let blueprints = base.join("blueprints");
     if blueprints.is_dir() {
         return blueprints;
     }
-    let legacy = pdir(r).join("archetypes");
+    let legacy = base.join("archetypes");
     if legacy.is_dir() {
         return legacy;
     }
@@ -29,8 +29,8 @@ fn blueprints_dir(r: &Path) -> PathBuf {
 }
 
 /// Blueprint names available on disk (directory names under blueprints_dir).
-fn known_blueprints(r: &Path) -> Vec<String> {
-    product_core::pf::deployable_unit::blueprint_names(&blueprints_dir(r))
+fn known_blueprints(base: &Path) -> Vec<String> {
+    product_core::pf::deployable_unit::blueprint_names(&blueprints_dir(base))
 }
 
 fn str_array(args: &Value, key: &str) -> Vec<String> {
@@ -44,19 +44,21 @@ fn opt_str(args: &Value, key: &str) -> Option<String> {
     args.get(key).and_then(|v| v.as_str()).map(String::from).filter(|s| !s.trim().is_empty())
 }
 
-pub fn handle_deployable_unit_list(_args: &Value, repo_root: &Path) -> Result<Value, String> {
-    Ok(json!({ "deployable_units": ids_in(&units_dir(repo_root)) }))
+pub fn handle_deployable_unit_list(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    Ok(json!({ "deployable_units": ids_in(&units_dir(&pbase(args, repo_root))) }))
 }
 
 pub fn handle_deployable_unit_show(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let du = load_yaml(&units_dir(repo_root), &req_str(args, "name")?, DeployableUnit::from_yaml)?;
+    let base = pbase(args, repo_root);
+    let du = load_yaml(&units_dir(&base), &req_str(args, "name")?, DeployableUnit::from_yaml)?;
     serde_json::to_value(&du).map_err(|e| format!("{e}"))
 }
 
 pub fn handle_deployable_unit_validate(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let du = load_yaml(&units_dir(repo_root), &req_str(args, "name")?, DeployableUnit::from_yaml)?;
+    let base = pbase(args, repo_root);
+    let du = load_yaml(&units_dir(&base), &req_str(args, "name")?, DeployableUnit::from_yaml)?;
     let graph = graph_of(args, repo_root).ok();
-    let problems = validate_deployable_unit(&du, graph.as_ref(), &known_blueprints(repo_root));
+    let problems = validate_deployable_unit(&du, graph.as_ref(), &known_blueprints(&base));
     if !problems.is_empty() {
         return Ok(json!({ "ok": false, "violations": problems }));
     }
@@ -76,12 +78,13 @@ pub fn handle_deployable_unit_new(args: &Value, repo_root: &Path) -> Result<Valu
             runtime: opt_str(args, "runtime"),
         },
     };
+    let base = pbase(args, repo_root);
     let graph = graph_of(args, repo_root).ok();
-    let problems = validate_deployable_unit(&du, graph.as_ref(), &known_blueprints(repo_root));
+    let problems = validate_deployable_unit(&du, graph.as_ref(), &known_blueprints(&base));
     if !problems.is_empty() {
         return Ok(json!({ "ok": false, "violations": problems }));
     }
-    let dir = units_dir(repo_root);
+    let dir = units_dir(&base);
     std::fs::create_dir_all(&dir).map_err(|e| format!("{e}"))?;
     let path = dir.join(format!("{id}.yaml"));
     let force = args.get("force").and_then(|v| v.as_bool()).unwrap_or(false);

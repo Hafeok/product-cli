@@ -1,6 +1,7 @@
 //! Tests for the delivery-scaffolding MCP write handlers.
 
 use super::*;
+use crate::pf_mcp::pdir;
 use serde_json::json;
 
 fn repo() -> tempfile::TempDir {

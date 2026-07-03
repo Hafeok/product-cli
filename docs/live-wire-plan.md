@@ -25,22 +25,29 @@ first render + on the SSE `changed` tick, merging the fields in `PF_LIVE_KEYS`.
 Every view renders (never crashes). Each remaining item becomes live the same way
 the shipped ones did: project its field → add the key to `PF_LIVE_KEYS`.
 
-## Write-side per-product scoping (in progress)
+## Write-side per-product scoping (done)
 The shared resolver `product_core::pf::paths::product_base(repo_root, product)`
 is the single source of truth for both reads (the projection) and writes (CLI +
 MCP): the **root product** (product.toml name) uses `.product/`, every other
-product is scoped to `.product/products/<name>/`. Wired so far:
-- **CLI `feature` + `deployable-unit`** honour `--product`: `feature new
-  --product acme` / `deployable-unit new --product acme` write into
-  `.product/products/acme/` (validated against acme's scoped blueprint); the
-  default product stays global. (`shared::artifact_dir`.)
-- **Follow-up** (cross-module helpers — `load_deciders`/`conformed_set`/`ids_in`
-  are shared across deliverable/release/target/build): thread `--product`
-  through `deliverable`, `release`, `target`, `decider`, `projector`, `cell`,
-  `work-unit`, `blueprint`, `how`, and the MCP handler mirrors. Mechanical now
-  that `product_base` exists. Until then those commands write to the root
-  `.product/` (acme's deliverables/blueprint were authored as scoped YAML by
-  `scripts/showcase-acme-how.sh`).
+product is scoped to `.product/products/<name>/`.
+- **CLI** — every authoring command honours `--product`: `feature`,
+  `deployable-unit`, `decider`, `projector`, `deliverable`, `release`, `target`,
+  `build`, `blueprint`, `how`, `cell`, `work-unit`. They resolve their artifact
+  dir through `shared::artifact_dir(product, kind)` (→ `product_base`), so
+  `--product acme` writes/reads under `.product/products/acme/` and the default
+  product stays global. Cross-module helpers (`deliverable::load*`/`save`,
+  `decider::deciders_dir`/`conformed_set`, `projector::projectors_dir`,
+  `build::load_work_units`) all take the resolved product.
+- **MCP** — the handler mirrors resolve the same base via `pf_mcp::pbase(args,
+  repo_root)` (the `product` arg, else the config name, else the shared
+  `.product/`), the write/read twin of `shared::artifact_dir`. Covers the
+  delivery, decider, projector, primitive, deployable-unit, how (read+write),
+  cell/work-unit scaffold, and blueprint families. `pdir` is now test-only.
+- **Verified** — `product decider derive order --product acme` lands in
+  `.product/products/acme/deciders/`; `decider list` (default) stays global,
+  `decider list --product acme` is scoped, no leak. The showcase derives acme's
+  Ordering Deciders (`scripts/showcase-acme-how.sh`) so its Behaviour view is
+  live too.
 
 ## Per-product scoping + product picker
 - **Per-product artifacts.** The projection resolves a per-product base

@@ -84,7 +84,7 @@ pub(crate) fn handle_cell(cmd: CellCommands) -> BoxResult {
 fn dispatch(file: Option<PathBuf>, binds: Vec<String>, product: Option<String>, out: Option<PathBuf>, print: bool) -> BoxResult {
     use product_core::pf::dispatch as disp;
     let task = load(file)?;
-    let domain = load_domain(product);
+    let domain = load_domain(product.clone());
     let mut bindings = Vec::new();
     for b in &binds {
         let (k, val) = b.split_once('=').ok_or_else(|| format!("--bind expects SLOT=VALUE, got {b:?}"))?;
@@ -103,17 +103,17 @@ fn dispatch(file: Option<PathBuf>, binds: Vec<String>, product: Option<String>, 
         }
         return Err(format!("{} dispatch binding violation(s)", violations.len()).into());
     }
-    write_work_units(&result.work_units, out, print)
+    write_work_units(&result.work_units, out, product, print)
 }
 
-fn write_work_units(work_units: &[product_core::pf::work_unit::WorkUnit], out: Option<PathBuf>, print: bool) -> BoxResult {
+fn write_work_units(work_units: &[product_core::pf::work_unit::WorkUnit], out: Option<PathBuf>, product: Option<String>, print: bool) -> BoxResult {
     if print {
         for wu in work_units {
             println!("# {}\n{}", wu.id, wu.to_yaml()?);
         }
         return Ok(());
     }
-    let dir = out.unwrap_or_else(|| super::shared::domain_root().join(".product").join("work-units"));
+    let dir = out.unwrap_or_else(|| super::shared::artifact_dir(product.as_deref(), "work-units"));
     std::fs::create_dir_all(&dir)?;
     for wu in work_units {
         let path = dir.join(format!("{}.yaml", wu.id));
@@ -143,15 +143,15 @@ fn load_domain(product: Option<String>) -> Option<DomainGraph> {
 }
 
 /// Best-effort load of the blueprint's How contract for cross-validation.
-fn load_how() -> Option<HowContract> {
-    let p = super::shared::domain_root().join(".product").join("how-contract.yaml");
+fn load_how(product: Option<&str>) -> Option<HowContract> {
+    let p = super::shared::artifact_dir(product, "").join("how-contract.yaml");
     std::fs::read_to_string(p).ok().and_then(|t| HowContract::from_yaml(&t).ok())
 }
 
 fn validate(file: Option<PathBuf>, product: Option<String>) -> BoxResult {
     let task = load(file)?;
+    let how = load_how(product.as_deref());
     let domain = load_domain(product);
-    let how = load_how();
     let results = validate_cell(&task, domain.as_ref(), how.as_ref());
 
     for w in results.iter().filter(|r| r.severity == "warning") {

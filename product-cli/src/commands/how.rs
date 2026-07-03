@@ -28,11 +28,15 @@ pub enum HowCommands {
         fields: super::how_fields::HowFields,
         #[arg(long)]
         file: Option<PathBuf>,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Project the How contract into the graph as Turtle
     Export {
         #[arg(long)]
         file: Option<PathBuf>,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Scaffold a starter how-contract.yaml
     Init {
@@ -41,6 +45,8 @@ pub enum HowCommands {
         blueprint: Option<String>,
         #[arg(long)]
         file: Option<PathBuf>,
+        #[arg(long)]
+        product: Option<String>,
         /// Overwrite an existing file
         #[arg(long)]
         force: bool,
@@ -51,6 +57,8 @@ pub enum HowCommands {
         kind: String,
         #[arg(long)]
         file: Option<PathBuf>,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Set a singleton: app-contract | infra-contract | version | realises-version (--id is the value)
     Set {
@@ -63,38 +71,44 @@ pub enum HowCommands {
         fields: super::how_fields::HowFields,
         #[arg(long)]
         file: Option<PathBuf>,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Show a summary of the How contract
     Show {
         #[arg(long)]
         file: Option<PathBuf>,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Validate the contract (structure + conformance + trace-truth)
     Validate {
         #[arg(long)]
         file: Option<PathBuf>,
+        #[arg(long)]
+        product: Option<String>,
     },
 }
 
 pub(crate) fn handle_how(cmd: HowCommands) -> BoxResult {
     match cmd {
-        HowCommands::Add { element, id, fields, file } => add(element, id, fields, file),
-        HowCommands::Set { target, id, fields, file } => set(target, id, fields, file),
-        HowCommands::Validate { file } => validate(file),
-        HowCommands::Show { file } => show(file),
-        HowCommands::List { kind, file } => list(kind, file),
-        HowCommands::Export { file } => export(file),
-        HowCommands::Init { blueprint, file, force } => init(blueprint, file, force),
+        HowCommands::Add { element, id, fields, file, product } => add(element, id, fields, file, product),
+        HowCommands::Set { target, id, fields, file, product } => set(target, id, fields, file, product),
+        HowCommands::Validate { file, product } => validate(file, product),
+        HowCommands::Show { file, product } => show(file, product),
+        HowCommands::List { kind, file, product } => list(kind, file, product),
+        HowCommands::Export { file, product } => export(file, product),
+        HowCommands::Init { blueprint, file, product, force } => init(blueprint, file, product, force),
     }
 }
 
 /// Resolve the contract path: `--file` or `<root>/.product/how-contract.yaml`.
-fn path(file: Option<PathBuf>) -> PathBuf {
-    file.unwrap_or_else(|| super::shared::domain_root().join(".product").join("how-contract.yaml"))
+fn path(file: Option<PathBuf>, product: Option<&str>) -> PathBuf {
+    file.unwrap_or_else(|| super::shared::artifact_dir(product, "").join("how-contract.yaml"))
 }
 
-fn load(file: Option<PathBuf>) -> Result<HowContract, Box<dyn std::error::Error>> {
-    let p = path(file);
+fn load(file: Option<PathBuf>, product: Option<&str>) -> Result<HowContract, Box<dyn std::error::Error>> {
+    let p = path(file, product);
     let text = std::fs::read_to_string(&p).map_err(|_| {
         format!(
             "no how-contract at {} — scaffold one with `product how init`",
@@ -106,8 +120,8 @@ fn load(file: Option<PathBuf>) -> Result<HowContract, Box<dyn std::error::Error>
 
 /// Load the contract, or start a fresh one keyed to the repo product so the
 /// How can be built up element by element.
-fn load_or_init(file: &Option<PathBuf>) -> Result<HowContract, Box<dyn std::error::Error>> {
-    let p = path(file.clone());
+fn load_or_init(file: &Option<PathBuf>, product: Option<&str>) -> Result<HowContract, Box<dyn std::error::Error>> {
+    let p = path(file.clone(), product);
     match std::fs::read_to_string(&p) {
         Ok(text) => Ok(HowContract::from_yaml(&text)?),
         Err(_) => Ok(HowContract {
@@ -117,8 +131,8 @@ fn load_or_init(file: &Option<PathBuf>) -> Result<HowContract, Box<dyn std::erro
     }
 }
 
-fn save(contract: &HowContract, file: &Option<PathBuf>) -> BoxResult {
-    let p = path(file.clone());
+fn save(contract: &HowContract, file: &Option<PathBuf>, product: Option<&str>) -> BoxResult {
+    let p = path(file.clone(), product);
     if let Some(parent) = p.parent() {
         std::fs::create_dir_all(parent)?;
     }
@@ -126,9 +140,9 @@ fn save(contract: &HowContract, file: &Option<PathBuf>) -> BoxResult {
     Ok(())
 }
 
-fn add(element: String, id: String, fields: super::how_fields::HowFields, file: Option<PathBuf>) -> BoxResult {
+fn add(element: String, id: String, fields: super::how_fields::HowFields, file: Option<PathBuf>, product: Option<String>) -> BoxResult {
     use product_core::pf::how_edit as edit;
-    let mut c = load_or_init(&file)?;
+    let mut c = load_or_init(&file, product.as_deref())?;
     match element.as_str() {
         "decision" => edit::add_decision(&mut c, fields.decision(&id))?,
         "principle" => edit::add_principle(&mut c, fields.principle(&id))?,
@@ -140,14 +154,14 @@ fn add(element: String, id: String, fields: super::how_fields::HowFields, file: 
             "unknown element {other:?} — use decision, principle, pattern, interface, app-statement, or resource"
         ).into()),
     }
-    save(&c, &file)?;
+    save(&c, &file, product.as_deref())?;
     println!("Added {element} '{id}'");
     Ok(())
 }
 
-fn set(target: String, id: String, fields: super::how_fields::HowFields, file: Option<PathBuf>) -> BoxResult {
+fn set(target: String, id: String, fields: super::how_fields::HowFields, file: Option<PathBuf>, product: Option<String>) -> BoxResult {
     use product_core::pf::how_edit as edit;
-    let mut c = load_or_init(&file)?;
+    let mut c = load_or_init(&file, product.as_deref())?;
     match target.as_str() {
         "app-contract" => edit::set_app_contract(&mut c, fields.app_contract(&id)),
         "infra-contract" => edit::set_infra_contract(&mut c, fields.infra_contract(&id)),
@@ -157,13 +171,13 @@ fn set(target: String, id: String, fields: super::how_fields::HowFields, file: O
         "realises-version" => c.realises_version = Some(id.clone()),
         other => return Err(format!("unknown target {other:?} — use app-contract, infra-contract, version, or realises-version").into()),
     }
-    save(&c, &file)?;
+    save(&c, &file, product.as_deref())?;
     println!("Set {target} '{id}'");
     Ok(())
 }
 
-fn validate(file: Option<PathBuf>) -> BoxResult {
-    let contract = load(file)?;
+fn validate(file: Option<PathBuf>, product: Option<String>) -> BoxResult {
+    let contract = load(file, product.as_deref())?;
     let results = validate_how(&contract);
     let warnings: Vec<_> = results.iter().filter(|r| r.severity == "warning").collect();
     let violations: Vec<_> = results.iter().filter(|r| r.severity == "violation").collect();
@@ -187,8 +201,8 @@ fn validate(file: Option<PathBuf>) -> BoxResult {
     Ok(())
 }
 
-fn show(file: Option<PathBuf>) -> BoxResult {
-    let c = load(file)?;
+fn show(file: Option<PathBuf>, product: Option<String>) -> BoxResult {
+    let c = load(file, product.as_deref())?;
     println!("blueprint: {}", c.blueprint);
     if let Some(v) = &c.version {
         println!("version:   {v}");
@@ -208,8 +222,8 @@ fn show(file: Option<PathBuf>) -> BoxResult {
     Ok(())
 }
 
-fn list(kind: String, file: Option<PathBuf>) -> BoxResult {
-    let c = load(file)?;
+fn list(kind: String, file: Option<PathBuf>, product: Option<String>) -> BoxResult {
+    let c = load(file, product.as_deref())?;
     let rows: Vec<(String, String)> = match kind.as_str() {
         "decisions" | "decision" => c.top_decisions.iter().map(|d| (d.id.clone(), d.decision.clone())).collect(),
         "principles" | "principle" => c.principles.iter().map(|p| (p.id.clone(), p.statement.clone())).collect(),
@@ -228,13 +242,13 @@ fn list(kind: String, file: Option<PathBuf>) -> BoxResult {
     Ok(())
 }
 
-fn export(file: Option<PathBuf>) -> BoxResult {
-    print!("{}", how_to_turtle(&load(file)?));
+fn export(file: Option<PathBuf>, product: Option<String>) -> BoxResult {
+    print!("{}", how_to_turtle(&load(file, product.as_deref())?));
     Ok(())
 }
 
-fn init(blueprint: Option<String>, file: Option<PathBuf>, force: bool) -> BoxResult {
-    let p = path(file);
+fn init(blueprint: Option<String>, file: Option<PathBuf>, product: Option<String>, force: bool) -> BoxResult {
+    let p = path(file, product.as_deref());
     if p.exists() && !force {
         return Err(format!("{} already exists — pass --force to overwrite", p.display()).into());
     }

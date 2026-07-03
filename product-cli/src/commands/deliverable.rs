@@ -30,6 +30,8 @@ pub enum DeliverableCommands {
         pass: bool,
         #[arg(long)]
         fail: bool,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Compute whether the deliverable is done (§7.2)
     Done {
@@ -39,7 +41,7 @@ pub enum DeliverableCommands {
         product: Option<String>,
     },
     /// List the deliverables under .product/deliverables/
-    List {},
+    List { #[arg(long)] product: Option<String> },
     /// Create a deliverable pointing at one feature
     New {
         /// The deliverable id (e.g. place-order)
@@ -50,6 +52,8 @@ pub enum DeliverableCommands {
         /// An acceptance criterion as "id:statement"; repeatable
         #[arg(long = "accept")]
         accept: Vec<String>,
+        #[arg(long)]
+        product: Option<String>,
         #[arg(long)]
         force: bool,
     },
@@ -65,22 +69,26 @@ pub enum DeliverableCommands {
         /// Runner args — a test filter for cargo-test, a command line for shell
         #[arg(long = "args")]
         args: Option<String>,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Show a deliverable
     Show {
         /// The deliverable id (filename stem)
         name: String,
+        #[arg(long)]
+        product: Option<String>,
     },
 }
 
 pub(crate) fn handle_deliverable(cmd: DeliverableCommands) -> BoxResult {
     match cmd {
-        DeliverableCommands::Accept { id, criterion, pass, fail } => accept(&id, &criterion, pass, fail),
-        DeliverableCommands::Runner { id, criterion, runner, args } => set_runner(&id, &criterion, &runner, args),
+        DeliverableCommands::Accept { id, criterion, pass, fail, product } => accept(&id, &criterion, pass, fail, product),
+        DeliverableCommands::Runner { id, criterion, runner, args, product } => set_runner(&id, &criterion, &runner, args, product),
         DeliverableCommands::Done { name, product } => done(&name, product),
-        DeliverableCommands::List {} => list(),
-        DeliverableCommands::New { id, feature, accept, force } => new(&id, &feature, accept, force),
-        DeliverableCommands::Show { name } => show(&name),
+        DeliverableCommands::List { product } => list(product),
+        DeliverableCommands::New { id, feature, accept, product, force } => new(&id, &feature, accept, product, force),
+        DeliverableCommands::Show { name, product } => show(&name, product),
     }
 }
 
@@ -95,14 +103,14 @@ pub(super) fn load_graph(product: Option<String>) -> Result<DomainGraph, Box<dyn
 }
 
 /// Load a feature pointer by id.
-pub(super) fn load_feature(id: &str) -> Result<Feature, Box<dyn std::error::Error>> {
-    let path = features_dir().join(format!("{id}.yaml"));
+pub(super) fn load_feature(id: &str, product: Option<&str>) -> Result<Feature, Box<dyn std::error::Error>> {
+    let path = features_dir(product).join(format!("{id}.yaml"));
     Ok(Feature::from_yaml(&std::fs::read_to_string(&path).map_err(|_| format!("feature '{id}' not found at {}", path.display()))?)?)
 }
 
 /// Load every Decider under .product/deliverables' sibling deciders/ dir.
-pub(super) fn load_deciders() -> Vec<Decider> {
-    let dir = super::shared::domain_root().join(".product").join("deciders");
+pub(super) fn load_deciders(product: Option<&str>) -> Vec<Decider> {
+    let dir = super::decider::deciders_dir(product);
     match std::fs::read_dir(&dir) {
         Ok(it) => it
             .flatten()
@@ -116,8 +124,8 @@ pub(super) fn load_deciders() -> Vec<Decider> {
 
 /// Load every Projector under the sibling projectors/ dir (§3.4) — their
 /// soundness gates `done` the way deciders' does.
-pub(super) fn load_projectors() -> Vec<product_core::pf::projector::Projector> {
-    let dir = super::shared::domain_root().join(".product").join("projectors");
+pub(super) fn load_projectors(product: Option<&str>) -> Vec<product_core::pf::projector::Projector> {
+    let dir = super::projector::projectors_dir(product);
     match std::fs::read_dir(&dir) {
         Ok(it) => it
             .flatten()
@@ -129,17 +137,17 @@ pub(super) fn load_projectors() -> Vec<product_core::pf::projector::Projector> {
     }
 }
 
-fn accept(id: &str, criterion: &str, pass: bool, fail: bool) -> BoxResult {
+fn accept(id: &str, criterion: &str, pass: bool, fail: bool, product: Option<String>) -> BoxResult {
     if pass == fail {
         return Err("record a verdict with exactly one of --pass / --fail".into());
     }
-    let mut d = load(id)?;
+    let mut d = load(id, product.as_deref())?;
     let Some(c) = d.acceptance.iter_mut().find(|c| c.id == criterion) else {
         return Err(format!("no acceptance criterion '{criterion}' on deliverable '{id}'").into());
     };
     c.status = if pass { "passing" } else { "failing" }.to_string();
     let status = c.status.clone();
-    std::fs::write(dir().join(format!("{id}.yaml")), d.to_yaml()?)?;
+    std::fs::write(dir(product.as_deref()).join(format!("{id}.yaml")), d.to_yaml()?)?;
     println!("deliverable '{id}': acceptance '{criterion}' → {status}");
     Ok(())
 }
@@ -150,11 +158,11 @@ fn known_runner(runner: &str) -> bool {
     runner == "cargo-test" || runner == "shell"
 }
 
-fn set_runner(id: &str, criterion: &str, runner: &str, args: Option<String>) -> BoxResult {
+fn set_runner(id: &str, criterion: &str, runner: &str, args: Option<String>, product: Option<String>) -> BoxResult {
     if !known_runner(runner) {
         return Err(format!("unknown runner '{runner}' — use cargo-test or shell").into());
     }
-    let mut d = load(id)?;
+    let mut d = load(id, product.as_deref())?;
     {
         let Some(c) = d.acceptance.iter_mut().find(|c| c.id == criterion) else {
             return Err(format!("no acceptance criterion '{criterion}' on deliverable '{id}'").into());
@@ -162,16 +170,20 @@ fn set_runner(id: &str, criterion: &str, runner: &str, args: Option<String>) -> 
         c.runner = Some(runner.to_string());
         c.runner_args = args.filter(|s| !s.trim().is_empty());
     }
-    save(&d)?;
+    save(&d, product.as_deref())?;
     println!("deliverable '{id}': acceptance '{criterion}' → runner '{runner}'");
     Ok(())
 }
 
 fn done(name: &str, product: Option<String>) -> BoxResult {
-    let d = load(name)?;
-    let feature = load_feature(&d.feature)?;
-    let graph = load_graph(product)?;
-    let fd = feature_done(&d, &feature, &graph, &load_deciders(), &super::decider::conformed_set(), &load_projectors());
+    let pr = product.as_deref();
+    let d = load(name, pr)?;
+    let feature = load_feature(&d.feature, pr)?;
+    let deciders = load_deciders(pr);
+    let projectors = load_projectors(pr);
+    let conformed = super::decider::conformed_set(pr);
+    let graph = load_graph(product.clone())?;
+    let fd = feature_done(&d, &feature, &graph, &deciders, &conformed, &projectors);
     print_feature_done(&fd);
     if fd.done {
         Ok(())
@@ -192,12 +204,12 @@ pub(super) fn print_feature_done(fd: &FeatureDone) {
     }
 }
 
-fn dir() -> PathBuf {
-    super::shared::domain_root().join(".product").join("deliverables")
+fn dir(product: Option<&str>) -> PathBuf {
+    super::shared::artifact_dir(product, "deliverables")
 }
 
-fn features_dir() -> PathBuf {
-    super::shared::domain_root().join(".product").join("features")
+fn features_dir(product: Option<&str>) -> PathBuf {
+    super::shared::artifact_dir(product, "features")
 }
 
 /// The set of artifact ids (filename stems) under a directory.
@@ -222,28 +234,28 @@ fn parse_acceptance(specs: Vec<String>) -> Vec<AcceptanceCriterion> {
         .collect()
 }
 
-pub(super) fn save(d: &Deliverable) -> BoxResult {
-    std::fs::write(dir().join(format!("{}.yaml", d.id)), d.to_yaml()?)?;
+pub(super) fn save(d: &Deliverable, product: Option<&str>) -> BoxResult {
+    std::fs::write(dir(product).join(format!("{}.yaml", d.id)), d.to_yaml()?)?;
     Ok(())
 }
 
-pub(super) fn load(name: &str) -> Result<Deliverable, Box<dyn std::error::Error>> {
-    let path = dir().join(format!("{name}.yaml"));
+pub(super) fn load(name: &str, product: Option<&str>) -> Result<Deliverable, Box<dyn std::error::Error>> {
+    let path = dir(product).join(format!("{name}.yaml"));
     let text = std::fs::read_to_string(&path)
         .map_err(|_| format!("no deliverable '{name}' at {} — create one with `product deliverable new`", path.display()))?;
     Ok(Deliverable::from_yaml(&text)?)
 }
 
-fn new(id: &str, feature: &str, accept: Vec<String>, force: bool) -> BoxResult {
+fn new(id: &str, feature: &str, accept: Vec<String>, product: Option<String>, force: bool) -> BoxResult {
     let deliverable = Deliverable { id: id.to_string(), feature: feature.to_string(), acceptance: parse_acceptance(accept) };
-    let problems = validate_deliverable(&deliverable, &ids_in(&features_dir()));
+    let problems = validate_deliverable(&deliverable, &ids_in(&features_dir(product.as_deref())));
     if !problems.is_empty() {
         for v in &problems {
             eprintln!("  - [{}] {}: {}", v.focus, v.path, v.message);
         }
         return Err(format!("{} deliverable problem(s)", problems.len()).into());
     }
-    let d = dir();
+    let d = dir(product.as_deref());
     std::fs::create_dir_all(&d)?;
     let path = d.join(format!("{id}.yaml"));
     if path.exists() && !force {
@@ -254,8 +266,8 @@ fn new(id: &str, feature: &str, accept: Vec<String>, force: bool) -> BoxResult {
     Ok(())
 }
 
-fn show(name: &str) -> BoxResult {
-    let d = load(name)?;
+fn show(name: &str, product: Option<String>) -> BoxResult {
+    let d = load(name, product.as_deref())?;
     println!("deliverable: {}", d.id);
     println!("feature: {}", d.feature);
     if d.acceptance.is_empty() {
@@ -273,8 +285,8 @@ fn show(name: &str) -> BoxResult {
     Ok(())
 }
 
-fn list() -> BoxResult {
-    let ids = ids_in(&dir());
+fn list(product: Option<String>) -> BoxResult {
+    let ids = ids_in(&dir(product.as_deref()));
     if ids.is_empty() {
         println!("(no deliverables — create one with `product deliverable new <id> --feature <feature>`)");
     }

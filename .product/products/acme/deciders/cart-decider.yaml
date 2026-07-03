@@ -1,0 +1,13 @@
+id: cart-decider
+decides_for: cart
+handles:
+- cmd-add-item
+- cmd-begin-payment
+emits:
+- ev-item-added
+- ev-payment-begun
+evolves_from:
+- ev-item-added
+- ev-payment-begun
+rejects:
+- cart-1

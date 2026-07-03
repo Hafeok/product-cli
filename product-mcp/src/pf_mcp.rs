@@ -34,9 +34,28 @@ pub(crate) fn graph_of(args: &Value, repo_root: &Path) -> Result<DomainGraph, St
         .map_err(|_| format!("no captured What graph for '{p}' — author one with `product author domain`"))
 }
 
-/// The `.product` directory under the repo root.
+/// The `.product` directory under the repo root. Test-only now that the
+/// handlers resolve their base per-product via [`pbase`]; kept for tests that
+/// assert against the root product's shared `.product/`.
+#[cfg(test)]
 pub(crate) fn pdir(repo_root: &Path) -> PathBuf {
     repo_root.join(".product")
+}
+
+/// The per-product artifact base for the resolved product: the root product
+/// (product.toml `name`) uses `.product/`, every other product
+/// `.product/products/<name>/`. Best-effort — an unresolvable product (no
+/// `product` arg and no config) falls back to the shared `.product/`. This is
+/// the write/read mirror of the CLI's `shared::artifact_dir`.
+pub(crate) fn pbase(args: &Value, repo_root: &Path) -> PathBuf {
+    let name = args
+        .get("product")
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.trim().is_empty())
+        .map(str::to_string)
+        .or_else(|| ProductConfig::load_from_root(repo_root).ok().map(|c| c.name.trim().to_string()))
+        .unwrap_or_default();
+    product_core::pf::paths::product_base(repo_root, &name)
 }
 
 /// Sorted artifact ids (filename stems) under a directory.

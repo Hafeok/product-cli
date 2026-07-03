@@ -1,0 +1,13 @@
+id: order-decider
+decides_for: order
+handles:
+- cmd-authorize-payment
+- cmd-issue-refund
+emits:
+- ev-order-placed
+- ev-refund-issued
+evolves_from:
+- ev-order-placed
+- ev-refund-issued
+rejects:
+- refund-1

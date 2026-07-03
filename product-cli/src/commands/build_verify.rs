@@ -22,7 +22,8 @@ type Outcome = (VerifyStep, bool, String);
 /// Run the verify steps, fixing failures in place, recording final verdicts.
 /// Each failed round climbs the capability `ladder` (a stronger model fixes what
 /// a weaker one could not).
-pub(super) fn run(d: &mut Deliverable, written: &[PathBuf], ladder: &[Capability], shared: &str, root: &Path, max_rounds: usize, budget: Option<u64>) {
+#[allow(clippy::too_many_arguments)]
+pub(super) fn run(d: &mut Deliverable, written: &[PathBuf], ladder: &[Capability], shared: &str, root: &Path, max_rounds: usize, budget: Option<u64>, product: Option<&str>) {
     let steps = verify::plan(d);
     if steps.is_empty() {
         return;
@@ -57,7 +58,7 @@ pub(super) fn run(d: &mut Deliverable, written: &[PathBuf], ladder: &[Capability
             Err(_) => break,
         }
     }
-    if let Err(e) = super::deliverable::save(d) {
+    if let Err(e) = super::deliverable::save(d, product) {
         eprintln!("  ! could not save verdicts: {e}");
     }
 }

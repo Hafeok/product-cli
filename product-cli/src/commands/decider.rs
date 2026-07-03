@@ -24,6 +24,8 @@ pub enum DeciderCommands {
         /// stdin and writes a JSON array of {emit|reject} outcomes on stdout
         #[arg(long)]
         runner: String,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Derive a Decider's signature for an aggregate from the What graph
     Derive {
@@ -36,16 +38,20 @@ pub enum DeciderCommands {
         force: bool,
     },
     /// List the deciders under .product/deciders/
-    List {},
+    List { #[arg(long)] product: Option<String> },
     /// Show a Decider's derived signature
     Show {
         /// The decider id (filename stem)
         name: String,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Simulate the Decider's scenarios — sound + complete before realisation
     Simulate {
         /// The decider id (filename stem)
         name: String,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Validate a Decider's signature against the event model
     Validate {
@@ -59,30 +65,30 @@ pub enum DeciderCommands {
 
 pub(crate) fn handle_decider(cmd: DeciderCommands) -> BoxResult {
     match cmd {
-        DeciderCommands::Conform { name, runner } => conform(&name, &runner),
+        DeciderCommands::Conform { name, runner, product } => conform(&name, &runner, product),
         DeciderCommands::Derive { aggregate, product, force } => derive(&aggregate, product, force),
-        DeciderCommands::List {} => list(),
-        DeciderCommands::Show { name } => show(&name),
-        DeciderCommands::Simulate { name } => simulate(&name),
+        DeciderCommands::List { product } => list(product),
+        DeciderCommands::Show { name, product } => show(&name, product),
+        DeciderCommands::Simulate { name, product } => simulate(&name, product),
         DeciderCommands::Validate { name, product } => validate(&name, product),
     }
 }
 
-fn deciders_dir() -> PathBuf {
-    super::shared::domain_root().join(".product").join("deciders")
+pub(super) fn deciders_dir(product: Option<&str>) -> PathBuf {
+    super::shared::artifact_dir(product, "deciders")
 }
 
 /// Persist the §6.3 behavioural-conformance verdict so `deliverable done` can
 /// fold it in. Written next to the decider as `<name>.conform.json`.
-fn record_conform_verdict(name: &str, conformant: bool) -> Result<(), Box<dyn std::error::Error>> {
-    let path = deciders_dir().join(format!("{name}.conform.json"));
+fn record_conform_verdict(name: &str, product: Option<&str>, conformant: bool) -> Result<(), Box<dyn std::error::Error>> {
+    let path = deciders_dir(product).join(format!("{name}.conform.json"));
     std::fs::write(&path, serde_json::json!({ "conformant": conformant }).to_string())?;
     Ok(())
 }
 
 /// The set of decider ids with a recorded passing conformance verdict.
-pub(super) fn conformed_set() -> std::collections::BTreeSet<String> {
-    let dir = deciders_dir();
+pub(super) fn conformed_set(product: Option<&str>) -> std::collections::BTreeSet<String> {
+    let dir = deciders_dir(product);
     let mut out = std::collections::BTreeSet::new();
     let Ok(entries) = std::fs::read_dir(&dir) else { return out };
     for e in entries.flatten() {
@@ -114,17 +120,17 @@ fn require_domain(product: Option<String>) -> Result<DomainGraph, Box<dyn std::e
         .ok_or("no captured What graph for this product — author one with `product author domain`")?)
 }
 
-fn load(name: &str) -> Result<Decider, Box<dyn std::error::Error>> {
-    let p = deciders_dir().join(format!("{name}.yaml"));
+fn load(name: &str, product: Option<&str>) -> Result<Decider, Box<dyn std::error::Error>> {
+    let p = deciders_dir(product).join(format!("{name}.yaml"));
     let text = std::fs::read_to_string(&p)
         .map_err(|_| format!("no decider '{name}' at {} — derive one with `product decider derive <aggregate>`", p.display()))?;
     Ok(Decider::from_yaml(&text)?)
 }
 
 fn derive(aggregate: &str, product: Option<String>, force: bool) -> BoxResult {
+    let dir = deciders_dir(product.as_deref());
     let graph = require_domain(product)?;
     let decider = derive_decider(&graph, aggregate)?;
-    let dir = deciders_dir();
     std::fs::create_dir_all(&dir)?;
     let p = dir.join(format!("{}.yaml", decider.id));
     if p.exists() && !force {
@@ -140,7 +146,7 @@ fn derive(aggregate: &str, product: Option<String>, force: bool) -> BoxResult {
 }
 
 fn validate(name: &str, product: Option<String>) -> BoxResult {
-    let decider = load(name)?;
+    let decider = load(name, product.as_deref())?;
     let graph = require_domain(product)?;
     let results = validate_decider(&decider, &graph);
     for w in results.iter().filter(|r| r.severity == "warning") {
@@ -161,11 +167,11 @@ fn validate(name: &str, product: Option<String>) -> BoxResult {
     Ok(())
 }
 
-fn conform(name: &str, runner: &str) -> BoxResult {
+fn conform(name: &str, runner: &str, product: Option<String>) -> BoxResult {
     use std::io::Write;
     use std::process::{Command, Stdio};
 
-    let decider = load(name)?;
+    let decider = load(name, product.as_deref())?;
     let requests = product_core::pf::decider_conform::requests(&decider);
     let input = serde_json::to_vec(&requests)?;
 
@@ -189,7 +195,7 @@ fn conform(name: &str, runner: &str) -> BoxResult {
     let realised: Vec<product_core::pf::decider_logic::Expectation> = serde_json::from_slice(&output.stdout)
         .map_err(|e| format!("runner output is not a JSON array of outcomes: {e}"))?;
     let findings = product_core::pf::decider_conform::check_conformance(&decider, &realised);
-    record_conform_verdict(name, findings.is_empty())?;
+    record_conform_verdict(name, product.as_deref(), findings.is_empty())?;
     if findings.is_empty() {
         println!(
             "behaviourally conformant — decider '{}': {} scenario(s) match the realised runner",
@@ -204,8 +210,8 @@ fn conform(name: &str, runner: &str) -> BoxResult {
     Err(format!("{} conformance finding(s)", findings.len()).into())
 }
 
-fn simulate(name: &str) -> BoxResult {
-    let decider = load(name)?;
+fn simulate(name: &str, product: Option<String>) -> BoxResult {
+    let decider = load(name, product.as_deref())?;
     let results = product_core::pf::decider_sim::simulate(&decider);
     if results.is_empty() {
         println!(
@@ -221,8 +227,8 @@ fn simulate(name: &str) -> BoxResult {
     Err(format!("{} simulation finding(s)", results.len()).into())
 }
 
-fn show(name: &str) -> BoxResult {
-    let d = load(name)?;
+fn show(name: &str, product: Option<String>) -> BoxResult {
+    let d = load(name, product.as_deref())?;
     println!("decider: {}", d.id);
     println!("decides-for: {}", d.decides_for);
     println!("handles: {}", join(&d.handles));
@@ -236,8 +242,8 @@ fn join(v: &[String]) -> String {
     if v.is_empty() { "(none)".to_string() } else { v.join(", ") }
 }
 
-fn list() -> BoxResult {
-    let dir = deciders_dir();
+fn list(product: Option<String>) -> BoxResult {
+    let dir = deciders_dir(product.as_deref());
     let entries = match std::fs::read_dir(&dir) {
         Ok(it) => it,
         Err(_) => {

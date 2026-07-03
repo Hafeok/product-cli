@@ -14,7 +14,7 @@ use product_core::pf::dispatch::dispatch;
 use product_core::pf::work_unit::WorkUnit;
 use serde_json::{json, Value};
 
-use crate::pf_mcp::{graph_of, load_yaml, pdir, req_str};
+use crate::pf_mcp::{graph_of, load_yaml, pbase, req_str};
 
 fn write_yaml(path: &Path, text: &str) -> Result<(), String> {
     if let Some(parent) = path.parent() {
@@ -39,7 +39,7 @@ fn file_arg(args: &Value, repo_root: &Path, default: &str) -> PathBuf {
             let p = PathBuf::from(&f);
             if p.is_absolute() { p } else { repo_root.join(p) }
         }
-        None => pdir(repo_root).join(default),
+        None => pbase(args, repo_root).join(default),
     }
 }
 
@@ -92,14 +92,15 @@ pub fn handle_work_unit_edit(args: &Value, repo_root: &Path) -> Result<Value, St
 /// Dispatch the cell at .product/cell.yaml into concrete §5 work units, bound to
 /// the captured What graph, written under .product/work-units/.
 pub fn handle_cell_dispatch(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let task = load_yaml(&pdir(repo_root), "cell", TaskType::from_yaml)?;
+    let base = pbase(args, repo_root);
+    let task = load_yaml(&base, "cell", TaskType::from_yaml)?;
     let bindings = parse_binds(args)?;
     let domain = graph_of(args, repo_root).ok();
     let result = dispatch(&task, &bindings, domain.as_ref());
     if result.violations.iter().any(|v| v.severity == "violation") {
         return Ok(json!({ "ok": false, "violations": result.violations }));
     }
-    let dir = pdir(repo_root).join("work-units");
+    let dir = base.join("work-units");
     let mut written = Vec::new();
     for wu in &result.work_units {
         let path = dir.join(format!("{}.yaml", wu.id));
@@ -114,7 +115,7 @@ pub fn handle_cell_dispatch(args: &Value, repo_root: &Path) -> Result<Value, Str
 /// Scaffold a new blueprint directory under .product/blueprints/<name>/.
 pub fn handle_blueprint_init(args: &Value, repo_root: &Path) -> Result<Value, String> {
     let name = req_str(args, "name")?;
-    let dir = pdir(repo_root).join("blueprints").join(&name);
+    let dir = pbase(args, repo_root).join("blueprints").join(&name);
     if dir.exists() && !force(args) {
         return Err(format!(
             "blueprint '{name}' already exists at {} — pass force=true to overwrite",

@@ -175,4 +175,10 @@ YAML
 printf 'id: rel-storefront\nfeatures: [del-checkout]\n' > "$ROOT/releases/rel-storefront.yaml"
 printf 'id: tgt-2\nversion: "2.0"\nin_target: [del-checkout, del-refunds]\n' > "$ROOT/targets/tgt-2.yaml"
 
+# ── §3.3 behaviour — derive the Ordering Deciders so the Behaviour view is live ──
+# Scoped to .product/products/acme/deciders/ via --product (paths::product_base).
+PRODUCT="${PRODUCT:-./target/debug/product}"
+"$PRODUCT" decider derive order --product acme --force >/dev/null
+"$PRODUCT" decider derive cart  --product acme --force >/dev/null
+
 echo "acme How + Delivery authored under $ROOT"

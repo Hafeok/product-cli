@@ -1,6 +1,7 @@
 //! Tests for the How-authoring MCP write handlers.
 
 use super::*;
+use crate::pf_mcp::pdir;
 use serde_json::json;
 
 fn repo() -> tempfile::TempDir {
@@ -15,7 +16,7 @@ fn init_scaffolds_a_contract_and_refuses_to_clobber() {
     let init = handle_how_init(&json!({"blueprint": "demo-cli"}), root).expect("init");
     assert_eq!(init["ok"], json!(true));
     assert_eq!(init["blueprint"], json!("demo-cli"));
-    assert!(how_path(root).exists());
+    assert!(how_path(&pdir(root)).exists());
 
     // A second init must not overwrite an existing contract.
     assert!(handle_how_init(&json!({"blueprint": "demo-cli"}), root).is_err());
@@ -92,7 +93,7 @@ fn set_carries_the_section_7_3_versions() {
     assert_eq!(rv["element"]["realisesVersion"], json!("3.2.0"));
 
     // Both land on the persisted contract (CLI↔MCP parity for `product how set`).
-    let c = load_how(root).expect("reload");
+    let c = load_how(&pdir(root)).expect("reload");
     assert_eq!(c.version.as_deref(), Some("1.4.0"));
     assert_eq!(c.realises_version.as_deref(), Some("3.2.0"));
 }

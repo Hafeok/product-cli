@@ -28,16 +28,20 @@ pub enum ProjectorCommands {
         force: bool,
     },
     /// List the projectors under .product/projectors/
-    List {},
+    List { #[arg(long)] product: Option<String> },
     /// Show a Projector's derived signature
     Show {
         /// The projector id (filename stem)
         name: String,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Simulate the Projector's scenarios — sound + complete before realisation
     Simulate {
         /// The projector id (filename stem)
         name: String,
+        #[arg(long)]
+        product: Option<String>,
     },
     /// Validate a Projector's signature against the event model
     Validate {
@@ -52,15 +56,15 @@ pub enum ProjectorCommands {
 pub(crate) fn handle_projector(cmd: ProjectorCommands) -> BoxResult {
     match cmd {
         ProjectorCommands::Derive { read_model, product, force } => derive(&read_model, product, force),
-        ProjectorCommands::List {} => list(),
-        ProjectorCommands::Show { name } => show(&name),
-        ProjectorCommands::Simulate { name } => simulate(&name),
+        ProjectorCommands::List { product } => list(product),
+        ProjectorCommands::Show { name, product } => show(&name, product),
+        ProjectorCommands::Simulate { name, product } => simulate(&name, product),
         ProjectorCommands::Validate { name, product } => validate(&name, product),
     }
 }
 
-fn projectors_dir() -> PathBuf {
-    super::shared::domain_root().join(".product").join("projectors")
+pub(super) fn projectors_dir(product: Option<&str>) -> PathBuf {
+    super::shared::artifact_dir(product, "projectors")
 }
 
 fn load_domain(product: Option<String>) -> Option<DomainGraph> {
@@ -73,17 +77,17 @@ fn require_domain(product: Option<String>) -> Result<DomainGraph, Box<dyn std::e
         .ok_or("no captured What graph for this product — author one with `product author domain`")?)
 }
 
-fn load(name: &str) -> Result<Projector, Box<dyn std::error::Error>> {
-    let p = projectors_dir().join(format!("{name}.yaml"));
+fn load(name: &str, product: Option<&str>) -> Result<Projector, Box<dyn std::error::Error>> {
+    let p = projectors_dir(product).join(format!("{name}.yaml"));
     let text = std::fs::read_to_string(&p)
         .map_err(|_| format!("no projector '{name}' at {} — derive one with `product projector derive <read-model>`", p.display()))?;
     Ok(Projector::from_yaml(&text)?)
 }
 
 fn derive(read_model: &str, product: Option<String>, force: bool) -> BoxResult {
+    let dir = projectors_dir(product.as_deref());
     let graph = require_domain(product)?;
     let projector = derive_projector(&graph, read_model)?;
-    let dir = projectors_dir();
     std::fs::create_dir_all(&dir)?;
     let p = dir.join(format!("{}.yaml", projector.id));
     if p.exists() && !force {
@@ -96,7 +100,7 @@ fn derive(read_model: &str, product: Option<String>, force: bool) -> BoxResult {
 }
 
 fn validate(name: &str, product: Option<String>) -> BoxResult {
-    let projector = load(name)?;
+    let projector = load(name, product.as_deref())?;
     let graph = require_domain(product)?;
     let results = validate_projector(&projector, &graph);
     for w in results.iter().filter(|r| r.severity == "warning") {
@@ -117,8 +121,8 @@ fn validate(name: &str, product: Option<String>) -> BoxResult {
     Ok(())
 }
 
-fn simulate(name: &str) -> BoxResult {
-    let projector = load(name)?;
+fn simulate(name: &str, product: Option<String>) -> BoxResult {
+    let projector = load(name, product.as_deref())?;
     let results = projector_sim::simulate(&projector);
     if results.is_empty() {
         println!(
@@ -134,8 +138,8 @@ fn simulate(name: &str) -> BoxResult {
     Err(format!("{} simulation finding(s)", results.len()).into())
 }
 
-fn show(name: &str) -> BoxResult {
-    let p = load(name)?;
+fn show(name: &str, product: Option<String>) -> BoxResult {
+    let p = load(name, product.as_deref())?;
     println!("projector: {}", p.id);
     println!("projects-for: {}", p.projects_for);
     println!("folds: {}", join(&p.folds));
@@ -147,8 +151,8 @@ fn join(v: &[String]) -> String {
     if v.is_empty() { "(none)".to_string() } else { v.join(", ") }
 }
 
-fn list() -> BoxResult {
-    let dir = projectors_dir();
+fn list(product: Option<String>) -> BoxResult {
+    let dir = projectors_dir(product.as_deref());
     let entries = match std::fs::read_dir(&dir) {
         Ok(it) => it,
         Err(_) => {
