@@ -1,0 +1,322 @@
+@prefix pf: <https://productframework.org/ns#> .
+@prefix d: <https://productframework.org/product/acme#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+d:ordering a pf:BoundedContext ;
+  rdfs:label "Ordering" ;
+  pf:purpose "Carts, orders, payments, refunds" ;
+  pf:ubiquitousTerm "Cart" ;
+  pf:ubiquitousTerm "Line Item" ;
+  pf:ubiquitousTerm "Order" ;
+  pf:ubiquitousTerm "Payment Method" .
+
+d:catalog a pf:BoundedContext ;
+  rdfs:label "Catalog" ;
+  pf:purpose "Products and prices" ;
+  pf:ubiquitousTerm "Product" ;
+  pf:ubiquitousTerm "Category" ;
+  pf:ubiquitousTerm "Price" .
+
+d:cart a pf:Entity ;
+  rdfs:label "Cart" ;
+  pf:definition "A shopper's basket" ;
+  pf:inContext d:ordering ;
+  pf:isAggregateRoot "true" ;
+  pf:identity "cart_id" .
+
+d:lineitem a pf:Entity ;
+  rdfs:label "LineItem" ;
+  pf:definition "One product line in a cart" ;
+  pf:inContext d:ordering .
+
+d:order a pf:Entity ;
+  rdfs:label "Order" ;
+  pf:definition "A placed, paid order" ;
+  pf:inContext d:ordering ;
+  pf:isAggregateRoot "true" ;
+  pf:identity "order_no" .
+
+d:product-item a pf:Entity ;
+  rdfs:label "Product" ;
+  pf:definition "A sellable item" ;
+  pf:inContext d:catalog ;
+  pf:isAggregateRoot "true" ;
+  pf:identity "sku" .
+
+d:money a pf:ValueObject ;
+  rdfs:label "" ;
+  pf:inContext d:ordering ;
+  pf:definition "An amount in minor units + currency" .
+
+d:orderno a pf:ValueObject ;
+  rdfs:label "" ;
+  pf:inContext d:ordering ;
+  pf:definition "A checksummed order number (Damm)" .
+
+d:r-cart-lineitem a pf:Relation ;
+  pf:from d:cart ;
+  pf:to d:lineitem ;
+  pf:cardinality "1 - *" ;
+  pf:rationale "a cart holds its lines" .
+
+d:cart-1 a pf:Invariant ;
+  pf:statement "a checking-out Cart has at least 1 LineItem" ;
+  pf:inContext d:ordering ;
+  pf:appliesTo d:cart .
+
+d:refund-1 a pf:Invariant ;
+  pf:statement "refund_total not greater than paid_total" ;
+  pf:inContext d:ordering ;
+  pf:appliesTo d:order .
+
+d:cmd-add-item a pf:Command ;
+  rdfs:label "Add item" ;
+  pf:inContext d:ordering ;
+  pf:targets d:cart ;
+  pf:emits d:ev-item-added .
+
+d:cmd-begin-payment a pf:Command ;
+  rdfs:label "Begin payment" ;
+  pf:inContext d:ordering ;
+  pf:targets d:cart ;
+  pf:emits d:ev-payment-begun .
+
+d:cmd-authorize-payment a pf:Command ;
+  rdfs:label "Authorize payment" ;
+  pf:inContext d:ordering ;
+  pf:targets d:order ;
+  pf:emits d:ev-order-placed .
+
+d:cmd-issue-refund a pf:Command ;
+  rdfs:label "Issue refund" ;
+  pf:inContext d:ordering ;
+  pf:targets d:order ;
+  pf:emits d:ev-refund-issued .
+
+d:ev-item-added a pf:Event ;
+  rdfs:label "Item added" ;
+  pf:inContext d:ordering ;
+  pf:changes d:cart .
+
+d:ev-payment-begun a pf:Event ;
+  rdfs:label "Payment begun" ;
+  pf:inContext d:ordering ;
+  pf:changes d:cart .
+
+d:ev-order-placed a pf:Event ;
+  rdfs:label "Order placed" ;
+  pf:inContext d:ordering ;
+  pf:changes d:order .
+
+d:ev-refund-issued a pf:Event ;
+  rdfs:label "Refund issued" ;
+  pf:inContext d:ordering ;
+  pf:changes d:order .
+
+d:rm-cart-summary a pf:ReadModel ;
+  rdfs:label "Cart summary" ;
+  pf:projects d:ev-item-added ;
+  pf:hasState "present" ;
+  pf:hasState "empty" .
+
+d:rm-order-confirmation a pf:ReadModel ;
+  rdfs:label "Order confirmation" ;
+  pf:projects d:ev-order-placed ;
+  pf:hasState "present" .
+
+d:ws-confirm a pf:WireframeStep ;
+  rdfs:label "Order placed" ;
+  pf:intent "Reassure the order succeeded" ;
+  pf:surfaces [ pf:projection d:rm-order-confirmation ; pf:typedAs d:aio-display-value ] ;
+  pf:stateMeaning [ pf:smProjection d:rm-order-confirmation ; pf:smState "present" ; pf:smMeaning "the placed order + its number" ] .
+
+d:ws-review-cart a pf:WireframeStep ;
+  rdfs:label "Review cart" ;
+  pf:intent "Confirm the order before paying" ;
+  pf:surfaces [ pf:projection d:rm-cart-summary ; pf:typedAs d:aio-display-collection ] ;
+  pf:offers [ pf:command d:cmd-begin-payment ; pf:typedAs d:aio-trigger-action ] ;
+  pf:stateMeaning [ pf:smProjection d:rm-cart-summary ; pf:smState "present" ; pf:smMeaning "the current cart contents" ] ;
+  pf:stateMeaning [ pf:smProjection d:rm-cart-summary ; pf:smState "empty" ; pf:smMeaning "Nothing to check out yet" ] ;
+  pf:transitionsTo d:ws-confirm .
+
+d:flow-checkout a pf:Flow ;
+  rdfs:label "Checkout" ;
+  pf:contains d:trg-open-cart ;
+  pf:contains d:cmd-add-item ;
+  pf:contains d:ev-item-added ;
+  pf:contains d:rm-cart-summary ;
+  pf:contains d:ws-review-cart ;
+  pf:contains d:cmd-begin-payment ;
+  pf:contains d:ev-payment-begun ;
+  pf:contains d:trg-authorize ;
+  pf:contains d:cmd-authorize-payment ;
+  pf:contains d:ev-order-placed ;
+  pf:contains d:rm-order-confirmation ;
+  pf:contains d:ws-confirm ;
+  pf:entryPage d:ws-review-cart ;
+  pf:systemOf d:acme-shop .
+
+d:flow-refunds a pf:Flow ;
+  rdfs:label "Refunds" ;
+  pf:contains d:cmd-issue-refund ;
+  pf:contains d:ev-refund-issued ;
+  pf:systemOf d:acme-admin .
+
+d:aio-display-collection a pf:Aio ;
+  rdfs:label "display-collection" ;
+  pf:means "show many of a kind" ;
+  pf:mustSatisfy d:wc-131 .
+
+d:aio-display-value a pf:Aio ;
+  rdfs:label "display-value" ;
+  pf:means "show a single datum" ;
+  pf:mustSatisfy d:wc-131 .
+
+d:aio-trigger-action a pf:Aio ;
+  rdfs:label "trigger-action" ;
+  pf:means "invoke an operation" ;
+  pf:mustSatisfy d:wc-258 ;
+  pf:mustSatisfy d:wc-247 .
+
+d:aio-single-select a pf:Aio ;
+  rdfs:label "single-select" ;
+  pf:means "choose one from a set" ;
+  pf:mustSatisfy d:wc-131 .
+
+d:cou-phone a pf:ContextOfUse ;
+  rdfs:label "Phone" ;
+  pf:dimension "form_factor" ;
+  pf:contextValue "phone" .
+
+d:cou-desktop a pf:ContextOfUse ;
+  rdfs:label "Desktop" ;
+  pf:dimension "form_factor" ;
+  pf:contextValue "desktop" .
+
+d:root-shop a pf:ApplicationRoot ;
+  rdfs:label "Shop root" ;
+  pf:navigatesFromRoot d:ws-review-cart .
+
+d:wc-131 a pf:WcagCriterion ;
+  rdfs:label "Info and Relationships" ;
+  pf:level "A" ;
+  pf:verification "machine" ;
+  pf:satisfied true .
+
+d:wc-258 a pf:WcagCriterion ;
+  rdfs:label "Target Size (Minimum)" ;
+  pf:level "AA" ;
+  pf:verification "machine" ;
+  pf:satisfied true .
+
+d:wc-247 a pf:WcagCriterion ;
+  rdfs:label "Focus Visible" ;
+  pf:level "AA" ;
+  pf:verification "machine" ;
+  pf:satisfied true .
+
+d:cio-list a pf:Cio ;
+  rdfs:label "List" .
+
+d:cio-button a pf:Cio ;
+  rdfs:label "Primary Button" .
+
+d:rr-collection-phone a pf:ReificationRule ;
+  pf:reifies d:aio-display-collection ;
+  pf:inContext d:cou-phone ;
+  pf:toCio d:cio-list ;
+  pf:rationale "stacked list on a phone" .
+
+d:rr-action-phone a pf:ReificationRule ;
+  pf:reifies d:aio-trigger-action ;
+  pf:inContext d:cou-phone ;
+  pf:toCio d:cio-button ;
+  pf:rationale "full-width button" .
+
+d:ref-payment-methods a pf:ReferenceSet ;
+  pf:referenceDataFor d:order ;
+  rdfs:label "Payment methods" ;
+  pf:referenceValue "card" ;
+  pf:referenceValue "apple-pay" ;
+  pf:referenceValue "pay-on-delivery" .
+
+d:ref-currencies a pf:ReferenceSet ;
+  pf:referenceDataFor d:money ;
+  rdfs:label "Supported currencies" ;
+  pf:referenceValue "EUR" .
+
+d:acme-shop a pf:System ;
+  rdfs:label "Acme Shop" ;
+  pf:systemKind "application" ;
+  pf:purpose "Let customers buy coffee supplies" ;
+  pf:targetsPlatform "ios" ;
+  pf:targetsPlatform "web" ;
+  pf:targetsClass "gui" ;
+  pf:rootsAt d:root-shop ;
+  pf:referencesDomain d:ordering ;
+  pf:referencesDomain d:catalog .
+
+d:acme-admin a pf:System ;
+  rdfs:label "Acme Admin" ;
+  pf:systemKind "website" ;
+  pf:purpose "Let staff manage orders and refunds" ;
+  pf:targetsPlatform "web" ;
+  pf:targetsClass "gui" ;
+  pf:referencesDomain d:ordering .
+
+d:trg-open-cart a pf:Trigger ;
+  rdfs:label "Shopper opens cart" ;
+  pf:source "user" ;
+  pf:issues d:cmd-add-item .
+
+d:trg-pay a pf:Trigger ;
+  rdfs:label "Shopper pays" ;
+  pf:source "user" ;
+  pf:issues d:cmd-begin-payment .
+
+d:trg-authorize a pf:Trigger ;
+  rdfs:label "Shopper confirms payment" ;
+  pf:source "user" ;
+  pf:issues d:cmd-authorize-payment .
+
+d:trg-fulfil a pf:Trigger ;
+  rdfs:label "Translation in" ;
+  pf:source "automated" ;
+  pf:issues d:cmd-issue-refund ;
+  pf:watches d:rm-order-confirmation ;
+  pf:translatesFrom d:acme-shop .
+
+d:acme a pf:Product ;
+  rdfs:label "Acme" ;
+  pf:purpose "Sell coffee supplies and run the business behind it" ;
+  pf:ownsDomain d:ordering ;
+  pf:ownsDomain d:catalog ;
+  pf:ownsSystem d:acme-shop ;
+  pf:ownsSystem d:acme-admin ;
+  pf:versionedAs "1.1" .
+
+d:journey-o2f a pf:Journey ;
+  rdfs:label "Order to fulfilment" ;
+  pf:composesFlow d:flow-checkout ;
+  pf:composesFlow d:flow-refunds ;
+  pf:crossesVia d:trg-fulfil .
+
+d:qd-latency a pf:QualityDemand ;
+  rdfs:label "Checkout latency" ;
+  pf:demandKind "runtime-bound" ;
+  pf:bound "checkout p99 not over 3s" ;
+  pf:scopes d:acme-shop ;
+  pf:measuredBy "telemetry:checkout" .
+
+d:acme-shop pf:boundedBy d:qd-latency .
+
+d:qd-residency a pf:QualityDemand ;
+  rdfs:label "Data residency" ;
+  pf:demandKind "architectural" ;
+  pf:bound "data_residency = EU" ;
+  pf:scopes d:acme-shop ;
+  pf:constrains d:pure-core .
+
+d:acme-shop pf:boundedBy d:qd-residency .
+

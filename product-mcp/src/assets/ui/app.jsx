@@ -579,7 +579,9 @@ function applyLive(data) {
   return true;
 }
 function fetchLive() {
-  return fetch('/api/pf').then(r => (r.ok ? r.json() : null)).then(applyLive).catch(() => false);
+  // Forward ?product= / ?session= from the page URL so /?product=acme renders
+  // the acme showcase alongside the self-hosted product-cli.
+  return fetch('/api/pf' + (location.search || '')).then(r => (r.ok ? r.json() : null)).then(applyLive).catch(() => false);
 }
 
 function Root() {

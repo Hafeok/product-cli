@@ -25,6 +25,19 @@ first render + on the SSE `changed` tick, merging the fields in `PF_LIVE_KEYS`.
 Every view renders (never crashes). Each remaining item becomes live the same way
 the shipped ones did: project its field → add the key to `PF_LIVE_KEYS`.
 
+## Since then
+- **Live repo-scan** for the §4.3 Layout tree (`pf_view/pf_repo.rs`) — walks the
+  real repo files the blueprint's layout rules cover, attributes each to its rule,
+  emits an indented tree with per-file verdicts. Layout is now fully live.
+- **ACME Shop showcase/test product** (`scripts/showcase-acme.sh`) — authors a
+  strict-conformant second product (51 nodes: 2 domains, 2 systems, entities/VOs/
+  invariants, full event model, AIOs/WCAG/reification/reference-data, ui-steps/
+  page-graph, a cross-system journey, quality demands) into
+  `.product/author-domain/acme/` via the real CLI, exercising the whole authoring
+  surface end-to-end. View it in the explorer at **`/?product=acme`** (the
+  `/api/pf` + `/api/graph` handlers now take a `?product=` override). This also
+  makes **Data** (reference-sets) and the UI reification views live for acme.
+
 ## North star (definition of done)
 Every view renders the real `.product/` graph, refreshes over SSE, and shows honest
 conformance — with **no bundled demo data consumed at runtime** (demo becomes an

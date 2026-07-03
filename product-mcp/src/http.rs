@@ -130,10 +130,13 @@ async fn mcp_handler(
 
 use super::http_ui::{legacy_view_handler, ui_handler};
 
-/// A `?session=<id>` query selecting which session the view follows.
+/// A `?session=<id>` query selecting which session the view follows, and a
+/// `?product=<name>` query selecting which product to render (e.g. the acme
+/// showcase alongside the self-hosted product-cli).
 #[derive(serde::Deserialize, Default)]
 struct SessionQuery {
     session: Option<String>,
+    product: Option<String>,
 }
 
 /// `GET /api/graph` — the What graph projected to `{nodes, edges, contexts}`,
@@ -143,7 +146,7 @@ async fn graph_handler(
     axum::extract::Query(q): axum::extract::Query<SessionQuery>,
 ) -> std::result::Result<axum::Json<ViewGraph>, (axum::http::StatusCode, String)> {
     let session = resolve_session(&state.repo_root, state.session.as_deref(), q.session.as_deref());
-    project_graph(&state.repo_root, session.as_ref())
+    project_graph(&state.repo_root, session.as_ref(), q.product.as_deref())
         .map(axum::Json)
         .map_err(|e| (axum::http::StatusCode::NOT_FOUND, e))
 }
@@ -156,7 +159,7 @@ async fn pf_handler(
     axum::extract::Query(q): axum::extract::Query<SessionQuery>,
 ) -> std::result::Result<axum::Json<serde_json::Value>, (axum::http::StatusCode, String)> {
     let session = resolve_session(&state.repo_root, state.session.as_deref(), q.session.as_deref());
-    load_domain_graph(&state.repo_root, session.as_ref())
+    load_domain_graph(&state.repo_root, session.as_ref(), q.product.as_deref())
         .map(|g| axum::Json(super::pf_view::build_pf_view(&g, &state.repo_root)))
         .map_err(|e| (axum::http::StatusCode::NOT_FOUND, e))
 }
@@ -222,8 +225,8 @@ fn active_session(repo_root: &Path) -> Option<(String, WorkflowSession)> {
 /// Project the What graph for the client — always the canonical graph (sessions
 /// write it directly). A followed `session` only selects which product to
 /// render; otherwise the configured product name is used.
-fn project_graph(repo_root: &Path, session: Option<&(String, WorkflowSession)>) -> std::result::Result<ViewGraph, String> {
-    let graph = load_domain_graph(repo_root, session)?;
+fn project_graph(repo_root: &Path, session: Option<&(String, WorkflowSession)>, product_override: Option<&str>) -> std::result::Result<ViewGraph, String> {
+    let graph = load_domain_graph(repo_root, session, product_override)?;
     let pd = repo_root.join(".product");
     let bp = pd.join("blueprints");
     let bp_dir = if bp.is_dir() { bp } else { pd.join("archetypes") };
@@ -232,22 +235,18 @@ fn project_graph(repo_root: &Path, session: Option<&(String, WorkflowSession)>) 
     Ok(to_view_graph_with_how(&graph, &blueprints, &units))
 }
 
-/// Resolve the product (from the followed session, else config) and load its
-/// canonical What graph — the shared source for `/api/graph` and `/api/pf`.
-fn load_domain_graph(repo_root: &Path, session: Option<&(String, WorkflowSession)>) -> std::result::Result<product_core::pf::model::DomainGraph, String> {
-    let configured;
-    let product = match session {
-        Some((_, s)) if !s.product.trim().is_empty() => s.product.trim(),
-        _ => {
-            configured = ProductConfig::load_from_root(repo_root).map_err(|e| e.to_string())?;
-            let name = configured.name.trim();
-            if name.is_empty() {
-                return Err("no product configured (set `name` in product.toml)".to_string());
-            }
-            name
-        }
+/// Resolve the product (query override, else followed session, else config) and
+/// load its canonical What graph — the shared source for `/api/graph` + `/api/pf`.
+fn load_domain_graph(repo_root: &Path, session: Option<&(String, WorkflowSession)>, product_override: Option<&str>) -> std::result::Result<product_core::pf::model::DomainGraph, String> {
+    let from_session = session.map(|(_, s)| s.product.trim()).filter(|p| !p.is_empty());
+    let product = match product_override.map(str::trim).filter(|p| !p.is_empty()).or(from_session) {
+        Some(p) => p.to_string(),
+        None => ProductConfig::load_from_root(repo_root).map_err(|e| e.to_string())?.name.trim().to_string(),
     };
-    DomainSession::load(&session_dir(repo_root, product))
+    if product.is_empty() {
+        return Err("no product configured (set `name` in product.toml)".to_string());
+    }
+    DomainSession::load(&session_dir(repo_root, &product))
         .map(|s| s.graph)
         .map_err(|_| format!("no What graph for product '{product}' yet"))
 }
@@ -256,7 +255,7 @@ fn load_domain_graph(repo_root: &Path, session: Option<&(String, WorkflowSession
 /// and the unscoped server default).
 #[cfg(test)]
 fn load_view(repo_root: &Path) -> std::result::Result<ViewGraph, String> {
-    project_graph(repo_root, active_session(repo_root).as_ref())
+    project_graph(repo_root, active_session(repo_root).as_ref(), None)
 }
 
 fn with_cors(app: axum::Router, cors_origins: &[String]) -> axum::Router {
