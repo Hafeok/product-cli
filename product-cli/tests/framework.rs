@@ -1347,3 +1347,55 @@ fn tc_1071_archetype_is_a_back_compat_alias_for_blueprint() {
     // …and the legacy `archetype` alias still drives the same surface.
     h.run(&["archetype", "list"]).assert_exit(0).assert_stdout_contains("shape");
 }
+
+#[test]
+fn tc_1072_reify_csharp_emits_typed_contracts_from_the_what() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "csharp", "--out", "gen"]) // relative to the temp repo root
+        .assert_exit(0)
+        .assert_stdout_contains("1 aggregate(s)");
+    // Typed contracts: command/event records + the Decider frame + runtime.
+    assert!(h.exists("gen/Bookstore.Domain/Order/OrderTypes.g.cs"), "types file emitted");
+    assert!(h.exists("gen/Bookstore.Domain/Runtime.g.cs"), "runtime substrate emitted");
+    let types = h.read("gen/Bookstore.Domain/Order/OrderTypes.g.cs");
+    assert!(types.contains("public sealed record PlaceOrder() : IOrderCommand"), "command record, got:\n{types}");
+    assert!(types.contains("public sealed record OrderPlaced() : IOrderEvent"), "event record, got:\n{types}");
+    let frame = h.read("gen/Bookstore.Domain/Order/OrderDecider.g.cs");
+    assert!(frame.contains("public static partial DecisionResult Decide(OrderState state, IOrderCommand command);"));
+    // The editable stub is scaffolded; the conformance runner speaks §6.3.
+    assert!(h.exists("gen/Bookstore.Domain/Order/OrderDecider.cs"), "editable stub scaffolded");
+    let program = h.read("gen/Bookstore.Conformance/Program.g.cs");
+    assert!(program.contains("\"Order-decider\" => RunOrder(request),"), "runner routes the decider, got:\n{program}");
+}
+
+#[test]
+fn tc_1073_reify_stubs_survive_regeneration() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    // A realiser edits the stub; regeneration must keep it (…unless --force).
+    h.write("gen/Bookstore.Domain/Order/OrderDecider.cs", "// realised\n");
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0).assert_stdout_contains("stub(s) kept");
+    assert_eq!(h.read("gen/Bookstore.Domain/Order/OrderDecider.cs"), "// realised\n");
+    h.run(&["reify", "csharp", "--out", "gen", "--force"]).assert_exit(0);
+    assert!(h.read("gen/Bookstore.Domain/Order/OrderDecider.cs").contains("NotImplementedException"));
+}
+
+#[test]
+fn tc_1074_reify_check_is_a_drift_gate_over_the_graph_hash() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    h.run(&["reify", "check", "--out", "gen"]).assert_exit(0).assert_stdout_contains("conformant");
+    // Any accepted graph mutation moves the hash → the gate must fail.
+    h.run(&["domain", "new", "event", "OrderCancelled", "--label", "Order cancelled", "--context", "Catalog", "--changes", "Order"])
+        .assert_exit(0);
+    h.run(&["reify", "check", "--out", "gen"]).assert_exit(1).assert_stderr_contains("drift");
+    // Regenerating clears the drift.
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    h.run(&["reify", "check", "--out", "gen"]).assert_exit(0);
+}

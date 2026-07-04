@@ -37,6 +37,7 @@ mod session;
 mod shared;
 mod skills;
 mod feature;
+mod reify;
 mod target;
 mod verdict;
 mod work_unit;
@@ -61,6 +62,7 @@ pub use self::release::ReleaseCommands;
 pub use self::session::SessionCommands;
 pub use self::skills::SkillsCommands;
 pub use self::feature::FeatureCommands;
+pub use self::reify::ReifyCommands;
 pub use self::target::TargetCommands;
 
 mod root_enum;
