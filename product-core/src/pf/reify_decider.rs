@@ -91,7 +91,7 @@ pub fn adapter_file(header: &str, ns: &str, agg: &str, shape: &AggShape) -> Stri
     s.push_str(&format!(
         "/// <summary>§6.3 conformance adapter for the {agg} aggregate — bridges the wire protocol to the typed Decider.</summary>\n"
     ));
-    s.push_str(&format!("internal sealed class {agg}Adapter : IConformanceAdapter\n{{\n"));
+    s.push_str(&format!("public sealed class {agg}Adapter : IConformanceAdapter\n{{\n"));
     s.push_str(&run_method(agg));
     s.push('\n');
     s.push_str(&from_wire(agg, "Event", &shape.events));

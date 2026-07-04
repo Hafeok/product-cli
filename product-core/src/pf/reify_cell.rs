@@ -104,6 +104,12 @@ fn audits(ns: &str) -> Vec<Audit> {
             protects: "the read-side fold (§3.4)".to_string(),
         },
         Audit {
+            id: "screen-seam".to_string(),
+            kind: Some("seam-conformance".to_string()),
+            checks: "`dotnet test` passes every generated <Step>ScreenTests fact — each surfaced projection renders in every non-waived state, each offer is wired to its command (§4.5)".to_string(),
+            protects: "the UI seam (§4.5)".to_string(),
+        },
+        Audit {
             id: "graph-drift".to_string(),
             kind: Some("provenance".to_string()),
             checks: "`product reify check --out <reified dir>` exits 0 (generated oracle matches the current graph hash)".to_string(),

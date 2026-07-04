@@ -117,6 +117,7 @@ pub fn plan_csharp(
     for projector in &sorted_p {
         files.extend(projector_files(opts, &hdr, projector));
     }
+    files.extend(integration_files(graph, opts, &hdr, &sorted, &sorted_p));
     files.extend(conformance_files(opts, &hdr, &sorted, &aggs, &sorted_p));
     files.push(gen(
         "realise-csharp.cell.g.yaml",
@@ -270,6 +271,47 @@ fn oracle_aggregate_files(opts: &ReifyOptions, hdr: &str, decider: &Decider, agg
         &format!("{ns}.Conformance.Tests/{agg}ScenarioTests.g.cs"),
         super::reify_oracle::wire_tests_file(hdr, ns, agg, decider),
     )]
+}
+
+/// Cross-slice artifacts: flow facts (the oracle-baked §3.2 chains) and the
+/// screen harness (§4.5 seam facts per UI step). Both land in the
+/// Conformance.Tests project, in either mode.
+fn integration_files(
+    graph: &DomainGraph,
+    opts: &ReifyOptions,
+    hdr: &str,
+    sorted: &[&Decider],
+    sorted_p: &[&Projector],
+) -> Vec<GenFile> {
+    let ns = &opts.namespace;
+    let tests = format!("{ns}.Conformance.Tests");
+    let mut out = Vec::new();
+    let flows = super::reify_flow::plan_flows(graph, sorted, sorted_p, opts.oracle_only);
+    if !flows.is_empty() {
+        out.push(gen(&format!("{tests}/FlowTests.g.cs"), super::reify_flow::tests_file(hdr, ns, &flows)));
+    }
+    let steps = super::reify_screen::testable_steps(graph);
+    if !steps.is_empty() {
+        let oracle_home = if opts.oracle_only { format!("{ns}.Conformance") } else { format!("{ns}.Domain") };
+        out.push(gen(&format!("{oracle_home}/ScreenSeam.g.cs"), super::reify_screen::seam_file(hdr, ns)));
+        out.push(GenFile {
+            path: format!("{ns}.Conformance/ScreenAdapter.cs"),
+            content: super::reify_screen::adapter_stub(ns),
+            overwrite: false,
+        });
+        for step in &steps {
+            out.push(gen(
+                &format!("{tests}/{}ScreenTests.g.cs", pascal(&step.id)),
+                super::reify_screen::tests_file(hdr, ns, step, sorted_p),
+            ));
+        }
+    }
+    // Full mode only grows the extra test project when it has content
+    // (oracle-only always emits it, in conformance_files).
+    if !opts.oracle_only && !out.is_empty() {
+        out.push(gen(&format!("{tests}/{tests}.csproj"), runtime::oracle_tests_csproj(ns)));
+    }
+    out
 }
 
 fn conformance_files(

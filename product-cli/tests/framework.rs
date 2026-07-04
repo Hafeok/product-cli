@@ -1421,3 +1421,34 @@ fn tc_1074_reify_check_is_a_drift_gate_over_the_graph_hash() {
     h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
     h.run(&["reify", "check", "--out", "gen"]).assert_exit(0);
 }
+
+#[test]
+fn tc_1076_reify_emits_flow_facts_and_the_screen_harness() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    // Author enough logic + scenarios for the oracle to bake a chain.
+    h.write(
+        ".product/deciders/Order-decider.yaml",
+        "id: Order-decider\ndecides_for: Order\nhandles:\n- PlaceOrder\nemits:\n- OrderPlaced\nevolves_from:\n- OrderPlaced\nlogic:\n  initial:\n    count: 0\n  decide:\n  - on: PlaceOrder\n    emit:\n    - OrderPlaced\nscenarios:\n- name: order accepted\n  given: []\n  when: PlaceOrder\n  then:\n    emit:\n    - OrderPlaced\n",
+    );
+    h.write(
+        ".product/projectors/OrderSummary-projector.yaml",
+        "id: OrderSummary-projector\nprojects_for: OrderSummary\nfolds:\n- OrderPlaced\nover:\n- Order\nlogic:\n  initial:\n    count: 0\n  apply:\n  - on: OrderPlaced\n    set:\n      count: '=view.count + 1'\nscenarios:\n- name: one counted\n  given:\n  - OrderPlaced\n  then:\n    count: 1\n",
+    );
+    // A flow chaining the pattern, and a screen surfacing the view.
+    h.run(&["domain", "new", "flow", "buy", "--label", "Buy a book", "--steps", "PlaceOrder,OrderPlaced,OrderSummary"]).assert_exit(0);
+    h.run(&[
+        "domain", "new", "ui-step", "Checkout", "--label", "Checkout",
+        "--surfaces", "OrderSummary:display-collection", "--offers", "PlaceOrder:trigger-action",
+    ])
+    .assert_exit(0);
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    let flows = h.read("gen/Bookstore.Conformance.Tests/FlowTests.g.cs");
+    assert!(flows.contains("public void Buy_a_book()"), "flow fact emitted, got:\n{flows}");
+    assert!(flows.contains("new OrderSummaryProjectionAdapter().Run(\"OrderSummary-projector\", stream);"));
+    let screen = h.read("gen/Bookstore.Conformance.Tests/CheckoutScreenTests.g.cs");
+    assert!(screen.contains("Assert.Contains(\"PlaceOrder\", screen.OfferedCommands);"));
+    assert!(h.exists("gen/Bookstore.Domain/ScreenSeam.g.cs"), "screen seam emitted");
+    assert!(h.exists("gen/Bookstore.Conformance/ScreenAdapter.cs"), "screen adapter scaffolded");
+}

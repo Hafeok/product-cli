@@ -124,9 +124,16 @@ realised, not transpiled).
    What graph has moved past the graph hash stamped into this code
    (see `Provenance.g.cs` / `provenance.g.json`).
 
+When the graph carries flows or UI steps, `<Ns>.Conformance.Tests` also
+gains **flow facts** (each §3.2 chain replayed across both seams, with
+every step's outcome baked by the oracle at generation time) and
+**screen facts** (implement the scaffolded `ScreenAdapter` over your UI;
+each surfaced projection must render in every non-waived state and each
+offer must be wired to its command — §4.5).
+
 `realise-csharp.cell.g.yaml` is a ready-made §5 task-type wiring these
-three gates as audits — copy it into your blueprint's `cells/` directory
-to dispatch realisation work units over this tree.
+gates as audits — copy it into your blueprint's `cells/` directory to
+dispatch realisation work units over this tree.
 "##;
 
 const README_ORACLE_MD: &str = r##"# {NS} — What-graph oracle (adapter seam)
@@ -141,9 +148,11 @@ only the incorruptible definition of done:
 - `{NS}.Conformance/ConformanceAdapter.cs` — scaffolded once, never
   overwritten: implement it by delegating to your domain model (add your
   ProjectReference in the scaffolded csproj).
-- `{NS}.Conformance.Tests/*.g.cs` — every Decider scenario as an xUnit
-  fact, driven through the adapter at the wire level.
-- `Program.g.cs` — the `product decider conform --runner` protocol.
+- `{NS}.Conformance.Tests/*.g.cs` — every Decider/Projector scenario as
+  an xUnit fact at the wire level, plus flow facts (oracle-baked §3.2
+  chains) and screen facts (implement `ScreenAdapter` over your UI).
+- `Program.g.cs` — the `product decider conform` / `product projector
+  conform` runner protocol.
 
 ## Verify
 

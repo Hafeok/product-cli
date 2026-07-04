@@ -1,173 +1,12 @@
 //! Unit tests for the C# reify slice — inference, emission, determinism.
 
-use std::collections::BTreeMap;
+#[path = "reify_fixtures.rs"]
+mod fixtures;
 
+use fixtures::*;
 use super::*;
-use crate::pf::decider_logic::{
-    CommandRef, DecideRule, DeciderLogic, EventRef, EvolveRule, Expectation, Guard, Scalar,
-    Scenario,
-};
-use crate::pf::model::{Attribute, Entity, ReferenceSet, ValueObject};
 use crate::pf::reify_ident::{method_name, pascal};
 
-fn payload(pairs: &[(&str, Scalar)]) -> BTreeMap<String, Scalar> {
-    pairs.iter().map(|(k, v)| (k.to_string(), v.clone())).collect()
-}
-
-fn fixture_graph() -> DomainGraph {
-    let mut g = DomainGraph::default();
-    g.entities.push(Entity {
-        id: "Order".into(),
-        label: "Order".into(),
-        context: "Catalog".into(),
-        definition: "A customer order".into(),
-        identity: None,
-        is_aggregate_root: true,
-        attributes: vec![Attribute { name: "customer-id".into(), ty: Some("string".into()) }],
-    });
-    g.value_objects.push(ValueObject {
-        id: "Money".into(),
-        label: "Money".into(),
-        context: "Catalog".into(),
-        definition: Some("An amount in cents".into()),
-    });
-    g.reference_sets.push(ReferenceSet {
-        id: "shipping-method".into(),
-        label: Some("Shipping method".into()),
-        concept: "Order".into(),
-        values: vec!["standard".into(), "express-2day".into()],
-    });
-    g.commands.push(crate::pf::model::Command {
-        id: "PlaceOrder".into(),
-        label: "Place order".into(),
-        context: "Catalog".into(),
-        targets: "Order".into(),
-        emits: vec!["OrderPlaced".into()],
-    });
-    g.events.push(crate::pf::model::Event {
-        id: "OrderPlaced".into(),
-        label: "Order placed".into(),
-        context: "Catalog".into(),
-        changes: "Order".into(),
-    });
-    g
-}
-
-fn fixture_logic() -> DeciderLogic {
-    DeciderLogic {
-        initial: payload(&[("status", Scalar::Str("new".into()))]),
-        evolve: vec![EvolveRule {
-            on: "OrderPlaced".into(),
-            set: payload(&[
-                ("status", Scalar::Str("placed".into())),
-                ("amount", Scalar::Str("=event.amount".into())),
-            ]),
-        }],
-        decide: vec![DecideRule {
-            on: "PlaceOrder".into(),
-            guards: vec![Guard {
-                when: None,
-                expr: Some("command.amount > 0".into()),
-                else_reject: "inv-positive-amount".into(),
-            }],
-            emit: vec![EventRef::Data {
-                event: "OrderPlaced".into(),
-                with: payload(&[("amount", Scalar::Str("=command.amount".into()))]),
-            }],
-        }],
-    }
-}
-
-fn fixture_scenarios() -> Vec<Scenario> {
-    let place = |amount: i64| CommandRef::Data {
-        command: "PlaceOrder".into(),
-        with: payload(&[("amount", Scalar::Int(amount))]),
-    };
-    vec![
-        Scenario {
-            name: "order accepted".into(),
-            given: vec![],
-            when: place(5),
-            then: Expectation::emit(vec![EventRef::Data {
-                event: "OrderPlaced".into(),
-                with: payload(&[("amount", Scalar::Int(5))]),
-            }]),
-        },
-        Scenario {
-            name: "non-positive rejected".into(),
-            given: vec![],
-            when: place(0),
-            then: Expectation::reject("inv-positive-amount"),
-        },
-    ]
-}
-
-fn fixture_decider() -> Decider {
-    Decider {
-        id: "order-decider".into(),
-        decides_for: "Order".into(),
-        handles: vec!["PlaceOrder".into()],
-        emits: vec!["OrderPlaced".into()],
-        evolves_from: vec!["OrderPlaced".into()],
-        rejects: vec!["inv-positive-amount".into()],
-        reads: vec![],
-        logic: Some(fixture_logic()),
-        scenarios: fixture_scenarios(),
-    }
-}
-
-fn opts() -> ReifyOptions {
-    ReifyOptions {
-        product: "bookstore".into(),
-        namespace: "Bookstore".into(),
-        what_version: "1.0".into(),
-        oracle_only: false,
-    }
-}
-
-fn fixture_projector() -> crate::pf::projector::Projector {
-    use crate::pf::projector_logic::{ProjectorLogic, ProjectorScenario};
-    crate::pf::projector::Projector {
-        id: "ordersummary-projector".into(),
-        projects_for: "OrderSummary".into(),
-        folds: vec!["OrderPlaced".into()],
-        over: vec!["Order".into()],
-        logic: Some(ProjectorLogic {
-            initial: payload(&[("count", Scalar::Int(0))]),
-            apply: vec![EvolveRule {
-                on: "OrderPlaced".into(),
-                set: payload(&[
-                    ("count", Scalar::Str("=view.count + 1".into())),
-                    ("last_amount", Scalar::Str("=event.amount".into())),
-                ]),
-            }],
-        }),
-        scenarios: vec![ProjectorScenario {
-            name: "one order counted".into(),
-            given: vec![EventRef::Data {
-                event: "OrderPlaced".into(),
-                with: payload(&[("amount", Scalar::Int(5))]),
-            }],
-            then: payload(&[("count", Scalar::Int(1)), ("last_amount", Scalar::Int(5))]),
-        }],
-    }
-}
-
-fn plan() -> ReifyPlan {
-    plan_csharp(&fixture_graph(), &[fixture_decider()], &[fixture_projector()], &opts()).expect("plan")
-}
-
-fn oracle_plan() -> ReifyPlan {
-    let o = ReifyOptions { oracle_only: true, ..opts() };
-    plan_csharp(&fixture_graph(), &[fixture_decider()], &[fixture_projector()], &o).expect("plan")
-}
-
-fn file<'a>(p: &'a ReifyPlan, suffix: &str) -> &'a GenFile {
-    p.files
-        .iter()
-        .find(|f| f.path.ends_with(suffix))
-        .unwrap_or_else(|| panic!("no generated file ending in {suffix}"))
-}
 
 #[test]
 fn identifiers_pascal_case_totally() {
@@ -216,7 +55,7 @@ fn decider_frame_and_typed_adapter_are_emitted() {
     assert!(frame.contains("public static partial OrderState Evolve(OrderState state, IOrderEvent evt);"));
     assert!(frame.contains("public static readonly string[] Handles = { \"PlaceOrder\" };"));
     let adapter = &file(&p, "OrderAdapter.g.cs").content;
-    assert!(adapter.contains("internal sealed class OrderAdapter : IConformanceAdapter"));
+    assert!(adapter.contains("public sealed class OrderAdapter : IConformanceAdapter"));
     assert!(adapter.contains("\"PlaceOrder\" => new PlaceOrder(Amount: PfWire.GetLong(wire.With, \"amount\")),"));
     let program = &file(&p, "Program.g.cs").content;
     assert!(program.contains("\"order-decider\" => new OrderAdapter(),"));
@@ -259,7 +98,7 @@ fn projector_frame_view_record_and_facts_are_emitted() {
     let stub = file(&p, "Views/OrderSummaryProjector.cs");
     assert!(!stub.overwrite);
     let adapter = &file(&p, "OrderSummaryProjectionAdapter.g.cs").content;
-    assert!(adapter.contains("internal sealed class OrderSummaryProjectionAdapter : IProjectionAdapter"));
+    assert!(adapter.contains("public sealed class OrderSummaryProjectionAdapter : IProjectionAdapter"));
     let tests = &file(&p, "Bookstore.Domain.Tests/OrderSummaryProjectionTests.g.cs").content;
     assert!(tests.contains("OrderSummaryProjector.Fold(given).WireState()"));
     assert!(tests.contains("Assert.Equal(1L, Assert.IsType<long>(wire[\"count\"]));"));
@@ -291,12 +130,47 @@ fn projectors_move_the_input_hash() {
 }
 
 #[test]
+fn flow_facts_bake_the_oracle_chain_across_both_seams() {
+    let p = plan();
+    let flows = &file(&p, "FlowTests.g.cs").content;
+    assert!(flows.contains("public void Buy_a_book()"));
+    // The command step drives the decider adapter with the scenario payload…
+    assert!(flows.contains("new OrderAdapter().Run(\"order-decider\", stream, new WireCommand(\"PlaceOrder\", new Dictionary<string, object?> { [\"amount\"] = 5L }));"));
+    assert!(flows.contains("stream.AddRange(o0.Emit!);"));
+    // …and the terminal view is the oracle's projection over the stream.
+    assert!(flows.contains("new OrderSummaryProjectionAdapter().Run(\"ordersummary-projector\", stream);"));
+    assert!(flows.contains("Assert.Equal(1L, Assert.IsType<long>(view0[\"count\"]));"));
+    // Oracle-only routes the same chain through the scaffolded adapters.
+    let o = oracle_plan();
+    let oflows = &file(&o, "FlowTests.g.cs").content;
+    assert!(oflows.contains("new ConformanceAdapter().Run(\"order-decider\""));
+    assert!(oflows.contains("new ProjectionAdapter().Run(\"ordersummary-projector\""));
+}
+
+#[test]
+fn screen_facts_pin_surfaces_offers_and_state_coverage() {
+    let p = plan();
+    let seam = &file(&p, "Bookstore.Domain/ScreenSeam.g.cs").content;
+    assert!(seam.contains("public interface IScreenAdapter"));
+    let stub = file(&p, "ScreenAdapter.cs");
+    assert!(!stub.overwrite);
+    let tests = &file(&p, "UiCheckoutScreenTests.g.cs").content;
+    // Present state: fixture from the projector oracle, every surface + offer.
+    assert!(tests.contains("Render(\"ui-checkout\", \"present\", new Dictionary<string, object?> { [\"count\"] = 1L, [\"last_amount\"] = 5L })"));
+    assert!(tests.contains("Assert.Contains(\"OrderSummary\", screen.Projections);"));
+    assert!(tests.contains("Assert.Contains(\"PlaceOrder\", screen.OfferedCommands);"));
+    // Non-waived degraded state gets a fact; the waived one does not.
+    assert!(tests.contains("public void OrderSummary_empty_state_is_handled()"));
+    assert!(!tests.contains("failed_state_is_handled"), "waived state must not be tested");
+}
+
+#[test]
 fn realise_csharp_cell_is_valid_task_type_yaml() {
     for p in [plan(), oracle_plan()] {
         let cell = &file(&p, "realise-csharp.cell.g.yaml").content;
         let parsed = crate::pf::cell::TaskType::from_yaml(cell).expect("cell parses");
         assert_eq!(parsed.id, "realise-csharp");
-        assert_eq!(parsed.audits.len(), 4);
+        assert_eq!(parsed.audits.len(), 5);
         assert!(parsed.audits.iter().any(|a| a.checks.contains("product reify check")));
         assert!(parsed.audits.iter().any(|a| a.checks.contains("decider conform")));
     }

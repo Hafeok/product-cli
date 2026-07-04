@@ -167,7 +167,7 @@ pub fn adapter_file(header: &str, ns: &str, projector: &Projector) -> String {
     s.push_str("#nullable enable\n\nusing System.Collections.Generic;\n\n");
     s.push_str(&format!("namespace {ns};\n\n"));
     s.push_str(&format!(
-        "/// <summary>§6.3 projection adapter for read model '{}' — wire events through the realised fold.</summary>\ninternal sealed class {base}ProjectionAdapter : IProjectionAdapter\n{{\n    public IReadOnlyDictionary<string, object?> Run(string projectorId, IReadOnlyList<WireEvent> given) =>\n        {base}Projector.Fold(given).WireState();\n}}\n",
+        "/// <summary>§6.3 projection adapter for read model '{}' — wire events through the realised fold.</summary>\npublic sealed class {base}ProjectionAdapter : IProjectionAdapter\n{{\n    public IReadOnlyDictionary<string, object?> Run(string projectorId, IReadOnlyList<WireEvent> given) =>\n        {base}Projector.Fold(given).WireState();\n}}\n",
         cs_escape(&projector.projects_for)
     ));
     s
