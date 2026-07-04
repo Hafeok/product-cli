@@ -125,7 +125,7 @@ fn emitted_event_asserts(i: usize, ev: &EventRef, shape: &AggShape) -> String {
 
 /// A collection-size assertion in the form the xUnit analyzers prefer
 /// (`Assert.Empty` / `Assert.Single` for 0/1, `Assert.Equal` above).
-fn count_assert(expr: &str, len: usize) -> String {
+pub(crate) fn count_assert(expr: &str, len: usize) -> String {
     match len {
         0 => format!("        Assert.Empty({expr});\n"),
         1 => format!("        Assert.Single({expr});\n"),

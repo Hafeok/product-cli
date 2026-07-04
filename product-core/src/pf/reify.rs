@@ -14,7 +14,7 @@ use crate::error::{ProductError, Result};
 use super::decider::Decider;
 use super::model::DomainGraph;
 use super::provenance::content_hash;
-use super::reify_decider::{frame_file, stub_file, wire_file};
+use super::reify_decider::{adapter_file, frame_file, stub_file};
 use super::reify_ident::pascal;
 use super::reify_infer::{infer, AggShape};
 use super::reify_program::{program_file, RunnerEntry};
@@ -29,6 +29,10 @@ pub struct ReifyOptions {
     /// The What version this code realises (§7.3) — the How's
     /// `realises_version` when present, else `"unversioned"`.
     pub what_version: String,
+    /// Oracle-only mode: emit no domain types — just the wire-level
+    /// verification shell (`IConformanceAdapter` seam, scenario tests,
+    /// runner, provenance). The realiser owns the whole domain design.
+    pub oracle_only: bool,
 }
 
 /// One file of the plan. `overwrite: false` marks an editable scaffold the
@@ -77,12 +81,24 @@ pub fn plan_csharp(graph: &DomainGraph, deciders: &[Decider], opts: &ReifyOption
     sorted.sort_by(|a, b| a.id.cmp(&b.id));
     let aggs = aggregate_names(&sorted)?;
 
-    let mut files = global_files(graph, opts, &hdr, &graph_hash);
+    let mut files = if opts.oracle_only {
+        oracle_global_files(opts, &hdr, &graph_hash)
+    } else {
+        global_files(graph, opts, &hdr, &graph_hash)
+    };
     for (decider, agg) in sorted.iter().zip(&aggs) {
         let shape = infer(decider);
-        files.extend(aggregate_files(graph, opts, &hdr, decider, agg, &shape));
+        files.extend(if opts.oracle_only {
+            oracle_aggregate_files(opts, &hdr, decider, agg)
+        } else {
+            aggregate_files(graph, opts, &hdr, decider, agg, &shape)
+        });
     }
     files.extend(conformance_files(opts, &hdr, &sorted, &aggs));
+    files.push(gen(
+        "realise-csharp.cell.g.yaml",
+        super::reify_cell::cell_file(&graph_hash, &opts.namespace, opts.oracle_only)?,
+    ));
     files.push(GenFile {
         path: "provenance.g.json".to_string(),
         content: provenance_json(opts, &graph_hash, &files),
@@ -113,7 +129,7 @@ fn global_files(graph: &DomainGraph, opts: &ReifyOptions, hdr: &str, hash: &str)
     let ns = &opts.namespace;
     let domain = format!("{ns}.Domain");
     vec![
-        gen("README.g.md", runtime::readme(ns)),
+        gen("README.g.md", runtime::readme(ns, false)),
         gen(&format!("{domain}/{domain}.csproj"), runtime::domain_csproj()),
         gen(&format!("{domain}/Runtime.g.cs"), runtime::runtime_file(hdr, ns)),
         gen(
@@ -121,6 +137,30 @@ fn global_files(graph: &DomainGraph, opts: &ReifyOptions, hdr: &str, hash: &str)
             runtime::provenance_cs(hdr, &opts.product, &opts.what_version, hash),
         ),
         gen(&format!("{domain}/Domain.g.cs"), domain_file(hdr, ns, graph)),
+    ]
+}
+
+/// Oracle-only globals — no domain project at all: the wire seam, the
+/// scaffolded adapter + csproj (both realiser-owned), assembly provenance.
+fn oracle_global_files(opts: &ReifyOptions, hdr: &str, hash: &str) -> Vec<GenFile> {
+    let ns = &opts.namespace;
+    let conf = format!("{ns}.Conformance");
+    vec![
+        gen("README.g.md", runtime::readme(ns, true)),
+        GenFile {
+            path: format!("{conf}/{conf}.csproj"),
+            content: super::reify_oracle::oracle_csproj(),
+            overwrite: false,
+        },
+        GenFile {
+            path: format!("{conf}/ConformanceAdapter.cs"),
+            content: super::reify_oracle::adapter_stub(ns),
+            overwrite: false,
+        },
+        gen(
+            &format!("{conf}/Provenance.g.cs"),
+            runtime::provenance_cs(hdr, &opts.product, &opts.what_version, hash),
+        ),
     ]
 }
 
@@ -137,7 +177,7 @@ fn aggregate_files(
     let mut out = vec![
         gen(&format!("{dir}/{agg}Types.g.cs"), agg_types_file(hdr, ns, agg, graph, decider, shape)),
         gen(&format!("{dir}/{agg}Decider.g.cs"), frame_file(hdr, ns, agg, decider)),
-        gen(&format!("{dir}/{agg}Wire.g.cs"), wire_file(hdr, ns, agg, shape)),
+        gen(&format!("{ns}.Conformance/{agg}Adapter.g.cs"), adapter_file(hdr, ns, agg, shape)),
         GenFile {
             path: format!("{dir}/{agg}Decider.cs"),
             content: stub_file(ns, agg, decider),
@@ -153,6 +193,18 @@ fn aggregate_files(
     out
 }
 
+/// Oracle-only per-decider artifacts: wire-level scenario facts only.
+fn oracle_aggregate_files(opts: &ReifyOptions, hdr: &str, decider: &Decider, agg: &str) -> Vec<GenFile> {
+    let ns = &opts.namespace;
+    if decider.scenarios.is_empty() {
+        return Vec::new();
+    }
+    vec![gen(
+        &format!("{ns}.Conformance.Tests/{agg}ScenarioTests.g.cs"),
+        super::reify_oracle::wire_tests_file(hdr, ns, agg, decider),
+    )]
+}
+
 fn conformance_files(opts: &ReifyOptions, hdr: &str, sorted: &[&Decider], aggs: &[String]) -> Vec<GenFile> {
     let ns = &opts.namespace;
     let entries: Vec<RunnerEntry> = sorted
@@ -160,17 +212,27 @@ fn conformance_files(opts: &ReifyOptions, hdr: &str, sorted: &[&Decider], aggs: 
         .zip(aggs)
         .map(|(d, agg)| RunnerEntry { decider_id: d.id.clone(), agg: agg.clone() })
         .collect();
-    vec![
+    let conf = format!("{ns}.Conformance");
+    let mut out = vec![
+        gen(&format!("{conf}/Oracle.g.cs"), super::reify_oracle::oracle_file(hdr, ns)),
         gen(
-            &format!("{ns}.Conformance/{ns}.Conformance.csproj"),
-            runtime::conformance_csproj(ns),
+            &format!("{conf}/Program.g.cs"),
+            program_file(hdr, ns, &entries, opts.oracle_only),
         ),
-        gen(&format!("{ns}.Conformance/Program.g.cs"), program_file(hdr, ns, &entries)),
-        gen(
+    ];
+    if opts.oracle_only {
+        out.push(gen(
+            &format!("{ns}.Conformance.Tests/{ns}.Conformance.Tests.csproj"),
+            runtime::oracle_tests_csproj(ns),
+        ));
+    } else {
+        out.push(gen(&format!("{conf}/{conf}.csproj"), runtime::conformance_csproj(ns)));
+        out.push(gen(
             &format!("{ns}.Domain.Tests/{ns}.Domain.Tests.csproj"),
             runtime::tests_csproj(ns),
-        ),
-    ]
+        ));
+    }
+    out
 }
 
 fn gen(path: &str, content: String) -> GenFile {

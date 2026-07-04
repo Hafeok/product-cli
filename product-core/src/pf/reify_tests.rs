@@ -121,11 +121,17 @@ fn opts() -> ReifyOptions {
         product: "bookstore".into(),
         namespace: "Bookstore".into(),
         what_version: "1.0".into(),
+        oracle_only: false,
     }
 }
 
 fn plan() -> ReifyPlan {
     plan_csharp(&fixture_graph(), &[fixture_decider()], &opts()).expect("plan")
+}
+
+fn oracle_plan() -> ReifyPlan {
+    let o = ReifyOptions { oracle_only: true, ..opts() };
+    plan_csharp(&fixture_graph(), &[fixture_decider()], &o).expect("plan")
 }
 
 fn file<'a>(p: &'a ReifyPlan, suffix: &str) -> &'a GenFile {
@@ -175,17 +181,51 @@ fn typed_contracts_are_emitted() {
 }
 
 #[test]
-fn decider_frame_and_wire_codec_are_emitted() {
+fn decider_frame_and_typed_adapter_are_emitted() {
     let p = plan();
     let frame = &file(&p, "OrderDecider.g.cs").content;
     assert!(frame.contains("public static partial DecisionResult Decide(OrderState state, IOrderCommand command);"));
     assert!(frame.contains("public static partial OrderState Evolve(OrderState state, IOrderEvent evt);"));
     assert!(frame.contains("public static readonly string[] Handles = { \"PlaceOrder\" };"));
-    let wire = &file(&p, "OrderWire.g.cs").content;
-    assert!(wire.contains("\"PlaceOrder\" => new PlaceOrder(Amount: PfJson.GetLong(with, \"amount\")),"));
+    let adapter = &file(&p, "OrderAdapter.g.cs").content;
+    assert!(adapter.contains("internal sealed class OrderAdapter : IConformanceAdapter"));
+    assert!(adapter.contains("\"PlaceOrder\" => new PlaceOrder(Amount: PfWire.GetLong(wire.With, \"amount\")),"));
     let program = &file(&p, "Program.g.cs").content;
-    assert!(program.contains("\"order-decider\" => RunOrder(request),"));
-    assert!(program.contains("static Dictionary<string, object?> RunOrder(JsonElement request)"));
+    assert!(program.contains("\"order-decider\" => new OrderAdapter(),"));
+    let oracle = &file(&p, "Oracle.g.cs").content;
+    assert!(oracle.contains("public interface IConformanceAdapter"));
+    assert!(oracle.contains("ConformanceOutcome Run(string deciderId, IReadOnlyList<WireEvent> given, WireCommand when);"));
+}
+
+#[test]
+fn oracle_only_mode_emits_the_verification_shell_without_types() {
+    let p = oracle_plan();
+    assert!(!p.files.iter().any(|f| f.path.contains("Domain.g.cs")), "no domain types");
+    assert!(!p.files.iter().any(|f| f.path.contains("OrderTypes.g.cs")), "no typed records");
+    let stub = file(&p, "ConformanceAdapter.cs");
+    assert!(!stub.overwrite, "adapter stub is scaffolded once");
+    assert!(stub.content.contains("public sealed class ConformanceAdapter : IConformanceAdapter"));
+    let csproj = file(&p, "Bookstore.Conformance/Bookstore.Conformance.csproj");
+    assert!(!csproj.overwrite, "oracle csproj is realiser-owned (domain reference)");
+    let program = &file(&p, "Program.g.cs").content;
+    assert!(program.contains("static IConformanceAdapter ResolveAdapter(string deciderId) => new ConformanceAdapter();"));
+    let tests = &file(&p, "Bookstore.Conformance.Tests/OrderScenarioTests.g.cs").content;
+    assert!(tests.contains("var adapter = new ConformanceAdapter();"));
+    assert!(tests.contains("adapter.Run(\"order-decider\""));
+    assert!(tests.contains("new WireCommand(\"PlaceOrder\", new Dictionary<string, object?> { [\"amount\"] = 5L })"));
+    assert!(tests.contains("Assert.Equal(\"inv-positive-amount\", outcome.Reject);"));
+}
+
+#[test]
+fn realise_csharp_cell_is_valid_task_type_yaml() {
+    for p in [plan(), oracle_plan()] {
+        let cell = &file(&p, "realise-csharp.cell.g.yaml").content;
+        let parsed = crate::pf::cell::TaskType::from_yaml(cell).expect("cell parses");
+        assert_eq!(parsed.id, "realise-csharp");
+        assert_eq!(parsed.audits.len(), 3);
+        assert!(parsed.audits.iter().any(|a| a.checks.contains("product reify check")));
+        assert!(parsed.audits.iter().any(|a| a.checks.contains("decider conform")));
+    }
 }
 
 #[test]

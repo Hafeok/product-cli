@@ -1364,10 +1364,32 @@ fn tc_1072_reify_csharp_emits_typed_contracts_from_the_what() {
     assert!(types.contains("public sealed record OrderPlaced() : IOrderEvent"), "event record, got:\n{types}");
     let frame = h.read("gen/Bookstore.Domain/Order/OrderDecider.g.cs");
     assert!(frame.contains("public static partial DecisionResult Decide(OrderState state, IOrderCommand command);"));
-    // The editable stub is scaffolded; the conformance runner speaks §6.3.
+    // The editable stub is scaffolded; the conformance runner speaks §6.3
+    // through the typed adapter behind the IConformanceAdapter seam.
     assert!(h.exists("gen/Bookstore.Domain/Order/OrderDecider.cs"), "editable stub scaffolded");
     let program = h.read("gen/Bookstore.Conformance/Program.g.cs");
-    assert!(program.contains("\"Order-decider\" => RunOrder(request),"), "runner routes the decider, got:\n{program}");
+    assert!(program.contains("\"Order-decider\" => new OrderAdapter(),"), "runner routes the decider, got:\n{program}");
+    assert!(h.read("gen/Bookstore.Conformance/Oracle.g.cs").contains("public interface IConformanceAdapter"));
+    // The §5 task-type is emitted ready to copy into a blueprint's cells/.
+    assert!(h.read("gen/realise-csharp.cell.g.yaml").contains("id: realise-csharp"));
+}
+
+#[test]
+fn tc_1075_reify_oracle_only_hands_construction_to_the_realiser() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "csharp", "--out", "gen", "--oracle-only"]).assert_exit(0).assert_stdout_contains("oracle-only");
+    // No domain types — only the verification shell plus realiser-owned scaffolds.
+    assert!(!h.exists("gen/Bookstore.Domain"), "no generated domain project");
+    assert!(h.exists("gen/Bookstore.Conformance/Oracle.g.cs"), "wire seam emitted");
+    assert!(h.exists("gen/Bookstore.Conformance/ConformanceAdapter.cs"), "adapter stub scaffolded");
+    h.write("gen/Bookstore.Conformance/ConformanceAdapter.cs", "// realised\n");
+    h.run(&["reify", "csharp", "--out", "gen", "--oracle-only"]).assert_exit(0);
+    assert_eq!(h.read("gen/Bookstore.Conformance/ConformanceAdapter.cs"), "// realised\n");
+    // Switching modes cleans up the generated files the new plan no longer produces.
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0).assert_stdout_contains("stale generated file(s) removed");
+    assert!(h.exists("gen/Bookstore.Domain/Runtime.g.cs"), "full mode emits the runtime");
 }
 
 #[test]
@@ -1378,7 +1400,7 @@ fn tc_1073_reify_stubs_survive_regeneration() {
     h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
     // A realiser edits the stub; regeneration must keep it (…unless --force).
     h.write("gen/Bookstore.Domain/Order/OrderDecider.cs", "// realised\n");
-    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0).assert_stdout_contains("stub(s) kept");
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0).assert_stdout_contains("scaffold(s) kept");
     assert_eq!(h.read("gen/Bookstore.Domain/Order/OrderDecider.cs"), "// realised\n");
     h.run(&["reify", "csharp", "--out", "gen", "--force"]).assert_exit(0);
     assert!(h.read("gen/Bookstore.Domain/Order/OrderDecider.cs").contains("NotImplementedException"));

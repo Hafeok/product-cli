@@ -36,9 +36,13 @@ pub enum ReifyCommands {
         /// Root C# namespace (default: PascalCase of the product name)
         #[arg(long)]
         namespace: Option<String>,
+        /// Emit only the verification shell (IConformanceAdapter seam, wire-level
+        /// scenario tests, runner, provenance) — the realiser owns all domain types
+        #[arg(long = "oracle-only")]
+        oracle_only: bool,
         #[arg(long)]
         product: Option<String>,
-        /// Also rewrite the editable <Aggregate>Decider.cs stubs
+        /// Also rewrite the editable scaffolds (Decider stubs / ConformanceAdapter)
         #[arg(long)]
         force: bool,
     },
@@ -47,34 +51,57 @@ pub enum ReifyCommands {
 pub(crate) fn handle_reify(cmd: ReifyCommands) -> BoxResult {
     match cmd {
         ReifyCommands::Check { out, product } => check(out, product),
-        ReifyCommands::Csharp { out, namespace, product, force } => {
-            csharp(out, namespace, product, force)
+        ReifyCommands::Csharp { out, namespace, oracle_only, product, force } => {
+            csharp(out, namespace, oracle_only, product, force)
         }
     }
 }
 
-fn csharp(out: Option<PathBuf>, namespace: Option<String>, product: Option<String>, force: bool) -> BoxResult {
+fn csharp(out: Option<PathBuf>, namespace: Option<String>, oracle_only: bool, product: Option<String>, force: bool) -> BoxResult {
     let (name, graph) = require_domain(product.as_deref())?;
     let deciders = load_deciders(Some(&name))?;
     let opts = ReifyOptions {
         namespace: namespace.unwrap_or_else(|| product_core::pf::reify_ident::pascal(&name)),
         what_version: what_version(Some(&name)),
         product: name.clone(),
+        oracle_only,
     };
     let plan = plan_csharp(&graph, &deciders, &opts)?;
     let root = out.unwrap_or_else(|| default_out(&name));
+    let stale = remove_stale(&root, &plan);
     let (written, kept) = write_plan(&root, &plan, force)?;
     println!(
-        "reified '{}' → {} — {} file(s) written{} across {} aggregate(s)",
+        "reified '{}' → {} ({}) — {} file(s) written{}{} across {} aggregate(s)",
         name,
         root.display(),
+        if oracle_only { "oracle-only" } else { "full" },
         written,
-        if kept > 0 { format!(" ({kept} editable stub(s) kept)") } else { String::new() },
+        if kept > 0 { format!(" ({kept} scaffold(s) kept)") } else { String::new() },
+        if stale > 0 { format!(", {stale} stale generated file(s) removed") } else { String::new() },
         plan.aggregates.len(),
     );
     println!("  graph hash sha256:{}", plan.graph_hash);
-    println!("  verify: dotnet test — then `product decider conform <id> --runner \"dotnet run --project {}/{}.Conformance -- <id>\"`", root.display(), opts.namespace);
+    println!("  verify: dotnet test — then `product decider conform <id> --runner \"dotnet {ns}.Conformance/bin/Debug/net8.0/{ns}.Conformance.dll <id>\"` (from {root})",
+        ns = opts.namespace, root = root.display());
     Ok(())
+}
+
+/// Delete generated files listed in the previous run's manifest that this
+/// plan no longer produces (e.g. a decider was removed, or the mode changed).
+/// Scaffolds are never in the manifest, so realiser-owned files are safe.
+fn remove_stale(root: &std::path::Path, plan: &ReifyPlan) -> usize {
+    let Ok(prev) = std::fs::read_to_string(root.join("provenance.g.json")) else { return 0 };
+    let Ok(v) = serde_json::from_str::<serde_json::Value>(&prev) else { return 0 };
+    let current: std::collections::BTreeSet<&str> =
+        plan.files.iter().map(|f| f.path.as_str()).collect();
+    let mut removed = 0;
+    for old in v.get("generated_files").and_then(|f| f.as_array()).into_iter().flatten() {
+        let Some(path) = old.as_str() else { continue };
+        if !current.contains(path) && std::fs::remove_file(root.join(path)).is_ok() {
+            removed += 1;
+        }
+    }
+    removed
 }
 
 fn write_plan(root: &std::path::Path, plan: &ReifyPlan, force: bool) -> Result<(usize, usize), Box<dyn std::error::Error>> {
