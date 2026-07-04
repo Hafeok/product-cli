@@ -96,6 +96,14 @@ fn audits(ns: &str) -> Vec<Audit> {
             protects: "decider slot".to_string(),
         },
         Audit {
+            id: "projection-conform".to_string(),
+            kind: Some("behavioural-conformance".to_string()),
+            checks: format!(
+                "for each projector: `product projector conform <projector> --runner \"dotnet {ns}.Conformance/bin/Debug/net8.0/{ns}.Conformance.dll <projector>\"` reports conformant (§3.4 full-state equality)"
+            ),
+            protects: "the read-side fold (§3.4)".to_string(),
+        },
+        Audit {
             id: "graph-drift".to_string(),
             kind: Some("provenance".to_string()),
             checks: "`product reify check --out <reified dir>` exits 0 (generated oracle matches the current graph hash)".to_string(),

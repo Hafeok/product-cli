@@ -60,13 +60,14 @@ pub(crate) fn handle_reify(cmd: ReifyCommands) -> BoxResult {
 fn csharp(out: Option<PathBuf>, namespace: Option<String>, oracle_only: bool, product: Option<String>, force: bool) -> BoxResult {
     let (name, graph) = require_domain(product.as_deref())?;
     let deciders = load_deciders(Some(&name))?;
+    let projectors = load_projectors(Some(&name))?;
     let opts = ReifyOptions {
         namespace: namespace.unwrap_or_else(|| product_core::pf::reify_ident::pascal(&name)),
         what_version: what_version(Some(&name)),
         product: name.clone(),
         oracle_only,
     };
-    let plan = plan_csharp(&graph, &deciders, &opts)?;
+    let plan = plan_csharp(&graph, &deciders, &projectors, &opts)?;
     let root = out.unwrap_or_else(|| default_out(&name));
     let stale = remove_stale(&root, &plan);
     let (written, kept) = write_plan(&root, &plan, force)?;
@@ -124,7 +125,8 @@ fn write_plan(root: &std::path::Path, plan: &ReifyPlan, force: bool) -> Result<(
 fn check(out: Option<PathBuf>, product: Option<String>) -> BoxResult {
     let (name, graph) = require_domain(product.as_deref())?;
     let deciders = load_deciders(Some(&name))?;
-    let current = input_hash(&graph, &name, &deciders)?;
+    let projectors = load_projectors(Some(&name))?;
+    let current = input_hash(&graph, &name, &deciders, &projectors)?;
     let root = out.unwrap_or_else(|| default_out(&name));
     let prov_path = root.join("provenance.g.json");
     let text = std::fs::read_to_string(&prov_path).map_err(|_| {
@@ -170,6 +172,24 @@ fn load_deciders(product: Option<&str>) -> Result<Vec<product_core::pf::decider:
     for p in paths {
         let text = std::fs::read_to_string(&p)?;
         out.push(product_core::pf::decider::Decider::from_yaml(&text)?);
+    }
+    Ok(out)
+}
+
+/// Every authored Projector under the product's projectors dir, sorted by id.
+fn load_projectors(product: Option<&str>) -> Result<Vec<product_core::pf::projector::Projector>, Box<dyn std::error::Error>> {
+    let dir = super::projector::projectors_dir(product);
+    let mut out = Vec::new();
+    let Ok(entries) = std::fs::read_dir(&dir) else { return Ok(out) };
+    let mut paths: Vec<PathBuf> = entries
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.extension().and_then(|s| s.to_str()) == Some("yaml"))
+        .collect();
+    paths.sort();
+    for p in paths {
+        let text = std::fs::read_to_string(&p)?;
+        out.push(product_core::pf::projector::Projector::from_yaml(&text)?);
     }
     Ok(out)
 }

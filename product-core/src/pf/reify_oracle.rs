@@ -51,6 +51,13 @@ public interface IConformanceAdapter
     ConformanceOutcome Run(string deciderId, IReadOnlyList<WireEvent> given, WireCommand when);
 }
 
+/// <summary>The read-side seam (§3.4/§6.3): fold <paramref name="given"/> into a fresh view,
+/// answered in wire form. Full-state equality against the Projector oracle.</summary>
+public interface IProjectionAdapter
+{
+    IReadOnlyDictionary<string, object?> Run(string projectorId, IReadOnlyList<WireEvent> given);
+}
+
 /// <summary>JSON codec for the §6.3 conformance wire protocol (scalars: long · bool · string).</summary>
 public static class PfWire
 {
@@ -111,6 +118,28 @@ public static class PfWire
 }
 "##;
 
+const PROJECTION_STUB_CS: &str = r##"// Scaffolded once by `product reify csharp` in oracle mode — never overwritten.
+// Implement the §3.4 read-side seam: fold `given` into your view representation
+// and answer it in wire form (field name → long | bool | string). Conformance is
+// full-state equality against the Projector oracle's fold.
+#nullable enable
+
+using System;
+using System.Collections.Generic;
+
+namespace {NS};
+
+public sealed class ProjectionAdapter : IProjectionAdapter
+{
+    public IReadOnlyDictionary<string, object?> Run(string projectorId, IReadOnlyList<WireEvent> given)
+    {
+        // TODO: delegate to your realised read model, e.g.
+        //   return OrderSummaryReadModel.Fold(given).ToWire();
+        throw new NotImplementedException($"realise the projection adapter for '{projectorId}'");
+    }
+}
+"##;
+
 const ADAPTER_STUB_CS: &str = r##"// Scaffolded once by `product reify csharp --oracle-only` — never overwritten.
 // Implement the §6.3 oracle seam here: fold `given` into your aggregate state,
 // decide `when`, and answer in wire form. Your domain model's design (types,
@@ -158,6 +187,12 @@ pub fn oracle_file(header: &str, ns: &str) -> String {
 /// The scaffolded-once `ConformanceAdapter.cs` stub (oracle-only mode).
 pub fn adapter_stub(ns: &str) -> String {
     ADAPTER_STUB_CS.replace("{NS}", ns)
+}
+
+/// The scaffolded-once `ProjectionAdapter.cs` stub (oracle-only mode, when
+/// the graph carries projectors).
+pub fn projection_stub(ns: &str) -> String {
+    PROJECTION_STUB_CS.replace("{NS}", ns)
 }
 
 /// The scaffolded-once Conformance csproj (oracle-only mode — the realiser
@@ -217,7 +252,7 @@ fn given_expr(given: &[EventRef]) -> String {
 }
 
 /// `new WireEvent("id", new Dictionary<string, object?> { ["f"] = v })`.
-fn wire_new(ty: &str, id: &str, payload: &Payload) -> String {
+pub(crate) fn wire_new(ty: &str, id: &str, payload: &Payload) -> String {
     if payload.is_empty() {
         return format!("new {ty}(\"{}\", new Dictionary<string, object?>())", cs_escape(id));
     }
@@ -232,7 +267,7 @@ fn wire_new(ty: &str, id: &str, payload: &Payload) -> String {
     )
 }
 
-fn wire_scalar(v: &Scalar) -> String {
+pub(crate) fn wire_scalar(v: &Scalar) -> String {
     match v {
         Scalar::Bool(b) => b.to_string(),
         Scalar::Int(i) => format!("{i}L"),

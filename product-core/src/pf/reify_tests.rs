@@ -125,13 +125,41 @@ fn opts() -> ReifyOptions {
     }
 }
 
+fn fixture_projector() -> crate::pf::projector::Projector {
+    use crate::pf::projector_logic::{ProjectorLogic, ProjectorScenario};
+    crate::pf::projector::Projector {
+        id: "ordersummary-projector".into(),
+        projects_for: "OrderSummary".into(),
+        folds: vec!["OrderPlaced".into()],
+        over: vec!["Order".into()],
+        logic: Some(ProjectorLogic {
+            initial: payload(&[("count", Scalar::Int(0))]),
+            apply: vec![EvolveRule {
+                on: "OrderPlaced".into(),
+                set: payload(&[
+                    ("count", Scalar::Str("=view.count + 1".into())),
+                    ("last_amount", Scalar::Str("=event.amount".into())),
+                ]),
+            }],
+        }),
+        scenarios: vec![ProjectorScenario {
+            name: "one order counted".into(),
+            given: vec![EventRef::Data {
+                event: "OrderPlaced".into(),
+                with: payload(&[("amount", Scalar::Int(5))]),
+            }],
+            then: payload(&[("count", Scalar::Int(1)), ("last_amount", Scalar::Int(5))]),
+        }],
+    }
+}
+
 fn plan() -> ReifyPlan {
-    plan_csharp(&fixture_graph(), &[fixture_decider()], &opts()).expect("plan")
+    plan_csharp(&fixture_graph(), &[fixture_decider()], &[fixture_projector()], &opts()).expect("plan")
 }
 
 fn oracle_plan() -> ReifyPlan {
     let o = ReifyOptions { oracle_only: true, ..opts() };
-    plan_csharp(&fixture_graph(), &[fixture_decider()], &o).expect("plan")
+    plan_csharp(&fixture_graph(), &[fixture_decider()], &[fixture_projector()], &o).expect("plan")
 }
 
 fn file<'a>(p: &'a ReifyPlan, suffix: &str) -> &'a GenFile {
@@ -208,7 +236,7 @@ fn oracle_only_mode_emits_the_verification_shell_without_types() {
     let csproj = file(&p, "Bookstore.Conformance/Bookstore.Conformance.csproj");
     assert!(!csproj.overwrite, "oracle csproj is realiser-owned (domain reference)");
     let program = &file(&p, "Program.g.cs").content;
-    assert!(program.contains("static IConformanceAdapter ResolveAdapter(string deciderId) => new ConformanceAdapter();"));
+    assert!(program.contains("static IConformanceAdapter ResolveDecider(string id) => new ConformanceAdapter();"));
     let tests = &file(&p, "Bookstore.Conformance.Tests/OrderScenarioTests.g.cs").content;
     assert!(tests.contains("var adapter = new ConformanceAdapter();"));
     assert!(tests.contains("adapter.Run(\"order-decider\""));
@@ -217,12 +245,58 @@ fn oracle_only_mode_emits_the_verification_shell_without_types() {
 }
 
 #[test]
+fn projector_frame_view_record_and_facts_are_emitted() {
+    let p = plan();
+    let frame = &file(&p, "Views/OrderSummaryProjector.g.cs").content;
+    assert!(frame.contains("public sealed record OrderSummaryView"));
+    // initial field: non-nullable with default, always in wire state.
+    assert!(frame.contains("public long Count { get; init; } = 0;"));
+    assert!(frame.contains("d[\"count\"] = Count;"));
+    // apply-only field: nullable, in wire state once set — oracle semantics.
+    assert!(frame.contains("public long? LastAmount { get; init; }"));
+    assert!(frame.contains("if (LastAmount is not null) d[\"last_amount\"] = LastAmount;"));
+    assert!(frame.contains("public static partial OrderSummaryView Apply(OrderSummaryView view, WireEvent evt);"));
+    let stub = file(&p, "Views/OrderSummaryProjector.cs");
+    assert!(!stub.overwrite);
+    let adapter = &file(&p, "OrderSummaryProjectionAdapter.g.cs").content;
+    assert!(adapter.contains("internal sealed class OrderSummaryProjectionAdapter : IProjectionAdapter"));
+    let tests = &file(&p, "Bookstore.Domain.Tests/OrderSummaryProjectionTests.g.cs").content;
+    assert!(tests.contains("OrderSummaryProjector.Fold(given).WireState()"));
+    assert!(tests.contains("Assert.Equal(1L, Assert.IsType<long>(wire[\"count\"]));"));
+    let program = &file(&p, "Program.g.cs").content;
+    assert!(program.contains("\"ordersummary-projector\" => new OrderSummaryProjectionAdapter(),"));
+    // Full mode hosts the wire seam in the Domain project (frames consume it).
+    assert!(p.files.iter().any(|f| f.path == "Bookstore.Domain/Oracle.g.cs"));
+}
+
+#[test]
+fn oracle_only_projectors_go_through_the_projection_adapter() {
+    let p = oracle_plan();
+    let stub = file(&p, "ProjectionAdapter.cs");
+    assert!(!stub.overwrite);
+    assert!(stub.content.contains("public sealed class ProjectionAdapter : IProjectionAdapter"));
+    let tests = &file(&p, "Bookstore.Conformance.Tests/OrderSummaryProjectionTests.g.cs").content;
+    assert!(tests.contains("new ProjectionAdapter().Run(\"ordersummary-projector\", given)"));
+    let program = &file(&p, "Program.g.cs").content;
+    assert!(program.contains("\"ordersummary-projector\" => new ProjectionAdapter(),"));
+    assert!(!p.files.iter().any(|f| f.path.contains("Views/")), "no typed views in oracle mode");
+}
+
+#[test]
+fn projectors_move_the_input_hash() {
+    let with = plan();
+    let without =
+        plan_csharp(&fixture_graph(), &[fixture_decider()], &[], &opts()).expect("plan");
+    assert_ne!(with.graph_hash, without.graph_hash);
+}
+
+#[test]
 fn realise_csharp_cell_is_valid_task_type_yaml() {
     for p in [plan(), oracle_plan()] {
         let cell = &file(&p, "realise-csharp.cell.g.yaml").content;
         let parsed = crate::pf::cell::TaskType::from_yaml(cell).expect("cell parses");
         assert_eq!(parsed.id, "realise-csharp");
-        assert_eq!(parsed.audits.len(), 3);
+        assert_eq!(parsed.audits.len(), 4);
         assert!(parsed.audits.iter().any(|a| a.checks.contains("product reify check")));
         assert!(parsed.audits.iter().any(|a| a.checks.contains("decider conform")));
     }
@@ -277,7 +351,7 @@ fn generation_is_deterministic_and_hash_tracks_the_graph() {
         context: "Catalog".into(),
         changes: "Order".into(),
     });
-    let c = plan_csharp(&moved, &[fixture_decider()], &opts()).expect("plan");
+    let c = plan_csharp(&moved, &[fixture_decider()], &[], &opts()).expect("plan");
     assert_ne!(a.graph_hash, c.graph_hash);
 }
 
@@ -285,6 +359,6 @@ fn generation_is_deterministic_and_hash_tracks_the_graph() {
 fn duplicate_aggregate_deciders_are_rejected() {
     let mut d2 = fixture_decider();
     d2.id = "order-decider-2".into();
-    let err = plan_csharp(&fixture_graph(), &[fixture_decider(), d2], &opts());
+    let err = plan_csharp(&fixture_graph(), &[fixture_decider(), d2], &[], &opts());
     assert!(err.is_err());
 }

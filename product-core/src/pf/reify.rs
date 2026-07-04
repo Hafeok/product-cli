@@ -13,6 +13,7 @@ use crate::error::{ProductError, Result};
 
 use super::decider::Decider;
 use super::model::DomainGraph;
+use super::projector::Projector;
 use super::provenance::content_hash;
 use super::reify_decider::{adapter_file, frame_file, stub_file};
 use super::reify_ident::pascal;
@@ -50,9 +51,15 @@ pub struct ReifyPlan {
     pub aggregates: Vec<String>,
 }
 
-/// Hex SHA-256 over the canonical Turtle export plus every decider YAML
-/// (sorted by id) — the identity `reify check` compares against.
-pub fn input_hash(graph: &DomainGraph, product: &str, deciders: &[Decider]) -> Result<String> {
+/// Hex SHA-256 over the canonical Turtle export plus every decider and
+/// projector YAML (sorted by id) — the identity `reify check` compares
+/// against.
+pub fn input_hash(
+    graph: &DomainGraph,
+    product: &str,
+    deciders: &[Decider],
+    projectors: &[Projector],
+) -> Result<String> {
     let mut canon = graph.clone();
     super::seed_canon::canonicalize(&mut canon);
     let mut input = super::turtle::to_turtle(&canon, product);
@@ -61,6 +68,12 @@ pub fn input_hash(graph: &DomainGraph, product: &str, deciders: &[Decider]) -> R
     for d in sorted {
         input.push('\0');
         input.push_str(&d.to_yaml()?);
+    }
+    let mut sorted_p: Vec<&Projector> = projectors.iter().collect();
+    sorted_p.sort_by(|a, b| a.id.cmp(&b.id));
+    for p in sorted_p {
+        input.push('\0');
+        input.push_str(&p.to_yaml()?);
     }
     Ok(content_hash(&input))
 }
@@ -72,17 +85,24 @@ pub fn header(graph_hash: &str, what_version: &str) -> String {
     )
 }
 
-/// Plan the C# projection: domain types, one frame per Decider, the
-/// conformance runner, the scenario tests, provenance.
-pub fn plan_csharp(graph: &DomainGraph, deciders: &[Decider], opts: &ReifyOptions) -> Result<ReifyPlan> {
-    let graph_hash = input_hash(graph, &opts.product, deciders)?;
+/// Plan the C# projection: domain types, one frame per Decider and per
+/// Projector, the conformance runner, the scenario tests, provenance.
+pub fn plan_csharp(
+    graph: &DomainGraph,
+    deciders: &[Decider],
+    projectors: &[Projector],
+    opts: &ReifyOptions,
+) -> Result<ReifyPlan> {
+    let graph_hash = input_hash(graph, &opts.product, deciders, projectors)?;
     let hdr = header(&graph_hash, &opts.what_version);
     let mut sorted: Vec<&Decider> = deciders.iter().collect();
     sorted.sort_by(|a, b| a.id.cmp(&b.id));
+    let mut sorted_p: Vec<&Projector> = projectors.iter().collect();
+    sorted_p.sort_by(|a, b| a.id.cmp(&b.id));
     let aggs = aggregate_names(&sorted)?;
 
     let mut files = if opts.oracle_only {
-        oracle_global_files(opts, &hdr, &graph_hash)
+        oracle_global_files(opts, &hdr, &graph_hash, !sorted_p.is_empty())
     } else {
         global_files(graph, opts, &hdr, &graph_hash)
     };
@@ -94,7 +114,10 @@ pub fn plan_csharp(graph: &DomainGraph, deciders: &[Decider], opts: &ReifyOption
             aggregate_files(graph, opts, &hdr, decider, agg, &shape)
         });
     }
-    files.extend(conformance_files(opts, &hdr, &sorted, &aggs));
+    for projector in &sorted_p {
+        files.extend(projector_files(opts, &hdr, projector));
+    }
+    files.extend(conformance_files(opts, &hdr, &sorted, &aggs, &sorted_p));
     files.push(gen(
         "realise-csharp.cell.g.yaml",
         super::reify_cell::cell_file(&graph_hash, &opts.namespace, opts.oracle_only)?,
@@ -105,6 +128,42 @@ pub fn plan_csharp(graph: &DomainGraph, deciders: &[Decider], opts: &ReifyOption
         overwrite: true,
     });
     Ok(ReifyPlan { files, graph_hash, aggregates: aggs })
+}
+
+/// Per-projector artifacts. Full mode: the view record + fold frame + stub +
+/// typed adapter + facts (all in the Domain project family). Oracle-only:
+/// wire-level facts through the scaffolded `ProjectionAdapter`.
+fn projector_files(opts: &ReifyOptions, hdr: &str, projector: &Projector) -> Vec<GenFile> {
+    use super::reify_projector as rp;
+    let ns = &opts.namespace;
+    let base = rp::view_base(projector);
+    if opts.oracle_only {
+        if projector.scenarios.is_empty() {
+            return Vec::new();
+        }
+        return vec![gen(
+            &format!("{ns}.Conformance.Tests/{base}ProjectionTests.g.cs"),
+            rp::tests_file(hdr, ns, projector, true),
+        )];
+    }
+    let (fields, defaults) = rp::infer_view(projector);
+    let dir = format!("{ns}.Domain/Views");
+    let mut out = vec![
+        gen(&format!("{dir}/{base}Projector.g.cs"), rp::frame_file(hdr, ns, projector, &fields, &defaults)),
+        gen(&format!("{ns}.Conformance/{base}ProjectionAdapter.g.cs"), rp::adapter_file(hdr, ns, projector)),
+        GenFile {
+            path: format!("{dir}/{base}Projector.cs"),
+            content: rp::stub_file(ns, projector),
+            overwrite: false,
+        },
+    ];
+    if !projector.scenarios.is_empty() {
+        out.push(gen(
+            &format!("{ns}.Domain.Tests/{base}ProjectionTests.g.cs"),
+            rp::tests_file(hdr, ns, projector, false),
+        ));
+    }
+    out
 }
 
 /// PascalCase aggregate names, one per decider — duplicates are an error
@@ -141,11 +200,11 @@ fn global_files(graph: &DomainGraph, opts: &ReifyOptions, hdr: &str, hash: &str)
 }
 
 /// Oracle-only globals — no domain project at all: the wire seam, the
-/// scaffolded adapter + csproj (both realiser-owned), assembly provenance.
-fn oracle_global_files(opts: &ReifyOptions, hdr: &str, hash: &str) -> Vec<GenFile> {
+/// scaffolded adapter(s) + csproj (all realiser-owned), assembly provenance.
+fn oracle_global_files(opts: &ReifyOptions, hdr: &str, hash: &str, has_projectors: bool) -> Vec<GenFile> {
     let ns = &opts.namespace;
     let conf = format!("{ns}.Conformance");
-    vec![
+    let mut out = vec![
         gen("README.g.md", runtime::readme(ns, true)),
         GenFile {
             path: format!("{conf}/{conf}.csproj"),
@@ -161,7 +220,15 @@ fn oracle_global_files(opts: &ReifyOptions, hdr: &str, hash: &str) -> Vec<GenFil
             &format!("{conf}/Provenance.g.cs"),
             runtime::provenance_cs(hdr, &opts.product, &opts.what_version, hash),
         ),
-    ]
+    ];
+    if has_projectors {
+        out.push(GenFile {
+            path: format!("{conf}/ProjectionAdapter.cs"),
+            content: super::reify_oracle::projection_stub(ns),
+            overwrite: false,
+        });
+    }
+    out
 }
 
 fn aggregate_files(
@@ -205,19 +272,35 @@ fn oracle_aggregate_files(opts: &ReifyOptions, hdr: &str, decider: &Decider, agg
     )]
 }
 
-fn conformance_files(opts: &ReifyOptions, hdr: &str, sorted: &[&Decider], aggs: &[String]) -> Vec<GenFile> {
+fn conformance_files(
+    opts: &ReifyOptions,
+    hdr: &str,
+    sorted: &[&Decider],
+    aggs: &[String],
+    sorted_p: &[&Projector],
+) -> Vec<GenFile> {
     let ns = &opts.namespace;
     let entries: Vec<RunnerEntry> = sorted
         .iter()
         .zip(aggs)
         .map(|(d, agg)| RunnerEntry { decider_id: d.id.clone(), agg: agg.clone() })
         .collect();
+    let projections: Vec<RunnerEntry> = sorted_p
+        .iter()
+        .map(|p| RunnerEntry {
+            decider_id: p.id.clone(),
+            agg: super::reify_projector::view_base(p),
+        })
+        .collect();
     let conf = format!("{ns}.Conformance");
+    // In full mode the wire seam lives in the Domain project (the projector
+    // frames consume `WireEvent`); oracle-only has no Domain project.
+    let oracle_home = if opts.oracle_only { conf.clone() } else { format!("{ns}.Domain") };
     let mut out = vec![
-        gen(&format!("{conf}/Oracle.g.cs"), super::reify_oracle::oracle_file(hdr, ns)),
+        gen(&format!("{oracle_home}/Oracle.g.cs"), super::reify_oracle::oracle_file(hdr, ns)),
         gen(
             &format!("{conf}/Program.g.cs"),
-            program_file(hdr, ns, &entries, opts.oracle_only),
+            program_file(hdr, ns, &entries, &projections, opts.oracle_only),
         ),
     ];
     if opts.oracle_only {

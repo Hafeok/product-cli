@@ -1369,7 +1369,7 @@ fn tc_1072_reify_csharp_emits_typed_contracts_from_the_what() {
     assert!(h.exists("gen/Bookstore.Domain/Order/OrderDecider.cs"), "editable stub scaffolded");
     let program = h.read("gen/Bookstore.Conformance/Program.g.cs");
     assert!(program.contains("\"Order-decider\" => new OrderAdapter(),"), "runner routes the decider, got:\n{program}");
-    assert!(h.read("gen/Bookstore.Conformance/Oracle.g.cs").contains("public interface IConformanceAdapter"));
+    assert!(h.read("gen/Bookstore.Domain/Oracle.g.cs").contains("public interface IConformanceAdapter"));
     // The §5 task-type is emitted ready to copy into a blueprint's cells/.
     assert!(h.read("gen/realise-csharp.cell.g.yaml").contains("id: realise-csharp"));
 }
