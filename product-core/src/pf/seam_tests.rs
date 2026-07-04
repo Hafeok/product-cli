@@ -7,7 +7,7 @@ fn base() -> DomainGraph {
     let mut g = DomainGraph::default();
     g.contexts.push(BoundedContext { id: "Catalog".into(), label: "Catalog".into(), ..Default::default() });
     g.read_models.push(ReadModel { id: "OrderSummary".into(), label: "Order".into(), projects: vec!["O".into()], ..Default::default() });
-    g.commands.push(Command { id: "ConfirmOrder".into(), label: "Confirm".into(), context: "Catalog".into(), targets: "O".into(), emits: vec!["E".into()] });
+    g.commands.push(Command { fields: vec![], id: "ConfirmOrder".into(), label: "Confirm".into(), context: "Catalog".into(), targets: "O".into(), emits: vec!["E".into()] });
     g
 }
 

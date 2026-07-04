@@ -7,10 +7,10 @@ fn graph() -> DomainGraph {
     let mut g = DomainGraph::default();
     g.contexts.push(BoundedContext { id: "Tasks".into(), label: "Tasks".into(), ..Default::default() });
     g.entities.push(Entity { id: "Task".into(), label: "Task".into(), context: "Tasks".into(), definition: "a task".into(), is_aggregate_root: true, ..Default::default() });
-    g.events.push(Event { id: "TaskCompleted".into(), label: "completed".into(), context: "Tasks".into(), changes: "Task".into() });
-    g.events.push(Event { id: "TaskReopened".into(), label: "reopened".into(), context: "Tasks".into(), changes: "Task".into() });
-    g.commands.push(Command { id: "CompleteTask".into(), label: "complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["TaskCompleted".into()] });
-    g.commands.push(Command { id: "ReopenTask".into(), label: "reopen".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["TaskReopened".into()] });
+    g.events.push(Event { fields: vec![], id: "TaskCompleted".into(), label: "completed".into(), context: "Tasks".into(), changes: "Task".into() });
+    g.events.push(Event { fields: vec![], id: "TaskReopened".into(), label: "reopened".into(), context: "Tasks".into(), changes: "Task".into() });
+    g.commands.push(Command { fields: vec![], id: "CompleteTask".into(), label: "complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["TaskCompleted".into()] });
+    g.commands.push(Command { fields: vec![], id: "ReopenTask".into(), label: "reopen".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["TaskReopened".into()] });
     g.invariants.push(Invariant { id: "not-deleted".into(), statement: "a completed task is not deleted".into(), context: Some("Tasks".into()), applies_to: Some("Task".into()) });
     g
 }

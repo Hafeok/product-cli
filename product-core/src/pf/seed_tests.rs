@@ -8,8 +8,8 @@ fn sample() -> DomainGraph {
     g.contexts.push(BoundedContext { id: "Tasks".into(), label: "Tasks".into(), purpose: Some("track work".into()), glossary: vec![] });
     g.entities.push(Entity { id: "Task".into(), label: "Task".into(), context: "Tasks".into(), definition: "a unit of work".into(), identity: Some("id".into()), is_aggregate_root: true, attributes: vec![] });
     g.relations.push(Relation { id: "rel".into(), label: Some("owns".into()), from: "Task".into(), to: "Task".into(), cardinality: "one-to-many".into(), rationale: "self ref".into() });
-    g.events.push(Event { id: "Done".into(), label: "Done".into(), context: "Tasks".into(), changes: "Task".into() });
-    g.commands.push(Command { id: "Complete".into(), label: "Complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["Done".into()] });
+    g.events.push(Event { fields: vec![], id: "Done".into(), label: "Done".into(), context: "Tasks".into(), changes: "Task".into() });
+    g.commands.push(Command { fields: vec![], id: "Complete".into(), label: "Complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["Done".into()] });
     g.read_models.push(ReadModel { id: "Open".into(), label: "Open".into(), projects: vec!["Task".into(), "Done".into()], ..Default::default() });
     g.flows.push(Flow { id: "Flow".into(), label: "Complete a task".into(), steps: vec!["Complete".into(), "Done".into(), "Open".into()], ..Default::default() });
     g
@@ -135,9 +135,9 @@ fn max_structure(g: &mut DomainGraph) {
 }
 
 fn max_behaviour(g: &mut DomainGraph) {
-    g.commands.push(Command { id: "cmd".into(), label: "Do".into(), context: "ctx".into(), targets: "ent".into(), emits: vec!["ev".into(), "ev2".into()] });
-    g.events.push(Event { id: "ev".into(), label: "Done".into(), context: "ctx".into(), changes: "ent".into() });
-    g.events.push(Event { id: "ev2".into(), label: "Also".into(), context: "ctx".into(), changes: "ent".into() });
+    g.commands.push(Command { fields: vec![Attribute { name: "amount".into(), ty: Some("integer".into()) }, Attribute { name: "note".into(), ty: None }], id: "cmd".into(), label: "Do".into(), context: "ctx".into(), targets: "ent".into(), emits: vec!["ev".into(), "ev2".into()] });
+    g.events.push(Event { fields: vec![Attribute { name: "amount".into(), ty: Some("integer".into()) }], id: "ev".into(), label: "Done".into(), context: "ctx".into(), changes: "ent".into() });
+    g.events.push(Event { fields: vec![], id: "ev2".into(), label: "Also".into(), context: "ctx".into(), changes: "ent".into() });
     g.read_models.push(ReadModel { id: "rm".into(), label: "View".into(), projects: vec!["ent".into(), "ev".into()], states: vec!["loading".into(), "empty".into()] });
     g.flows.push(Flow { id: "flow".into(), label: "Journey".into(), steps: vec!["step".into()], entry_page: Some("step".into()), system: Some("sys".into()) });
     g.systems.push(System { id: "sys".into(), label: "App".into(), kind: "application".into(), purpose: "do things".into(), target_platforms: vec!["web".into()], target_classes: vec!["gui".into()], root: Some("root".into()), references_domain: vec![] });

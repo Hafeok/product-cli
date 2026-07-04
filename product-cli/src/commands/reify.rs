@@ -46,45 +46,87 @@ pub enum ReifyCommands {
         #[arg(long)]
         force: bool,
     },
+    /// Emit a Kotlin verification shell (oracle-only): wire seam, kotlin.test facts, runner
+    Kotlin {
+        /// Output directory (default: reified/<product>/kotlin)
+        #[arg(long)]
+        out: Option<PathBuf>,
+        /// Kotlin package (default: lowercased product name)
+        #[arg(long)]
+        namespace: Option<String>,
+        #[arg(long)]
+        product: Option<String>,
+        /// Also rewrite the scaffolded adapters + Gradle files
+        #[arg(long)]
+        force: bool,
+    },
 }
 
 pub(crate) fn handle_reify(cmd: ReifyCommands) -> BoxResult {
     match cmd {
         ReifyCommands::Check { out, product } => check(out, product),
         ReifyCommands::Csharp { out, namespace, oracle_only, product, force } => {
-            csharp(out, namespace, oracle_only, product, force)
+            emit(Lang::Csharp { oracle_only }, out, namespace, product, force)
+        }
+        ReifyCommands::Kotlin { out, namespace, product, force } => {
+            emit(Lang::Kotlin, out, namespace, product, force)
         }
     }
 }
 
-fn csharp(out: Option<PathBuf>, namespace: Option<String>, oracle_only: bool, product: Option<String>, force: bool) -> BoxResult {
+/// The target backend for an emit run.
+enum Lang {
+    Csharp { oracle_only: bool },
+    Kotlin,
+}
+
+fn emit(lang: Lang, out: Option<PathBuf>, namespace: Option<String>, product: Option<String>, force: bool) -> BoxResult {
     let (name, graph) = require_domain(product.as_deref())?;
     let deciders = load_deciders(Some(&name))?;
     let projectors = load_projectors(Some(&name))?;
+    let oracle_only = matches!(lang, Lang::Csharp { oracle_only: true } | Lang::Kotlin);
     let opts = ReifyOptions {
         namespace: namespace.unwrap_or_else(|| product_core::pf::reify_ident::pascal(&name)),
         what_version: what_version(Some(&name)),
         product: name.clone(),
         oracle_only,
     };
-    let plan = plan_csharp(&graph, &deciders, &projectors, &opts)?;
-    let root = out.unwrap_or_else(|| default_out(&name));
+    let (plan, subdir, mode, verify_hint) = match &lang {
+        Lang::Csharp { oracle_only } => (
+            plan_csharp(&graph, &deciders, &projectors, &opts)?,
+            "csharp",
+            if *oracle_only { "oracle-only" } else { "full" },
+            format!("dotnet test — then `product decider conform <id> --runner \"dotnet {ns}.Conformance/bin/Debug/net8.0/{ns}.Conformance.dll <id>\"`", ns = opts.namespace),
+        ),
+        Lang::Kotlin => {
+            let pkg = product_core::pf::reify_kotlin::package_of(&opts.namespace);
+            (
+                product_core::pf::reify_kotlin::plan_kotlin(&graph, &deciders, &projectors, &opts)?,
+                "kotlin",
+                "oracle-only",
+                format!("gradle test — then `product decider conform <id> --runner \"build/install/{pkg}/bin/{pkg} <id>\"` after `gradle installDist`"),
+            )
+        }
+    };
+    let root = out.unwrap_or_else(|| default_out(&name, subdir));
     let stale = remove_stale(&root, &plan);
     let (written, kept) = write_plan(&root, &plan, force)?;
+    report(&name, &root, subdir, mode, &plan, (written, kept, stale), &verify_hint);
+    Ok(())
+}
+
+/// Print the one-run summary for an emit.
+fn report(name: &str, root: &std::path::Path, subdir: &str, mode: &str, plan: &ReifyPlan, counts: (usize, usize, usize), verify_hint: &str) {
+    let (written, kept, stale) = counts;
     println!(
-        "reified '{}' → {} ({}) — {} file(s) written{}{} across {} aggregate(s)",
-        name,
+        "reified '{name}' → {} ({subdir}, {mode}) — {written} file(s) written{}{} across {} aggregate(s)",
         root.display(),
-        if oracle_only { "oracle-only" } else { "full" },
-        written,
         if kept > 0 { format!(" ({kept} scaffold(s) kept)") } else { String::new() },
         if stale > 0 { format!(", {stale} stale generated file(s) removed") } else { String::new() },
         plan.aggregates.len(),
     );
     println!("  graph hash sha256:{}", plan.graph_hash);
-    println!("  verify: dotnet test — then `product decider conform <id> --runner \"dotnet {ns}.Conformance/bin/Debug/net8.0/{ns}.Conformance.dll <id>\"` (from {root})",
-        ns = opts.namespace, root = root.display());
-    Ok(())
+    println!("  verify: {verify_hint} (from {})", root.display());
 }
 
 /// Delete generated files listed in the previous run's manifest that this
@@ -127,7 +169,7 @@ fn check(out: Option<PathBuf>, product: Option<String>) -> BoxResult {
     let deciders = load_deciders(Some(&name))?;
     let projectors = load_projectors(Some(&name))?;
     let current = input_hash(&graph, &name, &deciders, &projectors)?;
-    let root = out.unwrap_or_else(|| default_out(&name));
+    let root = out.unwrap_or_else(|| default_out(&name, "csharp"));
     let prov_path = root.join("provenance.g.json");
     let text = std::fs::read_to_string(&prov_path).map_err(|_| {
         format!(
@@ -205,6 +247,6 @@ fn what_version(product: Option<&str>) -> String {
         .unwrap_or_else(|| "unversioned".to_string())
 }
 
-fn default_out(product: &str) -> PathBuf {
-    super::shared::domain_root().join("reified").join(product).join("csharp")
+fn default_out(product: &str, subdir: &str) -> PathBuf {
+    super::shared::domain_root().join("reified").join(product).join(subdir)
 }

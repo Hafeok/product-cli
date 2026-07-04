@@ -8,7 +8,7 @@ fn graph() -> DomainGraph {
     let mut g = DomainGraph::default();
     g.contexts.push(BoundedContext { id: "Sales".into(), label: "Sales".into(), ..Default::default() });
     g.entities.push(Entity { id: "Order".into(), label: "Order".into(), context: "Sales".into(), definition: "an order".into(), ..Default::default() });
-    g.commands.push(Command { id: "PlaceOrder".into(), label: "PlaceOrder".into(), context: "Sales".into(), targets: "Order".into(), emits: vec!["OrderPlaced".into()] });
+    g.commands.push(Command { fields: vec![], id: "PlaceOrder".into(), label: "PlaceOrder".into(), context: "Sales".into(), targets: "Order".into(), emits: vec!["OrderPlaced".into()] });
     g
 }
 

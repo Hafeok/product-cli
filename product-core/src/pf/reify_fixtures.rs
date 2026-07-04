@@ -47,6 +47,7 @@ pub fn fixture_graph() -> DomainGraph {
 
 fn behaviour_nodes(g: &mut DomainGraph) {
     g.commands.push(crate::pf::model::Command {
+        fields: vec![],
         id: "PlaceOrder".into(),
         label: "Place order".into(),
         context: "Catalog".into(),
@@ -54,6 +55,7 @@ fn behaviour_nodes(g: &mut DomainGraph) {
         emits: vec!["OrderPlaced".into()],
     });
     g.events.push(crate::pf::model::Event {
+        fields: vec![],
         id: "OrderPlaced".into(),
         label: "Order placed".into(),
         context: "Catalog".into(),

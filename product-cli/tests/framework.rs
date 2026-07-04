@@ -1452,3 +1452,53 @@ fn tc_1076_reify_emits_flow_facts_and_the_screen_harness() {
     assert!(h.exists("gen/Bookstore.Domain/ScreenSeam.g.cs"), "screen seam emitted");
     assert!(h.exists("gen/Bookstore.Conformance/ScreenAdapter.cs"), "screen adapter scaffolded");
 }
+
+#[test]
+fn tc_1077_declared_payload_fields_round_trip_and_type_the_contract() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // §3.2 payload schema declared on a new command; the demo PlaceOrder stays inferred.
+    h.run(&[
+        "domain", "new", "command", "CancelOrder", "--label", "Cancel order",
+        "--context", "Catalog", "--targets", "Order", "--emits", "OrderCancelled",
+        "--fields", "reason:string,amount:integer,urgent:boolean",
+    ])
+    .assert_exit(1); // OrderCancelled does not exist yet — emits must resolve
+    h.run(&["domain", "new", "event", "OrderCancelled", "--label", "Order cancelled", "--context", "Catalog", "--changes", "Order", "--fields", "reason:string"]).assert_exit(0);
+    h.run(&[
+        "domain", "new", "command", "CancelOrder", "--label", "Cancel order",
+        "--context", "Catalog", "--targets", "Order", "--emits", "OrderCancelled",
+        "--fields", "reason:string,amount:integer,urgent:boolean",
+    ])
+    .assert_exit(0);
+    // Declared fields survive the Turtle round-trip…
+    let ttl = h.run(&["domain", "export"]);
+    assert!(ttl.stdout.contains("pf:hasField [ pf:attrName \"reason\" ; pf:attrType \"string\" ]"), "field emitted, got:\n{}", ttl.stdout);
+    // …and type the reified contract without any scenario inference.
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    let types = h.read("gen/Bookstore.Domain/Order/OrderTypes.g.cs");
+    assert!(types.contains("public sealed record CancelOrder(long? Amount = null, string? Reason = null, bool? Urgent = null) : IOrderCommand"), "declared fields typed, got:\n{types}");
+    let api = h.read("gen/openapi.g.json");
+    assert!(api.contains("\"/commands/CancelOrder\""));
+    assert!(api.contains("\"format\": \"int64\""));
+}
+
+#[test]
+fn tc_1078_reify_kotlin_emits_the_jvm_verification_shell() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "kotlin", "--out", "kt"]).assert_exit(0).assert_stdout_contains("kotlin, oracle-only");
+    assert!(h.exists("kt/src/main/kotlin/bookstore/Oracle.g.kt"), "wire seam emitted");
+    assert!(h.exists("kt/src/main/kotlin/bookstore/Main.g.kt"), "runner emitted");
+    assert!(h.exists("kt/src/main/kotlin/bookstore/ConformanceAdapter.kt"), "adapter scaffolded");
+    assert!(h.exists("kt/build.gradle.kts"), "gradle build scaffolded");
+    assert!(h.exists("kt/openapi.g.json"), "interface contract shared across languages");
+    // The Kotlin tree is pinned to the same hash — reify check accepts it.
+    h.run(&["reify", "check", "--out", "kt"]).assert_exit(0).assert_stdout_contains("conformant");
+    // Scaffolds survive regeneration.
+    h.write("kt/src/main/kotlin/bookstore/ConformanceAdapter.kt", "// realised\n");
+    h.run(&["reify", "kotlin", "--out", "kt"]).assert_exit(0);
+    assert_eq!(h.read("kt/src/main/kotlin/bookstore/ConformanceAdapter.kt"), "// realised\n");
+}

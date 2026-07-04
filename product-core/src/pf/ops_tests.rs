@@ -18,9 +18,9 @@ fn happy_path_builds_a_conformant_fragment() {
     assert!(add_bounded_context(&mut s, ctx("Tasks")).ok);
     let e = Entity { id: "Task".into(), label: "Task".into(), context: "Tasks".into(), definition: "a unit".into(), is_aggregate_root: true, ..Default::default() };
     assert!(add_entity(&mut s, e).ok);
-    let ev = Event { id: "Done".into(), label: "Done".into(), context: "Tasks".into(), changes: "Task".into() };
+    let ev = Event { fields: vec![], id: "Done".into(), label: "Done".into(), context: "Tasks".into(), changes: "Task".into() };
     assert!(add_event(&mut s, ev).ok);
-    let cmd = Command { id: "Complete".into(), label: "Complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["Done".into()] };
+    let cmd = Command { fields: vec![], id: "Complete".into(), label: "Complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["Done".into()] };
     assert!(add_command(&mut s, cmd).ok);
     assert_eq!(s.tool_calls, 4);
 }
@@ -29,7 +29,7 @@ fn happy_path_builds_a_conformant_fragment() {
 fn event_without_real_entity_is_rejected_and_reverted() {
     let mut s = session();
     add_bounded_context(&mut s, ctx("Tasks"));
-    let ev = Event { id: "Ghost".into(), label: "Ghost".into(), context: "Tasks".into(), changes: "Nope".into() };
+    let ev = Event { fields: vec![], id: "Ghost".into(), label: "Ghost".into(), context: "Tasks".into(), changes: "Nope".into() };
     let r = add_event(&mut s, ev);
     assert!(!r.ok);
     assert_eq!(r.violations[0].path, "changes");
@@ -70,7 +70,7 @@ fn command_before_its_event_is_rejected() {
     add_bounded_context(&mut s, ctx("Tasks"));
     add_entity(&mut s, Entity { id: "Task".into(), label: "Task".into(), context: "Tasks".into(), definition: "d".into(), ..Default::default() });
     // event does not exist yet
-    let r = add_command(&mut s, Command { id: "Complete".into(), label: "Complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["Done".into()] });
+    let r = add_command(&mut s, Command { fields: vec![], id: "Complete".into(), label: "Complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["Done".into()] });
     assert!(!r.ok);
     assert_eq!(r.violations[0].path, "emits");
 }

@@ -42,6 +42,10 @@ pub struct NodeFields {
     targets: Option<String>,
     #[arg(long, value_delimiter = ',')]
     emits: Option<Vec<String>>,
+    /// §3.2 payload schema: `name:type` pairs (type from the §3.1 datatype
+    /// vocabulary — string · integer · number · boolean · date; omit for untyped)
+    #[arg(long = "fields", value_delimiter = ',')]
+    payload_fields: Option<Vec<String>>,
     #[arg(long)]
     changes: Option<String>,
     #[arg(long, value_delimiter = ',')]
@@ -206,6 +210,7 @@ impl NodeFields {
         if let Some(v) = &self.mapping_kind { put("kind", json!(v)); }
         if let Some(v) = &self.targets { put("targets", json!(v)); }
         if let Some(v) = &self.emits { put("emits", json!(v)); }
+        if let Some(v) = &self.payload_fields { put("fields", typed_fields(v)); }
         if let Some(v) = &self.changes { put("changes", json!(v)); }
         if let Some(v) = &self.projects { put("projects", json!(v)); }
         if let Some(v) = &self.triggers { put("triggers", json!(v)); }
@@ -306,6 +311,19 @@ fn state_annotations(meanings: Option<&[String]>, waivers: Option<&[String]>) ->
 
 /// Parse `a:b` pair strings into `[{<k1>: a, <k2>: b}, …]` (e.g. `proj:aio` for
 /// `surfaces`, `key:role` for content refs). A pair missing its `:b` half keeps b empty.
+/// Parse `name:type` payload-field pairs; a missing `:type` leaves the field
+/// untyped (no `type` key at all, so it round-trips as `None`).
+fn typed_fields(items: &[String]) -> Value {
+    let arr: Vec<Value> = items
+        .iter()
+        .map(|s| match s.split_once(':') {
+            Some((name, ty)) if !ty.is_empty() => json!({ "name": name, "type": ty }),
+            _ => json!({ "name": s.trim_end_matches(':') }),
+        })
+        .collect();
+    json!(arr)
+}
+
 fn pairs(items: &[String], k1: &str, k2: &str) -> Value {
     let arr: Vec<Value> = items
         .iter()

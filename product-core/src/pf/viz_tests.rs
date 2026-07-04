@@ -9,8 +9,8 @@ fn sample() -> DomainGraph {
         id: "Order".into(), label: "Order".into(), context: "ctx".into(), definition: "d".into(),
         is_aggregate_root: true, attributes: vec![Attribute { name: "total".into(), ty: Some("Money".into()) }], ..Default::default()
     });
-    g.commands.push(Command { id: "Place".into(), label: "Place".into(), context: "ctx".into(), targets: "Order".into(), emits: vec!["Placed".into()] });
-    g.events.push(Event { id: "Placed".into(), label: "Placed".into(), context: "ctx".into(), changes: "Order".into() });
+    g.commands.push(Command { fields: vec![], id: "Place".into(), label: "Place".into(), context: "ctx".into(), targets: "Order".into(), emits: vec!["Placed".into()] });
+    g.events.push(Event { fields: vec![], id: "Placed".into(), label: "Placed".into(), context: "ctx".into(), changes: "Order".into() });
     g.read_models.push(ReadModel { id: "Cart".into(), label: "Cart".into(), projects: vec!["Order".into()], ..Default::default() });
     g.systems.push(System {
         id: "sys".into(), label: "Shop".into(), kind: "application".into(), purpose: "shop".into(),

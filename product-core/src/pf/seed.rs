@@ -40,8 +40,13 @@ pub fn from_turtle(turtle: &str) -> Result<DomainGraph> {
     parse_invariants(&store, &mut g)?;
     parse_mappings(&store, &mut g)?;
     parse_commands(&store, &mut g)?;
+    let mut event_fields = payload_fields(&store, "pf:Event")?;
     for row in select(&store, "?s ?label ?ctx ?changes", "?s a pf:Event . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:inContext ?ctx } OPTIONAL { ?s pf:changes ?changes }")? {
-        g.events.push(Event { id: local(row.get("s")), label: lit(row.get("label")), context: local(row.get("ctx")), changes: local(row.get("changes")) });
+        let id = local(row.get("s"));
+        g.events.push(Event {
+            fields: event_fields.remove(&id).unwrap_or_default(),
+            id, label: lit(row.get("label")), context: local(row.get("ctx")), changes: local(row.get("changes")),
+        });
     }
     parse_read_models(&store, &mut g)?;
     parse_flows(&store, &mut g)?;
@@ -208,15 +213,30 @@ fn parse_mappings(store: &Store, g: &mut DomainGraph) -> Result<()> {
 
 fn parse_commands(store: &Store, g: &mut DomainGraph) -> Result<()> {
     let emits = multi(store, "pf:Command", "pf:emits")?;
+    let mut fields = payload_fields(store, "pf:Command")?;
     for row in select(store, "?s ?label ?ctx ?targets",
         "?s a pf:Command . OPTIONAL { ?s rdfs:label ?label } OPTIONAL { ?s pf:inContext ?ctx } OPTIONAL { ?s pf:targets ?targets }")? {
         let id = local(row.get("s"));
         g.commands.push(Command {
             emits: emits.get(&id).cloned().unwrap_or_default(),
+            fields: fields.remove(&id).unwrap_or_default(),
             id: id.clone(), label: lit(row.get("label")), context: local(row.get("ctx")), targets: local(row.get("targets")),
         });
     }
     Ok(())
+}
+
+/// The §3.2 payload schema per node: `pf:hasField` blank nodes, symmetric
+/// with the turtle `emit_payload_fields` encoding.
+fn payload_fields(store: &Store, class: &str) -> Result<HashMap<String, Vec<Attribute>>> {
+    let mut out: HashMap<String, Vec<Attribute>> = HashMap::new();
+    for row in select(store, "?s ?name ?ty",
+        &format!("?s a {class} ; pf:hasField ?b . ?b pf:attrName ?name . OPTIONAL {{ ?b pf:attrType ?ty }}"))? {
+        out.entry(local(row.get("s"))).or_default().push(Attribute {
+            name: lit(row.get("name")), ty: opt(row.get("ty")),
+        });
+    }
+    Ok(out)
 }
 
 fn parse_read_models(store: &Store, g: &mut DomainGraph) -> Result<()> {

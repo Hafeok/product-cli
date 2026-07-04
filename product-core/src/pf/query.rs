@@ -140,8 +140,8 @@ mod tests {
         let mut g = DomainGraph::default();
         g.contexts.push(BoundedContext { id: "Tasks".into(), label: "Tasks".into(), ..Default::default() });
         g.entities.push(Entity { id: "Task".into(), label: "Task".into(), context: "Tasks".into(), definition: "d".into(), ..Default::default() });
-        g.events.push(Event { id: "Done".into(), label: "Done".into(), context: "Tasks".into(), changes: "Task".into() });
-        g.commands.push(Command { id: "Complete".into(), label: "Complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["Done".into()] });
+        g.events.push(Event { fields: vec![], id: "Done".into(), label: "Done".into(), context: "Tasks".into(), changes: "Task".into() });
+        g.commands.push(Command { fields: vec![], id: "Complete".into(), label: "Complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["Done".into()] });
         g
     }
 

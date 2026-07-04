@@ -37,8 +37,36 @@ impl AggShape {
 }
 
 /// Infer the aggregate shape for a Decider from its signature, logic, and
-/// scenarios. Every handled command / emitted / evolved-from event gets an
-/// entry even when no payload field is ever observed.
+/// scenarios, then overlay the What graph's declared payload schemas
+/// (§3.2 `fields` — declarations win over inference). Every handled
+/// command / emitted / evolved-from event gets an entry even when no
+/// payload field is ever observed.
+pub fn infer_shape(decider: &Decider, graph: &super::model::DomainGraph) -> AggShape {
+    let mut shape = infer(decider);
+    for (id, fields) in shape.commands.iter_mut() {
+        if let Some(c) = graph.commands.iter().find(|c| &c.id == id) {
+            overlay_declared(fields, &c.fields);
+        }
+    }
+    for (id, fields) in shape.events.iter_mut() {
+        if let Some(e) = graph.events.iter().find(|e| &e.id == id) {
+            overlay_declared(fields, &e.fields);
+        }
+    }
+    shape
+}
+
+/// A declared field always exists; a declared *type* overrides inference.
+fn overlay_declared(fields: &mut Fields, declared: &[super::model::Attribute]) {
+    for a in declared {
+        let slot = fields.entry(a.name.clone()).or_insert(None);
+        if let Some(t) = super::reify_ident::attr_cs_ty(a.ty.as_deref()) {
+            *slot = Some(t);
+        }
+    }
+}
+
+/// Inference from the Decider alone (no graph overlay) — see [`infer_shape`].
 pub fn infer(decider: &Decider) -> AggShape {
     let mut shape = AggShape::default();
     for c in &decider.handles {

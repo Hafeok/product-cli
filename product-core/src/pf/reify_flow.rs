@@ -24,25 +24,25 @@ use super::reify_scenarios::count_assert;
 
 /// One command step of a computed chain: who decides, with what payload,
 /// and the oracle's outcome.
-struct CmdStep {
-    decider_id: String,
-    adapter: String,
-    when: CommandRef,
-    outcome: Outcome,
+pub(crate) struct CmdStep {
+    pub(crate) decider_id: String,
+    pub(crate) adapter: String,
+    pub(crate) when: CommandRef,
+    pub(crate) outcome: Outcome,
 }
 
 /// One read-model step: the projector and its oracle view over the stream.
-struct ViewCheck {
-    projector_id: String,
-    adapter: String,
-    view: super::decider_logic::State,
+pub(crate) struct ViewCheck {
+    pub(crate) projector_id: String,
+    pub(crate) adapter: String,
+    pub(crate) view: super::decider_logic::State,
 }
 
 /// A fully computed flow chain, ready to render as a fact.
 pub struct FlowFact {
-    name: String,
-    cmds: Vec<CmdStep>,
-    views: Vec<ViewCheck>,
+    pub(crate) name: String,
+    pub(crate) cmds: Vec<CmdStep>,
+    pub(crate) views: Vec<ViewCheck>,
 }
 
 /// Compute a chain per flow. A flow is skipped (not a fact) when a command

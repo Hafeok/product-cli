@@ -74,6 +74,18 @@ pub fn attr_ty(ty: Option<&str>) -> &'static str {
     }
 }
 
+/// Map a declared §3.2 payload datatype onto the wire scalar alphabet.
+/// `number`/`date` have no `Scalar` representation yet, so they travel as
+/// strings on the conformance wire; `None` stays unknown (inference may fill).
+pub fn attr_cs_ty(ty: Option<&str>) -> Option<CsTy> {
+    match ty.map(str::trim).map(str::to_ascii_lowercase).as_deref() {
+        Some("int") | Some("integer") => Some(CsTy::Long),
+        Some("bool") | Some("boolean") => Some(CsTy::Bool),
+        Some(_) => Some(CsTy::Str),
+        None => None,
+    }
+}
+
 /// Escape a string into a C# double-quoted literal (without the quotes).
 pub fn cs_escape(s: &str) -> String {
     let mut out = String::with_capacity(s.len());

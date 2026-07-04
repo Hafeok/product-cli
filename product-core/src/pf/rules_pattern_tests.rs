@@ -7,8 +7,8 @@ fn base() -> DomainGraph {
     let mut g = DomainGraph::default();
     g.contexts.push(BoundedContext { id: "C".into(), label: "C".into(), ..Default::default() });
     g.entities.push(Entity { id: "Order".into(), label: "Order".into(), context: "C".into(), definition: "d".into(), ..Default::default() });
-    g.events.push(Event { id: "Placed".into(), label: "Placed".into(), context: "C".into(), changes: "Order".into() });
-    g.commands.push(Command { id: "Place".into(), label: "Place".into(), context: "C".into(), targets: "Order".into(), emits: vec!["Placed".into()] });
+    g.events.push(Event { fields: vec![], id: "Placed".into(), label: "Placed".into(), context: "C".into(), changes: "Order".into() });
+    g.commands.push(Command { fields: vec![], id: "Place".into(), label: "Place".into(), context: "C".into(), targets: "Order".into(), emits: vec!["Placed".into()] });
     g
 }
 
@@ -29,7 +29,7 @@ fn command_pattern_wants_a_trigger_and_an_event() {
     assert!(!has(&pattern_conformance(&g), "trigger"));
 
     // A command with no event is a finding.
-    g.commands.push(Command { id: "Note".into(), label: "Note".into(), context: "C".into(), targets: "Order".into(), emits: vec![] });
+    g.commands.push(Command { fields: vec![], id: "Note".into(), label: "Note".into(), context: "C".into(), targets: "Order".into(), emits: vec![] });
     g.triggers.push(Trigger { id: "t2".into(), label: "T2".into(), source: "user".into(), issues: "Note".into(), ..Default::default() });
     assert!(pattern_conformance(&g).iter().any(|x| x.focus == "Note" && x.path == "emits"));
 }

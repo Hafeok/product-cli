@@ -44,6 +44,8 @@ fn canon_structure(g: &mut DomainGraph) {
     g.contexts.iter_mut().for_each(|c| c.glossary.sort());
     g.entities.sort_by(|a, b| a.id.cmp(&b.id));
     g.entities.iter_mut().for_each(|e| e.attributes.sort_by(|a, b| a.name.cmp(&b.name)));
+    g.commands.iter_mut().for_each(|c| c.fields.sort_by(|a, b| a.name.cmp(&b.name)));
+    g.events.iter_mut().for_each(|e| e.fields.sort_by(|a, b| a.name.cmp(&b.name)));
     g.value_objects.sort_by(|a, b| a.id.cmp(&b.id));
     g.relations.sort_by(|a, b| a.id.cmp(&b.id));
     g.invariants.sort_by(|a, b| a.id.cmp(&b.id));

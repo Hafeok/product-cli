@@ -85,8 +85,22 @@ fn emit_mapping(out: &mut String, m: &super::model::ContextMapping) {
 }
 
 fn emit_event(out: &mut String, ev: &super::model::Event) {
-    out.push_str(&format!("d:{} a pf:Event ;\n  rdfs:label {} ;\n  pf:inContext d:{} ;\n  pf:changes d:{} .\n\n",
+    out.push_str(&format!("d:{} a pf:Event ;\n  rdfs:label {} ;\n  pf:inContext d:{} ;\n  pf:changes d:{}",
         ev.id, lit(&ev.label), ev.context, ev.changes));
+    emit_payload_fields(out, &ev.fields);
+    out.push_str(" .\n\n");
+}
+
+/// Emit `pf:hasField` blank nodes (the §3.2 payload schema), mirroring the
+/// entity `pf:hasAttribute` encoding.
+fn emit_payload_fields(out: &mut String, fields: &[super::model::Attribute]) {
+    for f in fields {
+        out.push_str(&format!(" ;\n  pf:hasField [ pf:attrName {}", lit(&f.name)));
+        if let Some(ty) = &f.ty {
+            out.push_str(&format!(" ; pf:attrType {}", lit(ty)));
+        }
+        out.push_str(" ]");
+    }
 }
 
 fn emit_read_model(out: &mut String, rm: &super::model::ReadModel) {
@@ -195,6 +209,7 @@ fn emit_command(out: &mut String, cmd: &super::model::Command) {
     for ev in &cmd.emits {
         out.push_str(&format!(" ;\n  pf:emits d:{}", ev));
     }
+    emit_payload_fields(out, &cmd.fields);
     out.push_str(" .\n\n");
 }
 

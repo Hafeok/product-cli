@@ -130,14 +130,22 @@ fn present_fact(step: &WireframeStep, projectors: &[&Projector]) -> String {
     s
 }
 
-/// The present-state view data: the first surfaced projection's projector
-/// oracle view (its first scenario), else an empty dictionary.
-fn present_fixture(step: &WireframeStep, projectors: &[&Projector]) -> String {
-    let view = step.surfaces.iter().find_map(|surface| {
+/// The present-state view data as oracle state: the first surfaced
+/// projection's projector oracle view (its first scenario), if any.
+pub(crate) fn present_state(
+    step: &WireframeStep,
+    projectors: &[&Projector],
+) -> Option<super::decider_logic::State> {
+    step.surfaces.iter().find_map(|surface| {
         let p = projectors.iter().find(|p| p.projects_for == surface.projection)?;
         let scenario = p.scenarios.first()?;
         project(p.logic.as_ref()?, &scenario.given).ok()
-    });
+    })
+}
+
+/// The present-state view data rendered as a C# dictionary literal.
+fn present_fixture(step: &WireframeStep, projectors: &[&Projector]) -> String {
+    let view = present_state(step, projectors);
     let Some(view) = view else {
         return "new Dictionary<string, object?>()".to_string();
     };

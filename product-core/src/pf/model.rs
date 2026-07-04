@@ -94,6 +94,11 @@ pub struct Command {
     pub context: String,
     pub targets: String,
     pub emits: Vec<String>,
+    /// §3.2 — the declared payload schema (name + datatype per field). The
+    /// wire contract between systems; reification prefers these over
+    /// scenario inference.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub fields: Vec<Attribute>,
 }
 
 /// §3.2 — a past-tense fact; changes a real entity.
@@ -103,6 +108,9 @@ pub struct Event {
     pub label: String,
     pub context: String,
     pub changes: String,
+    /// §3.2 — the declared payload schema (see [`Command::fields`]).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub fields: Vec<Attribute>,
 }
 
 /// §3.2 — a view; projects entities/events. §3.2 state space — `present` plus

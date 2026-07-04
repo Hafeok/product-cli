@@ -31,6 +31,24 @@ fn inference_recovers_payload_and_state_fields() {
 }
 
 #[test]
+fn declared_payload_fields_override_inference() {
+    use crate::pf::model::Attribute;
+    let mut g = fixture_graph();
+    if let Some(c) = g.commands.iter_mut().find(|c| c.id == "PlaceOrder") {
+        c.fields = vec![
+            Attribute { name: "amount".into(), ty: Some("string".into()) }, // overrides inferred Long
+            Attribute { name: "currency".into(), ty: Some("string".into()) }, // never inferred
+            Attribute { name: "hint".into(), ty: None },                   // declared, untyped
+        ];
+    }
+    let shape = crate::pf::reify_infer::infer_shape(&fixture_decider(), &g);
+    let cmd = shape.commands.get("PlaceOrder").expect("command entry");
+    assert_eq!(cmd.get("amount"), Some(&Some(crate::pf::reify_ident::CsTy::Str)));
+    assert_eq!(cmd.get("currency"), Some(&Some(crate::pf::reify_ident::CsTy::Str)));
+    assert_eq!(cmd.get("hint"), Some(&None), "untyped declaration exists, type open");
+}
+
+#[test]
 fn typed_contracts_are_emitted() {
     let p = plan();
     let types = &file(&p, "Order/OrderTypes.g.cs").content;
@@ -165,6 +183,58 @@ fn screen_facts_pin_surfaces_offers_and_state_coverage() {
 }
 
 #[test]
+fn openapi_contract_projects_commands_and_views() {
+    let p = plan();
+    let api = &file(&p, "openapi.g.json").content;
+    let doc: serde_json::Value = serde_json::from_str(api).expect("valid JSON");
+    assert_eq!(doc["openapi"], "3.0.3");
+    assert_eq!(doc["info"]["x-pf-graph-hash"], format!("sha256:{}", p.graph_hash));
+    let place = &doc["paths"]["/commands/PlaceOrder"]["post"];
+    assert_eq!(
+        place["requestBody"]["content"]["application/json"]["schema"]["properties"]["amount"]["type"],
+        "integer"
+    );
+    assert!(place["responses"]["409"].is_object(), "rejection response present");
+    let view = &doc["paths"]["/views/OrderSummary"]["get"];
+    assert_eq!(
+        view["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["count"]["type"],
+        "integer"
+    );
+}
+
+#[test]
+fn kotlin_backend_emits_the_full_verification_shell() {
+    use crate::pf::reify_kotlin::plan_kotlin;
+    let o = ReifyOptions { oracle_only: true, ..opts() };
+    let p = plan_kotlin(&fixture_graph(), &[fixture_decider()], &[fixture_projector()], &o)
+        .expect("plan");
+    let oracle = &file(&p, "src/main/kotlin/bookstore/Oracle.g.kt").content;
+    assert!(oracle.contains("interface IConformanceAdapter"));
+    assert!(oracle.contains("fun run(projectorId: String, given: List<WireEvent>): Map<String, Any?>"));
+    let main = &file(&p, "Main.g.kt").content;
+    assert!(main.contains("\"ordersummary-projector\" -> ProjectionAdapter()"));
+    let facts = &file(&p, "OrderScenarioTests.g.kt").content;
+    assert!(facts.contains("ConformanceAdapter().run(\"order-decider\", emptyList(), WireCommand(\"PlaceOrder\", mapOf(\"amount\" to 5L)))"));
+    assert!(facts.contains("assertEquals(\"inv-positive-amount\", outcome.reject)"));
+    let proj = &file(&p, "OrderSummaryProjectionTests.g.kt").content;
+    assert!(proj.contains("assertEquals(1L, wire[\"count\"])"));
+    let flows = &file(&p, "FlowTests.g.kt").content;
+    assert!(flows.contains("stream.addAll(o0.emit!!)"));
+    let screens = &file(&p, "UiCheckoutScreenTests.g.kt").content;
+    assert!(screens.contains("assertTrue(\"PlaceOrder\" in screen.offeredCommands)"));
+    // Same graph, same hash as the C# tree — the cross-language pin.
+    assert_eq!(p.graph_hash, oracle_plan().graph_hash);
+    // Scaffolds: gradle files + three adapters, never overwritten.
+    for scaffold in ["build.gradle.kts", "ConformanceAdapter.kt", "ProjectionAdapter.kt", "ScreenAdapter.kt"] {
+        assert!(!file(&p, scaffold).overwrite, "{scaffold} is realiser-owned");
+    }
+    let cell = &file(&p, "realise-kotlin.cell.g.yaml").content;
+    let parsed = crate::pf::cell::TaskType::from_yaml(cell).expect("cell parses");
+    assert_eq!(parsed.id, "realise-kotlin");
+    assert!(parsed.audits.iter().any(|a| a.checks.contains("gradle test")));
+}
+
+#[test]
 fn realise_csharp_cell_is_valid_task_type_yaml() {
     for p in [plan(), oracle_plan()] {
         let cell = &file(&p, "realise-csharp.cell.g.yaml").content;
@@ -220,6 +290,7 @@ fn generation_is_deterministic_and_hash_tracks_the_graph() {
     }
     let mut moved = fixture_graph();
     moved.events.push(crate::pf::model::Event {
+        fields: vec![],
         id: "OrderCancelled".into(),
         label: "Order cancelled".into(),
         context: "Catalog".into(),

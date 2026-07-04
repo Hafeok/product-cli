@@ -6,9 +6,9 @@ use crate::pf::model::{DomainGraph, Entity, Event, ReadModel};
 fn graph() -> DomainGraph {
     let mut g = DomainGraph::default();
     g.entities.push(Entity { id: "Order".into(), label: "Order".into(), context: "Sales".into(), definition: "an order".into(), ..Default::default() });
-    g.events.push(Event { id: "OrderPlaced".into(), label: "Order Placed".into(), context: "Sales".into(), changes: "Order".into() });
-    g.events.push(Event { id: "OrderShipped".into(), label: "Order Shipped".into(), context: "Sales".into(), changes: "Order".into() });
-    g.events.push(Event { id: "UserRenamed".into(), label: "User Renamed".into(), context: "Iam".into(), changes: "User".into() });
+    g.events.push(Event { fields: vec![], id: "OrderPlaced".into(), label: "Order Placed".into(), context: "Sales".into(), changes: "Order".into() });
+    g.events.push(Event { fields: vec![], id: "OrderShipped".into(), label: "Order Shipped".into(), context: "Sales".into(), changes: "Order".into() });
+    g.events.push(Event { fields: vec![], id: "UserRenamed".into(), label: "User Renamed".into(), context: "Iam".into(), changes: "User".into() });
     g.read_models.push(ReadModel { id: "rm-orders".into(), label: "Orders".into(), projects: vec!["Order".into()], ..Default::default() });
     g
 }
