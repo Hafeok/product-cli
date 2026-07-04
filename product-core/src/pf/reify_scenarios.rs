@@ -97,7 +97,7 @@ fn expectation_block(then: &Expectation, shape: &AggShape) -> String {
     }
     let expected = then.emit.clone().unwrap_or_default();
     let mut s = String::from("        Assert.Null(result.RejectedInvariant);\n");
-    s.push_str(&format!("        Assert.Equal({}, result.Events.Count);\n", expected.len()));
+    s.push_str(&count_assert("result.Events", expected.len()));
     for (i, ev) in expected.iter().enumerate() {
         s.push_str(&emitted_event_asserts(i, ev, shape));
     }
@@ -111,7 +111,7 @@ fn emitted_event_asserts(i: usize, ev: &EventRef, shape: &AggShape) -> String {
     );
     let payload = ev.payload();
     s.push_str(&format!("        var with{i} = result.Events[{i}].WirePayload();\n"));
-    s.push_str(&format!("        Assert.Equal({}, with{i}.Count);\n", payload.len()));
+    s.push_str(&count_assert(&format!("with{i}"), payload.len()));
     for (name, value) in &payload {
         let ty = shape
             .events
@@ -121,6 +121,16 @@ fn emitted_event_asserts(i: usize, ev: &EventRef, shape: &AggShape) -> String {
         s.push_str(&payload_assert(i, name, ty, value));
     }
     s
+}
+
+/// A collection-size assertion in the form the xUnit analyzers prefer
+/// (`Assert.Empty` / `Assert.Single` for 0/1, `Assert.Equal` above).
+fn count_assert(expr: &str, len: usize) -> String {
+    match len {
+        0 => format!("        Assert.Empty({expr});\n"),
+        1 => format!("        Assert.Single({expr});\n"),
+        n => format!("        Assert.Equal({n}, {expr}.Count);\n"),
+    }
 }
 
 fn payload_assert(i: usize, name: &str, ty: CsTy, value: &super::decider_logic::Scalar) -> String {

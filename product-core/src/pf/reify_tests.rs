@@ -195,6 +195,7 @@ fn scenarios_become_xunit_facts() {
     assert!(tests.contains("public void Order_accepted()"));
     assert!(tests.contains("var state = OrderDecider.InitialState();"));
     assert!(tests.contains("OrderDecider.Decide(state, new PlaceOrder(Amount: 5L));"));
+    assert!(tests.contains("Assert.Single(result.Events);"));
     assert!(tests.contains("Assert.Equal(5L, Assert.IsType<long>(with0[\"amount\"]));"));
     assert!(tests.contains("Assert.Equal(\"inv-positive-amount\", result.RejectedInvariant);"));
 }
