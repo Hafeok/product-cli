@@ -331,6 +331,19 @@ mod tests {
         assert_eq!(phase_of("product_work_unit_show"), Phase::How);
         assert_eq!(phase_of("product_feature_new"), Phase::Build);
         assert_eq!(phase_of("product_build_run"), Phase::Build);
+        // Reify is realisation — home phase Build (reads stay visible later).
+        assert_eq!(phase_of("product_reify_manifest"), Phase::Build);
+        assert_eq!(phase_of("product_reify_emit"), Phase::Build);
+    }
+
+    #[test]
+    fn reify_tools_are_registered_with_the_right_write_gating() {
+        let tools = crate::tools::build_tool_list();
+        let find = |n: &str| tools.iter().find(|t| t.name == n).unwrap_or_else(|| panic!("{n} missing"));
+        assert!(!find("product_reify_backends").requires_write);
+        assert!(!find("product_reify_manifest").requires_write);
+        assert!(!find("product_reify_check").requires_write);
+        assert!(find("product_reify_emit").requires_write, "emit writes the repo");
     }
 
     #[test]

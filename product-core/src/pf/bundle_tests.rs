@@ -10,8 +10,8 @@ fn sample() -> DomainGraph {
     g.entities.push(Entity { id: "Order".into(), label: "Order".into(), context: "Sales".into(), definition: "a customer order".into(), is_aggregate_root: true, ..Default::default() });
     g.entities.push(Entity { id: "Invoice".into(), label: "Invoice".into(), context: "Billing".into(), definition: "a bill".into(), ..Default::default() });
     g.relations.push(Relation { id: "orderBilled".into(), label: Some("order billed".into()), from: "Order".into(), to: "Invoice".into(), cardinality: "one-to-one".into(), rationale: "one invoice per order".into() });
-    g.events.push(Event { id: "OrderPlaced".into(), label: "OrderPlaced".into(), context: "Sales".into(), changes: "Order".into() });
-    g.commands.push(Command { id: "PlaceOrder".into(), label: "PlaceOrder".into(), context: "Sales".into(), targets: "Order".into(), emits: vec!["OrderPlaced".into()] });
+    g.events.push(Event { fields: vec![], id: "OrderPlaced".into(), label: "OrderPlaced".into(), context: "Sales".into(), changes: "Order".into() });
+    g.commands.push(Command { fields: vec![], id: "PlaceOrder".into(), label: "PlaceOrder".into(), context: "Sales".into(), targets: "Order".into(), emits: vec!["OrderPlaced".into()] });
     g.read_models.push(ReadModel { id: "OpenOrders".into(), label: "OpenOrders".into(), projects: vec!["Order".into()], ..Default::default() });
     g
 }

@@ -1347,3 +1347,232 @@ fn tc_1071_archetype_is_a_back_compat_alias_for_blueprint() {
     // …and the legacy `archetype` alias still drives the same surface.
     h.run(&["archetype", "list"]).assert_exit(0).assert_stdout_contains("shape");
 }
+
+#[test]
+fn tc_1072_reify_csharp_emits_typed_contracts_from_the_what() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "csharp", "--out", "gen"]) // relative to the temp repo root
+        .assert_exit(0)
+        .assert_stdout_contains("1 aggregate(s)");
+    // Typed contracts: command/event records + the Decider frame + runtime.
+    assert!(h.exists("gen/Bookstore.Domain/Order/OrderTypes.g.cs"), "types file emitted");
+    assert!(h.exists("gen/Bookstore.Domain/Runtime.g.cs"), "runtime substrate emitted");
+    let types = h.read("gen/Bookstore.Domain/Order/OrderTypes.g.cs");
+    assert!(types.contains("public sealed record PlaceOrder() : IOrderCommand"), "command record, got:\n{types}");
+    assert!(types.contains("public sealed record OrderPlaced() : IOrderEvent"), "event record, got:\n{types}");
+    let frame = h.read("gen/Bookstore.Domain/Order/OrderDecider.g.cs");
+    assert!(frame.contains("public static partial DecisionResult Decide(OrderState state, IOrderCommand command);"));
+    // The editable stub is scaffolded; the conformance runner speaks §6.3
+    // through the typed adapter behind the IConformanceAdapter seam.
+    assert!(h.exists("gen/Bookstore.Domain/Order/OrderDecider.cs"), "editable stub scaffolded");
+    let program = h.read("gen/Bookstore.Conformance/Program.g.cs");
+    assert!(program.contains("\"Order-decider\" => new OrderAdapter(),"), "runner routes the decider, got:\n{program}");
+    assert!(h.read("gen/Bookstore.Domain/Oracle.g.cs").contains("public interface IConformanceAdapter"));
+    // The §5 task-type is emitted ready to copy into a blueprint's cells/.
+    assert!(h.read("gen/realise-csharp.cell.g.yaml").contains("id: realise-csharp"));
+}
+
+#[test]
+fn tc_1075_reify_oracle_only_hands_construction_to_the_realiser() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "csharp", "--out", "gen", "--oracle-only"]).assert_exit(0).assert_stdout_contains("oracle-only");
+    // No domain types — only the verification shell plus realiser-owned scaffolds.
+    assert!(!h.exists("gen/Bookstore.Domain"), "no generated domain project");
+    assert!(h.exists("gen/Bookstore.Conformance/Oracle.g.cs"), "wire seam emitted");
+    assert!(h.exists("gen/Bookstore.Conformance/ConformanceAdapter.cs"), "adapter stub scaffolded");
+    h.write("gen/Bookstore.Conformance/ConformanceAdapter.cs", "// realised\n");
+    h.run(&["reify", "csharp", "--out", "gen", "--oracle-only"]).assert_exit(0);
+    assert_eq!(h.read("gen/Bookstore.Conformance/ConformanceAdapter.cs"), "// realised\n");
+    // Switching modes cleans up the generated files the new plan no longer produces.
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0).assert_stdout_contains("stale generated file(s) removed");
+    assert!(h.exists("gen/Bookstore.Domain/Runtime.g.cs"), "full mode emits the runtime");
+}
+
+#[test]
+fn tc_1073_reify_stubs_survive_regeneration() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    // A realiser edits the stub; regeneration must keep it (…unless --force).
+    h.write("gen/Bookstore.Domain/Order/OrderDecider.cs", "// realised\n");
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0).assert_stdout_contains("scaffold(s) kept");
+    assert_eq!(h.read("gen/Bookstore.Domain/Order/OrderDecider.cs"), "// realised\n");
+    h.run(&["reify", "csharp", "--out", "gen", "--force"]).assert_exit(0);
+    assert!(h.read("gen/Bookstore.Domain/Order/OrderDecider.cs").contains("NotImplementedException"));
+}
+
+#[test]
+fn tc_1074_reify_check_is_a_drift_gate_over_the_graph_hash() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    h.run(&["reify", "check", "--out", "gen"]).assert_exit(0).assert_stdout_contains("conformant");
+    // Any accepted graph mutation moves the hash → the gate must fail.
+    h.run(&["domain", "new", "event", "OrderCancelled", "--label", "Order cancelled", "--context", "Catalog", "--changes", "Order"])
+        .assert_exit(0);
+    h.run(&["reify", "check", "--out", "gen"]).assert_exit(1).assert_stderr_contains("drift");
+    // Regenerating clears the drift.
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    h.run(&["reify", "check", "--out", "gen"]).assert_exit(0);
+}
+
+#[test]
+fn tc_1076_reify_emits_flow_facts_and_the_screen_harness() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    // Author enough logic + scenarios for the oracle to bake a chain.
+    h.write(
+        ".product/deciders/Order-decider.yaml",
+        "id: Order-decider\ndecides_for: Order\nhandles:\n- PlaceOrder\nemits:\n- OrderPlaced\nevolves_from:\n- OrderPlaced\nlogic:\n  initial:\n    count: 0\n  decide:\n  - on: PlaceOrder\n    emit:\n    - OrderPlaced\nscenarios:\n- name: order accepted\n  given: []\n  when: PlaceOrder\n  then:\n    emit:\n    - OrderPlaced\n",
+    );
+    h.write(
+        ".product/projectors/OrderSummary-projector.yaml",
+        "id: OrderSummary-projector\nprojects_for: OrderSummary\nfolds:\n- OrderPlaced\nover:\n- Order\nlogic:\n  initial:\n    count: 0\n  apply:\n  - on: OrderPlaced\n    set:\n      count: '=view.count + 1'\nscenarios:\n- name: one counted\n  given:\n  - OrderPlaced\n  then:\n    count: 1\n",
+    );
+    // A flow chaining the pattern, and a screen surfacing the view.
+    h.run(&["domain", "new", "flow", "buy", "--label", "Buy a book", "--steps", "PlaceOrder,OrderPlaced,OrderSummary"]).assert_exit(0);
+    h.run(&[
+        "domain", "new", "ui-step", "Checkout", "--label", "Checkout",
+        "--surfaces", "OrderSummary:display-collection", "--offers", "PlaceOrder:trigger-action",
+    ])
+    .assert_exit(0);
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    let flows = h.read("gen/Bookstore.Conformance.Tests/FlowTests.g.cs");
+    assert!(flows.contains("public void Buy_a_book()"), "flow fact emitted, got:\n{flows}");
+    assert!(flows.contains("new OrderSummaryProjectionAdapter().Run(\"OrderSummary-projector\", stream);"));
+    let screen = h.read("gen/Bookstore.Conformance.Tests/CheckoutScreenTests.g.cs");
+    assert!(screen.contains("Assert.Contains(\"PlaceOrder\", screen.OfferedCommands);"));
+    assert!(h.exists("gen/Bookstore.Domain/ScreenSeam.g.cs"), "screen seam emitted");
+    assert!(h.exists("gen/Bookstore.Conformance/ScreenAdapter.cs"), "screen adapter scaffolded");
+}
+
+#[test]
+fn tc_1077_declared_payload_fields_round_trip_and_type_the_contract() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // §3.2 payload schema declared on a new command; the demo PlaceOrder stays inferred.
+    h.run(&[
+        "domain", "new", "command", "CancelOrder", "--label", "Cancel order",
+        "--context", "Catalog", "--targets", "Order", "--emits", "OrderCancelled",
+        "--fields", "reason:string,amount:integer,urgent:boolean",
+    ])
+    .assert_exit(1); // OrderCancelled does not exist yet — emits must resolve
+    h.run(&["domain", "new", "event", "OrderCancelled", "--label", "Order cancelled", "--context", "Catalog", "--changes", "Order", "--fields", "reason:string"]).assert_exit(0);
+    h.run(&[
+        "domain", "new", "command", "CancelOrder", "--label", "Cancel order",
+        "--context", "Catalog", "--targets", "Order", "--emits", "OrderCancelled",
+        "--fields", "reason:string,amount:integer,urgent:boolean",
+    ])
+    .assert_exit(0);
+    // Declared fields survive the Turtle round-trip…
+    let ttl = h.run(&["domain", "export"]);
+    assert!(ttl.stdout.contains("pf:hasField [ pf:attrName \"reason\" ; pf:attrType \"string\" ]"), "field emitted, got:\n{}", ttl.stdout);
+    // …and type the reified contract without any scenario inference.
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    let types = h.read("gen/Bookstore.Domain/Order/OrderTypes.g.cs");
+    assert!(types.contains("public sealed record CancelOrder(long? Amount = null, string? Reason = null, bool? Urgent = null) : IOrderCommand"), "declared fields typed, got:\n{types}");
+    let api = h.read("gen/openapi.g.json");
+    assert!(api.contains("\"/commands/CancelOrder\""));
+    assert!(api.contains("\"format\": \"int64\""));
+}
+
+#[test]
+fn tc_1078_reify_kotlin_emits_the_jvm_verification_shell() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "kotlin", "--out", "kt"]).assert_exit(0).assert_stdout_contains("kotlin, oracle-only");
+    assert!(h.exists("kt/src/main/kotlin/bookstore/Oracle.g.kt"), "wire seam emitted");
+    assert!(h.exists("kt/src/main/kotlin/bookstore/Main.g.kt"), "runner emitted");
+    assert!(h.exists("kt/src/main/kotlin/bookstore/ConformanceAdapter.kt"), "adapter scaffolded");
+    assert!(h.exists("kt/build.gradle.kts"), "gradle build scaffolded");
+    assert!(h.exists("kt/openapi.g.json"), "interface contract shared across languages");
+    // The Kotlin tree is pinned to the same hash — reify check accepts it.
+    h.run(&["reify", "check", "--out", "kt"]).assert_exit(0).assert_stdout_contains("conformant");
+    // Scaffolds survive regeneration.
+    h.write("kt/src/main/kotlin/bookstore/ConformanceAdapter.kt", "// realised\n");
+    h.run(&["reify", "kotlin", "--out", "kt"]).assert_exit(0);
+    assert_eq!(h.read("kt/src/main/kotlin/bookstore/ConformanceAdapter.kt"), "// realised\n");
+}
+
+#[test]
+fn tc_1079_reify_manifest_is_the_oracle_by_value() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "backends"]).assert_exit(0).assert_stdout_contains("csharp").assert_stdout_contains("kotlin");
+    let out = h.run(&["reify", "manifest"]);
+    assert_eq!(out.exit_code, 0);
+    let m: serde_json::Value = serde_json::from_str(&out.stdout).expect("manifest is JSON");
+    assert_eq!(m["manifest_version"], "1");
+    assert_eq!(m["aggregates"][0]["decider_id"], "Order-decider");
+    assert!(m["graph_hash"].as_str().unwrap_or("").starts_with("sha256:"));
+}
+
+#[test]
+fn tc_1080_external_plugin_backends_speak_the_manifest_protocol() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    // A minimal external backend: manifest JSON in → file plan out.
+    h.write(
+        "ts-backend.py",
+        "import json, sys\nm = json.load(sys.stdin)\nagg = m['aggregates'][0]\nfiles = [\n  {'path': 'src/oracle.ts', 'content': f\"// {m['graph_hash']}\\nexport const handles = {json.dumps(agg['handles'])};\\n\"},\n  {'path': 'src/adapter.ts', 'content': '// realiser-owned\\n', 'overwrite': False},\n]\nprint(json.dumps({'files': files}))\n",
+    );
+    h.run(&["reify", "plugin", "--cmd", "python3 ts-backend.py", "--out", "gen-ts"])
+        .assert_exit(0)
+        .assert_stdout_contains("plugin, external");
+    let oracle = h.read("gen-ts/src/oracle.ts");
+    assert!(oracle.contains("export const handles = [\"PlaceOrder\"];"), "plugin consumed the manifest, got:\n{oracle}");
+    // Provenance was appended by the core, so the drift gate covers plugin trees…
+    h.run(&["reify", "check", "--out", "gen-ts"]).assert_exit(0).assert_stdout_contains("conformant");
+    // …and plugin-declared scaffolds survive regeneration.
+    h.write("gen-ts/src/adapter.ts", "// realised\n");
+    h.run(&["reify", "plugin", "--cmd", "python3 ts-backend.py", "--out", "gen-ts"]).assert_exit(0);
+    assert_eq!(h.read("gen-ts/src/adapter.ts"), "// realised\n");
+    // Graph moves → the plugin tree drifts like any other.
+    h.run(&["domain", "new", "event", "OrderCancelled", "--label", "Cancelled", "--context", "Catalog", "--changes", "Order"]).assert_exit(0);
+    h.run(&["reify", "check", "--out", "gen-ts"]).assert_exit(1).assert_stderr_contains("drift");
+}
+
+#[test]
+fn tc_1081_the_how_contracts_realisations_drive_reify_emit() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    // No contract yet → a helpful error, not a crash.
+    h.run(&["reify", "emit"]).assert_exit(1).assert_stderr_contains("how-contract");
+    // The §4.2 realisations block: the captured backend/tier/namespace decision.
+    h.write(
+        ".product/how-contract.yaml",
+        "blueprint: bookstore\napplication_contract:\n  id: app\n  language: mixed\n  statements:\n  - id: s1\n    statement: adapters stay thin\nrealisations:\n- id: api\n  backend: csharp\n  tier: oracle-only\n  namespace: Shop.Api\n  out: gen-api\n- id: app\n  backend: kotlin\n  namespace: shopapp\n  out: gen-app\n",
+    );
+    h.run(&["reify", "emit"]).assert_exit(0).assert_stdout_contains("csharp oracle-only, from the How").assert_stdout_contains("kotlin oracle-only, from the How");
+    assert!(h.exists("gen-api/Shop.Api.Conformance/Oracle.g.cs"), "csharp realisation at its declared out/namespace");
+    assert!(h.exists("gen-app/src/main/kotlin/shopapp/Oracle.g.kt"), "kotlin realisation at its declared out/namespace");
+    h.run(&["reify", "check", "--out", "gen-api"]).assert_exit(0);
+    h.run(&["reify", "check", "--out", "gen-app"]).assert_exit(0);
+    // --id runs a single declared realisation; unknown ids name the declared set.
+    h.run(&["reify", "emit", "--id", "app"]).assert_exit(0);
+    h.run(&["reify", "emit", "--id", "ghost"]).assert_exit(1).assert_stderr_contains("declared: api, app");
+    // A realisation for an undeclared system is refused at emit time…
+    h.write(
+        ".product/how-contract.yaml",
+        "blueprint: bookstore\napplication_contract:\n  id: app\n  language: mixed\n  statements:\n  - id: s1\n    statement: adapters stay thin\nrealisations:\n- id: api\n  backend: csharp\n  system: sys-ghost\n",
+    );
+    h.run(&["reify", "emit"]).assert_exit(1).assert_stderr_contains("no such system");
+    // …and `product how validate` gates the tier rules (§4.2).
+    h.write(
+        ".product/how-contract.yaml",
+        "blueprint: bookstore\napplication_contract:\n  id: app\n  language: mixed\n  statements:\n  - id: s1\n    statement: adapters stay thin\nrealisations:\n- id: app\n  backend: kotlin\n  tier: full\n",
+    );
+    h.run(&["how", "validate"]).assert_exit(1).assert_stderr_contains("oracle-only tier");
+}

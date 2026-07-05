@@ -36,8 +36,40 @@ pub fn validate_how(c: &HowContract) -> Vec<Violation> {
     check_patterns(c, &mut out);
     check_app_contract(c, &mut out);
     check_interfaces(c, &mut out);
+    check_realisations(c, &mut out);
     out.extend(run_rules(&how_to_turtle(c), how_rules()));
     out
+}
+
+/// §4.2 — realisation declarations: known backend, a tier the backend
+/// supports, a command for external backends, unique ids.
+fn check_realisations(c: &HowContract, out: &mut Vec<Violation>) {
+    let mut seen = std::collections::BTreeSet::new();
+    for r in &c.realisations {
+        if !seen.insert(r.id.clone()) {
+            out.push(v(&r.id, "id", "§4.2 Realisation ids must be unique."));
+        }
+        match r.backend.as_str() {
+            "csharp" => {}
+            "kotlin" | "plugin" => {
+                if r.tier.as_deref() == Some("full") {
+                    out.push(v(&r.id, "tier", &format!(
+                        "§4.2 Backend '{}' supports only the oracle-only tier (the realiser owns the domain design).", r.backend)));
+                }
+            }
+            other => out.push(v(&r.id, "backend", &format!(
+                "§4.2 Unknown backend '{other}' — built-ins: csharp, kotlin; external backends use `backend: plugin` + plugin_cmd."))),
+        }
+        if let Some(t) = r.tier.as_deref() {
+            if t != "full" && t != "oracle-only" {
+                out.push(v(&r.id, "tier", &format!("§4.2 Unknown tier '{t}' — full | oracle-only.")));
+            }
+        }
+        if r.backend == "plugin" && r.plugin_cmd.as_deref().map(str::trim).unwrap_or("").is_empty() {
+            out.push(v(&r.id, "plugin_cmd",
+                "§4.2 An external realisation must carry plugin_cmd (manifest on stdin → file plan on stdout)."));
+        }
+    }
 }
 
 fn check_decisions(c: &HowContract, out: &mut Vec<Violation>) {

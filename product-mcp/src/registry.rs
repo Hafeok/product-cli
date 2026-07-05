@@ -134,12 +134,25 @@ fn handle_tools_call(request: &JsonRpcRequest, registry: &ToolRegistry) -> JsonR
 
 fn dispatch_tool(name: &str, args: &Value, repo_root: &Path) -> Result<Value, String> {
     dispatch_what(name, args, repo_root)
+        .or_else(|| dispatch_reify(name, args, repo_root))
         .or_else(|| dispatch_delivery(name, args, repo_root))
         .or_else(|| dispatch_deployable_unit(name, args, repo_root))
         .or_else(|| dispatch_framework_read(name, args, repo_root))
         .or_else(|| dispatch_framework_write(name, args, repo_root))
         .or_else(|| dispatch_framework_scaffold(name, args, repo_root))
         .unwrap_or_else(|| Err(format!("Tool handler not implemented: {}", name)))
+}
+
+/// Reify — verifiable code projections (Build phase).
+fn dispatch_reify(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
+    use super::reify_handlers as rf;
+    Some(match name {
+        "product_reify_backends" => rf::handle_backends(args, repo_root),
+        "product_reify_manifest" => rf::handle_manifest(args, repo_root),
+        "product_reify_check" => rf::handle_check(args, repo_root),
+        "product_reify_emit" => rf::handle_emit(args, repo_root),
+        _ => return None,
+    })
 }
 
 /// §3.1–§3.5 — the What graph: domain, decider, projector, primitive.

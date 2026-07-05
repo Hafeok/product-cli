@@ -319,8 +319,7 @@ mod tests {
                 ..Default::default()
             });
         }
-        s.graph.commands.push(Command {
-            id: "Place".into(), label: "Place".into(), context: "ctx".into(), targets: "Order".into(), emits: vec![],
+        s.graph.commands.push(Command { fields: vec![], id: "Place".into(), label: "Place".into(), context: "ctx".into(), targets: "Order".into(), emits: vec![],
         });
         s.save(&session_dir(root, "demo")).expect("save");
     }

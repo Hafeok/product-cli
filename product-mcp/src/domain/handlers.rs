@@ -16,7 +16,13 @@ fn to_value(r: OpResult) -> Result<Value, String> {
 }
 
 fn attributes(a: &Value) -> Vec<Attribute> {
-    a.get("attributes")
+    attr_list(a, "attributes")
+}
+
+/// Parse a `[{name, type?}]` array under `key` (entity attributes, or the
+/// §3.2 command/event payload `fields`).
+fn attr_list(a: &Value, key: &str) -> Vec<Attribute> {
+    a.get(key)
         .and_then(|v| v.as_array())
         .map(|arr| {
             arr.iter()
@@ -103,6 +109,7 @@ pub fn add_command(s: &mut DomainSession, a: &Value) -> Result<Value, String> {
         context: req_str(a, "context")?,
         targets: req_str(a, "targets")?,
         emits: str_array(a, "emits"),
+        fields: attr_list(a, "fields"),
     };
     to_value(ops::add_command(s, c))
 }
@@ -113,6 +120,7 @@ pub fn add_event(s: &mut DomainSession, a: &Value) -> Result<Value, String> {
         label: req_str(a, "label")?,
         context: req_str(a, "context")?,
         changes: req_str(a, "changes")?,
+        fields: attr_list(a, "fields"),
     };
     to_value(ops::add_event(s, e))
 }

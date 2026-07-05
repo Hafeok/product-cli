@@ -16,8 +16,8 @@ fn graph() -> DomainGraph {
     let mut g = DomainGraph::default();
     g.contexts.push(BoundedContext { id: "Sales".into(), label: "Sales".into(), ..Default::default() });
     g.entities.push(Entity { id: "Order".into(), label: "Order".into(), context: "Sales".into(), definition: "an order".into(), is_aggregate_root: true, ..Default::default() });
-    g.events.push(Event { id: "OrderPlaced".into(), label: "OrderPlaced".into(), context: "Sales".into(), changes: "Order".into() });
-    g.commands.push(Command { id: "PlaceOrder".into(), label: "PlaceOrder".into(), context: "Sales".into(), targets: "Order".into(), emits: vec!["OrderPlaced".into()] });
+    g.events.push(Event { fields: vec![], id: "OrderPlaced".into(), label: "OrderPlaced".into(), context: "Sales".into(), changes: "Order".into() });
+    g.commands.push(Command { fields: vec![], id: "PlaceOrder".into(), label: "PlaceOrder".into(), context: "Sales".into(), targets: "Order".into(), emits: vec!["OrderPlaced".into()] });
     g
 }
 

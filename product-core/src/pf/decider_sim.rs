@@ -16,14 +16,15 @@ use super::decider_logic::{
 use super::validate::Violation;
 
 /// An emitted event with its computed payload.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct EmittedEvent {
     pub event: String,
     pub payload: Payload,
 }
 
 /// The result of running a command through `decide`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Outcome {
     /// Accepted, emitting these events.
     Accepted(Vec<EmittedEvent>),

@@ -16,8 +16,8 @@ fn conformant_what_graph_has_no_violations() {
     let mut g = DomainGraph::default();
     g.contexts.push(ctx("Tasks"));
     g.entities.push(entity("Task", "Tasks"));
-    g.events.push(Event { id: "TaskDone".into(), label: "TaskDone".into(), context: "Tasks".into(), changes: "Task".into() });
-    g.commands.push(Command { id: "Complete".into(), label: "Complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["TaskDone".into()] });
+    g.events.push(Event { fields: vec![], id: "TaskDone".into(), label: "TaskDone".into(), context: "Tasks".into(), changes: "Task".into() });
+    g.commands.push(Command { fields: vec![], id: "Complete".into(), label: "Complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["TaskDone".into()] });
     g.read_models.push(ReadModel { id: "Open".into(), label: "Open".into(), projects: vec!["Task".into()], ..Default::default() });
     assert_eq!(validate_graph(&g), vec![]);
 }
@@ -54,7 +54,7 @@ fn system_root_must_resolve_and_flow_system_must_resolve() {
 }
 
 fn cmd(id: &str, ctx: &str) -> Command {
-    Command { id: id.into(), label: id.into(), context: ctx.into(), targets: "Order".into(), emits: vec![] }
+    Command { fields: vec![], id: id.into(), label: id.into(), context: ctx.into(), targets: "Order".into(), emits: vec![] }
 }
 
 #[test]
@@ -130,7 +130,7 @@ fn automation_and_translation_patterns_are_checked() {
 fn event_changing_nothing_is_rejected() {
     let mut g = DomainGraph::default();
     g.contexts.push(ctx("Tasks"));
-    g.events.push(Event { id: "Ghost".into(), label: "Ghost".into(), context: "Tasks".into(), changes: "Nope".into() });
+    g.events.push(Event { fields: vec![], id: "Ghost".into(), label: "Ghost".into(), context: "Tasks".into(), changes: "Nope".into() });
     let vs = validate_node(&g, "Ghost");
     assert_eq!(vs.len(), 1);
     assert_eq!(vs[0].path, "changes");
@@ -169,7 +169,7 @@ fn command_without_event_is_rejected() {
     let mut g = DomainGraph::default();
     g.contexts.push(ctx("Tasks"));
     g.entities.push(entity("Task", "Tasks"));
-    g.commands.push(Command { id: "Complete".into(), label: "Complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["Nope".into()] });
+    g.commands.push(Command { fields: vec![], id: "Complete".into(), label: "Complete".into(), context: "Tasks".into(), targets: "Task".into(), emits: vec!["Nope".into()] });
     let vs = validate_node(&g, "Complete");
     assert!(vs.iter().any(|v| v.path == "emits"));
 }

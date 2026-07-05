@@ -205,7 +205,7 @@ mod tests {
     #[test]
     fn finalize_blocks_when_non_conformant() {
         let mut s = DomainSession::start("demo", None, vec![], None, "t".into()).expect("start");
-        s.graph.events.push(super::super::model::Event { id: "E".into(), label: "E".into(), context: "Nope".into(), changes: "Nope".into() });
+        s.graph.events.push(super::super::model::Event { fields: vec![], id: "E".into(), label: "E".into(), context: "Nope".into(), changes: "Nope".into() });
         let fin = s.finalize("t2".into());
         assert!(!fin.ok);
         assert!(fin.turtle.is_none());

@@ -113,6 +113,34 @@ pub struct InterfaceContract {
     pub derived_from: Vec<String>,
 }
 
+/// §4.2 — a declared realisation: which reify backend renders this How's
+/// verification shell, at which delegation tier. The human's remaining
+/// realisation decision, captured as spec instead of CLI flags — `product
+/// reify emit` derives its invocation from these.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
+pub struct Realisation {
+    pub id: String,
+    /// The §3.2.5 system this realisation is for (checked at emit time).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub system: Option<String>,
+    /// Backend id: `csharp` | `kotlin` | `plugin` (external, via `plugin_cmd`).
+    pub backend: String,
+    /// Delegation tier: `full` (typed frames) or `oracle-only` (adapter seam).
+    /// Defaults per backend; kotlin/plugin support only `oracle-only`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tier: Option<String>,
+    /// Type/package namespace (default: PascalCase of the product name).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub namespace: Option<String>,
+    /// Output directory relative to the repo root (default: `reified/<product>/<id>`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub out: Option<String>,
+    /// `backend: plugin` — the command implementing the external backend
+    /// (reify manifest on stdin → file plan on stdout).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plugin_cmd: Option<String>,
+}
+
 /// A blueprint's complete How (§4).
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct HowContract {
@@ -137,6 +165,10 @@ pub struct HowContract {
     pub layout_model: Option<String>,
     #[serde(default)]
     pub interface_contracts: Vec<InterfaceContract>,
+    /// §4.2 — the declared realisations (backend + delegation tier per
+    /// system); `product reify emit` runs them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub realisations: Vec<Realisation>,
 }
 
 /// A `how-contract.yaml` that is a pointer to another one (`ref: <relative

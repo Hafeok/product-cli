@@ -17,6 +17,17 @@ use super::BoxResult;
 
 #[derive(Subcommand)]
 pub enum ProjectorCommands {
+    /// Check realised read-side code (a runner) against the Projector's scenarios (§6.3)
+    Conform {
+        /// The projector id (filename stem)
+        name: String,
+        /// Shell command that reads a JSON array of {given} requests on stdin
+        /// and writes a JSON array of view-state objects on stdout
+        #[arg(long)]
+        runner: String,
+        #[arg(long)]
+        product: Option<String>,
+    },
     /// Derive a Projector's fold signature for a read model from the What graph
     Derive {
         /// The read-model id to project for
@@ -55,6 +66,7 @@ pub enum ProjectorCommands {
 
 pub(crate) fn handle_projector(cmd: ProjectorCommands) -> BoxResult {
     match cmd {
+        ProjectorCommands::Conform { name, runner, product } => conform(&name, &runner, product),
         ProjectorCommands::Derive { read_model, product, force } => derive(&read_model, product, force),
         ProjectorCommands::List { product } => list(product),
         ProjectorCommands::Show { name, product } => show(&name, product),
@@ -97,6 +109,57 @@ fn derive(read_model: &str, product: Option<String>, force: bool) -> BoxResult {
     println!("Derived projector '{}' for read model '{read_model}' at {}", projector.id, p.display());
     println!("  folds {} event(s) over {} entity(ies)", projector.folds.len(), projector.over.len());
     Ok(())
+}
+
+/// Persist the §6.3 projection-conformance verdict next to the projector as
+/// `<name>.conform.json` (the read-side peer of the decider verdict).
+fn record_conform_verdict(name: &str, product: Option<&str>, conformant: bool) -> Result<(), Box<dyn std::error::Error>> {
+    let path = projectors_dir(product).join(format!("{name}.conform.json"));
+    std::fs::write(&path, serde_json::json!({ "conformant": conformant }).to_string())?;
+    Ok(())
+}
+
+fn conform(name: &str, runner: &str, product: Option<String>) -> BoxResult {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+
+    let projector = load(name, product.as_deref())?;
+    let requests = product_core::pf::projector_conform::requests(&projector);
+    let input = serde_json::to_vec(&requests)?;
+
+    let mut child = Command::new("sh")
+        .arg("-c")
+        .arg(runner)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("failed to start runner: {e}"))?;
+    {
+        let mut stdin = child.stdin.take().ok_or("runner has no stdin")?;
+        stdin.write_all(&input)?;
+    } // closing stdin lets the runner finish
+    let output = child.wait_with_output()?;
+    if !output.status.success() {
+        return Err(format!("runner failed ({}): {}", output.status, String::from_utf8_lossy(&output.stderr)).into());
+    }
+
+    let realised: Vec<product_core::pf::decider_logic::State> = serde_json::from_slice(&output.stdout)
+        .map_err(|e| format!("runner output is not a JSON array of view states: {e}"))?;
+    let findings = product_core::pf::projector_conform::check_conformance(&projector, &realised);
+    record_conform_verdict(name, product.as_deref(), findings.is_empty())?;
+    if findings.is_empty() {
+        println!(
+            "projection conformant — projector '{}': {} scenario(s) match the realised runner",
+            projector.id, projector.scenarios.len(),
+        );
+        return Ok(());
+    }
+    eprintln!("not conformant — {} finding(s):", findings.len());
+    for f in &findings {
+        eprintln!("  - [{}] {}: {}", f.focus, f.path, f.message);
+    }
+    Err(format!("{} conformance finding(s)", findings.len()).into())
 }
 
 fn validate(name: &str, product: Option<String>) -> BoxResult {

@@ -306,8 +306,8 @@ mod tests {
         g.entities.push(Entity { id: "order".into(), label: "Order".into(), context: "ordering".into(), is_aggregate_root: true, ..Default::default() });
         g.systems.push(System { id: "shop".into(), label: "Shop".into(), kind: "application".into(), purpose: "buy".into(), references_domain: vec!["ordering".into()], ..Default::default() });
         g.flows.push(Flow { id: "flow-checkout".into(), label: "Checkout".into(), steps: vec!["t".into(), "cmd".into(), "ev".into()], system: Some("shop".into()), ..Default::default() });
-        g.commands.push(Command { id: "cmd".into(), label: "Place".into(), context: "ordering".into(), targets: "order".into(), emits: vec!["ev".into()] });
-        g.events.push(Event { id: "ev".into(), label: "Placed".into(), context: "ordering".into(), changes: "order".into() });
+        g.commands.push(Command { fields: vec![], id: "cmd".into(), label: "Place".into(), context: "ordering".into(), targets: "order".into(), emits: vec!["ev".into()] });
+        g.events.push(Event { fields: vec![], id: "ev".into(), label: "Placed".into(), context: "ordering".into(), changes: "order".into() });
         g.journeys.push(Journey { id: "j1".into(), label: "Order to fulfil".into(), product: "acme".into(), composes_flow: vec!["flow-checkout".into()], crosses_via: vec!["tr".into()] });
         g
     }

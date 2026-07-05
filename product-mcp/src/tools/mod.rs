@@ -9,6 +9,7 @@ mod deployable_unit;
 mod domain;
 mod how_author;
 mod legacy_pf;
+mod reify;
 
 use serde::Serialize;
 use serde_json::Value;
@@ -47,5 +48,6 @@ pub fn build_tool_list() -> Vec<ToolDef> {
     tools.extend(how_author::all());
     tools.extend(legacy_pf::all());
     tools.extend(build::all());
+    tools.extend(reify::all());
     tools
 }
