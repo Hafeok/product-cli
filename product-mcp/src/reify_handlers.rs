@@ -52,9 +52,17 @@ pub fn handle_check(args: &Value, repo_root: &Path) -> Result<Value, String> {
     let prov = std::fs::read_to_string(root.join("provenance.g.json"))
         .map_err(|_| format!("no provenance.g.json under '{out}' — emit first"))?;
     let recorded = recorded_hash(&prov).map_err(|e| format!("{e}"))?;
+    let ds_conformant = match product_core::pf::reify::recorded_ds(&prov) {
+        None => true,
+        Some((rec_id, rec_hash)) => opts
+            .design_system
+            .as_ref()
+            .is_some_and(|s| s.manifest.design_system.id == rec_id && s.hash == rec_hash),
+    };
     Ok(json!({
         "ok": true,
-        "conformant": recorded == current,
+        "conformant": recorded == current && ds_conformant,
+        "design_system_conformant": ds_conformant,
         "current": format!("sha256:{current}"),
         "recorded": format!("sha256:{recorded}"),
         "out": out,
@@ -117,7 +125,9 @@ fn resolve_target(
             return Err(format!("realisation '{rid}' names undeclared system '{sys}'"));
         }
     }
+    let design_system = opts.design_system.take();
     *opts = realisation_opts(&r, &opts.product, &opts.what_version).map_err(|e| format!("{e}"))?;
+    opts.design_system = design_system;
     let b = backend(&r.backend).map_err(|e| format!("{e}"))?;
     Ok((b, realisation_out(&r, &opts.product)))
 }
@@ -146,7 +156,19 @@ fn inputs(args: &Value, repo_root: &Path) -> Result<(product_core::pf::model::Do
         .flatten()
         .and_then(|c| c.realises_version)
         .unwrap_or_else(|| "unversioned".to_string());
-    Ok((graph, deciders, projectors, ReifyOptions { product, namespace, what_version, oracle_only: false }))
+    let design_system = load_bound_ds(&base)?;
+    Ok((graph, deciders, projectors, ReifyOptions { product, namespace, what_version, oracle_only: false, design_system }))
+}
+
+/// The How-bound design system as a reify input, when one is bound (§4.5).
+fn load_bound_ds(base: &Path) -> Result<Option<product_core::pf::reify_ds::DsSpec>, String> {
+    let bound = product_core::pf::HowContract::load_opt(&base.join("how-contract.yaml"))
+        .ok()
+        .flatten()
+        .and_then(|c| c.design_system);
+    let Some(b) = bound else { return Ok(None) };
+    let stored = product_core::pf::ds_store::load(base, &b.id).map_err(|e| format!("{e}"))?;
+    Ok(Some(product_core::pf::reify_ds::DsSpec::from_source(stored.manifest.clone(), &stored.source)))
 }
 
 /// Join a caller-supplied relative path under the repo root, rejecting

@@ -37,10 +37,21 @@ pub struct ReifyManifest {
     pub namespace: String,
     pub what_version: String,
     pub graph_hash: String,
+    /// The How-bound design system's pinned identity, when one is bound (§4.5/§11).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub design_system: Option<DsIdentity>,
     pub aggregates: Vec<AggregateManifest>,
     pub projectors: Vec<ProjectorManifest>,
     pub flows: Vec<FlowManifest>,
     pub screens: Vec<ScreenManifest>,
+}
+
+/// The bound design system's identity, hash-pinned like the graph.
+#[derive(Serialize)]
+pub struct DsIdentity {
+    pub id: String,
+    pub version: String,
+    pub hash: String,
 }
 
 #[derive(Serialize)]
@@ -100,6 +111,10 @@ pub struct ScreenManifest {
     pub degraded_states: Vec<(String, String)>,
     /// The `present`-state view data (a projector scenario's oracle fold).
     pub present_fixture: Option<State>,
+    /// The reify(AIO, context) → CIO map for this step, when a design system
+    /// is bound (§11.2 baked by value: cio, tokens, WCAG discharges).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub components: Vec<super::reify_ds::ReifiedComponent>,
 }
 
 /// Assemble the manifest for a product.
@@ -115,16 +130,25 @@ pub fn manifest(
     let mut sorted_p: Vec<&Projector> = projectors.iter().collect();
     sorted_p.sort_by(|a, b| a.id.cmp(&b.id));
     let aggs = aggregate_names(&sorted)?;
+    let resolved = match &opts.design_system {
+        Some(spec) => Some(super::reify_ds::resolve(spec, graph)?),
+        None => None,
+    };
     Ok(ReifyManifest {
         manifest_version: "1".to_string(),
         product: opts.product.clone(),
         namespace: opts.namespace.clone(),
         what_version: opts.what_version.clone(),
         graph_hash: format!("sha256:{graph_hash}"),
+        design_system: resolved.as_ref().map(|r| DsIdentity {
+            id: r.id.clone(),
+            version: r.version.clone(),
+            hash: format!("sha256:{}", r.hash),
+        }),
         aggregates: sorted.iter().zip(&aggs).map(|(d, a)| aggregate(graph, d, a)).collect(),
         projectors: sorted_p.iter().map(|p| projector(p)).collect(),
         flows: flows(graph, &sorted, &sorted_p),
-        screens: screens(graph, &sorted_p),
+        screens: screens(graph, &sorted_p, resolved.as_ref()),
     })
 }
 
@@ -262,7 +286,11 @@ fn flows(graph: &DomainGraph, sorted: &[&Decider], sorted_p: &[&Projector]) -> V
         .collect()
 }
 
-fn screens(graph: &DomainGraph, sorted_p: &[&Projector]) -> Vec<ScreenManifest> {
+fn screens(
+    graph: &DomainGraph,
+    sorted_p: &[&Projector],
+    resolved: Option<&super::reify_ds::ResolvedDs>,
+) -> Vec<ScreenManifest> {
     super::reify_screen::testable_steps(graph)
         .into_iter()
         .map(|step| ScreenManifest {
@@ -276,6 +304,9 @@ fn screens(graph: &DomainGraph, sorted_p: &[&Projector]) -> Vec<ScreenManifest> 
                 .map(|m| (m.projection.clone(), m.state.clone()))
                 .collect(),
             present_fixture: super::reify_screen::present_state(step, sorted_p),
+            components: resolved
+                .and_then(|r| r.screens.get(&step.id).cloned())
+                .unwrap_or_default(),
         })
         .collect()
 }

@@ -1,0 +1,53 @@
+design_system:
+  id: wire-ds
+  version: "1.0"
+  wcag_target: "2.2-AA"
+  contexts_supported:
+    form_factor: [phone, desktop]
+    modality: [touch, pointer]
+  targets: [web]
+  themes: [light, dark]
+  components:
+    - id: cio-button
+      tokens: [color.accent, space.gutter]
+      satisfies:
+        - { criterion: "2.5.8", level: AA, via: machine }
+        - { criterion: "2.4.7", level: AA, via: machine }
+      implementation:
+        web:
+          source: components/button.html
+          props: [label, action]
+    - id: cio-list
+      tokens: [color.surface, space.gutter]
+      satisfies:
+        - { criterion: "1.3.1", level: A, via: machine }
+      implementation:
+        web:
+          source: components/list.html
+          props: [items]
+    - id: cio-value
+      tokens: [color.surface]
+      satisfies:
+        - { criterion: "1.4.3", level: AA, via: machine }
+      implementation:
+        web:
+          source: components/value.html
+          props: [value]
+  reification:
+    - { aio: aio-trigger-action, when: {}, cio: cio-button, rationale: "A command offer renders as a button on every form factor" }
+    - { aio: aio-display-collection, when: {}, cio: cio-list, rationale: "A projected collection renders as a semantic list everywhere" }
+    - { aio: aio-display-value, when: {}, cio: cio-value, rationale: "A single projected value renders as a labelled value display" }
+  tokens:
+    - id: color.accent
+      type: color
+      values: { light: "#0a6cff", dark: "#5aa2ff" }
+    - id: color.surface
+      type: color
+      values: { light: "#ffffff", dark: "#12161c" }
+    - id: space.gutter
+      type: dimension
+      values: { light: "16px", dark: "16px" }
+  templates:
+    - id: tpl-page
+      regions: [header, main, actions]
+      composes: [cio-list, cio-value, cio-button]

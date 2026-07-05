@@ -27,7 +27,8 @@ pub(super) fn emit_from_how(id: Option<String>, product: Option<String>) -> BoxR
         .ok_or_else(|| format!("no how-contract at {} — scaffold one with `product how init`, then declare a §4.2 `realisations:` block", path.display()))?;
     for r in resolve_realisations(&contract, id.as_deref())? {
         check_system(&graph, r)?;
-        let opts = realisation_opts(r, &name, &base.what_version)?;
+        let mut opts = realisation_opts(r, &name, &base.what_version)?;
+        opts.design_system = super::design_system::load_bound_ds(Some(&name))?;
         let plan = plan_for(r, &graph, &deciders, &projectors, &opts)?;
         let root = super::shared::domain_root().join(realisation_out(r, &name));
         let stale = super::reify::remove_stale(&root, &plan);

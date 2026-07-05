@@ -6,6 +6,7 @@ mod projector;
 mod primitive;
 mod delivery;
 mod deployable_unit;
+mod design_system;
 mod domain;
 mod how_author;
 mod legacy_pf;
@@ -45,6 +46,7 @@ pub fn build_tool_list() -> Vec<ToolDef> {
     tools.extend(primitive::all());
     tools.extend(delivery::all());
     tools.extend(deployable_unit::all());
+    tools.extend(design_system::all());
     tools.extend(how_author::all());
     tools.extend(legacy_pf::all());
     tools.extend(build::all());

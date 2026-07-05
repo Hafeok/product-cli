@@ -7,8 +7,6 @@
 //! (canonical Turtle + decider YAMLs) so `reify check` is a drift gate:
 //! generated code that no longer matches the graph hash is stale.
 
-use serde_json::json;
-
 use crate::error::{ProductError, Result};
 
 use super::decider::Decider;
@@ -23,6 +21,9 @@ use super::reify_runtime as runtime;
 use super::reify_scenarios::tests_file;
 use super::reify_types::{agg_types_file, domain_file};
 
+pub use super::reify_ds::recorded_ds;
+pub use super::reify_prov::{provenance_json, recorded_hash};
+
 /// Inputs the generator is parameterized by (all resolved by the adapter).
 pub struct ReifyOptions {
     pub product: String,
@@ -34,6 +35,10 @@ pub struct ReifyOptions {
     /// verification shell (`IConformanceAdapter` seam, scenario tests,
     /// runner, provenance). The realiser owns the whole domain design.
     pub oracle_only: bool,
+    /// The How-bound design system (§4.5/§11), resolved by the adapter from
+    /// `.product/design-systems/<id>/`. When present, reify gates on the
+    /// §11.2 coupling and emits the resolved component map + token surface.
+    pub design_system: Option<super::reify_ds::DsSpec>,
 }
 
 /// One file of the plan. `overwrite: false` marks an editable scaffold the
@@ -119,6 +124,7 @@ pub fn plan_csharp(
     }
     files.extend(integration_files(graph, opts, &hdr, &sorted, &sorted_p));
     files.extend(conformance_files(opts, &hdr, &sorted, &aggs, &sorted_p));
+    files.extend(super::reify_ds::stage_files(graph, opts, &hdr, &graph_hash)?);
     files.push(gen(
         "openapi.g.json",
         super::reify_openapi::openapi_file(graph, &sorted, &sorted_p, &opts.product, &opts.what_version, &graph_hash),
@@ -366,33 +372,6 @@ fn conformance_files(
 
 pub(crate) fn gen(path: &str, content: String) -> GenFile {
     GenFile { path: path.to_string(), content, overwrite: true }
-}
-
-/// The machine-readable provenance manifest (`provenance.g.json`).
-pub(crate) fn provenance_json(opts: &ReifyOptions, graph_hash: &str, files: &[GenFile]) -> String {
-    let generated: Vec<&str> =
-        files.iter().filter(|f| f.overwrite).map(|f| f.path.as_str()).collect();
-    let v = json!({
-        "product": opts.product,
-        "namespace": opts.namespace,
-        "what_version": opts.what_version,
-        "graph_hash": format!("sha256:{graph_hash}"),
-        "generator": "product reify csharp",
-        "generated_files": generated,
-    });
-    let mut s = serde_json::to_string_pretty(&v).unwrap_or_default();
-    s.push('\n');
-    s
-}
-
-/// Extract the recorded graph hash from a `provenance.g.json` text.
-pub fn recorded_hash(provenance: &str) -> Result<String> {
-    let v: serde_json::Value = serde_json::from_str(provenance)
-        .map_err(|e| ProductError::ConfigError(format!("invalid provenance.g.json: {e}")))?;
-    v.get("graph_hash")
-        .and_then(|h| h.as_str())
-        .map(|h| h.trim_start_matches("sha256:").to_string())
-        .ok_or_else(|| ProductError::ConfigError("provenance.g.json carries no graph_hash".to_string()))
 }
 
 #[cfg(test)]

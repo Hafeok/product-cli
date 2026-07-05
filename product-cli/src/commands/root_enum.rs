@@ -81,6 +81,11 @@ pub enum Commands {
         #[command(subcommand)]
         command: DeployableUnitCommands,
     },
+    /// Design system (§11) — vendor a manifest, validate its bundle, bind it to the How
+    DesignSystem {
+        #[command(subcommand)]
+        command: DesignSystemCommands,
+    },
     /// Domain (What) graph — list, show, and CRUD over captured artifacts
     Domain {
         #[command(subcommand)]

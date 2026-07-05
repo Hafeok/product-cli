@@ -32,6 +32,7 @@ pub trait ReifyBackend: Sync {
 
 struct Csharp;
 struct Kotlin;
+struct Web;
 
 impl ReifyBackend for Csharp {
     fn id(&self) -> &'static str {
@@ -63,7 +64,22 @@ impl ReifyBackend for Kotlin {
     }
 }
 
-static BACKENDS: [&dyn ReifyBackend; 2] = [&Csharp, &Kotlin];
+impl ReifyBackend for Web {
+    fn id(&self) -> &'static str {
+        "web"
+    }
+    fn description(&self) -> &'static str {
+        "Web — one HTML page per UI step composed from the How-bound design system's catalog, styled exclusively via tokens (§4.5/§11)"
+    }
+    fn oracle_only_forced(&self) -> bool {
+        true
+    }
+    fn plan(&self, graph: &DomainGraph, deciders: &[Decider], projectors: &[Projector], opts: &ReifyOptions) -> Result<ReifyPlan> {
+        super::reify_web::plan_web(graph, deciders, projectors, opts)
+    }
+}
+
+static BACKENDS: [&dyn ReifyBackend; 3] = [&Csharp, &Kotlin, &Web];
 
 /// Every built-in backend, in registration order.
 pub fn backends() -> &'static [&'static dyn ReifyBackend] {
@@ -155,8 +171,8 @@ pub fn realisation_opts(
     what_version: &str,
 ) -> Result<ReifyOptions> {
     let oracle_only = match (r.backend.as_str(), r.tier.as_deref()) {
-        (_, Some("oracle-only")) | ("kotlin" | "plugin", None) => true,
-        ("kotlin" | "plugin", Some("full")) => {
+        (_, Some("oracle-only")) | ("kotlin" | "plugin" | "web", None) => true,
+        ("kotlin" | "plugin" | "web", Some("full")) => {
             return Err(ProductError::ConfigError(format!(
                 "realisation '{}': backend '{}' supports only the oracle-only tier",
                 r.id, r.backend
@@ -178,6 +194,7 @@ pub fn realisation_opts(
             .unwrap_or_else(|| super::reify_ident::pascal(product)),
         what_version: what_version.to_string(),
         oracle_only,
+        design_system: None,
     })
 }
 

@@ -101,6 +101,17 @@ pub enum ReifyCommands {
         #[arg(long)]
         force: bool,
     },
+    /// Emit web pages: one HTML page per UI step composed from the How-bound design system (§4.5/§11)
+    Web {
+        /// Output directory (default: reified/<product>/web)
+        #[arg(long)]
+        out: Option<PathBuf>,
+        #[arg(long)]
+        product: Option<String>,
+        /// Also rewrite any editable scaffolds
+        #[arg(long)]
+        force: bool,
+    },
 }
 
 pub(crate) fn handle_reify(cmd: ReifyCommands) -> BoxResult {
@@ -120,6 +131,7 @@ pub(crate) fn handle_reify(cmd: ReifyCommands) -> BoxResult {
         ReifyCommands::Plugin { cmd, out, namespace, product, force } => {
             plugin(&cmd, out, namespace, product, force)
         }
+        ReifyCommands::Web { out, product, force } => emit(Lang::Web, out, None, product, force),
     }
 }
 
@@ -127,18 +139,20 @@ pub(crate) fn handle_reify(cmd: ReifyCommands) -> BoxResult {
 enum Lang {
     Csharp { oracle_only: bool },
     Kotlin,
+    Web,
 }
 
 fn emit(lang: Lang, out: Option<PathBuf>, namespace: Option<String>, product: Option<String>, force: bool) -> BoxResult {
     let (name, graph) = require_domain(product.as_deref())?;
     let deciders = load_deciders(Some(&name))?;
     let projectors = load_projectors(Some(&name))?;
-    let oracle_only = matches!(lang, Lang::Csharp { oracle_only: true } | Lang::Kotlin);
+    let oracle_only = matches!(lang, Lang::Csharp { oracle_only: true } | Lang::Kotlin | Lang::Web);
     let opts = ReifyOptions {
         namespace: namespace.unwrap_or_else(|| product_core::pf::reify_ident::pascal(&name)),
         what_version: what_version(Some(&name)),
         product: name.clone(),
         oracle_only,
+        design_system: super::design_system::load_bound_ds(Some(&name))?,
     };
     let (plan, subdir, mode, verify_hint) = match &lang {
         Lang::Csharp { oracle_only } => (
@@ -156,6 +170,12 @@ fn emit(lang: Lang, out: Option<PathBuf>, namespace: Option<String>, product: Op
                 format!("gradle test — then `product decider conform <id> --runner \"build/install/{pkg}/bin/{pkg} <id>\"` after `gradle installDist`"),
             )
         }
+        Lang::Web => (
+            product_core::pf::reify_web::plan_web(&graph, &deciders, &projectors, &opts)?,
+            "web",
+            "design-system",
+            "open index.g.html — on-system composition is on the data-cio attributes; drift gate: `product reify check --out <dir>`".to_string(),
+        ),
     };
     let root = out.unwrap_or_else(|| default_out(&name, subdir));
     let stale = remove_stale(&root, &plan);
@@ -206,6 +226,7 @@ pub(super) fn resolve_inputs(namespace: Option<String>, product: Option<String>)
         what_version: what_version(Some(&name)),
         product: name.clone(),
         oracle_only: true,
+        design_system: super::design_system::load_bound_ds(Some(&name))?,
     };
     Ok((name, graph, deciders, projectors, opts))
 }
@@ -291,6 +312,7 @@ fn check(out: Option<PathBuf>, product: Option<String>) -> BoxResult {
         )
     })?;
     let recorded = recorded_hash(&text)?;
+    super::design_system::check_ds_drift(&text, Some(&name))?;
     if recorded == current {
         println!("conformant — generated code at {} matches the What graph (sha256:{current})", root.display());
         return Ok(());

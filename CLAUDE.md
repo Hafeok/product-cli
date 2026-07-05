@@ -170,6 +170,14 @@ Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
   pointer; its build-context is *assembled from the model*, never restated).
   `product how set version|realises-version --id <v>` carries the §7.3 semantic
   versions (a How declares which What-version it realises).
+- **Design system (§11)** — `product design-system add <manifest>` vendors a §11.3
+  manifest (declaration + implementation bundle: per-target component sources, token
+  values per theme, templates) under `.product/design-systems/<id>/`; `validate` /
+  `couple` are the wholeness + §11.2 coverage checks; `bind <id>` records the choice
+  on the How contract (§4.5). Once bound, every `product reify` backend gates on the
+  coupling at plan time and emits `design-system.g.json` + `tokens.g.css` (hash-pinned;
+  `reify check` catches design-system drift), and `product reify web` renders one
+  on-system HTML page per UI step, styled exclusively via tokens.
 - **DeployableUnit (§4/§4.2)** — `product deployable-unit new <id> --built-from
   <blueprint> --system <sys>… [--environment … --domain-name/--bundle-id/--runtime]`
   declares the concrete artifact a **blueprint** (v1.7.0's rename of *archetype*)

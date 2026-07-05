@@ -296,7 +296,8 @@ fn unit_slice_cuts_the_manifest_to_a_neighbourhood_with_the_full_hash() {
 #[test]
 fn backend_registry_resolves_and_rejects() {
     use crate::pf::reify_backend::{backend, backends};
-    assert_eq!(backends().len(), 2);
+    assert_eq!(backends().len(), 3);
+    assert!(backend("web").expect("web").oracle_only_forced());
     assert!(!backend("csharp").expect("csharp").oracle_only_forced());
     assert!(backend("kotlin").expect("kotlin").oracle_only_forced());
     assert!(backend("cobol").is_err());
