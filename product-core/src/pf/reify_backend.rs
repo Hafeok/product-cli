@@ -119,6 +119,73 @@ pub fn external_plan(
     Ok(ReifyPlan { files, graph_hash, aggregates })
 }
 
+/// The declared realisations to run: all of them, or the one named by `id`.
+/// An empty contract (or a miss) is an error that shows what is declared.
+pub fn resolve_realisations<'a>(
+    c: &'a super::how::HowContract,
+    id: Option<&str>,
+) -> Result<Vec<&'a super::how::Realisation>> {
+    if c.realisations.is_empty() {
+        return Err(ProductError::ConfigError(
+            "the How contract declares no realisations — add a `realisations:` block (id, backend: csharp|kotlin|plugin, tier: full|oracle-only, namespace?, out?, system?) to how-contract.yaml (§4.2)".to_string(),
+        ));
+    }
+    match id {
+        None => Ok(c.realisations.iter().collect()),
+        Some(want) => c
+            .realisations
+            .iter()
+            .find(|r| r.id == want)
+            .map(|r| vec![r])
+            .ok_or_else(|| {
+                let known: Vec<&str> = c.realisations.iter().map(|r| r.id.as_str()).collect();
+                ProductError::NotFound(format!(
+                    "no realisation '{want}' in the How contract — declared: {}",
+                    known.join(", ")
+                ))
+            }),
+    }
+}
+
+/// The effective [`ReifyOptions`] for a declared realisation — the §4.2
+/// delegation tier resolved against what the backend supports.
+pub fn realisation_opts(
+    r: &super::how::Realisation,
+    product: &str,
+    what_version: &str,
+) -> Result<ReifyOptions> {
+    let oracle_only = match (r.backend.as_str(), r.tier.as_deref()) {
+        (_, Some("oracle-only")) | ("kotlin" | "plugin", None) => true,
+        ("kotlin" | "plugin", Some("full")) => {
+            return Err(ProductError::ConfigError(format!(
+                "realisation '{}': backend '{}' supports only the oracle-only tier",
+                r.id, r.backend
+            )))
+        }
+        (_, None | Some("full")) => false,
+        (_, Some(other)) => {
+            return Err(ProductError::ConfigError(format!(
+                "realisation '{}': unknown tier '{other}' — full | oracle-only",
+                r.id
+            )))
+        }
+    };
+    Ok(ReifyOptions {
+        product: product.to_string(),
+        namespace: r
+            .namespace
+            .clone()
+            .unwrap_or_else(|| super::reify_ident::pascal(product)),
+        what_version: what_version.to_string(),
+        oracle_only,
+    })
+}
+
+/// A realisation's output directory (relative to the repo root).
+pub fn realisation_out(r: &super::how::Realisation, product: &str) -> String {
+    r.out.clone().unwrap_or_else(|| format!("reified/{product}/{}", r.id))
+}
+
 /// Resolve a built-in backend by id.
 pub fn backend(id: &str) -> Result<&'static dyn ReifyBackend> {
     BACKENDS

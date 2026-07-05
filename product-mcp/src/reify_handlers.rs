@@ -58,17 +58,14 @@ pub fn handle_check(args: &Value, repo_root: &Path) -> Result<Value, String> {
 }
 
 pub fn handle_emit(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    let lang = req_str(args, "lang")?;
-    let b = backend(&lang).map_err(|e| format!("{e}"))?;
     let (graph, deciders, projectors, mut opts) = inputs(args, repo_root)?;
-    opts.oracle_only = b.oracle_only_forced()
-        || args.get("oracle_only").and_then(|v| v.as_bool()).unwrap_or(false);
+    let (b, default_out) = resolve_target(args, repo_root, &graph, &mut opts)?;
     let plan = b.plan(&graph, &deciders, &projectors, &opts).map_err(|e| format!("{e}"))?;
     let out = args
         .get("out")
         .and_then(|v| v.as_str())
         .map(str::to_string)
-        .unwrap_or_else(|| format!("reified/{}/{}", opts.product, b.id()));
+        .unwrap_or(default_out);
     let root = safe_join(repo_root, &out)?;
     let stale = remove_stale(&root, &plan);
     let (written, kept) = write_plan(&root, &plan).map_err(|e| format!("{e}"))?;
@@ -83,6 +80,42 @@ pub fn handle_emit(args: &Value, repo_root: &Path) -> Result<Value, String> {
         "graph_hash": format!("sha256:{}", plan.graph_hash),
         "aggregates": plan.aggregates,
     }))
+}
+
+/// The backend + default output dir for an emit: either a §4.2 realisation
+/// declared in the How contract (by id), or explicit `lang`/`oracle_only`.
+fn resolve_target(
+    args: &Value,
+    repo_root: &Path,
+    graph: &product_core::pf::model::DomainGraph,
+    opts: &mut ReifyOptions,
+) -> Result<(&'static dyn product_core::pf::reify_backend::ReifyBackend, String), String> {
+    use product_core::pf::reify_backend::{realisation_opts, realisation_out, resolve_realisations};
+    let Some(rid) = args.get("realisation").and_then(|v| v.as_str()) else {
+        let lang = req_str(args, "lang")?;
+        let b = backend(&lang).map_err(|e| format!("{e}"))?;
+        opts.oracle_only = b.oracle_only_forced()
+            || args.get("oracle_only").and_then(|v| v.as_bool()).unwrap_or(false);
+        return Ok((b, format!("reified/{}/{}", opts.product, b.id())));
+    };
+    let base = pbase(args, repo_root);
+    let contract = product_core::pf::HowContract::load_opt(&base.join("how-contract.yaml"))
+        .map_err(|e| format!("{e}"))?
+        .ok_or("no how-contract — declare a §4.2 realisations: block first")?;
+    let r = resolve_realisations(&contract, Some(rid)).map_err(|e| format!("{e}"))?[0].clone();
+    if r.backend == "plugin" {
+        return Err(format!(
+            "realisation '{rid}' uses an external plugin backend — run it via `product reify emit` on the CLI"
+        ));
+    }
+    if let Some(sys) = &r.system {
+        if !graph.is_kind(sys, product_core::pf::ids::NodeKind::System) {
+            return Err(format!("realisation '{rid}' names undeclared system '{sys}'"));
+        }
+    }
+    *opts = realisation_opts(&r, &opts.product, &opts.what_version).map_err(|e| format!("{e}"))?;
+    let b = backend(&r.backend).map_err(|e| format!("{e}"))?;
+    Ok((b, realisation_out(&r, &opts.product)))
 }
 
 /// Resolve product name, graph, artifacts, and options from the arguments.

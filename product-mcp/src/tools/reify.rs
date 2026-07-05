@@ -56,18 +56,19 @@ fn check_tool() -> ToolDef {
 fn emit_tool() -> ToolDef {
     ToolDef {
         name: "product_reify_emit".to_string(),
-        description: "Emit a built-in backend's verification shell under the repo: `lang` csharp (full or oracle-only) or kotlin (oracle-only). Scaffolded realiser-owned files are never overwritten; stale generated files from a previous run are removed. Returns { written, kept, stale, graph_hash, out }.".to_string(),
+        description: "Emit a built-in backend's verification shell under the repo — either from a §4.2 realisation declared in the How contract (`realisation`: the captured backend/tier/namespace decision), or ad-hoc via `lang`. Scaffolded realiser-owned files are never overwritten; stale generated files from a previous run are removed. Returns { written, kept, stale, graph_hash, out }.".to_string(),
         requires_write: true,
         input_schema: serde_json::json!({
             "type": "object",
             "properties": {
-                "lang": {"type": "string", "description": "Backend id: csharp | kotlin"},
+                "realisation": {"type": "string", "description": "A realisation id from the How contract's §4.2 realisations: block (takes precedence over lang)"},
+                "lang": {"type": "string", "description": "Backend id: csharp | kotlin (ad-hoc, when no realisation is given)"},
                 "out": {"type": "string", "description": "Output directory relative to the repo root (default: reified/<product>/<lang>)"},
                 "namespace": {"type": "string", "description": "Type/package namespace (default: PascalCase of the product name)"},
                 "oracle_only": {"type": "boolean", "description": "C# only: emit just the adapter seam + facts (kotlin is always oracle-only)"},
                 "product": {"type": "string"}
             },
-            "required": ["lang"]
+            "required": []
         }),
     }
 }

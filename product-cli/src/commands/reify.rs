@@ -48,6 +48,14 @@ pub enum ReifyCommands {
         #[arg(long)]
         force: bool,
     },
+    /// Run the How contract's declared realisations (§4.2 `realisations:` block)
+    Emit {
+        /// Run only this realisation id (default: all declared)
+        #[arg(long)]
+        id: Option<String>,
+        #[arg(long)]
+        product: Option<String>,
+    },
     /// Emit a Kotlin verification shell (oracle-only): wire seam, kotlin.test facts, runner
     Kotlin {
         /// Output directory (default: reified/<product>/kotlin)
@@ -98,6 +106,7 @@ pub(crate) fn handle_reify(cmd: ReifyCommands) -> BoxResult {
         ReifyCommands::Csharp { out, namespace, oracle_only, product, force } => {
             emit(Lang::Csharp { oracle_only }, out, namespace, product, force)
         }
+        ReifyCommands::Emit { id, product } => super::reify_how::emit_from_how(id, product),
         ReifyCommands::Kotlin { out, namespace, product, force } => {
             emit(Lang::Kotlin, out, namespace, product, force)
         }
@@ -150,7 +159,7 @@ fn emit(lang: Lang, out: Option<PathBuf>, namespace: Option<String>, product: Op
 }
 
 /// Print the one-run summary for an emit.
-fn report(name: &str, root: &std::path::Path, subdir: &str, mode: &str, plan: &ReifyPlan, counts: (usize, usize, usize), verify_hint: &str) {
+pub(super) fn report(name: &str, root: &std::path::Path, subdir: &str, mode: &str, plan: &ReifyPlan, counts: (usize, usize, usize), verify_hint: &str) {
     let (written, kept, stale) = counts;
     println!(
         "reified '{name}' → {} ({subdir}, {mode}) — {written} file(s) written{}{} across {} aggregate(s)",
@@ -173,7 +182,7 @@ fn backends_list() -> BoxResult {
 }
 
 /// Everything an emit/manifest run needs, resolved once.
-type ReifyInputs = (
+pub(super) type ReifyInputs = (
     String,
     DomainGraph,
     Vec<product_core::pf::decider::Decider>,
@@ -182,7 +191,7 @@ type ReifyInputs = (
 );
 
 /// Resolve everything the manifest needs: product, graph, artifacts, options.
-fn resolve_inputs(namespace: Option<String>, product: Option<String>) -> Result<ReifyInputs, Box<dyn std::error::Error>> {
+pub(super) fn resolve_inputs(namespace: Option<String>, product: Option<String>) -> Result<ReifyInputs, Box<dyn std::error::Error>> {
     let (name, graph) = require_domain(product.as_deref())?;
     let deciders = load_deciders(Some(&name))?;
     let projectors = load_projectors(Some(&name))?;
@@ -209,29 +218,8 @@ fn manifest(out: Option<PathBuf>, namespace: Option<String>, product: Option<Str
 }
 
 fn plugin(cmd: &str, out: Option<PathBuf>, namespace: Option<String>, product: Option<String>, force: bool) -> BoxResult {
-    use std::io::Write;
-    use std::process::{Command, Stdio};
     let (name, graph, deciders, projectors, opts) = resolve_inputs(namespace, product)?;
-    let json = product_core::pf::reify_manifest::manifest_json(&graph, &deciders, &projectors, &opts)?;
-    let mut child = Command::new("sh")
-        .arg("-c")
-        .arg(cmd)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .map_err(|e| format!("failed to start backend plugin: {e}"))?;
-    {
-        let mut stdin = child.stdin.take().ok_or("plugin has no stdin")?;
-        stdin.write_all(json.as_bytes())?;
-    } // closing stdin lets the plugin finish
-    let output = child.wait_with_output()?;
-    if !output.status.success() {
-        return Err(format!("plugin failed ({}): {}", output.status, String::from_utf8_lossy(&output.stderr)).into());
-    }
-    let plan = product_core::pf::reify_backend::external_plan(
-        &String::from_utf8_lossy(&output.stdout), &graph, &deciders, &projectors, &opts,
-    )?;
+    let plan = super::reify_how::run_external(cmd, &graph, &deciders, &projectors, &opts)?;
     let root = out.unwrap_or_else(|| default_out(&name, "plugin"));
     let stale = remove_stale(&root, &plan);
     let (written, kept) = write_plan(&root, &plan, force)?;
@@ -242,7 +230,7 @@ fn plugin(cmd: &str, out: Option<PathBuf>, namespace: Option<String>, product: O
 /// Delete generated files listed in the previous run's manifest that this
 /// plan no longer produces (e.g. a decider was removed, or the mode changed).
 /// Scaffolds are never in the manifest, so realiser-owned files are safe.
-fn remove_stale(root: &std::path::Path, plan: &ReifyPlan) -> usize {
+pub(super) fn remove_stale(root: &std::path::Path, plan: &ReifyPlan) -> usize {
     let Ok(prev) = std::fs::read_to_string(root.join("provenance.g.json")) else { return 0 };
     let Ok(v) = serde_json::from_str::<serde_json::Value>(&prev) else { return 0 };
     let current: std::collections::BTreeSet<&str> =
@@ -257,7 +245,7 @@ fn remove_stale(root: &std::path::Path, plan: &ReifyPlan) -> usize {
     removed
 }
 
-fn write_plan(root: &std::path::Path, plan: &ReifyPlan, force: bool) -> Result<(usize, usize), Box<dyn std::error::Error>> {
+pub(super) fn write_plan(root: &std::path::Path, plan: &ReifyPlan, force: bool) -> Result<(usize, usize), Box<dyn std::error::Error>> {
     let (mut written, mut kept) = (0usize, 0usize);
     for f in &plan.files {
         let path = root.join(&f.path);

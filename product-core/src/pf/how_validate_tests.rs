@@ -82,3 +82,30 @@ fn unapplied_unenforced_principle_fails_earn_their_place() {
     });
     assert!(validate_how(&c).iter().any(|x| x.path == "earn-their-place"));
 }
+
+#[test]
+fn realisation_rules_gate_backend_tier_and_plugin_cmd() {
+    let mut c = example();
+    c.realisations = vec![
+        Realisation { id: "api".into(), backend: "csharp".into(), tier: Some("full".into()), ..Default::default() },
+        Realisation { id: "app".into(), backend: "kotlin".into(), ..Default::default() },
+    ];
+    assert!(!has_blocking(&validate_how(&c)), "a valid realisations block passes");
+
+    // kotlin cannot take the full tier (§4.2 — the realiser owns the design).
+    c.realisations[1].tier = Some("full".into());
+    assert!(validate_how(&c).iter().any(|x| x.path == "tier" && x.focus == "app"));
+    c.realisations[1].tier = None;
+
+    // plugin backends must carry the command; unknown backends are findings.
+    c.realisations.push(Realisation { id: "ts".into(), backend: "plugin".into(), ..Default::default() });
+    assert!(validate_how(&c).iter().any(|x| x.path == "plugin_cmd"));
+    c.realisations[2].plugin_cmd = Some("node render.js".into());
+    assert!(!has_blocking(&validate_how(&c)));
+    c.realisations.push(Realisation { id: "x".into(), backend: "cobol".into(), ..Default::default() });
+    assert!(validate_how(&c).iter().any(|x| x.path == "backend"));
+
+    // duplicate ids are findings.
+    c.realisations.push(Realisation { id: "api".into(), backend: "csharp".into(), ..Default::default() });
+    assert!(validate_how(&c).iter().any(|x| x.path == "id" && x.message.contains("unique")));
+}

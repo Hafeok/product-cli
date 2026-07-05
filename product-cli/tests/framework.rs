@@ -1542,3 +1542,37 @@ fn tc_1080_external_plugin_backends_speak_the_manifest_protocol() {
     h.run(&["domain", "new", "event", "OrderCancelled", "--label", "Cancelled", "--context", "Catalog", "--changes", "Order"]).assert_exit(0);
     h.run(&["reify", "check", "--out", "gen-ts"]).assert_exit(1).assert_stderr_contains("drift");
 }
+
+#[test]
+fn tc_1081_the_how_contracts_realisations_drive_reify_emit() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    // No contract yet → a helpful error, not a crash.
+    h.run(&["reify", "emit"]).assert_exit(1).assert_stderr_contains("how-contract");
+    // The §4.2 realisations block: the captured backend/tier/namespace decision.
+    h.write(
+        ".product/how-contract.yaml",
+        "blueprint: bookstore\napplication_contract:\n  id: app\n  language: mixed\n  statements:\n  - id: s1\n    statement: adapters stay thin\nrealisations:\n- id: api\n  backend: csharp\n  tier: oracle-only\n  namespace: Shop.Api\n  out: gen-api\n- id: app\n  backend: kotlin\n  namespace: shopapp\n  out: gen-app\n",
+    );
+    h.run(&["reify", "emit"]).assert_exit(0).assert_stdout_contains("csharp oracle-only, from the How").assert_stdout_contains("kotlin oracle-only, from the How");
+    assert!(h.exists("gen-api/Shop.Api.Conformance/Oracle.g.cs"), "csharp realisation at its declared out/namespace");
+    assert!(h.exists("gen-app/src/main/kotlin/shopapp/Oracle.g.kt"), "kotlin realisation at its declared out/namespace");
+    h.run(&["reify", "check", "--out", "gen-api"]).assert_exit(0);
+    h.run(&["reify", "check", "--out", "gen-app"]).assert_exit(0);
+    // --id runs a single declared realisation; unknown ids name the declared set.
+    h.run(&["reify", "emit", "--id", "app"]).assert_exit(0);
+    h.run(&["reify", "emit", "--id", "ghost"]).assert_exit(1).assert_stderr_contains("declared: api, app");
+    // A realisation for an undeclared system is refused at emit time…
+    h.write(
+        ".product/how-contract.yaml",
+        "blueprint: bookstore\napplication_contract:\n  id: app\n  language: mixed\n  statements:\n  - id: s1\n    statement: adapters stay thin\nrealisations:\n- id: api\n  backend: csharp\n  system: sys-ghost\n",
+    );
+    h.run(&["reify", "emit"]).assert_exit(1).assert_stderr_contains("no such system");
+    // …and `product how validate` gates the tier rules (§4.2).
+    h.write(
+        ".product/how-contract.yaml",
+        "blueprint: bookstore\napplication_contract:\n  id: app\n  language: mixed\n  statements:\n  - id: s1\n    statement: adapters stay thin\nrealisations:\n- id: app\n  backend: kotlin\n  tier: full\n",
+    );
+    h.run(&["how", "validate"]).assert_exit(1).assert_stderr_contains("oracle-only tier");
+}
