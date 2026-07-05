@@ -195,6 +195,31 @@ fn resolve(id: Option<String>, product: Option<&str>) -> Result<ds_store::Stored
     Ok(ds_store::load(&base(product), &id)?)
 }
 
+/// The How-bound design system as a reify input, when one is bound (§4.5).
+pub(crate) fn load_bound_ds(product: Option<&str>) -> Result<Option<product_core::pf::reify_ds::DsSpec>, Box<dyn std::error::Error>> {
+    let Some(id) = bound_id(product) else { return Ok(None) };
+    let stored = product_core::pf::ds_store::load(&super::shared::artifact_dir(product, ""), &id)?;
+    Ok(Some(product_core::pf::reify_ds::DsSpec::from_source(stored.manifest.clone(), &stored.source)))
+}
+
+/// Design-system drift: the tree was generated against a pinned manifest hash;
+/// fail when the stored manifest has moved past it (or the binding changed).
+pub(crate) fn check_ds_drift(provenance: &str, product: Option<&str>) -> BoxResult {
+    let Some((rec_id, rec_hash)) = product_core::pf::reify::recorded_ds(provenance) else { return Ok(()) };
+    let Some(spec) = load_bound_ds(product)? else {
+        return Err(format!(
+            "drift — the tree was generated with design system '{rec_id}', but the How no longer binds one"
+        ).into());
+    };
+    if spec.manifest.design_system.id != rec_id || spec.hash != rec_hash {
+        return Err(format!(
+            "drift — the design system has moved past the generated code:\n  generated from '{rec_id}' sha256:{rec_hash}\n  currently bound '{}' sha256:{}\n  regenerate with `product reify csharp` / `product reify web`",
+            spec.manifest.design_system.id, spec.hash
+        ).into());
+    }
+    Ok(())
+}
+
 /// The How contract's bound design-system id, if any.
 pub(crate) fn bound_id(product: Option<&str>) -> Option<String> {
     let path = super::shared::artifact_dir(product, "").join("how-contract.yaml");

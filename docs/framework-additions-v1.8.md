@@ -260,6 +260,44 @@ Proposed edits to the normative summary (house numbering to be settled upstream)
 
 ---
 
+## 8a. §11 — the design system as a bound, reify-consumed artifact
+
+**Gap.** §11 (Preview) defines the manifest a conforming design system publishes, but
+leaves it a free-floating file a validator inspects after the fact: nothing binds a
+What/How to *a particular* design system, the manifest carries no implementation
+(no component sources, no token values — no pixels), and reification proceeds happily
+past a coverage gap the preview check would have caught.
+
+**Proposed additions:**
+
+1. **The binding is How.** The How contract's screen-composition contract (§4.5) names
+   the design system it realises screens against, by id + version. The choice is a
+   graph fact, not a CLI flag; a stored system is an addressable artifact
+   (`.product/design-systems/<id>/`, vendored by value like every other seam input).
+2. **The manifest gains an implementation half** — the *design bundle*: per-component
+   implementation pointers keyed by target (`web`, …), token **values** per declared
+   theme, and Atomic-Design **templates**. The declaration/implementation split stays
+   explicit: §11.3 wholeness checks the declaration; a **bundle check** confirms every
+   catalog CIO has an implementation per declared target and every token a value per
+   declared theme.
+3. **Coupling is a plan-time gate.** Where a design system is bound, a reify run
+   resolves `reify(AIO, context) → CIO` for every UI step *before emitting anything*;
+   a §11.2 coverage gap fails the plan. The resolved map is emitted by value
+   (`design-system.g.json`, hash-pinned) together with the token surface
+   (`tokens.g.css`) and a design-system provider seam beside the screen seam.
+4. **Drift extends to the design system.** Provenance pins the manifest hash alongside
+   the graph hash; the drift gate reports a stale tree when either moves.
+5. **A presentation target exists.** The `web` backend renders one page per UI step,
+   composed only of catalog CIOs (closed vocabulary, checkable on the output's
+   `data-cio` attributes), styled exclusively through token custom properties — the
+   reference instance §11's Preview note asks for.
+
+**Implementation:** `pf/manifest.rs` (+`manifest_bundle.rs`), `pf/ds_store.rs`,
+`pf/reify_ds.rs`, `pf/reify_web.rs`, the `product design-system` CLI family, and the
+`product_design_system_*` MCP tools (How phase). Verified by tc_1090–tc_1094.
+
+---
+
 ## 9. Compatibility and versioning
 
 Everything here is **additive** — v1.7.0 graphs remain valid v1.8.0 graphs — hence a
@@ -283,3 +321,4 @@ minor bump to **1.8.0**. Two operational notes:
 | Realisation + tier | §4.2 | `pf/how.rs`, `pf/how_validate.rs`, `reify emit` | §4.2 unit tests, tc_1081 |
 | Canonical REST projection | §4.4 | `pf/reify_openapi.rs` | openapi tests, tc_1077 |
 | Provenance + drift gate | §7.3.1 | `reify check`, `provenance.g.json` | tc_1074/1078/1080 |
+| Design-system binding + bundle + web target | §11 | `pf/ds_store.rs`, `pf/reify_ds.rs`, `pf/reify_web.rs` | tc_1090–1094 |

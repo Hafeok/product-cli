@@ -152,7 +152,7 @@ fn emit(lang: Lang, out: Option<PathBuf>, namespace: Option<String>, product: Op
         what_version: what_version(Some(&name)),
         product: name.clone(),
         oracle_only,
-        design_system: load_bound_ds(Some(&name))?,
+        design_system: super::design_system::load_bound_ds(Some(&name))?,
     };
     let (plan, subdir, mode, verify_hint) = match &lang {
         Lang::Csharp { oracle_only } => (
@@ -226,7 +226,7 @@ pub(super) fn resolve_inputs(namespace: Option<String>, product: Option<String>)
         what_version: what_version(Some(&name)),
         product: name.clone(),
         oracle_only: true,
-        design_system: load_bound_ds(Some(&name))?,
+        design_system: super::design_system::load_bound_ds(Some(&name))?,
     };
     Ok((name, graph, deciders, projectors, opts))
 }
@@ -312,7 +312,7 @@ fn check(out: Option<PathBuf>, product: Option<String>) -> BoxResult {
         )
     })?;
     let recorded = recorded_hash(&text)?;
-    check_ds_drift(&text, Some(&name))?;
+    super::design_system::check_ds_drift(&text, Some(&name))?;
     if recorded == current {
         println!("conformant — generated code at {} matches the What graph (sha256:{current})", root.display());
         return Ok(());
@@ -322,31 +322,6 @@ fn check(out: Option<PathBuf>, product: Option<String>) -> BoxResult {
     eprintln!("  current graph  sha256:{current}");
     eprintln!("  regenerate with `product reify csharp --out {}`", root.display());
     Err("reified code is stale (graph drift)".into())
-}
-
-/// The How-bound design system as a reify input, when one is bound (§4.5).
-pub(super) fn load_bound_ds(product: Option<&str>) -> Result<Option<product_core::pf::reify_ds::DsSpec>, Box<dyn std::error::Error>> {
-    let Some(id) = super::design_system::bound_id(product) else { return Ok(None) };
-    let stored = product_core::pf::ds_store::load(&super::shared::artifact_dir(product, ""), &id)?;
-    Ok(Some(product_core::pf::reify_ds::DsSpec::from_source(stored.manifest.clone(), &stored.source)))
-}
-
-/// Design-system drift: the tree was generated against a pinned manifest hash;
-/// fail when the stored manifest has moved past it (or the binding changed).
-fn check_ds_drift(provenance: &str, product: Option<&str>) -> BoxResult {
-    let Some((rec_id, rec_hash)) = product_core::pf::reify::recorded_ds(provenance) else { return Ok(()) };
-    let Some(spec) = load_bound_ds(product)? else {
-        return Err(format!(
-            "drift — the tree was generated with design system '{rec_id}', but the How no longer binds one"
-        ).into());
-    };
-    if spec.manifest.design_system.id != rec_id || spec.hash != rec_hash {
-        return Err(format!(
-            "drift — the design system has moved past the generated code:\n  generated from '{rec_id}' sha256:{rec_hash}\n  currently bound '{}' sha256:{}\n  regenerate with `product reify csharp` / `product reify web`",
-            spec.manifest.design_system.id, spec.hash
-        ).into());
-    }
-    Ok(())
 }
 
 /// The configured product name plus its captured What graph.

@@ -152,6 +152,18 @@ What, never alongside an unsettled one (§2.1, step 6).
    literals. Resolve **content** keys against the content store per locale (§4.6).
    Where an AIO cannot honestly cross to a target class, declare it *unreifiable* —
    a recorded gap, not a silent one.
+
+   On the CLI this is the `product design-system` family: `add <manifest>` vendors
+   a §11.3 manifest (declaration half **plus** its implementation bundle — per-target
+   component sources, token values per theme, templates) under
+   `.product/design-systems/<id>/`; `validate` runs the wholeness + bundle checks;
+   `couple` is the §11.2 coverage check; `bind <id>` records the choice on the How
+   contract. Once bound, every `product reify` backend resolves it: the coupling
+   becomes a *plan-time gate* (a coverage gap fails the emit), the reified tree
+   carries `design-system.g.json` (the reify(AIO, context) → CIO map by value) +
+   `tokens.g.css`, and `product reify web` renders one on-system page per UI step,
+   styled exclusively through tokens. `product reify check` catches design-system
+   drift exactly as it catches graph drift.
 4. **Generate the interface contracts** from the domain model (§4.4) — OpenAPI,
    AsyncAPI, and so on — never hand-written, so the published surface cannot drift
    from the meaning.

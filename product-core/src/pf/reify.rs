@@ -7,8 +7,6 @@
 //! (canonical Turtle + decider YAMLs) so `reify check` is a drift gate:
 //! generated code that no longer matches the graph hash is stale.
 
-use serde_json::json;
-
 use crate::error::{ProductError, Result};
 
 use super::decider::Decider;
@@ -22,6 +20,9 @@ use super::reify_program::{program_file, RunnerEntry};
 use super::reify_runtime as runtime;
 use super::reify_scenarios::tests_file;
 use super::reify_types::{agg_types_file, domain_file};
+
+pub use super::reify_ds::recorded_ds;
+pub use super::reify_prov::{provenance_json, recorded_hash};
 
 /// Inputs the generator is parameterized by (all resolved by the adapter).
 pub struct ReifyOptions {
@@ -123,7 +124,7 @@ pub fn plan_csharp(
     }
     files.extend(integration_files(graph, opts, &hdr, &sorted, &sorted_p));
     files.extend(conformance_files(opts, &hdr, &sorted, &aggs, &sorted_p));
-    files.extend(design_system_files(graph, opts, &hdr, &graph_hash)?);
+    files.extend(super::reify_ds::stage_files(graph, opts, &hdr, &graph_hash)?);
     files.push(gen(
         "openapi.g.json",
         super::reify_openapi::openapi_file(graph, &sorted, &sorted_p, &opts.product, &opts.what_version, &graph_hash),
@@ -371,70 +372,6 @@ fn conformance_files(
 
 pub(crate) fn gen(path: &str, content: String) -> GenFile {
     GenFile { path: path.to_string(), content, overwrite: true }
-}
-
-/// The §11 design-system stage: resolve the bound system against the graph
-/// (a coupling gap fails the plan) and emit the component map by value, the
-/// token surface, and the provider seam next to the screen seam.
-pub(crate) fn design_system_files(
-    graph: &DomainGraph,
-    opts: &ReifyOptions,
-    hdr: &str,
-    graph_hash: &str,
-) -> Result<Vec<GenFile>> {
-    let Some(spec) = &opts.design_system else { return Ok(Vec::new()) };
-    let resolved = super::reify_ds::resolve(spec, graph)?;
-    let ns = &opts.namespace;
-    let seam_home = if opts.oracle_only { format!("{ns}.Conformance") } else { format!("{ns}.Domain") };
-    Ok(vec![
-        gen("design-system.g.json", super::reify_ds::ds_json(&resolved, spec, graph_hash)),
-        gen("tokens.g.css", super::reify_ds::tokens_css(spec)),
-        gen(&format!("{seam_home}/DesignSystem.g.cs"), super::reify_ds::catalog_cs(hdr, ns, &resolved)),
-    ])
-}
-
-/// The machine-readable provenance manifest (`provenance.g.json`).
-pub(crate) fn provenance_json(opts: &ReifyOptions, graph_hash: &str, files: &[GenFile]) -> String {
-    let generated: Vec<&str> =
-        files.iter().filter(|f| f.overwrite).map(|f| f.path.as_str()).collect();
-    let mut v = json!({
-        "product": opts.product,
-        "namespace": opts.namespace,
-        "what_version": opts.what_version,
-        "graph_hash": format!("sha256:{graph_hash}"),
-        "generator": "product reify csharp",
-        "generated_files": generated,
-    });
-    if let (Some(spec), Some(obj)) = (&opts.design_system, v.as_object_mut()) {
-        let ds = &spec.manifest.design_system;
-        obj.insert("design_system".to_string(), json!({
-            "id": ds.id, "version": ds.version, "hash": format!("sha256:{}", spec.hash),
-        }));
-    }
-    let mut s = serde_json::to_string_pretty(&v).unwrap_or_default();
-    s.push('\n');
-    s
-}
-
-/// Extract the recorded graph hash from a `provenance.g.json` text.
-pub fn recorded_hash(provenance: &str) -> Result<String> {
-    let v: serde_json::Value = serde_json::from_str(provenance)
-        .map_err(|e| ProductError::ConfigError(format!("invalid provenance.g.json: {e}")))?;
-    v.get("graph_hash")
-        .and_then(|h| h.as_str())
-        .map(|h| h.trim_start_matches("sha256:").to_string())
-        .ok_or_else(|| ProductError::ConfigError("provenance.g.json carries no graph_hash".to_string()))
-}
-
-/// Extract the recorded design-system (id, hash) from a `provenance.g.json`
-/// text, when the tree was generated with a bound design system.
-pub fn recorded_ds(provenance: &str) -> Option<(String, String)> {
-    let v: serde_json::Value = serde_json::from_str(provenance).ok()?;
-    let ds = v.get("design_system")?;
-    Some((
-        ds.get("id")?.as_str()?.to_string(),
-        ds.get("hash")?.as_str()?.trim_start_matches("sha256:").to_string(),
-    ))
 }
 
 #[cfg(test)]

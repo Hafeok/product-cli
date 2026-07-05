@@ -17,6 +17,7 @@ use crate::error::{ProductError, Result};
 use super::manifest::{applies, DsManifest};
 use super::model::{ContextOfUse, DomainGraph};
 use super::provenance::content_hash;
+use super::reify::{gen, GenFile, ReifyOptions};
 
 /// A design system as a reify input: the parsed manifest plus the hash of its
 /// stored YAML (the identity `reify check` pins alongside the graph hash).
@@ -263,6 +264,37 @@ public static class DesignSystemCatalog\n{{\n    public static readonly IReadOnl
 
 fn cs(s: &str) -> String {
     super::reify_ident::cs_escape(s)
+}
+
+/// The §11 design-system stage: resolve the bound system against the graph
+/// (a coupling gap fails the plan) and emit the component map by value, the
+/// token surface, and the provider seam next to the screen seam.
+pub(crate) fn stage_files(
+    graph: &DomainGraph,
+    opts: &ReifyOptions,
+    hdr: &str,
+    graph_hash: &str,
+) -> Result<Vec<GenFile>> {
+    let Some(spec) = &opts.design_system else { return Ok(Vec::new()) };
+    let resolved = super::reify_ds::resolve(spec, graph)?;
+    let ns = &opts.namespace;
+    let seam_home = if opts.oracle_only { format!("{ns}.Conformance") } else { format!("{ns}.Domain") };
+    Ok(vec![
+        gen("design-system.g.json", ds_json(&resolved, spec, graph_hash)),
+        gen("tokens.g.css", tokens_css(spec)),
+        gen(&format!("{seam_home}/DesignSystem.g.cs"), catalog_cs(hdr, ns, &resolved)),
+    ])
+}
+
+/// Extract the recorded design-system (id, hash) from a `provenance.g.json`
+/// text, when the tree was generated with a bound design system.
+pub fn recorded_ds(provenance: &str) -> Option<(String, String)> {
+    let v: serde_json::Value = serde_json::from_str(provenance).ok()?;
+    let ds = v.get("design_system")?;
+    Some((
+        ds.get("id")?.as_str()?.to_string(),
+        ds.get("hash")?.as_str()?.trim_start_matches("sha256:").to_string(),
+    ))
 }
 
 #[cfg(test)]

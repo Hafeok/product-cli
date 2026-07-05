@@ -12,6 +12,8 @@ design_system:
     form_factor: [phone, tablet]
     modality:    [touch, pointer]
 
+  themes: [light]                   # the implementation half: token values per theme
+
   components:                       # the CIO catalog
     - id: searchable-list
       tokens: [color.fg, color.bg, space.inset, type.body]
@@ -59,12 +61,12 @@ design_system:
         rationale: "global destinations behind a drawer on a phone" }
     - { aio: navigate,           when: { scope: root, form_factor: tablet }, cio: rail }
 
-  tokens:                           # the token surface
-    - { id: color.fg,        type: color }
-    - { id: color.bg,        type: color }
-    - { id: color.accent,    type: color }
-    - { id: color.on-accent, type: color }
-    - { id: space.inset,     type: dimension }
-    - { id: type.body,       type: typography }
-    - { id: type.label,      type: typography }
-    - { id: type.display,    type: typography }
+  tokens:                           # the token surface (+ resolved values per theme)
+    - { id: color.fg,        type: color,      values: { light: "#1a1d21" } }
+    - { id: color.bg,        type: color,      values: { light: "#ffffff" } }
+    - { id: color.accent,    type: color,      values: { light: "#3366ff" } }
+    - { id: color.on-accent, type: color,      values: { light: "#ffffff" } }
+    - { id: space.inset,     type: dimension,  values: { light: "12px" } }
+    - { id: type.body,       type: typography, values: { light: "400 15px/1.5 system-ui" } }
+    - { id: type.label,      type: typography, values: { light: "600 14px/1 system-ui" } }
+    - { id: type.display,    type: typography, values: { light: "700 28px/1.2 system-ui" } }

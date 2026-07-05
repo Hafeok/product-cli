@@ -71,6 +71,7 @@ pub mod reify_infer;
 pub mod reify_openapi;
 pub mod reify_program;
 pub mod reify_projector;
+pub mod reify_prov;
 pub mod reify_runtime;
 pub mod reify_screen;
 pub mod reify_scenarios;
