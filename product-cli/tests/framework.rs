@@ -1576,3 +1576,19 @@ fn tc_1081_the_how_contracts_realisations_drive_reify_emit() {
     );
     h.run(&["how", "validate"]).assert_exit(1).assert_stderr_contains("oracle-only tier");
 }
+
+#[test]
+fn tc_1082_unit_sliced_manifest_keeps_the_product_hash() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    let full: serde_json::Value =
+        serde_json::from_str(&h.run(&["reify", "manifest"]).stdout).expect("full manifest");
+    let unit: serde_json::Value =
+        serde_json::from_str(&h.run(&["reify", "manifest", "--unit", "Order-decider"]).stdout).expect("unit manifest");
+    assert_eq!(unit["aggregates"].as_array().map(Vec::len), Some(1));
+    // The slice is a view of the same specification — identical pin.
+    assert_eq!(unit["graph_hash"], full["graph_hash"]);
+    // Unknown units name what exists.
+    h.run(&["reify", "manifest", "--unit", "ghost"]).assert_exit(1).assert_stderr_contains("Order-decider");
+}

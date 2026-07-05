@@ -263,6 +263,37 @@ fn manifest_carries_the_whole_oracle_by_value() {
 }
 
 #[test]
+fn unit_slice_cuts_the_manifest_to_a_neighbourhood_with_the_full_hash() {
+    use crate::pf::reify_manifest::{manifest, manifest_unit};
+    // An unrelated projector: folds an event no retained decider produces.
+    let mut stray = fixture_projector();
+    stray.id = "stray-projector".into();
+    stray.projects_for = "StrayView".into();
+    stray.folds = vec!["UnrelatedEvent".into()];
+    let projectors = [fixture_projector(), stray];
+    let full = manifest(&fixture_graph(), &[fixture_decider()], &projectors, &opts()).expect("full");
+    let sliced = manifest_unit(&fixture_graph(), &[fixture_decider()], &projectors, &opts(), "order-decider")
+        .expect("slice");
+    // The neighbourhood: the decider, the projector folding its events —
+    // the stray is gone; the screen surfacing OrderSummary stays.
+    assert_eq!(sliced.aggregates.len(), 1);
+    assert_eq!(sliced.projectors.len(), 1);
+    assert_eq!(sliced.projectors[0].projector_id, "ordersummary-projector");
+    assert_eq!(sliced.flows.len(), 1);
+    assert_eq!(sliced.screens.len(), 1);
+    // A slice is a view of the same spec: identical pin, unlike a sub-spec.
+    assert_eq!(sliced.graph_hash, full.graph_hash);
+    // Slicing by the projector pulls its upstream decider in.
+    let by_p = manifest_unit(&fixture_graph(), &[fixture_decider()], &projectors, &opts(), "ordersummary-projector")
+        .expect("slice");
+    assert_eq!(by_p.aggregates.len(), 1);
+    assert_eq!(by_p.projectors.len(), 1);
+    // Unknown units name what exists.
+    let err = manifest_unit(&fixture_graph(), &[fixture_decider()], &projectors, &opts(), "ghost").err().map(|e| e.to_string()).unwrap_or_default();
+    assert!(err.contains("order-decider"), "unknown unit names the known set: {err}");
+}
+
+#[test]
 fn backend_registry_resolves_and_rejects() {
     use crate::pf::reify_backend::{backend, backends};
     assert_eq!(backends().len(), 2);

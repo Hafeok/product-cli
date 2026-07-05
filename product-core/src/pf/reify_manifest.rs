@@ -128,6 +128,77 @@ pub fn manifest(
     })
 }
 
+/// The manifest sliced to one work unit's neighbourhood — the frozen SPMC
+/// context for realising a single Decider or Projector, cheap-model sized:
+/// the named unit, its counterpart(s) across the event stream (projectors
+/// folding the decider's events, or deciders feeding the projector's
+/// folds), the flows the retained set fully covers, and the screens that
+/// surface a retained read model or offer a retained command. The
+/// `graph_hash` stays the **whole product's** — a slice is a view of the
+/// same specification, pinned identically.
+pub fn manifest_unit(
+    graph: &DomainGraph,
+    deciders: &[Decider],
+    projectors: &[Projector],
+    opts: &ReifyOptions,
+    unit: &str,
+) -> Result<ReifyManifest> {
+    let full_hash = input_hash(graph, &opts.product, deciders, projectors)?;
+    let (ds, ps) = slice_artifacts(deciders, projectors, unit)?;
+    let mut m = manifest(graph, &ds, &ps, opts)?;
+    m.graph_hash = format!("sha256:{full_hash}");
+    let handles: std::collections::BTreeSet<&str> =
+        ds.iter().flat_map(|d| d.handles.iter().map(String::as_str)).collect();
+    let read_models: std::collections::BTreeSet<&str> =
+        ps.iter().map(|p| p.projects_for.as_str()).collect();
+    m.screens.retain(|s| {
+        s.surfaces.iter().any(|rm| read_models.contains(rm.as_str()))
+            || s.offers.iter().any(|c| handles.contains(c.as_str()))
+    });
+    Ok(m)
+}
+
+/// Resolve a unit id to the artifacts in its neighbourhood.
+fn slice_artifacts(
+    deciders: &[Decider],
+    projectors: &[Projector],
+    unit: &str,
+) -> Result<(Vec<Decider>, Vec<Projector>)> {
+    if let Some(d) = deciders.iter().find(|d| d.id == unit) {
+        let events: std::collections::BTreeSet<&str> = d
+            .emits
+            .iter()
+            .chain(&d.evolves_from)
+            .map(String::as_str)
+            .collect();
+        let ps = projectors
+            .iter()
+            .filter(|p| p.folds.iter().any(|f| events.contains(f.as_str())))
+            .cloned()
+            .collect();
+        return Ok((vec![d.clone()], ps));
+    }
+    if let Some(p) = projectors.iter().find(|p| p.id == unit) {
+        let folds: std::collections::BTreeSet<&str> =
+            p.folds.iter().map(String::as_str).collect();
+        let ds = deciders
+            .iter()
+            .filter(|d| d.emits.iter().chain(&d.evolves_from).any(|e| folds.contains(e.as_str())))
+            .cloned()
+            .collect();
+        return Ok((ds, vec![p.clone()]));
+    }
+    let known: Vec<&str> = deciders
+        .iter()
+        .map(|d| d.id.as_str())
+        .chain(projectors.iter().map(|p| p.id.as_str()))
+        .collect();
+    Err(crate::error::ProductError::NotFound(format!(
+        "no decider or projector '{unit}' — known units: {}",
+        known.join(", ")
+    )))
+}
+
 /// The manifest as pretty JSON (trailing newline).
 pub fn manifest_json(
     graph: &DomainGraph,
