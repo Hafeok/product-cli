@@ -30,6 +30,7 @@ fn manifest_tool() -> ToolDef {
         input_schema: serde_json::json!({
             "type": "object",
             "properties": {
+                "unit": {"type": "string", "description": "Slice to one work unit's neighbourhood: a decider or projector id (frozen SPMC context for a single realisation hole; carries the whole product's graph hash)"},
                 "namespace": {"type": "string", "description": "Type/package namespace (default: PascalCase of the product name)"},
                 "product": {"type": "string"}
             }

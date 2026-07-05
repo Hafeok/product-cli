@@ -75,6 +75,10 @@ pub enum ReifyCommands {
         /// Write to this file (default: stdout)
         #[arg(long)]
         out: Option<PathBuf>,
+        /// Slice to one work unit's neighbourhood: a decider or projector id
+        /// (frozen SPMC context for a single realisation hole; same graph hash)
+        #[arg(long)]
+        unit: Option<String>,
         #[arg(long)]
         namespace: Option<String>,
         #[arg(long)]
@@ -110,7 +114,9 @@ pub(crate) fn handle_reify(cmd: ReifyCommands) -> BoxResult {
         ReifyCommands::Kotlin { out, namespace, product, force } => {
             emit(Lang::Kotlin, out, namespace, product, force)
         }
-        ReifyCommands::Manifest { out, namespace, product } => manifest(out, namespace, product),
+        ReifyCommands::Manifest { out, unit, namespace, product } => {
+            manifest(out, unit, namespace, product)
+        }
         ReifyCommands::Plugin { cmd, out, namespace, product, force } => {
             plugin(&cmd, out, namespace, product, force)
         }
@@ -204,9 +210,18 @@ pub(super) fn resolve_inputs(namespace: Option<String>, product: Option<String>)
     Ok((name, graph, deciders, projectors, opts))
 }
 
-fn manifest(out: Option<PathBuf>, namespace: Option<String>, product: Option<String>) -> BoxResult {
+fn manifest(out: Option<PathBuf>, unit: Option<String>, namespace: Option<String>, product: Option<String>) -> BoxResult {
+    use product_core::pf::reify_manifest as rm;
     let (_, graph, deciders, projectors, opts) = resolve_inputs(namespace, product)?;
-    let json = product_core::pf::reify_manifest::manifest_json(&graph, &deciders, &projectors, &opts)?;
+    let json = match unit {
+        Some(u) => {
+            let m = rm::manifest_unit(&graph, &deciders, &projectors, &opts, &u)?;
+            let mut s = serde_json::to_string_pretty(&m)?;
+            s.push('\n');
+            s
+        }
+        None => rm::manifest_json(&graph, &deciders, &projectors, &opts)?,
+    };
     match out {
         Some(path) => {
             std::fs::write(&path, &json)?;

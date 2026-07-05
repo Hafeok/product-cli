@@ -33,9 +33,13 @@ pub fn handle_backends(_args: &Value, _repo_root: &Path) -> Result<Value, String
 }
 
 pub fn handle_manifest(args: &Value, repo_root: &Path) -> Result<Value, String> {
+    use product_core::pf::reify_manifest as rm;
     let (graph, deciders, projectors, opts) = inputs(args, repo_root)?;
-    let m = product_core::pf::reify_manifest::manifest(&graph, &deciders, &projectors, &opts)
-        .map_err(|e| format!("{e}"))?;
+    let m = match args.get("unit").and_then(|v| v.as_str()) {
+        Some(unit) => rm::manifest_unit(&graph, &deciders, &projectors, &opts, unit),
+        None => rm::manifest(&graph, &deciders, &projectors, &opts),
+    }
+    .map_err(|e| format!("{e}"))?;
     let manifest = serde_json::to_value(&m).map_err(|e| format!("serialize manifest: {e}"))?;
     Ok(json!({ "ok": true, "manifest": manifest }))
 }
