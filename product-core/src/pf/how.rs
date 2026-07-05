@@ -141,6 +141,15 @@ pub struct Realisation {
     pub plugin_cmd: Option<String>,
 }
 
+/// §4.5 — the design system this How binds its screens to (a stored
+/// `.product/design-systems/<id>` manifest), making the choice a graph fact.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
+pub struct DesignSystemBinding {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+}
+
 /// A blueprint's complete How (§4).
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct HowContract {
@@ -165,6 +174,9 @@ pub struct HowContract {
     pub layout_model: Option<String>,
     #[serde(default)]
     pub interface_contracts: Vec<InterfaceContract>,
+    /// §4.5 — the screen-composition contract's bound design system.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design_system: Option<DesignSystemBinding>,
     /// §4.2 — the declared realisations (backend + delegation tier per
     /// system); `product reify emit` runs them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

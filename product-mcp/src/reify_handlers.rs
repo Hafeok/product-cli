@@ -146,7 +146,7 @@ fn inputs(args: &Value, repo_root: &Path) -> Result<(product_core::pf::model::Do
         .flatten()
         .and_then(|c| c.realises_version)
         .unwrap_or_else(|| "unversioned".to_string());
-    Ok((graph, deciders, projectors, ReifyOptions { product, namespace, what_version, oracle_only: false }))
+    Ok((graph, deciders, projectors, ReifyOptions { product, namespace, what_version, oracle_only: false, design_system: None }))
 }
 
 /// Join a caller-supplied relative path under the repo root, rejecting

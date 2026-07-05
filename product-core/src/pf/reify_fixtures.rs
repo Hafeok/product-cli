@@ -165,6 +165,7 @@ pub fn opts() -> ReifyOptions {
         namespace: "Bookstore".into(),
         what_version: "1.0".into(),
         oracle_only: false,
+        design_system: None,
     }
 }
 

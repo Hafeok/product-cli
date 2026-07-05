@@ -29,6 +29,18 @@ pub struct Satisfies {
     pub via: String,
 }
 
+/// The implementation half of one component for one target (e.g. `web`):
+/// where its source lives (relative to the manifest), an optional preview,
+/// and the props its CIO contract exposes.
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
+pub struct ComponentImpl {
+    pub source: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preview: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub props: Vec<String>,
+}
+
 /// One concrete interaction object in the catalog.
 #[derive(Debug, Clone, serde::Deserialize, PartialEq)]
 pub struct Component {
@@ -37,6 +49,20 @@ pub struct Component {
     pub tokens: Vec<String>,
     #[serde(default)]
     pub satisfies: Vec<Satisfies>,
+    /// Implementation pointers, keyed by target (`web`, `kotlin`, …).
+    #[serde(default)]
+    pub implementation: BTreeMap<String, ComponentImpl>,
+}
+
+/// An Atomic-Design page template a UI step's page `conforms_to` (§4.5) —
+/// named regions, each composing only catalog components.
+#[derive(Debug, Clone, serde::Deserialize, PartialEq)]
+pub struct Template {
+    pub id: String,
+    #[serde(default)]
+    pub regions: Vec<String>,
+    #[serde(default)]
+    pub composes: Vec<String>,
 }
 
 /// One reify(aio, when) → cio rule. `when` is a partial predicate over context
@@ -52,12 +78,15 @@ pub struct Reify {
     pub rationale: String,
 }
 
-/// One design token on the surface.
+/// One design token on the surface. `values` is the implementation half —
+/// the resolved value per theme (a `color` token's hex, a `dimension`'s px).
 #[derive(Debug, Clone, serde::Deserialize, PartialEq)]
 pub struct Token {
     pub id: String,
     #[serde(rename = "type", default)]
     pub kind: String,
+    #[serde(default)]
+    pub values: BTreeMap<String, String>,
 }
 
 /// The body of the §11.3 manifest (everything under the `design_system:` key).
@@ -76,6 +105,14 @@ pub struct DesignSystem {
     pub reification: Vec<Reify>,
     #[serde(default)]
     pub tokens: Vec<Token>,
+    /// Implementation targets the bundle claims (`web`, …) — gates the bundle check.
+    #[serde(default)]
+    pub targets: Vec<String>,
+    /// Themes every token value surface must cover (`light`, `dark`, …).
+    #[serde(default)]
+    pub themes: Vec<String>,
+    #[serde(default)]
+    pub templates: Vec<Template>,
 }
 
 /// The §11.3 design-system manifest (the canonical YAML shape).
@@ -122,7 +159,7 @@ pub fn validate_ds(m: &DsManifest) -> Vec<String> {
 
 /// Whether a reification rule's `when` predicate is compatible with a context of
 /// use — an unconstrained dimension is a wildcard (§11.3).
-fn applies(when: &BTreeMap<String, String>, ctx: &ContextOfUse) -> bool {
+pub(crate) fn applies(when: &BTreeMap<String, String>, ctx: &ContextOfUse) -> bool {
     match (&ctx.dimension, &ctx.value) {
         (Some(d), Some(v)) => when.get(d).is_none_or(|wv| wv == v),
         _ => when.is_empty() || when.values().any(|wv| wv == &ctx.id),
