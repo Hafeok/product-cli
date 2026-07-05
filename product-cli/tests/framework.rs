@@ -1502,3 +1502,43 @@ fn tc_1078_reify_kotlin_emits_the_jvm_verification_shell() {
     h.run(&["reify", "kotlin", "--out", "kt"]).assert_exit(0);
     assert_eq!(h.read("kt/src/main/kotlin/bookstore/ConformanceAdapter.kt"), "// realised\n");
 }
+
+#[test]
+fn tc_1079_reify_manifest_is_the_oracle_by_value() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "backends"]).assert_exit(0).assert_stdout_contains("csharp").assert_stdout_contains("kotlin");
+    let out = h.run(&["reify", "manifest"]);
+    assert_eq!(out.exit_code, 0);
+    let m: serde_json::Value = serde_json::from_str(&out.stdout).expect("manifest is JSON");
+    assert_eq!(m["manifest_version"], "1");
+    assert_eq!(m["aggregates"][0]["decider_id"], "Order-decider");
+    assert!(m["graph_hash"].as_str().unwrap_or("").starts_with("sha256:"));
+}
+
+#[test]
+fn tc_1080_external_plugin_backends_speak_the_manifest_protocol() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    // A minimal external backend: manifest JSON in → file plan out.
+    h.write(
+        "ts-backend.py",
+        "import json, sys\nm = json.load(sys.stdin)\nagg = m['aggregates'][0]\nfiles = [\n  {'path': 'src/oracle.ts', 'content': f\"// {m['graph_hash']}\\nexport const handles = {json.dumps(agg['handles'])};\\n\"},\n  {'path': 'src/adapter.ts', 'content': '// realiser-owned\\n', 'overwrite': False},\n]\nprint(json.dumps({'files': files}))\n",
+    );
+    h.run(&["reify", "plugin", "--cmd", "python3 ts-backend.py", "--out", "gen-ts"])
+        .assert_exit(0)
+        .assert_stdout_contains("plugin, external");
+    let oracle = h.read("gen-ts/src/oracle.ts");
+    assert!(oracle.contains("export const handles = [\"PlaceOrder\"];"), "plugin consumed the manifest, got:\n{oracle}");
+    // Provenance was appended by the core, so the drift gate covers plugin trees…
+    h.run(&["reify", "check", "--out", "gen-ts"]).assert_exit(0).assert_stdout_contains("conformant");
+    // …and plugin-declared scaffolds survive regeneration.
+    h.write("gen-ts/src/adapter.ts", "// realised\n");
+    h.run(&["reify", "plugin", "--cmd", "python3 ts-backend.py", "--out", "gen-ts"]).assert_exit(0);
+    assert_eq!(h.read("gen-ts/src/adapter.ts"), "// realised\n");
+    // Graph moves → the plugin tree drifts like any other.
+    h.run(&["domain", "new", "event", "OrderCancelled", "--label", "Cancelled", "--context", "Catalog", "--changes", "Order"]).assert_exit(0);
+    h.run(&["reify", "check", "--out", "gen-ts"]).assert_exit(1).assert_stderr_contains("drift");
+}

@@ -235,6 +235,63 @@ fn kotlin_backend_emits_the_full_verification_shell() {
 }
 
 #[test]
+fn manifest_carries_the_whole_oracle_by_value() {
+    let m = crate::pf::reify_manifest::manifest(
+        &fixture_graph(), &[fixture_decider()], &[fixture_projector()], &opts(),
+    )
+    .expect("manifest");
+    assert_eq!(m.manifest_version, "1");
+    assert_eq!(m.graph_hash, format!("sha256:{}", plan().graph_hash), "same pin as the plans");
+    let agg = &m.aggregates[0];
+    assert_eq!(agg.aggregate, "Order");
+    assert_eq!(agg.commands["PlaceOrder"]["amount"], Some("long"));
+    assert_eq!(agg.scenarios.len(), 2);
+    let p = &m.projectors[0];
+    assert_eq!(p.view["count"], Some("long"));
+    // Flow chain baked: the accepted outcome with its emitted event.
+    let flow = &m.flows[0];
+    assert_eq!(flow.commands[0].decider_id, "order-decider");
+    assert!(matches!(&flow.commands[0].outcome, crate::pf::decider_sim::Outcome::Accepted(e) if e[0].event == "OrderPlaced"));
+    assert_eq!(flow.views[0].projector_id, "ordersummary-projector");
+    // Screen fact: fixture from the projector oracle, waived state absent.
+    let screen = &m.screens[0];
+    assert_eq!(screen.offers, vec!["PlaceOrder"]);
+    assert_eq!(screen.degraded_states, vec![("OrderSummary".to_string(), "empty".to_string())]);
+    assert!(screen.present_fixture.is_some());
+    // And the whole document serializes.
+    assert!(serde_json::to_string(&m).expect("json").contains("\"reject\""));
+}
+
+#[test]
+fn backend_registry_resolves_and_rejects() {
+    use crate::pf::reify_backend::{backend, backends};
+    assert_eq!(backends().len(), 2);
+    assert!(!backend("csharp").expect("csharp").oracle_only_forced());
+    assert!(backend("kotlin").expect("kotlin").oracle_only_forced());
+    assert!(backend("cobol").is_err());
+}
+
+#[test]
+fn external_plan_parses_appends_provenance_and_rejects_escapes() {
+    use crate::pf::reify_backend::external_plan;
+    let (g, d, p, o) = (fixture_graph(), [fixture_decider()], [fixture_projector()], opts());
+    let plan = external_plan(
+        r#"{"files": [{"path": "src/x.ts", "content": "// hi"}, {"path": "adapter.ts", "content": "", "overwrite": false}]}"#,
+        &g, &d, &p, &o,
+    )
+    .expect("plan");
+    assert_eq!(plan.files.len(), 3, "two plugin files + provenance");
+    assert!(!plan.files[1].overwrite, "scaffold flag honoured");
+    let prov = &plan.files[2];
+    assert_eq!(prov.path, "provenance.g.json");
+    assert_eq!(recorded_hash(&prov.content).expect("hash"), plan.graph_hash, "check works on plugin trees");
+    assert!(!prov.content.contains("adapter.ts\""), "scaffolds excluded from the manifest");
+    for bad in [r#"{"files": [{"path": "/etc/x"}]}"#, r#"{"files": [{"path": "a/../../x"}]}"#] {
+        assert!(external_plan(bad, &g, &d, &p, &o).is_err(), "escape rejected: {bad}");
+    }
+}
+
+#[test]
 fn realise_csharp_cell_is_valid_task_type_yaml() {
     for p in [plan(), oracle_plan()] {
         let cell = &file(&p, "realise-csharp.cell.g.yaml").content;

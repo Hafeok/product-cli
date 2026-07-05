@@ -20,6 +20,8 @@ use super::BoxResult;
 
 #[derive(Subcommand)]
 pub enum ReifyCommands {
+    /// List the built-in language backends (external ones run via `plugin`)
+    Backends,
     /// Drift gate — fail when emitted code no longer matches the graph hash
     Check {
         /// The directory a previous `reify csharp` emitted into
@@ -60,16 +62,48 @@ pub enum ReifyCommands {
         #[arg(long)]
         force: bool,
     },
+    /// Emit the language-neutral reify manifest — the whole oracle, by value, as JSON
+    Manifest {
+        /// Write to this file (default: stdout)
+        #[arg(long)]
+        out: Option<PathBuf>,
+        #[arg(long)]
+        namespace: Option<String>,
+        #[arg(long)]
+        product: Option<String>,
+    },
+    /// Run an external backend: pipe the manifest to CMD, write the file plan it answers
+    Plugin {
+        /// Shell command implementing the backend — reads the manifest JSON on
+        /// stdin, answers {"files": [{"path", "content", "overwrite"?}]} on stdout
+        #[arg(long)]
+        cmd: String,
+        /// Output directory (default: reified/<product>/plugin)
+        #[arg(long)]
+        out: Option<PathBuf>,
+        #[arg(long)]
+        namespace: Option<String>,
+        #[arg(long)]
+        product: Option<String>,
+        /// Also rewrite files the plugin marks overwrite: false
+        #[arg(long)]
+        force: bool,
+    },
 }
 
 pub(crate) fn handle_reify(cmd: ReifyCommands) -> BoxResult {
     match cmd {
+        ReifyCommands::Backends => backends_list(),
         ReifyCommands::Check { out, product } => check(out, product),
         ReifyCommands::Csharp { out, namespace, oracle_only, product, force } => {
             emit(Lang::Csharp { oracle_only }, out, namespace, product, force)
         }
         ReifyCommands::Kotlin { out, namespace, product, force } => {
             emit(Lang::Kotlin, out, namespace, product, force)
+        }
+        ReifyCommands::Manifest { out, namespace, product } => manifest(out, namespace, product),
+        ReifyCommands::Plugin { cmd, out, namespace, product, force } => {
+            plugin(&cmd, out, namespace, product, force)
         }
     }
 }
@@ -127,6 +161,82 @@ fn report(name: &str, root: &std::path::Path, subdir: &str, mode: &str, plan: &R
     );
     println!("  graph hash sha256:{}", plan.graph_hash);
     println!("  verify: {verify_hint} (from {})", root.display());
+}
+
+fn backends_list() -> BoxResult {
+    for b in product_core::pf::reify_backend::backends() {
+        println!("{:<10} {}{}", b.id(), b.description(),
+            if b.oracle_only_forced() { " [oracle-only]" } else { "" });
+    }
+    println!("(external backends: `product reify plugin --cmd <command>` — manifest JSON in, file plan out)");
+    Ok(())
+}
+
+/// Everything an emit/manifest run needs, resolved once.
+type ReifyInputs = (
+    String,
+    DomainGraph,
+    Vec<product_core::pf::decider::Decider>,
+    Vec<product_core::pf::projector::Projector>,
+    ReifyOptions,
+);
+
+/// Resolve everything the manifest needs: product, graph, artifacts, options.
+fn resolve_inputs(namespace: Option<String>, product: Option<String>) -> Result<ReifyInputs, Box<dyn std::error::Error>> {
+    let (name, graph) = require_domain(product.as_deref())?;
+    let deciders = load_deciders(Some(&name))?;
+    let projectors = load_projectors(Some(&name))?;
+    let opts = ReifyOptions {
+        namespace: namespace.unwrap_or_else(|| product_core::pf::reify_ident::pascal(&name)),
+        what_version: what_version(Some(&name)),
+        product: name.clone(),
+        oracle_only: true,
+    };
+    Ok((name, graph, deciders, projectors, opts))
+}
+
+fn manifest(out: Option<PathBuf>, namespace: Option<String>, product: Option<String>) -> BoxResult {
+    let (_, graph, deciders, projectors, opts) = resolve_inputs(namespace, product)?;
+    let json = product_core::pf::reify_manifest::manifest_json(&graph, &deciders, &projectors, &opts)?;
+    match out {
+        Some(path) => {
+            std::fs::write(&path, &json)?;
+            println!("wrote reify manifest to {}", path.display());
+        }
+        None => print!("{json}"),
+    }
+    Ok(())
+}
+
+fn plugin(cmd: &str, out: Option<PathBuf>, namespace: Option<String>, product: Option<String>, force: bool) -> BoxResult {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+    let (name, graph, deciders, projectors, opts) = resolve_inputs(namespace, product)?;
+    let json = product_core::pf::reify_manifest::manifest_json(&graph, &deciders, &projectors, &opts)?;
+    let mut child = Command::new("sh")
+        .arg("-c")
+        .arg(cmd)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("failed to start backend plugin: {e}"))?;
+    {
+        let mut stdin = child.stdin.take().ok_or("plugin has no stdin")?;
+        stdin.write_all(json.as_bytes())?;
+    } // closing stdin lets the plugin finish
+    let output = child.wait_with_output()?;
+    if !output.status.success() {
+        return Err(format!("plugin failed ({}): {}", output.status, String::from_utf8_lossy(&output.stderr)).into());
+    }
+    let plan = product_core::pf::reify_backend::external_plan(
+        &String::from_utf8_lossy(&output.stdout), &graph, &deciders, &projectors, &opts,
+    )?;
+    let root = out.unwrap_or_else(|| default_out(&name, "plugin"));
+    let stale = remove_stale(&root, &plan);
+    let (written, kept) = write_plan(&root, &plan, force)?;
+    report(&name, &root, "plugin", "external", &plan, (written, kept, stale), "the plugin tree's own README/tooling; drift gate: `product reify check --out <dir>`");
+    Ok(())
 }
 
 /// Delete generated files listed in the previous run's manifest that this
