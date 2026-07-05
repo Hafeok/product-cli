@@ -58,8 +58,9 @@ const CONTROL_TOOLS: [&str; 3] =
 pub fn phase_of(name: &str) -> Phase {
     const WHAT: [&str; 4] =
         ["product_domain_", "product_decider_", "product_projector_", "product_primitive_"];
-    const HOW: [&str; 7] = [
+    const HOW: [&str; 8] = [
         "product_how_",
+        "product_design_system_",
         "product_blueprint_",
         // Back-compat: the pre-v1.7.0 `product_archetype_*` names still gate to How.
         "product_archetype_",
@@ -326,6 +327,8 @@ mod tests {
         assert_eq!(phase_of("product_how_show"), Phase::How);
         assert_eq!(phase_of("product_how_add"), Phase::How);
         assert_eq!(phase_of("product_blueprint_init"), Phase::How);
+        assert_eq!(phase_of("product_design_system_bind"), Phase::How);
+        assert_eq!(phase_of("product_design_system_show"), Phase::How);
         assert_eq!(phase_of("product_cell_dispatch"), Phase::How);
         assert_eq!(phase_of("product_work_unit_init"), Phase::How);
         assert_eq!(phase_of("product_work_unit_show"), Phase::How);

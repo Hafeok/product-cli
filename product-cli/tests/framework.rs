@@ -947,6 +947,102 @@ fn tc_1016_design_system_coupling_covers_every_aio_context() {
     assert!(out.stderr.contains("single-select") && out.stderr.contains("phone"), "stderr:\n{}", out.stderr);
 }
 
+// FT — the design system as an addressable, How-bound reify input (§11).
+
+/// The shared fixture: a phone context, one AIO-bearing step, the whole manifest.
+fn setup_bound_design_system(h: &Harness) {
+    h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
+    h.run(&["domain", "new", "context-of-use", "phone", "--label", "P",
+        "--dimension", "form_factor", "--value", "phone"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "Pick", "--label", "Pick",
+        "--surfaces", "OrderSummary:single-select", "--offers", "PlaceOrder:trigger-action"]).assert_exit(0);
+    h.write("ds.yaml", &whole_ds_manifest());
+    h.run(&["design-system", "add", "ds.yaml"]).assert_exit(0).assert_stdout_contains("acme");
+    h.run(&["design-system", "bind", "acme"]).assert_exit(0);
+}
+
+#[test]
+fn tc_1090_design_system_add_bind_and_reify_bakes_the_component_map() {
+    let h = Harness::new_bare();
+    setup_bound_design_system(&h);
+    // The store round-trips: list marks the binding; validate + couple pass.
+    h.run(&["design-system", "list"]).assert_exit(0).assert_stdout_contains("(bound)");
+    h.run(&["design-system", "validate"]).assert_exit(0);
+    h.run(&["design-system", "couple"]).assert_exit(0);
+    assert!(h.read(".product/how-contract.yaml").contains("design_system"), "binding is a graph fact");
+    // Reify emits the resolved component map + token surface, hash-pinned.
+    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    let dsjson = h.read("gen/design-system.g.json");
+    assert!(dsjson.contains("searchable-list") && dsjson.contains("\"context\": \"phone\""),
+        "reify(AIO, context) → CIO is baked by value:\n{dsjson}");
+    assert!(h.exists("gen/tokens.g.css"), "token surface emitted");
+    assert!(h.read("gen/provenance.g.json").contains("\"design_system\""), "provenance pins the ds identity");
+    assert!(h.read("gen/Shop.Domain/DesignSystem.g.cs").contains("IDesignSystemProvider"),
+        "the provider seam is scaffolded next to the screen seam");
+    h.run(&["reify", "check", "--out", "gen"]).assert_exit(0);
+    // The stored manifest moving past the generated tree is drift.
+    let stored = ".product/design-systems/acme/design-system.manifest.yaml";
+    let bumped = h.read(stored).replace("version: \"1.0\"", "version: \"1.1\"");
+    h.write(stored, &bumped);
+    let out = h.run(&["reify", "check", "--out", "gen"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("design system"), "drift names the design system, stderr:\n{}", out.stderr);
+}
+
+#[test]
+fn tc_1091_reify_gates_on_design_system_coverage() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
+    h.run(&["domain", "new", "context-of-use", "phone", "--label", "P",
+        "--dimension", "form_factor", "--value", "phone"]).assert_exit(0);
+    h.run(&["domain", "new", "ui-step", "Pick", "--label", "Pick",
+        "--surfaces", "OrderSummary:single-select"]).assert_exit(0);
+    // A manifest with no single-select rule: addable (whole), but not realisable.
+    h.write("gap.yaml", &ds_manifest(&[("trigger-action", "emphasis: primary", "primary-button")]));
+    h.run(&["design-system", "add", "gap.yaml"]).assert_exit(0);
+    h.run(&["design-system", "bind", "acme"]).assert_exit(0);
+    let out = h.run(&["reify", "csharp", "--out", "gen"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("single-select"), "the gate names the gap, stderr:\n{}", out.stderr);
+    assert!(!h.exists("gen/design-system.g.json"), "nothing is emitted past a coverage gap");
+}
+
+#[test]
+fn tc_1092_reify_web_composes_on_system_pages_from_tokens() {
+    let h = Harness::new_bare();
+    setup_bound_design_system(&h);
+    h.run(&["reify", "web", "--out", "site"]).assert_exit(0);
+    let page = h.read("site/pages/Pick.g.html");
+    assert!(page.contains("data-cio=\"searchable-list\"") && page.contains("data-projection=\"OrderSummary\""),
+        "surfaces reify to catalog CIOs:\n{page}");
+    assert!(page.contains("class=\"cio-primary-button\"") && page.contains("data-command=\"PlaceOrder\""),
+        "offers reify to on-system controls:\n{page}");
+    let css = h.read("site/ds.g.css");
+    assert!(css.contains("var(--color-accent)"), "styling goes through tokens, not literals:\n{css}");
+    assert!(h.exists("site/index.g.html") && h.exists("site/tokens.g.css"));
+    h.run(&["reify", "check", "--out", "site"]).assert_exit(0);
+}
+
+#[test]
+fn tc_1093_reify_web_requires_a_bound_design_system() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
+    let out = h.run(&["reify", "web", "--out", "site"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("design-system bind"), "points at the binding step, stderr:\n{}", out.stderr);
+}
+
+#[test]
+fn tc_1094_design_system_add_rejects_an_unwhole_manifest() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
+    h.write("bad.yaml", &whole_ds_manifest().replacen("cio: searchable-list", "cio: ghost-cio", 1));
+    let out = h.run(&["design-system", "add", "bad.yaml"]);
+    out.assert_exit(1);
+    assert!(out.stderr.contains("ghost-cio"), "stderr:\n{}", out.stderr);
+    assert!(!h.exists(".product/design-systems/acme"), "nothing saved on rejection");
+}
+
 /// A whole §12.2 content-store manifest (canonical YAML) with two entries over en/de.
 fn whole_content_manifest() -> String {
     "content_store:\n  id: copy\n  version: \"1.0\"\n  locales_supported: [en, de]\n  entries:\n\

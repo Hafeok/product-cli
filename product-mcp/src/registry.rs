@@ -137,6 +137,7 @@ fn dispatch_tool(name: &str, args: &Value, repo_root: &Path) -> Result<Value, St
         .or_else(|| dispatch_reify(name, args, repo_root))
         .or_else(|| dispatch_delivery(name, args, repo_root))
         .or_else(|| dispatch_deployable_unit(name, args, repo_root))
+        .or_else(|| dispatch_design_system(name, args, repo_root))
         .or_else(|| dispatch_framework_read(name, args, repo_root))
         .or_else(|| dispatch_framework_write(name, args, repo_root))
         .or_else(|| dispatch_framework_scaffold(name, args, repo_root))
@@ -218,6 +219,20 @@ fn dispatch_deployable_unit(name: &str, args: &Value, repo_root: &Path) -> Optio
         "product_deployable_unit_show" => d::handle_deployable_unit_show(args, repo_root),
         "product_deployable_unit_validate" => d::handle_deployable_unit_validate(args, repo_root),
         "product_deployable_unit_new" => d::handle_deployable_unit_new(args, repo_root),
+        _ => return None,
+    })
+}
+
+/// §11 — the design system as an addressable artifact (How phase).
+fn dispatch_design_system(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
+    use super::design_system_handlers as ds;
+    Some(match name {
+        "product_design_system_list" => ds::handle_ds_list(args, repo_root),
+        "product_design_system_show" => ds::handle_ds_show(args, repo_root),
+        "product_design_system_validate" => ds::handle_ds_validate(args, repo_root),
+        "product_design_system_couple" => ds::handle_ds_couple(args, repo_root),
+        "product_design_system_add" => ds::handle_ds_add(args, repo_root),
+        "product_design_system_bind" => ds::handle_ds_bind(args, repo_root),
         _ => return None,
     })
 }
