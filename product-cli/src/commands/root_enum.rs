@@ -114,12 +114,6 @@ pub enum Commands {
         /// Project name (default: directory name)
         #[arg(long)]
         name: Option<String>,
-        /// Product responsibility — single statement of what the product is and is not (FT-039)
-        #[arg(long, visible_alias = "responsibility", value_name = "TEXT")]
-        description: Option<String>,
-        /// Add a domain (repeatable): --domain security="Auth, secrets"
-        #[arg(long = "domain", value_name = "K=V")]
-        domains: Vec<String>,
         /// MCP HTTP port (default: 7777)
         #[arg(long, default_value = "7777")]
         port: u16,

@@ -5,12 +5,10 @@
 //! product new`). `--legacy-layout` opts into the pre-FT-057 root-based
 //! scheme (`product.toml` + `docs/...`).
 
-use product_core::{config::ProductConfig, error::ProductError, fileops};
+use product_core::{error::ProductError, fileops};
 use std::path::{Path, PathBuf};
 
-use super::init_helpers::{
-    build_toml, parse_cli_domains, run_interactive_prompts, Layout, CANONICAL, LEGACY,
-};
+use super::init_helpers::{build_toml, run_interactive_prompts, Layout, CANONICAL, LEGACY};
 use super::BoxResult;
 
 #[allow(clippy::too_many_arguments)]
@@ -18,8 +16,6 @@ pub(crate) fn handle_init(
     yes: bool,
     force: bool,
     name: Option<String>,
-    description: Option<String>,
-    cli_domains: Vec<String>,
     port: u16,
     write_tools: bool,
     legacy_layout: bool,
@@ -36,7 +32,7 @@ pub(crate) fn handle_init(
     let layout: &Layout = if legacy_layout { &LEGACY } else { &CANONICAL };
     let config_path = target_dir.join(layout.config);
 
-    let preserved_responsibility = check_existing_config(&config_path, force)?;
+    check_existing_config(&config_path, force)?;
 
     let default_name = target_dir
         .file_name()
@@ -44,41 +40,22 @@ pub(crate) fn handle_init(
         .unwrap_or("my-project")
         .to_string();
 
-    let mut domains = parse_cli_domains(&cli_domains);
-
     let project_name;
-    let responsibility;
     let mcp_write;
     let mcp_port;
 
     if yes {
         project_name = name.unwrap_or(default_name);
-        responsibility = description.or(preserved_responsibility);
         mcp_write = write_tools;
         mcp_port = port;
     } else {
-        let answers = run_interactive_prompts(
-            name,
-            description,
-            preserved_responsibility,
-            default_name,
-            port,
-            &mut domains,
-        )?;
+        let answers = run_interactive_prompts(name, default_name, port)?;
         project_name = answers.project_name;
-        responsibility = answers.responsibility;
         mcp_write = answers.mcp_write;
         mcp_port = answers.mcp_port;
     }
 
-    let toml_content = build_toml(
-        &project_name,
-        responsibility.as_deref(),
-        &domains,
-        mcp_write,
-        mcp_port,
-        cli.as_deref(),
-    );
+    let toml_content = build_toml(&project_name, mcp_write, mcp_port, cli.as_deref());
 
     if let Some(parent) = config_path.parent() {
         std::fs::create_dir_all(parent).map_err(|e| {
@@ -154,14 +131,8 @@ fn resolve_target_dir(path: Option<&Path>) -> Result<PathBuf, Box<dyn std::error
     }
 }
 
-fn check_existing_config(
-    config_path: &Path,
-    force: bool,
-) -> Result<Option<String>, Box<dyn std::error::Error>> {
-    if !config_path.exists() {
-        return Ok(None);
-    }
-    if !force {
+fn check_existing_config(config_path: &Path, force: bool) -> Result<(), Box<dyn std::error::Error>> {
+    if config_path.exists() && !force {
         return Err(Box::new(ProductError::ConfigError(format!(
             "{} already exists\n  --> {}\n  = hint: use `product init --force` to overwrite, or edit the file directly",
             config_path
@@ -171,8 +142,5 @@ fn check_existing_config(
             config_path.display()
         ))));
     }
-    match ProductConfig::load(config_path) {
-        Ok(c) => Ok(c.responsibility().map(|s| s.to_string())),
-        Err(_) => Ok(None),
-    }
+    Ok(())
 }

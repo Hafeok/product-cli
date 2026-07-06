@@ -66,8 +66,6 @@ fn dispatch_init(command: Commands) -> BoxResult {
         yes,
         force,
         name,
-        description,
-        domains,
         port,
         write_tools,
         legacy_layout,
@@ -79,20 +77,7 @@ fn dispatch_init(command: Commands) -> BoxResult {
     else {
         unreachable!("dispatch_init called with non-Init variant")
     };
-    init::handle_init(
-        yes,
-        force,
-        name,
-        description,
-        domains,
-        port,
-        write_tools,
-        legacy_layout,
-        path,
-        demo,
-        no_skills,
-        cli,
-    )
+    init::handle_init(yes, force, name, port, write_tools, legacy_layout, path, demo, no_skills, cli)
 }
 
 fn dispatch_mcp(command: Commands) -> BoxResult {
