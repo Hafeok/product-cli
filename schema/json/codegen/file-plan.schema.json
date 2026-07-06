@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hafeok.github.io/product-framework/codegen/file-plan.schema.json",
+  "title": "CodegenFilePlan",
+  "description": "The inbound message across the code-generation seam (spec §5.2): a language backend's answer to a CodegenManifest. A backend is any process that reads the manifest (the whole oracle by value) on stdin and writes this file plan on stdout — a flat list of files to write, each by value. The consumer materialises the plan. PROVENANCE IS THE CONSUMER'S JOB, NOT THE BACKEND'S: the consumer (not the backend) appends the provenance manifest (§7.3.1) to what it writes, so the drift gate covers EVERY backend identically — a backend cannot opt out of provenance or forge it, because it never writes provenance at all. Paths are RELATIVE and CONTAINED: no absolute path (no leading `/`) and no `..` segment may escape the output root; the `path` pattern enforces this structurally and the consumer rejects any plan that violates it. Self-contained: no cross-file `$ref`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["files"],
+  "properties": {
+    "files": {
+      "type": "array",
+      "description": "The files the backend asks the consumer to write, each by value. Order is not semantically significant; two entries targeting the same `path` are a backend defect the consumer may reject.",
+      "items": { "$ref": "#/$defs/file" }
+    }
+  },
+  "$defs": {
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "content"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+          "description": "The output-root-RELATIVE path to write. CONTAINED: the pattern rejects a leading `/` (no absolute paths) and any `..` path segment (no escaping the output root), so a plan can never write outside the tree the consumer owns. Forward slashes separate segments."
+        },
+        "content": {
+          "type": "string",
+          "description": "The file body, by value. A generated file typically carries a graph-hash provenance header the backend renders from the manifest's `graph_hash`; the consumer additionally appends the provenance manifest (§7.3.1) — the backend does not write that."
+        },
+        "overwrite": {
+          "type": "boolean",
+          "description": "Whether the consumer may overwrite an existing file at `path` on a later run. Optional; effectively defaults to TRUE — generated files are regenerated every run and the drift gate keeps them honest. Set `overwrite: false` to mark a REALISER-OWNED SCAFFOLD: written once if absent, then never regenerated (e.g. an entry point or config a human is expected to edit), so the backend seeds it without ever clobbering local edits."
+        }
+      }
+    }
+  }
+}

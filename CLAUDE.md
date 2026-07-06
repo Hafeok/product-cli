@@ -4,7 +4,7 @@
 
 Product is a Rust CLI and MCP server for the **Product Framework** — the open
 What/How specification graph (`docs/product-framework-open.md`, currently
-v1.7.0). It captures and verifies a product's *What* (domain model, event model,
+v1.9.1). It captures and verifies a product's *What* (domain model, event model,
 Deciders, Projectors, systems, triggers, UI/AIO model) and *How* (contracts,
 reification, delivery), all under `.product/`. The reference What lives in
 `.product/author-domain/product-cli/`.
@@ -87,8 +87,9 @@ product-cli/         # The `product` binary. Depends on product-core +
 xtask/                # Workspace convention enforcement (`cargo xtask check`)
 docs/
   product-framework-open.md   # The open framework spec (What/How/Delivery), a
-                              #   mirror of ../product-framework (patch build-seam
-                              #   links back to schema/json/build-seam/ on re-sync)
+                              #   mirror of ../product-framework (on re-sync, patch
+                              #   preview/{build-seam,codegen,conformance}/ links
+                              #   back to schema/json/... )
   two-pillars-conformance.md  # The conformance clause set
   examples/ · workshop/       # Worked examples + workshop runbook
 .product/
@@ -192,7 +193,10 @@ Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
 - **Build seam (§5.1)** — `product build <deliverable> --emit-seam` emits the work
   units as build-seam envelopes (by value + content-hash identity, the outbound
   half); `product verdict <file>` validates an inbound verdict event against the
-  pinned accepted/rejected/escalate vocabulary. Schemas: `schema/json/build-seam/`.
+  pinned accepted/rejected/escalate vocabulary. Schemas: `schema/json/build-seam/`,
+  with siblings `schema/json/codegen/` (the code-generation seam §5.2 — codegen
+  manifest + file plan) and `schema/json/conformance/` (the §6.3.1 behavioural-
+  conformance wire protocol — decision/projection request+response).
 
 The reference What lives in `.product/author-domain/product-cli/`. `product mcp
 --http` serves two web views:
@@ -345,7 +349,7 @@ not touch these five enumerations.
 
 ## Documentation System
 
-- **Framework spec** (source of truth): `docs/product-framework-open.md` — the open standard for What/How/Delivery, §-numbered. It mirrors the canonical `../product-framework`; on re-sync, patch the build-seam links back to `schema/json/build-seam/` (the framework repo keeps them under `preview/build-seam/`).
+- **Framework spec** (source of truth): `docs/product-framework-open.md` — the open standard for What/How/Delivery, §-numbered. It mirrors the canonical `../product-framework`; on re-sync, patch the `preview/{build-seam,codegen,conformance}/` links back to `schema/json/...` (the framework repo keeps them under `preview/`, product-cli vendors them under `schema/json/`). `schema/json/build-seam/` (§5.1) has siblings `schema/json/codegen/` (the code-generation seam §5.2) and `schema/json/conformance/` (the §6.3.1 wire protocol).
 - **Conformance clauses**: `docs/two-pillars-conformance.md`.
 - **Examples + workshop**: `docs/examples/`, `docs/workshop/`, `docs/workshop-runbook.md`.
 

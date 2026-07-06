@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hafeok.github.io/product-framework/conformance/decision-request.schema.json",
+  "title": "ConformanceDecisionRequest",
+  "description": "One Decider scenario on the behavioural-conformance wire (spec §6.3.1). A conformance runner reads a JSON ARRAY of requests on stdin and writes a JSON ARRAY of outcomes on stdout — one outcome per request, IN THE SAME ORDER — then exits 0; the array position is the only correlation, so ordering is load-bearing and there is no per-request id. For a decision request the runner folds `given` — a sequence of prior events — into fresh aggregate state (a clean slate per request; scenarios never share state), then decides the single `when` command against that state, answering with a ConformanceDecisionResponse. Every payload value on this wire is drawn from the WIRE SCALAR ALPHABET (§3.3): `boolean`, 64-bit signed `integer`, and `string` only; a field a payload schema declares as `number` or `date` (§3.2, §3.3) travels AS A STRING here, because the wire has no native number-with-fraction or date type. Self-contained: this schema shares no `$ref` across files and inlines every reusable shape in `$defs`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["given", "when"],
+  "properties": {
+    "given": {
+      "type": "array",
+      "description": "The prior events the runner folds, in order, into fresh aggregate state before deciding `when`. May be empty (the empty history — decide against the initial state). Each item is an EventRef.",
+      "items": { "$ref": "#/$defs/eventRef" }
+    },
+    "when": {
+      "description": "The single command decided against the folded state. A CommandRef.",
+      "$ref": "#/$defs/commandRef"
+    }
+  },
+  "$defs": {
+    "scalar": {
+      "description": "A wire scalar (§3.3): the only value types that cross this wire. `boolean`, a 64-bit signed `integer`, or a `string`. A payload field declared `number` or `date` (§3.2) is carried here AS A STRING — the wire alphabet has no fractional-number or date type, so those cross as their string form.",
+      "type": ["boolean", "integer", "string"]
+    },
+    "eventRef": {
+      "description": "A reference to an event with its payload. EITHER a bare id string (shorthand for that event with the EMPTY payload) OR an object naming the `event` id and its `with` payload. A missing `with` is the empty payload. Payload values are wire scalars (§3.3).",
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "description": "Bare event id — the event with an empty payload."
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event"],
+          "properties": {
+            "event": { "type": "string", "minLength": 1, "description": "The event id." },
+            "with": {
+              "type": "object",
+              "description": "The event payload: field name → wire scalar. Absent means the empty payload.",
+              "additionalProperties": { "$ref": "#/$defs/scalar" }
+            }
+          }
+        }
+      ]
+    },
+    "commandRef": {
+      "description": "A reference to a command with its payload. EITHER a bare id string (shorthand for that command with the EMPTY payload) OR an object naming the `command` id and its `with` payload. A missing `with` is the empty payload. Payload values are wire scalars (§3.3).",
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "description": "Bare command id — the command with an empty payload."
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["command"],
+          "properties": {
+            "command": { "type": "string", "minLength": 1, "description": "The command id." },
+            "with": {
+              "type": "object",
+              "description": "The command payload: field name → wire scalar. Absent means the empty payload.",
+              "additionalProperties": { "$ref": "#/$defs/scalar" }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

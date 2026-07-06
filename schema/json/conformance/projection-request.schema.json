@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hafeok.github.io/product-framework/conformance/projection-request.schema.json",
+  "title": "ConformanceProjectionRequest",
+  "description": "One Projector scenario on the behavioural-conformance wire (spec §6.3.1). A conformance runner reads a JSON ARRAY of requests on stdin and writes a JSON ARRAY of outcomes on stdout — one per request, IN THE SAME ORDER — then exits 0; array position is the only correlation, so ordering is load-bearing. For a projection request the runner folds `given` — a sequence of events — through the relevant Projector, starting from that Projector's initial view, and answers with the resulting view state as a ConformanceProjectionResponse. Each scenario folds against fresh state (scenarios never share view state). Every payload value is a wire scalar (§3.3): `boolean`, 64-bit signed `integer`, or `string`; a field a payload schema declares `number` or `date` (§3.2) travels AS A STRING here, because the wire has no native fractional-number or date type. Self-contained: no cross-file `$ref`; reusable shapes inline in `$defs`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["given"],
+  "properties": {
+    "given": {
+      "type": "array",
+      "description": "The events the Projector folds, in order, from its initial view. May be empty (the empty history — the Projector's initial view state). Each item is an EventRef.",
+      "items": { "$ref": "#/$defs/eventRef" }
+    }
+  },
+  "$defs": {
+    "scalar": {
+      "description": "A wire scalar (§3.3): the only value types that cross this wire. `boolean`, a 64-bit signed `integer`, or a `string`. A payload field declared `number` or `date` (§3.2) is carried here AS A STRING — the wire alphabet has no fractional-number or date type, so those cross as their string form.",
+      "type": ["boolean", "integer", "string"]
+    },
+    "eventRef": {
+      "description": "A reference to an event with its payload. EITHER a bare id string (shorthand for that event with the EMPTY payload) OR an object naming the `event` id and its `with` payload. A missing `with` is the empty payload. Payload values are wire scalars (§3.3).",
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "description": "Bare event id — the event with an empty payload."
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event"],
+          "properties": {
+            "event": { "type": "string", "minLength": 1, "description": "The event id." },
+            "with": {
+              "type": "object",
+              "description": "The event payload: field name → wire scalar. Absent means the empty payload.",
+              "additionalProperties": { "$ref": "#/$defs/scalar" }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
