@@ -14,6 +14,7 @@ mod codegen_handlers;
 mod decider_handlers;
 mod projector_handlers;
 mod primitive_handlers;
+mod product_handlers;
 mod delivery_handlers;
 mod deployable_unit_handlers;
 mod design_system_handlers;

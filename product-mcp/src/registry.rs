@@ -172,10 +172,13 @@ fn dispatch_scope(name: &str, args: &Value, repo_root: &Path) -> Option<Result<V
     })
 }
 
-/// §3.1–§3.5 — the What graph: domain, decider, projector, primitive.
+/// §3.0–§3.5 — the What graph: product homes, domain, decider, projector, primitive.
 fn dispatch_what(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
-    use super::{decider_handlers as dc, domain_handlers as dm, primitive_handlers as pm, projector_handlers as pj};
+    use super::{decider_handlers as dc, domain_handlers as dm, primitive_handlers as pm, product_handlers as pr, projector_handlers as pj};
     Some(match name {
+        "product_product_list" => pr::handle_product_list(args, repo_root),
+        "product_product_show" => pr::handle_product_show(args, repo_root),
+        "product_product_new" => pr::handle_product_new(args, repo_root),
         "product_domain_list" => dm::handle_domain_list(args, repo_root),
         "product_domain_show" => dm::handle_domain_show(args, repo_root),
         "product_domain_validate" => dm::handle_domain_validate(args, repo_root),

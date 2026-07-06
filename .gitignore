@@ -15,6 +15,8 @@ tests/__pycache__/
 
 # session.json is the regenerable working cache; the committed <product>.ttl is
 # the authoritative spec, and the session reloads from it (pf::session::load).
+.product/products/*/session.json
+# legacy pre-products/ location of the same cache
 .product/author-domain/*/session.json
 
 # build run I/O — frozen context, session metrics, logs (regenerable per `product build`)

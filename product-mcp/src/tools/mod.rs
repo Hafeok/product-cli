@@ -4,6 +4,7 @@ mod build;
 mod decider;
 mod projector;
 mod primitive;
+mod product;
 mod delivery;
 mod deployable_unit;
 mod design_system;
@@ -45,6 +46,7 @@ pub fn build_tool_list() -> Vec<ToolDef> {
     tools.extend(decider::all());
     tools.extend(projector::all());
     tools.extend(primitive::all());
+    tools.extend(product::all());
     tools.extend(delivery::all());
     tools.extend(deployable_unit::all());
     tools.extend(design_system::all());

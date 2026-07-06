@@ -82,16 +82,10 @@ pub fn build_pf_view(graph: &DomainGraph, repo_root: &Path, product: &str) -> Va
     Value::Object(out)
 }
 
-/// Every product with a captured What graph (dir names under author-domain/).
+/// Every product in the repo: homes under `products/`, legacy `author-domain/`
+/// graphs, and the configured root name — the shared resolver in product-core.
 pub(crate) fn list_products(repo_root: &Path) -> Vec<String> {
-    let dir = repo_root.join(".product").join("author-domain");
-    let mut names: Vec<String> = match std::fs::read_dir(&dir) {
-        Ok(it) => it.flatten().filter(|e| e.path().is_dir())
-            .filter_map(|e| e.file_name().into_string().ok()).collect(),
-        Err(_) => Vec::new(),
-    };
-    names.sort();
-    names
+    product_core::pf::paths::list_products(repo_root)
 }
 
 // --- §3.0 product / systems / domains / journeys ---------------------------

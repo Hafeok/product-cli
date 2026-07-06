@@ -194,6 +194,34 @@ fn tc_1020_init_demo_seeds_a_conformant_bookstore() {
 }
 
 #[test]
+fn product_family_lists_adds_and_shows_product_homes() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    // init creates the product's home; the demo What lands inside it.
+    assert!(h.exists(".product/products/bookstore"), "init must create the product home");
+    assert!(h.exists(".product/products/bookstore/bookstore.ttl"), "the What lives in the home");
+    h.run(&["product", "list"]).assert_exit(0).assert_stdout_contains("bookstore").assert_stdout_contains("(default)");
+
+    // A second product gets its own home with an empty What graph.
+    h.run(&["product", "new", "acme", "--title", "Acme Shop"]).assert_exit(0)
+        .assert_stdout_contains(".product/products/acme");
+    assert!(h.exists(".product/products/acme/acme.ttl"), "new product home carries its What spec");
+    h.run(&["product", "new", "acme"]).assert_exit(1); // duplicate is refused
+
+    // Its graph + artifacts scope to that home, not the first product's.
+    h.run(&["domain", "new", "context", "Sales", "--label", "Sales", "--product", "acme"]).assert_exit(0);
+    assert!(h.read(".product/products/acme/acme.ttl").contains("Sales"));
+    assert!(!h.read(".product/products/bookstore/bookstore.ttl").contains("Sales"));
+
+    // show (and the add/view aliases) report the home + state.
+    h.run(&["product", "show", "acme"]).assert_exit(0)
+        .assert_stdout_contains(".product/products/acme");
+    h.run(&["product", "view", "bookstore"]).assert_exit(0);
+    h.run(&["product", "show", "ghost"]).assert_exit(1);
+    h.run(&["product", "list"]).assert_stdout_contains("acme");
+}
+
+#[test]
 fn init_writes_the_bundled_workflow_skills() {
     let h = Harness::new_bare();
     let out = h.run(&["init", "--yes", "--name", "bookstore"]);
@@ -434,7 +462,7 @@ fn tc_1035_state_and_decider_justification_are_advisory_findings() {
     // A guard-less Decider over the demo's Order aggregate: it evolves `placed`
     // but reads nothing and never rejects — both are §3.3 model-gap findings.
     h.write(
-        ".product/deciders/Order-decider.yaml",
+        ".product/products/bookstore/deciders/Order-decider.yaml",
         "id: Order-decider\ndecides_for: Order\nhandles:\n- PlaceOrder\nemits:\n- OrderPlaced\nevolves_from:\n- OrderPlaced\nlogic:\n  initial:\n    placed: false\n  evolve:\n  - on: OrderPlaced\n    set:\n      placed: true\n  decide:\n  - on: PlaceOrder\n    emit:\n    - OrderPlaced\n",
     );
     let out = h.run(&["decider", "validate", "Order-decider"]);
@@ -819,8 +847,8 @@ fn tc_1026_divergence_rate_trend_is_surfaced_across_runs() {
     // --no-record leaves the history untouched (no standing signal written).
     let n = h.run(&["domain", "data", "OrdersLive", "--no-record"]);
     n.assert_exit(1);
-    assert!(!h.exists(".product/author-domain/test/data-history.jsonl")
-        || h.read(".product/author-domain/test/data-history.jsonl").lines().count() == 2,
+    assert!(!h.exists(".product/products/test/data-history.jsonl")
+        || h.read(".product/products/test/data-history.jsonl").lines().count() == 2,
         "history should hold exactly the two recorded runs");
 }
 
@@ -969,7 +997,7 @@ fn tc_1090_design_system_add_bind_and_codegen_bakes_the_component_map() {
     h.run(&["design-system", "list"]).assert_exit(0).assert_stdout_contains("(bound)");
     h.run(&["design-system", "validate"]).assert_exit(0);
     h.run(&["design-system", "couple"]).assert_exit(0);
-    assert!(h.read(".product/how-contract.yaml").contains("design_system"), "binding is a graph fact");
+    assert!(h.read(".product/products/shop/how-contract.yaml").contains("design_system"), "binding is a graph fact");
     // Reify emits the resolved component map + token surface, hash-pinned.
     h.run(&["codegen", "csharp", "--out", "gen"]).assert_exit(0);
     let dsjson = h.read("gen/design-system.g.json");
@@ -981,7 +1009,7 @@ fn tc_1090_design_system_add_bind_and_codegen_bakes_the_component_map() {
         "the provider seam is scaffolded next to the screen seam");
     h.run(&["codegen", "check", "--out", "gen"]).assert_exit(0);
     // The stored manifest moving past the generated tree is drift.
-    let stored = ".product/design-systems/acme/design-system.manifest.yaml";
+    let stored = ".product/products/shop/design-systems/acme/design-system.manifest.yaml";
     let bumped = h.read(stored).replace("version: \"1.0\"", "version: \"1.1\"");
     h.write(stored, &bumped);
     let out = h.run(&["codegen", "check", "--out", "gen"]);
@@ -1040,7 +1068,7 @@ fn tc_1094_design_system_add_rejects_an_unwhole_manifest() {
     let out = h.run(&["design-system", "add", "bad.yaml"]);
     out.assert_exit(1);
     assert!(out.stderr.contains("ghost-cio"), "stderr:\n{}", out.stderr);
-    assert!(!h.exists(".product/design-systems/acme"), "nothing saved on rejection");
+    assert!(!h.exists(".product/products/shop/design-systems/acme"), "nothing saved on rejection");
 }
 
 /// A whole §12.2 content-store manifest (canonical YAML) with two entries over en/de.
@@ -1235,7 +1263,7 @@ fn tc_workflow_writes_land_canonical_and_finalize_validates() {
     h.run_with_stdin(&["mcp", "--workflow", "--session", &id, "--repo", ".", "--write"], &format!("{add}\n"))
         .assert_exit(0);
 
-    let canonical = ".product/author-domain/bookstore/bookstore.ttl";
+    let canonical = ".product/products/bookstore/bookstore.ttl";
     assert!(h.read(canonical).contains("Shipping"), "canonical must hold the new context immediately");
     assert!(!h.exists(&format!(".product/sessions/{id}/ws")), "no workspace copy is scaffolded");
 
@@ -1246,7 +1274,7 @@ fn tc_workflow_writes_land_canonical_and_finalize_validates() {
     out.assert_stdout_contains("\\\"ok\\\": true");
     assert!(h.read(&format!(".product/sessions/{id}/workflow.json")).contains("\"finalized\": true"),
         "finalize must mark the session complete");
-    assert!(h.exists(".product/author-domain/bookstore/bookstore.provenance.json"),
+    assert!(h.exists(".product/products/bookstore/bookstore.provenance.json"),
         "finalize stamps provenance at canonical");
 }
 
@@ -1428,7 +1456,7 @@ fn tc_1070_deployable_unit_instantiates_a_blueprint_for_a_system() {
     ])
     .assert_exit(0)
     .assert_stdout_contains("Created deployable unit 'shop-ios'");
-    assert!(h.exists(".product/deployable-units/shop-ios.yaml"), "unit persisted under .product/");
+    assert!(h.exists(".product/products/bookstore/deployable-units/shop-ios.yaml"), "unit persisted under .product/");
     h.run(&["deployable-unit", "validate", "shop-ios"]).assert_exit(0).assert_stdout_contains("conformant");
     h.run(&["deployable-unit", "list"]).assert_stdout_contains("shop-ios");
 }
@@ -1439,7 +1467,7 @@ fn tc_1071_archetype_is_a_back_compat_alias_for_blueprint() {
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
     // The renamed command scaffolds a blueprint under the canonical dir…
     h.run(&["blueprint", "init", "shape"]).assert_exit(0);
-    assert!(h.exists(".product/blueprints/shape/how-contract.yaml"), "blueprint lands under .product/blueprints/");
+    assert!(h.exists(".product/products/bookstore/blueprints/shape/how-contract.yaml"), "blueprint lands under .product/blueprints/");
     // …and the legacy `archetype` alias still drives the same surface.
     h.run(&["archetype", "list"]).assert_exit(0).assert_stdout_contains("shape");
 }
@@ -1525,11 +1553,11 @@ fn tc_1076_codegen_emits_flow_facts_and_the_screen_harness() {
     h.run(&["decider", "derive", "Order"]).assert_exit(0);
     // Author enough logic + scenarios for the oracle to bake a chain.
     h.write(
-        ".product/deciders/Order-decider.yaml",
+        ".product/products/bookstore/deciders/Order-decider.yaml",
         "id: Order-decider\ndecides_for: Order\nhandles:\n- PlaceOrder\nemits:\n- OrderPlaced\nevolves_from:\n- OrderPlaced\nlogic:\n  initial:\n    count: 0\n  decide:\n  - on: PlaceOrder\n    emit:\n    - OrderPlaced\nscenarios:\n- name: order accepted\n  given: []\n  when: PlaceOrder\n  then:\n    emit:\n    - OrderPlaced\n",
     );
     h.write(
-        ".product/projectors/OrderSummary-projector.yaml",
+        ".product/products/bookstore/projectors/OrderSummary-projector.yaml",
         "id: OrderSummary-projector\nprojects_for: OrderSummary\nfolds:\n- OrderPlaced\nover:\n- Order\nlogic:\n  initial:\n    count: 0\n  apply:\n  - on: OrderPlaced\n    set:\n      count: '=view.count + 1'\nscenarios:\n- name: one counted\n  given:\n  - OrderPlaced\n  then:\n    count: 1\n",
     );
     // A flow chaining the pattern, and a screen surfacing the view.
@@ -1657,7 +1685,7 @@ fn tc_1081_the_how_contracts_realisations_drive_codegen_emit() {
     h.run(&["codegen", "emit"]).assert_exit(1).assert_stderr_contains("how-contract");
     // The §4.2 realisations block: the captured backend/tier/namespace decision.
     h.write(
-        ".product/how-contract.yaml",
+        ".product/products/bookstore/how-contract.yaml",
         "blueprint: bookstore\napplication_contract:\n  id: app\n  language: mixed\n  statements:\n  - id: s1\n    statement: adapters stay thin\nrealisations:\n- id: api\n  backend: csharp\n  tier: oracle-only\n  namespace: Shop.Api\n  out: gen-api\n- id: app\n  backend: kotlin\n  namespace: shopapp\n  out: gen-app\n",
     );
     h.run(&["codegen", "emit"]).assert_exit(0).assert_stdout_contains("csharp oracle-only, from the How").assert_stdout_contains("kotlin oracle-only, from the How");
@@ -1670,13 +1698,13 @@ fn tc_1081_the_how_contracts_realisations_drive_codegen_emit() {
     h.run(&["codegen", "emit", "--id", "ghost"]).assert_exit(1).assert_stderr_contains("declared: api, app");
     // A realisation for an undeclared system is refused at emit time…
     h.write(
-        ".product/how-contract.yaml",
+        ".product/products/bookstore/how-contract.yaml",
         "blueprint: bookstore\napplication_contract:\n  id: app\n  language: mixed\n  statements:\n  - id: s1\n    statement: adapters stay thin\nrealisations:\n- id: api\n  backend: csharp\n  system: sys-ghost\n",
     );
     h.run(&["codegen", "emit"]).assert_exit(1).assert_stderr_contains("no such system");
     // …and `product how validate` gates the tier rules (§4.2).
     h.write(
-        ".product/how-contract.yaml",
+        ".product/products/bookstore/how-contract.yaml",
         "blueprint: bookstore\napplication_contract:\n  id: app\n  language: mixed\n  statements:\n  - id: s1\n    statement: adapters stay thin\nrealisations:\n- id: app\n  backend: kotlin\n  tier: full\n",
     );
     h.run(&["how", "validate"]).assert_exit(1).assert_stderr_contains("oracle-only tier");
@@ -1728,7 +1756,7 @@ fn scope_add_validate_enforce_join_round_trip() {
     h.run(&["scope", "add", "figma.scope.yaml"])
         .assert_exit(0)
         .assert_stdout_contains("figma");
-    assert!(h.exists(".product/authoring-scopes/figma.yaml"), "scope vendored");
+    assert!(h.exists(".product/products/test/authoring-scopes/figma.yaml"), "scope vendored");
 
     // list + show
     h.run(&["scope", "list"]).assert_exit(0).assert_stdout_contains("figma");

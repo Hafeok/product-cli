@@ -21,21 +21,6 @@ fn arb_project_name() -> impl Strategy<Value = String> {
     "[a-z][a-z0-9-]{0,49}".prop_map(|s| s.trim_end_matches('-').to_string())
 }
 
-/// Generate a safe domain key (alphanumeric + hyphens)
-fn arb_domain_key() -> impl Strategy<Value = String> {
-    "[a-z][a-z0-9-]{0,19}".prop_map(|s| s.trim_end_matches('-').to_string())
-}
-
-/// Generate a domain description (simple ASCII)
-fn arb_domain_desc() -> impl Strategy<Value = String> {
-    "[A-Za-z ,]{1,40}"
-}
-
-/// Generate a domain entry as "key=value"
-fn arb_domain_entry() -> impl Strategy<Value = String> {
-    (arb_domain_key(), arb_domain_desc()).prop_map(|(k, v)| format!("{}={}", k, v))
-}
-
 /// TC-438: init generated toml parses as valid ProductConfig
 /// Property: any combination of flags produces a toml parseable by ProductConfig::load()
 proptest! {
@@ -44,7 +29,6 @@ proptest! {
     #[test]
     fn tc_438_init_generated_toml_parses_as_valid_productconfig(
         name in arb_project_name(),
-        domain_entries in proptest::collection::vec(arb_domain_entry(), 0..5),
         port in 1024u16..65535u16,
         write_tools in proptest::bool::ANY,
     ) {
@@ -62,16 +46,6 @@ proptest! {
 
         if write_tools {
             args.push("--write-tools".to_string());
-        }
-
-        // Deduplicate by domain key to avoid duplicate TOML keys
-        let mut seen_keys = std::collections::HashSet::new();
-        for entry in &domain_entries {
-            let key = entry.split('=').next().unwrap_or("");
-            if seen_keys.insert(key.to_string()) {
-                args.push("--domain".to_string());
-                args.push(entry.clone());
-            }
         }
 
         let output = Command::new(&bin)

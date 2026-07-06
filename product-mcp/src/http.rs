@@ -232,7 +232,7 @@ fn project_graph(repo_root: &Path, session: Option<&(String, WorkflowSession)>, 
     let graph = DomainSession::load(&session_dir(repo_root, &product))
         .map(|s| s.graph)
         .map_err(|_| format!("no What graph for product '{product}' yet"))?;
-    let pd = repo_root.join(".product");
+    let pd = product_core::pf::paths::product_base(repo_root, &product);
     let bp = pd.join("blueprints");
     let bp_dir = if bp.is_dir() { bp } else { pd.join("archetypes") };
     let blueprints = du::blueprint_names(&bp_dir);
