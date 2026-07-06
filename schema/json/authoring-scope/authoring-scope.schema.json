@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hafeok.github.io/product-framework/authoring-scope/authoring-scope.schema.json",
+  "title": "AuthoringScope",
+  "description": "A tool-adapter's declared authoring scope over the What: which specification-element kinds this tool is sanctioned to author, into which process slice of the funnel. Authorship outside the declared scope is invalid regardless of content. The What-element kind vocabulary is the Product Framework's own ontology; scopes are subsets over it. Specification has provenance: things to be specified may exist completely or partially in existing systems, and a scope declaration is how such a system becomes a bounded co-author of the What.",
+  "type": "object",
+  "required": [
+    "tool",
+    "adapter",
+    "authors",
+    "excluded"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "tool": {
+      "type": "string",
+      "description": "The authoring surface (e.g. 'figma', 'jira', 'legacy-crm-schema', 'event-modeling-workshop')."
+    },
+    "adapter": {
+      "type": "string",
+      "description": "The adapter that enforces this scope (e.g. 'figma-bridge'). The adapter owns enforcement, never the scope's content."
+    },
+    "authors": {
+      "type": "array",
+      "description": "What-element kinds this tool MAY author. Kinds come from the Product Framework ontology (e.g. domain-structure, trigger, command, event, view, decider, projector, ui-step, aio, state-annotation, page-graph, context-of-use, accessibility-criteria, content-reference, journey, quality-demand, data-shape, token-source).",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "A What-element kind from the framework ontology."
+          },
+          "completeness": {
+            "type": "string",
+            "enum": [
+              "sufficient",
+              "partial"
+            ],
+            "description": "'sufficient': this tool can author this kind completely. 'partial': this tool contributes to this kind but other authors are expected (e.g. Figma attaches WCAG criteria it can see, but non-visual criteria come from elsewhere)."
+          },
+          "channel": {
+            "type": "string",
+            "description": "How authored meaning is carried in the tool (e.g. 'native-annotation', 'component-name', 'frame-structure', 'variable-export'). The adapter reads only declared channels."
+          }
+        }
+      }
+    },
+    "excluded": {
+      "type": "array",
+      "description": "What-element kinds this tool MUST NOT author. Explicit, not inferred by omission: the exclusion list is the tool's Polanyi boundary made declarative. Inbound content authoring an excluded kind is rejected regardless of quality. Note some kinds are DERIVED by the framework rather than authored by anyone (e.g. a read model's state-space derives from the projection's shape, \u00a73.2) \u2014 such kinds belong in every tool's excluded list.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "process-slice": {
+      "type": "string",
+      "description": "OPTIONAL. The funnel slice this authorship enters (e.g. 'interface-specification', 'domain-modelling'). Binds the scope to a position in the process, so authorship arrives where the funnel expects it."
+    }
+  }
+}

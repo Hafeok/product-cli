@@ -56,12 +56,14 @@ const CONTROL_TOOLS: [&str; 3] =
 /// The home phase a tool belongs to, by name prefix (the single source of truth
 /// for gating; control tools are handled separately and are always visible).
 pub fn phase_of(name: &str) -> Phase {
-    const WHAT: [&str; 5] = [
+    const WHAT: [&str; 6] = [
         "product_product_",
         "product_domain_",
         "product_decider_",
         "product_projector_",
         "product_primitive_",
+        // Authoring scopes are an intake / What concept (§14).
+        "product_scope_",
     ];
     const HOW: [&str; 8] = [
         "product_how_",
@@ -330,6 +332,8 @@ mod tests {
         assert_eq!(phase_of("product_product_new"), Phase::What);
         assert_eq!(phase_of("product_domain_new"), Phase::What);
         assert_eq!(phase_of("product_decider_validate"), Phase::What);
+        assert_eq!(phase_of("product_scope_add"), Phase::What);
+        assert_eq!(phase_of("product_scope_enforce"), Phase::What);
         assert_eq!(phase_of("product_how_show"), Phase::How);
         assert_eq!(phase_of("product_how_add"), Phase::How);
         assert_eq!(phase_of("product_blueprint_init"), Phase::How);
@@ -340,19 +344,21 @@ mod tests {
         assert_eq!(phase_of("product_work_unit_show"), Phase::How);
         assert_eq!(phase_of("product_feature_new"), Phase::Build);
         assert_eq!(phase_of("product_build_run"), Phase::Build);
-        // Reify is realisation — home phase Build (reads stay visible later).
-        assert_eq!(phase_of("product_reify_manifest"), Phase::Build);
+        // Codegen is realisation — home phase Build (reads stay visible later).
+        assert_eq!(phase_of("product_codegen_manifest"), Phase::Build);
+        assert_eq!(phase_of("product_codegen_emit"), Phase::Build);
+        // Back-compat: the pre-v1.9.1 `product_reify_*` names still gate to Build.
         assert_eq!(phase_of("product_reify_emit"), Phase::Build);
     }
 
     #[test]
-    fn reify_tools_are_registered_with_the_right_write_gating() {
+    fn codegen_tools_are_registered_with_the_right_write_gating() {
         let tools = crate::tools::build_tool_list();
         let find = |n: &str| tools.iter().find(|t| t.name == n).unwrap_or_else(|| panic!("{n} missing"));
-        assert!(!find("product_reify_backends").requires_write);
-        assert!(!find("product_reify_manifest").requires_write);
-        assert!(!find("product_reify_check").requires_write);
-        assert!(find("product_reify_emit").requires_write, "emit writes the repo");
+        assert!(!find("product_codegen_backends").requires_write);
+        assert!(!find("product_codegen_manifest").requires_write);
+        assert!(!find("product_codegen_check").requires_write);
+        assert!(find("product_codegen_emit").requires_write, "emit writes the repo");
     }
 
     #[test]

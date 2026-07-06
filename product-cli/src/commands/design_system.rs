@@ -3,7 +3,7 @@
 //! Vendors a design-system manifest (plus its implementation bundle) under
 //! `.product/design-systems/<id>/`, parallel to blueprints and deliverables;
 //! `bind` records the chosen system on the How contract (§4.5), which is what
-//! `product reify` resolves — the choice is a graph fact, not a CLI flag.
+//! `product codegen` resolves — the choice is a graph fact, not a CLI flag.
 
 use clap::Subcommand;
 use product_core::pf::ds_store;
@@ -23,7 +23,7 @@ pub enum DesignSystemCommands {
         product: Option<String>,
     },
     /// Bind a stored design system to the How contract's screen-composition
-    /// contract (§4.5) — the system `product reify` resolves
+    /// contract (§4.5) — the system `product codegen` resolves
     Bind {
         /// A stored design-system id
         id: String,
@@ -205,7 +205,7 @@ pub(crate) fn load_bound_ds(product: Option<&str>) -> Result<Option<product_core
 /// Design-system drift: the tree was generated against a pinned manifest hash;
 /// fail when the stored manifest has moved past it (or the binding changed).
 pub(crate) fn check_ds_drift(provenance: &str, product: Option<&str>) -> BoxResult {
-    let Some((rec_id, rec_hash)) = product_core::pf::reify::recorded_ds(provenance) else { return Ok(()) };
+    let Some((rec_id, rec_hash)) = product_core::pf::codegen::recorded_ds(provenance) else { return Ok(()) };
     let Some(spec) = load_bound_ds(product)? else {
         return Err(format!(
             "drift — the tree was generated with design system '{rec_id}', but the How no longer binds one"
@@ -213,7 +213,7 @@ pub(crate) fn check_ds_drift(provenance: &str, product: Option<&str>) -> BoxResu
     };
     if spec.manifest.design_system.id != rec_id || spec.hash != rec_hash {
         return Err(format!(
-            "drift — the design system has moved past the generated code:\n  generated from '{rec_id}' sha256:{rec_hash}\n  currently bound '{}' sha256:{}\n  regenerate with `product reify csharp` / `product reify web`",
+            "drift — the design system has moved past the generated code:\n  generated from '{rec_id}' sha256:{rec_hash}\n  currently bound '{}' sha256:{}\n  regenerate with `product codegen csharp` / `product codegen web`",
             spec.manifest.design_system.id, spec.hash
         ).into());
     }

@@ -1,0 +1,43 @@
+tool: figma
+adapter: figma-bridge
+authors:
+- kind: ui-step
+  completeness: partial
+  channel: frame-structure
+- kind: aio
+  completeness: sufficient
+  channel: native-annotation
+- kind: aio
+  completeness: partial
+  channel: component-name
+- kind: state-annotation
+  completeness: sufficient
+  channel: native-annotation
+- kind: page-graph
+  completeness: sufficient
+  channel: frame-structure
+- kind: context-of-use
+  completeness: partial
+  channel: native-annotation
+- kind: accessibility-criteria
+  completeness: partial
+  channel: native-annotation
+- kind: content-reference
+  completeness: partial
+  channel: frame-structure
+- kind: token-source
+  completeness: sufficient
+  channel: variable-export
+excluded:
+- domain-structure
+- trigger
+- command
+- event
+- view
+- decider
+- projector
+- state-space
+- journey
+- quality-demand
+- data-shape
+process-slice: ui-steps-aios-page-graph

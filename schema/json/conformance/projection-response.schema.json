@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hafeok.github.io/product-framework/conformance/projection-response.schema.json",
+  "title": "ConformanceProjectionResponse",
+  "description": "The outcome the conformance runner writes for one ConformanceProjectionRequest (spec §6.3.1): the Projector's view state after folding the request's `given`. The runner reads a JSON ARRAY of requests on stdin and writes a JSON ARRAY of these outcomes on stdout — one per request, IN THE SAME ORDER — then exits 0; array position is the sole correlation. The view is a flat JSON object mapping each view FIELD NAME to its value, and every value is a wire scalar (§3.3): `boolean`, 64-bit signed `integer`, or `string`; a field a projection schema declares `number` or `date` (§3.2) appears here AS A STRING. Equality against the expected view is FULL-STATE: the response must match the expected object exactly — an EXTRA field is as non-conformant as a wrong or missing one. Because the property NAMES are the view's field names (open-ended, not enumerable in advance), this schema cannot set `additionalProperties: false`; instead it constrains every value to the wire-scalar union via `additionalProperties`, and the full-state equality check — not this schema — enforces the exact field set. Self-contained: no cross-file `$ref`.",
+  "type": "object",
+  "additionalProperties": { "$ref": "#/$defs/scalar" },
+  "$defs": {
+    "scalar": {
+      "description": "A wire scalar (§3.3): the only value types that appear in a view on this wire. `boolean`, a 64-bit signed `integer`, or a `string`. A view field declared `number` or `date` (§3.2) is carried here AS A STRING — the wire alphabet has no fractional-number or date type, so those cross as their string form.",
+      "type": ["boolean", "integer", "string"]
+    }
+  }
+}

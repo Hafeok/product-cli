@@ -4,7 +4,7 @@
 
 Product is a Rust CLI and MCP server for the **Product Framework** — the open
 What/How specification graph (`docs/product-framework-open.md`, currently
-v1.7.0). It captures and verifies a product's *What* (domain model, event model,
+v1.9.1). It captures and verifies a product's *What* (domain model, event model,
 Deciders, Projectors, systems, triggers, UI/AIO model) and *How* (contracts,
 reification, delivery), all under `.product/`. Every product has one home,
 `.product/products/<name>/`; the reference What lives in
@@ -88,8 +88,9 @@ product-cli/         # The `product` binary. Depends on product-core +
 xtask/                # Workspace convention enforcement (`cargo xtask check`)
 docs/
   product-framework-open.md   # The open framework spec (What/How/Delivery), a
-                              #   mirror of ../product-framework (patch build-seam
-                              #   links back to schema/json/build-seam/ on re-sync)
+                              #   mirror of ../product-framework (on re-sync, patch
+                              #   preview/{build-seam,codegen,conformance}/ links
+                              #   back to schema/json/... )
   two-pillars-conformance.md  # The conformance clause set
   examples/ · workshop/       # Worked examples + workshop runbook
 .product/
@@ -183,10 +184,25 @@ Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
   manifest (declaration + implementation bundle: per-target component sources, token
   values per theme, templates) under `.product/design-systems/<id>/`; `validate` /
   `couple` are the wholeness + §11.2 coverage checks; `bind <id>` records the choice
-  on the How contract (§4.5). Once bound, every `product reify` backend gates on the
+  on the How contract (§4.5). Once bound, every `product codegen` backend gates on the
   coupling at plan time and emits `design-system.g.json` + `tokens.g.css` (hash-pinned;
-  `reify check` catches design-system drift), and `product reify web` renders one
+  `reify check` catches design-system drift), and `product codegen web` renders one
   on-system HTML page per UI step, styled exclusively via tokens.
+- **Authoring scopes (§14)** — `product scope add <file>` validates a tool's
+  authoring-scope declaration (§14.2 — which What-element kinds it MAY author,
+  which it MUST NOT, over the framework's own kind vocabulary) and vendors it under
+  `.product/authoring-scopes/<tool>.yaml`. A scope makes a tool (Figma, a legacy
+  schema, an Event-Modeling board) a **bounded co-author** of the What. `list` /
+  `show` / `validate` inspect stored scopes (validate = wholeness + kind-vocabulary
+  + the derived-kind rule: a derived kind like `state-space` never appears in
+  `authors`). `scope enforce <tool> <submission.json>` runs the §14.3 enforcement
+  oracle — in-scope authorship accepted, out-of-scope content rejected regardless
+  of quality, the gap split into `unauthored-within-scope` vs `outside-scope`.
+  `scope join --required <kinds>` (or `--required-file`) runs the §14.4
+  completeness join across every stored scope — per required kind: covered (by
+  whom), coverable-but-unauthored, or uncovered. A **What-phase** intake concept;
+  the reference Figma scope lives at `.product/authoring-scopes/figma.yaml` and the
+  schema at `schema/json/authoring-scope/`.
 - **DeployableUnit (§4/§4.2)** — `product deployable-unit new <id> --built-from
   <blueprint> --system <sys>… [--environment … --domain-name/--bundle-id/--runtime]`
   declares the concrete artifact a **blueprint** (v1.7.0's rename of *archetype*)
@@ -201,7 +217,10 @@ Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
 - **Build seam (§5.1)** — `product build <deliverable> --emit-seam` emits the work
   units as build-seam envelopes (by value + content-hash identity, the outbound
   half); `product verdict <file>` validates an inbound verdict event against the
-  pinned accepted/rejected/escalate vocabulary. Schemas: `schema/json/build-seam/`.
+  pinned accepted/rejected/escalate vocabulary. Schemas: `schema/json/build-seam/`,
+  with siblings `schema/json/codegen/` (the code-generation seam §5.2 — codegen
+  manifest + file plan) and `schema/json/conformance/` (the §6.3.1 behavioural-
+  conformance wire protocol — decision/projection request+response).
 
 The reference What lives in `.product/products/product-cli/`. `product mcp
 --http` serves two web views:
@@ -230,7 +249,8 @@ is just `workflow.json` under `.product/sessions/<id>/`). The transport
 shows only the current phase's family, and out-of-phase calls are rejected:
 
 - **What** — `product_domain_*`, `product_decider_*`, `product_projector_*`,
-  `product_primitive_*`.
+  `product_primitive_*`, `product_scope_*` (§14 authoring scopes — the intake
+  concept: `add`/`list`/`show`/`validate`/`enforce`/`join`).
 - **How** — `product_how_*`, `product_blueprint_*` (alias `product_archetype_*`),
   `product_deployable_unit_*`, `product_cell_*`,
   `product_work_unit_*` (the atomic slice), `product_worker_*`.
@@ -354,7 +374,7 @@ not touch these five enumerations.
 
 ## Documentation System
 
-- **Framework spec** (source of truth): `docs/product-framework-open.md` — the open standard for What/How/Delivery, §-numbered. It mirrors the canonical `../product-framework`; on re-sync, patch the build-seam links back to `schema/json/build-seam/` (the framework repo keeps them under `preview/build-seam/`).
+- **Framework spec** (source of truth): `docs/product-framework-open.md` — the open standard for What/How/Delivery, §-numbered. It mirrors the canonical `../product-framework`; on re-sync, patch the `preview/{build-seam,codegen,conformance}/` links back to `schema/json/...` (the framework repo keeps them under `preview/`, product-cli vendors them under `schema/json/`). `schema/json/build-seam/` (§5.1) has siblings `schema/json/codegen/` (the code-generation seam §5.2) and `schema/json/conformance/` (the §6.3.1 wire protocol).
 - **Conformance clauses**: `docs/two-pillars-conformance.md`.
 - **Examples + workshop**: `docs/examples/`, `docs/workshop/`, `docs/workshop-runbook.md`.
 

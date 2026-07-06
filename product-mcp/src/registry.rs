@@ -134,7 +134,8 @@ fn handle_tools_call(request: &JsonRpcRequest, registry: &ToolRegistry) -> JsonR
 
 fn dispatch_tool(name: &str, args: &Value, repo_root: &Path) -> Result<Value, String> {
     dispatch_what(name, args, repo_root)
-        .or_else(|| dispatch_reify(name, args, repo_root))
+        .or_else(|| dispatch_scope(name, args, repo_root))
+        .or_else(|| dispatch_codegen(name, args, repo_root))
         .or_else(|| dispatch_delivery(name, args, repo_root))
         .or_else(|| dispatch_deployable_unit(name, args, repo_root))
         .or_else(|| dispatch_design_system(name, args, repo_root))
@@ -144,14 +145,29 @@ fn dispatch_tool(name: &str, args: &Value, repo_root: &Path) -> Result<Value, St
         .unwrap_or_else(|| Err(format!("Tool handler not implemented: {}", name)))
 }
 
-/// Reify — verifiable code projections (Build phase).
-fn dispatch_reify(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
-    use super::reify_handlers as rf;
+/// Codegen — verifiable code projections (Build phase).
+fn dispatch_codegen(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
+    use super::codegen_handlers as rf;
     Some(match name {
-        "product_reify_backends" => rf::handle_backends(args, repo_root),
-        "product_reify_manifest" => rf::handle_manifest(args, repo_root),
-        "product_reify_check" => rf::handle_check(args, repo_root),
-        "product_reify_emit" => rf::handle_emit(args, repo_root),
+        // Back-compat: the pre-v1.9.1 `product_reify_*` names route to the same handlers.
+        "product_codegen_backends" | "product_reify_backends" => rf::handle_backends(args, repo_root),
+        "product_codegen_manifest" | "product_reify_manifest" => rf::handle_manifest(args, repo_root),
+        "product_codegen_check" | "product_reify_check" => rf::handle_check(args, repo_root),
+        "product_codegen_emit" | "product_reify_emit" => rf::handle_emit(args, repo_root),
+        _ => return None,
+    })
+}
+
+/// §14 — authoring scopes: a tool as a bounded co-author of the What (What phase).
+fn dispatch_scope(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Value, String>> {
+    use super::scope_handlers as sc;
+    Some(match name {
+        "product_scope_list" => sc::handle_scope_list(args, repo_root),
+        "product_scope_show" => sc::handle_scope_show(args, repo_root),
+        "product_scope_validate" => sc::handle_scope_validate(args, repo_root),
+        "product_scope_enforce" => sc::handle_scope_enforce(args, repo_root),
+        "product_scope_join" => sc::handle_scope_join(args, repo_root),
+        "product_scope_add" => sc::handle_scope_add(args, repo_root),
         _ => return None,
     })
 }

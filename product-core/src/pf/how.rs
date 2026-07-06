@@ -113,10 +113,10 @@ pub struct InterfaceContract {
     pub derived_from: Vec<String>,
 }
 
-/// §4.2 — a declared realisation: which reify backend renders this How's
+/// §4.2 — a declared realisation: which codegen backend renders this How's
 /// verification shell, at which delegation tier. The human's remaining
 /// realisation decision, captured as spec instead of CLI flags — `product
-/// reify emit` derives its invocation from these.
+/// codegen emit` derives its invocation from these.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, schemars::JsonSchema)]
 pub struct Realisation {
     pub id: String,
@@ -136,7 +136,7 @@ pub struct Realisation {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub out: Option<String>,
     /// `backend: plugin` — the command implementing the external backend
-    /// (reify manifest on stdin → file plan on stdout).
+    /// (codegen manifest on stdin → file plan on stdout).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub plugin_cmd: Option<String>,
 }
@@ -178,7 +178,7 @@ pub struct HowContract {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub design_system: Option<DesignSystemBinding>,
     /// §4.2 — the declared realisations (backend + delegation tier per
-    /// system); `product reify emit` runs them.
+    /// system); `product codegen emit` runs them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub realisations: Vec<Realisation>,
 }

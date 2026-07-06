@@ -3,10 +3,10 @@
 use clap::Command as ClapCommand;
 
 use super::{
-    author, blueprint, build, cell, completions, decider, deliverable, deployable_unit,
+    author, blueprint, build, cell, codegen, completions, decider, deliverable, deployable_unit,
     design_system, domain,
-    guide, hooks, how, init, lsp, mcp_cmd, preview, primitive, product, projector, reify, release, render,
-    seam, session, skills, feature, target, verdict, work_unit, worker, BoxResult, Commands,
+    guide, hooks, how, init, lsp, mcp_cmd, preview, primitive, product, projector, release, render,
+    scope, seam, session, skills, feature, target, verdict, work_unit, worker, BoxResult, Commands,
 };
 
 pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapCommand) -> BoxResult {
@@ -19,12 +19,13 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::InstallHooks => hooks::handle_install_hooks(),
         Commands::Lsp { command } => lsp::handle_lsp(command),
         Commands::Mcp { .. } => dispatch_mcp(command),
+        Commands::Scope { command } => render(scope::handle_scope(command), fmt),
         Commands::Session { command } => session::handle_session(command),
         Commands::Skills { command } => skills::handle_skills(command),
         Commands::Seam { id, product } => seam::handle_seam(id, product),
         Commands::Verdict { file } => verdict::handle_verdict(file),
         // Product-Framework families route through a sub-dispatcher (keeps this match small).
-        c @ (Commands::Blueprint { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Primitive { .. } | Commands::Product { .. } | Commands::Deliverable { .. } | Commands::DeployableUnit { .. } | Commands::DesignSystem { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Preview { .. } | Commands::Reify { .. } | Commands::Release { .. } | Commands::Feature { .. } | Commands::Target { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
+        c @ (Commands::Blueprint { .. } | Commands::Cell { .. } | Commands::Decider { .. } | Commands::Projector { .. } | Commands::Primitive { .. } | Commands::Product { .. } | Commands::Deliverable { .. } | Commands::DeployableUnit { .. } | Commands::DesignSystem { .. } | Commands::Domain { .. } | Commands::How { .. } | Commands::Preview { .. } | Commands::Codegen { .. } | Commands::Release { .. } | Commands::Feature { .. } | Commands::Target { .. } | Commands::WorkUnit { .. } | Commands::Worker { .. }) => dispatch_pf(c),
     }
 }
 
@@ -43,7 +44,7 @@ fn dispatch_pf(command: Commands) -> BoxResult {
         Commands::Domain { command } => domain::handle_domain_cmd(command),
         Commands::How { command } => how::handle_how(command),
         Commands::Preview { command } => preview::handle_preview(command),
-        Commands::Reify { command } => reify::handle_reify(command),
+        Commands::Codegen { command } => codegen::handle_reify(command),
         Commands::Release { command } => release::handle_release(command),
         Commands::Feature { command } => feature::handle_feature(command),
         Commands::Target { command } => target::handle_target(command),

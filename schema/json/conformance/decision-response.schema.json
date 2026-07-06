@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hafeok.github.io/product-framework/conformance/decision-response.schema.json",
+  "title": "ConformanceDecisionResponse",
+  "description": "The outcome the conformance runner writes for one ConformanceDecisionRequest (spec §6.3.1). The runner reads a JSON ARRAY of requests on stdin and writes a JSON ARRAY of these outcomes on stdout — one per request, IN THE SAME ORDER — then exits 0; the array position is the sole correlation between a request and its response. A decision either ACCEPTS, emitting the events the Decider produced (`emit`), or REJECTS, naming the invariant that blocked it (`reject`). REJECT WINS: if a response object carries BOTH keys, the response is a rejection and `reject` is authoritative — a runner that has both an emission and a rejection to report is reporting a rejection. An accept with no resulting events is `{ \"emit\": [] }`. Every emitted payload value is a wire scalar (§3.3): `boolean`, 64-bit signed `integer`, or `string`; a `number`- or `date`-declared field travels AS A STRING. Self-contained: no cross-file `$ref`; all reusable shapes inline in `$defs`.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "emit": {
+      "type": "array",
+      "description": "The events the Decider produced, in emission order, when the command was ACCEPTED. May be empty (`[]`) — an accept that produces no event. If `reject` is also present, this field is ignored: reject wins.",
+      "items": { "$ref": "#/$defs/eventRef" }
+    },
+    "reject": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The id of the invariant that rejected the command. Its presence makes this response a REJECTION regardless of any `emit`: when both keys appear, reject wins."
+    }
+  },
+  "$defs": {
+    "scalar": {
+      "description": "A wire scalar (§3.3): the only value types that cross this wire. `boolean`, a 64-bit signed `integer`, or a `string`. A payload field declared `number` or `date` (§3.2) is carried here AS A STRING — the wire alphabet has no fractional-number or date type, so those cross as their string form.",
+      "type": ["boolean", "integer", "string"]
+    },
+    "eventRef": {
+      "description": "A reference to an event with its payload. EITHER a bare id string (shorthand for that event with the EMPTY payload) OR an object naming the `event` id and its `with` payload. A missing `with` is the empty payload. Payload values are wire scalars (§3.3).",
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "description": "Bare event id — the event with an empty payload."
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event"],
+          "properties": {
+            "event": { "type": "string", "minLength": 1, "description": "The event id." },
+            "with": {
+              "type": "object",
+              "description": "The event payload: field name → wire scalar. Absent means the empty payload.",
+              "additionalProperties": { "$ref": "#/$defs/scalar" }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

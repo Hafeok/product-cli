@@ -1,0 +1,253 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hafeok.github.io/product-framework/codegen/manifest.schema.json",
+  "title": "CodegenManifest",
+  "description": "The outbound message across the code-generation seam (spec §5.2): the boundary between the deterministic oracle and a language backend. NOT reification — reify(AIO,context)→CIO (§4.5) is a different boundary; this seam turns the whole oracle into a target-language source tree. The manifest carries the WHOLE ORACLE BY VALUE — every fact a backend needs to emit code is inlined, resolved, and pre-computed, so a backend is a pure function of the manifest and calls nothing back. A backend is any process that consumes a manifest on stdin and answers a CodegenFilePlan on stdout. What crosses, by value: per-aggregate payload schemas (declared §3.2 fields taking PRECEDENCE over inference); Decider and Projector scenarios (the behavioural oracle, §6.3.1); flow chains with EVERY step's outcome pre-computed by the oracle (§3.4); screen facts — surfaces, offers, non-waived degraded states, and a present-state fixture already folded by the relevant Projector (§3.4); and the graph content hash the manifest was computed from (`graph_hash`). Payload values obey the wire scalar alphabet (§3.3): `boolean`, 64-bit signed `integer`, `string`; a field declared `number` or `date` (§3.2) travels AS A STRING. Field names are snake_case to match the codegen family. Versioned via `manifest_version` so a future shape change is a version bump, not a silent break. Self-contained: no cross-file `$ref`; every reusable shape inlines in `$defs`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest_version",
+    "graph_hash",
+    "payload_schemas",
+    "decider_scenarios",
+    "projector_scenarios",
+    "flows",
+    "screens"
+  ],
+  "properties": {
+    "manifest_version": {
+      "const": "1",
+      "description": "Codegen manifest wire version. Const \"1\" for this projection. A backend MUST reject a manifest whose version it does not understand rather than guess — the version gates the whole shape, so a bump is an explicit, non-silent break."
+    },
+    "graph_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "The content hash of the knowledge graph this manifest was computed from — `sha256:`-prefixed, lowercase hex. It IS the manifest's provenance anchor: a file plan generated from this manifest is attributable to exactly this graph state, and the consumer's drift gate (§7.3.1) compares against it. See also `$defs/graphHash`."
+    },
+    "payload_schemas": {
+      "type": "object",
+      "description": "Per-aggregate payload schemas, keyed by aggregate id. For each aggregate, the field shapes of its events, commands, and view — with DECLARED §3.2 fields taking precedence over anything the oracle could infer from scenarios. A backend types generated code from these, not from guesswork. Value type per `$defs/aggregateSchema`.",
+      "additionalProperties": { "$ref": "#/$defs/aggregateSchema" }
+    },
+    "decider_scenarios": {
+      "type": "array",
+      "description": "The Decider oracle (§6.3.1): each scenario folds `given` into fresh aggregate state and decides `when`, with the oracle's PRE-COMPUTED outcome in `then` — an accept-with-emit or a reject naming the invariant. A backend reproduces these; it does not re-derive them.",
+      "items": { "$ref": "#/$defs/deciderScenario" }
+    },
+    "projector_scenarios": {
+      "type": "array",
+      "description": "The Projector oracle (§6.3.1): each scenario folds `given` from the relevant Projector's initial view, with the oracle's PRE-COMPUTED resulting view in `then` (full-state). A backend reproduces these exactly.",
+      "items": { "$ref": "#/$defs/projectorScenario" }
+    },
+    "flows": {
+      "type": "array",
+      "description": "Flow chains (§3.4): an ordered command sequence where EVERY step's outcome is pre-computed by the oracle and inlined. The backend wires the flow; it never has to run the Decider to know what a step does.",
+      "items": { "$ref": "#/$defs/flow" }
+    },
+    "screens": {
+      "type": "array",
+      "description": "Screen facts (§3.4): per screen, the surfaces it shows, the offers (commands) it can invoke, its NON-WAIVED degraded states, and a present-state fixture already folded by the relevant Projector. Everything the backend needs to render a screen is by value here.",
+      "items": { "$ref": "#/$defs/screen" }
+    }
+  },
+  "$defs": {
+    "scalar": {
+      "description": "A wire scalar (§3.3): `boolean`, a 64-bit signed `integer`, or a `string`. A payload field declared `number` or `date` (§3.2) is carried here AS A STRING — the wire alphabet has no fractional-number or date type.",
+      "type": ["boolean", "integer", "string"]
+    },
+    "declaredType": {
+      "type": "string",
+      "enum": ["boolean", "integer", "number", "string", "date"],
+      "description": "A field's DECLARED type (§3.2), which takes precedence over inference. Note the split from the wire alphabet (§3.3): `boolean`, `integer`, and `string` cross as themselves, whereas a `number` or `date` field crosses the wire AS A STRING even though it is declared with its richer type here."
+    },
+    "fieldSet": {
+      "type": "object",
+      "description": "One message's or view's declared fields: field name → declared type (§3.2). Empty object means the empty payload.",
+      "additionalProperties": { "$ref": "#/$defs/declaredType" }
+    },
+    "aggregateSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "One aggregate's payload schemas by value: the declared field shape of each of its events and commands, and of its view. Declared §3.2 fields win over inference.",
+      "properties": {
+        "events": {
+          "type": "object",
+          "description": "Event id → its declared field set (§3.2).",
+          "additionalProperties": { "$ref": "#/$defs/fieldSet" }
+        },
+        "commands": {
+          "type": "object",
+          "description": "Command id → its declared field set (§3.2).",
+          "additionalProperties": { "$ref": "#/$defs/fieldSet" }
+        },
+        "view": {
+          "$ref": "#/$defs/fieldSet",
+          "description": "The aggregate's view: field name → declared type (§3.2)."
+        }
+      }
+    },
+    "eventRef": {
+      "description": "A reference to an event with its payload. EITHER a bare id string (that event with the EMPTY payload) OR an object naming the `event` id and its `with` payload. A missing `with` is the empty payload. Payload values are wire scalars (§3.3).",
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "description": "Bare event id — the event with an empty payload."
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event"],
+          "properties": {
+            "event": { "type": "string", "minLength": 1, "description": "The event id." },
+            "with": {
+              "type": "object",
+              "description": "The event payload: field name → wire scalar. Absent means the empty payload.",
+              "additionalProperties": { "$ref": "#/$defs/scalar" }
+            }
+          }
+        }
+      ]
+    },
+    "commandRef": {
+      "description": "A reference to a command with its payload. EITHER a bare id string (that command with the EMPTY payload) OR an object naming the `command` id and its `with` payload. A missing `with` is the empty payload. Payload values are wire scalars (§3.3).",
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "description": "Bare command id — the command with an empty payload."
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["command"],
+          "properties": {
+            "command": { "type": "string", "minLength": 1, "description": "The command id." },
+            "with": {
+              "type": "object",
+              "description": "The command payload: field name → wire scalar. Absent means the empty payload.",
+              "additionalProperties": { "$ref": "#/$defs/scalar" }
+            }
+          }
+        }
+      ]
+    },
+    "decisionOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The oracle's pre-computed result of deciding a command: an accept that emits events (`emit`) or a reject naming the invariant (`reject`). REJECT WINS if both are present — a step with both an emission and a rejection to report is a rejection.",
+      "properties": {
+        "emit": {
+          "type": "array",
+          "description": "Events produced on accept, in emission order. May be empty (`[]`) — an accept with no event. Ignored if `reject` is present.",
+          "items": { "$ref": "#/$defs/eventRef" }
+        },
+        "reject": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The id of the invariant that rejected the command. Its presence makes the outcome a rejection regardless of any `emit`: reject wins."
+        }
+      }
+    },
+    "deciderScenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["given", "when", "then"],
+      "description": "One Decider scenario with the oracle's pre-computed outcome (§6.3.1). Fold `given` into fresh state, decide `when`, expect `then`.",
+      "properties": {
+        "aggregate": { "type": "string", "minLength": 1, "description": "Aggregate id this scenario exercises (keys into `payload_schemas`). Optional when unambiguous." },
+        "given": {
+          "type": "array",
+          "description": "Prior events folded, in order, into fresh state. May be empty.",
+          "items": { "$ref": "#/$defs/eventRef" }
+        },
+        "when": { "$ref": "#/$defs/commandRef", "description": "The single command decided against the folded state." },
+        "then": { "$ref": "#/$defs/decisionOutcome", "description": "The oracle's pre-computed outcome." }
+      }
+    },
+    "projectorScenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["given", "then"],
+      "description": "One Projector scenario with the oracle's pre-computed view (§6.3.1). Fold `given` from the Projector's initial view; expect the full-state `then`.",
+      "properties": {
+        "projector": { "type": "string", "minLength": 1, "description": "Projector id this scenario exercises. Optional when unambiguous." },
+        "given": {
+          "type": "array",
+          "description": "Events folded, in order, from the initial view. May be empty.",
+          "items": { "$ref": "#/$defs/eventRef" }
+        },
+        "then": {
+          "type": "object",
+          "description": "The oracle's pre-computed view state (full-state): field name → wire scalar (§3.3).",
+          "additionalProperties": { "$ref": "#/$defs/scalar" }
+        }
+      }
+    },
+    "flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "steps"],
+      "description": "A flow chain (§3.4): an ordered command sequence whose every step outcome is pre-computed by the oracle.",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "description": "Flow id." },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "description": "The flow's steps, in order. Each has a command and its oracle-pre-computed outcome.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["when", "then"],
+            "properties": {
+              "when": { "$ref": "#/$defs/commandRef", "description": "The command issued at this step." },
+              "then": { "$ref": "#/$defs/decisionOutcome", "description": "The oracle's pre-computed outcome of this step." }
+            }
+          }
+        }
+      }
+    },
+    "screen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "surfaces", "offers"],
+      "description": "A screen fact (§3.4): everything a backend needs to render one screen, by value.",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "description": "Screen id." },
+        "surfaces": {
+          "type": "array",
+          "description": "The view surfaces this screen shows (e.g. projector/view ids it reads from).",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "offers": {
+          "type": "array",
+          "description": "The offers this screen can invoke — commands the user may issue from it. Each is a CommandRef (bare id, or id with a partially-bound `with`).",
+          "items": { "$ref": "#/$defs/commandRef" }
+        },
+        "degraded_states": {
+          "type": "array",
+          "description": "The screen's NON-WAIVED degraded states — the ones a realiser must still handle (waived states are already dropped by the oracle and never appear here).",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1, "description": "Degraded-state id." },
+              "description": { "type": "string", "description": "What this degraded state means / when it shows." }
+            }
+          }
+        },
+        "present_state": {
+          "type": "object",
+          "description": "A present-state fixture: the screen's view already folded by the relevant Projector, field name → wire scalar (§3.3). Lets the backend scaffold against a concrete, oracle-computed state.",
+          "additionalProperties": { "$ref": "#/$defs/scalar" }
+        }
+      }
+    },
+    "graphHash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "A `sha256:`-prefixed, lowercase-hex content hash of the knowledge graph a manifest was computed from. Ties every generated artifact back to an immutable graph state so the consumer's provenance/drift gate (§7.3.1) is reproducible."
+    }
+  }
+}
