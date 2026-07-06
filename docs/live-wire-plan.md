@@ -70,7 +70,7 @@ product is scoped to `.product/products/<name>/`.
   strict-conformant second product (51 nodes: 2 domains, 2 systems, entities/VOs/
   invariants, full event model, AIOs/WCAG/reification/reference-data, ui-steps/
   page-graph, a cross-system journey, quality demands) into
-  `.product/author-domain/acme/` via the real CLI, exercising the whole authoring
+  `.product/products/acme/` via the real CLI, exercising the whole authoring
   surface end-to-end. View it in the explorer at **`/?product=acme`** (the
   `/api/pf` + `/api/graph` handlers now take a `?product=` override). This also
   makes **Data** (reference-sets) and the UI reification views live for acme.

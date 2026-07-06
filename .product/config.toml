@@ -2,9 +2,6 @@ name = "product-cli"
 version = "0.5.0"
 schema-version = "1"
 
-[product]
-responsibility = "A CLI and MCP server for the Product Framework: author and verify a What/How specification graph."
-
 [mcp]
 write = true
 port = 7777

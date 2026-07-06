@@ -3,7 +3,7 @@
 //! `product domain {list,show,new,edit,rm,validate,export}` lets you interact
 //! with a captured What graph directly from the CLI — no agent session — by
 //! reading/writing the persisted `session.json` under
-//! `.product/author-domain/<product>/`. Writes go through the same in-loop
+//! `.product/products/<product>/`. Writes go through the same in-loop
 //! conformance checker as the MCP `add_*` tools, so the CLI cannot corrupt the
 //! graph.
 
@@ -320,14 +320,14 @@ fn show(id: String, product: Option<String>) -> BoxResult {
 }
 
 fn validate_cmd(product: Option<String>, strict: bool) -> BoxResult {
-    let (_, dir) = resolve(product)?;
+    let (p, dir) = resolve(product)?;
     let session = load(&dir)?;
     let mut violations = validate::validate_graph(&session.graph);
     if strict {
         violations.extend(product_core::pf::rules_pattern::pattern_conformance(&session.graph));
         // §3.6 — if a How contract is present, an architectural demand's
         // `constrains` must bind a real How element (cross-artifact check).
-        let how_path = super::shared::domain_root().join(".product").join("how-contract.yaml");
+        let how_path = super::shared::artifact_dir(Some(&p), "").join("how-contract.yaml");
         if let Ok(text) = std::fs::read_to_string(&how_path) {
             if let Ok(how) = product_core::pf::how::HowContract::from_yaml(&text) {
                 violations.extend(product_core::pf::validate_product::constrains_bind_how(&session.graph, &how));

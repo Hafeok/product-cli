@@ -51,7 +51,7 @@ impl FrameworkState {
     /// (the directory containing `.product/`). Missing pieces read as zero, so
     /// a fresh repo yields an all-zero state rather than an error.
     pub fn probe(repo_root: &Path, product: &str) -> Self {
-        let pdir = repo_root.join(".product");
+        let pdir = crate::pf::paths::product_base(repo_root, product);
         let session = crate::author::domain::session_dir(repo_root, product);
         let graph = crate::pf::session::DomainSession::load(&session)
             .ok()

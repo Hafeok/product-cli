@@ -49,10 +49,7 @@ Always start clean — the resolution order for templates / config / `.product/`
 ### 4. Initialise a fresh project via the CLI
 
 ```bash
-$PRODUCT init -y \
-    --name "FT-XXX E2E Test" \
-    --description "End-to-end test of <feature title>" \
-    --domain core="<one-sentence domain>"
+$PRODUCT init -y --name ft-xxx-e2e-test
 ```
 
 Defaults to the canonical `.product/` layout (ADR-048). Pass `--legacy-layout` only if the feature specifically needs the pre-FT-057 root-based layout.
@@ -60,7 +57,7 @@ Defaults to the canonical `.product/` layout (ADR-048). Pass `--legacy-layout` o
 Verify init landed correctly:
 
 ```bash
-ls -la .product/                       # config.toml, features/, adrs/, tests/, graph/
+ls -la .product/                       # config.toml + products/<name>/ (the product home)
 $PRODUCT --help | head -40             # confirms binary loads against the fresh repo
 ```
 

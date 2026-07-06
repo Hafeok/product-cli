@@ -85,7 +85,7 @@ impl DomainSession {
 
     /// Reconstruct a session from the committed `<product>.ttl` (graph) and
     /// `<product>.provenance.json` (metadata). The product is the session
-    /// directory's name (`.product/author-domain/<product>/`).
+    /// directory's name (`.product/products/<product>/`).
     fn from_spec(session_dir: &Path) -> Result<Self> {
         let absent = || ProductError::NotFound("no active session — call session_start first".to_string());
         let product = session_dir.file_name().and_then(|s| s.to_str()).ok_or_else(absent)?.to_string();
