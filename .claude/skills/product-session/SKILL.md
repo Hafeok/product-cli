@@ -62,7 +62,7 @@ and completion record, not a promotion step.
 - **Locked session.** Do **not** make source-code edits or hand-edit files while a
   session is running. Finish the graph through the MCP/CLI tools; do code changes
   after you exit/finalize.
-- **User data.** Never `rm` or bulk-`git add` `.product/author-domain/` — it's the
+- **User data.** Never `rm` or bulk-`git add` `.product/products/` — it's the
   captured What and is the user's.
 - **Phase gating is real.** If a tool "belongs to another phase", advance first;
   don't fight the gate.

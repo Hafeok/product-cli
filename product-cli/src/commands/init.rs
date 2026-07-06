@@ -1,8 +1,9 @@
 //! Repository initialization (ADR-033, ADR-048, FT-057).
 //!
-//! Default layout writes `.product/config.toml` plus
-//! `.product/{features,adrs,tests,graph}/`. `--legacy-layout` opts into the
-//! pre-FT-057 root-based scheme (`product.toml` + `docs/...`).
+//! Default layout writes `.product/config.toml` plus the product's home,
+//! `.product/products/<name>/` (further products get theirs via `product
+//! product new`). `--legacy-layout` opts into the pre-FT-057 root-based
+//! scheme (`product.toml` + `docs/...`).
 
 use product_core::{config::ProductConfig, error::ProductError, fileops};
 use std::path::{Path, PathBuf};
@@ -87,6 +88,17 @@ pub(crate) fn handle_init(
     fileops::write_file_atomic(&config_path, &toml_content)?;
     println!("Created:");
     println!("  {}", layout.config);
+
+    // The product's home — every artifact for it (What graph, How, delivery)
+    // lives under `.product/products/<name>/`. Skipped when the project name
+    // is not a valid node id (the graph commands would reject it anyway).
+    if !legacy_layout && product_core::pf::ids::validate_id(&project_name).is_ok() {
+        let home = product_core::pf::paths::product_home(&target_dir, &project_name);
+        std::fs::create_dir_all(&home).map_err(|e| {
+            ProductError::IoError(format!("failed to create {}: {}", home.display(), e))
+        })?;
+        println!("  .product/products/{project_name}/");
+    }
 
     if !no_skills {
         let base = target_dir.join(".claude").join("skills");

@@ -77,5 +77,5 @@ start"]` → `build_run deliverable=session-start dry_run=true` → review → r
 `session_finalize`.
 
 Guardrails: **always dry-run before a real build** (it dispatches a worker and
-spends tokens). Plus the usual: locked session, `author-domain` is user data — see
+spends tokens). Plus the usual: locked session, `.product/products/` is user data — see
 **product-session**.

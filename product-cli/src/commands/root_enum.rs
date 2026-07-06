@@ -186,6 +186,11 @@ pub enum Commands {
         #[command(subcommand)]
         command: PrimitiveCommands,
     },
+    /// Products — list, add, and inspect the homes under .product/products/
+    Product {
+        #[command(subcommand)]
+        command: ProductCommands,
+    },
     Projector {
         #[command(subcommand)]
         command: ProjectorCommands,

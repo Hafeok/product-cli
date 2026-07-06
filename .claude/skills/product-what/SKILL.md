@@ -74,4 +74,4 @@ issues=cmd-x)` → `system sys-a (system_kind=service)` → `flow f-x (steps=[cm
 ev-x], system=sys-a)`. Six `product_domain_new` calls, then
 `product_domain_validate`.
 
-Guardrails: see **product-session** (locked session; `author-domain` is user data).
+Guardrails: see **product-session** (locked session; `.product/products/` is user data).

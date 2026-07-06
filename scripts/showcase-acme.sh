@@ -2,7 +2,7 @@
 # Author the ACME Shop showcase/test product into the repo's .product graph via
 # the real CLI. Nodes are created in strict dependency order because each create
 # validates that its references already resolve. Run against a fresh acme graph:
-#   rm -rf .product/author-domain/acme && bash scripts/showcase-acme.sh
+#   rm -rf .product/products/acme/acme.ttl .product/products/acme/session.json && bash scripts/showcase-acme.sh
 # Then view it in the explorer at  /?product=acme.
 set -euo pipefail
 BIN="${BIN:-./target/debug/product}"

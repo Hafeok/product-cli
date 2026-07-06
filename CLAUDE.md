@@ -6,8 +6,9 @@ Product is a Rust CLI and MCP server for the **Product Framework** — the open
 What/How specification graph (`docs/product-framework-open.md`, currently
 v1.7.0). It captures and verifies a product's *What* (domain model, event model,
 Deciders, Projectors, systems, triggers, UI/AIO model) and *How* (contracts,
-reification, delivery), all under `.product/`. The reference What lives in
-`.product/author-domain/product-cli/`.
+reification, delivery), all under `.product/`. Every product has one home,
+`.product/products/<name>/`; the reference What lives in
+`.product/products/product-cli/`.
 
 > **Graph-only.** This repo was pivoted to the framework graph alone. The former
 > FT/ADR/TC knowledge-graph tool (the `adr`/`test`/`gap`/`drift`/`conformance`/
@@ -93,11 +94,19 @@ docs/
   examples/ · workshop/       # Worked examples + workshop runbook
 .product/
   config.toml          # Repo config (`[author].cli` sets the default session CLI: claude|copilot)
-  how-contract.yaml    # The canonical §4 How (hand-editable source); the self-hosted blueprint refs it
-  author-domain/       # The captured What graphs (e.g. product-cli — the example What)
-  deciders/ · features/ · work-units/ · deliverables/ · blueprints/ ·
-  deployable-units/ · sessions/
+  capabilities.yaml · role-bindings.yaml · sessions/   # Repo-level worker catalog + session journals
+  products/            # One home per product (init creates the first; `product product new` adds more)
+    product-cli/       #   The self-hosted example: its What graph (product-cli.ttl + provenance)
+                       #   beside how-contract.yaml (the canonical §4 How the blueprint refs),
+                       #   deciders/ · features/ · work-units/ · deliverables/ · blueprints/ · targets/
+    acme/              #   The showcase product (What graph + its own How/delivery artifacts)
 ```
+
+`pf::paths::product_base` resolves a product's home; two legacy layouts still
+resolve for unmigrated repos (root-product artifacts directly under `.product/`,
+What graphs under `.product/author-domain/<name>/`) — the fallback only fires
+when the scoped home doesn't exist. `product product {new,list,show}` (and the
+`product_product_*` MCP tools) manage the homes.
 
 A blueprint's `how-contract.yaml` may be an inline contract **or** a one-line
 `ref: <relative path>` stub pointing at a shared one — resolved by
@@ -194,7 +203,7 @@ Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
   half); `product verdict <file>` validates an inbound verdict event against the
   pinned accepted/rejected/escalate vocabulary. Schemas: `schema/json/build-seam/`.
 
-The reference What lives in `.product/author-domain/product-cli/`. `product mcp
+The reference What lives in `.product/products/product-cli/`. `product mcp
 --http` serves two web views:
 
 - **`/`** — the **1.7.0 explorer** (a React app embedded from
