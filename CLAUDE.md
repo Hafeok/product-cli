@@ -179,6 +179,21 @@ Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
   coupling at plan time and emits `design-system.g.json` + `tokens.g.css` (hash-pinned;
   `reify check` catches design-system drift), and `product codegen web` renders one
   on-system HTML page per UI step, styled exclusively via tokens.
+- **Authoring scopes (§14)** — `product scope add <file>` validates a tool's
+  authoring-scope declaration (§14.2 — which What-element kinds it MAY author,
+  which it MUST NOT, over the framework's own kind vocabulary) and vendors it under
+  `.product/authoring-scopes/<tool>.yaml`. A scope makes a tool (Figma, a legacy
+  schema, an Event-Modeling board) a **bounded co-author** of the What. `list` /
+  `show` / `validate` inspect stored scopes (validate = wholeness + kind-vocabulary
+  + the derived-kind rule: a derived kind like `state-space` never appears in
+  `authors`). `scope enforce <tool> <submission.json>` runs the §14.3 enforcement
+  oracle — in-scope authorship accepted, out-of-scope content rejected regardless
+  of quality, the gap split into `unauthored-within-scope` vs `outside-scope`.
+  `scope join --required <kinds>` (or `--required-file`) runs the §14.4
+  completeness join across every stored scope — per required kind: covered (by
+  whom), coverable-but-unauthored, or uncovered. A **What-phase** intake concept;
+  the reference Figma scope lives at `.product/authoring-scopes/figma.yaml` and the
+  schema at `schema/json/authoring-scope/`.
 - **DeployableUnit (§4/§4.2)** — `product deployable-unit new <id> --built-from
   <blueprint> --system <sys>… [--environment … --domain-name/--bundle-id/--runtime]`
   declares the concrete artifact a **blueprint** (v1.7.0's rename of *archetype*)
@@ -225,7 +240,8 @@ is just `workflow.json` under `.product/sessions/<id>/`). The transport
 shows only the current phase's family, and out-of-phase calls are rejected:
 
 - **What** — `product_domain_*`, `product_decider_*`, `product_projector_*`,
-  `product_primitive_*`.
+  `product_primitive_*`, `product_scope_*` (§14 authoring scopes — the intake
+  concept: `add`/`list`/`show`/`validate`/`enforce`/`join`).
 - **How** — `product_how_*`, `product_blueprint_*` (alias `product_archetype_*`),
   `product_deployable_unit_*`, `product_cell_*`,
   `product_work_unit_*` (the atomic slice), `product_worker_*`.

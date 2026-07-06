@@ -56,8 +56,14 @@ const CONTROL_TOOLS: [&str; 3] =
 /// The home phase a tool belongs to, by name prefix (the single source of truth
 /// for gating; control tools are handled separately and are always visible).
 pub fn phase_of(name: &str) -> Phase {
-    const WHAT: [&str; 4] =
-        ["product_domain_", "product_decider_", "product_projector_", "product_primitive_"];
+    const WHAT: [&str; 5] = [
+        "product_domain_",
+        "product_decider_",
+        "product_projector_",
+        "product_primitive_",
+        // Authoring scopes are an intake / What concept (§14).
+        "product_scope_",
+    ];
     const HOW: [&str; 8] = [
         "product_how_",
         "product_design_system_",
@@ -324,6 +330,8 @@ mod tests {
     fn phase_of_maps_families() {
         assert_eq!(phase_of("product_domain_new"), Phase::What);
         assert_eq!(phase_of("product_decider_validate"), Phase::What);
+        assert_eq!(phase_of("product_scope_add"), Phase::What);
+        assert_eq!(phase_of("product_scope_enforce"), Phase::What);
         assert_eq!(phase_of("product_how_show"), Phase::How);
         assert_eq!(phase_of("product_how_add"), Phase::How);
         assert_eq!(phase_of("product_blueprint_init"), Phase::How);

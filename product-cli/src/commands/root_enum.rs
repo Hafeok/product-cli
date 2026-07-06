@@ -201,6 +201,11 @@ pub enum Commands {
         #[command(subcommand)]
         command: ReleaseCommands,
     },
+    /// Authoring scopes (§14) — a tool as a bounded co-author of the What
+    Scope {
+        #[command(subcommand)]
+        command: ScopeCommands,
+    },
     /// Seam verification (§6.3) — verify a UI step's screen and its What agree
     Seam {
         /// The UI step id

@@ -1697,3 +1697,71 @@ fn tc_1082_unit_sliced_manifest_keeps_the_product_hash() {
     // Unknown units name what exists.
     h.run(&["codegen", "manifest", "--unit", "ghost"]).assert_exit(1).assert_stderr_contains("Order-decider");
 }
+
+// =============================================================================
+// §14 Authoring scopes — a tool as a bounded co-author of the What.
+// =============================================================================
+
+/// The Figma reference scope (mirrors reference/figma.authoring-scope.json).
+const FIGMA_SCOPE: &str = r#"tool: figma
+adapter: figma-bridge
+authors:
+- {kind: ui-step, completeness: partial, channel: frame-structure}
+- {kind: aio, completeness: sufficient, channel: native-annotation}
+- {kind: aio, completeness: partial, channel: component-name}
+- {kind: state-annotation, completeness: sufficient, channel: native-annotation}
+- {kind: page-graph, completeness: sufficient, channel: frame-structure}
+- {kind: context-of-use, completeness: partial, channel: native-annotation}
+- {kind: accessibility-criteria, completeness: partial, channel: native-annotation}
+- {kind: content-reference, completeness: partial, channel: frame-structure}
+- {kind: token-source, completeness: sufficient, channel: variable-export}
+excluded: [domain-structure, trigger, command, event, view, decider, projector, state-space, journey, quality-demand, data-shape]
+process-slice: ui-steps-aios-page-graph
+"#;
+
+#[test]
+fn scope_add_validate_enforce_join_round_trip() {
+    let h = Harness::new();
+    h.write("figma.scope.yaml", FIGMA_SCOPE);
+
+    // add — validates + vendors under .product/authoring-scopes/<tool>.yaml
+    h.run(&["scope", "add", "figma.scope.yaml"])
+        .assert_exit(0)
+        .assert_stdout_contains("figma");
+    assert!(h.exists(".product/authoring-scopes/figma.yaml"), "scope vendored");
+
+    // list + show
+    h.run(&["scope", "list"]).assert_exit(0).assert_stdout_contains("figma");
+    h.run(&["scope", "show", "figma"]).assert_exit(0).assert_stdout_contains("figma-bridge");
+
+    // validate — the reference scope is whole (§14.2)
+    h.run(&["scope", "validate", "figma"]).assert_exit(0).assert_stdout_contains("valid");
+
+    // enforce — a Decider authored in Figma is rejected out of scope (§14.3)
+    let submission = r#"{"authored":[{"kind":"aio","element":"tz-field"},
+        {"kind":"decider","element":"no-overlap-rule"}],
+        "unauthored-candidates":[{"kind":"aio","element":"mystery"},
+        {"kind":"event","element":"booking"}]}"#;
+    h.write("submission.json", submission);
+    h.run(&["scope", "enforce", "figma", "submission.json"])
+        .assert_exit(0)
+        .assert_stdout_contains("INVALID")
+        .assert_stdout_contains("rejected-out-of-scope");
+
+    // join — journey has no connected author, so the What is incomplete (§14.4)
+    let join = h.run(&["scope", "join", "--required", "aio,journey,decider"]);
+    join.assert_exit(0)
+        .assert_stdout_contains("incomplete")
+        .assert_stdout_contains("journey: uncovered");
+}
+
+#[test]
+fn scope_add_rejects_a_derived_kind_in_authors() {
+    let h = Harness::new();
+    // state-space is DERIVED — no tool authors it (§14.2).
+    h.write("bad.scope.yaml", "tool: bad\nadapter: bad-bridge\nauthors:\n- {kind: state-space}\n");
+    h.run(&["scope", "add", "bad.scope.yaml"])
+        .assert_exit(1)
+        .assert_stderr_contains("DERIVED");
+    assert!(!h.exists(".product/authoring-scopes/bad.yaml"), "invalid scope not saved");
+}

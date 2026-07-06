@@ -6,7 +6,7 @@ use super::{
     author, blueprint, build, cell, codegen, completions, decider, deliverable, deployable_unit,
     design_system, domain,
     guide, hooks, how, init, lsp, mcp_cmd, preview, primitive, projector, release, render,
-    seam, session, skills, feature, target, verdict, work_unit, worker, BoxResult, Commands,
+    scope, seam, session, skills, feature, target, verdict, work_unit, worker, BoxResult, Commands,
 };
 
 pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapCommand) -> BoxResult {
@@ -19,6 +19,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::InstallHooks => hooks::handle_install_hooks(),
         Commands::Lsp { command } => lsp::handle_lsp(command),
         Commands::Mcp { .. } => dispatch_mcp(command),
+        Commands::Scope { command } => render(scope::handle_scope(command), fmt),
         Commands::Session { command } => session::handle_session(command),
         Commands::Skills { command } => skills::handle_skills(command),
         Commands::Seam { id, product } => seam::handle_seam(id, product),
