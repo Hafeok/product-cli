@@ -27,7 +27,7 @@ pub struct StoredDs {
 }
 
 impl StoredDs {
-    /// Hex SHA-256 over the manifest YAML — the identity `reify check` pins.
+    /// Hex SHA-256 over the manifest YAML — the identity `codegen check` pins.
     pub fn hash(&self) -> String {
         content_hash(&self.source)
     }

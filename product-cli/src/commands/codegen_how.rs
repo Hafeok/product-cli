@@ -1,6 +1,6 @@
-//! Reify-from-How adapter — run the contract's declared realisations.
+//! Codegen-from-How adapter — run the contract's declared realisations.
 //!
-//! `product reify emit` reads the §4.2 `realisations:` block of the How
+//! `product codegen emit` reads the §4.2 `realisations:` block of the How
 //! contract — the human's captured backend/tier/namespace decision — and
 //! derives every emission from it: built-in backends via the registry,
 //! external ones via their declared `plugin_cmd` over the manifest
@@ -12,8 +12,8 @@ use product_core::pf::decider::Decider;
 use product_core::pf::ids::NodeKind;
 use product_core::pf::model::DomainGraph;
 use product_core::pf::projector::Projector;
-use product_core::pf::reify::{ReifyOptions, ReifyPlan};
-use product_core::pf::reify_backend::{
+use product_core::pf::codegen::{ReifyOptions, ReifyPlan};
+use product_core::pf::codegen_backend::{
     backend, external_plan, realisation_opts, realisation_out, resolve_realisations,
 };
 use product_core::pf::HowContract;
@@ -21,7 +21,7 @@ use product_core::pf::HowContract;
 use super::BoxResult;
 
 pub(super) fn emit_from_how(id: Option<String>, product: Option<String>) -> BoxResult {
-    let (name, graph, deciders, projectors, base) = super::reify::resolve_inputs(None, product)?;
+    let (name, graph, deciders, projectors, base) = super::codegen::resolve_inputs(None, product)?;
     let path = super::shared::artifact_dir(Some(&name), "").join("how-contract.yaml");
     let contract = HowContract::load_opt(&path)?
         .ok_or_else(|| format!("no how-contract at {} — scaffold one with `product how init`, then declare a §4.2 `realisations:` block", path.display()))?;
@@ -31,16 +31,16 @@ pub(super) fn emit_from_how(id: Option<String>, product: Option<String>) -> BoxR
         opts.design_system = super::design_system::load_bound_ds(Some(&name))?;
         let plan = plan_for(r, &graph, &deciders, &projectors, &opts)?;
         let root = super::shared::domain_root().join(realisation_out(r, &name));
-        let stale = super::reify::remove_stale(&root, &plan);
-        let (written, kept) = super::reify::write_plan(&root, &plan, false)?;
+        let stale = super::codegen::remove_stale(&root, &plan);
+        let (written, kept) = super::codegen::write_plan(&root, &plan, false)?;
         let mode = format!(
             "{}{}, from the How",
             r.backend,
             if opts.oracle_only { " oracle-only" } else { " full" },
         );
-        super::reify::report(
+        super::codegen::report(
             &name, &root, &r.id, &mode, &plan, (written, kept, stale),
-            "see the tree's README.g.md; drift gate: `product reify check --out <dir>`",
+            "see the tree's README.g.md; drift gate: `product codegen check --out <dir>`",
         );
     }
     Ok(())
@@ -86,7 +86,7 @@ pub(super) fn run_external(
 ) -> Result<ReifyPlan, Box<dyn std::error::Error>> {
     use std::io::Write;
     use std::process::{Command, Stdio};
-    let json = product_core::pf::reify_manifest::manifest_json(graph, deciders, projectors, opts)?;
+    let json = product_core::pf::codegen_manifest::manifest_json(graph, deciders, projectors, opts)?;
     let mut child = Command::new("sh")
         .arg("-c")
         .arg(cmd)

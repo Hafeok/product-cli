@@ -3,20 +3,20 @@
 //! A [`ReifyBackend`] renders the deterministic oracle into one
 //! ecosystem's verification shell. Built-ins live here (C# full/oracle,
 //! Kotlin oracle-only); external backends never touch this trait — they
-//! are processes consuming the [`super::reify_manifest`] JSON on stdin
-//! and answering a file plan, wired via `product reify plugin`.
+//! are processes consuming the [`super::codegen_manifest`] JSON on stdin
+//! and answering a file plan, wired via `product codegen plugin`.
 
 use crate::error::{ProductError, Result};
 
 use super::decider::Decider;
 use super::model::DomainGraph;
 use super::projector::Projector;
-use super::reify::{plan_csharp, ReifyOptions, ReifyPlan};
-use super::reify_kotlin::plan_kotlin;
+use super::codegen::{plan_csharp, ReifyOptions, ReifyPlan};
+use super::codegen_kotlin::plan_kotlin;
 
 /// One built-in language backend.
 pub trait ReifyBackend: Sync {
-    /// The id used by `product reify emit --lang <id>` and the MCP tool.
+    /// The id used by `product codegen emit --lang <id>` and the MCP tool.
     fn id(&self) -> &'static str;
     fn description(&self) -> &'static str;
     /// True when the backend only supports the oracle-only tier.
@@ -75,7 +75,7 @@ impl ReifyBackend for Web {
         true
     }
     fn plan(&self, graph: &DomainGraph, deciders: &[Decider], projectors: &[Projector], opts: &ReifyOptions) -> Result<ReifyPlan> {
-        super::reify_web::plan_web(graph, deciders, projectors, opts)
+        super::codegen_web::plan_web(graph, deciders, projectors, opts)
     }
 }
 
@@ -88,7 +88,7 @@ pub fn backends() -> &'static [&'static dyn ReifyBackend] {
 
 /// Parse an external backend's answer — `{"files": [{path, content,
 /// overwrite?}]}` — into a [`ReifyPlan`], appending the provenance manifest
-/// so `product reify check` (and stale-file cleanup) work on plugin trees
+/// so `product codegen check` (and stale-file cleanup) work on plugin trees
 /// exactly as on built-in ones. Paths must be relative and stay inside the
 /// output tree.
 pub fn external_plan(
@@ -98,7 +98,7 @@ pub fn external_plan(
     projectors: &[Projector],
     opts: &ReifyOptions,
 ) -> Result<ReifyPlan> {
-    use super::reify::{aggregate_names, input_hash, provenance_json, GenFile};
+    use super::codegen::{aggregate_names, input_hash, provenance_json, GenFile};
     let v: serde_json::Value = serde_json::from_str(stdout_json).map_err(|e| {
         ProductError::ConfigError(format!("plugin output is not valid JSON: {e}"))
     })?;
@@ -191,7 +191,7 @@ pub fn realisation_opts(
         namespace: r
             .namespace
             .clone()
-            .unwrap_or_else(|| super::reify_ident::pascal(product)),
+            .unwrap_or_else(|| super::codegen_ident::pascal(product)),
         what_version: what_version.to_string(),
         oracle_only,
         design_system: None,
@@ -212,7 +212,7 @@ pub fn backend(id: &str) -> Result<&'static dyn ReifyBackend> {
         .ok_or_else(|| {
             let known: Vec<&str> = BACKENDS.iter().map(|b| b.id()).collect();
             ProductError::ConfigError(format!(
-                "unknown reify backend '{id}' — built-ins: {} (external backends run via `product reify plugin`)",
+                "unknown codegen backend '{id}' — built-ins: {} (external backends run via `product codegen plugin`)",
                 known.join(", ")
             ))
         })

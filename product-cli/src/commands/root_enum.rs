@@ -61,6 +61,12 @@ pub enum Commands {
         #[command(subcommand)]
         command: CellCommands,
     },
+    /// Codegen (§5.2 the code-generation seam) — project the What graph into a verifiable implementation frame
+    #[command(visible_alias = "reify")]
+    Codegen {
+        #[command(subcommand)]
+        command: ReifyCommands,
+    },
     /// Generate shell completions
     Completions {
         /// Shell: bash, zsh, fish
@@ -189,11 +195,6 @@ pub enum Commands {
     Projector {
         #[command(subcommand)]
         command: ProjectorCommands,
-    },
-    /// Reify (§4.5) — project the What graph into a verifiable implementation frame
-    Reify {
-        #[command(subcommand)]
-        command: ReifyCommands,
     },
     /// Release — a coherent set of delivery features (§7.1)
     Release {

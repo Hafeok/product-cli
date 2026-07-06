@@ -10,7 +10,7 @@ pub mod registry;
 pub mod domain;
 pub mod workflow;
 mod build_handler;
-mod reify_handlers;
+mod codegen_handlers;
 mod decider_handlers;
 mod projector_handlers;
 mod primitive_handlers;

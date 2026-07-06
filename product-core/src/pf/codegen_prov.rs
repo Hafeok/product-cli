@@ -1,15 +1,15 @@
-//! Reify provenance — the generated tree's machine-readable identity.
+//! Codegen provenance — the generated tree's machine-readable identity.
 //!
-//! `provenance.g.json` records what a reify run produced and the exact inputs
+//! `provenance.g.json` records what a codegen run produced and the exact inputs
 //! it was produced from: the pinned graph hash, the What-version, and — when a
-//! design system is bound — its id + manifest hash. `reify check` reads these
+//! design system is bound — its id + manifest hash. `codegen check` reads these
 //! back as the drift gate.
 
 use serde_json::json;
 
 use crate::error::{ProductError, Result};
 
-use super::reify::{GenFile, ReifyOptions};
+use super::codegen::{GenFile, ReifyOptions};
 
 /// The machine-readable provenance manifest (`provenance.g.json`).
 pub fn provenance_json(opts: &ReifyOptions, graph_hash: &str, files: &[GenFile]) -> String {
@@ -20,7 +20,7 @@ pub fn provenance_json(opts: &ReifyOptions, graph_hash: &str, files: &[GenFile])
         "namespace": opts.namespace,
         "what_version": opts.what_version,
         "graph_hash": format!("sha256:{graph_hash}"),
-        "generator": "product reify csharp",
+        "generator": "product codegen csharp",
         "generated_files": generated,
     });
     if let (Some(spec), Some(obj)) = (&opts.design_system, v.as_object_mut()) {

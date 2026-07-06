@@ -1,10 +1,10 @@
-//! Handlers for the `product_reify_*` tools (Build phase).
+//! Handlers for the `product_codegen_*` tools (Build phase).
 //!
-//! Thin adapters over the `product-core` reify slice: resolve the
+//! Thin adapters over the `product-core` codegen slice: resolve the
 //! product, What graph, and authored Deciders/Projectors via the shared
 //! `pf_mcp` loaders, then delegate to the backend registry / manifest /
 //! drift check. `emit` writes generated trees under the repo root (never
-//! under `.product/` — reify reads the spec, it does not mutate it).
+//! under `.product/` — codegen reads the spec, it does not mutate it).
 
 use std::path::{Path, PathBuf};
 
@@ -12,9 +12,9 @@ use serde_json::{json, Value};
 
 use product_core::pf::decider::Decider;
 use product_core::pf::projector::Projector;
-use product_core::pf::reify::{input_hash, recorded_hash, ReifyOptions, ReifyPlan};
-use product_core::pf::reify_backend::{backend, backends};
-use product_core::pf::reify_ident::pascal;
+use product_core::pf::codegen::{input_hash, recorded_hash, ReifyOptions, ReifyPlan};
+use product_core::pf::codegen_backend::{backend, backends};
+use product_core::pf::codegen_ident::pascal;
 
 use crate::pf_mcp::{graph_of, ids_in, load_yaml, pbase, product_of, req_str};
 
@@ -33,7 +33,7 @@ pub fn handle_backends(_args: &Value, _repo_root: &Path) -> Result<Value, String
 }
 
 pub fn handle_manifest(args: &Value, repo_root: &Path) -> Result<Value, String> {
-    use product_core::pf::reify_manifest as rm;
+    use product_core::pf::codegen_manifest as rm;
     let (graph, deciders, projectors, opts) = inputs(args, repo_root)?;
     let m = match args.get("unit").and_then(|v| v.as_str()) {
         Some(unit) => rm::manifest_unit(&graph, &deciders, &projectors, &opts, unit),
@@ -52,7 +52,7 @@ pub fn handle_check(args: &Value, repo_root: &Path) -> Result<Value, String> {
     let prov = std::fs::read_to_string(root.join("provenance.g.json"))
         .map_err(|_| format!("no provenance.g.json under '{out}' — emit first"))?;
     let recorded = recorded_hash(&prov).map_err(|e| format!("{e}"))?;
-    let ds_conformant = match product_core::pf::reify::recorded_ds(&prov) {
+    let ds_conformant = match product_core::pf::codegen::recorded_ds(&prov) {
         None => true,
         Some((rec_id, rec_hash)) => opts
             .design_system
@@ -101,8 +101,8 @@ fn resolve_target(
     repo_root: &Path,
     graph: &product_core::pf::model::DomainGraph,
     opts: &mut ReifyOptions,
-) -> Result<(&'static dyn product_core::pf::reify_backend::ReifyBackend, String), String> {
-    use product_core::pf::reify_backend::{realisation_opts, realisation_out, resolve_realisations};
+) -> Result<(&'static dyn product_core::pf::codegen_backend::ReifyBackend, String), String> {
+    use product_core::pf::codegen_backend::{realisation_opts, realisation_out, resolve_realisations};
     let Some(rid) = args.get("realisation").and_then(|v| v.as_str()) else {
         let lang = req_str(args, "lang")?;
         let b = backend(&lang).map_err(|e| format!("{e}"))?;
@@ -117,7 +117,7 @@ fn resolve_target(
     let r = resolve_realisations(&contract, Some(rid)).map_err(|e| format!("{e}"))?[0].clone();
     if r.backend == "plugin" {
         return Err(format!(
-            "realisation '{rid}' uses an external plugin backend — run it via `product reify emit` on the CLI"
+            "realisation '{rid}' uses an external plugin backend — run it via `product codegen emit` on the CLI"
         ));
     }
     if let Some(sys) = &r.system {
@@ -160,7 +160,7 @@ fn inputs(args: &Value, repo_root: &Path) -> Result<(product_core::pf::model::Do
     Ok((graph, deciders, projectors, ReifyOptions { product, namespace, what_version, oracle_only: false, design_system }))
 }
 
-/// The How-bound design system as a reify input, when one is bound (§4.5).
+/// The How-bound design system as a codegen input, when one is bound (§4.5).
 fn load_bound_ds(base: &Path) -> Result<Option<product_core::pf::reify_ds::DsSpec>, String> {
     let bound = product_core::pf::HowContract::load_opt(&base.join("how-contract.yaml"))
         .ok()

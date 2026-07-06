@@ -1,10 +1,10 @@
-//! Shared test fixtures for the reify slice tests.
+//! Shared test fixtures for the codegen slice tests.
 
 #![allow(dead_code)] // each consumer uses a subset
 
 use std::collections::BTreeMap;
 
-use crate::pf::reify::{plan_csharp, GenFile, ReifyOptions, ReifyPlan};
+use crate::pf::codegen::{plan_csharp, GenFile, ReifyOptions, ReifyPlan};
 use crate::pf::decider::Decider;
 use crate::pf::model::DomainGraph;
 use crate::pf::decider_logic::{

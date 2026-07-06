@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 
 use super::decider::Decider;
 use super::decider_logic::{CommandRef, EventRef, Scalar, State};
-use super::reify_ident::CsTy;
+use super::codegen_ident::CsTy;
 
 /// Field name → inferred type (`None` until a concrete value is observed).
 pub type Fields = BTreeMap<String, Option<CsTy>>;
@@ -60,7 +60,7 @@ pub fn infer_shape(decider: &Decider, graph: &super::model::DomainGraph) -> AggS
 fn overlay_declared(fields: &mut Fields, declared: &[super::model::Attribute]) {
     for a in declared {
         let slot = fields.entry(a.name.clone()).or_insert(None);
-        if let Some(t) = super::reify_ident::attr_cs_ty(a.ty.as_deref()) {
+        if let Some(t) = super::codegen_ident::attr_cs_ty(a.ty.as_deref()) {
             *slot = Some(t);
         }
     }

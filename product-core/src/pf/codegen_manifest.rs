@@ -1,4 +1,4 @@
-//! Reify manifest — the whole oracle, by value, language-neutral.
+//! Codegen manifest — the whole oracle, by value, language-neutral.
 //!
 //! The plugin seam is a protocol, not a linkage (the same stance as the
 //! §5.1 build seam): everything a language backend needs to render a
@@ -7,7 +7,7 @@
 //! scenarios, the oracle-baked flow chains, the screen seam facts with
 //! their projector-derived fixtures, and the pinned graph hash. External
 //! backends consume this JSON on stdin and answer a file plan; the MCP
-//! `product_reify_manifest` tool hands the same document to a session
+//! `product_codegen_manifest` tool hands the same document to a session
 //! agent so it can realise (or render) without touching the repo.
 
 use std::collections::BTreeMap;
@@ -22,9 +22,9 @@ use super::decider_sim::Outcome;
 use super::model::DomainGraph;
 use super::projector::Projector;
 use super::projector_logic::ProjectorScenario;
-use super::reify::{aggregate_names, input_hash, ReifyOptions};
-use super::reify_ident::CsTy;
-use super::reify_infer::{infer_shape, Fields};
+use super::codegen::{aggregate_names, input_hash, ReifyOptions};
+use super::codegen_ident::CsTy;
+use super::codegen_infer::{infer_shape, Fields};
 
 /// Field name → wire type (`"long" | "bool" | "string"`, or `null` when
 /// neither declared nor observed).
@@ -256,7 +256,7 @@ fn aggregate(graph: &DomainGraph, d: &Decider, agg: &str) -> AggregateManifest {
 }
 
 fn projector(p: &Projector) -> ProjectorManifest {
-    let (fields, defaults) = super::reify_projector::infer_view(p);
+    let (fields, defaults) = super::codegen_projector::infer_view(p);
     ProjectorManifest {
         projector_id: p.id.clone(),
         projects_for: p.projects_for.clone(),
@@ -268,7 +268,7 @@ fn projector(p: &Projector) -> ProjectorManifest {
 }
 
 fn flows(graph: &DomainGraph, sorted: &[&Decider], sorted_p: &[&Projector]) -> Vec<FlowManifest> {
-    super::reify_flow::plan_flows(graph, sorted, sorted_p, true)
+    super::codegen_flow::plan_flows(graph, sorted, sorted_p, true)
         .into_iter()
         .map(|f| FlowManifest {
             name: f.name,
@@ -291,7 +291,7 @@ fn screens(
     sorted_p: &[&Projector],
     resolved: Option<&super::reify_ds::ResolvedDs>,
 ) -> Vec<ScreenManifest> {
-    super::reify_screen::testable_steps(graph)
+    super::codegen_screen::testable_steps(graph)
         .into_iter()
         .map(|step| ScreenManifest {
             step_id: step.id.clone(),
@@ -303,7 +303,7 @@ fn screens(
                 .filter(|m| m.waiver.is_none() && m.state != "present")
                 .map(|m| (m.projection.clone(), m.state.clone()))
                 .collect(),
-            present_fixture: super::reify_screen::present_state(step, sorted_p),
+            present_fixture: super::codegen_screen::present_state(step, sorted_p),
             components: resolved
                 .and_then(|r| r.screens.get(&step.id).cloned())
                 .unwrap_or_default(),

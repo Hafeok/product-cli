@@ -1,4 +1,4 @@
-//! Unit tests for the web reify backend — on-system pages, tokens not literals.
+//! Unit tests for the web codegen backend — on-system pages, tokens not literals.
 
 use super::*;
 use crate::pf::model_ui::{Flow, Offer, Surface, WireframeStep};

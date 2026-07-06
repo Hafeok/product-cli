@@ -175,9 +175,9 @@ Use the `product` CLI (or MCP tools) to author and verify a What/How graph under
   manifest (declaration + implementation bundle: per-target component sources, token
   values per theme, templates) under `.product/design-systems/<id>/`; `validate` /
   `couple` are the wholeness + §11.2 coverage checks; `bind <id>` records the choice
-  on the How contract (§4.5). Once bound, every `product reify` backend gates on the
+  on the How contract (§4.5). Once bound, every `product codegen` backend gates on the
   coupling at plan time and emits `design-system.g.json` + `tokens.g.css` (hash-pinned;
-  `reify check` catches design-system drift), and `product reify web` renders one
+  `reify check` catches design-system drift), and `product codegen web` renders one
   on-system HTML page per UI step, styled exclusively via tokens.
 - **DeployableUnit (§4/§4.2)** — `product deployable-unit new <id> --built-from
   <blueprint> --system <sys>… [--environment … --domain-name/--bundle-id/--runtime]`

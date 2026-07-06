@@ -13,8 +13,8 @@ use super::decider::Decider;
 use super::decider_logic::{EventRef, Expectation, Payload, Scalar};
 use super::model_ui::WireframeStep;
 use super::projector::Projector;
-use super::reify_flow::FlowFact;
-use super::reify_ident::{cs_escape, method_name, pascal};
+use super::codegen_flow::FlowFact;
+use super::codegen_ident::{cs_escape, method_name, pascal};
 
 /// `<Agg>ScenarioTests.g.kt` — decider scenarios through `ConformanceAdapter`.
 pub fn decider_tests(hdr: &str, pkg: &str, agg: &str, decider: &Decider) -> String {
@@ -121,7 +121,7 @@ pub fn screen_tests(hdr: &str, pkg: &str, step: &WireframeStep, projectors: &[&P
     let mut s = test_header(hdr, pkg);
     s.push_str(&format!("class {base}ScreenTests {{\n"));
     s.push_str("    @Test\n    fun Present_state_surfaces_every_projection_and_offer() {\n");
-    let fixture = super::reify_screen::present_state(step, projectors)
+    let fixture = super::codegen_screen::present_state(step, projectors)
         .map(|v| kt_map(&v))
         .unwrap_or_else(|| "emptyMap()".to_string());
     s.push_str(&format!(

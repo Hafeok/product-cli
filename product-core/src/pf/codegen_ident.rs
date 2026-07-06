@@ -1,4 +1,4 @@
-//! C# identifier + primitive-type mapping for the reify emitters.
+//! C# identifier + primitive-type mapping for the codegen emitters.
 //!
 //! Graph ids are kebab/camel/free-form strings; C# wants PascalCase
 //! identifiers. `pascal` is total: any non-alphanumeric byte is a word

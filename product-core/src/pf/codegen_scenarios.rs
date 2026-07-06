@@ -10,9 +10,9 @@ use std::collections::BTreeSet;
 
 use super::decider::Decider;
 use super::decider_logic::{EventRef, Expectation, Payload, Scenario};
-use super::reify_ident::{cs_escape, method_name, pascal, CsTy};
-use super::reify_infer::{AggShape, Fields};
-use super::reify_types::scalar_literal;
+use super::codegen_ident::{cs_escape, method_name, pascal, CsTy};
+use super::codegen_infer::{AggShape, Fields};
+use super::codegen_types::scalar_literal;
 
 /// Render `<Agg>ScenarioTests.g.cs` for a Decider with scenarios.
 pub fn tests_file(header: &str, ns: &str, agg: &str, decider: &Decider, shape: &AggShape) -> String {

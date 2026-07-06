@@ -1,17 +1,17 @@
-//! Reify adapter — project the What graph into a verifiable C# frame.
+//! Codegen adapter — project the What graph into a verifiable C# frame.
 //!
-//! `product reify csharp` emits typed contracts (records, enums, Decider
+//! `product codegen csharp` emits typed contracts (records, enums, Decider
 //! frames), the generated xUnit scenario suite, and the §6.3 conformance
 //! runner from the captured What graph + authored Deciders — behaviour is
 //! *not* transpiled; the realiser implements the scaffolded stubs and is
-//! held to the graph by the generated tests. `product reify check` is the
+//! held to the graph by the generated tests. `product codegen check` is the
 //! drift gate: it recomputes the input hash and fails when the emitted
 //! code was generated from a graph the What has since moved past.
 
 use clap::Subcommand;
 use product_core::author::domain::session_dir;
 use product_core::pf::model::DomainGraph;
-use product_core::pf::reify::{input_hash, plan_csharp, recorded_hash, ReifyOptions, ReifyPlan};
+use product_core::pf::codegen::{input_hash, plan_csharp, recorded_hash, ReifyOptions, ReifyPlan};
 use product_core::pf::session::DomainSession;
 use product_core::pf::HowContract;
 use std::path::PathBuf;
@@ -24,7 +24,7 @@ pub enum ReifyCommands {
     Backends,
     /// Drift gate — fail when emitted code no longer matches the graph hash
     Check {
-        /// The directory a previous `reify csharp` emitted into
+        /// The directory a previous `codegen csharp` emitted into
         #[arg(long)]
         out: Option<PathBuf>,
         #[arg(long)]
@@ -70,7 +70,7 @@ pub enum ReifyCommands {
         #[arg(long)]
         force: bool,
     },
-    /// Emit the language-neutral reify manifest — the whole oracle, by value, as JSON
+    /// Emit the language-neutral codegen manifest — the whole oracle, by value, as JSON
     Manifest {
         /// Write to this file (default: stdout)
         #[arg(long)]
@@ -121,7 +121,7 @@ pub(crate) fn handle_reify(cmd: ReifyCommands) -> BoxResult {
         ReifyCommands::Csharp { out, namespace, oracle_only, product, force } => {
             emit(Lang::Csharp { oracle_only }, out, namespace, product, force)
         }
-        ReifyCommands::Emit { id, product } => super::reify_how::emit_from_how(id, product),
+        ReifyCommands::Emit { id, product } => super::codegen_how::emit_from_how(id, product),
         ReifyCommands::Kotlin { out, namespace, product, force } => {
             emit(Lang::Kotlin, out, namespace, product, force)
         }
@@ -148,7 +148,7 @@ fn emit(lang: Lang, out: Option<PathBuf>, namespace: Option<String>, product: Op
     let projectors = load_projectors(Some(&name))?;
     let oracle_only = matches!(lang, Lang::Csharp { oracle_only: true } | Lang::Kotlin | Lang::Web);
     let opts = ReifyOptions {
-        namespace: namespace.unwrap_or_else(|| product_core::pf::reify_ident::pascal(&name)),
+        namespace: namespace.unwrap_or_else(|| product_core::pf::codegen_ident::pascal(&name)),
         what_version: what_version(Some(&name)),
         product: name.clone(),
         oracle_only,
@@ -162,19 +162,19 @@ fn emit(lang: Lang, out: Option<PathBuf>, namespace: Option<String>, product: Op
             format!("dotnet test — then `product decider conform <id> --runner \"dotnet {ns}.Conformance/bin/Debug/net8.0/{ns}.Conformance.dll <id>\"`", ns = opts.namespace),
         ),
         Lang::Kotlin => {
-            let pkg = product_core::pf::reify_kotlin::package_of(&opts.namespace);
+            let pkg = product_core::pf::codegen_kotlin::package_of(&opts.namespace);
             (
-                product_core::pf::reify_kotlin::plan_kotlin(&graph, &deciders, &projectors, &opts)?,
+                product_core::pf::codegen_kotlin::plan_kotlin(&graph, &deciders, &projectors, &opts)?,
                 "kotlin",
                 "oracle-only",
                 format!("gradle test — then `product decider conform <id> --runner \"build/install/{pkg}/bin/{pkg} <id>\"` after `gradle installDist`"),
             )
         }
         Lang::Web => (
-            product_core::pf::reify_web::plan_web(&graph, &deciders, &projectors, &opts)?,
+            product_core::pf::codegen_web::plan_web(&graph, &deciders, &projectors, &opts)?,
             "web",
             "design-system",
-            "open index.g.html — on-system composition is on the data-cio attributes; drift gate: `product reify check --out <dir>`".to_string(),
+            "open index.g.html — on-system composition is on the data-cio attributes; drift gate: `product codegen check --out <dir>`".to_string(),
         ),
     };
     let root = out.unwrap_or_else(|| default_out(&name, subdir));
@@ -199,11 +199,11 @@ pub(super) fn report(name: &str, root: &std::path::Path, subdir: &str, mode: &st
 }
 
 fn backends_list() -> BoxResult {
-    for b in product_core::pf::reify_backend::backends() {
+    for b in product_core::pf::codegen_backend::backends() {
         println!("{:<10} {}{}", b.id(), b.description(),
             if b.oracle_only_forced() { " [oracle-only]" } else { "" });
     }
-    println!("(external backends: `product reify plugin --cmd <command>` — manifest JSON in, file plan out)");
+    println!("(external backends: `product codegen plugin --cmd <command>` — manifest JSON in, file plan out)");
     Ok(())
 }
 
@@ -222,7 +222,7 @@ pub(super) fn resolve_inputs(namespace: Option<String>, product: Option<String>)
     let deciders = load_deciders(Some(&name))?;
     let projectors = load_projectors(Some(&name))?;
     let opts = ReifyOptions {
-        namespace: namespace.unwrap_or_else(|| product_core::pf::reify_ident::pascal(&name)),
+        namespace: namespace.unwrap_or_else(|| product_core::pf::codegen_ident::pascal(&name)),
         what_version: what_version(Some(&name)),
         product: name.clone(),
         oracle_only: true,
@@ -232,7 +232,7 @@ pub(super) fn resolve_inputs(namespace: Option<String>, product: Option<String>)
 }
 
 fn manifest(out: Option<PathBuf>, unit: Option<String>, namespace: Option<String>, product: Option<String>) -> BoxResult {
-    use product_core::pf::reify_manifest as rm;
+    use product_core::pf::codegen_manifest as rm;
     let (_, graph, deciders, projectors, opts) = resolve_inputs(namespace, product)?;
     let json = match unit {
         Some(u) => {
@@ -246,7 +246,7 @@ fn manifest(out: Option<PathBuf>, unit: Option<String>, namespace: Option<String
     match out {
         Some(path) => {
             std::fs::write(&path, &json)?;
-            println!("wrote reify manifest to {}", path.display());
+            println!("wrote codegen manifest to {}", path.display());
         }
         None => print!("{json}"),
     }
@@ -255,11 +255,11 @@ fn manifest(out: Option<PathBuf>, unit: Option<String>, namespace: Option<String
 
 fn plugin(cmd: &str, out: Option<PathBuf>, namespace: Option<String>, product: Option<String>, force: bool) -> BoxResult {
     let (name, graph, deciders, projectors, opts) = resolve_inputs(namespace, product)?;
-    let plan = super::reify_how::run_external(cmd, &graph, &deciders, &projectors, &opts)?;
+    let plan = super::codegen_how::run_external(cmd, &graph, &deciders, &projectors, &opts)?;
     let root = out.unwrap_or_else(|| default_out(&name, "plugin"));
     let stale = remove_stale(&root, &plan);
     let (written, kept) = write_plan(&root, &plan, force)?;
-    report(&name, &root, "plugin", "external", &plan, (written, kept, stale), "the plugin tree's own README/tooling; drift gate: `product reify check --out <dir>`");
+    report(&name, &root, "plugin", "external", &plan, (written, kept, stale), "the plugin tree's own README/tooling; drift gate: `product codegen check --out <dir>`");
     Ok(())
 }
 
@@ -307,7 +307,7 @@ fn check(out: Option<PathBuf>, product: Option<String>) -> BoxResult {
     let prov_path = root.join("provenance.g.json");
     let text = std::fs::read_to_string(&prov_path).map_err(|_| {
         format!(
-            "no provenance.g.json at {} — emit first with `product reify csharp`",
+            "no provenance.g.json at {} — emit first with `product codegen csharp`",
             prov_path.display()
         )
     })?;
@@ -320,7 +320,7 @@ fn check(out: Option<PathBuf>, product: Option<String>) -> BoxResult {
     eprintln!("drift — the What graph has moved past the generated code:");
     eprintln!("  generated from sha256:{recorded}");
     eprintln!("  current graph  sha256:{current}");
-    eprintln!("  regenerate with `product reify csharp --out {}`", root.display());
+    eprintln!("  regenerate with `product codegen csharp --out {}`", root.display());
     Err("reified code is stale (graph drift)".into())
 }
 

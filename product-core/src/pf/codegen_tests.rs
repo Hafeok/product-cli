@@ -1,11 +1,11 @@
-//! Unit tests for the C# reify slice — inference, emission, determinism.
+//! Unit tests for the C# codegen slice — inference, emission, determinism.
 
-#[path = "reify_fixtures.rs"]
+#[path = "codegen_fixtures.rs"]
 mod fixtures;
 
 use fixtures::*;
 use super::*;
-use crate::pf::reify_ident::{method_name, pascal};
+use crate::pf::codegen_ident::{method_name, pascal};
 
 
 #[test]
@@ -19,15 +19,15 @@ fn identifiers_pascal_case_totally() {
 
 #[test]
 fn inference_recovers_payload_and_state_fields() {
-    let shape = crate::pf::reify_infer::infer(&fixture_decider());
+    let shape = crate::pf::codegen_infer::infer(&fixture_decider());
     let cmd = shape.commands.get("PlaceOrder").expect("command entry");
-    assert_eq!(cmd.get("amount"), Some(&Some(crate::pf::reify_ident::CsTy::Long)));
+    assert_eq!(cmd.get("amount"), Some(&Some(crate::pf::codegen_ident::CsTy::Long)));
     let ev = shape.events.get("OrderPlaced").expect("event entry");
-    assert_eq!(ev.get("amount"), Some(&Some(crate::pf::reify_ident::CsTy::Long)));
+    assert_eq!(ev.get("amount"), Some(&Some(crate::pf::codegen_ident::CsTy::Long)));
     // status is typed from initial; amount is a plain `=event.amount` copy,
     // so it inherits the event field's type once scenarios pin it.
-    assert_eq!(shape.state.get("status"), Some(&Some(crate::pf::reify_ident::CsTy::Str)));
-    assert_eq!(shape.state.get("amount"), Some(&Some(crate::pf::reify_ident::CsTy::Long)));
+    assert_eq!(shape.state.get("status"), Some(&Some(crate::pf::codegen_ident::CsTy::Str)));
+    assert_eq!(shape.state.get("amount"), Some(&Some(crate::pf::codegen_ident::CsTy::Long)));
 }
 
 #[test]
@@ -41,10 +41,10 @@ fn declared_payload_fields_override_inference() {
             Attribute { name: "hint".into(), ty: None },                   // declared, untyped
         ];
     }
-    let shape = crate::pf::reify_infer::infer_shape(&fixture_decider(), &g);
+    let shape = crate::pf::codegen_infer::infer_shape(&fixture_decider(), &g);
     let cmd = shape.commands.get("PlaceOrder").expect("command entry");
-    assert_eq!(cmd.get("amount"), Some(&Some(crate::pf::reify_ident::CsTy::Str)));
-    assert_eq!(cmd.get("currency"), Some(&Some(crate::pf::reify_ident::CsTy::Str)));
+    assert_eq!(cmd.get("amount"), Some(&Some(crate::pf::codegen_ident::CsTy::Str)));
+    assert_eq!(cmd.get("currency"), Some(&Some(crate::pf::codegen_ident::CsTy::Str)));
     assert_eq!(cmd.get("hint"), Some(&None), "untyped declaration exists, type open");
 }
 
@@ -204,7 +204,7 @@ fn openapi_contract_projects_commands_and_views() {
 
 #[test]
 fn kotlin_backend_emits_the_full_verification_shell() {
-    use crate::pf::reify_kotlin::plan_kotlin;
+    use crate::pf::codegen_kotlin::plan_kotlin;
     let o = ReifyOptions { oracle_only: true, ..opts() };
     let p = plan_kotlin(&fixture_graph(), &[fixture_decider()], &[fixture_projector()], &o)
         .expect("plan");
@@ -236,7 +236,7 @@ fn kotlin_backend_emits_the_full_verification_shell() {
 
 #[test]
 fn manifest_carries_the_whole_oracle_by_value() {
-    let m = crate::pf::reify_manifest::manifest(
+    let m = crate::pf::codegen_manifest::manifest(
         &fixture_graph(), &[fixture_decider()], &[fixture_projector()], &opts(),
     )
     .expect("manifest");
@@ -264,7 +264,7 @@ fn manifest_carries_the_whole_oracle_by_value() {
 
 #[test]
 fn unit_slice_cuts_the_manifest_to_a_neighbourhood_with_the_full_hash() {
-    use crate::pf::reify_manifest::{manifest, manifest_unit};
+    use crate::pf::codegen_manifest::{manifest, manifest_unit};
     // An unrelated projector: folds an event no retained decider produces.
     let mut stray = fixture_projector();
     stray.id = "stray-projector".into();
@@ -295,7 +295,7 @@ fn unit_slice_cuts_the_manifest_to_a_neighbourhood_with_the_full_hash() {
 
 #[test]
 fn backend_registry_resolves_and_rejects() {
-    use crate::pf::reify_backend::{backend, backends};
+    use crate::pf::codegen_backend::{backend, backends};
     assert_eq!(backends().len(), 3);
     assert!(backend("web").expect("web").oracle_only_forced());
     assert!(!backend("csharp").expect("csharp").oracle_only_forced());
@@ -305,7 +305,7 @@ fn backend_registry_resolves_and_rejects() {
 
 #[test]
 fn external_plan_parses_appends_provenance_and_rejects_escapes() {
-    use crate::pf::reify_backend::external_plan;
+    use crate::pf::codegen_backend::external_plan;
     let (g, d, p, o) = (fixture_graph(), [fixture_decider()], [fixture_projector()], opts());
     let plan = external_plan(
         r#"{"files": [{"path": "src/x.ts", "content": "// hi"}, {"path": "adapter.ts", "content": "", "overwrite": false}]}"#,
@@ -330,7 +330,7 @@ fn realise_csharp_cell_is_valid_task_type_yaml() {
         let parsed = crate::pf::cell::TaskType::from_yaml(cell).expect("cell parses");
         assert_eq!(parsed.id, "realise-csharp");
         assert_eq!(parsed.audits.len(), 5);
-        assert!(parsed.audits.iter().any(|a| a.checks.contains("product reify check")));
+        assert!(parsed.audits.iter().any(|a| a.checks.contains("product codegen check")));
         assert!(parsed.audits.iter().any(|a| a.checks.contains("decider conform")));
     }
 }

@@ -17,8 +17,8 @@ use super::model::DomainGraph;
 use super::model_ui::WireframeStep;
 use super::projector::Projector;
 use super::projector_sim::project;
-use super::reify_ident::{cs_escape, method_name, pascal};
-use super::reify_scenarios::count_assert;
+use super::codegen_ident::{cs_escape, method_name, pascal};
+use super::codegen_scenarios::count_assert;
 
 const SCREEN_SEAM_CS: &str = r##"#nullable enable
 
@@ -39,7 +39,7 @@ public interface IScreenAdapter
 }
 "##;
 
-const SCREEN_STUB_CS: &str = r##"// Scaffolded once by `product reify csharp` — never overwritten.
+const SCREEN_STUB_CS: &str = r##"// Scaffolded once by `product codegen csharp` — never overwritten.
 // Implement the §4.5 screen seam over your real UI: render the step headlessly
 // (component harness, test renderer, DOM driver — your framework's choice) and
 // answer which projections were surfaced and which commands were offered.

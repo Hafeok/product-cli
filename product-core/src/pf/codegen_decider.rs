@@ -8,8 +8,8 @@
 //! `IConformanceAdapter` bridging the §6.3 wire protocol to the Decider).
 
 use super::decider::Decider;
-use super::reify_ident::{cs_escape, pascal, CsTy};
-use super::reify_infer::{AggShape, Fields};
+use super::codegen_ident::{cs_escape, pascal, CsTy};
+use super::codegen_infer::{AggShape, Fields};
 
 /// Render `<Agg>Decider.g.cs` — the generated half of the partial class.
 pub fn frame_file(header: &str, ns: &str, agg: &str, decider: &Decider) -> String {
@@ -62,7 +62,7 @@ fn frame_members(agg: &str) -> String {
 pub fn stub_file(ns: &str, agg: &str, decider: &Decider) -> String {
     let mut s = String::new();
     s.push_str(&format!(
-        "// Editable realisation of the '{}' Decider (§3.3). Scaffolded once by\n// `product reify csharp` and never overwritten — author Decide + Evolve here.\n// Verify with the generated scenario tests, then close the loop with:\n//   product decider conform {} --runner \"dotnet run --project ../{ns}.Conformance -- {}\"\n",
+        "// Editable realisation of the '{}' Decider (§3.3). Scaffolded once by\n// `product codegen csharp` and never overwritten — author Decide + Evolve here.\n// Verify with the generated scenario tests, then close the loop with:\n//   product decider conform {} --runner \"dotnet run --project ../{ns}.Conformance -- {}\"\n",
         cs_escape(&decider.decides_for),
         decider.id,
         decider.id

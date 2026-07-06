@@ -10,7 +10,7 @@
 
 use super::decider::Decider;
 use super::decider_logic::{EventRef, Expectation, Payload, Scalar, Scenario};
-use super::reify_ident::{cs_escape, method_name};
+use super::codegen_ident::{cs_escape, method_name};
 use std::collections::BTreeSet;
 
 const ORACLE_CS: &str = r##"#nullable enable
@@ -118,7 +118,7 @@ public static class PfWire
 }
 "##;
 
-const PROJECTION_STUB_CS: &str = r##"// Scaffolded once by `product reify csharp` in oracle mode — never overwritten.
+const PROJECTION_STUB_CS: &str = r##"// Scaffolded once by `product codegen csharp` in oracle mode — never overwritten.
 // Implement the §3.4 read-side seam: fold `given` into your view representation
 // and answer it in wire form (field name → long | bool | string). Conformance is
 // full-state equality against the Projector oracle's fold.
@@ -140,7 +140,7 @@ public sealed class ProjectionAdapter : IProjectionAdapter
 }
 "##;
 
-const ADAPTER_STUB_CS: &str = r##"// Scaffolded once by `product reify csharp --oracle-only` — never overwritten.
+const ADAPTER_STUB_CS: &str = r##"// Scaffolded once by `product codegen csharp --oracle-only` — never overwritten.
 // Implement the §6.3 oracle seam here: fold `given` into your aggregate state,
 // decide `when`, and answer in wire form. Your domain model's design (types,
 // layering, patterns from the How contract) is entirely yours — the generated
@@ -166,7 +166,7 @@ public sealed class ConformanceAdapter : IConformanceAdapter
 
 const ORACLE_CSPROJ: &str = r##"<Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Scaffolded once by `product reify csharp` in oracle mode (never
+  <!-- Scaffolded once by `product codegen csharp` in oracle mode (never
        overwritten): add a ProjectReference to your domain implementation below. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -281,14 +281,14 @@ fn wire_expectation(then: &Expectation) -> String {
     }
     let expected = then.emit.clone().unwrap_or_default();
     let mut s = String::from("        Assert.Null(outcome.Reject);\n");
-    s.push_str(&super::reify_scenarios::count_assert("outcome.Emit!", expected.len()));
+    s.push_str(&super::codegen_scenarios::count_assert("outcome.Emit!", expected.len()));
     for (i, ev) in expected.iter().enumerate() {
         s.push_str(&format!(
             "        Assert.Equal(\"{}\", outcome.Emit![{i}].Id);\n",
             cs_escape(ev.id())
         ));
         let payload = ev.payload();
-        s.push_str(&super::reify_scenarios::count_assert(&format!("outcome.Emit![{i}].With"), payload.len()));
+        s.push_str(&super::codegen_scenarios::count_assert(&format!("outcome.Emit![{i}].With"), payload.len()));
         for (k, v) in &payload {
             s.push_str(&wire_payload_assert(i, k, v));
         }

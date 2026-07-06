@@ -11,8 +11,8 @@
 use super::decider::Decider;
 use super::decider_logic::Scalar;
 use super::model::{DomainGraph, Entity, ReferenceSet, ValueObject};
-use super::reify_ident::{attr_ty, cs_escape, pascal, CsTy};
-use super::reify_infer::{AggShape, Fields};
+use super::codegen_ident::{attr_ty, cs_escape, pascal, CsTy};
+use super::codegen_infer::{AggShape, Fields};
 
 /// Render `Domain.g.cs` — entities, value objects, reference-set enums.
 pub fn domain_file(header: &str, ns: &str, graph: &DomainGraph) -> String {

@@ -1,7 +1,7 @@
 # Proposed framework additions for v1.8 — the reify layer
 
 **Status:** proposal, targeting `product-framework` v1.8.0.
-**Source:** the reference implementation in this repo (`product reify` — PR #22): two
+**Source:** the reference implementation in this repo (`product codegen` — PR #22): two
 language backends (C#/.NET, Kotlin/JVM), an external-backend plugin protocol, and the
 conformance loops, all verified end-to-end against real toolchains. Everything below
 is running code here; this document extracts what belongs in the open standard.
@@ -151,8 +151,8 @@ against this repo. The extension seam should be a protocol, exactly like §5.1.
 and `file-plan`.
 
 *Reference implementation:* `pf/reify_manifest.rs`, `pf/reify_backend.rs`
-(`external_plan`), `product reify manifest` / `product reify plugin`, MCP
-`product_reify_manifest`. The integration suite drives a 10-line Python backend
+(`external_plan`), `product codegen manifest` / `product codegen plugin`, MCP
+`product_codegen_manifest`. The integration suite drives a 10-line Python backend
 through the full loop, including drift detection on its output tree.
 
 ---
@@ -185,7 +185,7 @@ it leaked into CLI flags. New vocabulary is needed for the tier itself.
 > realisation choice living outside the contract is unrecorded How.
 
 *Reference implementation:* `Realisation` on `HowContract` (`pf/how.rs`), §4.2 rules
-in `pf/how_validate.rs`, `product reify emit [--id]`, MCP `product_reify_emit`
+in `pf/how_validate.rs`, `product codegen emit [--id]`, MCP `product_codegen_emit`
 (`realisation` argument).
 
 ---
@@ -236,7 +236,7 @@ against an actual artifact.
 **Encoding:** provenance manifest fields `product`, `namespace`, `what_version`,
 `graph_hash` (`sha256:` prefixed), `generator`, `generated_files`.
 
-*Reference implementation:* `product reify check`, `provenance.g.json`, per-file
+*Reference implementation:* `product codegen check`, `provenance.g.json`, per-file
 `pf:graph-hash` headers, .NET `AssemblyMetadata` / Kotlin `PfProvenance` stamping.
 Demonstrated: a C# tree and a Kotlin tree pinned to the same hash, both conformant
 under the same oracle.

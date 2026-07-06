@@ -1,6 +1,6 @@
 //! C# Projector emission — view record, fold frame, projection adapter.
 //!
-//! The read-side peer of `reify_decider`: per Projector a typed view
+//! The read-side peer of `codegen_decider`: per Projector a typed view
 //! record (fields inferred from `logic.initial` + apply rules + scenario
 //! `then` states), a `static partial` fold frame whose `Apply` the
 //! realiser implements (events arrive in wire form — projections consume
@@ -14,11 +14,11 @@ use std::collections::BTreeSet;
 use super::decider_logic::{Scalar, State};
 use super::projector::Projector;
 use super::projector_logic::ProjectorScenario;
-use super::reify_ident::{cs_escape, method_name, pascal, CsTy};
-use super::reify_infer::Fields;
-use super::reify_oracle::wire_new;
-use super::reify_scenarios::count_assert;
-use super::reify_types::scalar_literal;
+use super::codegen_ident::{cs_escape, method_name, pascal, CsTy};
+use super::codegen_infer::Fields;
+use super::codegen_oracle::wire_new;
+use super::codegen_scenarios::count_assert;
+use super::codegen_types::scalar_literal;
 
 /// The PascalCase base name for a projector's generated types
 /// (`OrderSummary` → `OrderSummaryView` / `OrderSummaryProjector`).
@@ -145,7 +145,7 @@ fn frame(base: &str, projector: &Projector) -> String {
 pub fn stub_file(ns: &str, projector: &Projector) -> String {
     let base = view_base(projector);
     let mut s = format!(
-        "// Editable realisation of the '{}' Projector (§3.4). Scaffolded once by\n// `product reify csharp` and never overwritten — author Apply here.\n// Verify with the generated projection tests, then close the loop with:\n//   product projector conform {}\n",
+        "// Editable realisation of the '{}' Projector (§3.4). Scaffolded once by\n// `product codegen csharp` and never overwritten — author Apply here.\n// Verify with the generated projection tests, then close the loop with:\n//   product projector conform {}\n",
         cs_escape(&projector.projects_for),
         projector.id
     );

@@ -158,11 +158,11 @@ What, never alongside an unsettled one (§2.1, step 6).
    component sources, token values per theme, templates) under
    `.product/design-systems/<id>/`; `validate` runs the wholeness + bundle checks;
    `couple` is the §11.2 coverage check; `bind <id>` records the choice on the How
-   contract. Once bound, every `product reify` backend resolves it: the coupling
+   contract. Once bound, every `product codegen` backend resolves it: the coupling
    becomes a *plan-time gate* (a coverage gap fails the emit), the reified tree
    carries `design-system.g.json` (the reify(AIO, context) → CIO map by value) +
-   `tokens.g.css`, and `product reify web` renders one on-system page per UI step,
-   styled exclusively through tokens. `product reify check` catches design-system
+   `tokens.g.css`, and `product codegen web` renders one on-system page per UI step,
+   styled exclusively through tokens. `product codegen check` catches design-system
    drift exactly as it catches graph drift.
 4. **Generate the interface contracts** from the domain model (§4.4) — OpenAPI,
    AsyncAPI, and so on — never hand-written, so the published surface cannot drift

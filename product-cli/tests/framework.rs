@@ -962,7 +962,7 @@ fn setup_bound_design_system(h: &Harness) {
 }
 
 #[test]
-fn tc_1090_design_system_add_bind_and_reify_bakes_the_component_map() {
+fn tc_1090_design_system_add_bind_and_codegen_bakes_the_component_map() {
     let h = Harness::new_bare();
     setup_bound_design_system(&h);
     // The store round-trips: list marks the binding; validate + couple pass.
@@ -971,7 +971,7 @@ fn tc_1090_design_system_add_bind_and_reify_bakes_the_component_map() {
     h.run(&["design-system", "couple"]).assert_exit(0);
     assert!(h.read(".product/how-contract.yaml").contains("design_system"), "binding is a graph fact");
     // Reify emits the resolved component map + token surface, hash-pinned.
-    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    h.run(&["codegen", "csharp", "--out", "gen"]).assert_exit(0);
     let dsjson = h.read("gen/design-system.g.json");
     assert!(dsjson.contains("searchable-list") && dsjson.contains("\"context\": \"phone\""),
         "reify(AIO, context) → CIO is baked by value:\n{dsjson}");
@@ -979,18 +979,18 @@ fn tc_1090_design_system_add_bind_and_reify_bakes_the_component_map() {
     assert!(h.read("gen/provenance.g.json").contains("\"design_system\""), "provenance pins the ds identity");
     assert!(h.read("gen/Shop.Domain/DesignSystem.g.cs").contains("IDesignSystemProvider"),
         "the provider seam is scaffolded next to the screen seam");
-    h.run(&["reify", "check", "--out", "gen"]).assert_exit(0);
+    h.run(&["codegen", "check", "--out", "gen"]).assert_exit(0);
     // The stored manifest moving past the generated tree is drift.
     let stored = ".product/design-systems/acme/design-system.manifest.yaml";
     let bumped = h.read(stored).replace("version: \"1.0\"", "version: \"1.1\"");
     h.write(stored, &bumped);
-    let out = h.run(&["reify", "check", "--out", "gen"]);
+    let out = h.run(&["codegen", "check", "--out", "gen"]);
     out.assert_exit(1);
     assert!(out.stderr.contains("design system"), "drift names the design system, stderr:\n{}", out.stderr);
 }
 
 #[test]
-fn tc_1091_reify_gates_on_design_system_coverage() {
+fn tc_1091_codegen_gates_on_design_system_coverage() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
     h.run(&["domain", "new", "context-of-use", "phone", "--label", "P",
@@ -1001,17 +1001,17 @@ fn tc_1091_reify_gates_on_design_system_coverage() {
     h.write("gap.yaml", &ds_manifest(&[("trigger-action", "emphasis: primary", "primary-button")]));
     h.run(&["design-system", "add", "gap.yaml"]).assert_exit(0);
     h.run(&["design-system", "bind", "acme"]).assert_exit(0);
-    let out = h.run(&["reify", "csharp", "--out", "gen"]);
+    let out = h.run(&["codegen", "csharp", "--out", "gen"]);
     out.assert_exit(1);
     assert!(out.stderr.contains("single-select"), "the gate names the gap, stderr:\n{}", out.stderr);
     assert!(!h.exists("gen/design-system.g.json"), "nothing is emitted past a coverage gap");
 }
 
 #[test]
-fn tc_1092_reify_web_composes_on_system_pages_from_tokens() {
+fn tc_1092_codegen_web_composes_on_system_pages_from_tokens() {
     let h = Harness::new_bare();
     setup_bound_design_system(&h);
-    h.run(&["reify", "web", "--out", "site"]).assert_exit(0);
+    h.run(&["codegen", "web", "--out", "site"]).assert_exit(0);
     let page = h.read("site/pages/Pick.g.html");
     assert!(page.contains("data-cio=\"searchable-list\"") && page.contains("data-projection=\"OrderSummary\""),
         "surfaces reify to catalog CIOs:\n{page}");
@@ -1020,14 +1020,14 @@ fn tc_1092_reify_web_composes_on_system_pages_from_tokens() {
     let css = h.read("site/ds.g.css");
     assert!(css.contains("var(--color-accent)"), "styling goes through tokens, not literals:\n{css}");
     assert!(h.exists("site/index.g.html") && h.exists("site/tokens.g.css"));
-    h.run(&["reify", "check", "--out", "site"]).assert_exit(0);
+    h.run(&["codegen", "check", "--out", "site"]).assert_exit(0);
 }
 
 #[test]
-fn tc_1093_reify_web_requires_a_bound_design_system() {
+fn tc_1093_codegen_web_requires_a_bound_design_system() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "shop", "--demo"]).assert_exit(0);
-    let out = h.run(&["reify", "web", "--out", "site"]);
+    let out = h.run(&["codegen", "web", "--out", "site"]);
     out.assert_exit(1);
     assert!(out.stderr.contains("design-system bind"), "points at the binding step, stderr:\n{}", out.stderr);
 }
@@ -1445,11 +1445,11 @@ fn tc_1071_archetype_is_a_back_compat_alias_for_blueprint() {
 }
 
 #[test]
-fn tc_1072_reify_csharp_emits_typed_contracts_from_the_what() {
+fn tc_1072_codegen_csharp_emits_typed_contracts_from_the_what() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
     h.run(&["decider", "derive", "Order"]).assert_exit(0);
-    h.run(&["reify", "csharp", "--out", "gen"]) // relative to the temp repo root
+    h.run(&["codegen", "csharp", "--out", "gen"]) // relative to the temp repo root
         .assert_exit(0)
         .assert_stdout_contains("1 aggregate(s)");
     // Typed contracts: command/event records + the Decider frame + runtime.
@@ -1471,55 +1471,55 @@ fn tc_1072_reify_csharp_emits_typed_contracts_from_the_what() {
 }
 
 #[test]
-fn tc_1075_reify_oracle_only_hands_construction_to_the_realiser() {
+fn tc_1075_codegen_oracle_only_hands_construction_to_the_realiser() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
     h.run(&["decider", "derive", "Order"]).assert_exit(0);
-    h.run(&["reify", "csharp", "--out", "gen", "--oracle-only"]).assert_exit(0).assert_stdout_contains("oracle-only");
+    h.run(&["codegen", "csharp", "--out", "gen", "--oracle-only"]).assert_exit(0).assert_stdout_contains("oracle-only");
     // No domain types — only the verification shell plus realiser-owned scaffolds.
     assert!(!h.exists("gen/Bookstore.Domain"), "no generated domain project");
     assert!(h.exists("gen/Bookstore.Conformance/Oracle.g.cs"), "wire seam emitted");
     assert!(h.exists("gen/Bookstore.Conformance/ConformanceAdapter.cs"), "adapter stub scaffolded");
     h.write("gen/Bookstore.Conformance/ConformanceAdapter.cs", "// realised\n");
-    h.run(&["reify", "csharp", "--out", "gen", "--oracle-only"]).assert_exit(0);
+    h.run(&["codegen", "csharp", "--out", "gen", "--oracle-only"]).assert_exit(0);
     assert_eq!(h.read("gen/Bookstore.Conformance/ConformanceAdapter.cs"), "// realised\n");
     // Switching modes cleans up the generated files the new plan no longer produces.
-    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0).assert_stdout_contains("stale generated file(s) removed");
+    h.run(&["codegen", "csharp", "--out", "gen"]).assert_exit(0).assert_stdout_contains("stale generated file(s) removed");
     assert!(h.exists("gen/Bookstore.Domain/Runtime.g.cs"), "full mode emits the runtime");
 }
 
 #[test]
-fn tc_1073_reify_stubs_survive_regeneration() {
+fn tc_1073_codegen_stubs_survive_regeneration() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
     h.run(&["decider", "derive", "Order"]).assert_exit(0);
-    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    h.run(&["codegen", "csharp", "--out", "gen"]).assert_exit(0);
     // A realiser edits the stub; regeneration must keep it (…unless --force).
     h.write("gen/Bookstore.Domain/Order/OrderDecider.cs", "// realised\n");
-    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0).assert_stdout_contains("scaffold(s) kept");
+    h.run(&["codegen", "csharp", "--out", "gen"]).assert_exit(0).assert_stdout_contains("scaffold(s) kept");
     assert_eq!(h.read("gen/Bookstore.Domain/Order/OrderDecider.cs"), "// realised\n");
-    h.run(&["reify", "csharp", "--out", "gen", "--force"]).assert_exit(0);
+    h.run(&["codegen", "csharp", "--out", "gen", "--force"]).assert_exit(0);
     assert!(h.read("gen/Bookstore.Domain/Order/OrderDecider.cs").contains("NotImplementedException"));
 }
 
 #[test]
-fn tc_1074_reify_check_is_a_drift_gate_over_the_graph_hash() {
+fn tc_1074_codegen_check_is_a_drift_gate_over_the_graph_hash() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
     h.run(&["decider", "derive", "Order"]).assert_exit(0);
-    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
-    h.run(&["reify", "check", "--out", "gen"]).assert_exit(0).assert_stdout_contains("conformant");
+    h.run(&["codegen", "csharp", "--out", "gen"]).assert_exit(0);
+    h.run(&["codegen", "check", "--out", "gen"]).assert_exit(0).assert_stdout_contains("conformant");
     // Any accepted graph mutation moves the hash → the gate must fail.
     h.run(&["domain", "new", "event", "OrderCancelled", "--label", "Order cancelled", "--context", "Catalog", "--changes", "Order"])
         .assert_exit(0);
-    h.run(&["reify", "check", "--out", "gen"]).assert_exit(1).assert_stderr_contains("drift");
+    h.run(&["codegen", "check", "--out", "gen"]).assert_exit(1).assert_stderr_contains("drift");
     // Regenerating clears the drift.
-    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
-    h.run(&["reify", "check", "--out", "gen"]).assert_exit(0);
+    h.run(&["codegen", "csharp", "--out", "gen"]).assert_exit(0);
+    h.run(&["codegen", "check", "--out", "gen"]).assert_exit(0);
 }
 
 #[test]
-fn tc_1076_reify_emits_flow_facts_and_the_screen_harness() {
+fn tc_1076_codegen_emits_flow_facts_and_the_screen_harness() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
     h.run(&["decider", "derive", "Order"]).assert_exit(0);
@@ -1539,7 +1539,7 @@ fn tc_1076_reify_emits_flow_facts_and_the_screen_harness() {
         "--surfaces", "OrderSummary:display-collection", "--offers", "PlaceOrder:trigger-action",
     ])
     .assert_exit(0);
-    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    h.run(&["codegen", "csharp", "--out", "gen"]).assert_exit(0);
     let flows = h.read("gen/Bookstore.Conformance.Tests/FlowTests.g.cs");
     assert!(flows.contains("public void Buy_a_book()"), "flow fact emitted, got:\n{flows}");
     assert!(flows.contains("new OrderSummaryProjectionAdapter().Run(\"OrderSummary-projector\", stream);"));
@@ -1572,7 +1572,7 @@ fn tc_1077_declared_payload_fields_round_trip_and_type_the_contract() {
     assert!(ttl.stdout.contains("pf:hasField [ pf:attrName \"reason\" ; pf:attrType \"string\" ]"), "field emitted, got:\n{}", ttl.stdout);
     // …and type the reified contract without any scenario inference.
     h.run(&["decider", "derive", "Order"]).assert_exit(0);
-    h.run(&["reify", "csharp", "--out", "gen"]).assert_exit(0);
+    h.run(&["codegen", "csharp", "--out", "gen"]).assert_exit(0);
     let types = h.read("gen/Bookstore.Domain/Order/OrderTypes.g.cs");
     assert!(types.contains("public sealed record CancelOrder(long? Amount = null, string? Reason = null, bool? Urgent = null) : IOrderCommand"), "declared fields typed, got:\n{types}");
     let api = h.read("gen/openapi.g.json");
@@ -1581,36 +1581,45 @@ fn tc_1077_declared_payload_fields_round_trip_and_type_the_contract() {
 }
 
 #[test]
-fn tc_1078_reify_kotlin_emits_the_jvm_verification_shell() {
+fn tc_1078_codegen_kotlin_emits_the_jvm_verification_shell() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
     h.run(&["decider", "derive", "Order"]).assert_exit(0);
-    h.run(&["reify", "kotlin", "--out", "kt"]).assert_exit(0).assert_stdout_contains("kotlin, oracle-only");
+    h.run(&["codegen", "kotlin", "--out", "kt"]).assert_exit(0).assert_stdout_contains("kotlin, oracle-only");
     assert!(h.exists("kt/src/main/kotlin/bookstore/Oracle.g.kt"), "wire seam emitted");
     assert!(h.exists("kt/src/main/kotlin/bookstore/Main.g.kt"), "runner emitted");
     assert!(h.exists("kt/src/main/kotlin/bookstore/ConformanceAdapter.kt"), "adapter scaffolded");
     assert!(h.exists("kt/build.gradle.kts"), "gradle build scaffolded");
     assert!(h.exists("kt/openapi.g.json"), "interface contract shared across languages");
-    // The Kotlin tree is pinned to the same hash — reify check accepts it.
-    h.run(&["reify", "check", "--out", "kt"]).assert_exit(0).assert_stdout_contains("conformant");
+    // The Kotlin tree is pinned to the same hash — codegen check accepts it.
+    h.run(&["codegen", "check", "--out", "kt"]).assert_exit(0).assert_stdout_contains("conformant");
     // Scaffolds survive regeneration.
     h.write("kt/src/main/kotlin/bookstore/ConformanceAdapter.kt", "// realised\n");
-    h.run(&["reify", "kotlin", "--out", "kt"]).assert_exit(0);
+    h.run(&["codegen", "kotlin", "--out", "kt"]).assert_exit(0);
     assert_eq!(h.read("kt/src/main/kotlin/bookstore/ConformanceAdapter.kt"), "// realised\n");
 }
 
 #[test]
-fn tc_1079_reify_manifest_is_the_oracle_by_value() {
+fn tc_1079_codegen_manifest_is_the_oracle_by_value() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
     h.run(&["decider", "derive", "Order"]).assert_exit(0);
-    h.run(&["reify", "backends"]).assert_exit(0).assert_stdout_contains("csharp").assert_stdout_contains("kotlin");
-    let out = h.run(&["reify", "manifest"]);
+    h.run(&["codegen", "backends"]).assert_exit(0).assert_stdout_contains("csharp").assert_stdout_contains("kotlin");
+    let out = h.run(&["codegen", "manifest"]);
     assert_eq!(out.exit_code, 0);
     let m: serde_json::Value = serde_json::from_str(&out.stdout).expect("manifest is JSON");
     assert_eq!(m["manifest_version"], "1");
     assert_eq!(m["aggregates"][0]["decider_id"], "Order-decider");
     assert!(m["graph_hash"].as_str().unwrap_or("").starts_with("sha256:"));
+}
+
+#[test]
+fn codegen_keeps_reify_as_a_back_compat_alias() {
+    // v1.9.1 renamed the `reify` surface to `codegen`; the old name must still dispatch.
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+    h.run(&["decider", "derive", "Order"]).assert_exit(0);
+    h.run(&["reify", "backends"]).assert_exit(0).assert_stdout_contains("csharp");
 }
 
 #[test]
@@ -1623,48 +1632,48 @@ fn tc_1080_external_plugin_backends_speak_the_manifest_protocol() {
         "ts-backend.py",
         "import json, sys\nm = json.load(sys.stdin)\nagg = m['aggregates'][0]\nfiles = [\n  {'path': 'src/oracle.ts', 'content': f\"// {m['graph_hash']}\\nexport const handles = {json.dumps(agg['handles'])};\\n\"},\n  {'path': 'src/adapter.ts', 'content': '// realiser-owned\\n', 'overwrite': False},\n]\nprint(json.dumps({'files': files}))\n",
     );
-    h.run(&["reify", "plugin", "--cmd", "python3 ts-backend.py", "--out", "gen-ts"])
+    h.run(&["codegen", "plugin", "--cmd", "python3 ts-backend.py", "--out", "gen-ts"])
         .assert_exit(0)
         .assert_stdout_contains("plugin, external");
     let oracle = h.read("gen-ts/src/oracle.ts");
     assert!(oracle.contains("export const handles = [\"PlaceOrder\"];"), "plugin consumed the manifest, got:\n{oracle}");
     // Provenance was appended by the core, so the drift gate covers plugin trees…
-    h.run(&["reify", "check", "--out", "gen-ts"]).assert_exit(0).assert_stdout_contains("conformant");
+    h.run(&["codegen", "check", "--out", "gen-ts"]).assert_exit(0).assert_stdout_contains("conformant");
     // …and plugin-declared scaffolds survive regeneration.
     h.write("gen-ts/src/adapter.ts", "// realised\n");
-    h.run(&["reify", "plugin", "--cmd", "python3 ts-backend.py", "--out", "gen-ts"]).assert_exit(0);
+    h.run(&["codegen", "plugin", "--cmd", "python3 ts-backend.py", "--out", "gen-ts"]).assert_exit(0);
     assert_eq!(h.read("gen-ts/src/adapter.ts"), "// realised\n");
     // Graph moves → the plugin tree drifts like any other.
     h.run(&["domain", "new", "event", "OrderCancelled", "--label", "Cancelled", "--context", "Catalog", "--changes", "Order"]).assert_exit(0);
-    h.run(&["reify", "check", "--out", "gen-ts"]).assert_exit(1).assert_stderr_contains("drift");
+    h.run(&["codegen", "check", "--out", "gen-ts"]).assert_exit(1).assert_stderr_contains("drift");
 }
 
 #[test]
-fn tc_1081_the_how_contracts_realisations_drive_reify_emit() {
+fn tc_1081_the_how_contracts_realisations_drive_codegen_emit() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
     h.run(&["decider", "derive", "Order"]).assert_exit(0);
     // No contract yet → a helpful error, not a crash.
-    h.run(&["reify", "emit"]).assert_exit(1).assert_stderr_contains("how-contract");
+    h.run(&["codegen", "emit"]).assert_exit(1).assert_stderr_contains("how-contract");
     // The §4.2 realisations block: the captured backend/tier/namespace decision.
     h.write(
         ".product/how-contract.yaml",
         "blueprint: bookstore\napplication_contract:\n  id: app\n  language: mixed\n  statements:\n  - id: s1\n    statement: adapters stay thin\nrealisations:\n- id: api\n  backend: csharp\n  tier: oracle-only\n  namespace: Shop.Api\n  out: gen-api\n- id: app\n  backend: kotlin\n  namespace: shopapp\n  out: gen-app\n",
     );
-    h.run(&["reify", "emit"]).assert_exit(0).assert_stdout_contains("csharp oracle-only, from the How").assert_stdout_contains("kotlin oracle-only, from the How");
+    h.run(&["codegen", "emit"]).assert_exit(0).assert_stdout_contains("csharp oracle-only, from the How").assert_stdout_contains("kotlin oracle-only, from the How");
     assert!(h.exists("gen-api/Shop.Api.Conformance/Oracle.g.cs"), "csharp realisation at its declared out/namespace");
     assert!(h.exists("gen-app/src/main/kotlin/shopapp/Oracle.g.kt"), "kotlin realisation at its declared out/namespace");
-    h.run(&["reify", "check", "--out", "gen-api"]).assert_exit(0);
-    h.run(&["reify", "check", "--out", "gen-app"]).assert_exit(0);
+    h.run(&["codegen", "check", "--out", "gen-api"]).assert_exit(0);
+    h.run(&["codegen", "check", "--out", "gen-app"]).assert_exit(0);
     // --id runs a single declared realisation; unknown ids name the declared set.
-    h.run(&["reify", "emit", "--id", "app"]).assert_exit(0);
-    h.run(&["reify", "emit", "--id", "ghost"]).assert_exit(1).assert_stderr_contains("declared: api, app");
+    h.run(&["codegen", "emit", "--id", "app"]).assert_exit(0);
+    h.run(&["codegen", "emit", "--id", "ghost"]).assert_exit(1).assert_stderr_contains("declared: api, app");
     // A realisation for an undeclared system is refused at emit time…
     h.write(
         ".product/how-contract.yaml",
         "blueprint: bookstore\napplication_contract:\n  id: app\n  language: mixed\n  statements:\n  - id: s1\n    statement: adapters stay thin\nrealisations:\n- id: api\n  backend: csharp\n  system: sys-ghost\n",
     );
-    h.run(&["reify", "emit"]).assert_exit(1).assert_stderr_contains("no such system");
+    h.run(&["codegen", "emit"]).assert_exit(1).assert_stderr_contains("no such system");
     // …and `product how validate` gates the tier rules (§4.2).
     h.write(
         ".product/how-contract.yaml",
@@ -1679,12 +1688,12 @@ fn tc_1082_unit_sliced_manifest_keeps_the_product_hash() {
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
     h.run(&["decider", "derive", "Order"]).assert_exit(0);
     let full: serde_json::Value =
-        serde_json::from_str(&h.run(&["reify", "manifest"]).stdout).expect("full manifest");
+        serde_json::from_str(&h.run(&["codegen", "manifest"]).stdout).expect("full manifest");
     let unit: serde_json::Value =
-        serde_json::from_str(&h.run(&["reify", "manifest", "--unit", "Order-decider"]).stdout).expect("unit manifest");
+        serde_json::from_str(&h.run(&["codegen", "manifest", "--unit", "Order-decider"]).stdout).expect("unit manifest");
     assert_eq!(unit["aggregates"].as_array().map(Vec::len), Some(1));
     // The slice is a view of the same specification — identical pin.
     assert_eq!(unit["graph_hash"], full["graph_hash"]);
     // Unknown units name what exists.
-    h.run(&["reify", "manifest", "--unit", "ghost"]).assert_exit(1).assert_stderr_contains("Order-decider");
+    h.run(&["codegen", "manifest", "--unit", "ghost"]).assert_exit(1).assert_stderr_contains("Order-decider");
 }

@@ -8,7 +8,7 @@
 //! emit/reject responses). Full mode routes to generated typed adapters;
 //! oracle-only mode routes to the realiser's scaffolded adapters.
 
-use super::reify_ident::cs_escape;
+use super::codegen_ident::cs_escape;
 
 /// One (id, C# type-name) routing entry — a decider or a projector.
 pub struct RunnerEntry {

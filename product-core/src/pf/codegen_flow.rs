@@ -17,10 +17,10 @@ use super::decider_sim::{decide, replay, Outcome};
 use super::model::DomainGraph;
 use super::projector::Projector;
 use super::projector_sim::project;
-use super::reify_ident::{cs_escape, method_name, pascal};
-use super::reify_oracle::wire_new;
-use super::reify_projector::view_base;
-use super::reify_scenarios::count_assert;
+use super::codegen_ident::{cs_escape, method_name, pascal};
+use super::codegen_oracle::wire_new;
+use super::codegen_projector::view_base;
+use super::codegen_scenarios::count_assert;
 
 /// One command step of a computed chain: who decides, with what payload,
 /// and the oracle's outcome.

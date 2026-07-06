@@ -57,7 +57,7 @@ fn validate_tool() -> ToolDef {
 fn couple_tool() -> ToolDef {
     ToolDef {
         name: "product_design_system_couple".to_string(),
-        description: "Coupling check (§11.2): every AIO the What's UI steps reference has a reifying CIO for each declared context of use. The same gate `product reify` applies at plan time.".to_string(),
+        description: "Coupling check (§11.2): every AIO the What's UI steps reference has a reifying CIO for each declared context of use. The same gate `product codegen` applies at plan time.".to_string(),
         requires_write: false,
         input_schema: serde_json::json!({
             "type": "object",
@@ -82,7 +82,7 @@ fn add_tool() -> ToolDef {
 fn bind_tool() -> ToolDef {
     ToolDef {
         name: "product_design_system_bind".to_string(),
-        description: "Bind a stored design system to the How contract's screen-composition contract (§4.5) by id + version — the system every `product reify` backend resolves.".to_string(),
+        description: "Bind a stored design system to the How contract's screen-composition contract (§4.5) by id + version — the system every `product codegen` backend resolves.".to_string(),
         requires_write: true,
         input_schema: serde_json::json!({
             "type": "object",
