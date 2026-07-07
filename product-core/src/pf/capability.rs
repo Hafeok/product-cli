@@ -46,6 +46,12 @@ pub struct Capability {
     pub tier: u8,
     #[serde(default = "active")]
     pub status: String,
+    /// Optional invocation parameters merged verbatim into the model request
+    /// body (e.g. `max_tokens`, `temperature`, `chat_template_kwargs:
+    /// {enable_thinking: false}` for reasoning models served by vLLM). The
+    /// catalog owns the binding, so the binding owns its sampling knobs.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub invocation: Option<serde_json::Value>,
 }
 
 fn active() -> String {

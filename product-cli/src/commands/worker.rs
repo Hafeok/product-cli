@@ -104,6 +104,7 @@ fn default_claude() -> Capability {
         model_identifier: "claude-opus-4-8".to_string(),
         tier: 2,
         status: "active".to_string(),
+        invocation: None,
     }
 }
 
@@ -198,7 +199,7 @@ fn worker_output(cap: &Capability, prompt: &str) -> Result<(Vec<fpw::ArtifactFil
         (Some(base), Some(key)) => {
             let model = if cap.model_identifier.is_empty() { cap.id.as_str() } else { cap.model_identifier.as_str() };
             let url = format!("{}/chat/completions", base.trim_end_matches('/'));
-            let v = post_json_retry(&url, &key, &fpw::build_request(model, prompt))?;
+            let v = post_json_retry(&url, &key, &fpw::build_request(model, prompt, cap.invocation.as_ref()))?;
             super::build_session::record_usage(&cap.id, &v);
             let content = v["choices"][0]["message"]["content"].as_str().unwrap_or("");
             Ok(fpw::parse_output(&fpw::extract_json(content)?)?)
@@ -248,7 +249,15 @@ fn run_litellm(cap: &Capability, prompt: &str) -> BoxResult {
     let base = std::env::var("LITELLM_BASE_URL").map_err(|_| "LITELLM_BASE_URL is not set (point it at the LiteLLM proxy)")?;
     let key = std::env::var("LITELLM_API_KEY").map_err(|_| "LITELLM_API_KEY is not set")?;
     let url = format!("{}/chat/completions", base.trim_end_matches('/'));
-    let body = serde_json::json!({ "model": cap.id, "messages": [{ "role": "user", "content": prompt }] });
+    let mut body = serde_json::json!({ "model": cap.id, "messages": [{ "role": "user", "content": prompt }] });
+    if let Some(serde_json::Value::Object(inv)) = &cap.invocation {
+        let obj = body.as_object_mut().expect("body is an object");
+        for (k, v) in inv {
+            if k != "model" && k != "messages" {
+                obj.insert(k.clone(), v.clone());
+            }
+        }
+    }
     let v = post_json_retry(&url, &key, &body)?;
     super::build_session::record_usage(&cap.id, &v);
     println!("{}", v["choices"][0]["message"]["content"].as_str().unwrap_or(""));

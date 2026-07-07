@@ -51,6 +51,9 @@ pub fn validate_work_unit(w: &super::work_unit::WorkUnit, domain: Option<&Domain
     }
     if w.produces.path.trim().is_empty() {
         out.push(v(&w.id, "produces.path", "§5 A work unit must declare the exact path its artifact lands at — the harness owns placement."));
+    } else if w.produces.path.trim_end().ends_with('/') {
+        out.push(v(&w.id, "produces.path",
+            "§5 produces.path must be a file, not a directory — a worker echoes this path as a write target, and a directory fails at dispatch."));
     }
     check_domain_refs(w, domain, &mut out);
     check_applies(w, how, &mut out);

@@ -86,29 +86,84 @@ fn load_how(file: &Option<PathBuf>, product: Option<&str>) -> Option<HowContract
         .and_then(|t| HowContract::from_yaml(&t).ok())
 }
 
-fn validate(file: Option<PathBuf>, product: Option<String>) -> BoxResult {
-    let wu = load(file.clone())?;
-    let how = load_how(&file, product.as_deref());
-    let domain = load_domain(product);
-    let results = validate_work_unit(&wu, domain.as_ref(), how.as_ref());
+/// The files `validate` covers: an explicit `--file`, or else the singleton
+/// `.product/work-unit.yaml` (if present) plus the dispatched fleet under
+/// `.product/work-units/*.yaml` — the units `product build` actually runs.
+fn validate_targets(file: Option<PathBuf>) -> Vec<PathBuf> {
+    if let Some(f) = file {
+        return vec![f];
+    }
+    let root = super::shared::domain_root().join(".product");
+    let mut out = Vec::new();
+    let singleton = root.join("work-unit.yaml");
+    if singleton.exists() {
+        out.push(singleton);
+    }
+    if let Ok(entries) = std::fs::read_dir(root.join("work-units")) {
+        let mut fleet: Vec<PathBuf> = entries
+            .filter_map(|e| e.ok().map(|e| e.path()))
+            .filter(|p| p.extension().map(|x| x == "yaml" || x == "yml").unwrap_or(false))
+            .collect();
+        fleet.sort();
+        out.extend(fleet);
+    }
+    out
+}
 
+/// Validate one work-unit file; print its warnings/violations and return the
+/// violation count. Beyond the core checks, a `produces.path` that resolves to
+/// an existing directory under `repo_root` is a violation — a worker echoes
+/// this path as a write target, and a directory fails at dispatch.
+fn validate_one(target: &PathBuf, domain: Option<&DomainGraph>, product: Option<&str>, repo_root: &PathBuf) -> Result<usize, Box<dyn std::error::Error>> {
+    let text = std::fs::read_to_string(target)
+        .map_err(|e| format!("cannot read {}: {e}", target.display()))?;
+    let wu = WorkUnit::from_yaml(&text)?;
+    let how = load_how(&Some(target.clone()), product);
+    let mut results = validate_work_unit(&wu, domain, how.as_ref());
+    let produced = wu.produces.path.trim();
+    if !produced.is_empty() && repo_root.join(produced).is_dir() {
+        results.push(product_core::pf::validate::Violation {
+            focus: wu.id.clone(),
+            path: "produces.path".to_string(),
+            message: format!("§5 produces.path '{produced}' is an existing directory — the artifact needs an exact file path."),
+            severity: "violation".to_string(),
+        });
+    }
     for w in results.iter().filter(|r| r.severity == "warning") {
         eprintln!("warning: [{}] {}: {}", w.focus, w.path, w.message);
     }
-    if has_blocking(&results) {
-        let violations: Vec<_> = results.iter().filter(|r| r.severity == "violation").collect();
-        eprintln!("non-conformant — {} violation(s):", violations.len());
-        for v in &violations {
-            eprintln!("  - [{}] {}: {}", v.focus, v.path, v.message);
-        }
-        return Err(format!("{} work-unit conformance violation(s)", violations.len()).into());
+    if !has_blocking(&results) {
+        return Ok(0);
+    }
+    let violations: Vec<_> = results.iter().filter(|r| r.severity == "violation").collect();
+    eprintln!("non-conformant — '{}' ({}): {} violation(s):", wu.id, target.display(), violations.len());
+    for v in &violations {
+        eprintln!("  - [{}] {}: {}", v.focus, v.path, v.message);
+    }
+    Ok(violations.len())
+}
+
+fn validate(file: Option<PathBuf>, product: Option<String>) -> BoxResult {
+    let targets = validate_targets(file.clone());
+    if targets.is_empty() {
+        return Err(format!(
+            "no work unit at {} and no fleet under .product/work-units/ — scaffold one with `product work-unit init <id>`",
+            path(None).display()
+        ).into());
+    }
+    let domain = load_domain(product.clone());
+    let repo_root = super::shared::domain_root();
+    let mut total_violations = 0usize;
+    for target in &targets {
+        total_violations += validate_one(target, domain.as_ref(), product.as_deref(), &repo_root)?;
+    }
+    if total_violations > 0 {
+        return Err(format!("{total_violations} work-unit conformance violation(s) across {} unit(s)", targets.len()).into());
     }
     println!(
-        "conformant — work unit '{}' produces {} [domain: {}, how: {}]",
-        wu.id,
-        wu.produces.artifact,
+        "conformant — {} work unit(s) [domain: {}]",
+        targets.len(),
         if domain.is_some() { "cross-checked" } else { "not loaded" },
-        if how.is_some() { "cross-checked" } else { "not loaded" },
     );
     Ok(())
 }

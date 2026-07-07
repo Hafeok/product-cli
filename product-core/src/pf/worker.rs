@@ -34,15 +34,27 @@ pub struct EditOp {
 pub const SYSTEM_PROMPT: &str = "You are a code-writing worker. Implement the work described, applying the How by pointer. Respond with ONLY a JSON object. To create or overwrite whole files use {\"files\":[{\"path\":\"<relative path>\",\"content\":\"<file contents>\"}]}. To modify an existing file whose current content is shown to you, return a precise edit instead: {\"edits\":[{\"path\":\"<relative path>\",\"find\":\"<a unique snippet of the current file>\",\"replace\":\"<its replacement>\"}]}. Prefer `edits` over `files` whenever a file's current content is provided.";
 
 /// Build the litellm chat-completion request body for structured file output.
-pub fn build_request(model: &str, user: &str) -> Value {
-    json!({
+/// `invocation` is the capability's optional parameter object (max_tokens,
+/// temperature, chat_template_kwargs, …) merged verbatim into the body —
+/// `model` and `messages` are reserved and cannot be overridden.
+pub fn build_request(model: &str, user: &str, invocation: Option<&Value>) -> Value {
+    let mut body = json!({
         "model": model,
         "response_format": { "type": "json_object" },
         "messages": [
             { "role": "system", "content": SYSTEM_PROMPT },
             { "role": "user", "content": user },
         ],
-    })
+    });
+    if let Some(Value::Object(inv)) = invocation {
+        let obj = body.as_object_mut().expect("body is an object");
+        for (k, v) in inv {
+            if k != "model" && k != "messages" {
+                obj.insert(k.clone(), v.clone());
+            }
+        }
+    }
+    body
 }
 
 /// Parse a structured worker response object `{ "files": [{path, content}, …] }`.
