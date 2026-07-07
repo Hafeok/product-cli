@@ -87,19 +87,20 @@ fn load_how(file: &Option<PathBuf>, product: Option<&str>) -> Option<HowContract
 }
 
 /// The files `validate` covers: an explicit `--file`, or else the singleton
-/// `.product/work-unit.yaml` (if present) plus the dispatched fleet under
-/// `.product/work-units/*.yaml` — the units `product build` actually runs.
-fn validate_targets(file: Option<PathBuf>) -> Vec<PathBuf> {
+/// `.product/work-unit.yaml` (if present) plus the dispatched fleet in the
+/// product's `work-units/` home — the same directory `product build` loads
+/// (`.product/work-units` for the root product, `.product/products/<name>/
+/// work-units` otherwise).
+fn validate_targets(file: Option<PathBuf>, product: Option<&str>) -> Vec<PathBuf> {
     if let Some(f) = file {
         return vec![f];
     }
-    let root = super::shared::domain_root().join(".product");
     let mut out = Vec::new();
-    let singleton = root.join("work-unit.yaml");
+    let singleton = super::shared::domain_root().join(".product").join("work-unit.yaml");
     if singleton.exists() {
         out.push(singleton);
     }
-    if let Ok(entries) = std::fs::read_dir(root.join("work-units")) {
+    if let Ok(entries) = std::fs::read_dir(super::shared::artifact_dir(product, "work-units")) {
         let mut fleet: Vec<PathBuf> = entries
             .filter_map(|e| e.ok().map(|e| e.path()))
             .filter(|p| p.extension().map(|x| x == "yaml" || x == "yml").unwrap_or(false))
@@ -144,10 +145,10 @@ fn validate_one(target: &Path, domain: Option<&DomainGraph>, product: Option<&st
 }
 
 fn validate(file: Option<PathBuf>, product: Option<String>) -> BoxResult {
-    let targets = validate_targets(file.clone());
+    let targets = validate_targets(file.clone(), product.as_deref());
     if targets.is_empty() {
         return Err(format!(
-            "no work unit at {} and no fleet under .product/work-units/ — scaffold one with `product work-unit init <id>`",
+            "no work unit at {} and no fleet under the product's work-units/ home — scaffold one with `product work-unit init <id>`",
             path(None).display()
         ).into());
     }
