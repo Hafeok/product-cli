@@ -29,7 +29,9 @@ pub fn session_dir(root: &Path, product: &str) -> PathBuf {
 }
 
 /// Whether `dir` holds a captured What graph (the working cache or the spec).
-fn has_graph(dir: &Path, product: &str) -> bool {
+/// Whether a What graph has been captured in `dir` — either the working
+/// `session.json` cache or the committed `<product>.ttl`.
+pub fn has_graph(dir: &Path, product: &str) -> bool {
     dir.join("session.json").exists() || dir.join(format!("{product}.ttl")).exists()
 }
 

@@ -216,5 +216,18 @@
     },
   };
 
-  Object.assign(window, { PFUI: { EdgeLayer, anchor, curve, elbow, ConfDot, DetailPanel, useHover, CONF, FitCanvas, layout } });
+  /* The friendly face of an empty live graph — shown while a session's agent
+     hasn't authored this part of the What/How yet (never an error box). */
+  function EmptyHint({ what, hint }) {
+    return (
+      <div style={{ padding: '48px 52px', fontFamily: 'var(--font-mono)', fontSize: 12.5,
+        color: 'var(--slate-400)', lineHeight: 1.8 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--slate-200)' }}>no {what} yet</div>
+        <div style={{ marginTop: 6, color: 'var(--slate-500)' }}>
+          {hint || 'this view fills in live as the graph is authored.'}</div>
+      </div>
+    );
+  }
+
+  Object.assign(window, { PFUI: { EdgeLayer, anchor, curve, elbow, ConfDot, DetailPanel, useHover, CONF, FitCanvas, layout, EmptyHint } });
 })();

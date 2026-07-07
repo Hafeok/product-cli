@@ -258,10 +258,14 @@
     const [tab, setTab] = useState('screen');
     const current = screenId || C().start;
     const screen = PF.screen(current);
-    const data = C().scenario.projected[screen.projection] || {};
+    if (!screen) {
+      return <window.PFUI.EmptyHint what="screens"
+        hint="the preview renders once a UI step with elements is captured (§3.2.1) — the render contract needs a screen to draw." />;
+    }
+    const data = ((C().scenario || {}).projected || {})[screen.projection] || {};
     const state = (forced && screen.state_space.includes(forced)) ? forced : (data.state || 'present');
     const curFlow = flowOf(current);
-    const flow = C().flows.find(f => f.id === curFlow);
+    const flow = (C().flows || []).find(f => f.id === curFlow);
     const go = (id) => { setScreenId(id); setForced(null); };
 
     const jsonObj = tab === 'screen' ? screen
