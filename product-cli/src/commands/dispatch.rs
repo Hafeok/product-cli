@@ -55,10 +55,10 @@ fn dispatch_pf(command: Commands) -> BoxResult {
 }
 
 fn dispatch_build(command: Commands) -> BoxResult {
-    let Commands::Build { deliverable, role, jobs, dry_run, lsp, no_verify, max_rounds, budget, emit_spmc, emit_seam, out, product } = command else {
+    let Commands::Build { deliverable, role, jobs, dry_run, lsp, no_verify, max_rounds, budget, redispatch, emit_spmc, emit_seam, out, product } = command else {
         unreachable!("dispatch_build called with non-Build variant")
     };
-    let gates = build::Gates { lsp, verify: !no_verify, max_rounds, budget };
+    let gates = build::Gates { lsp, verify: !no_verify, max_rounds, budget, redispatch };
     build::handle_build(&deliverable, &role, jobs, dry_run, gates, emit_spmc, emit_seam, out, product)
 }
 

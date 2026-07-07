@@ -44,6 +44,9 @@ pub enum Commands {
         /// Token budget — escalation stops once total tokens reach it
         #[arg(long)]
         budget: Option<u64>,
+        /// Re-dispatch every work unit, including ones whose artifact is tracked and git-clean (default: skip those)
+        #[arg(long)]
+        redispatch: bool,
         /// Emit a self-contained SPMC prompt for a Claude Code -p session instead of dispatching
         #[arg(long = "emit-spmc")]
         emit_spmc: bool,

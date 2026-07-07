@@ -33,6 +33,9 @@ pub(crate) struct Gates {
     pub max_rounds: usize,
     /// Optional token budget; escalation stops once total tokens reach it.
     pub budget: Option<u64>,
+    /// Re-dispatch units whose artifact is tracked + git-clean (default: skip
+    /// them, so a committed green tree survives later deliverables' builds).
+    pub redispatch: bool,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -179,7 +182,8 @@ fn dispatch_live(deliverable: &str, context: &str, ladder: &[Capability], units:
         }
         paths.into_iter().filter(|p| !reverted.contains(p)).collect()
     } else {
-        dispatch_parallel(units, cap, context, jobs)
+        let live = super::build_skip::to_dispatch(units, gates.redispatch, &root);
+        dispatch_parallel(&live, units, cap, context, jobs)
     };
     if gates.lsp {
         super::build_lsp::run(&written, ladder, context, &root, gates.max_rounds, gates.budget);
@@ -209,8 +213,9 @@ fn report_changes(written: &[PathBuf], root: &Path) {
     super::build_session::set_files(changes);
 }
 
-/// A file's git state, classified for the change summary.
-fn git_status(root: &Path, rel: &str) -> &'static str {
+/// A file's git state, classified for the change summary (and the
+/// skip-if-clean test in `build_skip`).
+pub(super) fn git_status(root: &Path, rel: &str) -> &'static str {
     let Ok(out) = std::process::Command::new("git")
         .arg("-C").arg(root)
         .args(["status", "--porcelain", "--", rel])
@@ -252,8 +257,12 @@ fn print_verify_plan(d: &Deliverable) {
 /// in parallel, then its oracle artifacts are frozen before the next layer — so a
 /// `write-test` unit's test is immutable by the time the `implement` unit that
 /// derives from it runs. Coherence is gated afterwards (§6.1) by `report_gates`.
-fn dispatch_parallel(units: &[WorkUnit], cap: &Capability, shared: &str, jobs: usize) -> Vec<PathBuf> {
+fn dispatch_parallel(units: &[WorkUnit], all: &[WorkUnit], cap: &Capability, shared: &str, jobs: usize) -> Vec<PathBuf> {
     let root = super::shared::domain_root();
+    if units.is_empty() {
+        println!("Nothing to dispatch — every unit's artifact is tracked and clean.");
+        return Vec::new();
+    }
     let layers = product_core::pf::schedule::layers(units);
     println!("Dispatching {} work unit(s) in {} dependency layer(s) → '{}'…", units.len(), layers.len(), cap.id);
     let mut written = Vec::new();
@@ -264,7 +273,7 @@ fn dispatch_parallel(units: &[WorkUnit], cap: &Capability, shared: &str, jobs: u
         }
         let layer_units: Vec<WorkUnit> = layer.iter().map(|&i| units[i].clone()).collect();
         let results = run_parallel(layer_units, jobs, |_, wu| {
-            let prompt = unit_prompt(shared, wu, units, &root);
+            let prompt = unit_prompt(shared, wu, all, &root);
             super::worker::dispatch_to(cap, &prompt, &wu.produces.path)
                 .map(|paths| (wu.clone(), paths))
                 .map_err(|e| format!("{}: {e}", wu.id))
