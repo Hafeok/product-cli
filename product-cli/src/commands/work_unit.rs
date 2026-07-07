@@ -14,7 +14,7 @@ use product_core::pf::model::DomainGraph;
 use product_core::pf::session::DomainSession;
 use product_core::pf::work_unit::WorkUnit;
 use product_core::pf::work_unit_validate::validate_work_unit;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use super::BoxResult;
 
@@ -114,11 +114,11 @@ fn validate_targets(file: Option<PathBuf>) -> Vec<PathBuf> {
 /// violation count. Beyond the core checks, a `produces.path` that resolves to
 /// an existing directory under `repo_root` is a violation — a worker echoes
 /// this path as a write target, and a directory fails at dispatch.
-fn validate_one(target: &PathBuf, domain: Option<&DomainGraph>, product: Option<&str>, repo_root: &PathBuf) -> Result<usize, Box<dyn std::error::Error>> {
+fn validate_one(target: &Path, domain: Option<&DomainGraph>, product: Option<&str>, repo_root: &Path) -> Result<usize, Box<dyn std::error::Error>> {
     let text = std::fs::read_to_string(target)
         .map_err(|e| format!("cannot read {}: {e}", target.display()))?;
     let wu = WorkUnit::from_yaml(&text)?;
-    let how = load_how(&Some(target.clone()), product);
+    let how = load_how(&Some(target.to_path_buf()), product);
     let mut results = validate_work_unit(&wu, domain, how.as_ref());
     let produced = wu.produces.path.trim();
     if !produced.is_empty() && repo_root.join(produced).is_dir() {

@@ -128,7 +128,17 @@ pub fn project_delivery(g: &DomainGraph, base: &Path, conf: &super::conformance:
     let feat_json: Vec<Value> = features.iter().map(|f| feature_json(f, &deliverables, conf)).collect();
     let rel_json: Vec<Value> = releases
         .iter()
-        .map(|r| json!({ "id": r.id, "name": r.id, "features": r.features, "closed": true, "note": "" }))
+        .map(|r| {
+            // A release's members are deliverable ids (§7.2); the board renders
+            // the features they wrap, so resolve each through its deliverable
+            // (an unmatched id passes through — the UI drops what it can't show).
+            let feats: Vec<String> = r
+                .features
+                .iter()
+                .map(|m| deliverables.iter().find(|d| &d.id == m).map(|d| d.feature.clone()).unwrap_or_else(|| m.clone()))
+                .collect();
+            json!({ "id": r.id, "name": r.id, "features": feats, "closed": true, "note": "" })
+        })
         .collect();
     let tgt_json: Vec<Value> = targets
         .iter()

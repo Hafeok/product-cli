@@ -98,7 +98,9 @@
     planned: { c: 'var(--slate-500)', t: 'planned' },
   };
   function ReleaseColumn({ rel, selected, onSelect, showConf, dense }) {
-    const feats = rel.features.map(id => PF.feature(id));
+    // Drop members that don't resolve to a declared feature — a live graph may
+    // reference features this projection doesn't carry; never crash the board.
+    const feats = rel.features.map(id => PF.feature(id)).filter(Boolean);
     const doneN = feats.filter(PF.featureDone).length;
     const st = STATUS[rel.status] || STATUS.planned;
     const planned = rel.status === 'planned';

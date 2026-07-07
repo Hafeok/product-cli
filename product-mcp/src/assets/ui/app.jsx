@@ -245,6 +245,27 @@ function featureDetail(id, openFlow) {
   };
 }
 
+/* One broken view must never unmount the whole app (losing the nav and the
+   product picker with it) — catch its render error and show it in place. The
+   parent keys this by view id, so navigating elsewhere resets the boundary. */
+class ViewErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div role="alert" style={{ padding: '40px 48px', fontFamily: 'var(--font-mono)', fontSize: 12.5,
+          color: 'var(--slate-300)', lineHeight: 1.8 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--error, #ef4444)' }}>this view failed to render</div>
+          <div style={{ marginTop: 8, color: 'var(--slate-400)' }}>{String(this.state.error)}</div>
+          <div style={{ marginTop: 14, color: 'var(--slate-500)' }}>the rest of the explorer still works — pick another view on the left.</div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [view, setView] = useState('systems');
@@ -283,9 +304,14 @@ function App() {
   const [navOpen, setNavOpen] = useState(() => { try { return localStorage.getItem('pf-nav-open') !== '0'; } catch (e) { return true; } });
   const toggleNav = () => setNavOpen(o => { try { localStorage.setItem('pf-nav-open', o ? '0' : '1'); } catch (e) {} return !o; });
 
-  // detail
+  // detail — a selection over live data the projection doesn't carry must
+  // degrade to "no panel", not take the app down.
   const selValue = view === 'flows' ? (sel.flows ? { flowId, nodeId: sel.flows } : null) : sel[view];
-  const detail = view === 'screens' ? null : buildDetail(view, selValue, openSystem, openDomain, openFlow, openStep);
+  let detail = null;
+  if (view !== 'screens') {
+    try { detail = buildDetail(view, selValue, openSystem, openDomain, openFlow, openStep); }
+    catch (e) { detail = null; }
+  }
 
   const NAV = [
     { id: 'graph', label: 'The Graph', ref: '§2·§9', color: 'var(--em-bridge)', items: [
@@ -322,7 +348,8 @@ function App() {
         </span>
         {(PF._products || []).length > 1 && (
           <select value={PF._product || ''} title="switch product"
-            onChange={e => { location.search = '?product=' + encodeURIComponent(e.target.value); }}
+            onChange={e => { const q = new URLSearchParams(location.search); q.set('product', e.target.value);
+              location.search = q.toString(); /* keeps ?session= — the view stays on its session */ }}
             style={{ fontFamily: 'var(--font-mono)', fontSize: 11, background: 'var(--slate-900)', color: 'var(--slate-200)',
               border: '1px solid var(--slate-600)', borderRadius: 4, padding: '2px 6px', cursor: 'pointer' }}>
             {(PF._products).map(p => <option key={p} value={p}>{p}</option>)}
@@ -456,6 +483,7 @@ function App() {
 
       {/* canvas */}
       <div style={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <ViewErrorBoundary key={view}>
         {view === 'graph' && <GraphView onOpen={(v) => setView(v)} />}
         {view === 'systems' && (
           <SystemsMap onOpenSystem={openSystem} selected={sel.systems} onSelect={(id) => select('systems', id)}
@@ -505,6 +533,7 @@ function App() {
         {view === 'reification' && <ReificationView />}
         {view === 'workunits' && <WorkUnitsView />}
         {view === 'verifications' && <VerificationsView />}
+        </ViewErrorBoundary>
 
         {detail && (
           <DetailPanel title={detail.title} kindTag={detail.tag} rows={detail.rows} onClose={() => select(view, null)}>

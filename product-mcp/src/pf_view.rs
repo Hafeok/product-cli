@@ -322,6 +322,27 @@ mod tests {
         assert_eq!(pf["_live"], true);
     }
 
+    /// A release's members are deliverable ids (§7.2); the UI board resolves
+    /// them with `PF.feature(id)`, so the projection must map each member to
+    /// the feature its deliverable wraps — passing deliverable ids through
+    /// verbatim crashed the explorer on the first repo with a real release.
+    #[test]
+    fn release_members_project_as_the_wrapped_feature_ids() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let base = tmp.path().join(".product/products/acme");
+        for d in ["features", "deliverables", "releases"] {
+            std::fs::create_dir_all(base.join(d)).expect("mkdir");
+        }
+        std::fs::write(base.join("features/ft-checkout.yaml"), "id: ft-checkout\nanchors:\n- flow-checkout\n").expect("feature");
+        std::fs::write(base.join("deliverables/d1-checkout.yaml"), "id: d1-checkout\nfeature: ft-checkout\n").expect("deliverable");
+        std::fs::write(base.join("releases/rel-1.yaml"), "id: rel-1\nfeatures:\n- d1-checkout\n- ghost\n").expect("release");
+
+        let pf = build_pf_view(&sample(), tmp.path(), "acme");
+        let members = pf["delivery"]["releases"][0]["features"].as_array().expect("members");
+        assert_eq!(members[0], "ft-checkout", "deliverable id resolves to its wrapped feature");
+        assert_eq!(members[1], "ghost", "an unmatched member passes through for the UI to drop");
+    }
+
     #[test]
     fn flow_layout_assigns_lanes_and_causal_columns() {
         let tmp = tempfile::tempdir().expect("tempdir");
