@@ -84,12 +84,13 @@ window.PF.buildGraph = function () {
 
   /* ---------- HOW ---------- */
   PF.how.decisions.forEach(d => { N('d:' + d.id, d.title, 'decision', 'how', 2, 'decisions'); });
-  N('bp:' + PF.how.blueprint.id, PF.how.blueprint.name, 'blueprint', 'how', 1, 'decisions');
+  // a live How may not carry a blueprint yet
+  if (PF.how.blueprint) N('bp:' + PF.how.blueprint.id, PF.how.blueprint.name, 'blueprint', 'how', 1, 'decisions');
   PF.how.principles.forEach(p => { N('p:' + p.id, p.id.replace('prin-', ''), 'principle', 'how', 3, 'decisions'); });
   PF.how.decisions.forEach(d => d.licenses.forEach(p => E('d:' + d.id, 'p:' + p, 'licenses')));
-  PF.how.deployableUnits.forEach(du => {
+  (PF.how.deployableUnits || []).forEach(du => {
     N('du:' + du.id, du.id.replace('du-', ''), 'deployable', 'how', 2, 'decisions');
-    E('bp:' + PF.how.blueprint.id, 'du:' + du.id, 'instantiates');
+    if (PF.how.blueprint) E('bp:' + PF.how.blueprint.id, 'du:' + du.id, 'instantiates');
     E('sys:' + du.system, 'du:' + du.id, 'realised-by'); // bridge
   });
   PF.how.patterns.forEach(p => {

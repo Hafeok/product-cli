@@ -93,6 +93,10 @@
   function FlowsView({ systemId, flowId, setFlowId, hidden, selected, onSelect, showConf, showLabels, dense }) {
     const system = PF.systems.find(s => s.id === systemId);
     const flow = PF.flows[flowId];
+    if (!system || !flow) {
+      return <window.PFUI.EmptyHint what="event-model flows"
+        hint="flows appear here once a system and its trigger → command → event chains are captured (§3.2)." />;
+    }
 
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>

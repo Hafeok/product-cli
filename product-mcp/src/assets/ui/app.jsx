@@ -245,6 +245,24 @@ function featureDetail(id, openFlow) {
   };
 }
 
+/* The header connection badge — honest about what the page is showing. Green
+   only when the last /api/pf fetch actually applied; amber while a fetch has
+   failed and a retry is pending; grey when no server was ever reached and the
+   bundled demo data is on screen. */
+const CONN_BADGE = {
+  live: { color: '#22c55e', label: 'live' },
+  stale: { color: '#f59e0b', label: 'reconnecting…' },
+  demo: { color: 'var(--slate-500)', label: 'demo data' },
+};
+function ConnBadge({ conn }) {
+  const s = CONN_BADGE[conn] || CONN_BADGE.demo;
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--slate-400)', fontSize: 12, fontFamily: 'var(--font-mono)' }}>
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color }} />{s.label}
+    </span>
+  );
+}
+
 /* One broken view must never unmount the whole app (losing the nav and the
    product picker with it) — catch its render error and show it in place. The
    parent keys this by view id, so navigating elsewhere resets the boundary. */
@@ -343,9 +361,7 @@ function App() {
           view === 'features' || view === 'versions' || view === 'workunits' || view === 'verifications' ? 'build'
           : view === 'screens' || view === 'decisions' || view === 'layout' || view === 'reification' || view === 'composition' || view === 'patterns' || view === 'howprocess' ? 'how'
           : 'what'} until="build" />
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--slate-400)', fontSize: 12, fontFamily: 'var(--font-mono)' }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }} />live
-        </span>
+        <ConnBadge conn={PF._conn} />
         {(PF._products || []).length > 1 && (
           <select value={PF._product || ''} title="switch product"
             onChange={e => { const q = new URLSearchParams(location.search); q.set('product', e.target.value);
@@ -617,21 +633,48 @@ function applyLive(data) {
   window.PF._products = data._products || [];
   return true;
 }
+/* Connection state for the header badge — 'live' (last fetch applied),
+   'stale' (was live, last fetch failed — e.g. a read raced a write; the next
+   SSE tick or the scheduled retry recovers), 'demo' (never reached a server:
+   the bundled demo data is showing). */
+let fetchSeq = 0;
+function markConn(ok) {
+  window.PF._conn = ok ? 'live'
+    : (window.PF._conn === 'live' || window.PF._conn === 'stale') ? 'stale' : 'demo';
+  return ok;
+}
 function fetchLive() {
   // Forward ?product= / ?session= from the page URL so /?product=acme renders
   // the acme showcase alongside the self-hosted product-cli.
-  return fetch('/api/pf' + (location.search || '')).then(r => (r.ok ? r.json() : null)).then(applyLive).catch(() => false);
+  const seq = ++fetchSeq;
+  return fetch('/api/pf' + (location.search || ''))
+    .then(r => (r.ok ? r.json() : null))
+    .then(data => (seq === fetchSeq ? markConn(applyLive(data)) : false))
+    .catch(() => (seq === fetchSeq ? markConn(false) : false));
 }
 
 function Root() {
   const [, bump] = useState(0);
   React.useEffect(() => {
     let es;
+    let retry = null;
+    const refetch = () => fetchLive().then(ok => {
+      bump(x => x + 1); // re-render even on failure, so the badge shows 'stale'
+      if (!ok && !retry) {
+        // a read that raced a write — one delayed retry recovers without
+        // waiting for the next change tick
+        retry = setTimeout(() => { retry = null; fetchLive().then(() => bump(x => x + 1)); }, 800);
+      }
+    });
     try {
       es = new EventSource('/api/events');
-      es.addEventListener('changed', () => fetchLive().then(ok => { if (ok) bump(x => x + 1); }));
+      es.addEventListener('changed', refetch);
+      // server gone (session over, crash): show 'reconnecting…' instead of a
+      // stale green 'live'; a successful reconnect refetches and goes green.
+      es.onerror = () => { if (window.PF._conn === 'live') { window.PF._conn = 'stale'; bump(x => x + 1); } };
+      es.onopen = () => { if (window.PF._conn && window.PF._conn !== 'live') refetch(); };
     } catch (e) { /* no SSE (static hosting) — stay on the last fetch */ }
-    return () => { if (es) es.close(); };
+    return () => { if (es) es.close(); if (retry) clearTimeout(retry); };
   }, []);
   return <App />;
 }

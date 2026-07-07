@@ -59,7 +59,11 @@
   }
 
   function UIStepsView({ stepId, setStepId, onPreview }) {
-    const s = PF.screen(stepId) || PF.contract.screens[0];
+    const s = PF.screen(stepId) || (PF.contract.screens || [])[0];
+    if (!s) {
+      return <window.PFUI.EmptyHint what="UI steps"
+        hint="steps appear here once wireframe steps are captured on a flow (§3.2.1)." />;
+    }
     const spec = PF.stepSpecs[s.id] || {};
     const displays = s.elements.filter(e => e.aio.startsWith('display'));
     const actions = s.elements.filter(e => !e.aio.startsWith('display'));

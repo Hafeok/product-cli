@@ -152,8 +152,11 @@
   }
   function DecisionsView({ selected, onSelect }) {
     const H = PF.how;
-    const A = H.blueprint;
-    const dus = H.deployableUnits;
+    // A live How may not have declared a blueprint yet — render a stub card so
+    // the rest of the view (decisions, principles, contracts) stays visible.
+    const A = H.blueprint || { id: '—', name: 'no blueprint yet', instances: [], packages: [],
+      note: 'declare one under .product/blueprints/ when a system shape recurs (§4)' };
+    const dus = H.deployableUnits || [];
     return (
       <Page>
         {/* the blueprint — a reusable How, instantiated as DeployableUnits */}

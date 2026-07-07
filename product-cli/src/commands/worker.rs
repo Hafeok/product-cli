@@ -105,6 +105,7 @@ fn default_claude() -> Capability {
         tier: 2,
         status: "active".to_string(),
         invocation: None,
+        response_mode: None,
     }
 }
 
@@ -199,7 +200,7 @@ fn worker_output(cap: &Capability, prompt: &str) -> Result<(Vec<fpw::ArtifactFil
         (Some(base), Some(key)) => {
             let model = if cap.model_identifier.is_empty() { cap.id.as_str() } else { cap.model_identifier.as_str() };
             let url = format!("{}/chat/completions", base.trim_end_matches('/'));
-            let v = post_json_retry(&url, &key, &fpw::build_request(model, prompt, cap.invocation.as_ref()))?;
+            let v = post_json_retry(&url, &key, &fpw::build_request(model, prompt, cap.invocation.as_ref(), cap.response_mode.as_deref()))?;
             super::build_session::record_usage(&cap.id, &v);
             let content = v["choices"][0]["message"]["content"].as_str().unwrap_or("");
             Ok(fpw::parse_output(&fpw::extract_json(content)?)?)
