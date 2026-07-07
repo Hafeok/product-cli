@@ -5,10 +5,18 @@ use serde_json::json;
 
 #[test]
 fn build_request_forces_json_output() {
-    let req = build_request("fast-cheap", "do the thing", None);
+    let req = build_request("fast-cheap", "do the thing", None, None);
     assert_eq!(req["model"], json!("fast-cheap"));
     assert_eq!(req["response_format"]["type"], json!("json_object"));
     assert_eq!(req["messages"][1]["content"], json!("do the thing"));
+}
+
+#[test]
+fn response_mode_files_selects_the_whole_file_prompt() {
+    let req = build_request("fast-cheap", "do the thing", None, Some("files"));
+    assert_eq!(req["messages"][0]["content"], json!(SYSTEM_PROMPT_FILES_ONLY));
+    let default = build_request("fast-cheap", "do the thing", None, None);
+    assert_eq!(default["messages"][0]["content"], json!(SYSTEM_PROMPT));
 }
 
 #[test]
@@ -20,7 +28,7 @@ fn build_request_merges_invocation_without_touching_reserved_keys() {
         "model": "evil-override",
         "messages": []
     });
-    let req = build_request("fast-cheap", "do the thing", Some(&inv));
+    let req = build_request("fast-cheap", "do the thing", Some(&inv), None);
     assert_eq!(req["max_tokens"], json!(16384));
     assert_eq!(req["temperature"], json!(0));
     assert_eq!(req["chat_template_kwargs"]["enable_thinking"], json!(false));

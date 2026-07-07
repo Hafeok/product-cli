@@ -33,16 +33,29 @@ pub struct EditOp {
 /// The system instruction that fixes the worker's output contract.
 pub const SYSTEM_PROMPT: &str = "You are a code-writing worker. Implement the work described, applying the How by pointer. Respond with ONLY a JSON object. To create or overwrite whole files use {\"files\":[{\"path\":\"<relative path>\",\"content\":\"<file contents>\"}]}. To modify an existing file whose current content is shown to you, return a precise edit instead: {\"edits\":[{\"path\":\"<relative path>\",\"find\":\"<a unique snippet of the current file>\",\"replace\":\"<its replacement>\"}]}. Prefer `edits` over `files` whenever a file's current content is provided.";
 
+/// The files-only variant (`response_mode: files`): whole-file rewrites, never
+/// targeted edits — for models that cannot reproduce exact unique find-spans.
+pub const SYSTEM_PROMPT_FILES_ONLY: &str = "You are a code-writing worker. Implement the work described, applying the How by pointer. Respond with ONLY a JSON object of the form {\"files\":[{\"path\":\"<relative path>\",\"content\":\"<file contents>\"}]}. Always write each file COMPLETE from the first line to the last — even when the file's current content is shown to you, respond with the full rewritten file, never a fragment and never an edit object.";
+
+/// The system prompt for a capability's declared response mode.
+pub fn system_prompt(response_mode: Option<&str>) -> &'static str {
+    match response_mode {
+        Some("files") => SYSTEM_PROMPT_FILES_ONLY,
+        _ => SYSTEM_PROMPT,
+    }
+}
+
 /// Build the litellm chat-completion request body for structured file output.
 /// `invocation` is the capability's optional parameter object (max_tokens,
 /// temperature, chat_template_kwargs, …) merged verbatim into the body —
 /// `model` and `messages` are reserved and cannot be overridden.
-pub fn build_request(model: &str, user: &str, invocation: Option<&Value>) -> Value {
+/// `response_mode` selects the system prompt (`files` = whole-file only).
+pub fn build_request(model: &str, user: &str, invocation: Option<&Value>, response_mode: Option<&str>) -> Value {
     let mut body = json!({
         "model": model,
         "response_format": { "type": "json_object" },
         "messages": [
-            { "role": "system", "content": SYSTEM_PROMPT },
+            { "role": "system", "content": system_prompt(response_mode) },
             { "role": "user", "content": user },
         ],
     });

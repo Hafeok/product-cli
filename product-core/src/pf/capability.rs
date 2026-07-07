@@ -52,7 +52,16 @@ pub struct Capability {
     /// catalog owns the binding, so the binding owns its sampling knobs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub invocation: Option<serde_json::Value>,
+    /// Optional first-party-worker response mode: `files` forces whole-file
+    /// rewrites (no targeted edits) — the reliable setting for smaller local
+    /// models that cannot reproduce exact unique find-spans; unset or `edits`
+    /// keeps edits-preferred when current file content is shown.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub response_mode: Option<String>,
 }
+
+/// The response modes a capability may declare.
+pub const RESPONSE_MODES: &[&str] = &["files", "edits"];
 
 fn active() -> String {
     "active".to_string()
@@ -166,6 +175,12 @@ pub fn validate_catalog(catalog: &Catalog) -> Vec<Violation> {
         if !ENDPOINTS.contains(&c.endpoint.as_str()) {
             out.push(v(&c.id, "endpoint",
                 &format!("unknown endpoint '{}' (expected one of: {})", c.endpoint, ENDPOINTS.join(", "))));
+        }
+        if let Some(mode) = &c.response_mode {
+            if !RESPONSE_MODES.contains(&mode.as_str()) {
+                out.push(v(&c.id, "response_mode",
+                    &format!("unknown response_mode '{}' (expected one of: {})", mode, RESPONSE_MODES.join(", "))));
+            }
         }
     }
     let known: std::collections::BTreeSet<&str> = catalog.capabilities.iter().map(|c| c.id.as_str()).collect();
