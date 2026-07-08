@@ -230,11 +230,22 @@ fn next_scripted_response(dir: &str) -> Result<String, Box<dyn std::error::Error
 }
 
 fn run_claude(prompt: &str) -> BoxResult {
-    let status = Command::new("claude")
+    // The prompt rides on stdin: as an argv argument it hits the kernel's
+    // per-arg limit (~128 KiB) once the assembled context grows, and the
+    // spawn dies with E2BIG before claude ever runs.
+    use std::io::Write;
+    let mut child = Command::new("claude")
         .arg("-p")
-        .arg(prompt)
-        .status()
+        .stdin(std::process::Stdio::piped())
+        .spawn()
         .map_err(|e| format!("failed to launch `claude`: {e}"))?;
+    child
+        .stdin
+        .take()
+        .ok_or("claude stdin unavailable")?
+        .write_all(prompt.as_bytes())
+        .map_err(|e| format!("writing prompt to claude: {e}"))?;
+    let status = child.wait().map_err(|e| format!("waiting for claude: {e}"))?;
     if !status.success() {
         return Err(format!("claude exited with {status}").into());
     }

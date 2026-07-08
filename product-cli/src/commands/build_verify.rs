@@ -55,7 +55,10 @@ pub(super) fn run(d: &mut Deliverable, written: &[PathBuf], ladder: &[Capability
                     println!("  ! oracle guard: reverted {} worker edit(s) to test files {reverted:?} — a fix may not rewrite the acceptance test", reverted.len());
                 }
             }
-            Err(_) => break,
+            Err(e) => {
+                eprintln!("  ! fix dispatch to '{}' failed: {e} — stopping with {} failing check(s)", cap.id, failing.len());
+                break;
+            }
         }
     }
     if let Err(e) = super::deliverable::save(d, product) {
@@ -68,10 +71,24 @@ fn run_step(s: &VerifyStep, root: &Path) -> Outcome {
         Ok(o) => {
             let mut text = String::from_utf8_lossy(&o.stdout).into_owned();
             text.push_str(&String::from_utf8_lossy(&o.stderr));
-            (s.clone(), o.status.success(), text)
+            let mut ok = o.status.success();
+            if ok && cargo_test_ran_nothing(s, &text) {
+                ok = false;
+                text.push_str("\nvacuous pass refused: the filter matched zero tests — the acceptance test does not exist yet.");
+            }
+            (s.clone(), ok, text)
         }
         Err(e) => (s.clone(), false, e.to_string()),
     }
+}
+
+/// A cargo-test runner that ran zero tests proves nothing — `cargo test` exits
+/// 0 when a filter matches no test, which would record a criterion as passing
+/// before its acceptance test exists.
+fn cargo_test_ran_nothing(s: &VerifyStep, out: &str) -> bool {
+    s.program == "cargo"
+        && s.args.first().is_some_and(|a| a == "test")
+        && !out.lines().any(|l| l.contains("test result:") && !l.contains(" 0 passed"))
 }
 
 fn record(d: &mut Deliverable, outcomes: &[Outcome]) {
