@@ -159,7 +159,7 @@ fn dispatch_inner(cap: &Capability, prompt: &str, target: Option<&str>) -> Dispa
     match cap.endpoint.as_str() {
         "claude" => {
             super::build_session::record_call(&cap.id, 0, 0);
-            run_claude(prompt).map(|_| Vec::new())
+            run_claude(cap, prompt).map(|_| Vec::new())
         }
         "litellm" | "anthropic" | "scaleway" => run_litellm(cap, prompt).map(|_| Vec::new()),
         "worker" => run_first_party(cap, prompt, target),
@@ -229,13 +229,19 @@ fn next_scripted_response(dir: &str) -> Result<String, Box<dyn std::error::Error
     Ok(std::fs::read_to_string(&path)?)
 }
 
-fn run_claude(prompt: &str) -> BoxResult {
+fn run_claude(cap: &Capability, prompt: &str) -> BoxResult {
     // The prompt rides on stdin: as an argv argument it hits the kernel's
     // per-arg limit (~128 KiB) once the assembled context grows, and the
     // spawn dies with E2BIG before claude ever runs.
     use std::io::Write;
-    let mut child = Command::new("claude")
-        .arg("-p")
+    let mut cmd = Command::new("claude");
+    cmd.arg("-p");
+    // The catalog owns the binding: without --model the subprocess runs
+    // whatever the user's Claude Code default happens to be.
+    if !cap.model_identifier.is_empty() {
+        cmd.args(["--model", &cap.model_identifier]);
+    }
+    let mut child = cmd
         .stdin(std::process::Stdio::piped())
         .spawn()
         .map_err(|e| format!("failed to launch `claude`: {e}"))?;

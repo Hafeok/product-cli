@@ -37,8 +37,9 @@ pub struct Capability {
     pub id: String,
     /// Runner selector: `claude` (subprocess) | `litellm` (HTTP proxy).
     pub endpoint: String,
-    /// The underlying provider model (informational for claude; the litellm
-    /// group is keyed by `id`).
+    /// The underlying provider model. For the `claude` endpoint it is passed
+    /// as `--model`; for `worker` it is the wire model id; the litellm group
+    /// is keyed by `id`. Empty = the runner's own default.
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub model_identifier: String,
     /// Escalation-ladder tier (higher = stronger/costlier).
