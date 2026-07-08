@@ -12,6 +12,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use github_copilot_sdk::handler::{UserInputHandler, UserInputResponse};
+use github_copilot_sdk::mode::ToolSet;
 use github_copilot_sdk::types::{MessageOptions, SessionConfig, SessionEvent, SessionId, Tool};
 use github_copilot_sdk::session::Session;
 use github_copilot_sdk::{permission, Client, ClientOptions, CliProgram};
@@ -53,7 +54,7 @@ async fn run(spec: SessionSpec) -> Result<()> {
         .map_err(|e| sdk_err("start the Copilot CLI server", &e))?;
 
     let session = client
-        .create_session(session_config(spec.tools))
+        .create_session(session_config(spec.tools)?)
         .await
         .map_err(|e| sdk_err("create the Copilot session", &e))?;
 
@@ -94,7 +95,7 @@ async fn run(spec: SessionSpec) -> Result<()> {
 /// built-ins, stdin for the agent's questions. Config discovery stays off —
 /// parity with the previous `--no-custom-instructions` +
 /// `--disable-builtin-mcps` flags (no instruction files, no MCP config).
-fn session_config(tools: Vec<Tool>) -> SessionConfig {
+fn session_config(tools: Vec<Tool>) -> Result<SessionConfig> {
     let mut config = SessionConfig::default()
         .with_permission_handler(permission::approve_if(|data| {
             // Only read-only built-ins get through. The bridged product
@@ -108,9 +109,21 @@ fn session_config(tools: Vec<Tool>) -> SessionConfig {
         .with_user_input_handler(Arc::new(StdinUserInput))
         .with_tools(tools);
     config.streaming = Some(true);
-    config.available_tools = Some(READ_ONLY_BUILTINS.iter().map(|s| s.to_string()).collect());
+    config.available_tools = Some(available_tools()?);
     config.enable_config_discovery = Some(false);
-    config
+    Ok(config)
+}
+
+/// The session's tool filter. `available_tools` filters **every** tool
+/// source, not just built-ins — a bare built-in list would hide the bridged
+/// product tools too — so it must be source-qualified: the read-only
+/// built-ins plus every client-registered (`custom:`) tool.
+fn available_tools() -> Result<Vec<String>> {
+    ToolSet::new()
+        .add_builtin_many(READ_ONLY_BUILTINS)
+        .and_then(|set| set.add_custom("*"))
+        .map(ToolSet::into_vec)
+        .map_err(|e| sdk_err("build the session tool filter", &e))
 }
 
 /// Send one user turn; block until the session goes idle. Turn-level errors
@@ -194,4 +207,36 @@ impl UserInputHandler for StdinUserInput {
 
 fn sdk_err(action: &str, e: &github_copilot_sdk::Error) -> ProductError {
     ProductError::IoError(format!("could not {action}: {e}"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tool_filter_admits_custom_tools_alongside_readonly_builtins() {
+        // Regression: a bare built-in list here silently hid every bridged
+        // product tool — the filter applies to ALL tool sources.
+        let filter = available_tools().expect("filter");
+        assert!(filter.contains(&"custom:*".to_string()), "{filter:?}");
+        for builtin in READ_ONLY_BUILTINS {
+            assert!(filter.contains(&format!("builtin:{builtin}")), "{filter:?}");
+        }
+        assert!(
+            !filter.iter().any(|f| f.contains("bash") || f.contains("write")),
+            "no mutating built-ins: {filter:?}"
+        );
+    }
+
+    #[test]
+    fn session_config_carries_the_bridged_tools() {
+        let config = session_config(vec![Tool::new("product_workflow_status")]).expect("config");
+        assert_eq!(config.streaming, Some(true));
+        assert_eq!(config.enable_config_discovery, Some(false));
+        let names: Vec<String> =
+            config.tools.iter().flatten().map(|t| t.name.clone()).collect();
+        assert_eq!(names, ["product_workflow_status"]);
+        let filter = config.available_tools.as_deref().expect("filter set");
+        assert!(filter.contains(&"custom:*".to_string()), "{filter:?}");
+    }
 }
