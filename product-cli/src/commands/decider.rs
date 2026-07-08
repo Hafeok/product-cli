@@ -167,6 +167,24 @@ fn validate(name: &str, product: Option<String>) -> BoxResult {
     Ok(())
 }
 
+/// Run behavioural conformance for every decider that declares its runner in
+/// the YAML (`conform: <command>`). Called by `product build` after verify —
+/// step §6.3 closes automatically instead of waiting for a manual invocation.
+pub(super) fn run_declared_conform(deciders: &[product_core::pf::decider::Decider], product: Option<&str>) {
+    let declared: Vec<_> = deciders.iter().filter(|d| d.conform.is_some()).collect();
+    if declared.is_empty() {
+        return;
+    }
+    println!("\n--- Behavioural conformance (§6.3, declared runners) ---");
+    for d in declared {
+        let runner = d.conform.as_deref().expect("filtered on Some");
+        match conform(&d.id, runner, product.map(str::to_string)) {
+            Ok(()) => {}
+            Err(e) => eprintln!("  ! {}: {e}", d.id),
+        }
+    }
+}
+
 fn conform(name: &str, runner: &str, product: Option<String>) -> BoxResult {
     use std::io::Write;
     use std::process::{Command, Stdio};

@@ -68,6 +68,7 @@ pub(crate) fn handle_build(deliverable: &str, role: &str, jobs: usize, dry_run: 
     } else {
         super::build_session::begin(deliverable);
         dispatch_live(deliverable, &context, &ladder, &units, jobs, gates, &mut d, pr.as_deref())?;
+        super::decider::run_declared_conform(&deciders, pr.as_deref());
     }
     println!("\n--- Gate status ---");
     let fd = report_gates(&d, &feature, &graph, &deciders, pr.as_deref());

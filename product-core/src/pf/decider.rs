@@ -45,6 +45,12 @@ pub struct Decider {
     /// Behavioural scenarios — the oracle simulated before realisation.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub scenarios: Vec<Scenario>,
+    /// Optional declared conformance runner (§6.3): a shell command reading the
+    /// scenario requests on stdin and answering outcomes on stdout. When set,
+    /// `product build` runs behavioural conformance automatically after verify
+    /// (e.g. `cargo run -q --release -p <crate> --bin <bridge>` self-compiles).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub conform: Option<String>,
 }
 
 impl Decider {
@@ -96,6 +102,7 @@ pub fn derive_decider(graph: &DomainGraph, aggregate: &str) -> Result<Decider> {
         reads: Vec::new(),
         logic: None,
         scenarios: Vec::new(),
+        conform: None,
     })
 }
 

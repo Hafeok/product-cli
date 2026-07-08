@@ -156,6 +156,7 @@ pub fn fixture_decider() -> Decider {
         reads: vec![],
         logic: Some(fixture_logic()),
         scenarios: fixture_scenarios(),
+        conform: None,
     }
 }
 
