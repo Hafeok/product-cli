@@ -69,7 +69,7 @@ fn start(product: Option<String>, cli: Option<String>, until: &str, no_launch: b
         println!("  Run the agent against it with: product mcp --workflow --session {} --repo {}", id, root.display());
         return Ok(());
     }
-    author::workflow::launch(&id, &product, agent_cli, &root)?;
+    author::workflow::launch(&id, &product, agent_cli, &root, &super::shared::run_copilot_session)?;
     Ok(())
 }
 
@@ -119,7 +119,7 @@ fn resume(id: &str) -> BoxResult {
     let session = WorkflowSession::load(&session_root)
         .map_err(|_| format!("no session '{id}' under {}", root.display()))?;
     let agent_cli = author::AgentCli::parse(&session.agent_cli)?;
-    author::workflow::launch(id, &session.product, agent_cli, &root)?;
+    author::workflow::launch(id, &session.product, agent_cli, &root, &super::shared::run_copilot_session)?;
     Ok(())
 }
 

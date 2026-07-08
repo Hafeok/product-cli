@@ -79,7 +79,7 @@ fn handle_domain(cmd: AuthorCommands) -> BoxResult {
     let now = chrono::Utc::now();
     let id = format!("{product}-{}", now.format("%Y%m%d-%H%M%S"));
     author::workflow::scaffold(&root, &id, &product, &cli_str, Phase::What, now.to_rfc3339())?;
-    author::workflow::launch(&id, &product, agent_cli, &root)?;
+    author::workflow::launch(&id, &product, agent_cli, &root, &super::shared::run_copilot_session)?;
     Ok(())
 }
 

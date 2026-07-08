@@ -1237,6 +1237,27 @@ fn tc_workflow_session_phases_gate_the_tool_surface() {
 }
 
 #[test]
+fn tc_copilot_session_resolves_the_cli_before_hosting() {
+    let h = Harness::new_bare();
+    h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);
+
+    // The Copilot path runs through the SDK host (in-process tools, no MCP
+    // server). Deterministically break its CLI resolution: COPILOT_CLI_PATH
+    // wins over any PATH scan, and this one points nowhere.
+    let out = h.run_with_env(
+        &["session", "start", "bookstore", "--cli", "copilot"],
+        &[("COPILOT_CLI_PATH", "/nonexistent/copilot-bin")],
+    );
+    assert_ne!(out.exit_code, 0, "stdout:\n{}\nstderr:\n{}", out.stdout, out.stderr);
+    assert!(out.stderr.contains("COPILOT_CLI_PATH"), "stderr:\n{}", out.stderr);
+
+    // The journal was scaffolded before the launch attempt — the session is
+    // resumable once the CLI is installed.
+    let id = h.run(&["session", "list"]).stdout.split_whitespace().next().expect("session id").to_string();
+    assert!(h.exists(&format!(".product/sessions/{id}/workflow.json")), "journal missing");
+}
+
+#[test]
 fn tc_workflow_show_reports_phase_and_journey() {
     let h = Harness::new_bare();
     h.run(&["init", "--yes", "--name", "bookstore", "--demo"]).assert_exit(0);

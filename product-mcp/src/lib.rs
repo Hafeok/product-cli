@@ -9,6 +9,7 @@
 pub mod registry;
 pub mod domain;
 pub mod workflow;
+pub mod copilot;
 mod build_handler;
 mod codegen_handlers;
 mod decider_handlers;

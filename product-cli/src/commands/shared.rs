@@ -19,6 +19,20 @@ pub(crate) fn acquire_write_lock_typed() -> Result<fileops::RepoLock, ProductErr
     fileops::RepoLock::acquire(&root)
 }
 
+/// The Copilot session runner injected into `author::workflow::launch`.
+/// The SDK host lives in `product-mcp` (it dispatches straight into the
+/// workflow tool handlers), which product-core cannot depend on — so the
+/// CLI crate closes the loop here.
+pub(crate) fn run_copilot_session(
+    launch: &product_core::author::workflow::CopilotLaunch<'_>,
+) -> Result<(), ProductError> {
+    product_mcp::copilot::run_workflow_session(
+        launch.session_id,
+        launch.prompt,
+        launch.canonical_root,
+    )
+}
+
 /// The repo's configured product name, if a product.toml is discoverable and
 /// carries a non-empty `name`. Used to default the `<product>` argument of the
 /// domain-graph commands in single-product repos.

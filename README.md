@@ -63,6 +63,13 @@ default for every repo by putting the same `[author]` block in
 `~/.config/product/config.toml`. With a default configured, `product session
 start` needs no `--cli` flag.
 
+The two CLIs are hosted differently. Claude Code runs as its own TUI wired to
+the session's MCP server over stdio. Copilot runs through the **Copilot SDK**
+(`copilot --server`, driven over JSON-RPC): the session tools are registered
+in-process on the session — no MCP server is involved, so enterprise MCP
+allowlists don't apply — and `product` provides the interactive prompt loop
+itself. The `copilot` binary is resolved from `COPILOT_CLI_PATH` or `PATH`.
+
 ## 60-second tour
 
 ```bash

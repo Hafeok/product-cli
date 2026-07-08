@@ -242,9 +242,9 @@ The reference What lives in `.product/products/product-cli/`. `product mcp
 
 `product session start <product>` (or `product mcp --workflow --session <id>`)
 launches a **phase-gated** authoring session: the agent CLI (`[author].cli` —
-claude or copilot) drives the graph *only through MCP tools*, writing the
-**canonical `.product` graph directly** (no workspace copy — the session record
-is just `workflow.json` under `.product/sessions/<id>/`). The transport
+claude or copilot) drives the graph *only through the workflow tools*, writing
+the **canonical `.product` graph directly** (no workspace copy — the session
+record is just `workflow.json` under `.product/sessions/<id>/`). The transport
 (`product-mcp/src/workflow.rs`) gates the tool surface by phase — `tools/list`
 shows only the current phase's family, and out-of-phase calls are rejected:
 
@@ -264,6 +264,19 @@ tools are visible in every phase: `product_workflow_status`,
 What and, if conformant, stamps provenance and closes the session. Writes land
 in canonical as they happen (`RepoLock` serializes them); there is no draft
 rollback — an abandoned session's edits stay in the graph.
+
+**Transport per agent CLI.** Claude runs as a child TUI wired to the stdio MCP
+server (`product mcp --workflow`). Copilot does **not** use MCP at all: its
+enterprise MCP allowlist fingerprints every server against the org registry and
+silently filters local stdio commands, so `product-mcp/src/copilot/` hosts the
+session via `github-copilot-sdk` instead — `copilot --server` driven over
+JSON-RPC, the full workflow tool surface registered as **in-process client-side
+tools** whose every invocation dispatches through `workflow::handle` (same
+phase/write gating). The CLI binary is resolved at runtime (`COPILOT_CLI_PATH`,
+then PATH); the SDK's build-time CLI download is disabled repo-wide via
+`COPILOT_SKIP_CLI_DOWNLOAD` in `.cargo/config.toml`. The runner is injected
+into `author::workflow::launch` from `product-cli` (`shared::run_copilot_session`)
+because product-core cannot depend on product-mcp.
 
 ## Key Conventions
 

@@ -93,8 +93,9 @@ pub fn is_visible(tool: &ToolDef, current: Phase) -> bool {
     home == current || (home < current && !tool.requires_write)
 }
 
-/// The session-control tool definitions, advertised in every phase.
-fn control_tools() -> Vec<ToolDef> {
+/// The session-control tool definitions, advertised in every phase (the
+/// Copilot SDK host also registers them, alongside the registry surface).
+pub(crate) fn control_tools() -> Vec<ToolDef> {
     vec![
         ToolDef {
             name: "product_workflow_status".into(),
@@ -129,6 +130,7 @@ fn load_session(ctx: &WorkflowCtx) -> Result<WorkflowSession, String> {
 fn visible_tools(registry: &ToolRegistry, phase: Phase) -> Vec<&ToolDef> {
     registry.tool_list().iter().filter(|t| is_visible(t, phase)).collect()
 }
+
 
 fn tool_json(t: &ToolDef) -> Value {
     json!({ "name": t.name, "description": t.description, "inputSchema": t.input_schema })

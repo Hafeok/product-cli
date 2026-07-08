@@ -8,9 +8,10 @@ use crate::error::{ProductError, Result};
 /// The MCP registry name this CLI is published under (`io.github.<owner>/<repo>`).
 ///
 /// Used as the `mcpServers` config key when wiring a session server into the
-/// Claude or Copilot CLI, so a locally-launched session names the server exactly
-/// as the github.com MCP registry does — which is also the raw token Copilot
-/// matches in `--available-tools` / `--allow-tool`.
+/// Claude CLI, so a locally-launched session names the server exactly as the
+/// github.com MCP registry does. (Copilot no longer sees an MCP server at
+/// all — its sessions run through the SDK host in `product-mcp`, which
+/// registers the tools in-process.)
 pub const MCP_SERVER_NAME: &str = "io.github.Hafeok/product-cli";
 
 /// The Claude Code `--allowedTools` glob selecting [`MCP_SERVER_NAME`]'s tools.
@@ -18,9 +19,8 @@ pub const MCP_SERVER_NAME: &str = "io.github.Hafeok/product-cli";
 /// Claude derives MCP tool names as `mcp__<server>__<tool>`, replacing every
 /// character outside `[A-Za-z0-9_-]` in the server name with `_`; the allow glob
 /// must match that sanitized prefix, so `io.github.Hafeok/product-cli` becomes
-/// `mcp__io_github_Hafeok_product-cli__*`. (Copilot, by contrast, matches the raw
-/// name.) Get this wrong and the glob matches nothing — leaving the agent with no
-/// MCP tools, silently.
+/// `mcp__io_github_Hafeok_product-cli__*`. Get this wrong and the glob matches
+/// nothing — leaving the agent with no MCP tools, silently.
 pub fn claude_tools_glob() -> String {
     let sanitized: String = MCP_SERVER_NAME
         .chars()

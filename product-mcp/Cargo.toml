@@ -30,6 +30,14 @@ notify     = "6"
 tokio-stream = { version = "0.1", features = ["sync"] }
 rust-embed = "8"
 glob = "0.3"
+# Copilot session host: drives the Copilot CLI in `--server` mode over
+# JSON-RPC and registers the product tools as in-process (client-side) tools —
+# no MCP server for the enterprise MCP allowlist to fingerprint. `bundled-cli`
+# is off: the CLI binary is resolved at runtime from COPILOT_CLI_PATH / PATH
+# (see `copilot::resolve_cli`), never downloaded at build time
+# (COPILOT_SKIP_CLI_DOWNLOAD is pinned in .cargo/config.toml).
+github-copilot-sdk = { version = "1.0.6-preview.1", default-features = false }
+async-trait = "0.1"
 
 [dev-dependencies]
 tempfile = "3"
