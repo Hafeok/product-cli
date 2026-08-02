@@ -1,0 +1,8 @@
+# .ddd/config.yaml — repo-level DDD governance configuration (format v1).
+format: 1
+
+# Interception mode for contract-surface edits: enforce | warn | off (PRD §8).
+intercept: warn
+
+# Globs the interceptor plus detection skip.
+ignore: []

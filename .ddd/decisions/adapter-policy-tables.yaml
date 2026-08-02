@@ -1,0 +1,12 @@
+format: 1
+id: dec/ddd/adapter-policy-tables
+title: Contract surface is defined per-language in adapter policy tables
+rationale: >
+  An adapter answers exactly three questions (what is contract-surface, what
+  visibility means, what a signature change is); the tables are themselves
+  claims, falsifiable against where boundary defects occur. Wrong rows get
+  fixed in the adapter, never in the core.
+principal: Emil (Context&)
+based_on:
+  - DDD-adapter-01
+date: 2026-08-02

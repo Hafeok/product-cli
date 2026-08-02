@@ -1,0 +1,15 @@
+format: 1
+id: DDD-scope-01
+statement: >
+  Context& engagement demand concentrates in C# + Bicep repositories, and
+  Bicep's adapter cost is low because provenance is first-class in its syntax.
+status: reported
+evidence: >
+  Engagement history to date; the Bicep adapter policy table (PRD §9.2) maps
+  ground provenance directly onto literal/param/runtime-resolved syntax.
+falsifier: >
+  An engagement mix where most governed repos are neither C# nor Bicep, or a
+  Bicep adapter whose policy table cannot express provenance mapping.
+owner: none
+changed: 2026-08-02
+depends_on: []

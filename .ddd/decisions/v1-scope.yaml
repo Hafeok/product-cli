@@ -1,0 +1,13 @@
+format: 1
+id: dec/ddd/v1-scope
+title: "v1 scope: local repo, C# + Bicep, build-output detection first"
+rationale: >
+  The graph is repo-local (shared/ reserves the central-catalog split without
+  redesign); languages are C# and Bicep only; detection starts from dotnet
+  build and Bicep CLI output, with LSP diagnostics supplementing at edit time.
+  Scope follows where Context& demand concentrates and where adapter cost is
+  lowest.
+principal: Emil (Context&)
+based_on:
+  - DDD-scope-01
+date: 2026-08-02

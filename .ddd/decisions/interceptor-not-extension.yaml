@@ -1,0 +1,12 @@
+format: 1
+id: dec/ddd/interceptor-not-extension
+title: Seam detection is an edit-flow interceptor, not an LSP extension
+rationale: >
+  Interception happens in the tool's apply_edit path, consuming LSP events
+  client-side. Neither language server is extended or forked; the check is
+  part of the arrangement the agent edits through, not the agent's residual
+  discretion.
+principal: Emil (Context&)
+based_on:
+  - DDD-arch-03
+date: 2026-08-02

@@ -1,0 +1,17 @@
+format: 1
+id: DDD-arch-01
+statement: >
+  product-cli's store conventions, SPARQL validation engine, and MCP plumbing
+  cover the ddd tool's storage and validation needs without forking any of them.
+status: reported
+evidence: >
+  M1 survey plus M1 implementation: ddd-core reuses pf::sparql_rules,
+  pf::validate::Violation, fileops atomic writes, and the ProductError model
+  unmodified, through public surfaces only.
+falsifier: >
+  An M2-M4 need (LSP hosting, interception, MCP tool registration) that
+  product-core/product-mcp public surfaces cannot express, forcing a fork or
+  an internals dependency.
+owner: none
+changed: 2026-08-02
+depends_on: []

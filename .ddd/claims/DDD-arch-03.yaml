@@ -1,0 +1,13 @@
+format: 1
+id: DDD-arch-03
+statement: >
+  An edit-flow interceptor consuming LSP events can demand seam declarations
+  at apply_edit time without extending either language server.
+status: projected
+falsifier: >
+  An interception point that cannot be observed client-side and would require
+  a server-side LSP extension to see.
+owner: none
+changed: 2026-08-02
+depends_on:
+  - DDD-arch-02
