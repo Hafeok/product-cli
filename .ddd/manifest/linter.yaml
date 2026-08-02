@@ -1,0 +1,4 @@
+# One entry per enabled rule, each mapping to a decision (PRD §6 rule 4).
+# Entries marked `governance: UNGOVERNED` warn until a decision is filed.
+format: 1
+rules: []

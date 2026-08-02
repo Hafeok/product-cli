@@ -1,0 +1,12 @@
+format: 1
+id: dec/ddd/lsp-as-seam
+title: The LSP protocol is the seam to language intelligence
+rationale: >
+  The core consumes normalized LSP events and never touches Roslyn or Bicep
+  APIs directly. This bounds the blast radius of prerelease language-server
+  churn to version pins and keeps the core language-free (one adapter + policy
+  table per new language, by design).
+principal: Emil (Context&)
+based_on:
+  - DDD-arch-02
+date: 2026-08-02

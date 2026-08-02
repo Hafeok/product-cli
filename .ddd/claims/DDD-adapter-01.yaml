@@ -1,0 +1,13 @@
+format: 1
+id: DDD-adapter-01
+statement: >
+  Per-language contract-surface definitions expressed as adapter policy
+  tables are falsifiable against where boundary defects actually occur;
+  wrong rows get fixed in the adapter, never in the core.
+status: projected
+falsifier: >
+  A boundary defect class that no policy-table row could have named — i.e.
+  contract-surface knowledge that cannot be localised to a language adapter.
+owner: none
+changed: 2026-08-02
+depends_on: []

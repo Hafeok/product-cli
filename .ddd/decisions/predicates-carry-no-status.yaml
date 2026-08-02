@@ -1,0 +1,11 @@
+format: 1
+id: dec/ddd/predicates-carry-no-status
+title: Predicates carry no status; enforcement is structural
+rationale: >
+  Closure lives only in claims, with status and falsifiers. The split is
+  enforced by schema (deny_unknown_fields rejects a status key on a predicate
+  entry, naming ontology rule 1), not by convention or review.
+principal: Emil (Context&)
+based_on:
+  - DDD-method-01
+date: 2026-08-02

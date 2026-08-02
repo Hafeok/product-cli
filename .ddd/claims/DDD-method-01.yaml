@@ -1,0 +1,16 @@
+format: 1
+id: DDD-method-01
+statement: >
+  Keeping closure status out of definitional entries prevents stale-confidence
+  drift: a predicate stays valid while findings about it change status.
+status: reported
+evidence: >
+  The framework corpus's predicate/claim split (predicate-definition.md,
+  predicate-format.md): only claims carry status, boundary clauses, and
+  falsifiers; the split is enforced structurally in ddd-core's schema.
+falsifier: >
+  A predicate whose embedded status would have stayed accurate while the
+  separate claim graph drifted stale.
+owner: none
+changed: 2026-08-02
+depends_on: []

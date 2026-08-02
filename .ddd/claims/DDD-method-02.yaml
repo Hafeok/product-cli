@@ -1,0 +1,15 @@
+format: 1
+id: DDD-method-02
+statement: >
+  Mined pattern instances lack a principal and become escaped decisions; the
+  analyzer warning swamp is the canonical instance.
+status: reported
+evidence: >
+  The warning swamp (PRD §2): analyzer rule sets nobody can explain,
+  accumulated without governing commitment, check, or principal.
+falsifier: >
+  A mined catalog whose entries remain explainable to a named principal over
+  time without curation.
+owner: none
+changed: 2026-08-02
+depends_on: []

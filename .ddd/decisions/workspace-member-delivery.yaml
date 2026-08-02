@@ -1,0 +1,15 @@
+format: 1
+id: dec/ddd/workspace-member-delivery
+title: Deliver ddd as a workspace member of product-cli
+rationale: >
+  Reuse the existing store/validation/MCP infrastructure rather than rebuild
+  it: YAML store conventions, the sh:sparql-style rule engine, product-mcp
+  plumbing, CLI patterns. The DDD ontology is its own schema namespace and
+  store (.ddd/, ddd:); it does not extend the What/How vocabulary. Runtime
+  consequence recorded: Rust host process, .NET language servers as children
+  over stdio. Basis rechecked against the current repo state at M1 and
+  confirmed by the M1 implementation itself.
+principal: Emil (Context&)
+based_on:
+  - DDD-arch-01
+date: 2026-08-02

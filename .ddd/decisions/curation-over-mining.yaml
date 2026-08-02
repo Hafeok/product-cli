@@ -1,0 +1,11 @@
+format: 1
+id: dec/ddd/curation-over-mining
+title: Curation over mining; detection is conformance checking
+rationale: >
+  The graph is the source of truth and the code must conform to it. Detection
+  exists only to check declared instances against reality (ddd diff); nothing
+  is mined into the catalog, so every entry has a principal who can explain it.
+principal: Emil (Context&)
+based_on:
+  - DDD-method-02
+date: 2026-08-02

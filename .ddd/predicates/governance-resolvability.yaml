@@ -1,0 +1,21 @@
+predicate:
+  id: pred/tooling/governance-resolvability
+  format: 1
+  name: Governance resolvability
+  statement: >
+    Accept repo c iff every enabled analyzer/linter diagnostic in c resolves
+    through the graph in G to a decision with a named principal and at least
+    one basedOn claim.
+  artifact_class: composition
+  ground:
+    - fact: the manifest and decision graph under .ddd/
+      provenance: controlled
+    - fact: the enabled rule set as the toolchain reports it
+      provenance: observed
+  tolerance: zero orphaned diagnostics
+  rejection_witness: the first diagnostic id with no governing decision chain
+  closure_claims: []
+  notes: >
+    The observed-ground item is why validate alone cannot close this — the
+    enabled rule set lives in the toolchain, which is what `ddd diff` (M2)
+    brings into view.
