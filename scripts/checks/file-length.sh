@@ -13,7 +13,7 @@ WARN_LIMIT=${FILE_LENGTH_WARN:-300}
 # `src/` fallback so the script also works inside tempdirs created by the
 # `code_quality_tests` suite (which fake a single-crate layout).
 DIRS=()
-for d in product-core/src product-mcp/src product-cli/src; do
+for d in product-core/src product-mcp/src product-cli/src ddd-core/src ddd-cli/src; do
   [ -d "$d" ] && DIRS+=("$d")
 done
 if [ ${#DIRS[@]} -eq 0 ] && [ -d src ]; then
