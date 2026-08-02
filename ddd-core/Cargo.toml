@@ -1,0 +1,25 @@
+[package]
+name = "ddd-core"
+version = "0.6.0"
+edition = "2021"
+authors = ["PiCloud Contributors"]
+license = "Apache-2.0"
+description = "Decision-Driven Design governance graph: repo-local .ddd/ store, ontology validation, why resolution."
+repository = "https://github.com/Hafeok/product-cli"
+homepage = "https://github.com/Hafeok/product-cli"
+readme = "../README.md"
+
+[lib]
+name = "ddd_core"
+path = "src/lib.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+product-core = { path = "../product-core", version = "0.6.0" }
+serde      = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+
+[dev-dependencies]
+tempfile = "3"
