@@ -15,6 +15,7 @@ pub mod manifest;
 pub mod pattern;
 pub mod predicate;
 pub mod rules;
+pub mod sarif;
 pub mod seam;
 pub mod store;
 pub mod turtle;
