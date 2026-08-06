@@ -38,6 +38,10 @@ pub struct Predicate {
     /// Predicate ids this one presupposes (catalog graph edges, acyclic).
     #[serde(default)]
     pub depends_on: Vec<String>,
+    /// For pattern predicates (format 3): the obligations an instance must
+    /// answer at declaration time (PRD §8, `declare_pattern`).
+    #[serde(default)]
+    pub obligations: Vec<String>,
     /// Claim ids only — closure lives in the claim graph, never here.
     #[serde(default)]
     pub closure_claims: Vec<String>,

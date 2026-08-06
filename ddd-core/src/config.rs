@@ -1,10 +1,16 @@
 //! Repo-level `.ddd/config.yaml` — interception mode, ignore globs, plus
-//! the format-2 `diff`/`detect` sections.
+//! the format-2 `diff`/`detect` sections, plus the format-3 adapter keys.
 //!
 //! M1 reads the file for validity; the `intercept` mode is consumed by M4's
 //! edit interceptor (`enforce | warn | off`, PRD §8) and defaults to `warn`
 //! per PRD §11's adoption mitigation. Format 2 adds `diff` (per-finding
 //! severity thresholds for `ddd diff`) and `detect` (default SARIF inputs).
+//! Format 3 adds `intercept_by_class` (per-artifact-class interception
+//! modes over the global default) and `adapter` (per-language behavior
+//! switches keyed by language name — the keys are routing data; language
+//! *meaning* stays in the ddd-lsp adapters).
+
+use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -26,6 +32,30 @@ pub struct DddConfig {
     /// Detection inputs for `ddd diff` / `ddd report` (format 2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub detect: Option<DetectConfig>,
+    /// Per-artifact-class interception modes (format 3); classes not
+    /// listed fall back to the global `intercept`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intercept_by_class: Option<BTreeMap<String, String>>,
+    /// Per-language adapter switches, keyed by adapter language name
+    /// (format 3), e.g. `adapter.csharp.internal_is_surface`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub adapter: Option<BTreeMap<String, AdapterEntry>>,
+}
+
+/// One language's adapter switches (format 3).
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AdapterEntry {
+    /// Host command override (program + args); defaults live in the adapter.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub command: Option<Vec<String>>,
+    /// Treat `internal` visibility as contract surface (library-repo
+    /// posture; default off per `dec/ddd/internal-not-surface`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub internal_is_surface: Option<bool>,
+    /// Attribute markers that make a symbol an exported endpoint.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exported_attributes: Option<Vec<String>>,
 }
 
 /// How each `ddd diff` finding kind is treated (default: `error`).
@@ -77,6 +107,30 @@ impl DiffConfig {
     }
 }
 
+impl DddConfig {
+    /// The effective interception mode for an artifact class: the
+    /// per-class entry when present, else the global `intercept`.
+    pub fn intercept_for(&self, artifact_class: &str) -> &str {
+        self.intercept_by_class
+            .as_ref()
+            .and_then(|m| m.get(artifact_class))
+            .map(String::as_str)
+            .unwrap_or(&self.intercept)
+    }
+
+    /// The adapter switches for a language, when configured.
+    pub fn adapter_entry(&self, language: &str) -> Option<&AdapterEntry> {
+        self.adapter.as_ref().and_then(|m| m.get(language))
+    }
+}
+
+/// Read `.ddd/config.yaml` under `repo_root`, when present and parseable.
+pub fn load(repo_root: &std::path::Path) -> Option<DddConfig> {
+    let path = repo_root.join(crate::store::STORE_DIR).join("config.yaml");
+    let text = std::fs::read_to_string(path).ok()?;
+    serde_yaml::from_str(&text).ok()
+}
+
 fn default_intercept() -> String {
     "warn".to_string()
 }
@@ -89,6 +143,8 @@ impl Default for DddConfig {
             ignore: Vec::new(),
             diff: None,
             detect: None,
+            intercept_by_class: None,
+            adapter: None,
         }
     }
 }

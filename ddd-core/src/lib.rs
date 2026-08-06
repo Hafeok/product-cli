@@ -24,6 +24,7 @@ pub mod report;
 pub mod rules;
 pub mod sarif;
 pub mod seam;
+pub mod seam_event;
 pub mod store;
 pub mod turtle;
 pub mod validate;
