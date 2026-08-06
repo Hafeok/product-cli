@@ -24,6 +24,7 @@ dist = false
 [dependencies]
 ddd-core     = { path = "../ddd-core", version = "0.6.0" }
 product-core = { path = "../product-core", version = "0.6.0" }
+chrono       = "0.4"
 clap         = { version = "4", features = ["derive"] }
 
 [dev-dependencies]

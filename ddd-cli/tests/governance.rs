@@ -218,6 +218,70 @@ fn ignore_globs_exclude_config_from_detection() {
         .stdout(predicate::str::contains("governance diff clean"));
 }
 
+#[test]
+fn report_escapes_names_a_seeded_basis_loss_with_both_statuses() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    ddd(tmp.path()).arg("init").assert().success();
+    // The decision pinned the claim as reported@2026-08-02; the claim has
+    // since been retired — the report must name decision, claim, both.
+    write(
+        tmp.path(),
+        ".ddd/claims/DDD-cs-1.yaml",
+        "format: 1\nid: DDD-cs-1\nstatement: s\nstatus: retired\nevidence: killed by a counterexample repo\nowner: none\nchanged: 2026-08-05\n",
+    );
+    write(
+        tmp.path(),
+        ".ddd/decisions/adopt.yaml",
+        "format: 2\nid: dec/cs/adopt\ntitle: Adopt\nrationale: r\nprincipal: Emil\nbased_on:\n  - claim: DDD-cs-1\n    status: reported\n    changed: 2026-08-02\n",
+    );
+    ddd(tmp.path())
+        .args(["report", "escapes", "--today", "2026-08-06"])
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains(
+                "decision dec/cs/adopt — basedOn DDD-cs-1 pinned reported@2026-08-02, now retired@2026-08-05",
+            )
+            .and(predicate::str::contains("escape(s)")),
+        );
+}
+
+#[test]
+fn report_escapes_flags_claims_past_their_cadence() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    ddd(tmp.path()).arg("init").assert().success();
+    write(
+        tmp.path(),
+        ".ddd/claims/DDD-cs-1.yaml",
+        "format: 2\nid: DDD-cs-1\nstatement: s\nstatus: reported\nevidence: e\nfalsifier: f\nowner: none\nchanged: 2026-01-01\nrevalidate_by: 2026-06-01\n",
+    );
+    ddd(tmp.path())
+        .args(["report", "escapes", "--today", "2026-08-06"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "claim DDD-cs-1 [reported] — revalidate_by 2026-06-01 has passed",
+        ));
+    ddd(tmp.path())
+        .args(["report", "escapes", "--today", "2026-05-01"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("no escaped decisions"));
+}
+
+#[test]
+fn report_escapes_carries_the_diff_findings_as_its_first_section() {
+    let tmp = csharp_repo();
+    ddd(tmp.path())
+        .args(["report", "escapes", "--sarif", &csharp_sarif(), "--today", "2026-08-06"])
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("== governance diff ==")
+                .and(predicate::str::contains("UNGOVERNED analyzers/CA2007")),
+        );
+}
+
 /// Local-only regeneration of the committed C# SARIF (needs the .NET SDK
 /// plus network for restore). Verifies the documented invocation works and
 /// the output feeds the same ingestion path.
