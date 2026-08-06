@@ -1,0 +1,19 @@
+format: 2
+id: DDD-detect-01
+statement: >
+  Both governed toolchains emit SARIF 2.1 through documented, supported
+  switches (the C# compiler ErrorLog property with version=2.1; bicep lint
+  --diagnostics-format sarif), so one structured ingestion path covers all
+  emitted diagnostics without console parsing.
+status: reported
+evidence: >
+  Verified against current Microsoft docs at M2 implementation (C# compiler
+  options errors-warnings page; Bicep CLI lint command reference) and
+  exercised by the committed fixtures plus the ignored regeneration tests.
+falsifier: >
+  A governed diagnostic source in either toolchain that cannot be routed
+  into SARIF 2.1, forcing a per-tool console parser back into detection.
+owner: none
+changed: 2026-08-06
+revalidate_by: 2027-02-06
+depends_on: []

@@ -99,6 +99,46 @@ swimlanes — triggers / commands / views over per-aggregate event streams, §3.
 A node detail panel, the What→How→Build phase stepper, dark/light theme and live
 SSE refresh round it out.
 
+## ddd — Decision-Driven Design governance
+
+The workspace also ships `ddd` (crates `ddd-core` + `ddd-cli`), a separate
+tool over a separate store: a repo-local `.ddd/` graph of predicates, closure
+claims, decisions, analyzer/linter manifests, and seam declarations
+([PRD](docs/ddd-cli-prd.md), formats: [migrations](docs/ddd-format-migrations.md)).
+
+```bash
+cargo run -p ddd-cli -- init        # scaffold .ddd/
+ddd validate                        # schema + ontology rules (CI gate)
+ddd diff --sarif build.sarif        # declared vs. detected rules (CI gate)
+ddd report escapes                  # diff + cadence + basis-loss report
+ddd why CA2007                      # rule -> decision -> principal -> claims
+```
+
+`ddd diff` compares the manifests under `.ddd/manifest/` against two detected
+sources per language and reports `UNGOVERNED` (detected, no manifest entry),
+`STALE` (manifest entry, absent from config and emissions), and
+`UNCITED_SUPPRESSION` (a config or in-source suppression with no
+risk-acceptance record):
+
+- **configured** — parsed from `.editorconfig` (`dotnet_diagnostic.<ID>.severity`
+  lines only; section globs are recorded, never evaluated — deliberately not an
+  editorconfig engine), `bicepconfig.json` (`analyzers.core.rules` levels), and
+  the root `Cargo.toml` (`[workspace.lints.clippy]`, for this repo's own gates).
+  Rules enabled by analyzer-package defaults have no config line and surface
+  via the emitted source only — `diff` says so when one source covers a rule.
+- **emitted** — SARIF 2.1 files from real builds, ingested by one shared
+  module. Produce them with (verified against current tool docs at M2):
+  - **C#**: `dotnet build -p:ErrorLog=diag.sarif%2Cversion=2.1` — the MSBuild
+    `ErrorLog` property; `version=2.1` is required (the default is SARIF 1.0),
+    and `%2C` escapes the comma on the CLI (or set `<ErrorLog>` in the project).
+  - **Bicep**: `bicep lint main.bicep --diagnostics-format sarif > bicep.sarif`
+    (also available as `az bicep lint`).
+
+Point `ddd diff` at the files with `--sarif` or the `detect.sarif` list in
+`.ddd/config.yaml`. This repo governs itself: `.ddd/manifest/clippy.yaml` maps
+`clippy::unwrap_used` to its decision, and `ddd diff` verifies it against the
+workspace lints table.
+
 ## Build & test
 
 ```bash

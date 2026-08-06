@@ -1,8 +1,10 @@
-# .ddd/config.yaml — repo-level DDD governance configuration (format v1).
-format: 1
+# .ddd/config.yaml — repo-level DDD governance configuration (format v2).
+format: 2
 
 # Interception mode for contract-surface edits: enforce | warn | off (PRD §8).
 intercept: warn
 
-# Globs the interceptor plus detection skip.
-ignore: []
+# Globs the interceptor plus detection skip. The M2 fixtures carry config
+# files for the tests, not for this repo's governance.
+ignore:
+  - "ddd-cli/tests/fixtures/**"

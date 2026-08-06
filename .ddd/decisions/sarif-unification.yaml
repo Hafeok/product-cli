@@ -1,0 +1,14 @@
+format: 2
+id: dec/ddd/sarif-unification
+title: Unify detection on SARIF ingestion with thin invocation adapters
+rationale: >
+  One ingestion module reads every emitted diagnostic; per-language adapters
+  know only how to produce a SARIF file and which rule-id namespace it
+  carries (PRD §7, §13). No console parsing — both toolchains emit SARIF
+  through supported switches, verified at M2 and recorded in the README.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-detect-01
+    status: reported
+    changed: 2026-08-06
+date: 2026-08-06
