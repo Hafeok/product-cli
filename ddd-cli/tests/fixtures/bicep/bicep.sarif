@@ -1,0 +1,35 @@
+{
+  "$schema": "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "bicep"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "no-unused-params",
+          "level": "warning",
+          "message": {
+            "text": "Parameter \"unusedParam\" is declared but never used."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "main.bicep"
+                },
+                "region": {
+                  "startLine": 7,
+                  "charOffset": 306
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

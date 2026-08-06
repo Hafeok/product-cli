@@ -13,6 +13,8 @@ pub mod claim;
 pub mod config;
 pub mod configured;
 pub mod decision;
+pub mod detect;
+pub mod diff;
 pub mod editorconfig;
 pub mod init;
 pub mod manifest;

@@ -339,11 +339,13 @@ fn a_format_two_decision_must_pin_every_edge() {
 
 #[test]
 fn diff_or_detect_sections_under_format_one_are_a_violation() {
-    let mut s = DddStore::default();
-    s.config = Some(crate::config::DddConfig {
-        diff: Some(Default::default()),
+    let s = DddStore {
+        config: Some(crate::config::DddConfig {
+            diff: Some(Default::default()),
+            ..Default::default()
+        }),
         ..Default::default()
-    });
+    };
     assert_names(&validate_store(&s), "config.yaml", "format 2");
 }
 

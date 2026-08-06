@@ -1,5 +1,6 @@
 //! Subcommand surface for the `ddd` binary.
 
+mod diff;
 mod init;
 mod validate;
 mod why;
@@ -9,9 +10,15 @@ use std::path::PathBuf;
 use clap::Subcommand;
 use product_core::error::{ProductError, Result};
 
-/// The M1 command surface (PRD §7). Keep the variant list sorted.
+/// The M1+M2 command surface (PRD §7). Keep the variant list sorted.
 #[derive(Subcommand)]
 pub enum Commands {
+    /// Declared vs. detected rules: UNGOVERNED / STALE / UNCITED_SUPPRESSION
+    Diff {
+        /// SARIF file(s) with emitted diagnostics (adds to config detect.sarif)
+        #[arg(long, value_name = "FILE")]
+        sarif: Vec<PathBuf>,
+    },
     /// Scaffold the .ddd/ store: the §6 layout plus config.yaml
     Init,
     /// Schema + ontology validation of the graph (exit 1 on violations)
@@ -25,6 +32,7 @@ pub enum Commands {
 
 pub fn run(cmd: Commands, root: Option<PathBuf>) -> Result<()> {
     match cmd {
+        Commands::Diff { sarif } => diff::run(root, sarif),
         Commands::Init => init::run(root),
         Commands::Validate => validate::run(root),
         Commands::Why { id } => why::run(root, &id),
