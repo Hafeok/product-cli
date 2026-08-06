@@ -101,9 +101,10 @@ SSE refresh round it out.
 
 ## ddd — Decision-Driven Design governance
 
-The workspace also ships `ddd` (crates `ddd-core` + `ddd-cli`), a separate
-tool over a separate store: a repo-local `.ddd/` graph of predicates, closure
-claims, decisions, analyzer/linter manifests, and seam declarations
+The workspace also ships `ddd` (crates `ddd-core`, `ddd-lsp`, `ddd-mcp`,
+`ddd-cli`), a separate tool over a separate store: a repo-local `.ddd/` graph
+of predicates, closure claims, decisions, analyzer/linter manifests, pattern
+instances, seam declarations, and interception event rows
 ([PRD](docs/ddd-cli-prd.md), formats: [migrations](docs/ddd-format-migrations.md)).
 
 ```bash
@@ -112,7 +113,36 @@ ddd validate                        # schema + ontology rules (CI gate)
 ddd diff --sarif build.sarif        # declared vs. detected rules (CI gate)
 ddd report escapes                  # diff + cadence + basis-loss report
 ddd why CA2007                      # rule -> decision -> principal -> claims
+ddd serve                           # the ddd_* MCP surface (stdio)
+ddd warmup                          # pre-load the LSP hosts (Roslyn solution load)
 ```
+
+### MCP surface (M3/M4)
+
+`ddd serve` exposes the `ddd_*` tool namespace over stdio: LSP-backed
+language intelligence for C# (`roslyn-language-server --stdio
+--autoLoadProjects`, the official prerelease .NET global tool) and Bicep
+(`bicep-ls` from `Azure.Bicep.LangServer`) — `find_symbol`, `references`,
+`hover`, `diagnostics` (joined to the manifests by rule id, the same join the
+SARIF path uses), `signature`, `rename` (computes; application funnels
+through the interceptor) — plus the governance tools `why`, `graph_query`,
+`declare_seam`, `declare_pattern`, `accept_risk`.
+
+`ddd_apply_edit` runs every edit through the per-language contract-surface
+classifier (policy tables, PRD §9): non-surface edits apply; a surface edit
+applies only with a matching same-session declaration; otherwise it is
+rejected with a structured demand whose *facts* (symbol, kind, signature,
+visibility, reference count) are pre-filled and whose judgment fields are
+blank (`dec/ddd/rejection-facts-prefilled`). Modes: `intercept: enforce |
+warn | off`, per artifact class via `intercept_by_class` (config format 3);
+`adapter.csharp.internal_is_surface` flips the library-repo posture
+(`dec/ddd/internal-not-surface`). Every classified surface outcome lands as a
+row under `.ddd/seams/events/` — the correspondence dataset. Hosts are
+spawned lazily, health-checked, and respawned on crash; while Roslyn loads
+the solution, tools return an explicit `{"status": "loading"}` rather than
+hanging. CI runs against a fixture-grade mock host
+(`dec/ddd/fixtures-not-sdk`); set `DDD_LSP_E2E=1` with both tools on PATH to
+run the gated real-host suites.
 
 `ddd diff` compares the manifests under `.ddd/manifest/` against two detected
 sources per language and reports `UNGOVERNED` (detected, no manifest entry),

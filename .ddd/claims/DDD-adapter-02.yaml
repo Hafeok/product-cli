@@ -1,0 +1,13 @@
+format: 2
+id: DDD-adapter-02
+statement: >
+  In application repos, internal C# members are not consumed across the
+  repo boundary, so treating internal as non-surface loses no governed
+  contract events; the library case is detectable by InternalsVisibleTo
+  presence and is served by a per-repo config flip.
+status: projected
+falsifier: >
+  A boundary defect in an app repo traced to an internal member consumed
+  across a boundary the interceptor should have demanded a seam for.
+owner: none
+changed: 2026-08-06

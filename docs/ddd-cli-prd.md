@@ -331,9 +331,13 @@ The tool's repo is its own first user; these entries are M1 acceptance content, 
 ## 14. Open questions
 
 1. Final name and command prefix (`ddd` collides with nothing on PATH but is generic).
-2. `internal` default for C# contract surface: off (app repos) vs. on (library repos) — per-repo
-   config default undecided.
-3. Whether `apply_edit` rejection returns the declaration *template* pre-filled from LSP metadata
-   (lower friction, risk of rubber-stamping) or empty (higher friction, honest declarations).
+2. **Settled (M4)** — `internal` as C# contract surface defaults to **off** (app-repo posture);
+   the config key `adapter.csharp.internal_is_surface` is present and documented, and library
+   repos flip it per-repo. `InternalsVisibleTo` presence emits a warning suggesting the flip.
+   Decision: `dec/ddd/internal-not-surface` (basedOn `DDD-adapter-02`).
+3. **Settled (M4)** — `apply_edit` rejection payloads pre-fill the **facts** (the LSP-derived
+   observables: symbol, kind, signature, visibility, current reference count) as read-only
+   fields, while `verdict_knowledge` and obligation answers are always empty and must be
+   authored. Decision: `dec/ddd/rejection-facts-prefilled` (basedOn `DDD-friction-01`).
 4. Seam-entry granularity for Bicep: per-param or per-module-contract.
 5. Whether M5's closure-claim seed lives in `shared/` from day one or is promoted later.

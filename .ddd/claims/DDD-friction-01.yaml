@@ -1,0 +1,15 @@
+format: 2
+id: DDD-friction-01
+statement: >
+  Pre-filling the LSP-derived observables (symbol, kind, signature,
+  visibility, current reference count) in an apply_edit rejection removes
+  the agent's re-derivation cost, while keeping verdict_knowledge plus
+  obligation answers blank keeps the declaration an authored judgment
+  rather than a rubber stamp.
+status: projected
+falsifier: >
+  Dogfood sessions showing agents pasting the pre-filled facts into
+  verdict_knowledge unchanged (rubber-stamping), or agents measurably
+  re-deriving the facts despite the pre-fill (wasted tool calls).
+owner: none
+changed: 2026-08-06

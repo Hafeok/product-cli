@@ -1,0 +1,22 @@
+# The one M3/M4 catalog seed (kickoff constraint 3): the decorator
+# pattern as a fixture-grade predicate. M5 owns the real seeding pass.
+predicate:
+  id: pred/composition/decorator
+  format: 3
+  name: Decorator composition
+  statement: >
+    Accept composition c iff every decorator in c preserves the decorated
+    interface's identity, forwards every member it does not intentionally
+    override, and the decoration order matches the declared ordering.
+  artifact_class: composition
+  ground:
+    - fact: the composition-root registration order
+      provenance: controlled
+    - fact: the decorated interface's member list
+      provenance: controlled
+  tolerance: exact — an undeclared ordering or a silently dropped member is a reject
+  rejection_witness: the first member call that dead-ends in a decorator, or the first pair of decorators applied out of declared order
+  obligations:
+    - ordering
+    - identity-preservation
+    - forwarding-completeness
