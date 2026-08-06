@@ -2,6 +2,7 @@
 
 mod diff;
 mod init;
+mod render;
 mod report;
 mod serve;
 mod validate;
@@ -23,6 +24,18 @@ pub enum Commands {
     },
     /// Scaffold the .ddd/ store: the §6 layout plus config.yaml
     Init,
+    /// Project the graph to one static, self-contained HTML file
+    Render {
+        /// Output file (default: .ddd/render.html)
+        #[arg(long, value_name = "FILE")]
+        out: Option<PathBuf>,
+        /// SARIF file(s) with emitted diagnostics (adds to config detect.sarif)
+        #[arg(long, value_name = "FILE")]
+        sarif: Vec<PathBuf>,
+        /// Judge cadence against this date instead of today (YYYY-MM-DD)
+        #[arg(long, value_name = "DATE")]
+        today: Option<String>,
+    },
     /// Escape report: diff findings, cadence violations, basis loss
     Report {
         #[command(subcommand)]
@@ -66,6 +79,7 @@ pub fn run(cmd: Commands, root: Option<PathBuf>) -> Result<()> {
     match cmd {
         Commands::Diff { sarif } => diff::run(root, sarif),
         Commands::Init => init::run(root),
+        Commands::Render { out, sarif, today } => render::run(root, out, sarif, today),
         Commands::Report { what } => match what {
             ReportWhat::Escapes { sarif, today } => report::run(root, sarif, today),
         },

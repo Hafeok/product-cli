@@ -113,6 +113,7 @@ ddd validate                        # schema + ontology rules (CI gate)
 ddd diff --sarif build.sarif        # declared vs. detected rules (CI gate)
 ddd report escapes                  # diff + cadence + basis-loss report
 ddd why CA2007                      # rule -> decision -> principal -> claims
+ddd render                          # static self-contained HTML projection of the graph
 ddd serve                           # the ddd_* MCP surface (stdio)
 ddd warmup                          # pre-load the LSP hosts (Roslyn solution load)
 ```

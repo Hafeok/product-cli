@@ -20,6 +20,7 @@ pub mod init;
 pub mod manifest;
 pub mod pattern;
 pub mod predicate;
+pub mod render;
 pub mod report;
 pub mod rules;
 pub mod sarif;
