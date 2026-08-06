@@ -1,0 +1,15 @@
+format: 2
+id: dec/ddd/pins-at-m2
+title: Add basedOn status pins as an M2 format bump, not deferred
+rationale: >
+  Basis-loss detection requires knowing what the decision stood on when it
+  was made; without the pin, `report escapes` cannot say whether the ground
+  moved (PRD §6 rule 6, §13). Escaped-decision reporting is load-bearing
+  for the tool's thesis — the warning swamp is the canonical escape — so
+  the format bump lands with M2 rather than waiting for a later milestone.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-method-02
+    status: reported
+    changed: 2026-08-02
+date: 2026-08-06

@@ -4,7 +4,7 @@ use product_core::pf::validate::Violation;
 
 use super::*;
 use crate::claim::ClaimStatus;
-use crate::decision::{Decision, DecisionKind};
+use crate::decision::{BasedOn, BasisPin, Decision, DecisionKind};
 use crate::manifest::{ManifestFile, ManifestRule, ManifestSet, Suppression};
 use crate::pattern::PatternInstance;
 use crate::predicate::{ArtifactClass, Predicate};
@@ -36,6 +36,7 @@ fn claim(id: &str) -> Claim {
         falsifier: Some("the killing observation".into()),
         owner: "none".into(),
         changed: "2026-08-01".into(),
+        revalidate_by: None,
         depends_on: Vec::new(),
         refines: Vec::new(),
         predicate: None,
@@ -50,7 +51,7 @@ fn decision(id: &str, based_on: &[&str]) -> Decision {
         title: "T".into(),
         rationale: "R".into(),
         principal: "Emil".into(),
-        based_on: based_on.iter().map(|s| s.to_string()).collect(),
+        based_on: based_on.iter().map(|s| BasedOn::from(*s)).collect(),
         date: None,
         notes: None,
     }
@@ -276,12 +277,76 @@ fn claim_ladder_falsifier_and_evidence_presence() {
 }
 
 #[test]
-fn declared_formats_other_than_v1_are_named() {
+fn declared_formats_beyond_v2_are_named() {
     let mut s = DddStore::default();
     let mut p = pred("pred/a/x");
-    p.format = 2;
+    p.format = 3;
     s.predicates.push(p);
-    assert_names(&validate_store(&s), "pred/a/x", "declares format 2");
+    assert_names(&validate_store(&s), "pred/a/x", "declares format 3");
+}
+
+#[test]
+fn revalidate_by_under_format_one_is_a_violation() {
+    let mut s = DddStore::default();
+    let mut c = claim("DDD-a-1");
+    c.revalidate_by = Some("2027-01-01".into());
+    s.claims.push(c);
+    assert_names(&validate_store(&s), "DDD-a-1", "format-2 field");
+
+    let mut ok = DddStore::default();
+    let mut c2 = claim("DDD-a-2");
+    c2.format = 2;
+    c2.revalidate_by = Some("2027-01-01".into());
+    ok.claims.push(c2);
+    assert!(validate_store(&ok).is_empty(), "{}", msgs(&validate_store(&ok)));
+}
+
+#[test]
+fn pinned_edges_under_format_one_are_a_violation() {
+    let mut s = DddStore::default();
+    s.claims.push(claim("DDD-a-1"));
+    let mut d = decision("dec/a/adopt", &[]);
+    d.based_on = vec![BasedOn::Pinned(BasisPin {
+        claim: "DDD-a-1".into(),
+        status: ClaimStatus::Projected,
+        changed: "2026-08-01".into(),
+    })];
+    s.decisions.push(d);
+    assert_names(&validate_store(&s), "dec/a/adopt", "format 2");
+}
+
+#[test]
+fn a_format_two_decision_must_pin_every_edge() {
+    let mut s = DddStore::default();
+    s.claims.push(claim("DDD-a-1"));
+    let mut d = decision("dec/a/adopt", &["DDD-a-1"]);
+    d.format = 2;
+    s.decisions.push(d);
+    assert_names(&validate_store(&s), "dec/a/adopt", "pins every basedOn edge");
+
+    let mut ok = DddStore::default();
+    ok.claims.push(claim("DDD-a-1"));
+    let mut d2 = decision("dec/a/adopt", &[]);
+    d2.format = 2;
+    d2.based_on = vec![BasedOn::Pinned(BasisPin {
+        claim: "DDD-a-1".into(),
+        status: ClaimStatus::Projected,
+        changed: "2026-08-01".into(),
+    })];
+    ok.decisions.push(d2);
+    assert!(validate_store(&ok).is_empty(), "{}", msgs(&validate_store(&ok)));
+}
+
+#[test]
+fn diff_or_detect_sections_under_format_one_are_a_violation() {
+    let s = DddStore {
+        config: Some(crate::config::DddConfig {
+            diff: Some(Default::default()),
+            ..Default::default()
+        }),
+        ..Default::default()
+    };
+    assert_names(&validate_store(&s), "config.yaml", "format 2");
 }
 
 #[test]

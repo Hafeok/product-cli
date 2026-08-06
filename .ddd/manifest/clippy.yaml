@@ -1,0 +1,10 @@
+# This workspace's own gates, governed (PRD §12 dogfood): one entry per
+# clippy lint the root Cargo.toml declares. `ddd diff` verifies this file
+# against [workspace.lints.clippy]; `ddd why clippy::unwrap_used` resolves
+# the chain. The CI-only flag -D warnings is rustc-level, not a rule id,
+# so it has no entry here — its decision lives in the CI workflow.
+format: 1
+rules:
+  - rule_id: clippy::unwrap_used
+    severity: deny
+    decision: dec/rust/no-unwrap

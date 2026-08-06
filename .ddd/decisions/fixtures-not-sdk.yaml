@@ -1,0 +1,13 @@
+format: 2
+id: dec/ddd/fixtures-not-sdk
+title: Test against committed SARIF; no .NET SDK in workspace CI
+rationale: >
+  The suite runs on committed fixtures so workspace CI stays hermetic and
+  fast; two #[ignore]d integration tests regenerate the SARIF from real
+  builds with the documented invocations for local verification (PRD §13).
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-detect-02
+    status: reported
+    changed: 2026-08-06
+date: 2026-08-06

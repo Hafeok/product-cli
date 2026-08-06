@@ -1,6 +1,8 @@
 //! Subcommand surface for the `ddd` binary.
 
+mod diff;
 mod init;
+mod report;
 mod validate;
 mod why;
 
@@ -9,11 +11,22 @@ use std::path::PathBuf;
 use clap::Subcommand;
 use product_core::error::{ProductError, Result};
 
-/// The M1 command surface (PRD §7). Keep the variant list sorted.
+/// The M1+M2 command surface (PRD §7). Keep the variant list sorted.
 #[derive(Subcommand)]
 pub enum Commands {
+    /// Declared vs. detected rules: UNGOVERNED / STALE / UNCITED_SUPPRESSION
+    Diff {
+        /// SARIF file(s) with emitted diagnostics (adds to config detect.sarif)
+        #[arg(long, value_name = "FILE")]
+        sarif: Vec<PathBuf>,
+    },
     /// Scaffold the .ddd/ store: the §6 layout plus config.yaml
     Init,
+    /// Escape report: diff findings, cadence violations, basis loss
+    Report {
+        #[command(subcommand)]
+        what: ReportWhat,
+    },
     /// Schema + ontology validation of the graph (exit 1 on violations)
     Validate,
     /// Resolve an id to decision -> rationale -> principal -> basedOn claims
@@ -23,9 +36,27 @@ pub enum Commands {
     },
 }
 
+/// What `ddd report` reports on (M2 ships `escapes`).
+#[derive(Subcommand)]
+pub enum ReportWhat {
+    /// Detected-but-undeclared items, claims past cadence, basis loss
+    Escapes {
+        /// SARIF file(s) with emitted diagnostics (adds to config detect.sarif)
+        #[arg(long, value_name = "FILE")]
+        sarif: Vec<PathBuf>,
+        /// Judge cadence against this date instead of today (YYYY-MM-DD)
+        #[arg(long, value_name = "DATE")]
+        today: Option<String>,
+    },
+}
+
 pub fn run(cmd: Commands, root: Option<PathBuf>) -> Result<()> {
     match cmd {
+        Commands::Diff { sarif } => diff::run(root, sarif),
         Commands::Init => init::run(root),
+        Commands::Report { what } => match what {
+            ReportWhat::Escapes { sarif, today } => report::run(root, sarif, today),
+        },
         Commands::Validate => validate::run(root),
         Commands::Why { id } => why::run(root, &id),
     }

@@ -1,0 +1,18 @@
+format: 2
+id: DDD-gates-01
+statement: >
+  Denying clippy::unwrap_used workspace-wide converts every potential panic
+  site into an explicit Result path or a reviewed expect, at negligible
+  authoring cost in this codebase.
+status: reported
+evidence: >
+  The zero-unwrap policy has held across the whole workspace (enforced via
+  [workspace.lints.clippy] and the CI clippy gate) without a single
+  waiver request; error paths route through ProductError.
+falsifier: >
+  A recurring class of code where satisfying the lint produces worse error
+  handling than the unwrap it replaced, or waiver pressure in review.
+owner: none
+changed: 2026-08-06
+revalidate_by: 2027-08-06
+depends_on: []

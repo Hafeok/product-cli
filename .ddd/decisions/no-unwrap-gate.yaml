@@ -1,0 +1,16 @@
+format: 2
+id: dec/rust/no-unwrap
+title: Deny clippy::unwrap_used workspace-wide
+rationale: >
+  Every unwrap is an undeclared panic path; the workspace routes fallibility
+  through ProductError instead. Enforced twice by arrangement, not
+  exhortation: [workspace.lints.clippy] in the root manifest and the CI
+  clippy gate (cargo clippy -- -D warnings -D clippy::unwrap_used). This
+  entry makes the flag resolvable through `ddd why clippy::unwrap_used` —
+  the workspace config is what `ddd diff` verifies the manifest against.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-gates-01
+    status: reported
+    changed: 2026-08-06
+date: 2026-08-06

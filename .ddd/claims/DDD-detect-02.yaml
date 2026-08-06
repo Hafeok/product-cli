@@ -1,0 +1,19 @@
+format: 2
+id: DDD-detect-02
+statement: >
+  Committed SARIF fixtures keep the M2 test suite hermetic: CI needs no
+  .NET SDK or Bicep CLI, while ignored regeneration tests keep the fixtures
+  falsifiable against the real toolchains locally.
+status: reported
+evidence: >
+  The ddd-cli governance suite runs green on committed fixtures alone; the
+  two #[ignore]d tests regenerate SARIF via the documented invocations and
+  feed it back through the same ingestion path.
+falsifier: >
+  A toolchain SARIF change that the committed fixtures mask until a user
+  hits it — i.e. a regeneration test that would have failed but was never
+  run before release.
+owner: none
+changed: 2026-08-06
+revalidate_by: 2027-02-06
+depends_on: []

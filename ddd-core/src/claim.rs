@@ -30,6 +30,10 @@ pub struct Claim {
     pub owner: String,
     /// Date of last content change — the claim's own version axis.
     pub changed: String,
+    /// Optional revalidation cadence (format 2): the date by which the
+    /// status must be rechecked; `report escapes` flags claims past it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub revalidate_by: Option<String>,
     /// Claim ids this one presupposes (acyclic).
     #[serde(default)]
     pub depends_on: Vec<String>,
@@ -89,6 +93,15 @@ depends_on: []
         assert_eq!(c.status, ClaimStatus::Reported);
         assert_eq!(c.owner, "none");
         assert!(c.refines.is_empty());
+    }
+
+    #[test]
+    fn a_format_two_claim_may_declare_a_revalidation_cadence() {
+        let text = SPEC_SHAPED.replace("format: 1", "format: 2\nrevalidate_by: 2027-01-01");
+        let c: Claim = serde_yaml::from_str(&text).expect("parse");
+        assert_eq!(c.revalidate_by.as_deref(), Some("2027-01-01"));
+        let out = serde_yaml::to_string(&c).expect("serialize");
+        assert!(out.contains("revalidate_by"), "{out}");
     }
 
     #[test]

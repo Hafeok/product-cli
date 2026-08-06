@@ -87,7 +87,7 @@ pub fn to_turtle(store: &DddStore) -> String {
         };
         let s = typed(&mut out, &d.id, class);
         for basis in &d.based_on {
-            triple(&mut out, &s, &prop("basedOn"), &iri(basis));
+            triple(&mut out, &s, &prop("basedOn"), &iri(basis.claim_id()));
         }
         if !d.principal.trim().is_empty() {
             triple(&mut out, &s, &prop("principal"), &format!("\"{}\"", escape(&d.principal)));

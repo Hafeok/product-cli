@@ -1,0 +1,7 @@
+root = true
+
+[*.cs]
+# Enabled with an explicit severity — the configured source.
+dotnet_diagnostic.CA2007.severity = warning
+# Turned off entirely — a config suppression that must cite a risk record.
+dotnet_diagnostic.CA1303.severity = none
