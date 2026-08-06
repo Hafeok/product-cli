@@ -13,7 +13,7 @@ RESULTS_FILE=$(mktemp /tmp/fn-length-results.XXXXXX)
 trap "rm -f $RESULTS_FILE" EXIT
 
 DIRS=()
-for d in product-core/src product-mcp/src product-cli/src ddd-core/src ddd-cli/src; do
+for d in product-core/src product-mcp/src product-cli/src ddd-core/src ddd-lsp/src ddd-mcp/src ddd-cli/src; do
   [ -d "$d" ] && DIRS+=("$d")
 done
 if [ ${#DIRS[@]} -eq 0 ] && [ -d src ]; then
