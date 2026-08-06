@@ -10,10 +10,16 @@ use super::{JsonRpcRequest, JsonRpcResponse};
 /// Run MCP server over stdio (stdin/stdout). When `session_id` is set the server
 /// runs the phase-gated workflow against that session (one session per process).
 pub fn run_stdio(repo_root: PathBuf, write_enabled: bool, session_id: Option<String>) -> Result<()> {
-    use std::io::BufRead;
-
     let registry = ToolRegistry::new(repo_root.clone(), write_enabled);
     let ctx = session_id.map(|id| WorkflowCtx::resolve(&repo_root, &id));
+    run_stdio_registry(registry, ctx)
+}
+
+/// Run MCP over stdio for an already-built registry (the entry external
+/// tool namespaces like `ddd_*` reuse; no workflow gating unless given).
+pub fn run_stdio_registry(registry: ToolRegistry, ctx: Option<WorkflowCtx>) -> Result<()> {
+    use std::io::BufRead;
+
     let stdin = std::io::stdin();
     let stdout = std::io::stdout();
 
