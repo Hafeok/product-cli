@@ -1,0 +1,30 @@
+[package]
+name = "ddd-lsp"
+version = "0.6.0"
+edition = "2021"
+authors = ["PiCloud Contributors"]
+license = "Apache-2.0"
+description = "LSP client stack for the ddd governance surface: child-process hosts, language adapters, contract-surface classification."
+repository = "https://github.com/Hafeok/product-cli"
+homepage = "https://github.com/Hafeok/product-cli"
+readme = "../README.md"
+
+[lib]
+name = "ddd_lsp"
+path = "src/lib.rs"
+
+# The mock host is a test harness (fixture-grade LSP over stdio), not a
+# release artifact; keep the crate out of the cargo-dist release set.
+[package.metadata.dist]
+dist = false
+
+[lints]
+workspace = true
+
+[dependencies]
+ddd-core   = { path = "../ddd-core", version = "0.6.0" }
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+tempfile = "3"

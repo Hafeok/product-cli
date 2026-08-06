@@ -1,0 +1,16 @@
+format: 2
+id: dec/ddd/internal-not-surface
+title: internal is not C# contract surface by default; library repos flip per-repo
+rationale: >
+  App-repo posture is the default. The config key
+  `adapter.csharp.internal_is_surface` (present, documented, default
+  false) makes the posture explicit and cheap to flip per repo;
+  InternalsVisibleTo presence near an edit emits a warning suggesting the
+  flip, so the library case cannot pass silently. Settles PRD §14
+  question 2 with the stated default.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-adapter-02
+    status: projected
+    changed: 2026-08-06
+date: 2026-08-06

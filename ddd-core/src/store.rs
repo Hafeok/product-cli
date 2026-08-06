@@ -17,6 +17,7 @@ use crate::manifest::{ManifestFile, ManifestSet};
 use crate::pattern::PatternInstance;
 use crate::predicate::PredicateFile;
 use crate::seam::SeamDeclaration;
+use crate::seam_event::{SeamEvent, EVENTS_DIR};
 
 /// The store directory name, sibling to `.product/` where both are present.
 pub const STORE_DIR: &str = ".ddd";
@@ -32,6 +33,8 @@ pub struct DddStore {
     pub manifests: Vec<ManifestSet>,
     pub patterns: Vec<PatternInstance>,
     pub seams: Vec<SeamDeclaration>,
+    /// Interception outcome rows (`seams/events/`, PRD §8).
+    pub seam_events: Vec<SeamEvent>,
     pub config: Option<DddConfig>,
     /// Parse-level faults, one per unreadable entry, named by file.
     pub schema_violations: Vec<Violation>,
@@ -74,6 +77,9 @@ pub fn load(ddd_dir: &Path) -> DddStore {
         store.patterns.push(p);
     });
     parse_dir::<SeamDeclaration>(&ddd_dir.join("seams"), "seam", v, |s| store.seams.push(s));
+    parse_dir::<SeamEvent>(&ddd_dir.join(EVENTS_DIR), "seam-event", v, |e| {
+        store.seam_events.push(e);
+    });
     load_manifests(ddd_dir, &mut store.manifests, v);
     load_config(ddd_dir, &mut store.config, v);
     store

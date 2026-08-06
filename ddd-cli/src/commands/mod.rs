@@ -2,7 +2,9 @@
 
 mod diff;
 mod init;
+mod render;
 mod report;
+mod serve;
 mod validate;
 mod why;
 
@@ -11,7 +13,7 @@ use std::path::PathBuf;
 use clap::Subcommand;
 use product_core::error::{ProductError, Result};
 
-/// The M1+M2 command surface (PRD §7). Keep the variant list sorted.
+/// The M1-M4 command surface (PRD §7). Keep the variant list sorted.
 #[derive(Subcommand)]
 pub enum Commands {
     /// Declared vs. detected rules: UNGOVERNED / STALE / UNCITED_SUPPRESSION
@@ -22,13 +24,36 @@ pub enum Commands {
     },
     /// Scaffold the .ddd/ store: the §6 layout plus config.yaml
     Init,
+    /// Project the graph to one static, self-contained HTML file
+    Render {
+        /// Output file (default: .ddd/render.html)
+        #[arg(long, value_name = "FILE")]
+        out: Option<PathBuf>,
+        /// SARIF file(s) with emitted diagnostics (adds to config detect.sarif)
+        #[arg(long, value_name = "FILE")]
+        sarif: Vec<PathBuf>,
+        /// Judge cadence against this date instead of today (YYYY-MM-DD)
+        #[arg(long, value_name = "DATE")]
+        today: Option<String>,
+    },
     /// Escape report: diff findings, cadence violations, basis loss
     Report {
         #[command(subcommand)]
         what: ReportWhat,
     },
+    /// Start the ddd_* MCP server over stdio (language tools + interceptor)
+    Serve,
     /// Schema + ontology validation of the graph (exit 1 on violations)
     Validate,
+    /// Pre-load the LSP hosts (Roslyn solution load) so tools answer warm
+    Warmup {
+        /// Limit to one language (repeatable); default warms every adapter
+        #[arg(long, value_name = "LANG")]
+        language: Vec<String>,
+        /// Give up after this many seconds per host
+        #[arg(long, default_value = "120")]
+        timeout: u64,
+    },
     /// Resolve an id to decision -> rationale -> principal -> basedOn claims
     Why {
         /// A decision, claim, diagnostic (rule), pattern, or seam id
@@ -54,10 +79,13 @@ pub fn run(cmd: Commands, root: Option<PathBuf>) -> Result<()> {
     match cmd {
         Commands::Diff { sarif } => diff::run(root, sarif),
         Commands::Init => init::run(root),
+        Commands::Render { out, sarif, today } => render::run(root, out, sarif, today),
         Commands::Report { what } => match what {
             ReportWhat::Escapes { sarif, today } => report::run(root, sarif, today),
         },
+        Commands::Serve => serve::run(root),
         Commands::Validate => validate::run(root),
+        Commands::Warmup { language, timeout } => serve::warmup(root, language, timeout),
         Commands::Why { id } => why::run(root, &id),
     }
 }

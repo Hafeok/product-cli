@@ -80,3 +80,62 @@ detect:
 
 Using either section under `format: 1` is a validation violation. A v1
 config without them stays valid.
+
+## Format 3 (M3/M4)
+
+Formats 1 and 2 remain valid unchanged. Format 3 exists for the two
+capabilities the MCP surface (M3) and the interceptor (M4) need.
+
+### Predicates: `obligations` (pattern predicates)
+
+A format-3 predicate may declare the obligation list a pattern instance
+must answer at declaration time (`ddd_declare_pattern` rejects unanswered
+obligations):
+
+```yaml
+predicate:
+  id: pred/composition/decorator
+  format: 3
+  # ...
+  obligations:
+    - ordering
+    - identity-preservation
+    - forwarding-completeness
+```
+
+Declaring `obligations` under format 1 or 2 is a validation violation.
+
+### Config: `intercept_by_class` and `adapter` sections
+
+`.ddd/config.yaml` gains two optional sections under `format: 3`:
+
+```yaml
+format: 3
+intercept: warn            # the global default, as before
+
+# Per-artifact-class overrides (PRD §8): enforce | warn | off.
+intercept_by_class:
+  code: enforce            # C# edits
+  configuration: warn      # Bicep edits
+
+# Per-language adapter switches, keyed by adapter language name.
+adapter:
+  csharp:
+    internal_is_surface: false        # dec/ddd/internal-not-surface; flip in library repos
+    exported_attributes: [McpServerTool]
+    command: ["roslyn-language-server", "--stdio", "--autoLoadProjects"]  # host override
+  bicep:
+    command: ["bicep-ls"]
+```
+
+Both intercept vocabularies are validated (`enforce | warn | off`);
+unknown modes are violations. Declaring either section under a lower
+format is a violation.
+
+### Seam events (new entry family, format 1)
+
+The interceptor logs every classified surface outcome as one row under
+`.ddd/seams/events/` — separate from the seam *declarations* directly in
+`.ddd/seams/`. Rows are format-versioned like every other entry and load
+into `validate`. This is the correspondence dataset (PRD §8); its field
+set is the schema M5 files claims against.

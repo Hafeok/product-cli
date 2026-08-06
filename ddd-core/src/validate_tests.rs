@@ -20,6 +20,7 @@ fn pred(id: &str) -> Predicate {
         tolerance: "exact".into(),
         rejection_witness: "w".into(),
         depends_on: Vec::new(),
+        obligations: Vec::new(),
         closure_claims: Vec::new(),
         proxy_gap: None,
         notes: None,
@@ -277,12 +278,12 @@ fn claim_ladder_falsifier_and_evidence_presence() {
 }
 
 #[test]
-fn declared_formats_beyond_v2_are_named() {
+fn declared_formats_beyond_v3_are_named() {
     let mut s = DddStore::default();
     let mut p = pred("pred/a/x");
-    p.format = 3;
+    p.format = 4;
     s.predicates.push(p);
-    assert_names(&validate_store(&s), "pred/a/x", "declares format 3");
+    assert_names(&validate_store(&s), "pred/a/x", "declares format 4");
 }
 
 #[test]

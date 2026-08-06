@@ -14,17 +14,50 @@ use super::{JsonRpcRequest, JsonRpcResponse};
 // Tool registry
 // ---------------------------------------------------------------------------
 
+/// A pluggable dispatcher for an external tool namespace served through
+/// this registry's transports (e.g. the `ddd_*` surface). Returns `None`
+/// when the name is not its to handle.
+pub type CustomDispatch =
+    std::sync::Arc<dyn Fn(&str, &Value, &Path) -> Option<Result<Value, String>> + Send + Sync>;
+
 #[allow(dead_code)]
 pub struct ToolRegistry {
     tools: Vec<ToolDef>,
     write_enabled: bool,
     repo_root: PathBuf,
+    server_name: String,
+    custom: Option<CustomDispatch>,
 }
 
 impl ToolRegistry {
     pub fn new(repo_root: PathBuf, write_enabled: bool) -> Self {
         let tools = tools::build_tool_list();
-        Self { tools, write_enabled, repo_root }
+        Self {
+            tools,
+            write_enabled,
+            repo_root,
+            server_name: product_core::author::MCP_SERVER_NAME.to_string(),
+            custom: None,
+        }
+    }
+
+    /// A registry serving an external tool list through its own dispatcher,
+    /// reusing this crate's JSON-RPC handling plus transports. Locking
+    /// semantics stay: write tools run under the repo lock.
+    pub fn with_tools(
+        repo_root: PathBuf,
+        write_enabled: bool,
+        server_name: &str,
+        tools: Vec<ToolDef>,
+        dispatch: CustomDispatch,
+    ) -> Self {
+        Self {
+            tools,
+            write_enabled,
+            repo_root,
+            server_name: server_name.to_string(),
+            custom: Some(dispatch),
+        }
     }
 
     pub fn tool_list(&self) -> &[ToolDef] {
@@ -44,6 +77,16 @@ impl ToolRegistry {
             .ok_or_else(|| format!("Tool not found: {}", name))?;
         if tool.requires_write && !self.write_enabled {
             return Err("Write tools are disabled. Set mcp.write = true in product.toml".to_string());
+        }
+        if let Some(custom) = &self.custom {
+            let _lock = if tool.requires_write {
+                Some(product_core::fileops::RepoLock::acquire(repo_root)
+                    .map_err(|e| format!("{}", e))?)
+            } else {
+                None
+            };
+            return custom(name, args, repo_root)
+                .unwrap_or_else(|| Err(format!("Tool handler not implemented: {}", name)));
         }
         if name == "product_build_run" {
             return crate::build_handler::run(args, repo_root);
@@ -78,7 +121,7 @@ impl ToolRegistry {
             return None;
         }
         Some(match request.method.as_str() {
-            "initialize" => handle_initialize(request),
+            "initialize" => handle_initialize(request, &self.server_name),
             "tools/list" => handle_tools_list(request, self.tool_list()),
             "tools/call" => handle_tools_call(request, self),
             _ => JsonRpcResponse::error(
@@ -94,11 +137,11 @@ impl ToolRegistry {
 // JSON-RPC method handlers
 // ---------------------------------------------------------------------------
 
-fn handle_initialize(request: &JsonRpcRequest) -> JsonRpcResponse {
+fn handle_initialize(request: &JsonRpcRequest, server_name: &str) -> JsonRpcResponse {
     JsonRpcResponse::success(request.id.clone(), serde_json::json!({
         "protocolVersion": "2024-11-05",
         "capabilities": { "tools": {} },
-        "serverInfo": { "name": product_core::author::MCP_SERVER_NAME, "version": env!("CARGO_PKG_VERSION") },
+        "serverInfo": { "name": server_name, "version": env!("CARGO_PKG_VERSION") },
     }))
 }
 

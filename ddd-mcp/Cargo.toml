@@ -1,0 +1,33 @@
+[package]
+name = "ddd-mcp"
+version = "0.6.0"
+edition = "2021"
+authors = ["PiCloud Contributors"]
+license = "Apache-2.0"
+description = "The ddd_* MCP tool surface: LSP-backed language intelligence, the contract-surface interceptor, governance tools."
+repository = "https://github.com/Hafeok/product-cli"
+homepage = "https://github.com/Hafeok/product-cli"
+readme = "../README.md"
+
+[lib]
+name = "ddd_mcp"
+path = "src/lib.rs"
+
+[package.metadata.dist]
+dist = false
+
+[lints]
+workspace = true
+
+[dependencies]
+ddd-core     = { path = "../ddd-core", version = "0.6.0" }
+ddd-lsp      = { path = "../ddd-lsp", version = "0.6.0" }
+product-core = { path = "../product-core", version = "0.6.0" }
+product-mcp  = { path = "../product-mcp", version = "0.6.0" }
+chrono       = "0.4"
+serde        = { version = "1", features = ["derive"] }
+serde_json   = "1"
+serde_yaml   = "0.9"
+
+[dev-dependencies]
+tempfile = "3"

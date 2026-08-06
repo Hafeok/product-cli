@@ -1,0 +1,16 @@
+format: 2
+id: dec/ddd/rejection-facts-prefilled
+title: apply_edit rejections pre-fill the facts, never the judgment
+rationale: >
+  The structured demand carries the LSP-derived observables (symbol,
+  kind, signature, visibility, current reference count) as read-only
+  fields; verdict_knowledge plus obligation answers are always empty and
+  must be authored. Pre-filling the judgment invites rubber-stamping;
+  omitting the facts wastes the agent's calls re-deriving them. Settles
+  PRD §14 question 3 with the stated default.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-friction-01
+    status: projected
+    changed: 2026-08-06
+date: 2026-08-06

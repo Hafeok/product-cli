@@ -18,7 +18,7 @@ use crate::turtle;
 
 /// The entry format versions this tool validates against; each entry is
 /// checked against the version it declares (PRD §6).
-pub const SUPPORTED_FORMATS: &[u32] = &[1, 2];
+pub const SUPPORTED_FORMATS: &[u32] = &[1, 2, 3];
 
 /// Run every check over the store; empty means conformant.
 pub fn validate_store(store: &DddStore) -> Vec<Violation> {
@@ -53,7 +53,7 @@ fn format_checks(store: &DddStore) -> Vec<Violation> {
             out.push(fault(
                 id,
                 "format",
-                format!("declares format {format}; this tool validates formats 1-2"),
+                format!("declares format {format}; this tool validates formats 1-3"),
             ));
         }
     };
@@ -74,6 +74,9 @@ fn format_checks(store: &DddStore) -> Vec<Violation> {
     }
     for s in &store.seams {
         check(&s.id, s.format);
+    }
+    for e in &store.seam_events {
+        check(&e.id, e.format);
     }
     if let Some(c) = &store.config {
         check("config.yaml", c.format);
@@ -112,11 +115,59 @@ fn format_gate_checks(store: &DddStore) -> Vec<Violation> {
         }
     }
     if let Some(c) = &store.config {
-        if c.format < 2 && (c.diff.is_some() || c.detect.is_some()) {
+        out.extend(config_gate_checks(c));
+    }
+    for p in &store.predicates {
+        if p.format < 3 && !p.obligations.is_empty() {
+            out.push(fault(
+                &p.id,
+                "obligations",
+                "pattern obligations are a format-3 field — declare `format: 3`".to_string(),
+            ));
+        }
+    }
+    out
+}
+
+/// Config-file gates: sections must be declared at their format, modes
+/// must come from the closed vocabulary.
+fn config_gate_checks(c: &crate::config::DddConfig) -> Vec<Violation> {
+    let mut out = Vec::new();
+    if c.format < 2 && (c.diff.is_some() || c.detect.is_some()) {
+        out.push(fault(
+            "config.yaml",
+            "format",
+            "diff/detect sections are format 2 — declare `format: 2`".to_string(),
+        ));
+    }
+    if c.format < 3 && (c.intercept_by_class.is_some() || c.adapter.is_some()) {
+        out.push(fault(
+            "config.yaml",
+            "format",
+            "intercept_by_class/adapter sections are format 3 — declare `format: 3`".to_string(),
+        ));
+    }
+    out.extend(intercept_mode_checks(c));
+    out
+}
+
+/// Interception modes come from a closed vocabulary (PRD §8).
+fn intercept_mode_checks(c: &crate::config::DddConfig) -> Vec<Violation> {
+    const MODES: &[&str] = &["enforce", "warn", "off"];
+    let mut out = Vec::new();
+    if !MODES.contains(&c.intercept.as_str()) {
+        out.push(fault(
+            "config.yaml",
+            "intercept",
+            format!("`{}` is not an interception mode (enforce | warn | off)", c.intercept),
+        ));
+    }
+    for (class, mode) in c.intercept_by_class.iter().flatten() {
+        if !MODES.contains(&mode.as_str()) {
             out.push(fault(
                 "config.yaml",
-                "format",
-                "diff/detect sections are format 2 — declare `format: 2`".to_string(),
+                "intercept_by_class",
+                format!("`{class}: {mode}` is not an interception mode (enforce | warn | off)"),
             ));
         }
     }
