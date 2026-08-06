@@ -16,13 +16,15 @@ use crate::rules::ONTOLOGY_RULES;
 use crate::store::DddStore;
 use crate::turtle;
 
-/// The entry format version this tool validates against.
-pub const SUPPORTED_FORMAT: u32 = 1;
+/// The entry format versions this tool validates against; each entry is
+/// checked against the version it declares (PRD §6).
+pub const SUPPORTED_FORMATS: &[u32] = &[1, 2];
 
 /// Run every check over the store; empty means conformant.
 pub fn validate_store(store: &DddStore) -> Vec<Violation> {
     let mut out = store.schema_violations.clone();
     out.extend(format_checks(store));
+    out.extend(format_gate_checks(store));
     out.extend(duplicate_id_checks(store));
     out.extend(claim_shape_checks(&store.claims));
     out.extend(tolerance_checks(store));
@@ -43,15 +45,15 @@ fn fault(focus: &str, path: &str, message: String) -> Violation {
     Violation { focus: focus.to_string(), path: path.to_string(), message, severity: "violation".to_string() }
 }
 
-/// Validation is always against the declared format; only v1 is known here.
+/// Validation is always against the declared format; v1 plus v2 are known.
 fn format_checks(store: &DddStore) -> Vec<Violation> {
     let mut out = Vec::new();
     let mut check = |id: &str, format: u32| {
-        if format != SUPPORTED_FORMAT {
+        if !SUPPORTED_FORMATS.contains(&format) {
             out.push(fault(
                 id,
                 "format",
-                format!("declares format {format}; this tool validates format {SUPPORTED_FORMAT}"),
+                format!("declares format {format}; this tool validates formats 1-2"),
             ));
         }
     };
@@ -75,6 +77,48 @@ fn format_checks(store: &DddStore) -> Vec<Violation> {
     }
     if let Some(c) = &store.config {
         check("config.yaml", c.format);
+    }
+    out
+}
+
+/// Format-2 features must be declared: an entry using them under format 1
+/// is a violation, so v1 entries never change meaning silently (PRD §6).
+fn format_gate_checks(store: &DddStore) -> Vec<Violation> {
+    let mut out = Vec::new();
+    for c in &store.claims {
+        if c.format < 2 && c.revalidate_by.is_some() {
+            out.push(fault(
+                &c.id,
+                "revalidate_by",
+                "revalidate_by is a format-2 field — declare `format: 2`".to_string(),
+            ));
+        }
+    }
+    for d in &store.decisions {
+        let pinned = d.based_on.iter().filter(|b| b.pin().is_some()).count();
+        if d.format < 2 && pinned > 0 {
+            out.push(fault(
+                &d.id,
+                "based_on",
+                "pinned basedOn edges are format 2 — declare `format: 2`".to_string(),
+            ));
+        }
+        if d.format >= 2 && pinned < d.based_on.len() {
+            out.push(fault(
+                &d.id,
+                "based_on",
+                "a format-2 decision pins every basedOn edge with the claim's status plus changed date at decision time (rule 6)".to_string(),
+            ));
+        }
+    }
+    if let Some(c) = &store.config {
+        if c.format < 2 && (c.diff.is_some() || c.detect.is_some()) {
+            out.push(fault(
+                "config.yaml",
+                "format",
+                "diff/detect sections are format 2 — declare `format: 2`".to_string(),
+            ));
+        }
     }
     out
 }

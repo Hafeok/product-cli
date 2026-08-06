@@ -63,9 +63,21 @@ fn render_decision(store: &DddStore, d: &Decision, depth: usize) -> String {
     out.push_str(&format!("{p}  rationale: {}\n", d.rationale.trim()));
     if !d.based_on.is_empty() {
         out.push_str(&format!("{p}  basedOn:\n"));
-        for id in &d.based_on {
-            match store.claims.iter().find(|c| c.id == *id) {
-                Some(c) => out.push_str(&render_claim(c, depth + 2)),
+        for basis in &d.based_on {
+            let id = basis.claim_id();
+            match store.claims.iter().find(|c| c.id == id) {
+                Some(c) => {
+                    out.push_str(&render_claim(c, depth + 2));
+                    if let Some(pin) = basis.pin() {
+                        if pin.status != c.status || pin.changed != c.changed {
+                            out.push_str(&format!(
+                                "{p}      pinned at {}@{} — basis has moved (see `ddd report escapes`)\n",
+                                pin.status.as_str(),
+                                pin.changed
+                            ));
+                        }
+                    }
+                }
                 None => out.push_str(&format!("{p}    {id} (claim not found)\n")),
             }
         }
