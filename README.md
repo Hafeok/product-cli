@@ -134,6 +134,12 @@ risk-acceptance record):
   - **Bicep**: `bicep lint main.bicep --diagnostics-format sarif > bicep.sarif`
     (also available as `az bicep lint`).
 
+  In-source suppressions differ per toolchain: the C# compiler still logs a
+  `#pragma`-suppressed diagnostic into SARIF (marked suppressed), which is how
+  `UNCITED_SUPPRESSION` sees it; Bicep's `#disable-next-line` removes the
+  diagnostic from the output entirely, so Bicep source suppressions are
+  invisible to detection — only `level: off` config suppressions are covered.
+
 Point `ddd diff` at the files with `--sarif` or the `detect.sarif` list in
 `.ddd/config.yaml`. This repo governs itself: `.ddd/manifest/clippy.yaml` maps
 `clippy::unwrap_used` to its decision, and `ddd diff` verifies it against the
