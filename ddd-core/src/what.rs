@@ -108,6 +108,37 @@ pub fn what_ref(element_id: &str) -> String {
     format!("what:{element_id}")
 }
 
+/// Kinds a row calls surface unconditionally — the boundary vocabulary.
+///
+/// Prose that tells an agent what is gated is generated from these rather
+/// than restated, so a new row cannot leave the instructions, the tool
+/// descriptions and the skill describing an older table.
+pub fn boundary_kinds() -> Vec<&'static str> {
+    kinds_where(|r| r.visibilities.is_empty())
+}
+
+/// Kinds a row calls surface only once a Translation publishes them.
+pub fn published_kinds() -> Vec<&'static str> {
+    kinds_where(|r| r.visibilities.contains(&PUBLISHED))
+}
+
+/// Every kind any surface row names, boundary or published.
+pub fn surface_kinds() -> Vec<&'static str> {
+    kinds_where(|_| true)
+}
+
+fn kinds_where(pred: fn(&PolicyRow) -> bool) -> Vec<&'static str> {
+    let mut out: Vec<&'static str> = Vec::new();
+    for row in WHAT_POLICY.iter().filter(|r| r.surface).filter(|r| pred(r)) {
+        for kind in row.kinds {
+            if !out.contains(kind) {
+                out.push(kind);
+            }
+        }
+    }
+    out
+}
+
 /// One classified element of the What graph.
 #[derive(Debug, Clone, Serialize)]
 pub struct WhatElement {

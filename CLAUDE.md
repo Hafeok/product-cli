@@ -272,10 +272,21 @@ new` on the CLI is not intercepted; `ddd what --strict` is the gate there.
 `product-mcp` therefore depends on `ddd-core` (pure library). **`product-core`
 must stay ddd-free** — that is the downstream-consumer contract.
 
-Agent-facing context lives in three places, keep them in sync:
-`product-mcp/src/instructions.rs` (MCP `instructions`, generated from repo
-state), the `product_domain_*` tool descriptions, and
-`.claude/skills/product-what/SKILL.md`.
+Agent-facing context lives in three places, all **derived from
+`WHAT_POLICY`** so a new row cannot leave one describing an older table:
+
+- `product-mcp/src/instructions.rs` — the MCP `instructions` string, built
+  from `what::boundary_kinds()` / `published_kinds()` and from repo state (no
+  `.ddd/` or `intercept: off` → no governance paragraph at all).
+- the `product_domain_*` tool descriptions — checked by
+  `product-cli/tests/agent_context.rs`.
+- `.claude/skills/product-what/SKILL.md` — carries a generated block between
+  `<!-- BEGIN GENERATED: what-policy -->` markers. The same test fails when it
+  goes stale; regenerate with:
+
+```bash
+UPDATE_SKILL=1 cargo test -p product-cli --test agent_context
+```
 
 ## Phase-gated session (What → How → Build)
 

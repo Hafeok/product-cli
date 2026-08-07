@@ -58,10 +58,21 @@ Inspect anytime: `product_domain_list`, `product_domain_show <id>`,
 ## Boundary governance (only when the repo has a `.ddd/` store)
 
 Boundary-forming writes are **rejected until declared**, and the rejected edit
-is rolled back — nothing lands. A boundary is a **system** (§3.2.5), a
-**context mapping** (§3.1), a **journey crossing** (§3.0.1), a **quality
-demand** (§3.6), or **wiring a §3.2.0 Translation** — which publishes the View
-it watches, the Command it issues, and the Events that View projects.
+is rolled back — nothing lands. The table below is generated from the policy
+rows the interceptor actually applies:
+
+<!-- BEGIN GENERATED: what-policy (product_mcp::instructions::skill_section) -->
+| rule | kind | surface when | the claim the row states |
+|---|---|---|---|
+| `pf-add-system` | system | always | a system (§3.2.5) is a deployment, team and contract boundary |
+| `pf-add-context-mapping` | context-mapping | always | a context mapping (§3.1) declares how two models translate — it is the seam itself |
+| `pf-journey-crossing` | journey-crossing | always | a journey crossing a system boundary (§3.0.1) must be absorbed by a Translation |
+| `pf-translation-view` | read-model | a Translation publishes it | the View a Translation watches is the contract the other side reads |
+| `pf-add-event` | event | a Translation publishes it | an event a Translation carries across a boundary is a published contract |
+| `pf-event-signature` | event, command | a Translation publishes it | a payload field added or removed changes a wire contract consumers depend on |
+| `pf-add-command` | command | a Translation publishes it | a command a Translation issues is an entry point exposed across a boundary |
+| `pf-quality-demand` | quality-demand | always | a quality demand (§3.6) binds runtime behaviour or a How element |
+<!-- END GENERATED -->
 
 Everything else in the question script above is internal elaboration and is
 never gated. In particular an **event or command is internal until a

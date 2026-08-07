@@ -42,22 +42,28 @@ fn governance(repo_root: &Path) -> Option<String> {
     let cfg = store.config.as_ref()?;
     let mode = cfg.intercept_for(crate::what_intercept::ARTIFACT_CLASS);
     match mode {
-        "enforce" => Some(ENFORCE.to_string()),
-        "warn" => Some(WARN.to_string()),
+        "enforce" => Some(format!("{}\n\n{RECOVERY}", table_prose("enforce"))),
+        "warn" => Some(format!("{}\n\n{WARN_TAIL}", table_prose("warn"))),
         _ => None,
     }
 }
 
-const ENFORCE: &str = "\
-GOVERNANCE (intercept: enforce). This repo carries a `.ddd/` governance \
-store, so What writes are classified against a boundary policy table before \
-they land. A boundary is: a system (§3.2.5), a context mapping (§3.1), a \
-journey crossing (§3.0.1), a quality demand (§3.6), or wiring a §3.2.0 \
-Translation — which publishes the View it watches, the Command it issues, and \
-the Events that View projects. Entities, value objects, views and UI steps \
-are internal elaboration and are never gated; an event or command is internal \
-until a Translation carries it.\n\n\
-Forming a boundary with nothing declared for it returns `\"status\": \
+/// The gated vocabulary, read off the policy table so prose cannot drift
+/// from the rows the interceptor actually applies.
+fn table_prose(mode: &str) -> String {
+    format!(
+        "GOVERNANCE (intercept: {mode}). This repo carries a `.ddd/` governance store, so What \
+writes are classified against a boundary policy table before they land. These kinds are a \
+boundary always: {}. These are gated only once a §3.2.0 Translation publishes them — the View it \
+watches, the Command it issues, and the Events that View projects: {}. Every other kind is \
+internal elaboration and is never gated.",
+        ddd_core::what::boundary_kinds().join(", "),
+        ddd_core::what::published_kinds().join(", "),
+    )
+}
+
+const RECOVERY: &str = "\
+Forming one of those with nothing declared for it returns `\"status\": \
 \"rejected\"` and the edit is rolled back. When that happens: do NOT retry the \
 edit unchanged, and do NOT work around it by renaming the node, splitting it, \
 or switching to a different tool. Read `demands[].surface`, call \
@@ -66,14 +72,33 @@ you author — one sentence on what this boundary lets the other side learn, \
 which is deliberately never pre-filled because it is the judgment being asked \
 for — then retry the identical edit. It will apply.";
 
-const WARN: &str = "\
-GOVERNANCE (intercept: warn). This repo carries a `.ddd/` governance store, \
-so What writes are classified against a boundary policy table. Boundary-\
-forming edits (a system §3.2.5, a context mapping §3.1, a journey crossing \
-§3.0.1, a quality demand §3.6, or wiring a §3.2.0 Translation) still apply, \
-but come back with a `warning` and a `surface` list. File the declaration \
-with `product_what_declare`, supplying a `verdict_knowledge` you author: one \
-sentence on what the boundary lets the other side learn.";
+const WARN_TAIL: &str = "\
+Forming one of those still applies the write, but returns a `warning` and a \
+`surface` list. File the declaration with `product_what_declare`, supplying a \
+`verdict_knowledge` you author: one sentence on what the boundary lets the \
+other side learn.";
+
+/// The generated block the `product-what` skill carries, so the skill's
+/// statement of what is gated is the policy table itself.
+pub fn skill_section() -> String {
+    let mut out = String::from(
+        "| rule | kind | surface when | the claim the row states |\n|---|---|---|---|\n",
+    );
+    for row in ddd_core::what::WHAT_POLICY.iter().filter(|r| r.surface) {
+        let when = if row.visibilities.is_empty() {
+            "always"
+        } else {
+            "a Translation publishes it"
+        };
+        out.push_str(&format!(
+            "| `{}` | {} | {when} | {} |\n",
+            row.id,
+            row.kinds.join(", "),
+            row.claim,
+        ));
+    }
+    out
+}
 
 #[cfg(test)]
 mod tests {
@@ -117,7 +142,38 @@ mod tests {
         let tmp = repo(Some("format: 3\nintercept: warn\nignore: []\n"));
         let text = instructions(tmp.path(), false);
         assert!(text.contains("GOVERNANCE (intercept: warn)"), "{text}");
-        assert!(text.contains("still apply"));
+        assert!(text.contains("still applies the write"));
+    }
+
+    /// The drift guard: a row added to the table reaches the prose, because
+    /// the prose is read off the table.
+    #[test]
+    fn every_gated_kind_the_table_names_reaches_the_instructions() {
+        let tmp = repo(Some("format: 3\nintercept: enforce\nignore: []\n"));
+        let text = instructions(tmp.path(), false);
+        for kind in ddd_core::what::surface_kinds() {
+            assert!(text.contains(kind), "the table gates `{kind}`, the instructions never say so");
+        }
+    }
+
+    #[test]
+    fn the_boundary_and_published_splits_are_disjoint_and_complete() {
+        let boundary = ddd_core::what::boundary_kinds();
+        let published = ddd_core::what::published_kinds();
+        assert!(!boundary.is_empty() && !published.is_empty());
+        for k in &published {
+            assert!(!boundary.contains(k), "`{k}` cannot be both unconditional and gated");
+        }
+        assert_eq!(boundary.len() + published.len(), ddd_core::what::surface_kinds().len());
+    }
+
+    #[test]
+    fn the_skill_block_carries_every_surface_row() {
+        let block = skill_section();
+        for row in ddd_core::what::WHAT_POLICY.iter().filter(|r| r.surface) {
+            assert!(block.contains(row.id), "`{}` missing from the skill block", row.id);
+            assert!(block.contains(row.claim), "`{}` claim missing", row.id);
+        }
     }
 
     #[test]
