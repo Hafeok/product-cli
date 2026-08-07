@@ -16,6 +16,7 @@ fn claim(id: &str, status: ClaimStatus, changed: &str) -> Claim {
         owner: "none".into(),
         changed: changed.into(),
         revalidate_by: None,
+        version_index: None,
         depends_on: Vec::new(),
         refines: Vec::new(),
         predicate: None,

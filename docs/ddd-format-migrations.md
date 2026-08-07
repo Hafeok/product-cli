@@ -134,8 +134,49 @@ format is a violation.
 
 ### Seam events (new entry family, format 1)
 
+
 The interceptor logs every classified surface outcome as one row under
 `.ddd/seams/events/` — separate from the seam *declarations* directly in
 `.ddd/seams/`. Rows are format-versioned like every other entry and load
 into `validate`. This is the correspondence dataset (PRD §8); its field
 set is the schema M5 files claims against.
+
+## Format 4 (M5)
+
+Formats 1–3 remain valid unchanged. Format 4 exists for one capability the
+closure-claim seed needs.
+
+### Claims: `version_index`
+
+A closure claim reports what an arrangement closes, and an arrangement is a
+versioned thing: `Nullable` closes what it closes *in a given C# version, on
+a given SDK*. Before format 4 that anchor could only live in `evidence`
+prose, where nothing can read it. A format-4 claim may index it:
+
+```yaml
+format: 4
+id: DDD-cs-nrt-01
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "Microsoft.CodeAnalysis.NetAnalyzers 9.0.0"
+status: reported
+```
+
+Every sub-field is optional, because the anchor differs by claim: a language
+rule pins `language`, an SDK behaviour pins `sdk`, an analyzer finding pins
+`tool`. But an index must anchor **something** — an index with no version in
+it is a validation violation, since it would record the appearance of a drift
+anchor without the substance. Declaring `version_index` under format 1–3 is
+a violation.
+
+The field is what a promoting repo checks before inheriting an entry
+(`dec/ddd/seed-lands-in-claims-not-shared`): a closure claim indexed to an
+SDK the destination does not run is worse than no entry, because it carries
+the catalog's authority without holding there.
+
+**Migrating a v1–v3 claim:** set `format: 4` and add `version_index` if the
+claim is a closure finding whose truth depends on a toolchain version. Claims
+about method, architecture or scope need no index and should stay at their
+current format. No other field changes meaning.
