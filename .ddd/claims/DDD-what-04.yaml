@@ -1,0 +1,23 @@
+format: 2
+id: DDD-what-04
+statement: >
+  Both What graphs in this repo are demonstration content — the acme
+  showcase and the self-hosted product-cli reference — and neither has a
+  second party that reads its elements across a boundary. A seam declared
+  over one of their 24 boundaries could therefore carry no verdict knowledge
+  that anything downstream depends on: the empty-verdict_knowledge case the
+  declaration surface already warns about as seam cost with no demand
+  absorbed.
+status: projected
+falsifier: >
+  A party that breaks on a change to a boundary element of either graph — a
+  downstream repo, generated code, or an engagement repo that inherits
+  either graph — or a boundary defect in this repo traced to one of the 24
+  undeclared elements. Test suites asserting on graph validity do not
+  count: they consume the graph's well-formedness, not a boundary contract.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-02-07
+depends_on:
+  - DDD-what-01
+  - DDD-what-03

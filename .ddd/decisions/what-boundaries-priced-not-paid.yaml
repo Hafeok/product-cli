@@ -1,0 +1,44 @@
+format: 2
+id: dec/ddd/what-boundaries-priced-not-paid
+title: The 24 undeclared What boundaries are priced and deferred, not declared
+rationale: >
+  Exposure. `ddd what --strict` reports 24 undeclared boundaries over 121
+  classified elements (97 of which the policy table calls internal): 8 in
+  acme — 2 system, 2 quality demand, 1 command, 1 event, 1 read model, 1
+  journey crossing — and 16 in product-cli — 3 system, 4 quality demand, 3
+  context mapping, 2 journey crossing, 2 command, 2 read model. None carries
+  a declaration, so a change to any of them goes unrecorded, and while
+  `--strict` stays red the What surface has no green baseline against which
+  a future regression could be measured.
+
+
+  What that costs today is bounded two ways. By DDD-what-04: both graphs are
+  demonstration content with no second party, so the declarations would carry
+  no verdict knowledge anything depends on. And by posture: `ddd what
+  --strict` is not wired into CI — product-ci.yml runs the cargo suite only —
+  and What write interception resolves through the `specification` artifact
+  class of `intercept_by_class`, which this repo leaves unset, so it inherits
+  the global `intercept: warn`. Nothing enforces these boundaries in either
+  direction; deferring moves no gate.
+
+
+  Paying now would mean a workspace-governance campaign of 24 seams, each
+  demanding authored verdict knowledge from graphs that have none to give —
+  producing 24 entries the tool's own surface warns about, which is precisely
+  the confident staleness M5 exists to avoid. The finding stays standing and
+  visible rather than being suppressed or satisfied cheaply.
+
+
+  Review by 2027-02-07. The date is carried mechanically by DDD-what-04's
+  `revalidate_by` rather than restated as a field here: `report escapes`
+  raises it then, and basis loss raises it sooner if the claim moves. The
+  trigger to pay rather than re-defer is whichever arrives first — M6 giving
+  this workspace a Rust adapter and so a genuinely governed surface of its
+  own, or a first engagement repo bringing a What graph with a real second
+  party.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-what-04
+    status: projected
+    changed: 2026-08-07
+date: 2026-08-07
