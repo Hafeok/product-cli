@@ -1,0 +1,26 @@
+format: 4
+id: DDD-cs-disp-01
+statement: >
+  A `using` statement closes pred/code/deterministic-disposal for exactly the
+  ownership it can express: an instance whose owner is the enclosing lexical
+  scope. The compiler emits the try/finally, so disposal happens once on every
+  path including exceptional ones. It closes nothing about ownership the
+  syntax cannot name, which is every case where the owner is not a scope.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain: `using var r = new Res("lexical");`
+  followed by a thrown InvalidOperationException leaves the instance disposed
+  when the exception is caught outside. The refining claims are the cases
+  where ownership is held by something other than a scope, and each is
+  observed undisposed in the same run.
+falsifier: >
+  A lexically scoped `using` whose instance is not disposed on some path —
+  which would break the construct itself rather than the inference around it.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+predicate: pred/code/deterministic-disposal

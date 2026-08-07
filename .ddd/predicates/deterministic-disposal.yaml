@@ -30,7 +30,12 @@ predicate:
 
   depends_on: []
 
-  closure_claims: []
+  closure_claims:
+    - DDD-cs-disp-01   # `using` closes lexically scoped ownership, all paths
+    - DDD-cs-disp-02   # field-held — analyzer-closable (CA1001 + CA2000)
+    - DDD-cs-disp-03   # async — open only where both interfaces are implemented
+    - DDD-cs-disp-04   # container hand-off — open, seen by nothing
+    - DDD-cs-disp-05   # the inferred ground item, observed: CA2000 errs both ways
 
   proxy_gap: >
     Lexically scoped disposal proxies lifetime correctness. They diverge

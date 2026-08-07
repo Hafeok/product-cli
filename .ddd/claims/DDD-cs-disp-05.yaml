@@ -1,0 +1,34 @@
+format: 4
+id: DDD-cs-disp-05
+statement: >
+  CA2000's ownership inference is neither sound nor complete, and the
+  direction of its error is not predictable from the shape of the code. It
+  reports a site where disposal is written and stays silent on a site where
+  disposal appears nowhere. This is the predicate's `inferred` ground item
+  observed directly: C# cannot express ownership, so the analyzer must guess,
+  and a guess fails in both directions rather than erring consistently one
+  way.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain, both observations from a single build
+  of a single file. `static Action Capture() { var r = new Res(); return ()
+  => r.Dispose(); }` draws CA2000 at the construction, although the returned
+  delegate does dispose the instance when invoked. In the same file
+  `Reg.Add(new Res())`, handing ownership to a container with no disposal
+  path at all, draws nothing. Conservative at the site that is handled,
+  silent at the site that is not.
+falsifier: >
+  A characterisation of CA2000's analysis under which its false positives and
+  false negatives are predictable from the code shape — which would make the
+  residual allocable to a rule rather than to judgment.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "SDK-bundled .NET analyzers at AnalysisLevel=latest, AnalysisMode=All"
+predicate: pred/code/deterministic-disposal
+refines:
+  - DDD-cs-disp-01
