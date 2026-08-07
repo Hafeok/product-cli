@@ -1,4 +1,4 @@
-format: 1
+format: 2
 id: DDD-arch-03
 statement: >
   An edit-flow interceptor consuming LSP events can demand seam declarations
@@ -9,5 +9,6 @@ falsifier: >
   a server-side LSP extension to see.
 owner: none
 changed: 2026-08-02
+revalidate_by: 2027-02-07
 depends_on:
   - DDD-arch-02

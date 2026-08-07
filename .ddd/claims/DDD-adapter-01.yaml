@@ -1,4 +1,4 @@
-format: 1
+format: 2
 id: DDD-adapter-01
 statement: >
   Per-language contract-surface definitions expressed as adapter policy
@@ -10,4 +10,5 @@ falsifier: >
   contract-surface knowledge that cannot be localised to a language adapter.
 owner: none
 changed: 2026-08-02
+revalidate_by: 2027-02-07
 depends_on: []
