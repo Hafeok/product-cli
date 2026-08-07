@@ -1,0 +1,19 @@
+format: 2
+id: dec/ddd/what-published-qualifier
+title: Events, commands and views are surface only when a Translation carries them
+rationale: >
+  The unqualified rows called every event and command boundary-forming, which
+  the measurement killed (DDD-what-02): 39 elements selected, 0 of them
+  actually crossing anything. The qualifier is the framework's own crossing
+  structure — the adapter computes a published/internal visibility from the
+  §3.2.0 Translations and the table matches on it, exactly as the C# table
+  matches on visibility (`dec/ddd/internal-not-surface`). This also fixes a
+  table defect the measurement exposed: the View a Translation watches is
+  the published contract, so a read-model can be surface, where the first
+  table called every read-model internal elaboration.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-what-03
+    status: reported
+    changed: 2026-08-07
+date: 2026-08-07

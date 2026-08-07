@@ -127,14 +127,22 @@ owns the What as typed data, so the adapter reads kinds and containers
 straight off `DomainGraph` and runs them through the same policy-table
 mechanism (`ddd-core/src/surface.rs`, shared with the LSP adapters).
 
-The table names what forms a boundary — a system (§3.2.5), a context mapping
-(§3.1), a journey crossing (§3.0.1), an event or command payload, a quality
-demand (§3.6). Entities, value objects, views and UI steps are internal
-elaboration and never demand a declaration. A boundary counts as governed
-when a seam declaration's `contract_location` is `what:<element-id>`.
+Two kinds of row. **Boundary kinds** are surface whatever they connect to: a
+system (§3.2.5), a context mapping (§3.1), a journey crossing (§3.0.1), a
+quality demand (§3.6). **Published kinds** are surface only when a §3.2.0
+Translation carries them — the View a Translation watches, the Command it
+issues, and the Events that View projects. Everything else is internal to its
+own system and never demands a declaration.
 
-`--strict` turns it into a CI gate; the default reports without failing, so
-the table can be calibrated against a real graph first.
+That published/internal split is the What's analogue of C# visibility, and it
+is load-bearing: the first table called every event and command a boundary,
+which the measurement in `DDD-what-02` killed (0 of 39 crossed anything). See
+`dec/ddd/what-published-qualifier`.
+
+A boundary counts as governed when a seam declaration's `contract_location`
+is `what:<element-id>`. `--strict` turns it into a CI gate; the default
+reports without failing, so the table can be calibrated against a real graph
+first.
 
 ### MCP surface (M3/M4)
 

@@ -1,0 +1,21 @@
+format: 2
+id: DDD-what-02
+statement: >
+  Every domain event and command in a What graph is a published contract —
+  some consumer outside its own bounded context reads it — so each one is
+  boundary-forming and worth a declaration.
+status: retired
+evidence: >
+  Killed 2026-08-07 by measurement over the two reference graphs. Of 20
+  events and 19 commands, 0 were referenced from any context other than
+  their own, and 0 read-models projected events from more than one context.
+  The framework does not carry events across boundaries by direct reference:
+  crossings run through §3.2.0 Translation triggers, of which the two graphs
+  hold three in total. Under the framework's own crossing structure the
+  published set is 4 elements in product-cli and 3 in acme, against the 39
+  the unqualified rows called surface. Replaced by DDD-what-03.
+falsifier: >
+  A conformant What graph in which most events and commands are consumed
+  only inside their own bounded context.
+owner: Emil
+changed: 2026-08-07

@@ -203,16 +203,17 @@ fn what_reports_undeclared_boundaries_and_gates_under_strict() {
            "started_at":"2026-08-07T00:00:00Z"}"#,
     );
 
-    // Both boundaries undeclared; the entity is internal elaboration.
+    // The system is a boundary; the event is internal because no
+    // Translation carries it (dec/ddd/what-published-qualifier).
     ddd(tmp.path())
         .arg("what")
         .assert()
         .success()
         .stdout(
             predicate::str::contains("UNDECLARED system/payments-api")
-                .and(predicate::str::contains("UNDECLARED event/PaymentAuthorized"))
-                .and(predicate::str::contains("2 surface element(s): 0 declared, 2 undeclared"))
-                .and(predicate::str::contains("1 internal element(s)")),
+                .and(predicate::str::contains("event/PaymentAuthorized").not())
+                .and(predicate::str::contains("1 surface element(s): 0 declared, 1 undeclared"))
+                .and(predicate::str::contains("2 internal element(s)")),
         );
 
     // --strict turns it into a gate.
@@ -230,7 +231,40 @@ fn what_reports_undeclared_boundaries_and_gates_under_strict() {
         .success()
         .stdout(
             predicate::str::contains("declared  system/payments-api — seam/what/payments-api")
-                .and(predicate::str::contains("1 declared, 1 undeclared")),
+                .and(predicate::str::contains("1 declared, 0 undeclared")),
+        );
+}
+
+/// A §3.2.0 Translation publishes the View it watches, the Command it
+/// issues, and the Events that View projects.
+#[test]
+fn what_treats_translation_carried_elements_as_published() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    ddd(tmp.path()).arg("init").assert().success();
+    write(tmp.path(), "product.toml", "name = \"acme\"\n");
+    write(
+        tmp.path(),
+        ".product/products/acme/session.json",
+        r#"{"product":"acme","graph":{
+             "events":[{"id":"OrderPlaced","label":"Placed","context":"ordering","changes":"Order"},
+                       {"id":"ItemAdded","label":"Added","context":"ordering","changes":"Cart"}],
+             "commands":[{"id":"IssueRefund","label":"Refund","context":"ordering","targets":"Order","emits":[]}],
+             "read_models":[{"id":"OrderConfirmation","label":"Confirmation","projects":["OrderPlaced"]}],
+             "triggers":[{"id":"trg-fulfil","label":"Translation in","source":"automated",
+                          "issues":"IssueRefund","watches":"OrderConfirmation","translates_from":"acme-shop"}]},
+           "started_at":"2026-08-07T00:00:00Z"}"#,
+    );
+    ddd(tmp.path())
+        .arg("what")
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("UNDECLARED read-model/OrderConfirmation")
+                .and(predicate::str::contains("UNDECLARED event/OrderPlaced"))
+                .and(predicate::str::contains("UNDECLARED command/IssueRefund"))
+                // ItemAdded is not on the crossing, so it stays internal.
+                .and(predicate::str::contains("event/ItemAdded").not())
+                .and(predicate::str::contains("3 surface element(s)")),
         );
 }
 

@@ -1,0 +1,21 @@
+format: 2
+id: dec/ddd/what-policy-table
+title: The What graph is governed by a policy table over the framework's boundary kinds
+rationale: >
+  The What is a third contract surface alongside C# and Bicep, classified by
+  the same policy-table mechanism. product-core already owns the graph as
+  typed data, so the adapter needs no language server. The table names what
+  forms a boundary — system, context mapping, journey crossing, event,
+  command, payload signature, quality demand — and everything else (entities,
+  value objects, read-models, UI steps) is internal elaboration that never
+  demands a declaration. Stage 1 reports without gating so the table is
+  calibrated against real graphs before it blocks a write.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-what-01
+    status: projected
+    changed: 2026-08-07
+  - claim: DDD-what-03
+    status: reported
+    changed: 2026-08-07
+date: 2026-08-07

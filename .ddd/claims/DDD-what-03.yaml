@@ -1,0 +1,21 @@
+format: 2
+id: DDD-what-03
+statement: >
+  A What element is published exactly when it participates in a §3.2.0
+  Translation crossing: the View a Translation watches, the Command it
+  issues, and the Events that View projects. Everything else is internal to
+  its own system whatever its kind, because the framework carries nothing
+  across a boundary except through a Translation.
+status: reported
+evidence: >
+  Measured over both reference graphs 2026-08-07. Direct cross-context
+  reference of events and commands is 0 of 39; the three Translations the
+  graphs declare carry 4 published elements in product-cli and 3 in acme.
+  The crossing structure, not the reference graph, is where boundary
+  traffic actually shows up.
+falsifier: >
+  A boundary defect originating in an element this rule calls internal —
+  an event or command consumed across a system boundary by a path that does
+  not run through a Translation trigger.
+owner: Emil
+changed: 2026-08-07

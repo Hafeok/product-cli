@@ -3,7 +3,25 @@
 use super::*;
 use product_core::pf::model::{Command, ContextMapping, Entity, Event, ReadModel};
 use product_core::pf::model_product::{Journey, QualityDemand};
-use product_core::pf::model_ui::System;
+use product_core::pf::model_ui::{System, Trigger};
+
+/// Add a §3.2.0 Translation carrying `view` (which projects `event`) and
+/// issuing `command` across a boundary.
+fn with_translation(g: &mut DomainGraph, view: &str, event: &str, command: &str) {
+    g.read_models.push(ReadModel {
+        id: view.into(),
+        projects: vec![event.into()],
+        ..Default::default()
+    });
+    g.triggers.push(Trigger {
+        id: "translate-in".into(),
+        source: "automated".into(),
+        issues: command.into(),
+        watches: Some(view.into()),
+        translates_from: Some("payments-api".into()),
+        ..Default::default()
+    });
+}
 
 fn graph() -> DomainGraph {
     let mut g = DomainGraph::default();
@@ -54,24 +72,86 @@ fn seam(id: &str, element: &str) -> crate::seam::SeamDeclaration {
     }
 }
 
-#[test]
-fn boundaries_and_the_published_contract_are_surface() {
-    let classified = classify(&graph());
-    let surface: Vec<(&str, &str)> = classified
-        .iter()
+fn surface_of(g: &DomainGraph) -> Vec<(String, String)> {
+    classify(g)
+        .into_iter()
         .filter(|e| e.surface)
-        .map(|e| (e.kind.as_str(), e.id.as_str()))
-        .collect();
-    for expect in [
+        .map(|e| (e.kind, e.id))
+        .collect()
+}
+
+#[test]
+fn boundary_kinds_are_surface_whatever_they_connect_to() {
+    let surface = surface_of(&graph());
+    for (kind, id) in [
         ("system", "payments-api"),
         ("context-mapping", "billing-to-ledger"),
         ("journey-crossing", "checkout#translate-to-ledger"),
-        ("event", "PaymentAuthorized"),
-        ("command", "AuthorizePayment"),
         ("quality-demand", "auth-latency"),
     ] {
-        assert!(surface.contains(&expect), "{expect:?} missing from {surface:?}");
+        assert!(
+            surface.contains(&(kind.to_string(), id.to_string())),
+            "{kind}/{id} missing from {surface:?}"
+        );
     }
+}
+
+/// dec/ddd/what-published-qualifier: without a Translation carrying them,
+/// events and commands are internal — the rule DDD-what-02 got wrong.
+#[test]
+fn an_event_or_command_no_translation_carries_is_internal() {
+    let surface = surface_of(&graph());
+    for kind in ["event", "command"] {
+        assert!(
+            !surface.iter().any(|(k, _)| k == kind),
+            "{kind} must not be surface without a crossing: {surface:?}"
+        );
+    }
+    let classified = classify(&graph());
+    let ev = classified.iter().find(|e| e.kind == "event").expect("event");
+    assert_eq!(ev.visibility, INTERNAL);
+}
+
+#[test]
+fn a_translation_publishes_its_view_its_command_and_the_events_it_projects() {
+    let mut g = graph();
+    with_translation(&mut g, "OrderConfirmation", "PaymentAuthorized", "AuthorizePayment");
+    let surface = surface_of(&g);
+    for (kind, id) in [
+        ("read-model", "OrderConfirmation"),
+        ("event", "PaymentAuthorized"),
+        ("command", "AuthorizePayment"),
+    ] {
+        assert!(
+            surface.contains(&(kind.to_string(), id.to_string())),
+            "{kind}/{id} missing from {surface:?}"
+        );
+    }
+    // The view a Translation watches is surface; the plain one is not.
+    let plain = classify(&g)
+        .into_iter()
+        .find(|e| e.id == "PaymentList")
+        .expect("PaymentList");
+    assert!(!plain.surface);
+    assert_eq!(plain.visibility, INTERNAL);
+}
+
+#[test]
+fn published_set_follows_the_translation_edges_only() {
+    let mut g = graph();
+    with_translation(&mut g, "OrderConfirmation", "PaymentAuthorized", "AuthorizePayment");
+    let published = published_set(&g);
+    assert!(published.contains("OrderConfirmation"));
+    assert!(published.contains("PaymentAuthorized"));
+    assert!(published.contains("AuthorizePayment"));
+    // A non-Translation trigger publishes nothing.
+    g.triggers.push(Trigger {
+        id: "user-pays".into(),
+        source: "user".into(),
+        issues: "PayNow".into(),
+        ..Default::default()
+    });
+    assert!(!published_set(&g).contains("PayNow"));
 }
 
 #[test]
@@ -97,10 +177,11 @@ fn an_ungoverned_graph_reports_every_surface_element_as_an_escape() {
     let store = DddStore::default();
     let r = report(&store, &graph(), "acme");
     assert!(r.governed.is_empty());
-    assert_eq!(r.escapes.len(), 6, "{:?}", r.escapes);
-    assert_eq!(r.surface_total(), 6);
+    // Four boundary kinds; the event/command/view need a Translation.
+    assert_eq!(r.escapes.len(), 4, "{:?}", r.escapes);
+    assert_eq!(r.surface_total(), 4);
     // Coverage: internals are counted, not silently dropped.
-    assert_eq!(r.internal, 2);
+    assert_eq!(r.internal, 4);
     assert_eq!(r.classified, 8);
     assert!(!r.is_clean());
 }
@@ -113,7 +194,7 @@ fn a_seam_naming_the_element_moves_it_out_of_the_escapes() {
     assert_eq!(r.governed.len(), 1);
     assert_eq!(r.governed[0].id, "payments-api");
     assert_eq!(r.governed[0].governed_by.as_deref(), Some("seam/what/payments-api"));
-    assert_eq!(r.escapes.len(), 5);
+    assert_eq!(r.escapes.len(), 3);
 }
 
 #[test]
@@ -131,7 +212,7 @@ fn a_payload_change_is_surface_only_under_the_signature_row() {
         name: "PaymentAuthorized".into(),
         container: "billing".into(),
         kind: "event".into(),
-        visibility: String::new(),
+        visibility: PUBLISHED.into(),
         signature: "(amount)".into(),
         decorators: Vec::new(),
         exported: false,
@@ -139,12 +220,17 @@ fn a_payload_change_is_surface_only_under_the_signature_row() {
         sel_line: 0,
         sel_char: 0,
     };
-    let (surface, rule, _) = decide(WHAT_POLICY, ChangeKind::SignatureChanged, &facts, "");
+    let (surface, rule, _) =
+        decide(WHAT_POLICY, ChangeKind::SignatureChanged, &facts, PUBLISHED);
     assert!(surface);
     assert_eq!(rule, Some("pf-event-signature"));
     // Removal has no row yet: the table names what forms a boundary.
-    let (removed, _, _) = decide(WHAT_POLICY, ChangeKind::Removed, &facts, "");
+    let (removed, _, _) = decide(WHAT_POLICY, ChangeKind::Removed, &facts, PUBLISHED);
     assert!(!removed);
+    // An internal event's payload change is not a boundary event.
+    let (internal, _, _) =
+        decide(WHAT_POLICY, ChangeKind::SignatureChanged, &facts, INTERNAL);
+    assert!(!internal);
 }
 
 #[test]
