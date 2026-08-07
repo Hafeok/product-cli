@@ -39,7 +39,7 @@ fn read_query_tools() -> Vec<ToolDef> {
 fn what_declare_tool() -> ToolDef {
     ToolDef {
         name: "product_what_declare".to_string(),
-        description: "File the seam declaration a What boundary demands (lands in .ddd/seams/, resolvable by `ddd why`). Pass amend:true to revise one already filed.".to_string(),
+        description: "File the seam declaration a What boundary demands, answering a `status: rejected` reply from product_domain_new/edit/rm. Copy `demands[].template` and add a `verdict_knowledge` you author — one sentence on what the boundary lets the other side learn; it is never pre-filled. Lands in .ddd/seams/, resolvable by `ddd why`. Pass amend:true to revise one already filed.".to_string(),
         requires_write: true,
         input_schema: serde_json::json!({"type": "object", "properties": {
             "id": {"type": "string", "description": "seam/<area>/<name>"},
@@ -159,7 +159,7 @@ fn write_tools() -> Vec<ToolDef> {
     vec![
         ToolDef {
             name: "product_domain_new".to_string(),
-            description: "Create a What-graph node: `kind` + `id` plus the node's fields (label, context, definition, changes, targets, emits, …). A system must set `system_kind` (§3.2.5). On a validation failure nothing is persisted (atomic) — supply every field the node's shape requires in the one call. Validated in-loop; returns { ok, node, violations }.".to_string(),
+            description: "Create a What-graph node: `kind` + `id` plus the node's fields (label, context, definition, changes, targets, emits, …). A system must set `system_kind` (§3.2.5). On a validation failure nothing is persisted (atomic) — supply every field the node's shape requires in the one call. Validated in-loop; returns { ok, node, violations }. If the repo carries a `.ddd/` store, a boundary-forming change (system, context mapping, journey crossing, quality demand, or wiring a §3.2.0 Translation) returns `status: rejected` and is rolled back until `product_what_declare` names it — declare, then retry the identical call.".to_string(),
             requires_write: true,
             input_schema: serde_json::json!({
                 "type": "object",
@@ -169,7 +169,7 @@ fn write_tools() -> Vec<ToolDef> {
         },
         ToolDef {
             name: "product_domain_edit".to_string(),
-            description: "Patch a What-graph node's fields by id; re-validated in-loop. Returns { ok, node, violations }.".to_string(),
+            description: "Patch a What-graph node's fields by id; re-validated in-loop. Returns { ok, node, violations }. If the repo carries a `.ddd/` store, a boundary-forming change (system, context mapping, journey crossing, quality demand, or wiring a §3.2.0 Translation) returns `status: rejected` and is rolled back until `product_what_declare` names it — declare, then retry the identical call.".to_string(),
             requires_write: true,
             input_schema: serde_json::json!({
                 "type": "object",
@@ -179,7 +179,7 @@ fn write_tools() -> Vec<ToolDef> {
         },
         ToolDef {
             name: "product_domain_rm".to_string(),
-            description: "Delete a What-graph node by id; reports any references the deletion leaves dangling.".to_string(),
+            description: "Delete a What-graph node by id; reports any references the deletion leaves dangling. If the repo carries a `.ddd/` store, a boundary-forming change (system, context mapping, journey crossing, quality demand, or wiring a §3.2.0 Translation) returns `status: rejected` and is rolled back until `product_what_declare` names it — declare, then retry the identical call.".to_string(),
             requires_write: true,
             input_schema: serde_json::json!({
                 "type": "object",

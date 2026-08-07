@@ -143,7 +143,7 @@ pub fn handle(registry: &ToolRegistry, request: &JsonRpcRequest, ctx: &WorkflowC
         return Outgoing::silent();
     }
     match request.method.as_str() {
-        "initialize" => Outgoing::resp(initialize(request)),
+        "initialize" => Outgoing::resp(initialize(request, ctx)),
         "tools/list" => Outgoing::resp(tools_list(registry, request, ctx)),
         "tools/call" => tools_call(registry, request, ctx),
         other => Outgoing::resp(JsonRpcResponse::error(
@@ -154,13 +154,14 @@ pub fn handle(registry: &ToolRegistry, request: &JsonRpcRequest, ctx: &WorkflowC
     }
 }
 
-fn initialize(request: &JsonRpcRequest) -> JsonRpcResponse {
+fn initialize(request: &JsonRpcRequest, ctx: &WorkflowCtx) -> JsonRpcResponse {
     JsonRpcResponse::success(
         request.id.clone(),
         json!({
             "protocolVersion": "2024-11-05",
             "capabilities": { "tools": { "listChanged": true } },
             "serverInfo": { "name": product_core::author::MCP_SERVER_NAME, "version": env!("CARGO_PKG_VERSION") },
+            "instructions": crate::instructions::instructions(&ctx.canonical, true),
         }),
     )
 }

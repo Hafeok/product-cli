@@ -55,6 +55,33 @@ Inspect anytime: `product_domain_list`, `product_domain_show <id>`,
 `product_domain_edit` / `product_domain_rm`. Relations (`kind=relation`) need a
 `rationale`.
 
+## Boundary governance (only when the repo has a `.ddd/` store)
+
+Boundary-forming writes are **rejected until declared**, and the rejected edit
+is rolled back — nothing lands. A boundary is a **system** (§3.2.5), a
+**context mapping** (§3.1), a **journey crossing** (§3.0.1), a **quality
+demand** (§3.6), or **wiring a §3.2.0 Translation** — which publishes the View
+it watches, the Command it issues, and the Events that View projects.
+
+Everything else in the question script above is internal elaboration and is
+never gated. In particular an **event or command is internal until a
+Translation carries it**, so steps 3–4 flow freely; step 7 (systems) and any
+Translation trigger in step 6 are where you will meet the gate.
+
+On `"status": "rejected"`:
+
+1. Read `demands[].surface` — it names the element, the rule, and the claim
+   that rule states.
+2. Call `product_what_declare` with the supplied `template`, adding
+   `verdict_knowledge`: one sentence on **what this boundary lets the other
+   side learn**. It is deliberately blank in the template — that judgement is
+   the thing being asked for. Empty files with a warning.
+3. Retry the **identical** call. It applies.
+
+Do not rename, split, or re-route the node to get around a rejection, and do
+not skip ahead — the demand is the point, not an obstacle. `ddd what` lists
+undeclared boundaries anytime; `ddd why <seam-id>` resolves one.
+
 ## The gate
 
 `product_domain_validate` runs the per-node §3.1/§3.2 shapes → `{ ok, violations }`.

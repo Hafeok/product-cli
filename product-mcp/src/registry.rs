@@ -129,7 +129,7 @@ impl ToolRegistry {
             return None;
         }
         Some(match request.method.as_str() {
-            "initialize" => handle_initialize(request, &self.server_name),
+            "initialize" => handle_initialize(request, &self.server_name, &self.repo_root),
             "tools/list" => handle_tools_list(request, self.tool_list()),
             "tools/call" => handle_tools_call(request, self),
             _ => JsonRpcResponse::error(
@@ -145,11 +145,16 @@ impl ToolRegistry {
 // JSON-RPC method handlers
 // ---------------------------------------------------------------------------
 
-fn handle_initialize(request: &JsonRpcRequest, server_name: &str) -> JsonRpcResponse {
+fn handle_initialize(
+    request: &JsonRpcRequest,
+    server_name: &str,
+    repo_root: &Path,
+) -> JsonRpcResponse {
     JsonRpcResponse::success(request.id.clone(), serde_json::json!({
         "protocolVersion": "2024-11-05",
         "capabilities": { "tools": {} },
         "serverInfo": { "name": server_name, "version": env!("CARGO_PKG_VERSION") },
+        "instructions": crate::instructions::instructions(repo_root, false),
     }))
 }
 

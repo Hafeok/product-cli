@@ -238,6 +238,45 @@ The reference What lives in `.product/products/product-cli/`. `product mcp
   `/api/graph` (`pf::viz`, gaining a §4 How lane in 1.7.0) and live-refreshed
   over SSE. This is the graph-connected view until the explorer is wired.
 
+## DDD governance (`.ddd/`, the `ddd` binary)
+
+A second workspace stack — `ddd-core` / `ddd-lsp` / `ddd-mcp` / `ddd-cli` —
+governs *decisions* over a repo-local `.ddd/` store (predicates, falsifiable
+claims, decisions, analyzer/linter manifests, patterns, seams). Separate
+ontology, separate store, shared storage conventions
+([PRD](docs/ddd-cli-prd.md)). `ddd validate | diff | report escapes | why |
+render | what | serve`.
+
+**The What is a governed contract surface** (`ddd what`,
+`dec/ddd/what-policy-table`). It needs no language server — product-core owns
+the What as typed data, so the adapter reads it off `DomainGraph` and runs the
+same policy-table mechanism as the C#/Bicep adapters (`ddd-core/src/surface.rs`).
+
+- **Boundary kinds** are surface always: system (§3.2.5), context mapping
+  (§3.1), journey crossing (§3.0.1), quality demand (§3.6).
+- **Published kinds** are surface only when a §3.2.0 **Translation** carries
+  them — the View it watches, the Command it issues, the Events that View
+  projects (`dec/ddd/what-published-qualifier`; the unqualified rule was
+  measured false and retired as `DDD-what-02`). Everything else is internal.
+- A boundary is governed when a seam's `contract_location` is
+  `what:<element-id>`.
+
+**Write-time interception** lives at `product-mcp/src/what_intercept.rs`,
+inside the existing `RepoLock` in `registry.rs::call_tool_at`: it applies the
+edit, classifies before/after, and restores its snapshot when an undeclared
+boundary appears. `product_what_declare` files the seam without leaving the
+session. Inert unless `.ddd/` exists; mode from
+`intercept_by_class.specification`. **MCP write path only** — `product domain
+new` on the CLI is not intercepted; `ddd what --strict` is the gate there.
+
+`product-mcp` therefore depends on `ddd-core` (pure library). **`product-core`
+must stay ddd-free** — that is the downstream-consumer contract.
+
+Agent-facing context lives in three places, keep them in sync:
+`product-mcp/src/instructions.rs` (MCP `instructions`, generated from repo
+state), the `product_domain_*` tool descriptions, and
+`.claude/skills/product-what/SKILL.md`.
+
 ## Phase-gated session (What → How → Build)
 
 `product session start <product>` (or `product mcp --workflow --session <id>`)
