@@ -1,0 +1,46 @@
+predicate:
+  id: pred/code/failure-behaviour-declared
+  format: 1
+  name: Failure behaviour declared
+  statement: >
+    Accept code c iff every catch clause in c names the failure it handles
+    and what the program does afterwards, rather than absorbing an
+    unspecified set of failures into an unstated continuation.
+
+  artifact_class: code
+
+  ground:
+    - fact: the exception type each clause catches and the operations in its
+        body
+      provenance: controlled
+    - fact: the set of exceptions the guarded call can actually throw
+      provenance: inferred
+    - fact: which of those failures are recoverable in the deployed
+        environment
+      provenance: observed
+
+  tolerance: >
+    No clause catches a type broader than the failure it names, and no clause
+    body leaves the failure absorbed without either rethrowing, translating,
+    or citing a governing decision at the site.
+
+  rejection_witness: >
+    The clause, the type it catches, and the absence of a narrowing, a
+    rethrow, or a cited decision.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-cs-fail-01  # CA1031 closes breadth of the caught type, not the continuation
+
+  proxy_gap: >
+    Catching narrowly proxies handling correctly. A clause can name exactly
+    the right exception type and still implement the wrong continuation —
+    retrying what should fail, or failing what should degrade.
+
+  notes: >
+    The inferred ground item is the load-bearing one, and it is a language
+    property rather than an analyzer weakness: C# has no checked exceptions,
+    so nothing in the compilation states what a call can throw. Every catch
+    is therefore written against a guessed throw set, which is why the DAD
+    checklist treats failure behaviour as governing essentially always.

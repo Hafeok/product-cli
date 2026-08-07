@@ -1,0 +1,29 @@
+format: 4
+id: DDD-cs-pol-01
+statement: >
+  For string comparison and for format providers, the SDK's own analyzer set
+  closes pred/code/explicit-policy-argument at build time: no extra package
+  is needed, only severity. CA1305 reports a missing IFormatProvider, CA1307
+  and CA1309 report a missing or non-ordinal StringComparison, and CA1310
+  reports the correctness case.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain with EnableNETAnalyzers,
+  AnalysisLevel=latest, AnalysisMode=All and no package references beyond
+  the SDK. A probe containing `a.Equals(b)`, `n.ToString()` and
+  `int.Parse(s)` drew CA1305 four times, CA1307 twice and CA1309 twice. The
+  DAD §4.1 .editorconfig raises exactly these ids to error, so the
+  arrangement it prescribes is available from the SDK alone.
+falsifier: >
+  A policy-bearing comparison or formatting call under these settings that
+  none of CA1305/CA1307/CA1309/CA1310 reports — leaving a class of omission
+  that severity configuration cannot reach.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "SDK-bundled .NET analyzers at AnalysisLevel=latest, AnalysisMode=All"
+predicate: pred/code/explicit-policy-argument
