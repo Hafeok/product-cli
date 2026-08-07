@@ -1,0 +1,31 @@
+format: 4
+id: DDD-cs-nrt-01
+statement: >
+  With `<Nullable>enable</Nullable>` and `<TreatWarningsAsErrors>true</...>`,
+  the C# compiler's null-state analysis closes pred/code/null-dereference-safety
+  at build time for values whose provenance lies entirely within the
+  compilation. It closes nothing for values entering from outside it — the
+  predicate's observed ground item — and the refining claims enumerate the
+  channels through which they enter.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain. A dereference of a `string?`
+  parameter yields CS8602; assigning it to a `string` local yields CS8600; a
+  non-nullable auto-property left unassigned by the constructor yields
+  CS8618. Under TreatWarningsAsErrors each is a build failure, so within the
+  compilation the tolerance holds. The refining claims each build clean under
+  the same settings and then fault at runtime, which is the same observation
+  from the other side.
+falsifier: >
+  A value whose provenance is entirely inside the compilation, dereferenced
+  while possibly-null, that the analysis does not report — a flow-analysis
+  blind spot in ordinary intra-assembly code rather than at one of the
+  enumerated boundaries.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+predicate: pred/code/null-dereference-safety

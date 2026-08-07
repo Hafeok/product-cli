@@ -1,0 +1,35 @@
+format: 4
+id: DDD-cs-nrt-04
+statement: >
+  The null-forgiving operator `!` exits the closure by assertion, and unlike
+  every other escape in this family it is invisible to the manifest
+  machinery. A `#pragma warning disable` or an .editorconfig severity is a
+  configured rule that `ddd diff` sees and ontology rule 4 makes cite a
+  risk-acceptance record; `!` suppresses no diagnostic, produces no rule id,
+  and appears in no SARIF, so nothing in the governance surface can count the
+  escapes it makes.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain: `string? maybe = null;
+  maybe!.Length` builds clean under Nullable enable plus
+  TreatWarningsAsErrors and throws NullReferenceException. The invisibility
+  is structural rather than observed — `!` is a syntax node, not a
+  diagnostic, so the configured-rule parsers (editorconfig, bicepconfig,
+  cargo lints) and the SARIF ingestion path have no key to join on. This is
+  why the DAD §4.4 escape-site analyzer registers on
+  SuppressNullableWarningExpression directly: a syntax-level check is the
+  only thing that can see it.
+falsifier: >
+  A path by which the existing manifest or SARIF machinery enumerates `!`
+  sites without a purpose-written syntax analyzer — which would make the
+  operator governable by the same mechanism as every other escape.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+predicate: pred/code/null-dereference-safety
+refines:
+  - DDD-cs-nrt-01

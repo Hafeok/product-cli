@@ -1,0 +1,26 @@
+format: 4
+id: DDD-cs-nrt-03
+statement: >
+  The closure does not extend across reflection. A PropertyInfo.SetValue call
+  writes null into a non-nullable reference property with no diagnostic at
+  the call site and none at the later dereference, because the write is
+  invisible to flow analysis.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain.
+  `typeof(Dto).GetProperty("Name")!.SetValue(o, null)` followed by
+  `o.Name.Length` builds clean under Nullable enable plus
+  TreatWarningsAsErrors and throws NullReferenceException at runtime.
+falsifier: >
+  A reflection write of null to a non-nullable property that the runtime or
+  an analyzer rejects under these settings, rather than performing silently.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+predicate: pred/code/null-dereference-safety
+refines:
+  - DDD-cs-nrt-01

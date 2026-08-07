@@ -31,7 +31,14 @@ predicate:
 
   depends_on: []
 
-  closure_claims: []
+  closure_claims:
+    - DDD-cs-nrt-01   # the bounded closure: within the compilation
+    - DDD-cs-nrt-02   # ...not across deserialisation
+    - DDD-cs-nrt-03   # ...not across reflection
+    - DDD-cs-nrt-04   # ...not across `!`, and `!` is unreportable
+    - DDD-cs-nrt-05   # ...not across an unloaded required EF navigation
+    - DDD-cs-nrt-06   # ...but EF scalar materialisation does close it, loudly
+    - DDD-cs-nrt-07   # ...not across unmanaged interop
 
   proxy_gap: >
     Compile-time null-state proxies runtime null-safety. They diverge exactly

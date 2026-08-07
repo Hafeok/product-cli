@@ -1,0 +1,31 @@
+format: 4
+id: DDD-cs-nrt-02
+statement: >
+  The closure does not extend across deserialisation. System.Text.Json
+  assigns a JSON null to a non-nullable reference property without the
+  compiler seeing it, and the idiomatic remedy for CS8618 — initialising the
+  property so the constructor satisfies the analysis — does not prevent the
+  deserialiser from overwriting it with null.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain. `sealed class Dto { public string
+  Name { get; set; } = ""; }` deserialised from `{"Name":null}` builds clean
+  under Nullable enable plus TreatWarningsAsErrors, and `d.Name.Length`
+  throws NullReferenceException at runtime. The `= ""` initialiser is what
+  silences CS8618, so the standard fix for the compiler's own complaint is
+  what leaves the hole unmarked.
+falsifier: >
+  A serializer configuration under these settings that rejects or coerces the
+  null before it reaches the property — making the closure hold across the
+  boundary rather than stopping at it.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "System.Text.Json (net8.0 shared framework)"
+predicate: pred/code/null-dereference-safety
+refines:
+  - DDD-cs-nrt-01
