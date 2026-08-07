@@ -31,7 +31,13 @@ predicate:
 
   depends_on: []
 
-  closure_claims: []
+  closure_claims:
+    - DDD-cs-tc-01   # the closure: between statically typed sites, no opt-in
+    - DDD-cs-tc-02   # dynamic — check deferred to the binder, fails loudly
+    - DDD-cs-tc-03   # object downcast — deferred to the CLR cast check
+    - DDD-cs-tc-04   # Unsafe.As — check removed, no witness at all
+    - DDD-cs-tc-05   # Marshal.PtrToStructure — likewise, and not gated by
+                     #   AllowUnsafeBlocks
 
   proxy_gap: >
     Static conformance proxies runtime type-safety. They diverge wherever the

@@ -1,0 +1,29 @@
+format: 4
+id: DDD-cs-tc-04
+statement: >
+  `Unsafe.As` removes the check rather than deferring it. It reinterprets a
+  reference as an unrelated type with no verification at build time and none
+  at runtime, so a mistyped reference is used as though it conformed and the
+  program continues with a plausible wrong answer instead of a rejection.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain: `object o = new int[]{1,2,3};` then
+  `Unsafe.As<object, string>(ref o).Length` builds clean under
+  TreatWarningsAsErrors, throws nothing, and returns 3 — the array's length
+  field read at the offset where a string keeps its own. The predicate's
+  rejection witness is not merely late here, it does not exist.
+falsifier: >
+  A runtime configuration under these settings in which a reinterpreted
+  reference is type-checked at first use, producing an exception rather than
+  a value read at the wrong offset.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "System.Runtime.CompilerServices.Unsafe (net8.0 shared framework)"
+predicate: pred/code/static-type-conformance
+refines:
+  - DDD-cs-tc-01
