@@ -1,0 +1,32 @@
+format: 2
+id: dec/ddd/correspondence-rows-are-stratified
+title: The correspondence dataset is a surface-stratum sample; the limit is recorded, not removed
+rationale: >
+  Takes the second choice M3/M4 flagged. Logging only classified-surface
+  outcomes is the right default — a row per keystroke-scale non-surface apply
+  would swamp the store, and off-mode exists precisely so a repo can opt out
+  of the machinery. The selectivity stays.
+
+
+  What must not stay implicit is what the selectivity costs. PRD §8 frames
+  these rows as the correspondence dataset — I(V;S) against real interface
+  cost — and the tempting first question of such a dataset is a base rate:
+  what share of edits touch contract surface. DDD-arch-06 says that question
+  is unanswerable here, and a reader who does not know the rows are
+  stratified will answer it anyway and be wrong in a direction that flatters
+  the tool. Filing the limit as a claim is what makes it visible at the point
+  of analysis rather than discoverable only by reading the interceptor.
+
+
+  Consequence accepted: the rows support within-stratum questions — which
+  kinds of surface change, at what reference counts, get declared versus
+  refused — and no question whose denominator is all edits. If a base rate is
+  ever wanted, it needs its own instrument, counting apply calls rather than
+  surface events, and that is a new decision rather than a reinterpretation
+  of these rows.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-arch-06
+    status: reported
+    changed: 2026-08-07
+date: 2026-08-07

@@ -1,0 +1,36 @@
+format: 2
+id: dec/ddd/enforce-matching-tightens-to-symbol
+title: Enforce-mode declaration matching tightens to symbol granularity; warn mode keeps the file arm
+rationale: >
+  Takes the choice M3/M4 flagged for this milestone. In enforce mode the file
+  arm of match_declarations is too broad to sustain what enforce mode claims:
+  a declaration authored about one symbol should not admit an unexamined
+  change to a different symbol that happens to share a file. Enforce mode
+  should match on symbol identity alone, and demand a declaration per
+  undeclared symbol.
+
+
+  Warn mode keeps the file arm. There the declaration is advisory, the edit
+  applies either way, and the broad arm costs only a slightly generous link
+  on a row that was going to be written regardless. Paying symbol-granular
+  friction for an advisory mode buys nothing.
+
+
+  Priced, not paid, in M5. No code changed here: this milestone is curation,
+  and the change is adapter-adjacent work with its own tests. It lands in M6
+  alongside the Rust adapter, when this workspace first has an enforce-mode
+  surface of its own to run it against. Until then the exposure stands as
+  DDD-arch-05 describes it, and this repo's global posture is `intercept:
+  warn`, where the arm is the intended behaviour rather than a gap.
+
+
+  The correspondence rows are the check: once M6 lands, a row whose
+  linked_declaration names a symbol other than the row's own should not
+  occur in enforce mode. That is both the acceptance test for the change and
+  the falsifier for the claim.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-arch-05
+    status: projected
+    changed: 2026-08-07
+date: 2026-08-07

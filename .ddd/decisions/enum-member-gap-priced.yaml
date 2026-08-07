@@ -1,0 +1,36 @@
+format: 2
+id: dec/ddd/enum-member-gap-priced
+title: The C# enum-member gap is a named policy-table hole, priced now and closed in M6
+rationale: >
+  Takes the third choice M3/M4 flagged. DDD-adapter-03 establishes that the
+  §9.1 table is wrong by omission rather than by a wrong row: enum-member
+  addition is contract-forming and the table cannot see it.
+
+
+  Exposure, stated. In a governed C# repo with the DAD §4.1 store on, adding
+  a public enum member breaks every consumer whose switch expression was
+  exhaustive, at error severity — and the interceptor applies the edit with
+  no demand and writes no correspondence row, because the symbol is dropped
+  before classification. So the gap is silent twice: no seam demanded, and no
+  trace in the dataset that would later reveal the miss. The blast radius is
+  bounded by the fact that the consumer break is a compile error rather than
+  a runtime fault, so it surfaces at the next build of the consumer — late,
+  but not in production.
+
+
+  Not paid in M5. Adding `enum-member` to DECL_KINDS plus a policy row is
+  adapter work with its own classifier tests, and this milestone is curation.
+  It lands in M6. The change is small, and if the exposure is judged to
+  outweigh the scope line it can be pulled forward — that is a call for the
+  principal, not a reason to widen M5.
+
+
+  This is what dec/ddd/adapter-policy-tables predicted: a wrong row gets
+  fixed in the adapter, never in the core. It is the first time the
+  prediction has been tested, and the fix is indeed adapter-local.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-adapter-03
+    status: reported
+    changed: 2026-08-07
+date: 2026-08-07
