@@ -24,3 +24,9 @@ tests/__pycache__/
 
 # Playwright MCP scratch (headless browser profile/output)
 .playwright-mcp/
+
+# MSBuild intermediates under the C# fixture. A real `dotnet build` only runs
+# for the DDD_LSP_E2E and SARIF-regeneration tests (committed SARIF covers CI),
+# but an editor's C# language server restores the project on sight.
+ddd-cli/tests/fixtures/csharp/obj/
+ddd-cli/tests/fixtures/csharp/bin/
