@@ -36,6 +36,7 @@ predicate:
     - DDD-cs-disp-03   # async — open only where both interfaces are implemented
     - DDD-cs-disp-04   # container hand-off — open, seen by nothing
     - DDD-cs-disp-05   # the inferred ground item, observed: CA2000 errs both ways
+    - DDD-cs-disp-06   # HttpClient — the proxy gap instantiated, not a violation
 
   proxy_gap: >
     Lexically scoped disposal proxies lifetime correctness. They diverge

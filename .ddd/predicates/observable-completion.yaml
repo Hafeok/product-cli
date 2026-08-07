@@ -1,0 +1,46 @@
+predicate:
+  id: pred/code/observable-completion
+  format: 1
+  name: Observable completion
+  statement: >
+    Accept code c iff every asynchronous operation started in c returns a
+    handle by which some caller can observe its completion and its failure,
+    rather than being started into the void.
+
+  artifact_class: code
+
+  ground:
+    - fact: the return type of each asynchronous operation and whether a
+        caller retains it
+      provenance: controlled
+    - fact: which started operations are awaited, stored, or otherwise joined
+        somewhere in the program
+      provenance: inferred
+    - fact: whether an unobserved failure crashed the process or was lost
+      provenance: observed
+
+  tolerance: >
+    No `async void` outside an event-handler signature required by a
+    framework, and no discarded Task. A started operation whose failure has
+    no observer is a reject even when it succeeds in practice.
+
+  rejection_witness: >
+    The operation, its declaration site, and the absence of any caller
+    retaining its completion handle.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-cs-obs-01   # open — nothing in the SDK set reports it
+
+  proxy_gap: >
+    Returning a Task proxies observability. A caller can hold the handle and
+    still never await it, or discard it explicitly, which satisfies the
+    signature while losing the failure exactly as `async void` does.
+
+  notes: >
+    An `async void` failure does not surface at the call site: the exception
+    is posted to the synchronization context and, with none installed, tears
+    down the process. That asymmetry is why this is a distinct predicate
+    rather than a policy argument — nothing is being defaulted, the channel
+    for observing the outcome simply does not exist.

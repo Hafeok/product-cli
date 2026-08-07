@@ -1,0 +1,32 @@
+format: 4
+id: DDD-cs-pol-04
+statement: >
+  Cancellation is a policy argument too, and CA2016 closes only half of it.
+  The rule reports a method that holds a CancellationToken and calls an
+  overload accepting one without forwarding it — omission where the policy
+  was available. It reports nothing about a method that exposes no token at
+  all, so "this operation cannot be cancelled" is never surfaced as a choice.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain, three cases. A method holding `ct` and
+  calling `Inner()` on an overload with an optional token drew
+  `CA2016: Forward the 'ct' parameter to the 'Inner' method or pass in
+  'CancellationToken.None' explicitly to indicate intentionally not
+  propagating the token`. Passing CancellationToken.None explicitly silenced
+  it, which is the rule's stated design. An async method exposing no token
+  parameter at all drew nothing.
+falsifier: >
+  A rule reachable by severity configuration alone that reports an async
+  operation exposing no cancellation, which would extend this closure from
+  forwarding to presence.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "SDK-bundled .NET analyzers at AnalysisLevel=latest, AnalysisMode=All"
+predicate: pred/code/explicit-policy-argument
+refines:
+  - DDD-cs-pol-03

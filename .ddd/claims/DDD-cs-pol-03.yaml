@@ -1,0 +1,27 @@
+format: 4
+id: DDD-cs-pol-03
+statement: >
+  The continuation context is a policy argument, and CA2007 closes it. An
+  await that does not name a ConfigureAwait policy takes
+  SynchronizationContext.Current — an ambient value — so it falls under
+  pred/code/explicit-policy-argument on the same terms as culture and
+  comparison, and the SDK rule reports every such site.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain: every unqualified await in the probe
+  drew CA2007, six occurrences across the file, with no package beyond the
+  SDK. Routing note — the DAD checklist files this under "async shape", but
+  the relation is the policy-argument one: an ambient default taken silently
+  at a call site that has an overload for naming it.
+falsifier: >
+  An await under these settings whose continuation context is left to the
+  ambient value and that CA2007 does not report.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "SDK-bundled .NET analyzers at AnalysisLevel=latest, AnalysisMode=All"
+predicate: pred/code/explicit-policy-argument

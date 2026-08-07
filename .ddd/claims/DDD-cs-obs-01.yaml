@@ -1,0 +1,29 @@
+format: 4
+id: DDD-cs-obs-01
+statement: >
+  pred/code/observable-completion is open in the SDK analyzer set. `async
+  void` and its invocation draw no diagnostic at AnalysisMode=All, so the
+  shape the DAD checklist lists first under async escapes is invisible to the
+  arrangement that closes ConfigureAwait in the same file. Closing it needs
+  an added analyzer package, which is a dependency decision rather than a
+  severity one.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain: `internal static async void
+  FireAndForget() => await Task.Delay(1).ConfigureAwait(false);` and a
+  caller invoking it produced no diagnostic, in a build where CA2007 fired on
+  unqualified awaits elsewhere. DAD §4.1 names
+  Microsoft.VisualStudio.Threading.Analyzers as the package carrying the
+  rule; it was not exercised here, so no rule id is cited for it.
+falsifier: >
+  An SDK-bundled rule at some AnalysisMode that reports `async void` or a
+  discarded Task, which would make this closable by severity alone.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "SDK-bundled .NET analyzers at AnalysisLevel=latest, AnalysisMode=All"
+predicate: pred/code/observable-completion

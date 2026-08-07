@@ -33,6 +33,8 @@ predicate:
   closure_claims:
     - DDD-cs-pol-01   # closed for comparison + culture by CA1305/1307/1309
     - DDD-cs-pol-02   # ...but not for the ambient clock
+    - DDD-cs-pol-03   # continuation context — closed by CA2007
+    - DDD-cs-pol-04   # cancellation — CA2016 closes forwarding, not presence
 
   proxy_gap: >
     Explicitness proxies correctness. A call can name a policy and name the

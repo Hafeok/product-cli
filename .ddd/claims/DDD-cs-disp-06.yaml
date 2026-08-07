@@ -1,0 +1,37 @@
+format: 4
+id: DDD-cs-disp-06
+statement: >
+  HttpClient lifetime instantiates pred/code/deterministic-disposal's proxy
+  gap rather than violating the predicate. A per-call `using var http = new
+  HttpClient()` satisfies the predicate completely — lexical ownership,
+  disposal once on every path, no diagnostic from any rule — and is
+  nonetheless the wrong lifetime. No strengthening of the disposal check can
+  reach it, because with respect to disposal the code is correct.
+status: reported
+evidence: >
+  Demonstrated on the indexed toolchain: a method containing `using var http
+  = new HttpClient();` drew no CA2000, no CA1001 and no lifetime diagnostic
+  of any kind at AnalysisMode=All; the only rule that fired on the method was
+  CA2234, about passing a Uri rather than a string. So both halves hold —
+  the predicate is satisfied and nothing objects.
+
+
+  Cited, not exercised: that the per-call lifetime is wrong rests on
+  Microsoft's documented guidance to reuse a client or resolve one from
+  IHttpClientFactory, because disposal leaves the underlying connection in
+  TIME_WAIT. No load test was run here, so the harm is attributed rather than
+  observed, and the claim should not be read as reporting it.
+falsifier: >
+  A rule reachable under these settings that reports a per-call HttpClient
+  construction — which would mean the case is checkable after all, just not
+  by the disposal predicate. Or guidance revising the lifetime advice, which
+  would remove the gap by making the satisfied check also the correct one.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "SDK-bundled .NET analyzers at AnalysisLevel=latest, AnalysisMode=All"
+predicate: pred/code/deterministic-disposal
