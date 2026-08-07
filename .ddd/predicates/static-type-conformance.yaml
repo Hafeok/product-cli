@@ -1,0 +1,45 @@
+predicate:
+  id: pred/code/static-type-conformance
+  format: 1
+  name: Static type conformance
+  statement: >
+    Accept code c iff every value flowing to a typed use site in c is
+    statically known to conform to that site's declared type in G, with no
+    conversion deferred to runtime.
+
+  artifact_class: code
+
+  ground:
+    - fact: the declared types of every member, expression and conversion in
+        c and in the assemblies it references
+      provenance: controlled
+    - fact: the compiler's type inference and conversion-legality analysis
+      provenance: controlled
+    - fact: the runtime type of values entering c through untyped channels —
+        dynamic dispatch, downcasts from object, reflection invocation,
+        unmanaged interop marshalling
+      provenance: observed
+
+  tolerance: >
+    Exact. Every conversion reaching a use site is either statically verified
+    or an explicit narrowing that a governing decision names; an unchecked
+    conversion is a reject regardless of whether it succeeds in practice.
+
+  rejection_witness: >
+    The use site, the value path reaching it, and the declared type the
+    path's static type does not conform to.
+
+  depends_on: []
+
+  closure_claims: []
+
+  proxy_gap: >
+    Static conformance proxies runtime type-safety. They diverge wherever the
+    type system is exited by design, where the check does not disappear but
+    moves to runtime — surfacing as an InvalidCastException or a binder
+    failure at the use site rather than a diagnostic at the conversion.
+
+  notes: >
+    Distinct from pred/data/shape-conformance-style predicates over payloads:
+    c here ranges over code and G over the type system, so the question is
+    what the compiler can prove, not what a validator checks at a boundary.

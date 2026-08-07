@@ -1,0 +1,48 @@
+predicate:
+  id: pred/code/deterministic-disposal
+  format: 1
+  name: Deterministic disposal
+  statement: >
+    Accept code c iff every disposable instance c owns is disposed exactly
+    once before its owner becomes unreachable, on every path through c
+    including exceptional ones, given the ownership relation in G.
+
+  artifact_class: code
+
+  ground:
+    - fact: the set of paths through c, including exceptional ones
+      provenance: controlled
+    - fact: which scope owns each disposable instance — the obligation to
+        dispose it rather than merely hold a reference to it
+      provenance: inferred
+    - fact: the actual lifetime of instances whose owner is a field, a
+        container-managed scope, or a caller the instance was handed to
+      provenance: observed
+
+  tolerance: >
+    Exactly once, on every path including exceptional ones. Zero disposals is
+    a leak and two is a use-after-dispose hazard; both are rejects. A
+    disposable whose owner cannot be located is a reject, not a pass.
+
+  rejection_witness: >
+    The instance and its allocation site, plus a path on which Dispose or
+    DisposeAsync is not reached — or is reached a second time.
+
+  depends_on: []
+
+  closure_claims: []
+
+  proxy_gap: >
+    Lexically scoped disposal proxies lifetime correctness. They diverge
+    whenever the lifetime is not lexical: an instance held in a field, one
+    whose disposal is awaited across a suspension point, or one whose
+    ownership is transferred to a caller or a DI container. In those cases
+    the lexical check is satisfiable while the obligation is unmet, and
+    unsatisfiable while the obligation is met.
+
+  notes: >
+    The inferred ground item is the load-bearing one. C# expresses lifetime
+    lexically but has no way to express ownership, so any checker must infer
+    who is obliged to dispose. That inference is why disposal analyzers are
+    noisy in both directions, and it is a property of the language's ground,
+    not of any particular analyzer's quality.
