@@ -1,4 +1,4 @@
-format: 1
+format: 2
 id: dec/ddd/v1-scope
 title: "v1 scope: local repo, C# + Bicep, build-output detection first"
 rationale: >
@@ -9,5 +9,12 @@ rationale: >
   lowest.
 principal: Emil (Context&)
 based_on:
-  - DDD-scope-01
+  - claim: DDD-scope-01
+    status: reported
+    changed: 2026-08-02
 date: 2026-08-02
+notes: >
+  Pin backfilled at M5 from git, not from the present: the decision was filed
+  in 136aa55 (2026-08-02) and DDD-scope-01 has not been touched since, so
+  the status and changed values above are the claim's state at decision time,
+  recovered rather than assumed. Not a re-decision.
