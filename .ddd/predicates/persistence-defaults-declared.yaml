@@ -1,0 +1,49 @@
+predicate:
+  id: pred/data/persistence-defaults-declared
+  format: 1
+  name: Persistence defaults declared
+  statement: >
+    Accept a persistence model c iff every behaviour the mapping layer will
+    otherwise supply on its own — change tracking, cascade on delete,
+    concurrency control — is stated in c, rather than left to the default the
+    modelling conventions in G apply.
+
+  artifact_class: data
+
+  ground:
+    - fact: the model as configured, and the conventions the mapper applies
+        to everything left unconfigured
+      provenance: controlled
+    - fact: which entities are in fact modified concurrently, and which
+        deletions are meant to propagate
+      provenance: observed
+
+  tolerance: >
+    Every one of the three behaviours stated per entity. Silence is a reject:
+    the conventions will supply a value, and a value nobody chose is the
+    escape this predicate exists to catch.
+
+  rejection_witness: >
+    The entity, the behaviour left unstated, and the convention-supplied
+    value that took effect.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-cs-ef-01     # tracking and cascade default silently
+    - DDD-cs-conc-01   # no concurrency token means last-write-wins, silently
+    - DDD-cs-conc-02   # ...and the closure available is a model assertion
+
+  proxy_gap: >
+    A stated model proxies correct persistence behaviour. Cascade can be
+    declared and declared wrong; a concurrency token can be present and never
+    incremented, which satisfies the model check while losing the update
+    anyway.
+
+  notes: >
+    Unlike most predicates in this seed, the ground here is entirely readable
+    at startup: the model is a queryable object. That is why the closure
+    available is a model assertion rather than an analyzer rule or a review
+    protocol — the same mode as pred/composition/convention-mapping's
+    coverage obligation, and it carries the same condition, that the
+    assertion has to actually run.
