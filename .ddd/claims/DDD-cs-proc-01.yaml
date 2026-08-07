@@ -1,0 +1,28 @@
+format: 4
+id: DDD-cs-proc-01
+statement: >
+  pred/execution/failure-policy-declared is open, and worse than open for
+  most of its elements: the platform client supplies a silent default for
+  timeout and has no concept at all of retry, backoff or idempotency, so
+  those elements are not merely unset but unrepresentable on the type that
+  makes the call.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain: `new HttpClient().Timeout` is
+  00:01:40 — a hundred-second default no caller chose — and the type exposes
+  no retry, backoff or idempotency surface whatever, so there is nothing for
+  a checker to find unset. Nothing in the SDK analyzer set reports a
+  boundary call lacking a failure policy.
+falsifier: >
+  A rule reachable by severity configuration that reports an unpoliced
+  process-boundary call, or a platform client that represents the missing
+  elements so their absence becomes detectable.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "System.Net.Http (net8.0 shared framework)"
+predicate: pred/execution/failure-policy-declared

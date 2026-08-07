@@ -1,0 +1,33 @@
+format: 4
+id: DDD-cs-ser-01
+statement: >
+  Every element of pred/data/serialisation-contract-declared defaults
+  silently under System.Text.Json, and nothing reports the omission. Member
+  naming, enum representation, null handling, temporal format and
+  unknown-member handling are all supplied by the serialiser when unset, with
+  no diagnostic at build time and no failure at run time — so the contract
+  exists and is authored by the library rather than by the repo.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain with default JsonSerializerOptions.
+  Serialising a DTO produced
+  `{"Name":"ada","State":1,"When":"2026-08-07T13:00:00Z","Discount":null}` —
+  member names carried through unchanged rather than camel-cased, the enum
+  emitted as the ordinal 1 rather than "Closed", a null property included
+  rather than omitted, and an ISO-8601 instant. Deserialising
+  `{"Name":"bob","Unknown":"ignored silently"}` succeeded, the unknown member
+  discarded without error. Five contract elements, five defaults, no
+  diagnostic.
+falsifier: >
+  A default configuration under these settings that reports or rejects any
+  unset contract element, or a serialiser whose defaults are versioned as
+  part of the consuming repo rather than the library.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "System.Text.Json (net8.0 shared framework)"
+predicate: pred/data/serialisation-contract-declared
