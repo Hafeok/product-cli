@@ -34,9 +34,74 @@ pub struct SeamDeclaration {
     pub notes: Option<String>,
 }
 
+/// Whether filing created a new entry or revised one already filed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Filed {
+    Created,
+    Amended,
+}
+
+impl Filed {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Created => "filed",
+            Self::Amended => "amended",
+        }
+    }
+}
+
+/// The path a declaration id files to, under a `.ddd/seams/` directory.
+pub fn path_for(seams_dir: &std::path::Path, id: &str) -> std::path::PathBuf {
+    let slug: String = id
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c.to_ascii_lowercase() } else { '-' })
+        .collect();
+    seams_dir.join(format!("{slug}.yaml"))
+}
+
+/// Read the declaration filed at `path`, when one is.
+pub fn load_at(path: &std::path::Path) -> Option<SeamDeclaration> {
+    let text = std::fs::read_to_string(path).ok()?;
+    serde_yaml::from_str(&text).ok()
+}
+
+/// Resolve the create-vs-amend intent, the way the declare tools do
+/// (`dec/ddd/amend-explicit-evidence-frozen`): `amend` requires an entry to
+/// exist, and its absence requires that none does.
+pub fn resolve_intent(
+    path: &std::path::Path,
+    id: &str,
+    amend: bool,
+) -> Result<Option<SeamDeclaration>, String> {
+    match (amend, path.exists()) {
+        (false, true) => {
+            Err(format!("{id} is already filed — pass `amend: true` to revise it"))
+        }
+        (true, false) => Err(format!("nothing is filed at {id} — drop `amend` to file it")),
+        (true, true) => load_at(path)
+            .map(Some)
+            .ok_or_else(|| format!("{id} is filed but unreadable")),
+        (false, false) => Ok(None),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_slug_is_derived_from_the_id() {
+        let p = path_for(std::path::Path::new("/x/seams"), "seam/what/payments-api");
+        assert!(p.ends_with("seam-what-payments-api.yaml"), "{p:?}");
+    }
+
+    #[test]
+    fn intent_refuses_a_create_over_a_file_and_an_amend_over_nothing() {
+        let dir = std::path::Path::new("/definitely/not/here");
+        let p = path_for(dir, "seam/x/y");
+        assert!(resolve_intent(&p, "seam/x/y", false).expect("create").is_none());
+        assert!(resolve_intent(&p, "seam/x/y", true).is_err());
+    }
 
     #[test]
     fn parses_with_free_form_metadata() {

@@ -23,6 +23,8 @@ mod framework_read_handlers;
 mod framework_scaffold_handlers;
 mod framework_write_handlers;
 mod scope_handlers;
+mod what_declare;
+pub mod what_intercept;
 mod pf_mcp;
 pub mod stdio;
 pub mod http;

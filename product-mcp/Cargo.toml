@@ -18,6 +18,9 @@ workspace = true
 
 [dependencies]
 product-core = { path = "../product-core", version = "0.6.0" }
+# The `.ddd/` governance store, for What write-time interception. Pure
+# library (no clap/LSP/MCP); product-core stays ddd-free for downstream.
+ddd-core     = { path = "../ddd-core", version = "0.6.0" }
 serde      = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_yaml = "0.9"

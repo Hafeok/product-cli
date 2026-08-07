@@ -56,7 +56,7 @@ const CONTROL_TOOLS: [&str; 3] =
 /// The home phase a tool belongs to, by name prefix (the single source of truth
 /// for gating; control tools are handled separately and are always visible).
 pub fn phase_of(name: &str) -> Phase {
-    const WHAT: [&str; 6] = [
+    const WHAT: [&str; 7] = [
         "product_product_",
         "product_domain_",
         "product_decider_",
@@ -64,6 +64,9 @@ pub fn phase_of(name: &str) -> Phase {
         "product_primitive_",
         // Authoring scopes are an intake / What concept (§14).
         "product_scope_",
+        // The declaration the What interceptor demands must be fileable in
+        // the phase whose writes it gates.
+        "product_what_declare",
     ];
     const HOW: [&str; 8] = [
         "product_how_",
@@ -333,6 +336,7 @@ mod tests {
         assert_eq!(phase_of("product_domain_new"), Phase::What);
         assert_eq!(phase_of("product_decider_validate"), Phase::What);
         assert_eq!(phase_of("product_scope_add"), Phase::What);
+        assert_eq!(phase_of("product_what_declare"), Phase::What);
         assert_eq!(phase_of("product_scope_enforce"), Phase::What);
         assert_eq!(phase_of("product_how_show"), Phase::How);
         assert_eq!(phase_of("product_how_add"), Phase::How);

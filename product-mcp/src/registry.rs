@@ -103,7 +103,15 @@ impl ToolRegistry {
         } else {
             None
         };
-        dispatch_tool(name, args, repo_root)
+        // A What write is judged inside the lock: applied, classified, and
+        // rolled back when it forms an undeclared boundary.
+        match crate::what_intercept::before(name, args, repo_root) {
+            Some(guard) => {
+                let outcome = dispatch_tool(name, args, repo_root);
+                crate::what_intercept::after(guard, outcome, repo_root)
+            }
+            None => dispatch_tool(name, args, repo_root),
+        }
     }
 
     /// Handle a JSON-RPC request in workflow mode against a session context.
@@ -230,6 +238,7 @@ fn dispatch_what(name: &str, args: &Value, repo_root: &Path) -> Option<Result<Va
         "product_domain_new" => dm::handle_domain_new(args, repo_root),
         "product_domain_edit" => dm::handle_domain_edit(args, repo_root),
         "product_domain_rm" => dm::handle_domain_rm(args, repo_root),
+        "product_what_declare" => crate::what_declare::declare(args, repo_root),
         "product_decider_list" => dc::handle_decider_list(args, repo_root),
         "product_decider_show" => dc::handle_decider_show(args, repo_root),
         "product_decider_validate" => dc::handle_decider_validate(args, repo_root),

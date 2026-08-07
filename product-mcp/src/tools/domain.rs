@@ -7,6 +7,7 @@ pub(super) fn all() -> Vec<ToolDef> {
     let mut tools = read_query_tools();
     tools.extend(read_inspect_tools());
     tools.extend(write_tools());
+    tools.push(what_declare_tool());
     tools
 }
 
@@ -32,6 +33,24 @@ fn read_query_tools() -> Vec<ToolDef> {
             }),
         },
     ]
+}
+
+/// `product_what_declare` — the declaration the What interceptor demands.
+fn what_declare_tool() -> ToolDef {
+    ToolDef {
+        name: "product_what_declare".to_string(),
+        description: "File the seam declaration a What boundary demands (lands in .ddd/seams/, resolvable by `ddd why`). Pass amend:true to revise one already filed.".to_string(),
+        requires_write: true,
+        input_schema: serde_json::json!({"type": "object", "properties": {
+            "id": {"type": "string", "description": "seam/<area>/<name>"},
+            "element": {"type": "string", "description": "The What element id this declares; required when filing"},
+            "boundary": {"type": "string"},
+            "verdict_knowledge": {"type": "string", "description": "What the boundary encodes about the verdict — author this; it is never pre-filled"},
+            "obligations": {"type": "array", "items": {"type": "string"}},
+            "notes": {"type": "string"},
+            "amend": {"type": "boolean"}
+        }, "required": ["id"]}),
+    }
 }
 
 fn read_inspect_tools() -> Vec<ToolDef> {
