@@ -1,0 +1,17 @@
+format: 2
+id: dec/ddd/why-resolves-three-ways
+title: why separates an unknown id from a detected-but-unfiled rule
+rationale: >
+  `why` loads the detected state alongside the store and resolves three ways:
+  resolved, detected-but-unfiled, and genuinely unknown. The unfiled case
+  names how the rule was detected, reusing the diff's own sources line so the
+  two commands cannot disagree about detection. It stays non-zero — an
+  ungoverned detected rule is a real escape — but reads as a governance
+  failure rather than a lookup failure. Same resolution over CLI and MCP,
+  per PRD §8.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-method-03
+    status: projected
+    changed: 2026-08-07
+date: 2026-08-07

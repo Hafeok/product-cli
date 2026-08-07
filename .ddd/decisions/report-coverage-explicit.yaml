@@ -1,0 +1,17 @@
+format: 2
+id: dec/ddd/report-coverage-explicit
+title: Escape-report sections state their coverage; uncheckable is a note, not an escape
+rationale: >
+  Every section of `ddd report escapes` separates checked-and-clean from
+  not-checkable and names the uncheckable set — unpinned basedOn edges in
+  basis loss, claims carrying no revalidate_by in cadence. Coverage is
+  reported as a note and never fails the gate: formats 1-3 are all valid to
+  `validate`, so counting unpinned edges as escapes would break CI for every
+  format-1 repo and punish a supported format. `ddd render` already annotates
+  per edge and needs no change.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-method-03
+    status: projected
+    changed: 2026-08-07
+date: 2026-08-07

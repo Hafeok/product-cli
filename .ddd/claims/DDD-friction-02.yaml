@@ -1,0 +1,14 @@
+format: 2
+id: DDD-friction-02
+statement: >
+  A declaration surface with no in-surface amend path pushes the agent to
+  either leave a warned entry uncorrected or hand-edit the YAML outside the
+  interceptor; the second defeats the interceptor's guarantee that
+  declarations and the edits they cover move together.
+status: projected
+falsifier: >
+  Dogfood sessions in which agents neither hand-edit declaration YAML nor
+  leave warned entries uncorrected — i.e. the missing amend path costs
+  nothing in practice.
+owner: none
+changed: 2026-08-07

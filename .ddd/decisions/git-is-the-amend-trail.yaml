@@ -1,0 +1,14 @@
+format: 2
+id: dec/ddd/git-is-the-amend-trail
+title: Amendments leave no in-file trail; the committed graph's history is the record
+rationale: >
+  `.ddd/` is committed, so git already carries who amended what and when. An
+  in-file `amended:` counter or history block duplicates that record and adds
+  a field that can drift from it. Revisit if the graph ever gains a backing
+  store that is not under version control.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-method-04
+    status: projected
+    changed: 2026-08-07
+date: 2026-08-07

@@ -1,0 +1,12 @@
+format: 2
+id: DDD-method-03
+statement: >
+  A governance report that renders "not checkable" identically to "checked
+  and clean" manufactures false assurance: the reader cannot separate
+  coverage from conformance, and acts on the stronger reading.
+status: projected
+falsifier: >
+  A repo where surfacing the uncheckable set changed no reader's action —
+  i.e. the silent form was never in fact read as an all-clear.
+owner: none
+changed: 2026-08-07

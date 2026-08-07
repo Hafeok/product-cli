@@ -1,0 +1,21 @@
+format: 2
+id: dec/ddd/amend-explicit-evidence-frozen
+title: Declarations amend through an explicit flag; LSP-derived evidence is frozen
+rationale: >
+  declare_seam, declare_pattern and accept_risk take `amend: true`, which
+  files only over an existing id and errors on a missing one, so create and
+  amend cannot be confused in either direction and no silent upsert exists.
+  Judgement fields amend and omitted fields are preserved: verdict_knowledge,
+  obligations, obligation answers, boundary, rationale, notes. Identity and
+  LSP-derived evidence — id, contract_location, metadata — carry forward from
+  the filed entry and are ignored if supplied, because the correspondence
+  dataset is only evidence while those fields stay machine-authored.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-friction-02
+    status: projected
+    changed: 2026-08-07
+  - claim: DDD-arch-04
+    status: projected
+    changed: 2026-08-07
+date: 2026-08-07

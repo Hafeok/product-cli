@@ -1,0 +1,13 @@
+format: 2
+id: DDD-method-04
+statement: >
+  For a graph committed to version control, the VCS history already answers
+  who amended what and when, so an in-file mutation counter duplicates the
+  record while adding a field that can drift from it.
+status: projected
+falsifier: >
+  An amendment whose authorship or motive could not be recovered from git
+  history in practice — for instance entries rewritten by tooling inside
+  bulk commits.
+owner: none
+changed: 2026-08-07

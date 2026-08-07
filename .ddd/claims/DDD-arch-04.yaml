@@ -1,0 +1,13 @@
+format: 2
+id: DDD-arch-04
+statement: >
+  The correspondence rows are usable as evidence about contract-surface
+  change only while their structural fields stay machine-authored; any
+  authoring path that lets a declarant rewrite symbol, kind, signature, or
+  reference count makes the dataset unfalsifiable.
+status: projected
+falsifier: >
+  A study over the rows in which declarant-supplied structural fields
+  proved as reliable as the LSP-derived ones.
+owner: none
+changed: 2026-08-07
