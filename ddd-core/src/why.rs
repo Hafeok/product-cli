@@ -4,11 +4,44 @@
 //! id to decision → rationale → principal → basedOn claims, rendered as
 //! readable text (PRD §7). Diagnostic ids resolve both fully qualified
 //! (`analyzers/CA2007`) and bare (`CA2007`).
+//!
+//! Resolution is three-way (`dec/ddd/why-resolves-three-ways`): a miss on
+//! the store is not necessarily an unknown id. When detection knows the
+//! rule but the manifest does not, that is an ungoverned rule, and saying
+//! "not found" would read as a missing decision rather than a missing
+//! mapping.
 
 use crate::claim::Claim;
 use crate::decision::{Decision, DecisionKind};
+use crate::detect::DetectedState;
 use crate::manifest::{ManifestRule, ManifestSet, UNGOVERNED};
 use crate::store::DddStore;
+
+/// The three outcomes of resolving an id.
+#[derive(Debug)]
+pub enum WhyResolution {
+    /// The id resolved; the chain is rendered.
+    Resolved(String),
+    /// Detection knows the rule but no manifest entry maps it — an escape,
+    /// not a lookup failure.
+    DetectedUnfiled { namespace: String, rule_id: String, sources: String },
+    /// Nothing in the graph or in detection knows this id.
+    NotFound,
+}
+
+/// Resolve `id` against the store, falling back to `detected` so an
+/// ungoverned rule reports as such rather than as an unknown id.
+pub fn resolve_why(store: &DddStore, detected: Option<&DetectedState>, id: &str) -> WhyResolution {
+    if let Some(text) = render_why(store, id) {
+        return WhyResolution::Resolved(text);
+    }
+    if let Some(d) = detected {
+        if let Some((ns, rule_id, sources)) = crate::diff::find_detected(d, id) {
+            return WhyResolution::DetectedUnfiled { namespace: ns, rule_id, sources };
+        }
+    }
+    WhyResolution::NotFound
+}
 
 /// Render the governance chain behind `id`, or `None` when nothing matches.
 pub fn render_why(store: &DddStore, id: &str) -> Option<String> {

@@ -111,8 +111,8 @@ instances, seam declarations, and interception event rows
 cargo run -p ddd-cli -- init        # scaffold .ddd/
 ddd validate                        # schema + ontology rules (CI gate)
 ddd diff --sarif build.sarif        # declared vs. detected rules (CI gate)
-ddd report escapes                  # diff + cadence + basis-loss report
-ddd why CA2007                      # rule -> decision -> principal -> claims
+ddd report escapes                  # diff + cadence + basis-loss report, each section stating its coverage
+ddd why CA2007                      # rule -> decision -> principal -> claims (or: detected but unfiled)
 ddd render                          # static self-contained HTML projection of the graph
 ddd serve                           # the ddd_* MCP surface (stdio)
 ddd warmup                          # pre-load the LSP hosts (Roslyn solution load)
@@ -128,6 +128,13 @@ language intelligence for C# (`roslyn-language-server --stdio
 SARIF path uses), `signature`, `rename` (computes; application funnels
 through the interceptor) — plus the governance tools `why`, `graph_query`,
 `declare_seam`, `declare_pattern`, `accept_risk`.
+
+The three `declare`/`accept` tools take `amend: true` to revise an entry
+already filed. The flag is explicit in both directions — a create never
+silently overwrites, an amend never silently creates — and the split is by
+field: judgement amends (`verdict_knowledge`, obligation answers, rationale),
+while identity and LSP-derived evidence (`contract_location`, `metadata`) are
+carried forward untouched, so the interception rows stay machine-authored.
 
 `ddd_apply_edit` runs every edit through the per-language contract-surface
 classifier (policy tables, PRD §9): non-surface edits apply; a surface edit

@@ -182,6 +182,18 @@ fn cited_suppression(store: &DddStore, entry: Option<&crate::manifest::ManifestR
 
 /// Name which source(s) saw the rule; single-source coverage is stated
 /// because config parsing is deliberately partial (PRD §7).
+/// Find a detected rule by fully-qualified (`analyzers/CA2007`) or bare
+/// (`CA2007`) id, returning its namespace, rule id, and the same
+/// how-detected line `diff` prints — so `why` and `diff` cannot disagree
+/// about detection (`dec/ddd/why-resolves-three-ways`).
+pub fn find_detected(detected: &DetectedState, id: &str) -> Option<(String, String, String)> {
+    detected
+        .rules
+        .iter()
+        .find(|((ns, rule_id), _)| id == rule_id || id == format!("{ns}/{rule_id}"))
+        .map(|((ns, rule_id), rule)| (ns.clone(), rule_id.clone(), sources_line(rule)))
+}
+
 fn sources_line(rule: &DetectedRule) -> String {
     match (&rule.configured, &rule.emitted) {
         (Some(c), Some((level, n, s))) => format!(

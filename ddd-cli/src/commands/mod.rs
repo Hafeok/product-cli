@@ -58,6 +58,9 @@ pub enum Commands {
     Why {
         /// A decision, claim, diagnostic (rule), pattern, or seam id
         id: String,
+        /// SARIF file(s) with emitted diagnostics (adds to config detect.sarif)
+        #[arg(long, value_name = "FILE")]
+        sarif: Vec<PathBuf>,
     },
 }
 
@@ -86,7 +89,7 @@ pub fn run(cmd: Commands, root: Option<PathBuf>) -> Result<()> {
         Commands::Serve => serve::run(root),
         Commands::Validate => validate::run(root),
         Commands::Warmup { language, timeout } => serve::warmup(root, language, timeout),
-        Commands::Why { id } => why::run(root, &id),
+        Commands::Why { id, sarif } => why::run(root, &id, sarif),
     }
 }
 

@@ -17,6 +17,18 @@ pub fn run(root: Option<PathBuf>, sarif: Vec<PathBuf>, today: Option<String>) ->
 }
 
 fn print_report(report: &EscapesReport, today: &str) {
+    print_diff(report);
+    print_cadence(report, today);
+    print_basis(report);
+    if report.is_clean() {
+        println!("\nno escaped decisions — every governed diagnostic resolves");
+    } else {
+        let n = report.diff.findings.len() + report.cadence.len() + report.basis_loss.len();
+        println!("\n{n} escape(s) — file the missing entries or revalidate the claims");
+    }
+}
+
+fn print_diff(report: &EscapesReport) {
     println!("== governance diff ==");
     if report.diff.findings.is_empty() {
         println!("clean");
@@ -28,9 +40,13 @@ fn print_report(report: &EscapesReport, today: &str) {
     for n in &report.diff.notes {
         println!("note: {n}");
     }
+}
+
+fn print_cadence(report: &EscapesReport, today: &str) {
+    let cov = &report.cadence_coverage;
     println!("\n== revalidation cadence (today: {today}) ==");
     if report.cadence.is_empty() {
-        println!("clean");
+        println!("clean — {} live claim(s) carry a revalidate_by", cov.dated);
     }
     for c in &report.cadence {
         println!(
@@ -40,9 +56,20 @@ fn print_report(report: &EscapesReport, today: &str) {
             c.revalidate_by
         );
     }
+    if !cov.undated.is_empty() {
+        println!(
+            "not checkable: {} live claim(s) carry no revalidate_by — {}",
+            cov.undated.len(),
+            join_capped(&cov.undated)
+        );
+    }
+}
+
+fn print_basis(report: &EscapesReport) {
+    let cov = &report.basis_coverage;
     println!("\n== basis loss ==");
     if report.basis_loss.is_empty() {
-        println!("clean");
+        println!("clean — {} pinned basedOn edge(s) checked", cov.pinned);
     }
     for b in &report.basis_loss {
         let current = match (&b.current_status, &b.current_changed) {
@@ -58,10 +85,22 @@ fn print_report(report: &EscapesReport, today: &str) {
             current
         );
     }
-    if report.is_clean() {
-        println!("\nno escaped decisions — every governed diagnostic resolves");
-    } else {
-        let n = report.diff.findings.len() + report.cadence.len() + report.basis_loss.len();
-        println!("\n{n} escape(s) — file the missing entries or revalidate the claims");
+    if !cov.unpinned.is_empty() {
+        let ids: Vec<String> = cov.unpinned.iter().map(|u| u.decision.clone()).collect();
+        println!(
+            "not checkable: {} unpinned edge(s) — {} (pin them with format-2 based_on edges)",
+            cov.unpinned.len(),
+            join_capped(&ids)
+        );
     }
+}
+
+/// Name the uncheckable set, but keep one long list from swamping the
+/// report: past six, name six and count the rest.
+fn join_capped(ids: &[String]) -> String {
+    const CAP: usize = 6;
+    if ids.len() <= CAP {
+        return ids.join(", ");
+    }
+    format!("{}, and {} more", ids[..CAP].join(", "), ids.len() - CAP)
 }

@@ -118,3 +118,64 @@ fn a_vanished_claim_is_basis_loss_with_no_current_state() {
     assert_eq!(r.basis_loss.len(), 1);
     assert_eq!(r.basis_loss[0].current_status, None);
 }
+
+// Coverage (dec/ddd/report-coverage-explicit): an unpinned edge is
+// uncheckable, not clean, and must never fail the gate.
+
+#[test]
+fn an_unpinned_edge_is_reported_as_uncheckable_not_clean() {
+    let mut s = DddStore::default();
+    s.claims.push(claim("DDD-a-1", ClaimStatus::Reported, "2026-08-02"));
+    let mut plain = pinned_decision("dec/a/old", "DDD-a-1", ClaimStatus::Reported, "2026-08-02");
+    plain.format = 1;
+    plain.based_on = vec![BasedOn::Plain("DDD-a-1".into())];
+    s.decisions.push(plain);
+    let r = report(&s);
+    assert_eq!(r.basis_coverage.pinned, 0);
+    assert_eq!(r.basis_coverage.unpinned.len(), 1);
+    assert_eq!(r.basis_coverage.unpinned[0].decision, "dec/a/old");
+    assert_eq!(r.basis_coverage.unpinned[0].claim, "DDD-a-1");
+    // Uncheckable is a note, never an escape.
+    assert!(r.is_clean(), "unpinned edges must not fail the gate");
+}
+
+#[test]
+fn basis_coverage_counts_both_sides_of_a_mixed_graph() {
+    let mut s = DddStore::default();
+    s.claims.push(claim("DDD-a-1", ClaimStatus::Reported, "2026-08-02"));
+    s.decisions.push(pinned_decision("dec/a/one", "DDD-a-1", ClaimStatus::Reported, "2026-08-02"));
+    s.decisions.push(pinned_decision("dec/a/two", "DDD-a-1", ClaimStatus::Reported, "2026-08-02"));
+    let mut plain = pinned_decision("dec/a/old", "DDD-a-1", ClaimStatus::Reported, "2026-08-02");
+    plain.based_on = vec![BasedOn::Plain("DDD-a-1".into())];
+    s.decisions.push(plain);
+    let r = report(&s);
+    assert_eq!(r.basis_coverage.pinned, 2);
+    assert_eq!(r.basis_coverage.unpinned.len(), 1);
+}
+
+#[test]
+fn a_decision_with_no_basis_contributes_to_neither_side() {
+    let mut s = DddStore::default();
+    let mut bare = pinned_decision("dec/a/bare", "DDD-a-1", ClaimStatus::Reported, "2026-08-02");
+    bare.based_on = Vec::new();
+    s.decisions.push(bare);
+    let r = report(&s);
+    assert_eq!(r.basis_coverage.pinned, 0);
+    assert!(r.basis_coverage.unpinned.is_empty());
+    assert!(r.is_clean());
+}
+
+#[test]
+fn cadence_coverage_separates_dated_claims_from_undated_ones() {
+    let mut s = DddStore::default();
+    let mut dated = claim("DDD-a-1", ClaimStatus::Reported, "2026-01-01");
+    dated.revalidate_by = Some("2027-01-01".into());
+    s.claims.push(dated);
+    s.claims.push(claim("DDD-a-2", ClaimStatus::Reported, "2026-01-01"));
+    // Retired claims carry no duty, so they are outside the check entirely.
+    s.claims.push(claim("DDD-a-3", ClaimStatus::Retired, "2026-01-01"));
+    let r = report(&s);
+    assert_eq!(r.cadence_coverage.dated, 1);
+    assert_eq!(r.cadence_coverage.undated, vec!["DDD-a-2".to_string()]);
+    assert!(r.is_clean());
+}

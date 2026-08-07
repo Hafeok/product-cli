@@ -174,47 +174,51 @@ fn graph_query() -> ToolDef {
 fn declare_seam() -> ToolDef {
     tool(
         "ddd_declare_seam",
-        "File a seam declaration (boundary + verdict_knowledge + contract_location). Empty verdict_knowledge files with a seam-cost-without-demand warning.",
+        "File a seam declaration (boundary + verdict_knowledge + contract_location). Empty verdict_knowledge files with a seam-cost-without-demand warning. Pass amend:true to revise a filed seam — boundary and contract_location are required only when filing.",
         true,
         json!({
             "id": {"type": "string", "description": "seam/<area>/<name>"},
             "boundary": {"type": "string"},
             "verdict_knowledge": {"type": "string", "description": "What the boundary encodes about the verdict — author this; it is never pre-filled"},
-            "contract_location": {"type": "string"},
+            "contract_location": {"type": "string", "description": "Required when filing; frozen on amend"},
             "obligations": {"type": "array", "items": {"type": "string"}},
             "symbol": {"type": "string", "description": "The symbol this seam covers (links interceptor demands)"},
             "notes": {"type": "string"},
+            "amend": {"type": "boolean", "description": "Revise the filed seam; omitted fields keep their filed values, and contract_location plus LSP-derived metadata are frozen"},
         }),
-        &["id", "boundary", "contract_location"],
+        &["id"],
     )
 }
 
 fn declare_pattern() -> ToolDef {
     tool(
         "ddd_declare_pattern",
-        "File a pattern instance against a catalog pattern predicate; every catalog obligation must be answered.",
+        "File a pattern instance against a catalog pattern predicate; every catalog obligation must be answered. Pass amend:true to revise a filed instance — answers merge onto the filed ones, so a single obligation can be refined alone.",
         true,
         json!({
             "id": {"type": "string", "description": "pat/<pattern>/<instance>"},
-            "pattern": {"type": "string", "description": "The catalog pattern predicate id"},
+            "pattern": {"type": "string", "description": "The catalog pattern predicate id; required when filing, and a filed instance cannot change it"},
             "instance": {"type": "string", "description": "Where the instance lives"},
             "obligation_answers": {"type": "object", "description": "Answers keyed by the catalog obligation names"},
             "notes": {"type": "string"},
+            "amend": {"type": "boolean", "description": "Revise the filed instance; obligation answers merge onto the filed set and completeness is re-checked"},
         }),
-        &["id", "pattern", "instance"],
+        &["id"],
     )
 }
 
 fn accept_risk() -> ToolDef {
     tool(
         "ddd_accept_risk",
-        "File the risk-acceptance record a suppression must cite (M2 UNCITED_SUPPRESSION).",
+        "File the risk-acceptance record a suppression must cite (M2 UNCITED_SUPPRESSION). Pass amend:true to revise a filed record.",
         true,
         json!({
             "diagnostic_id": {"type": "string"},
             "rationale": {"type": "string"},
             "principal": {"type": "string", "description": "A named human; never a model identity"},
+            "notes": {"type": "string"},
+            "amend": {"type": "boolean", "description": "Revise the filed record; omitted fields keep their filed values"},
         }),
-        &["diagnostic_id", "rationale", "principal"],
+        &["diagnostic_id"],
     )
 }

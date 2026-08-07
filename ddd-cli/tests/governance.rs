@@ -131,6 +131,50 @@ fn a_governed_csharp_repo_diffs_clean_and_why_resolves_the_chain() {
         );
 }
 
+/// dec/ddd/why-resolves-three-ways: a detected rule with no manifest entry
+/// is an escape, not an unknown id, and must not read as "not found".
+#[test]
+fn why_separates_a_detected_unfiled_rule_from_an_unknown_id() {
+    let tmp = csharp_repo();
+    // CA2007 is configured in .editorconfig; nothing maps it yet.
+    ddd(tmp.path())
+        .args(["why", "CA2007"])
+        .assert()
+        .failure()
+        .stdout(
+            predicate::str::contains("detected, not in the manifest")
+                .and(predicate::str::contains(".editorconfig"))
+                .and(predicate::str::contains("UNGOVERNED")),
+        )
+        .stderr(predicate::str::contains("resolves to no decision"));
+
+    // An id no source knows still reports as a genuine miss.
+    ddd(tmp.path())
+        .args(["why", "CA9999"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("not found"));
+}
+
+/// The escape report names what it could not check rather than printing a
+/// bare `clean` (dec/ddd/report-coverage-explicit).
+#[test]
+fn escapes_report_states_its_own_coverage() {
+    let tmp = csharp_repo();
+    write(tmp.path(), ".ddd/claims/DDD-cs-1.yaml", &claim_yaml("DDD-cs-1"));
+    // A format-1 decision: its basis edge carries no pin to compare against.
+    write(tmp.path(), ".ddd/decisions/adopt.yaml", &decision_yaml("dec/cs/adopt", "DDD-cs-1"));
+    ddd(tmp.path())
+        .args(["report", "escapes", "--sarif", &csharp_sarif()])
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("clean — 0 pinned basedOn edge(s) checked")
+                .and(predicate::str::contains("not checkable: 1 unpinned edge(s) — dec/cs/adopt"))
+                .and(predicate::str::contains("not checkable: 1 live claim(s) carry no revalidate_by")),
+        );
+}
+
 #[test]
 fn bicep_ungoverned_stale_and_uncited_are_all_found() {
     let tmp = bicep_repo();

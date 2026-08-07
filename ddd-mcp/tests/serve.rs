@@ -303,6 +303,138 @@ fn m4_declare_pattern_round_trips_the_decorator_obligations() {
     assert!(why["chain"].as_str().expect("chain").contains("forwarding"), "{why}");
 }
 
+/// Amending a filed declaration (dec/ddd/amend-explicit-evidence-frozen):
+/// judgement fields revise, identity plus LSP-derived evidence do not.
+#[test]
+fn m4_amend_fills_in_the_warned_verdict_knowledge() {
+    let (tmp, registry) = repo("intercept: enforce\n");
+    warm(&registry);
+    let cs = fixture("csharp/Library.cs");
+    let edited = cs.replace(
+        "    public void Ping() { }\n",
+        "    public void Ping() { }\n    public void Pong() { }\n",
+    );
+    call(&registry, "ddd_apply_edit", json!({"file": "Library.cs", "new_text": edited}));
+
+    // File it warned: the boundary declares cost with no demand absorbed.
+    let warned = call(&registry, "ddd_declare_seam", json!({
+        "id": "seam/csharp/pong", "boundary": "method Pong in Library.cs",
+        "contract_location": "Library.cs#Pong", "symbol": "Pong", "verdict_knowledge": "",
+    }));
+    assert_eq!(warned["status"], "filed");
+    assert!(warned["warning"].is_string(), "{warned}");
+
+    // Re-declaring without the flag still refuses — no silent overwrite.
+    let clash = registry.call_tool("ddd_declare_seam", &json!({
+        "id": "seam/csharp/pong", "boundary": "b", "contract_location": "c",
+    }));
+    assert!(clash.expect_err("must refuse").contains("amend: true"));
+
+    // Re-apply so the interceptor writes its LSP-derived evidence onto the
+    // declaration; the amendment below must leave that evidence alone.
+    let applied = call(&registry, "ddd_apply_edit", json!({"file": "Library.cs", "new_text": edited}));
+    assert_eq!(applied["status"], "applied", "{applied}");
+
+    // Amending supplies only the field being revised.
+    let amended = call(&registry, "ddd_declare_seam", json!({
+        "id": "seam/csharp/pong", "amend": true,
+        "verdict_knowledge": "callers learn whether the service answers",
+    }));
+    assert_eq!(amended["status"], "amended", "{amended}");
+    assert!(amended["warning"].is_null(), "{amended}");
+
+    let seam = std::fs::read_to_string(tmp.path().join(".ddd/seams/seam-csharp-pong.yaml"))
+        .expect("seam");
+    assert!(seam.contains("callers learn whether the service answers"), "{seam}");
+    // Omitted judgement fields are preserved, not blanked.
+    assert!(seam.contains("boundary: method Pong in Library.cs"), "{seam}");
+    // The interceptor's evidence survives the amendment.
+    assert!(seam.contains("kind: method"), "{seam}");
+    assert!(seam.contains("reference_count:"), "{seam}");
+
+    let why = call(&registry, "ddd_why", json!({"id": "seam/csharp/pong"}));
+    assert!(why["chain"].as_str().expect("chain").contains("callers learn"), "{why}");
+}
+
+#[test]
+fn m4_amend_cannot_create_and_cannot_rewrite_frozen_evidence() {
+    let (tmp, registry) = repo("intercept: enforce\n");
+    warm(&registry);
+    // Amending something never filed is an error, not a create.
+    let missing = registry.call_tool("ddd_declare_seam", &json!({
+        "id": "seam/csharp/ghost", "amend": true, "verdict_knowledge": "x",
+    }));
+    assert!(missing.expect_err("must refuse").contains("nothing is filed"));
+    assert!(!tmp.path().join(".ddd/seams/seam-csharp-ghost.yaml").exists());
+
+    call(&registry, "ddd_declare_seam", json!({
+        "id": "seam/csharp/pong", "boundary": "method Pong", "symbol": "Pong",
+        "contract_location": "Library.cs#Pong", "verdict_knowledge": "v",
+    }));
+    // contract_location is evidence: a supplied value is ignored, not applied.
+    call(&registry, "ddd_declare_seam", json!({
+        "id": "seam/csharp/pong", "amend": true, "contract_location": "Elsewhere.cs#Fake",
+    }));
+    let seam = std::fs::read_to_string(tmp.path().join(".ddd/seams/seam-csharp-pong.yaml"))
+        .expect("seam");
+    assert!(seam.contains("Library.cs#Pong"), "{seam}");
+    assert!(!seam.contains("Elsewhere.cs#Fake"), "{seam}");
+}
+
+#[test]
+fn m4_amend_refines_one_obligation_without_restating_the_rest() {
+    let (tmp, registry) = repo("intercept: enforce\n");
+    write(tmp.path(), ".ddd/predicates/composition-decorator.yaml",
+        &fixture("../../../.ddd/predicates/composition-decorator.yaml"));
+    let args = json!({
+        "id": "pat/decorator/logging", "pattern": "pred/composition/decorator",
+        "instance": "Scrutor .Decorate in Program.cs",
+        "obligation_answers": {
+            "ordering": "logging outermost",
+            "identity-preservation": "decorated interface only",
+            "forwarding-completeness": "all members forwarded",
+        },
+    });
+    call(&registry, "ddd_declare_pattern", args.clone());
+
+    // One obligation revised; the other two carry forward and completeness
+    // still holds.
+    let amended = call(&registry, "ddd_declare_pattern", json!({
+        "id": "pat/decorator/logging", "amend": true,
+        "obligation_answers": {"ordering": "logging outermost, retry innermost"},
+    }));
+    assert_eq!(amended["status"], "amended", "{amended}");
+    let q = call(&registry, "ddd_graph_query", json!({"select": "patterns"}));
+    let obligations = &q["entries"][0]["obligations"];
+    assert_eq!(obligations["ordering"], "logging outermost, retry innermost");
+    assert_eq!(obligations["identity-preservation"], "decorated interface only");
+    assert_eq!(obligations["forwarding-completeness"], "all members forwarded");
+
+    // The predicate is identity: a filed instance cannot be re-pointed.
+    let repointed = registry.call_tool("ddd_declare_pattern", &json!({
+        "id": "pat/decorator/logging", "amend": true, "pattern": "pred/other/thing",
+    }));
+    assert!(repointed.expect_err("must refuse").contains("cannot change its predicate"));
+}
+
+#[test]
+fn m4_accept_risk_amends_its_rationale() {
+    let (tmp, registry) = repo("intercept: enforce\n");
+    call(&registry, "ddd_accept_risk", json!({
+        "diagnostic_id": "CA1848", "rationale": "first pass", "principal": "Emil",
+    }));
+    let amended = call(&registry, "ddd_accept_risk", json!({
+        "diagnostic_id": "CA1848", "amend": true,
+        "rationale": "the service logs under 200 lines/min; the codegen is not worth it",
+    }));
+    assert_eq!(amended["status"], "amended", "{amended}");
+    let record = std::fs::read_to_string(tmp.path().join(".ddd/decisions/risk-rule-ca1848.yaml"))
+        .expect("record");
+    assert!(record.contains("200 lines/min"), "{record}");
+    // principal was not re-supplied, so it is preserved.
+    assert!(record.contains("principal: Emil"), "{record}");
+}
+
 #[test]
 fn m4_accept_risk_satisfies_the_uncited_suppression_check() {
     let (tmp, registry) = repo("intercept: enforce\n");
