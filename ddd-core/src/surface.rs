@@ -5,6 +5,10 @@
 //! visibility is boundary-forming"). The classifier walks the table; wrong
 //! rows get amended in the adapter's table, never in classifier logic
 //! (PRD §9, `dec/ddd/adapter-policy-tables`).
+//!
+//! The mechanism is language-neutral, so it lives here rather than in the
+//! LSP crate: `ddd-lsp` supplies facts from a language server, while
+//! [`crate::what`] supplies them from the framework's own typed graph.
 
 use std::collections::BTreeMap;
 

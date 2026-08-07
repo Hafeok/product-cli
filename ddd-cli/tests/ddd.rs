@@ -184,3 +184,63 @@ fn root_flag_targets_a_store_from_elsewhere() {
         .assert()
         .success();
 }
+
+/// `ddd what` over a seeded What graph: the boundaries report, the
+/// declaration clears one, and `--strict` is the CI gate.
+#[test]
+fn what_reports_undeclared_boundaries_and_gates_under_strict() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    ddd(tmp.path()).arg("init").assert().success();
+    write(tmp.path(), "product.toml", "name = \"acme\"\n");
+    // A minimal What graph: one system, one event, one entity.
+    write(
+        tmp.path(),
+        ".product/products/acme/session.json",
+        r#"{"product":"acme","graph":{
+             "systems":[{"id":"payments-api","label":"Payments","kind":"service"}],
+             "events":[{"id":"PaymentAuthorized","label":"Authorized","context":"billing","changes":"Payment"}],
+             "entities":[{"id":"Payment","label":"Payment","context":"billing","definition":"a payment in flight"}]},
+           "started_at":"2026-08-07T00:00:00Z"}"#,
+    );
+
+    // Both boundaries undeclared; the entity is internal elaboration.
+    ddd(tmp.path())
+        .arg("what")
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("UNDECLARED system/payments-api")
+                .and(predicate::str::contains("UNDECLARED event/PaymentAuthorized"))
+                .and(predicate::str::contains("2 surface element(s): 0 declared, 2 undeclared"))
+                .and(predicate::str::contains("1 internal element(s)")),
+        );
+
+    // --strict turns it into a gate.
+    ddd(tmp.path()).args(["what", "--strict"]).assert().failure();
+
+    // A seam naming the element clears it; the join is `what:<id>`.
+    write(
+        tmp.path(),
+        ".ddd/seams/seam-what-payments-api.yaml",
+        "format: 1\nid: seam/what/payments-api\nboundary: the payments system\nverdict_knowledge: callers learn whether a payment is authorized\ncontract_location: what:payments-api\nobligations: []\n",
+    );
+    ddd(tmp.path())
+        .args(["what", "--all"])
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("declared  system/payments-api — seam/what/payments-api")
+                .and(predicate::str::contains("1 declared, 1 undeclared")),
+        );
+}
+
+#[test]
+fn what_says_so_when_there_is_no_product_to_govern() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    ddd(tmp.path()).arg("init").assert().success();
+    ddd(tmp.path())
+        .arg("what")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("no product"));
+}

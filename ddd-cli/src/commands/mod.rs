@@ -6,6 +6,7 @@ mod render;
 mod report;
 mod serve;
 mod validate;
+mod what;
 mod why;
 
 use std::path::PathBuf;
@@ -54,6 +55,18 @@ pub enum Commands {
         #[arg(long, default_value = "120")]
         timeout: u64,
     },
+    /// What-graph boundaries (§3) carrying no governing declaration
+    What {
+        /// Limit to one product; default reports every product under .product/
+        #[arg(long, value_name = "NAME")]
+        product: Option<String>,
+        /// Also list the surface elements that are already declared
+        #[arg(long)]
+        all: bool,
+        /// Exit non-zero when a boundary carries no declaration (CI gate)
+        #[arg(long)]
+        strict: bool,
+    },
     /// Resolve an id to decision -> rationale -> principal -> basedOn claims
     Why {
         /// A decision, claim, diagnostic (rule), pattern, or seam id
@@ -89,6 +102,7 @@ pub fn run(cmd: Commands, root: Option<PathBuf>) -> Result<()> {
         Commands::Serve => serve::run(root),
         Commands::Validate => validate::run(root),
         Commands::Warmup { language, timeout } => serve::warmup(root, language, timeout),
+        Commands::What { product, all, strict } => what::run(root, product, all, strict),
         Commands::Why { id, sarif } => why::run(root, &id, sarif),
     }
 }

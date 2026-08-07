@@ -116,7 +116,25 @@ ddd why CA2007                      # rule -> decision -> principal -> claims (o
 ddd render                          # static self-contained HTML projection of the graph
 ddd serve                           # the ddd_* MCP surface (stdio)
 ddd warmup                          # pre-load the LSP hosts (Roslyn solution load)
+ddd what                            # What-graph boundaries carrying no declaration
 ```
+
+### Governing the What (the framework graph)
+
+`ddd what` treats the `.product/` What graph as a third governed surface
+alongside C# and Bicep. It needs no language server: `product-core` already
+owns the What as typed data, so the adapter reads kinds and containers
+straight off `DomainGraph` and runs them through the same policy-table
+mechanism (`ddd-core/src/surface.rs`, shared with the LSP adapters).
+
+The table names what forms a boundary — a system (§3.2.5), a context mapping
+(§3.1), a journey crossing (§3.0.1), an event or command payload, a quality
+demand (§3.6). Entities, value objects, views and UI steps are internal
+elaboration and never demand a declaration. A boundary counts as governed
+when a seam declaration's `contract_location` is `what:<element-id>`.
+
+`--strict` turns it into a CI gate; the default reports without failing, so
+the table can be calibrated against a real graph first.
 
 ### MCP surface (M3/M4)
 

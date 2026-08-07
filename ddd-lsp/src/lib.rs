@@ -18,7 +18,10 @@ pub mod jsonrpc;
 pub mod manager;
 pub mod mock;
 pub mod protocol;
-pub mod surface;
+/// The contract-surface vocabulary, owned by `ddd-core` because the policy
+/// table mechanism is language-neutral; re-exported here so adapters keep
+/// reaching it as `crate::surface`.
+pub use ddd_core::surface;
 
 pub use error::{LspError, Result};
 pub use manager::HostManager;

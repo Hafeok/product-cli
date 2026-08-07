@@ -27,8 +27,10 @@ pub mod sarif;
 pub mod seam;
 pub mod seam_event;
 pub mod store;
+pub mod surface;
 pub mod turtle;
 pub mod validate;
+pub mod what;
 pub mod why;
 
 pub use store::DddStore;
