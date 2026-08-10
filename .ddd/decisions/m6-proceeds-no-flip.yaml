@@ -1,0 +1,37 @@
+format: 2
+id: dec/ddd/m6-proceeds-no-flip
+title: M6 proceeds as the Rust adapter; the M6/M7 flip condition does not fire
+rationale: >
+  The flip condition was to be evaluated at the top of this session: swap M6
+  for M7 if HTML/CSS failures had kept costing since the condition was filed.
+  Evaluated and not fired — M6 proceeds.
+
+
+  The evaluation has a caveat worth recording rather than hiding. The
+  condition is not filed anywhere in this repository. The committed PRD's §10
+  milestone table ends at M5; there is no M6 row, no M7 row, and no flip
+  condition in `docs/ddd-cli-prd.md`, in `.ddd/decisions/`, or in
+  `docs/ddd-m5-report.md`. A search of the store for HTML/CSS content returns
+  nothing. The condition therefore could not be evaluated against filed
+  evidence; it was resolved by the stated default.
+
+
+  What the repo does say about M6 is consistent with proceeding: the M5
+  closing report §5 is written as a list of what M6 owes, and it names the
+  Rust adapter as M6's content. That is corroboration of the default, not
+  evidence about the flip condition, and it is not treated as such here.
+
+
+  Consequence for the reader: if the flip condition matters beyond this
+  session, it needs filing. An unfiled condition evaluated by default is an
+  escaped decision in the making — the exact shape this tool exists to catch.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-adapter-01
+    status: projected
+    changed: 2026-08-02
+date: 2026-08-10
+notes: >
+  M6's content is the third language adapter, which is the experiment that
+  moves DDD-adapter-01 off `projected`. That is why the basis edge points at
+  the adapter-cost claim rather than at a scope claim.

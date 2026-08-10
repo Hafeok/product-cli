@@ -1,0 +1,46 @@
+format: 2
+id: dec/ddd/rust-class-enforced-here
+title: This workspace runs the code artifact class under enforce once the Rust adapter ships
+rationale: >
+  This is a Context& repository and the tool's own first user, so the default
+  posture for its own artifact class is enforce rather than warn. From the
+  point the Rust adapter passes its fixture acceptance, contract-surface edits
+  to this workspace's Rust sources are rejected until a seam declaration
+  covers them.
+
+
+  The point is not compliance. Both friction claims have no ground in this
+  repo at all — `.ddd/seams/events/` is empty, so DDD-friction-01 and
+  DDD-friction-02 have been carrying six-month revalidation cadences against
+  zero observations. Running the tail of this session governed is the first
+  live reading of the friction falsifier on a real repo, and the declarations
+  it produces are the first correspondence rows.
+
+
+  One granularity limit is recorded rather than worked around. Interception
+  mode is keyed by *artifact class*, not by language, and both the C# and the
+  Rust adapters declare the class `code`. `intercept_by_class.code: enforce`
+  therefore enforces C# here too. That is harmless in this workspace — it has
+  no governed C# outside `ddd-cli/tests/fixtures/**`, which the ignore globs
+  already exclude — but a repo holding both languages could not enforce one
+  and warn the other. Priced, not paid; it needs a decision of its own if a
+  mixed repo ever wants the split.
+
+
+  The global `intercept: warn` stays as the default for classes that are not
+  named, which keeps PRD §11's adoption mitigation intact for anything the
+  per-class entry does not cover.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-friction-01
+    status: projected
+    changed: 2026-08-06
+  - claim: DDD-friction-02
+    status: projected
+    changed: 2026-08-07
+date: 2026-08-10
+notes: >
+  The friction reading this produces is optimistic by a known amount:
+  `dec/ddd/enforce-matching-tightens-to-symbol` is deliberately not
+  implemented in this session, so enforce-mode matching still admits the file
+  arm. See docs/ddd-m6-experiment.md §1.1.
