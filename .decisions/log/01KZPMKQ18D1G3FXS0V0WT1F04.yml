@@ -1,0 +1,22 @@
+format: 1
+id: cs:01KZPMKQ18D1G3FXS0V0WT1F04
+created_at: 2026-08-10T20:07:48.518628262Z
+created_by: noreply@anthropic.com
+decisions:
+- id: dec:hafeok.ledger/01KZPMKQ188RBSZ8XS7EJWN9EK
+  created_at: 2026-08-10T20:07:48.518628262Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ledger/01KZPMKQ188RBSZ8XS7EJWN9EK
+  hash: sha256:5034f2a98c2e290e290caa71bf79f3d68ef1112a5ee46eef5ad47db4649144f3
+  set: ledger-design
+  statement: 'The judgment-actor gap closes as verify class L010 in a spec v1.1 amendment: a judgment whose actor resolves to a model or CI identity fails the gate. Additive and stricter, shipped with a migration note stating that existing stores may newly fail and that this is the point; the exactly-nine class contract becomes exactly-ten everywhere it is asserted, including the closed-enum count test.'
+  allocation: constraint
+  discharge:
+  - analyzer:ledger-verify.L010
+  tolerance_floor_at_creation: T1
+  tolerance_override: T2
+  based_on:
+  - format:ledger-format-v1#5.2
+  - format:ledger-format-migrations#spec-v1.1
+  - prd:decision-ledger-prd#9.3
