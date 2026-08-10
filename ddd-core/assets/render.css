@@ -1,0 +1,40 @@
+/* ddd render — the projection page's whole stylesheet. Inlined into the
+   page's <style> at render time, so the output stays one self-contained
+   file (PRD §3 non-goals). Governed as the html-css pair with the
+   committed sample page (pair.units in .ddd/config.yaml). */
+
+/* The ink + status palette, one governed decision
+   (dec/web/render-status-palette): every color: below resolves through a
+   token, and dec/web/token-discipline makes a raw restatement a stylelint
+   finding rather than a style preference. */
+:root {
+  --ink: #1c1c1c;
+  --ink-muted: #555;
+  --ink-faint: #777;
+  --status-ok: #1a7f37;
+  --status-bad: #b3261e;
+  --status-warn: #8a5a00;
+  --on-chip: #fff;
+  --surface: #fdfdfc;
+  --surface-raised: #fff;
+}
+
+body { font: 15px/1.5 system-ui, sans-serif; margin: 2rem auto; max-width: 70rem; padding: 0 1rem; color: var(--ink); background: var(--surface) }
+h1 { font-size: 1.5rem }
+h2 { font-size: 1.15rem; margin-top: 2.2rem; border-bottom: 1px solid #ddd; padding-bottom: .25rem }
+table { border-collapse: collapse; width: 100%; margin: .6rem 0 }
+th, td { text-align: left; vertical-align: top; padding: .3rem .6rem; border-bottom: 1px solid #eee; font-size: .92em }
+th { color: var(--ink-muted) }
+code { background: #f2f1ee; padding: 0 .25em; border-radius: 3px }
+.muted { color: var(--ink-faint) }
+.ok { color: var(--status-ok) }
+.bad { color: var(--status-bad) }
+.warn { color: var(--status-warn) }
+.chip { display: inline-block; padding: 0 .5em; border-radius: 9px; font-size: .85em; color: var(--on-chip) }
+.chip.projected { background: #6a737d }
+.chip.reported { background: #0969da }
+.chip.established { background: var(--status-ok) }
+.chip.retired { background: #8250df }
+.card { border: 1px solid #e4e2dd; border-radius: 6px; padding: .7rem 1rem; margin: .7rem 0; background: var(--surface-raised) }
+.card h3 { margin: .1rem 0 .3rem; font-size: 1em }
+ul { margin: .3rem 0 .3rem 1.2rem; padding: 0 }

@@ -1,5 +1,5 @@
-# .ddd/config.yaml — repo-level DDD governance configuration (format v3).
-format: 3
+# .ddd/config.yaml — repo-level DDD governance configuration (format v4).
+format: 4
 
 # Interception mode for contract-surface edits: enforce | warn | off (PRD §8).
 # The global default stays `warn` for any artifact class not named below.
@@ -7,11 +7,12 @@ intercept: warn
 
 # Per-artifact-class modes. `code` is this workspace's own Rust sources
 # (dec/ddd/rust-class-enforced-here): from M6 on, a contract-surface edit is
-# rejected until a seam declaration covers it. Note the granularity limit
-# recorded on that decision — the key is the artifact class, not the
-# language, so the C# adapter shares this entry.
+# rejected until a seam declaration covers it. `html-css` is the M7 pair —
+# the tool's own projection surface — enforced per dec/web/htmlcss-enforce:
+# warn is exactly the exhortation the observed failure mode ignores.
 intercept_by_class:
   code: enforce
+  html-css: enforce
 
 # Per-language adapter switches. `pub(crate)` is Rust's `internal`, so it
 # rides the same switch; left at the default (off) per the app-repo posture
@@ -19,6 +20,22 @@ intercept_by_class:
 adapter:
   rust:
     internal_is_surface: false
+
+# The governed HTML+CSS pair (M7): the render stylesheet plus the committed
+# representative projection page, checked bidirectionally by
+# `ddd report escapes` (orphan classes / dead selectors).
+pair:
+  units:
+    - html: ["docs/examples/ddd-render-sample.html"]
+      css: ["ddd-core/assets/render.css"]
+  ignore_classes: []
+
+# Detection sources beyond the config walk (format 4): the render
+# stylesheet is a registered token file, so each custom property resolves
+# through `ddd why` to its decision and `ddd diff` flags UNGOVERNED or
+# STALE tokens.
+detect:
+  tokens: ["ddd-core/assets/render.css"]
 
 # Globs the interceptor plus detection skip. The M2 fixtures carry config
 # files for the tests, not for this repo's governance; the M6 Rust fixture

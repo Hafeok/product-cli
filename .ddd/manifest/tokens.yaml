@@ -1,0 +1,33 @@
+# The tokens namespace — the render stylesheet's custom properties, each a
+# governed design decision (detect.tokens registers the file; the severity
+# column carries the token's value type). `ddd why -- --status-ok` resolves
+# the chain; a token this file does not govern is UNGOVERNED in `ddd diff`.
+format: 1
+rules:
+  - rule_id: "--ink"
+    severity: color
+    decision: dec/web/render-status-palette
+  - rule_id: "--ink-muted"
+    severity: color
+    decision: dec/web/render-status-palette
+  - rule_id: "--ink-faint"
+    severity: color
+    decision: dec/web/render-status-palette
+  - rule_id: "--status-ok"
+    severity: color
+    decision: dec/web/render-status-palette
+  - rule_id: "--status-bad"
+    severity: color
+    decision: dec/web/render-status-palette
+  - rule_id: "--status-warn"
+    severity: color
+    decision: dec/web/render-status-palette
+  - rule_id: "--on-chip"
+    severity: color
+    decision: dec/web/render-status-palette
+  - rule_id: "--surface"
+    severity: color
+    decision: dec/web/render-status-palette
+  - rule_id: "--surface-raised"
+    severity: color
+    decision: dec/web/render-status-palette

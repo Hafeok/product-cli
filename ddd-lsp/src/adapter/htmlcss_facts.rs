@@ -59,7 +59,7 @@ fn css_facts(text: &str) -> Vec<SymbolFacts> {
     out
 }
 
-fn strip_css_comments(text: &str) -> String {
+pub(crate) fn strip_css_comments(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     let mut rest = text;
     while let Some(start) = rest.find("/*") {

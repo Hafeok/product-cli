@@ -1,0 +1,21 @@
+format: 2
+id: dec/web/render-status-palette
+title: The render page's ink plus status palette is tokenised, one decision for the set
+rationale: >
+  Every `color:` value in the render stylesheet resolves through a custom
+  property — ink at three emphasis levels, the three status colours, the
+  on-chip foreground, plus the two surface grounds the page and its cards
+  sit on — and the token file is registered
+  (`detect.tokens`), so each token is a governed diagnostic: `ddd why`
+  resolves it here, `ddd diff` flags a token this decision does not cover
+  or a manifest entry whose token vanished. The stylelint rule
+  `declaration-property-value-disallowed-list` (dec/web/token-discipline)
+  is the closure: a raw hex on a colour property is a finding, not a
+  style preference. One decision governs the set because the palette is
+  one choice — status colours mean verdicts together or not at all.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-web-02
+    status: projected
+    changed: 2026-08-10
+date: 2026-08-10

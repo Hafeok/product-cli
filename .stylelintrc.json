@@ -1,0 +1,7 @@
+{
+  "rules": {
+    "declaration-property-value-disallowed-list": {
+      "/color$/": ["/#[0-9a-fA-F]{3,8}/"]
+    }
+  }
+}

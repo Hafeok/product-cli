@@ -1,0 +1,20 @@
+format: 1
+id: seam-event/42
+at: 2026-08-10T12:53:16Z
+language: htmlcss
+artifact_class: html-css
+mode: enforce
+file: ddd-core/assets/render.css
+symbol: --status-warn
+container: ''
+kind: token
+change: added
+visibility: unlayered
+signature: color
+rule: web-token-membership
+rule_claim: 'design tokens are the stylesheet''s params: a custom property added or removed changes the contract every consuming rule and document depends on'
+outcome: applied-linked
+linked_declaration: seam/web/token-status-warn
+extra:
+  pair_counterpart: ''
+  pair_direction: definition

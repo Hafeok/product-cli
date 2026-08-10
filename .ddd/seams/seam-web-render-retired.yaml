@@ -1,0 +1,15 @@
+format: 1
+id: seam/web/render-retired
+boundary: class retired in ddd-core/assets/render.css
+verdict_knowledge: Marks a claim no longer held; a consumer learns nothing may be basedOn it going forward.
+contract_location: ddd-core/assets/render.css#retired
+obligations:
+- the sample page docs/examples/ddd-render-sample.html keeps the class alive — a dead selector here is a report escapes finding
+- render.rs emits the class name verbatim; renaming either side alone orphans the other
+metadata:
+  kind: class
+  pair_counterpart: ''
+  pair_direction: definition
+  signature: ''
+  symbol: retired
+  visibility: unlayered

@@ -1,0 +1,15 @@
+format: 1
+id: seam/web/render-bad
+boundary: class bad in ddd-core/assets/render.css
+verdict_knowledge: A reader learns a check failed — basis moved, suppression uncited — red is the fail verdict and the page's call to action.
+contract_location: ddd-core/assets/render.css#bad
+obligations:
+- the sample page docs/examples/ddd-render-sample.html keeps the class alive — a dead selector here is a report escapes finding
+- render.rs emits the class name verbatim; renaming either side alone orphans the other
+metadata:
+  kind: class
+  pair_counterpart: ''
+  pair_direction: definition
+  signature: ''
+  symbol: bad
+  visibility: unlayered

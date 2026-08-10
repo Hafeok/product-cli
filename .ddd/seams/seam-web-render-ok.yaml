@@ -1,0 +1,15 @@
+format: 1
+id: seam/web/render-ok
+boundary: class ok in ddd-core/assets/render.css
+verdict_knowledge: A reader learns a check passed — a pin holds, a gate is clean — before reading the sentence; green is the page's pass verdict.
+contract_location: ddd-core/assets/render.css#ok
+obligations:
+- the sample page docs/examples/ddd-render-sample.html keeps the class alive — a dead selector here is a report escapes finding
+- render.rs emits the class name verbatim; renaming either side alone orphans the other
+metadata:
+  kind: class
+  pair_counterpart: ''
+  pair_direction: definition
+  signature: ''
+  symbol: ok
+  visibility: unlayered

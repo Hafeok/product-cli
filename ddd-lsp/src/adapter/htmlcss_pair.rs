@@ -155,7 +155,7 @@ fn check_unit(
     let mut defined: Vec<String> = Vec::new();
     let mut selectors: Vec<(String, String)> = Vec::new();
     for css in css_files {
-        let text = read(root, css);
+        let text = super::htmlcss_facts::strip_css_comments(&read(root, css));
         for (_, name) in super::htmlcss_facts::selector_class_names(&text) {
             if !defined.contains(&name) {
                 defined.push(name);

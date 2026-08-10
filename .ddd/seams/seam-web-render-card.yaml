@@ -1,0 +1,15 @@
+format: 1
+id: seam/web/render-card
+boundary: class card in ddd-core/assets/render.css
+verdict_knowledge: Groups one decision or seam with its whole chain; a reader learns where one entry's evidence ends and the next begins.
+contract_location: ddd-core/assets/render.css#card
+obligations:
+- the sample page docs/examples/ddd-render-sample.html keeps the class alive — a dead selector here is a report escapes finding
+- render.rs emits the class name verbatim; renaming either side alone orphans the other
+metadata:
+  kind: class
+  pair_counterpart: ''
+  pair_direction: definition
+  signature: ''
+  symbol: card
+  visibility: unlayered

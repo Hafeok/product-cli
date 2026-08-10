@@ -1,0 +1,20 @@
+format: 1
+id: seam-event/46
+at: 2026-08-10T12:55:49Z
+language: htmlcss
+artifact_class: html-css
+mode: enforce
+file: ddd-core/assets/render.css
+symbol: --surface-raised
+container: ''
+kind: token
+change: added
+visibility: unlayered
+signature: color
+rule: web-token-membership
+rule_claim: 'design tokens are the stylesheet''s params: a custom property added or removed changes the contract every consuming rule and document depends on'
+outcome: applied-linked
+linked_declaration: seam/web/token-surface-raised
+extra:
+  pair_counterpart: docs/examples/ddd-render-sample.html
+  pair_direction: definition

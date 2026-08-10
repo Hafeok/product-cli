@@ -125,3 +125,19 @@ fn enrichment_stamps_direction_and_counterpart_and_drops_decorative_classes() {
     assert_eq!(extra.get("pair_direction").map(String::as_str), Some("definition"));
     assert_eq!(extra.get("pair_counterpart").map(String::as_str), Some("site/page.html"));
 }
+
+/// A commented-out rule is neither vocabulary nor a live selector — the
+/// dogfood run caught comment prose being parsed as dead selectors.
+#[test]
+fn css_comments_are_not_selectors_in_the_pair_check() {
+    let tmp = tempfile::tempdir().expect("tmp");
+    write(tmp.path(), "site/page.html", PAGE);
+    write(
+        tmp.path(),
+        "site/style.css",
+        &format!("/* prose that mentions .nothing and reads like a selector */\n{SHEET}/* .ghost {{ color: red; }} */\n"),
+    );
+    let report = check_pairs(tmp.path(), &config(&["js-*"]));
+    assert!(report.is_clean(), "{report:?}");
+    assert!(report.coverage.selectors_skipped.is_empty(), "{report:?}");
+}
