@@ -25,6 +25,12 @@ use crate::jsonrpc;
 pub struct ServerState {
     /// Notification methods seen at least once (readiness signals live here).
     pub flags: Mutex<BTreeSet<String>>,
+    /// The most recent params per notification method. Hosts that repeat one
+    /// notification and carry its meaning in the payload — rust-analyzer's
+    /// `experimental/serverStatus` arrives first with `quiescent: false` —
+    /// cannot be read off `flags` alone. Bounded by the number of distinct
+    /// methods a host sends, not by how often it sends them.
+    pub last_params: Mutex<BTreeMap<String, Value>>,
     /// Human-readable observations (restore requests, log lines worth keeping).
     pub notes: Mutex<Vec<String>>,
     /// Latest `textDocument/publishDiagnostics` params per uri.
@@ -200,5 +206,8 @@ fn record_notification(state: &ServerState, method: &str, msg: &Value) {
     }
     if let Ok(mut flags) = state.flags.lock() {
         flags.insert(method.to_string());
+    }
+    if let Ok(mut last) = state.last_params.lock() {
+        last.insert(method.to_string(), msg.get("params").cloned().unwrap_or(Value::Null));
     }
 }

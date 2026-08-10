@@ -7,7 +7,7 @@
 //! provenance first-class, so each param carries its provenance class
 //! for the seam entry (PRD §9.2).
 
-use crate::adapter::{Adapter, AdapterFlags};
+use crate::adapter::{no_extra_capabilities, Adapter, AdapterFlags, ReadySignal};
 use crate::protocol::RawSymbol;
 use crate::surface::{ChangeKind, PolicyRow, SymbolFacts};
 
@@ -17,7 +17,8 @@ pub const ADAPTER: Adapter = Adapter {
     extensions: &["bicep", "bicepparam"],
     language_id: "bicep",
     default_command: &["bicep-ls"],
-    ready_flag: None,
+    ready: ReadySignal::AfterInitialized,
+    extra_capabilities: no_extra_capabilities,
     needs_open_handshake: false,
     facts,
     policy,

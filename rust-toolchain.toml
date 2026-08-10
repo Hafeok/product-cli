@@ -3,5 +3,7 @@
 # toolchain — CI's dtolnay/rust-toolchain@master reads this file, so a single
 # change keeps local and CI in lockstep.
 channel = "1.95"
-components = ["rustfmt", "clippy"]
+# rust-analyzer is a test dependency, not a convenience: the ddd Rust adapter's
+# acceptance runs against the real language server (dec/ddd/rust-host-is-real).
+components = ["rustfmt", "clippy", "rust-analyzer"]
 profile = "minimal"

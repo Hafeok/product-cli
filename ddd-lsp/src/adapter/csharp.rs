@@ -7,7 +7,7 @@
 //! layer via this adapter's declarations. Facts come from LSP symbols
 //! plus declaration-text slicing only — no Roslyn API anywhere.
 
-use crate::adapter::{Adapter, AdapterFlags};
+use crate::adapter::{no_extra_capabilities, Adapter, AdapterFlags, ReadySignal};
 use crate::protocol::{kind_name, RawSymbol};
 use crate::surface::{ChangeKind, PolicyRow, SymbolFacts};
 
@@ -17,7 +17,8 @@ pub const ADAPTER: Adapter = Adapter {
     extensions: &["cs"],
     language_id: "csharp",
     default_command: &["roslyn-language-server", "--stdio", "--autoLoadProjects"],
-    ready_flag: Some("workspace/projectInitializationComplete"),
+    ready: ReadySignal::Notification("workspace/projectInitializationComplete"),
+    extra_capabilities: no_extra_capabilities,
     needs_open_handshake: true,
     facts,
     policy,

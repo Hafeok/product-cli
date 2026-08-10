@@ -1,0 +1,13 @@
+# Materialised as `Cargo.toml` in a tempdir by the Rust adapter tests. Kept
+# under a non-manifest filename so the workspace never tries to resolve it as
+# a member. No dependencies: `cargo metadata` must succeed offline in CI.
+[package]
+name = "ddd-rust-fixture"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[workspace]
