@@ -232,6 +232,255 @@ class-contract check directions, land in a paired fixture set.
 
 ---
 
-*Sections §5+ (classification table, numbers, prediction scored, the
-governed tail, proposed status consequences) are written after
-implementation; nothing above this line is edited afterwards.*
+*Everything below was written after implementation; nothing above this
+line was edited afterwards.*
+
+---
+
+## 5. Classification table
+
+Every change outside `ddd-lsp/src/adapter/htmlcss*.rs`, measured as
+`git diff --numstat` from the pre-registration commit (`e402d55`) to the
+end of the session (commits: phase 1 `81323a6`, phase 3 `d86d5f6`,
+phase 2 `298fefa`).
+
+### 5.1 The new adapter module (not classified)
+
+| File | + | What |
+|---|---|---|
+| `adapter/htmlcss.rs` | 151 | the hostless ADAPTER, the 5-row policy table, layer-graded visibility ranking, the unlayered-mix posture warning |
+| `adapter/htmlcss_facts.rs` | 358 | CSS slicing (tokens with typed signatures, class vocabulary, `@layer` order) plus HTML slicing (stylesheet links; script/style bodies opaque) |
+| `adapter/htmlcss_pair.rs` | 364 | the pair map, the enrichment hook, the bidirectional class-contract check with explicit coverage |
+| tests (`htmlcss_*_tests.rs`) | 312 | facts, one trigger + one non-trigger per row, both contract directions, thresholds, the comment-stripping regression |
+| **total** | **1185** | (873 non-test) |
+
+### 5.2 Changes outside the adapter — classified
+
+| File | +/− | Class | What, and why that class |
+|---|---|---|---|
+| `adapter/mod.rs` | +33/−3 | **event-source leakage** (~17) + glue (~16) | `hosted`, `enrich`/`EnrichFn` and their docs are E1/E2. Module decls, the `all()` entry, and three test touches are glue. |
+| `ddd-mcp/src/intercept.rs` | +33/−77 | **event-source leakage** (~28) | The hostless branch, `Option<&mut Host>` through `intercept()`, the enrich call, `None` reference counts, the guarded reject-overlay. The −77 is dominated by the fitness split (§5.4). |
+| `ddd-mcp/src/lang_tools.rs` | +6 | **event-source leakage** | `with_ready_host` refuses a hostless language with a pointer at `ddd_apply_edit` instead of spawning nothing. |
+| `ddd-lsp/src/manager.rs` | +1 | **event-source leakage** | `warm_all` skips hostless adapters. |
+| `adapter/{csharp,bicep,rust}.rs` | +2 each | **event-source leakage** | Consequential restatement of the two new fields. No policy row touched — the same category as M6's ±2 restatements. |
+| `ddd-core/src/config.rs` | +43 | glue (predicted §4.4) | `PairConfig`/`PairUnit` + the three `detect` lists, format 4. The html/css field names are the predicted *naming* category — routing data, no language semantics. |
+| `ddd-core/src/validate.rs` | +12 | glue | The format-4 gate check, mirroring the format-2/3 gates. |
+| `ddd-core/src/{detect,stylelintconfig,htmlvalidateconfig,tokenfile}.rs` | +364/−3 | **manifest wiring** (§1.1) | Per-tool configured+emitted parsers plus the token-file source — the `cargolints` category, outside the adapter contract by M6 precedent. Includes their unit tests. |
+| `ddd-cli/src/commands/report.rs` | +39/−4 | manifest wiring | The pair-contract section of `report escapes` (core cannot call ddd-lsp, so the join is CLI-level). |
+| `ddd-core/src/lib.rs`, `ddd-mcp/src/lib.rs` | +4 | glue | Module registration. |
+| `docs/{ddd-format-migrations,predicate-format}.md` | +26 | glue | The format-4 migration note (with the documented tool invocations) and `html-css` joining the artifact-class enumeration. |
+| `ddd-core/src/render.rs` | +5/−12 | dogfood (phase 3) | The CSS constant became `include_str!` of the governed asset. Predicted clean and *not forced by admitting the language* — it is the governing of the surface, done on purpose. |
+| tests + fixtures | +558 | test / fixture | `webpair_governed.rs` (180), governance webpair module (136), the render-sample test (50), the visual harness (85+32), the committed webpair fixture set with real stylelint 17.14.1 / html-validate 11.6.2 outputs. |
+| `.ddd/` graph entries, `.stylelintrc.json`, `.htmlvalidate.json`, `render.css`, the sample page | — | dogfood / record | Claims, decisions, manifests, 38 correspondence rows, 19 seam declarations, the governed pair itself. |
+
+### 5.3 The numbers
+
+| Class | Lines added outside the adapter |
+|---|---|
+| **Contract-surface leakage** | **0** — `surface.rs`, `classify.rs`, `seam_event.rs`, `protocol.rs`, `host.rs`, `client.rs`, `govern_tools.rs`, `seam.rs`, `why.rs`, `store.rs` all byte-identical to their pre-M7 state |
+| **Event-source leakage** | 2 instances (E1, E2), ≈58 lines |
+| Genuine core bug | 0 (one *adapter* bug, §6.3) |
+| Registration glue | ≈75 |
+| Manifest wiring (outside the adapter contract, §1.1) | ≈400 |
+
+### 5.4 Two fitness-gate splits, disclosed
+
+The 400-line file gate forced two behavior-free splits mid-session:
+`csharp.rs` → `csharp_facts.rs` (pushed over by preamble 1's enum-member
+row, not by M7) and `intercept.rs` → `edits.rs` (pushed over by E1's ~28
+lines — so this split *is* part of the event-source cost's footprint,
+though it moved only pre-existing code). Neither changed behavior; both
+are excluded from the leakage line counts above and disclosed here so the
+numstat reconciles.
+
+### 5.5 Prediction scored
+
+| Predicted | Outcome |
+|---|---|
+| E1 — the serve layer assumes a spawnable host per adapter → forced, 30–60 lines | **Correct.** ~46 lines (mod.rs host half, intercept, lang_tools, manager, 3×restatement). |
+| E2 — single-document facts; pair facts need an enrichment hook → forced, 10–20 lines | **Correct.** ~12 lines (mod.rs hook half + the intercept call site). |
+| `&[RawSymbol]` dead weight, `reference_count: None`, `language: htmlcss` on both files, mock parser unreached, `adapter.<lang>` switches unused → latent | **Correct**, all five. One latent consequence not itemised in advance: with no document identity in the facts signature, the adapter dispatches CSS-vs-HTML by content sniffing (`looks_like_html`) — adapter-local, cost ~6 lines *inside* the adapter, but it is E2's fingerprint and belongs in DDD-adapter-05's evidence. |
+| `surface.rs`/`classify.rs`/`seam_event.rs`/`govern_tools`/`seam`/`why`/`store` clean | **Correct for all.** `render.rs` was also predicted clean and moved — for the phase-3 dogfood extraction, not for language admission (§5.2). |
+| The PolicyRow-lacks-an-`extra`-matcher risk → resolved adapter-locally or it is leakage | **Resolved adapter-locally.** Ownership and decorative exemptions live in the enrichment (drop) and the facts fn (never lift); `surface.rs` gained no matcher. The M6 orphan-impl shape repeated exactly. |
+
+Nothing unpredicted leaked. The one file outside the prediction that moved
+for non-dogfood reasons was none.
+
+---
+
+## 6. Governed-tail reading
+
+The `html-css` class went to `enforce` (dec/web/htmlcss-enforce) before
+any authored HTML/CSS landed. Three governed edits ran through
+`ddd serve` stdio — the same batch-driver shape M6 needed, unchanged —
+producing **38 correspondence rows** (seam-event/9–46) and **19 seam
+declarations**.
+
+| What happened | Count |
+|---|---|
+| Contract-surface edits rejected, then declared, then applied | 6 events-rounds / 3 edits |
+| Surface events demanded (10 classes, 7 palette tokens, 2 surface tokens) | 19 |
+| Declarations authored, all symbol-granular | 19 |
+| Declarations with empty `verdict_knowledge` (the rubber-stamp signal) | 0 |
+| Non-surface pair edits in the same window (token value changes, sample regeneration by the renderer) | no events, by design |
+
+### 6.1 The class has a different edit rhythm, and it showed immediately
+
+Rust's rhythm is one or two symbols per edit; M6's whole tail demanded 4
+declarations. A stylesheet's rhythm is different: **its birth lands the
+entire vocabulary at once.** The first governed edit (the verbatim
+extraction of the render CSS) produced one rejection carrying ten
+class demands, and preamble 2's symbol-granular matching — correct, and
+freshly landed — demanded ten separate declarations for it. The
+declarations were real (each status class genuinely encodes verdict
+knowledge; the sentences wrote themselves), but the shape is clear: for
+this class, a *vocabulary-granule* declaration — one seam covering a
+named set of symbols landing together — may be the right amendment.
+Filed as an observation for the principal, not applied; the
+correspondence rows (ten rows, one edit, ten declarations) are the
+evidence a future decision would cite.
+
+### 6.2 What was absent: the warmup tax
+
+M6's friction reading led with the 14-second first-call warmup and the
+discarded `loading` call. The hostless tail had **none of that** — the
+first `ddd_apply_edit` of the session answered in milliseconds. The
+absence localises the loading cost cleanly: it is a *host* cost, not an
+interception cost, which is what DDD-adapter-04 would predict.
+
+### 6.3 Dogfood caught an adapter bug on first contact
+
+The first `report escapes` run against the real pair flagged four "dead
+selectors" that were CSS comment prose — the pair check's selector walk
+did not strip comments, though the facts side did. Fixed by sharing the
+facts side's stripper; regression test added. Adapter-internal (both the
+bug and the fix), so it does not classify above — but it is worth
+recording that the check's first real finding was about itself, and the
+second real run came back honest: 20 selectors checked, `:root` reported
+as outside the modelled subset rather than silently passed.
+
+### 6.4 The voluntariness caveat, half-answered for this class
+
+M6 §5.3 stands: routing an edit through `ddd_apply_edit` is voluntary,
+and nothing about M7 changes that for *declarations*. But this class is
+the first whose contract has an after-the-fact gate regardless of
+routing: a class introduced or stranded outside the tool becomes an
+`orphan-class`/`dead-selector` finding in `report escapes`, and a token
+added outside the manifest becomes `UNGOVERNED tokens/--x` in `ddd diff`
+— the analogue of `ddd what --strict`, which code still lacks. The pair's
+seam failures are now findings whether or not the interceptor was in the
+loop; only the *declaration* discipline remains voluntary.
+
+### 6.5 One measured gap in the pair facts
+
+The first 34 rows carry `pair_counterpart: ""` — the sample page did not
+exist yet when the vocabulary and palette landed, so the enrichment had
+nothing to resolve against. The final governed edit (the surface tokens),
+run after the sample was committed, produced rows carrying the full pair
+facts: both files, direction, token id. The gap is honest (the counterpart
+genuinely wasn't there) but it documents an ordering sensitivity: pair
+facts are only as complete as the pair map's resolution at edit time.
+
+### 6.6 Preamble 2, exercised at n=10
+
+The ten-class edit was the first real test of symbol-granular enforce
+matching: ten surface events, ten declarations, and every row's
+`linked_declaration` names its own symbol — zero of the mis-attributions
+that corrupted `seam/rust/default-command` at M6. The corrupted M6 entry
+itself remains untouched, per the ruling; the regression tests stand in
+its place.
+
+---
+
+## 7. Proposed status consequences — for the principal, not applied
+
+Nothing below has been applied to the graph.
+
+### 7.1 `DDD-adapter-01` — survived its scheduled falsification attempt; **strengthen**
+
+The claim's falsifier — *contract-surface knowledge that cannot be
+localised to a language adapter* — was given its best shot yet: an
+artifact class whose contract surface is not symbol events at all, whose
+producer is not an LSP host, and whose governed unit is two files. Every
+piece of pair knowledge localised: token typing, class vocabulary, layer
+grading, link rewiring, ownership, decorative thresholds, and the
+cross-file checks all live in the adapter module; the surface vocabulary,
+the classifier, and the row schema are byte-identical to their pre-M7
+state. The PolicyRow-expressiveness gap (no `extra` matcher) repeated
+M6's orphan-impl shape and was absorbed the same adapter-local way.
+
+**Recommendation: extend the evidence with the language-four result and
+promote `reported` → `established`** — the claim has now held across
+four languages, three fact producers (two LSP hosts of different
+lifecycle shapes, the What's typed graph, and a hostless parser), and one
+scheduled falsification attempt at its own falsifier. If the promotion
+feels early at n=4, the fallback is unchanged wording at `reported` with
+the evidence extended; the drafted evidence text works for either.
+
+### 7.2 `DDD-adapter-05` — proposed as new, **reported**: the event-source half
+
+Drafted for filing on acceptance:
+
+> **Statement.** The seam-event abstraction's *contract-surface* half is
+> producer-independent, but its *event-source* half assumed one producer
+> shape: a language server per language, one document per edit. Admitting
+> a producer outside that shape costs bounded, named changes in the
+> serve/host layer — never in the surface vocabulary. At M7 a hostless
+> two-file producer cost 2 assumptions / ≈58 lines: (E1) every adapter
+> has a spawnable host — `hosted` plus a hostless classification path;
+> (E2) a symbol's facts derive from one document's text — an `enrich`
+> hook for facts only the repo context carries (counterpart, direction).
+> The adapter-local content-sniff dispatch (`looks_like_html`) is E2's
+> fingerprint: the facts signature carries no document identity at all.
+> This generalises DDD-adapter-04 (whose scope is LSP host *lifecycle*)
+> to the producer boundary itself: each new producer *shape* — not each
+> new language — is a budgeted core cost, and rust-analyzer's 114 lines
+> plus this 58 are the first two entries in that budget's ledger.
+>
+> **Falsifier.** (a) A fifth producer shape (e.g. a build-system-backed
+> producer, or a genuinely multi-document N>2 unit) forcing changes
+> *outside* the two seams now expressible (`hosted`, `enrich`) — that
+> would show the generalisation is still enumerating cases, not done.
+> (b) Contract-surface leakage at any future producer — which takes
+> DDD-adapter-01 down first and this claim with it.
+
+### 7.3 PRD §11 amendment — proposed wording
+
+The scope-creep row's mitigation currently ends at the M6 re-pricing.
+Proposed continuation: *"…and the event-source boundary is priced the
+same way (M7): a producer outside the LSP-host shape costs bounded
+serve-layer changes (2 assumptions / ~58 lines for the hostless pair
+producer), never surface-vocabulary changes; each new producer shape is a
+budget line, each new language within a known shape is adapter-only."*
+
+### 7.4 Working entries filed during the milestone (already in the graph, flagged for review)
+
+`DDD-web-01` (the demand claim, reported), `DDD-web-02` (the palette
+claim, projected), `DDD-web-visual-01` (the screenshot-diff evidence
+path, reported, version-indexed to the Chromium build), the two ruled
+decisions recorded verbatim from the session brief
+(`dec/web/plain-pair-scope`, `dec/web/htmlcss-enforce`), and the three
+seeded governance decisions (`dec/web/render-status-palette`,
+`dec/web/token-discipline`, `dec/web/markup-validity`). These are
+milestone working content in the M5/M6 tradition, not experiment status
+consequences; the 19 seam declarations are likewise staged in the diff
+for review.
+
+---
+
+## 8. What M7 leaves standing
+
+- **The vocabulary-granule question** (§6.1): symbol-granular enforce is
+  correct and now proven at n=10, but a stylesheet's birth suggests a
+  set-granule declaration form. Observation for the principal.
+- **Razor/Blazor and JS/TS** stay out per `dec/web/plain-pair-scope`;
+  `<script>` bodies were opaque bytes throughout.
+- **Chip backgrounds and the remaining raw surface values** are not
+  tokenised — the seeded stylelint rule scopes to `color:` properties.
+  Wider tokenisation and rule curation are a future curation session's
+  content by design (the anti-goal held).
+- **Emitted web-tool outputs are fixture-proven but not wired into this
+  repo's CI** — the invocations are documented in the format-4 migration
+  note; running Node tools in CI is a decision nobody has taken.
+- **M6 §5.3's routing-voluntariness** remains open for the `code` class;
+  this class now has its post-hoc gate (§6.4), code still does not.
