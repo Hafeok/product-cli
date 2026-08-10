@@ -39,6 +39,16 @@ accountable human actor (or to another store); there is nothing to rewrite,
 because history is append-only. The "exactly nine" contract is now "exactly
 ten" everywhere it is asserted, including the closed-enum count test.
 
+## L2 — the graph stage arrives (2026-08-10, no format change)
+
+Not a `format` bump, not a `CANONICAL_FORM` bump, not part of the file
+gate's ten classes. `.decisions/index/` (reserved since format 1) is now
+written by `ledger reindex` as byte-deterministic Turtle, and `verify`
+gains a distinct graph stage (`G001`–`G003`, cross-entry referential
+integrity) with unchanged exit semantics. Specified in
+`ledger-format-v1.md` §8, explicitly outside the import surface an
+outside implementation must reproduce.
+
 ## Format 1 / `ledger.decision-version.v1` (L0)
 
 The baseline. Two file schemas — the set file and the change-set log file —

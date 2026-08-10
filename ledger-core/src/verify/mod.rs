@@ -46,6 +46,9 @@ impl Options {
 #[derive(Debug, Default, Serialize)]
 pub struct Report {
     pub findings: Vec<Finding>,
+    /// The L2 graph stage: cross-entry shape findings (`G001`–`G003`),
+    /// distinct from the file gate's closed ten classes.
+    pub graph: Vec<crate::graph::GraphFinding>,
     /// Entries that loaded cleanly, for the summary line.
     pub entries: usize,
     /// Decisions the log carries.
@@ -59,9 +62,10 @@ pub struct Report {
 }
 
 impl Report {
-    /// Whether the gate passes.
+    /// Whether the gate passes: no file-stage findings, no graph-stage
+    /// findings. Two stages, one exit discipline.
     pub fn is_conformant(&self) -> bool {
-        self.findings.is_empty()
+        self.findings.is_empty() && self.graph.is_empty()
     }
 }
 
@@ -96,6 +100,8 @@ pub fn verify(store: &Store, opts: &Options) -> Report {
     findings.sort_by(|a, b| (a.class, &a.subject).cmp(&(b.class, &b.subject)));
     findings.dedup();
     report.findings = findings;
+    // The graph stage: structural integrity, so it runs under both gates.
+    report.graph = crate::graph::shapes::graph_findings(store);
     report
 }
 

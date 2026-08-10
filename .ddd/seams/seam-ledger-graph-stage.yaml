@@ -1,0 +1,13 @@
+format: 1
+id: seam/ledger/graph-stage
+boundary: pub GraphClass/GraphFinding with turtle::emit in ledger-core/src/graph/
+verdict_knowledge: 'A caller learns that the graph is a materialised, disposable view: the Turtle emission is byte-deterministic over the log alone, so deleting .decisions/index/ and rebuilding reproduces identical bytes — the PRD §5 correctness proof, run in CI. The shape checks G001–G003 are a distinct verify stage, deliberately outside the file gate''s closed ten classes: they name cross-entry referential integrity the per-file schema cannot see, and an outside implementation of the format may skip them without losing conformance. The SPARQL engine is product-core''s (OD-2); ledger-core carries no graph dependency of its own.'
+contract_location: ledger-core/src/graph/mod.rs#GraphClass
+obligations:
+- the emission reads the log and nothing else — no clock, no environment, no index feedback; determinism is tested by double-emission plus the delete-and-rebuild byte comparison
+- the graph classes are closed at three; a G004 lands with its row in docs/ledger-format-v1.md §8 in the same commit
+- graph findings fail verify with unchanged exit semantics but never join VerifyClass — the ten-class file contract is the import surface, this stage is not
+metadata:
+  kind: enum
+  symbol: GraphClass
+  visibility: public

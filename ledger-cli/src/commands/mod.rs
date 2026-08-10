@@ -10,6 +10,7 @@ mod add;
 mod common;
 mod declare;
 mod evolve;
+mod graph_cmds;
 mod init;
 mod inspect;
 mod sign;
@@ -86,6 +87,18 @@ pub enum Commands {
     Blame {
         decision: String,
     },
+    /// Disposition coverage per set, per namespace, with supersession chains
+    Coverage {
+        /// Limit to one set
+        #[arg(long, value_name = "SET")]
+        set: Option<String>,
+        /// Emit the report as JSON
+        #[arg(long)]
+        json: bool,
+        /// Judge expiry against this date instead of today
+        #[arg(long, value_name = "DATE")]
+        today: Option<String>,
+    },
     /// Declare a decision set: floor, ground, owner
     Declare {
         #[arg(long, value_name = "ID")]
@@ -120,6 +133,8 @@ pub enum Commands {
         #[arg(long, value_name = "SET")]
         set: Option<String>,
     },
+    /// Rebuild the RDF index under .decisions/index/ from the log
+    Reindex,
     /// Restate a decision as a new version; prior acceptances become history
     Revise {
         decision: String,
@@ -197,6 +212,9 @@ fn dispatch(command: Commands, root: Option<PathBuf>) -> Result<i32, String> {
             evolve::allocate(root, &decision, &store, &discharge, stage.as_deref(), expectation, actor.as_deref())
         }
         Commands::Blame { decision } => inspect::blame(root, &decision),
+        Commands::Coverage { set, json, today } => {
+            graph_cmds::coverage(root, set.as_deref(), json, today.as_deref())
+        }
         Commands::Declare { set, title, tolerance_floor, ground, owner, notes } => {
             declare::run(root, declare::Flags { set, title, tolerance_floor, ground, owner, notes })
         }
@@ -205,6 +223,7 @@ fn dispatch(command: Commands, root: Option<PathBuf>) -> Result<i32, String> {
         }
         Commands::Init => init::run(root),
         Commands::Log { set } => inspect::log(root, set.as_deref()),
+        Commands::Reindex => graph_cmds::reindex(root),
         Commands::Revise { decision, statement, based_on, parent } => {
             evolve::revise(root, &decision, statement, &based_on, parent.as_deref())
         }

@@ -1,0 +1,17 @@
+format: 1
+id: cs:01KZPMA8T68ZYVCJZXG9Z07FYW
+created_at: 2026-08-10T20:02:39.044418523Z
+created_by: fixture-human@example
+decisions:
+- id: dec:fixture.coverage/01KZPMA8T6DGQ2MVT4XYDM1JHS
+  created_at: 2026-08-10T20:02:39.044418523Z
+  created_by: fixture-human@example
+versions:
+- decision: dec:fixture.coverage/01KZPMA8T6DGQ2MVT4XYDM1JHS
+  hash: sha256:9229d1b962a4adfb7da1194ea95462a42b88797e0d44255e1a0b19bab5117aad
+  set: coverage-fixture
+  statement: d7 superseded root.
+  allocation: constraint
+  discharge:
+  - analyzer:DEC006
+  tolerance_floor_at_creation: T1

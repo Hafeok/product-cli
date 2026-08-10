@@ -488,3 +488,48 @@ second copy of the rules:
 | `status` | `verify::view::View` — latest versions, live acceptances, pendency |
 | `blame` | `blame::introducing_author` |
 | `diff` | `canon::canonical_json`, field by field |
+
+L1 shipped against this table (2026-08-10); every verb routes through the
+listed surface via a delta-gate — the verb refuses at write exactly the
+findings `verify` would report afterwards. Semantic `diff <ref>..<ref>`
+alone is deferred: it needs store-at-revision loading, which arrives with
+L3's per-decision merge base.
+
+---
+
+## 8. The graph stage (L2)
+
+**Outside the import surface.** Sections 1–5 are what an outside
+implementation of the *format* reproduces; this section describes the
+reference implementation's L2 graph stage, which an outside implementation
+may skip without losing format conformance. The file gate's closed ten
+classes (§5) are unchanged by it.
+
+The `.decisions/index/` cache holds the RDF materialisation of the log
+(`index/ledger.ttl`), rebuilt by `ledger reindex`. The log is the source of
+truth; the emission is byte-deterministic, so deleting the index and
+rebuilding reproduces it byte-identically — the PRD §5 correctness test,
+run in CI. Acceptance provenance is PROV-O (an acceptance
+`prov:wasAttributedTo` its actor; a version `prov:wasRevisionOf` its
+parent; both `prov:wasGeneratedBy` their change-set). `based_on` tokens
+become `ledger:basedOn` literals exactly as written — the vocabulary stays
+open at this milestone; the graph exposes it and does not police it.
+
+`ledger verify` additionally runs three SPARQL shape checks over the
+emitted graph — cross-entry referential integrity the per-file schema
+cannot name. They report as a **distinct stage** of the same command, with
+unchanged exit semantics (findings exit `1`):
+
+| Code | Fails when |
+|---|---|
+| `G001` | a `supersedes` edge targets a decision no change-set filed |
+| `G002` | a version's `parent` hash matches no filed version of its decision |
+| `G003` | a version names a decision no change-set introduced |
+
+The graph classes are closed the same way the file classes are: a `G004`
+is a change to this section. Coverage (`ledger coverage`) reports the
+seven-state disposition vocabulary — `undecided`, `awaiting-acceptance`,
+`decided`, `escaped-priced`, `escape-review-due`, `expired`, `superseded`
+— per set and per namespace, with supersession chains walked to their
+tips, and always states §8-of-the-PRD's honest limit: coverage is measured
+against the enumerated set, and nothing verifies the set itself.

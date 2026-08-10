@@ -1,0 +1,12 @@
+format: 1
+id: cs:01KZPMA8S0K9SNDXXK4NS2ZWFA
+created_at: 2026-08-10T20:02:39.006522607Z
+created_by: fixture-human@example
+acceptances:
+- id: acc:01KZPMA8S0SMP6QMW86G2VRSQD
+  decision: dec:fixture.coverage/01KZPMA8QV1Y46EKZ5973TER8A
+  version: sha256:b59536f02c9184a238a17a4d236102757d065c93183e634aaefe55415437bcf0
+  actor: fixture-human@example
+  at: 2026-08-10T20:02:39.006522607Z
+  scope: version
+  expires_at: 2026-12-31

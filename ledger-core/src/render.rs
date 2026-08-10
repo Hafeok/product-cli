@@ -19,9 +19,16 @@ pub fn render(report: &Report) -> String {
             report.decisions
         ));
     } else {
-        lines.push(format!("non-conformant — {} finding(s):", report.findings.len()));
+        let total = report.findings.len() + report.graph.len();
+        lines.push(format!("non-conformant — {total} finding(s):"));
         for f in &report.findings {
             lines.push(format!("  - [{}] {}: {}", f.class.code(), f.subject, f.message));
+        }
+        if !report.graph.is_empty() {
+            lines.push(format!("graph stage — {} finding(s):", report.graph.len()));
+            for g in &report.graph {
+                lines.push(format!("  - [{}] {}: {}", g.class.code(), g.subject, g.message));
+            }
         }
     }
     lines.extend(status_lines(report));

@@ -1,0 +1,17 @@
+format: 1
+id: cs:01KZPMA8WVA4P7GEDV915Y5GG8
+created_at: 2026-08-10T20:02:39.128446253Z
+created_by: fixture-human@example
+decisions:
+- id: dec:fixture.coverage/01KZPMA8WTDCA883S49AKX2AV7
+  created_at: 2026-08-10T20:02:39.128446253Z
+  created_by: fixture-human@example
+versions:
+- decision: dec:fixture.coverage/01KZPMA8WTDCA883S49AKX2AV7
+  hash: sha256:0be15d7224557342dedf5c2ca216da438d3993aa5480c885d1a263f148660088
+  set: coverage-fixture
+  statement: d9 chain tip.
+  allocation: constraint
+  discharge:
+  - analyzer:DEC008
+  tolerance_floor_at_creation: T1
