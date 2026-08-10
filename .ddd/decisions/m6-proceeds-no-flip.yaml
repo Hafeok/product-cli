@@ -35,3 +35,15 @@ notes: >
   M6's content is the third language adapter, which is the experiment that
   moves DDD-adapter-01 off `projected`. That is why the basis edge points at
   the adapter-cost claim rather than at a scope claim.
+
+
+  Basis re-affirmed 2026-08-10 (Emil). DDD-adapter-01 did move off projected,
+  to reported, which is the outcome the paragraph above anticipated — so this
+  decision's basis strengthened and nothing is re-litigated. The pin stays at
+  its decision-time value per PRD §6 rule 6, and `ddd report escapes` will keep
+  listing the edge as basis loss; this note is the record that it was looked
+  at. Also noted at ratification: the entry's assertion that the flip condition
+  is filed nowhere in this repository was true against the tree at a8871da and
+  is stale now — canon was synced afterwards (e90e6ea) and the condition is
+  filed in the PRD M7 row. The entry stands as the record of what was known at
+  ruling time, which the principal ruled was its whole value.

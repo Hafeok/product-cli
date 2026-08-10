@@ -17,3 +17,13 @@ notes: >
   in 136aa55 (2026-08-02) and DDD-adapter-01 has not been touched since, so
   the status and changed values above are the claim's state at decision time,
   recovered rather than assumed. Not a re-decision.
+
+
+  Basis re-affirmed 2026-08-10 (Emil). DDD-adapter-01 moved projected ->
+  reported on M6's contract-surface evidence, so this decision's basis
+  strengthened rather than weakened and nothing in the rationale is
+  re-litigated. The pin above is deliberately left at its decision-time value,
+  per the sentence before this one and PRD §6 rule 6: it records what was
+  known on 2026-08-02, not what is known now. `ddd report escapes` will
+  therefore keep listing this edge as basis loss, correctly — the basis did
+  move, and this note is the record that it was looked at.

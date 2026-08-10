@@ -43,3 +43,12 @@ notes: >
   filed as evidence on DDD-arch-05 (reported, 2026-08-10). Rescheduled by
   ruling to the M7 preamble, task 2. The corrupted seam declaration stays in
   place, notes intact, until that task lands.
+
+
+  Basis re-affirmed 2026-08-10 (Emil). DDD-arch-05 moved projected -> reported
+  and gained a paragraph naming the metadata-corruption consequence, so this
+  decision's basis strengthened in both status and content — the extension
+  describes exactly the damage the tightening prevents. Nothing is
+  re-litigated. The pin stays at its decision-time value per PRD §6 rule 6,
+  and `ddd report escapes` will keep listing the edge as basis loss; this note
+  is the record that it was looked at.
