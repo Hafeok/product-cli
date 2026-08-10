@@ -34,3 +34,12 @@ based_on:
     status: projected
     changed: 2026-08-07
 date: 2026-08-07
+notes: >
+  Did not land in M6. The decision's own acceptance test is a property of the
+  correspondence rows, so M6 ran its governed tail with the file arm still in
+  place in order to observe the falsifier rather than pre-empt it. It fired on
+  the first enforce-mode edit — seam-event/4, symbol host_command, linked to
+  seam/rust/default-command — and the metadata corruption that followed is now
+  filed as evidence on DDD-arch-05 (reported, 2026-08-10). Rescheduled by
+  ruling to the M7 preamble, task 2. The corrupted seam declaration stays in
+  place, notes intact, until that task lands.
