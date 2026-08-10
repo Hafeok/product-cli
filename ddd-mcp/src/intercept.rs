@@ -76,7 +76,12 @@ fn intercept(
     let warning = (adapter.posture_warning)(file, flags);
     let rel = state.rel_display(file);
     if mode == "warn" {
-        let rows = log_events(state, adapter, mode, &rel, &surface, &counts, "applied-warned", &[])?;
+        // Advisory matching keeps the file arm; the rows carry the generous
+        // link, but declaration metadata stays symbol-exact (enforce-only)
+        // so a broad match can never overwrite another symbol's facts.
+        let matches = match_declarations(state, &rel, &surface, false);
+        let rows =
+            log_events(state, adapter, mode, &rel, &surface, &counts, "applied-warned", &matches)?;
         write_disk(file, new_text)?;
         return Ok(json!({
             "status": "applied", "intercepted": true, "mode": "warn",
@@ -85,7 +90,7 @@ fn intercept(
             "events_logged": rows, "posture_warning": warning,
         }));
     }
-    let matches = match_declarations(state, &rel, &surface);
+    let matches = match_declarations(state, &rel, &surface, true);
     if matches.iter().all(Option::is_some) {
         let linked: Vec<String> = matches.iter().flatten().map(|d| d.id.clone()).collect();
         let rows =
@@ -274,12 +279,18 @@ fn demands(
         .collect()
 }
 
-/// Same-session matching: a declaration covers an event when it names the
-/// symbol or its contract_location names the file.
+/// Same-session matching (`dec/ddd/enforce-matching-tightens-to-symbol`).
+///
+/// In enforce mode a declaration covers an event only when it names the
+/// event's symbol: the file arm admitted unexamined symbols and corrupted
+/// the correspondence record (`DDD-arch-05`, seam-event/4). In warn mode
+/// the declaration is advisory and the edit applies either way, so the
+/// broad file arm stays — a generous link on a row written regardless.
 fn match_declarations(
     state: &ServeState,
     rel_file: &str,
     events: &[SurfaceEvent],
+    symbol_only: bool,
 ) -> Vec<Option<Declared>> {
     let declared = state.session.lock().map(|l| l.declared.clone()).unwrap_or_default();
     events
@@ -289,7 +300,7 @@ fn match_declarations(
                 .iter()
                 .find(|d| {
                     d.symbol.as_deref() == Some(e.facts.name.as_str())
-                        || d.contract_location.contains(rel_file)
+                        || (!symbol_only && d.contract_location.contains(rel_file))
                 })
                 .cloned()
         })
