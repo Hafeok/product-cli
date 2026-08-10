@@ -57,10 +57,12 @@ pub const ADAPTER: Adapter = Adapter {
     ready: ReadySignal::NotificationWhere("experimental/serverStatus", quiescent),
     extra_capabilities: capabilities,
     needs_open_handshake: false,
+    hosted: true,
     facts: rust_facts::facts,
     policy,
     visibility_rank,
     posture_warning,
+    enrich: None,
 };
 
 /// rust-analyzer repeats `experimental/serverStatus` and carries the answer

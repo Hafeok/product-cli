@@ -9,6 +9,10 @@
 
 pub mod bicep;
 pub mod csharp;
+mod csharp_facts;
+pub mod htmlcss;
+mod htmlcss_facts;
+pub mod htmlcss_pair;
 pub mod rust;
 mod rust_facts;
 
@@ -18,7 +22,7 @@ use serde_json::{json, Value};
 
 use crate::client::ServerState;
 use crate::protocol::RawSymbol;
-use crate::surface::{PolicyRow, SymbolFacts};
+use crate::surface::{PolicyRow, SurfaceEvent, SymbolFacts};
 
 /// How a host announces that it can answer semantic requests.
 ///
@@ -110,6 +114,11 @@ pub struct Adapter {
     pub extra_capabilities: fn() -> Value,
     /// Host wants the workspace's build inputs announced after initialize.
     pub needs_open_handshake: bool,
+    /// Whether a language server exists behind this adapter at all. The
+    /// HTML+CSS pair has none (M7): its facts are parsed from source text,
+    /// so the serve layer must classify without opening a host — the host
+    /// fields above are inert when this is false.
+    pub hosted: bool,
     /// Derive symbol facts from source text plus LSP symbols.
     pub facts: fn(&str, &[RawSymbol], &AdapterFlags) -> Vec<SymbolFacts>,
     /// The contract-surface policy table (data, not logic — PRD §9).
@@ -119,11 +128,19 @@ pub struct Adapter {
     /// A repo-posture warning worth raising for edits near this file
     /// (e.g. C#'s InternalsVisibleTo → suggest the library posture).
     pub posture_warning: fn(&Path, &AdapterFlags) -> Option<String>,
+    /// Post-classification enrichment: facts a single document cannot
+    /// carry (the pair's counterpart files, direction) stamped onto the
+    /// events before demands plus rows. `None` for single-document
+    /// adapters; called as (repo root, edited file, config, events).
+    pub enrich: Option<EnrichFn>,
 }
+
+/// The enrichment hook's shape: (repo root, edited file, config, events).
+pub type EnrichFn = fn(&Path, &Path, &ddd_core::config::DddConfig, &mut Vec<SurfaceEvent>);
 
 /// Every adapter the build ships.
 pub fn all() -> &'static [&'static Adapter] {
-    &[&csharp::ADAPTER, &bicep::ADAPTER, &rust::ADAPTER]
+    &[&csharp::ADAPTER, &bicep::ADAPTER, &rust::ADAPTER, &htmlcss::ADAPTER]
 }
 
 /// The adapter registered for a language name.
@@ -146,13 +163,26 @@ mod tests {
         assert_eq!(for_path(Path::new("/x/A.cs")).map(|a| a.language), Some("csharp"));
         assert_eq!(for_path(Path::new("/x/m.bicep")).map(|a| a.language), Some("bicep"));
         assert_eq!(for_path(Path::new("/x/lib.rs")).map(|a| a.language), Some("rust"));
+        assert_eq!(for_path(Path::new("/x/p.html")).map(|a| a.language), Some("htmlcss"));
+        assert_eq!(for_path(Path::new("/x/s.css")).map(|a| a.language), Some("htmlcss"));
         assert!(for_path(Path::new("/x/notes.md")).is_none());
     }
 
     #[test]
     fn artifact_classes_stay_in_the_predicate_vocabulary() {
         for a in all() {
-            assert!(["code", "configuration"].contains(&a.artifact_class), "{}", a.language);
+            assert!(
+                ["code", "configuration", "html-css"].contains(&a.artifact_class),
+                "{}",
+                a.language
+            );
+        }
+    }
+
+    #[test]
+    fn hostless_adapters_carry_no_host_command() {
+        for a in all() {
+            assert_eq!(a.hosted, !a.default_command.is_empty(), "{}", a.language);
         }
     }
 }

@@ -1,0 +1,20 @@
+format: 1
+id: seam-event/26
+at: 2026-08-10T12:53:16Z
+language: htmlcss
+artifact_class: html-css
+mode: enforce
+file: ddd-core/assets/render.css
+symbol: reported
+container: ''
+kind: class
+change: added
+visibility: unlayered
+signature: ''
+rule: web-class-membership
+rule_claim: the class vocabulary is the pair's shared contract — consumed by HTML, defined by owned CSS; membership changes are where orphan classes and dead selectors are born
+outcome: applied-linked
+linked_declaration: seam/web/render-reported
+extra:
+  pair_counterpart: ''
+  pair_direction: definition

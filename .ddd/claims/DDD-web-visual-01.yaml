@@ -1,0 +1,38 @@
+format: 4
+id: DDD-web-visual-01
+statement: >
+  "Looks right" is an open predicate no static check closes — but a
+  deterministic screenshot-diff converts a visual claim from unchecked to
+  reported-with-evidence: given a fixed browser build, a font-free
+  fixture, a fixed window and scale factor, the same pair renders to
+  byte-identical pixels, so any pixel difference is a real visual change,
+  including the class the interceptor is deliberately silent on (a
+  same-type token value drift).
+status: reported
+version_index:
+  tool: "Chromium 141.0.7390.37 (Playwright headless_shell build 1194)"
+evidence: >
+  Measured 2026-08-10 on this workspace, harness ddd-cli/tests/visual.rs
+  over the pure-geometry panel fixture
+  (ddd-cli/tests/fixtures/visual/panel.html). Determinism: two renders of
+  the unchanged panel produced byte-identical PNGs
+  (sha256 e3389b15fdcdc7c5be010199b0adc8c68674fef24f99356a237c567a6a24b3fc,
+  440x140, --headless --disable-gpu --hide-scrollbars
+  --force-device-scale-factor=1). Regression: drifting --status-ok from
+  #1a7f37 to #2ea043 — a same-type token value change, which
+  web-token-membership/-retype correctly produce no event for — changed
+  the render to sha256
+  9ad4ed9bdb4e0b5c4673d47876a8621003e0259e492ab038e34c3792cc0ff8ca. The
+  harness asserts both directions and is gated on a local Chromium, per
+  the fixtures-not-sdk posture; CI machines without a browser skip it.
+falsifier: >
+  Nondeterminism inside the modelled envelope — the same fixture, browser
+  build, window and scale factor rendering to different bytes across runs
+  — or a visual regression class expressible in the fixture vocabulary
+  (token drift, class loss, layer reorder) that renders byte-identically
+  and so cannot be caught as pixels.
+owner: none
+changed: 2026-08-10
+revalidate_by: 2027-08-10
+depends_on:
+  - DDD-web-02

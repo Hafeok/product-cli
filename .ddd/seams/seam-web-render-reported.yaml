@@ -1,0 +1,15 @@
+format: 1
+id: seam/web/render-reported
+boundary: class reported in ddd-core/assets/render.css
+verdict_knowledge: Marks a claim with evidence filed; a consumer learns the entry has been exercised at least once.
+contract_location: ddd-core/assets/render.css#reported
+obligations:
+- the sample page docs/examples/ddd-render-sample.html keeps the class alive — a dead selector here is a report escapes finding
+- render.rs emits the class name verbatim; renaming either side alone orphans the other
+metadata:
+  kind: class
+  pair_counterpart: ''
+  pair_direction: definition
+  signature: ''
+  symbol: reported
+  visibility: unlayered

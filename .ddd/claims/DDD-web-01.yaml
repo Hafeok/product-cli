@@ -1,0 +1,28 @@
+format: 2
+id: DDD-web-01
+statement: >
+  The HTML↔CSS seam is where agent-authored visual work fails when it is
+  ungoverned: agents drift past the pair boundary — classes consumed with no
+  definition, selectors styling structure that no longer exists, token
+  values restated raw — because no predicate closes over the pair and the
+  only check is a human eyeball. The demand concentrates in Context&'s
+  visual deliverables, which are single-file HTML+CSS.
+status: reported
+evidence: >
+  Repeated observed agent failures on Context& visual deliverables, compiled
+  as the M7 basis (PRD §10, §13): zero closed predicates over the artifact
+  class, an undeclared class contract between markup and stylesheet, and
+  eyeball-only checking as the entire verification arrangement. The PRD
+  records this as compiled demand evidence — strong enough that a flip
+  condition against M6 was pre-registered on it — and the M6/M7 ordering
+  ruling (dec/ddd/m6-proceeds-no-flip) re-examined rather than assumed it.
+falsifier: >
+  Governed pair work in which the seam failures do not occur without
+  enforcement — e.g. a sustained run of agent-authored HTML+CSS where orphan
+  classes, dead selectors, or raw restatements of token values stay near
+  zero with the pair class at `warn` or `off`. The pair contract check's
+  finding classes measure this directly.
+owner: Emil
+changed: 2026-08-10
+revalidate_by: 2027-08-10
+depends_on: []

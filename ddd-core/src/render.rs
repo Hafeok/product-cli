@@ -27,18 +27,11 @@ pub fn render_html(store: &DddStore, escapes: &EscapesReport, today: &str) -> St
     b
 }
 
-const CSS: &str = "\
-body{font:15px/1.5 system-ui,sans-serif;margin:2rem auto;max-width:70rem;padding:0 1rem;color:#1c1c1c;background:#fdfdfc}\
-h1{font-size:1.5rem}h2{font-size:1.15rem;margin-top:2.2rem;border-bottom:1px solid #ddd;padding-bottom:.25rem}\
-table{border-collapse:collapse;width:100%;margin:.6rem 0}\
-th,td{text-align:left;vertical-align:top;padding:.3rem .6rem;border-bottom:1px solid #eee;font-size:.92em}\
-th{color:#555}code{background:#f2f1ee;padding:0 .25em;border-radius:3px}\
-.muted{color:#777}.ok{color:#1a7f37}.bad{color:#b3261e}.warn{color:#8a5a00}\
-.chip{display:inline-block;padding:0 .5em;border-radius:9px;font-size:.85em;color:#fff}\
-.chip.projected{background:#6a737d}.chip.reported{background:#0969da}\
-.chip.established{background:#1a7f37}.chip.retired{background:#8250df}\
-.card{border:1px solid #e4e2dd;border-radius:6px;padding:.7rem 1rem;margin:.7rem 0;background:#fff}\
-.card h3{margin:.1rem 0 .3rem;font-size:1em}ul{margin:.3rem 0 .3rem 1.2rem;padding:0}";
+/// The page's stylesheet — a real `.css` asset so the M7 pair governance
+/// (interception, the class contract check, the token discipline) applies
+/// to it; inlined into `<style>` at render time so the output stays one
+/// self-contained file.
+const CSS: &str = include_str!("../assets/render.css");
 
 fn esc(s: &str) -> String {
     s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;")

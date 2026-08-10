@@ -1,0 +1,15 @@
+format: 1
+id: seam/web/token-on-chip
+boundary: design token --on-chip in ddd-core/assets/render.css
+verdict_knowledge: The foreground guaranteed readable on every chip background; a chip added with a background this ink cannot sit on is a contract violation, not a taste issue.
+contract_location: ddd-core/assets/render.css#--on-chip
+obligations:
+- governed by dec/web/render-status-palette via .ddd/manifest/tokens.yaml — ddd why resolves the chain
+- a raw restatement of the value on a colour property is a stylelint finding (dec/web/token-discipline)
+metadata:
+  kind: token
+  pair_counterpart: ''
+  pair_direction: definition
+  signature: color
+  symbol: --on-chip
+  visibility: unlayered

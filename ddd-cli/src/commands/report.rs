@@ -12,19 +12,54 @@ pub fn run(root: Option<PathBuf>, sarif: Vec<PathBuf>, today: Option<String>) ->
     let detected = ddd_core::detect::detect(&repo_root, store.config.as_ref(), &sarif);
     let today = today.unwrap_or_else(|| chrono::Local::now().format("%Y-%m-%d").to_string());
     let report = ddd_core::report::report_escapes(&store, &detected, &today);
-    print_report(&report, &today);
+    let config = store.config.clone().unwrap_or_default();
+    let pair = ddd_lsp::adapter::htmlcss_pair::check_pairs(&repo_root, &config);
+    print_report(&report, &pair, &today);
     Ok(())
 }
 
-fn print_report(report: &EscapesReport, today: &str) {
+fn print_report(
+    report: &EscapesReport,
+    pair: &ddd_lsp::adapter::htmlcss_pair::PairReport,
+    today: &str,
+) {
     print_diff(report);
     print_cadence(report, today);
     print_basis(report);
-    if report.is_clean() {
+    print_pair(pair);
+    if report.is_clean() && pair.is_clean() {
         println!("\nno escaped decisions — every governed diagnostic resolves");
     } else {
-        let n = report.diff.findings.len() + report.cadence.len() + report.basis_loss.len();
+        let n = report.diff.findings.len()
+            + report.cadence.len()
+            + report.basis_loss.len()
+            + pair.findings.len();
         println!("\n{n} escape(s) — file the missing entries or revalidate the claims");
+    }
+}
+
+/// The M7 pair contract: orphan classes plus dead selectors, with the
+/// check's own coverage stated (dec/ddd/report-coverage-explicit).
+fn print_pair(pair: &ddd_lsp::adapter::htmlcss_pair::PairReport) {
+    if pair.coverage.units == 0 {
+        return;
+    }
+    println!("\n== html+css pair contract ==");
+    if pair.is_clean() {
+        println!(
+            "clean — {} unit(s), {} selector(s) checked",
+            pair.coverage.units, pair.coverage.selectors_checked
+        );
+    }
+    for f in &pair.findings {
+        println!("{} `{}` — {}", f.kind, f.name, f.detail);
+    }
+    if !pair.coverage.selectors_skipped.is_empty() {
+        println!(
+            "not checkable: {} selector(s) outside the modelled subset — {}",
+            pair.coverage.selectors_skipped.len(),
+            join_capped(&pair.coverage.selectors_skipped)
+        );
     }
 }
 

@@ -1,0 +1,15 @@
+format: 1
+id: seam/web/render-chip
+boundary: class chip in ddd-core/assets/render.css
+verdict_knowledge: A reader learns an entry's position on the claim-status ladder at a glance; the chip is the status vocabulary made visual.
+contract_location: ddd-core/assets/render.css#chip
+obligations:
+- the sample page docs/examples/ddd-render-sample.html keeps the class alive — a dead selector here is a report escapes finding
+- render.rs emits the class name verbatim; renaming either side alone orphans the other
+metadata:
+  kind: class
+  pair_counterpart: ''
+  pair_direction: definition
+  signature: ''
+  symbol: chip
+  visibility: unlayered

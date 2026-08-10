@@ -28,3 +28,15 @@ public class Tools
     [McpServerTool]
     private string Fetch() { return "x"; }
 }
+
+public enum Status
+{
+    Active,
+    Suspended,
+}
+
+internal enum Toggle
+{
+    On,
+    Off,
+}

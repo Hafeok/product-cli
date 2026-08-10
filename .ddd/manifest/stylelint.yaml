@@ -1,0 +1,8 @@
+# The stylelint namespace — one entry per rule .stylelintrc.json enables,
+# each mapping to a decision (PRD §6 rule 4). Seeded at M7 with the token
+# discipline; wider curation is a later session's content.
+format: 1
+rules:
+  - rule_id: declaration-property-value-disallowed-list
+    severity: error
+    decision: dec/web/token-discipline

@@ -1,0 +1,7 @@
+# The htmlvalidate namespace — one entry per rule .htmlvalidate.json
+# enables, each mapping to a decision (PRD §6 rule 4). Seeded at M7.
+format: 1
+rules:
+  - rule_id: no-dup-class
+    severity: error
+    decision: dec/web/markup-validity

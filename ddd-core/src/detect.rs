@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 use crate::config::DddConfig;
 use crate::configured::ConfiguredRule;
-use crate::{bicepconfig, cargolints, editorconfig, sarif};
+use crate::{bicepconfig, cargolints, editorconfig, htmlvalidateconfig, sarif, stylelintconfig, tokenfile};
 
 /// Everything detection saw, keyed by `(namespace, rule_id)`.
 #[derive(Debug, Default)]
@@ -53,12 +53,21 @@ impl DetectedRule {
 }
 
 /// The M2 adapter table: route a rule id (plus the SARIF driver that
-/// emitted it) to the manifest namespace that governs it.
+/// emitted it) to the manifest namespace that governs it. The web tools'
+/// kebab-case ids collide with Bicep's linter names, so their drivers are
+/// checked first.
 pub fn namespace_for(driver: &str, rule_id: &str) -> &'static str {
     if rule_id.starts_with("clippy::") {
         return "clippy";
     }
-    if driver.to_ascii_lowercase().contains("bicep") {
+    let driver = driver.to_ascii_lowercase();
+    if driver.contains("stylelint") {
+        return "stylelint";
+    }
+    if driver.contains("html-validate") {
+        return "htmlvalidate";
+    }
+    if driver.contains("bicep") {
         return "linter";
     }
     if is_bicep_id(rule_id) {
@@ -96,7 +105,64 @@ pub fn detect(root: &Path, config: Option<&DddConfig>, extra_sarif: &[PathBuf]) 
     for path in sarif_paths {
         ingest_sarif_file(&path, &mut state);
     }
+    if let Some(d) = config.and_then(|c| c.detect.as_ref()) {
+        ingest_web_outputs(root, d, &mut state);
+        ingest_token_files(root, d, &mut state);
+    }
     state
+}
+
+/// The web tools' own JSON outputs are the emitted sources for their
+/// namespaces (format 4); each listed file marks its namespace sourced
+/// even when the run was clean.
+fn ingest_web_outputs(root: &Path, d: &crate::config::DetectConfig, state: &mut DetectedState) {
+    let listed = [
+        ("stylelint", &d.stylelint, stylelintconfig::parse_output as fn(&str) -> _),
+        ("htmlvalidate", &d.htmlvalidate, htmlvalidateconfig::parse_output as fn(&str) -> _),
+    ];
+    for (ns, files, parse) in listed {
+        for rel in files.iter() {
+            let path = root.join(rel);
+            let display = path.to_string_lossy().replace('\\', "/");
+            let parsed = std::fs::read_to_string(&path)
+                .map_err(|e| e.to_string())
+                .and_then(|t| parse(&t));
+            match parsed {
+                Ok(pairs) => {
+                    state.sourced.insert(ns.to_string());
+                    for (rule_id, level) in pairs {
+                        let key = (ns.to_string(), rule_id);
+                        let entry = state.rules.entry(key).or_default();
+                        let (l, count, s) = entry.emitted.take().unwrap_or((level, 0, 0));
+                        entry.emitted = Some((l, count + 1, s));
+                    }
+                }
+                Err(e) => state.notes.push(format!("{display}: {e}")),
+            }
+        }
+    }
+}
+
+/// Registered token stylesheets are the configured source for the
+/// `tokens` namespace: one rule per custom property.
+fn ingest_token_files(root: &Path, d: &crate::config::DetectConfig, state: &mut DetectedState) {
+    for rel in &d.tokens {
+        let path = root.join(rel);
+        let display = path.to_string_lossy().replace('\\', "/");
+        let parsed = std::fs::read_to_string(&path)
+            .map_err(|e| e.to_string())
+            .and_then(|t| tokenfile::parse(&t, rel));
+        match parsed {
+            Ok(rules) => {
+                state.sourced.insert("tokens".to_string());
+                for rule in rules {
+                    let key = ("tokens".to_string(), rule.rule_id.clone());
+                    state.rules.entry(key).or_default().configured = Some(rule);
+                }
+            }
+            Err(e) => state.notes.push(format!("{display}: {e}")),
+        }
+    }
 }
 
 fn ingest_config_file(root: &Path, path: &Path, state: &mut DetectedState) {
@@ -110,6 +176,12 @@ fn ingest_config_file(root: &Path, path: &Path, state: &mut DetectedState) {
         },
         "bicepconfig.json" => ("linter", read().and_then(|t| bicepconfig::parse(&t, &rel)), true),
         "Cargo.toml" => ("clippy", read().and_then(|t| cargolints::parse(&t, &rel)), false),
+        ".stylelintrc.json" => {
+            ("stylelint", read().and_then(|t| stylelintconfig::parse_config(&t, &rel)), true)
+        }
+        ".htmlvalidate.json" => {
+            ("htmlvalidate", read().and_then(|t| htmlvalidateconfig::parse_config(&t, &rel)), true)
+        }
         _ => return,
     };
     match parsed {

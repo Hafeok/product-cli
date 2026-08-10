@@ -1,0 +1,15 @@
+format: 1
+id: seam/web/render-muted
+boundary: class muted in ddd-core/assets/render.css
+verdict_knowledge: A reader learns the text is meta-commentary — coverage notes, provenance — not a finding; the de-emphasis encodes that nothing here demands action.
+contract_location: ddd-core/assets/render.css#muted
+obligations:
+- the sample page docs/examples/ddd-render-sample.html keeps the class alive — a dead selector here is a report escapes finding
+- render.rs emits the class name verbatim; renaming either side alone orphans the other
+metadata:
+  kind: class
+  pair_counterpart: ''
+  pair_direction: definition
+  signature: ''
+  symbol: muted
+  visibility: unlayered

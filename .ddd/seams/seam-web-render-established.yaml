@@ -1,0 +1,15 @@
+format: 1
+id: seam/web/render-established
+boundary: class established in ddd-core/assets/render.css
+verdict_knowledge: Marks a claim corroborated across arrangements; a consumer learns the entry is load-bearing for decisions.
+contract_location: ddd-core/assets/render.css#established
+obligations:
+- the sample page docs/examples/ddd-render-sample.html keeps the class alive — a dead selector here is a report escapes finding
+- render.rs emits the class name verbatim; renaming either side alone orphans the other
+metadata:
+  kind: class
+  pair_counterpart: ''
+  pair_direction: definition
+  signature: ''
+  symbol: established
+  visibility: unlayered

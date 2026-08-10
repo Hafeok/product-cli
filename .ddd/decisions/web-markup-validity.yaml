@@ -1,0 +1,15 @@
+format: 2
+id: dec/web/markup-validity
+title: Duplicated classes in markup are errors (html-validate, error)
+rationale: >
+  `no-dup-class` rejects an element carrying the same class twice — always
+  a copy-paste artifact, and one that silently masks a missing *second*
+  class the author meant to add, which is how orphan references are born.
+  Seeded as the one html-validate rule M7 wires; curation of a fuller rule
+  set is a later session's content by design.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-web-01
+    status: reported
+    changed: 2026-08-10
+date: 2026-08-10

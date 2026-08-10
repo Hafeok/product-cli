@@ -1,0 +1,18 @@
+format: 2
+id: dec/web/htmlcss-enforce
+title: Interception for the html-css artifact class is enforce on this repo
+rationale: >
+  Anything less than enforce is not doing the value-add this class exists
+  for — the observed failure mode is agents drifting past ungoverned
+  HTML↔CSS seams, and `warn` is exactly the exhortation that failure mode
+  ignores. The dogfood target is the tool's own projection surface: the
+  `ddd render` stylesheet and its representative output page, governed as a
+  pair by the tool that renders them. The class key is the artifact class,
+  not a language, per the granularity limit recorded on
+  dec/ddd/rust-class-enforced-here.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-web-01
+    status: reported
+    changed: 2026-08-10
+date: 2026-08-10

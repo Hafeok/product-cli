@@ -180,3 +180,28 @@ the catalog's authority without holding there.
 claim is a closure finding whose truth depends on a toolchain version. Claims
 about method, architecture or scope need no index and should stay at their
 current format. No other field changes meaning.
+
+### Config: the pair map plus the web detection sources (M7)
+
+`.ddd/config.yaml` gains, at `format: 4`:
+
+- **`pair`** — the governed HTML+CSS pair map (`units`, each an
+  `html`/`css` glob pair) plus the class-contract thresholds
+  (`ignore_classes`, decorative one-off class globs). Consumed by the
+  `htmlcss` adapter's enrichment and by the pair contract check in
+  `ddd report escapes`. Thresholds are data; what a pair *means* stays in
+  the adapter.
+- **`detect.stylelint` / `detect.htmlvalidate`** — the tools' own JSON
+  output files as emitted sources for the `stylelint` / `htmlvalidate`
+  namespaces (stylelint ≥16 writes its report to stderr:
+  `stylelint <files> -f json 2> out.json`; html-validate:
+  `html-validate -f json <files> > out.json`). Configured sources need no
+  registration — `.stylelintrc.json` and `.htmlvalidate.json` are found by
+  the detection walk like `bicepconfig.json` is.
+- **`detect.tokens`** — design-token stylesheets whose custom properties
+  become the configured source for the `tokens` namespace, one rule per
+  token, so a token resolves through `why` to its decision and `diff`
+  flags UNGOVERNED or STALE tokens.
+
+Declaring any of these under `format: 1`–`3` is a validation violation.
+Existing configs remain valid unchanged.

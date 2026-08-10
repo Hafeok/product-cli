@@ -27,3 +27,11 @@ notes: >
   known on 2026-08-02, not what is known now. `ddd report escapes` will
   therefore keep listing this edge as basis loss, correctly — the basis did
   move, and this note is the record that it was looked at.
+
+  Basis re-affirmed again 2026-08-10 (Emil), at M7's acceptance:
+  DDD-adapter-01 moved reported -> established after surviving its
+  scheduled falsification attempt at language four (the non-LSP HTML+CSS
+  pair; zero contract-surface leakage). The basis strengthened a second
+  time; nothing is re-litigated, the pin stays at its decision-time value
+  per PRD §6 rule 6, and this note is the record that the moved edge was
+  looked at.

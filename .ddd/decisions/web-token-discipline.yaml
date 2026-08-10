@@ -1,0 +1,17 @@
+format: 2
+id: dec/web/token-discipline
+title: Raw colour values are banned where a token exists (stylelint, error)
+rationale: >
+  `declaration-property-value-disallowed-list` rejects hex literals on
+  colour properties in governed stylesheets, which forces every colour
+  through `var(--…)` and makes the token file the single place a colour
+  decision lives. Error severity because a raw restatement is not a lesser
+  form of the token — it is the drift the token exists to prevent
+  (DDD-web-02). Seeded as the one stylelint rule M7 wires; curation of a
+  fuller rule set is a later session's content by design.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-web-02
+    status: projected
+    changed: 2026-08-10
+date: 2026-08-10

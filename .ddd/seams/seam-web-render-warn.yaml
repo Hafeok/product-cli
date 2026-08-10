@@ -1,0 +1,15 @@
+format: 1
+id: seam/web/render-warn
+boundary: class warn in ddd-core/assets/render.css
+verdict_knowledge: A reader learns something is degraded but not failing — UNGOVERNED pending a decision, cadence overdue; amber is the deferred verdict.
+contract_location: ddd-core/assets/render.css#warn
+obligations:
+- the sample page docs/examples/ddd-render-sample.html keeps the class alive — a dead selector here is a report escapes finding
+- render.rs emits the class name verbatim; renaming either side alone orphans the other
+metadata:
+  kind: class
+  pair_counterpart: ''
+  pair_direction: definition
+  signature: ''
+  symbol: warn
+  visibility: unlayered

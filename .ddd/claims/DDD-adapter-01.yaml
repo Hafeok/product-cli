@@ -4,8 +4,29 @@ statement: >
   Per-language contract-surface definitions expressed as adapter policy
   tables are falsifiable against where boundary defects actually occur;
   wrong rows get fixed in the adapter, never in the core.
-status: reported
+status: established
 evidence: >
+  M7 (2026-08-10) was the scheduled falsification attempt at this claim's
+  own falsifier: language four, the HTML+CSS pair — an artifact class
+  whose contract surface (design tokens, class vocabulary, @layer order,
+  stylesheet links) is not symbol events, whose producer is not an LSP
+  host, and whose governed unit is two files. Every piece of pair
+  knowledge localised to the adapter module (ddd-lsp/src/adapter/
+  htmlcss*): token typing, class membership, layer grading as visibility,
+  link rewiring, ownership and decorative thresholds, and the cross-file
+  contract checks. surface.rs, classify.rs and the seam-event row schema
+  are byte-identical to their pre-M7 state, and the PolicyRow
+  expressiveness gap (no matcher over extra) recurred exactly as at M6
+  and was absorbed adapter-locally again. The two forced core changes
+  were event-source plumbing, outside this claim's scope and filed as
+  DDD-adapter-05. Promoted reported -> established on this result — four
+  languages, three fact-producer shapes, one scheduled falsification
+  attempt survived (classification: docs/ddd-m7-experiment.md; ruled by
+  Emil, 2026-08-10).
+
+
+  The M6 evidence, retained:
+
   M6 (2026-08-10) added a third language and looked for the falsifier without
   finding it. Every Rust contract-surface assumption localised to the adapter
   module: graded visibility (pub / pub(crate) / pub(super) / pub(in path)),

@@ -30,6 +30,12 @@ pub fn with_ready_host(
     let mut manager = state.manager.lock().map_err(|_| "host manager poisoned".to_string())?;
     let adapter =
         manager.resolve_adapter(language.as_deref(), file).map_err(|e| e.to_string())?;
+    if !adapter.hosted {
+        return Err(format!(
+            "`{}` has no language server — the pair adapter classifies edits from source text; use ddd_apply_edit",
+            adapter.language
+        ));
+    }
     let host = manager.host(adapter.language).map_err(|e| e.to_string())?;
     match host.readiness().map_err(|e| e.to_string())? {
         Readiness::Ready { .. } => f(host),

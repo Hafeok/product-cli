@@ -1,0 +1,22 @@
+format: 2
+id: DDD-web-02
+statement: >
+  The render page's status colours are contract, not decoration: green,
+  red, and amber consistently mean passing, failing, and degraded across
+  every section of the projection, so a reader's verdict-at-a-glance
+  depends on the palette staying stable and being restated nowhere. Naming
+  them as design tokens (custom properties) is the arrangement that closes
+  this — a raw hex restatement is exactly the drift the token exists to
+  prevent.
+status: projected
+falsifier: >
+  A reader-facing regression traceable to a token change that the token
+  discipline did not catch — e.g. a status hue drifting between sections
+  despite the palette being tokenised — or, in the other direction, a
+  sustained absence of raw-value restatements in a sheet with no token
+  discipline at all.
+owner: Emil
+changed: 2026-08-10
+revalidate_by: 2027-08-10
+depends_on:
+  - DDD-web-01

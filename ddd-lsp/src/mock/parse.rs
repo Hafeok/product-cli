@@ -66,7 +66,8 @@ fn csharp_symbols(text: &str) -> Value {
                 });
             } else if let Some(frame) = stack.last_mut() {
                 if depth == frame.entry_depth + 1 {
-                    if let Some(child) = member_decl(trimmed, &frame.name, i, line) {
+                    let kind = frame.node["kind"].as_u64().unwrap_or(0);
+                    if let Some(child) = member_decl(trimmed, &frame.name, kind, i, line) {
                         frame.children.push(child);
                     }
                 }
@@ -115,11 +116,19 @@ fn type_decl(trimmed: &str) -> Option<(u64, String)> {
 const CONTROL: &[&str] = &["if", "for", "foreach", "while", "switch", "return", "using", "throw"];
 
 /// One-line member declarations: methods/ctors (have parens), properties
-/// (braced accessors), fields (semicolon-terminated).
-fn member_decl(trimmed: &str, type_name: &str, i: usize, line: &str) -> Option<Value> {
+/// (braced accessors), fields (semicolon-terminated), enum members (bare
+/// identifiers inside an enum body).
+fn member_decl(trimmed: &str, type_name: &str, type_kind: u64, i: usize, line: &str) -> Option<Value> {
     let first = trimmed.split_whitespace().next().unwrap_or("");
     if CONTROL.contains(&first) || trimmed.starts_with('}') {
         return None;
+    }
+    if type_kind == 10 {
+        let name: String = trimmed.chars().take_while(|c| c.is_alphanumeric() || *c == '_').collect();
+        if name.is_empty() {
+            return None;
+        }
+        return Some(symbol(&name, 22, i, i, (i, line.find(&name).unwrap_or(0))));
     }
     if let Some(paren) = trimmed.find('(') {
         let head = &trimmed[..paren];

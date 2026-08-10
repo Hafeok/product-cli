@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DDD governance graph</title>
+<style>/* ddd render — the projection page's whole stylesheet. Inlined into the
+   page's <style> at render time, so the output stays one self-contained
+   file (PRD §3 non-goals). Governed as the html-css pair with the
+   committed sample page (pair.units in .ddd/config.yaml). */
+
+/* The ink + status palette, one governed decision
+   (dec/web/render-status-palette): every color: below resolves through a
+   token, and dec/web/token-discipline makes a raw restatement a stylelint
+   finding rather than a style preference. */
+:root {
+  --ink: #1c1c1c;
+  --ink-muted: #555;
+  --ink-faint: #777;
+  --status-ok: #1a7f37;
+  --status-bad: #b3261e;
+  --status-warn: #8a5a00;
+  --on-chip: #fff;
+  --surface: #fdfdfc;
+  --surface-raised: #fff;
+}
+
+body { font: 15px/1.5 system-ui, sans-serif; margin: 2rem auto; max-width: 70rem; padding: 0 1rem; color: var(--ink); background: var(--surface) }
+h1 { font-size: 1.5rem }
+h2 { font-size: 1.15rem; margin-top: 2.2rem; border-bottom: 1px solid #ddd; padding-bottom: .25rem }
+table { border-collapse: collapse; width: 100%; margin: .6rem 0 }
+th, td { text-align: left; vertical-align: top; padding: .3rem .6rem; border-bottom: 1px solid #eee; font-size: .92em }
+th { color: var(--ink-muted) }
+code { background: #f2f1ee; padding: 0 .25em; border-radius: 3px }
+.muted { color: var(--ink-faint) }
+.ok { color: var(--status-ok) }
+.bad { color: var(--status-bad) }
+.warn { color: var(--status-warn) }
+.chip { display: inline-block; padding: 0 .5em; border-radius: 9px; font-size: .85em; color: var(--on-chip) }
+.chip.projected { background: #6a737d }
+.chip.reported { background: #0969da }
+.chip.established { background: var(--status-ok) }
+.chip.retired { background: #8250df }
+.card { border: 1px solid #e4e2dd; border-radius: 6px; padding: .7rem 1rem; margin: .7rem 0; background: var(--surface-raised) }
+.card h3 { margin: .1rem 0 .3rem; font-size: 1em }
+ul { margin: .3rem 0 .3rem 1.2rem; padding: 0 }
+</style>
+</head>
+<body>
+<h1>DDD governance graph</h1>
+<p class="muted">A static projection of <code>.ddd/</code> — regenerated, never edited. Cadence judged against 2026-08-10.</p>
+<h2>Claims (4)</h2>
+<table><tr><th>id</th><th>status</th><th>statement</th><th>falsifier</th><th>changed</th><th>revalidate by</th></tr>
+<tr><td><code>DDD-ex-1</code></td><td><span class="chip projected">projected</span></td><td>a worked-example claim at the projected rung</td><td class="muted">a counterexample</td><td>2026-08-01</td><td>2027-01-01</td></tr>
+<tr><td><code>DDD-ex-2</code></td><td><span class="chip reported">reported</span></td><td>a worked-example claim at the reported rung</td><td class="muted">a counterexample</td><td>2026-08-01</td><td>2027-01-01</td></tr>
+<tr><td><code>DDD-ex-3</code></td><td><span class="chip established">established</span></td><td>a worked-example claim at the established rung</td><td class="muted">a counterexample</td><td>2026-08-01</td><td>2027-01-01</td></tr>
+<tr><td><code>DDD-ex-4</code></td><td><span class="chip retired">retired</span></td><td>a worked-example claim at the retired rung</td><td class="muted">a counterexample</td><td>2026-08-01</td><td>2026-01-01</td></tr>
+</table>
+<h2>Decisions (1)</h2>
+<div class="card"><h3><code>dec/example/adopt</code> — Adopt the worked example</h3>
+<p class="muted">decision · principal Emil</p>
+<p>the sample graph shows every render state once</p>
+<ul>
+<li>basedOn <code>DDD-ex-3</code> — <span class="ok">pin holds (established@2026-08-01)</span></li>
+<li>basedOn <code>DDD-ex-2</code> — <span class="bad">basis moved: pinned projected@2026-07-01, now reported@2026-08-01</span></li>
+</ul>
+</div>
+<h2>Manifest coverage (2 rules)</h2>
+<h3><code>analyzers</code></h3>
+<table><tr><th>rule</th><th>severity</th><th>governance</th><th>suppression</th></tr>
+<tr><td><code>CA2007</code></td><td>warning</td><td><code>dec/example/adopt</code></td><td>—</td></tr>
+<tr><td><code>CA1848</code></td><td>warning</td><td><span class="warn">UNGOVERNED</span></td><td>—</td></tr>
+</table>
+<h2>Escapes dashboard</h2>
+<h3>Basis loss (1)</h3>
+<table><tr><th>decision</th><th>claim</th><th>pinned</th><th>current</th></tr>
+<tr><td><code>dec/example/adopt</code></td><td><code>DDD-ex-2</code></td><td>projected@2026-07-01</td><td class="bad">reported@2026-08-01</td></tr>
+</table>
+<p class="muted">note: namespace analyzers: no detection source seen — staleness not evaluated (provide SARIF via detect.sarif or --sarif)</p>
+<h2>Seam map (1 declarations, 1 interception rows)</h2>
+<div class="card"><h3><code>seam/example/api</code> — method Ping in Api.cs</h3><p>callers learn whether the service answers</p><p class="muted">contract: Api.cs#Ping</p></div>
+<table><tr><th>row</th><th>file</th><th>symbol</th><th>change</th><th>outcome</th><th>refs</th><th>linked</th></tr>
+<tr><td><code>seam-event/1</code></td><td>Api.cs</td><td><code>Ping</code></td><td>added</td><td>applied-linked</td><td>2</td><td>seam/example/api</td></tr>
+</table>
+</body>
+</html>

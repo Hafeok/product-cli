@@ -1,0 +1,20 @@
+[
+ {
+  "filePath": "webpair/page.html",
+  "messages": [
+   {
+    "ruleId": "no-dup-class",
+    "severity": 2,
+    "message": "Class \"card\" duplicated",
+    "offset": 148,
+    "line": 4,
+    "column": 24,
+    "size": 4,
+    "selector": "html > body > div",
+    "ruleUrl": "https://html-validate.org/rules/no-dup-class.html"
+   }
+  ],
+  "errorCount": 1,
+  "warningCount": 0
+ }
+]

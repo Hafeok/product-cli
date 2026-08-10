@@ -494,3 +494,105 @@ fn m4_real_roslyn_full_loop() {
     assert_eq!(applied["linked"][0], "seam/csharp/pong");
     assert_eq!(event_rows(tmp.path()).len(), 2);
 }
+
+/// `dec/ddd/enforce-matching-tightens-to-symbol`, the regression M6 observed
+/// as seam-event/4: one edit adds two public symbols, two declarations are
+/// authored one per symbol, and each surface event must link to the
+/// declaration naming its own symbol — never to whichever declaration
+/// happened to share the file. The metadata write must stay symbol-exact
+/// too, or the correspondence record silently carries another symbol's
+/// facts (DDD-arch-05).
+#[test]
+fn m7_enforce_links_each_symbol_to_its_own_declaration() {
+    let (tmp, registry) = repo("intercept: enforce\n");
+    warm(&registry);
+    let cs = fixture("csharp/Library.cs");
+    let edited = cs.replace(
+        "    public void Ping() { }\n",
+        "    public void Ping() { }\n    public void Alpha() { }\n    public void Beta(int n) { }\n",
+    );
+    call(&registry, "ddd_declare_seam", json!({
+        "id": "seam/csharp/alpha", "boundary": "method Alpha in Library.cs",
+        "contract_location": "Library.cs#Alpha", "symbol": "Alpha",
+        "verdict_knowledge": "callers learn the alpha outcome",
+    }));
+    call(&registry, "ddd_declare_seam", json!({
+        "id": "seam/csharp/beta", "boundary": "method Beta in Library.cs",
+        "contract_location": "Library.cs#Beta", "symbol": "Beta",
+        "verdict_knowledge": "callers learn the beta count",
+    }));
+    let applied = call(&registry, "ddd_apply_edit", json!({"file": "Library.cs", "new_text": edited}));
+    assert_eq!(applied["status"], "applied", "{applied}");
+
+    // Every applied-linked row links the declaration naming its own symbol.
+    for row in event_rows(tmp.path()) {
+        let (symbol, linked) = (row["symbol"].as_str().expect("symbol"),
+                                row["linked_declaration"].as_str().expect("linked"));
+        match symbol {
+            "Alpha" => assert_eq!(linked, "seam/csharp/alpha", "{row}"),
+            "Beta" => assert_eq!(linked, "seam/csharp/beta", "{row}"),
+            other => panic!("unexpected row symbol {other}"),
+        }
+    }
+
+    // Each declaration carries its own symbol's facts — the mis-attribution
+    // seam-event/4 produced can no longer occur.
+    let alpha = std::fs::read_to_string(tmp.path().join(".ddd/seams/seam-csharp-alpha.yaml")).expect("alpha");
+    assert!(alpha.contains("symbol: Alpha"), "{alpha}");
+    let beta = std::fs::read_to_string(tmp.path().join(".ddd/seams/seam-csharp-beta.yaml")).expect("beta");
+    assert!(beta.contains("symbol: Beta"), "{beta}");
+    assert!(beta.contains("signature: void Beta(int n)"), "{beta}");
+}
+
+/// The file arm is gone from enforce mode: a same-session declaration whose
+/// contract_location names the file but whose symbol is a different one
+/// admits nothing.
+#[test]
+fn m7_enforce_rejects_a_file_arm_only_declaration() {
+    let (tmp, registry) = repo("intercept: enforce\n");
+    warm(&registry);
+    call(&registry, "ddd_declare_seam", json!({
+        "id": "seam/csharp/ping", "boundary": "method Ping in Library.cs",
+        "contract_location": "Library.cs",
+        "symbol": "Ping",
+        "verdict_knowledge": "an unrelated symbol in the same file",
+    }));
+    let cs = fixture("csharp/Library.cs");
+    let edited = cs.replace(
+        "    public void Ping() { }\n",
+        "    public void Ping() { }\n    public void Pong() { }\n",
+    );
+    let out = call(&registry, "ddd_apply_edit", json!({"file": "Library.cs", "new_text": edited}));
+    assert_eq!(out["status"], "rejected", "{out}");
+    assert_eq!(out["demands"][0]["surface"]["symbol"], "Pong", "{out}");
+    let rows = event_rows(tmp.path());
+    assert_eq!(rows.last().expect("row")["outcome"], "rejected");
+}
+
+/// Warn mode keeps the broad arm: the row gets the generous link, but the
+/// declaration's metadata is never overwritten by a file-arm match.
+#[test]
+fn m7_warn_keeps_the_file_arm_and_never_writes_metadata() {
+    let (tmp, registry) = repo("intercept: warn\n");
+    warm(&registry);
+    call(&registry, "ddd_declare_seam", json!({
+        "id": "seam/bicep/storage", "boundary": "the storage module contract",
+        "contract_location": "storage-module.bicep",
+        "verdict_knowledge": "deployers learn the module's parameter shape",
+    }));
+    let bi = fixture("bicep/storage-module.bicep");
+    let edited = bi.replace(
+        "param accountName string\n",
+        "param accountName string\nparam replicas int = 2\n",
+    );
+    let out = call(&registry, "ddd_apply_edit",
+        json!({"file": "storage-module.bicep", "new_text": edited}));
+    assert_eq!(out["status"], "applied", "{out}");
+    assert_eq!(out["mode"], "warn");
+    let rows = event_rows(tmp.path());
+    let row = rows.last().expect("row");
+    assert_eq!(row["outcome"], "applied-warned");
+    assert_eq!(row["linked_declaration"], "seam/bicep/storage", "{row}");
+    let seam = std::fs::read_to_string(tmp.path().join(".ddd/seams/seam-bicep-storage.yaml")).expect("seam");
+    assert!(!seam.contains("symbol: replicas"), "file-arm match wrote metadata: {seam}");
+}

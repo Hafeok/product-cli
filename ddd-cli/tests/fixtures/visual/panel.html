@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>status panel — visual regression fixture</title>
+<!-- Pure geometry, no text: system fonts vary across machines, coloured
+     boxes do not, so the render is byte-deterministic per browser build.
+     The panel is driven by the pair vocabulary under test: the status
+     tokens and the swatch classes. -->
+<style>
+:root {
+  --status-ok: #1a7f37;
+  --status-bad: #b3261e;
+  --status-warn: #8a5a00;
+  --surface: #fdfdfc;
+}
+body { margin: 0; background: var(--surface) }
+.row { display: flex; gap: 20px; padding: 10px }
+.swatch { width: 120px; height: 120px; border-radius: 6px }
+.ok { background: var(--status-ok) }
+.bad { background: var(--status-bad) }
+.warn { background: var(--status-warn) }
+</style>
+</head>
+<body>
+<div class="row">
+<div class="swatch ok"></div>
+<div class="swatch bad"></div>
+<div class="swatch warn"></div>
+</div>
+</body>
+</html>

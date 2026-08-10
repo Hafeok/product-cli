@@ -1,0 +1,46 @@
+format: 2
+id: DDD-adapter-05
+statement: >
+  The seam-event abstraction's contract-surface half is
+  producer-independent, but its event-source half assumed one producer
+  shape: a language server per language, one document per edit. Admitting
+  a producer outside that shape costs bounded, named changes in the
+  serve/host layer — never in the surface vocabulary. This generalises
+  DDD-adapter-04 (whose scope is LSP host lifecycle) to the producer
+  boundary itself: each new producer *shape* — not each new language — is
+  a budgeted core cost.
+status: reported
+evidence: >
+  Measured at M7 against a pre-registered prediction filed before any
+  adapter code (docs/ddd-m7-experiment.md, commit e402d55). The hostless
+  two-file producer (the HTML+CSS pair) tripped exactly the two predicted
+  assumptions. E1 — every adapter has a spawnable host: apply_edit routed
+  unconditionally through with_ready_host, warm_all started every
+  registered adapter's child, and the language tools presumed one; fix is
+  Adapter::hosted plus a hostless classification path (the interceptor
+  takes an optional host — empty symbol slices in, no reference counts
+  out). E2 — a symbol's facts derive from one document's text plus its
+  LSP symbols: pair facts (counterpart files, direction) need the
+  document's identity and the repo pair map; fix is the one optional
+  Adapter::enrich hook, called post-classification. Cost: 2 assumptions,
+  ~58 lines — adapter/mod.rs ~17, ddd-mcp/src/intercept.rs ~28,
+  lang_tools.rs 6, manager.rs 1, and a ±2-line restatement in each of the
+  three hosted adapters. Nothing in the surface vocabulary, the
+  classifier, the seam-event row schema, or the governance layer moved.
+  The adapter-local content-sniff dispatch (looks_like_html) is E2's
+  fingerprint: the facts signature carries no document identity at all.
+  rust-analyzer's 114 lines (DDD-adapter-04) and this 58 are the first
+  two entries in the producer-budget ledger.
+falsifier: >
+  (a) A fifth producer shape — a build-system-backed producer, a
+  genuinely multi-document N>2 unit — forcing changes outside the two
+  seams now expressible (hosted, enrich): that would show the
+  generalisation is still enumerating cases rather than done. (b)
+  Contract-surface leakage at any future producer, which takes
+  DDD-adapter-01 down first and this claim with it.
+owner: none
+changed: 2026-08-10
+revalidate_by: 2027-02-10
+depends_on:
+  - DDD-adapter-01
+  - DDD-adapter-04
