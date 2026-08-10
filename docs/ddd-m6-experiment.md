@@ -340,6 +340,48 @@ Read against that: had the file arm not been there, the two edits would have
 demanded and linked per symbol, and the friction count would be unchanged —
 the arm cost nothing in *effort* here and cost the dataset its integrity.
 
+### 5.3 The larger limit: routing to the interceptor is voluntary
+
+§5.2 is the smaller caveat. This is the bigger one, and it qualifies the
+words "self-governance" everywhere they appear above.
+
+Interception binds edits that arrive through `ddd_apply_edit`. Nothing binds
+an edit to arrive that way. A contract-surface change made with an ordinary
+editor — `pub fn foo()` typed into a file — is never classified, never
+demanded, and never logged. There is no after-the-fact check either: neither
+`ddd diff` nor `ddd report escapes` computes contract-surface coverage, so an
+undeclared `pub` item introduced outside the tool produces no finding at any
+later point.
+
+Every one of the eight correspondence rows in §5 is therefore an edit that
+was **volunteered**. The switch to `enforce` changed what happened to edits
+already routed through the tool; it did not change what fraction of edits
+were routed. M6 demonstrates that the interceptor works when invoked. It does
+not demonstrate that the interceptor is in the loop.
+
+This matters against PRD §2, which is where the tool's whole justification
+sits: *"prompt rules are exhortation an agent can drift past. A tool in the
+edit loop is a policy-level commitment — the check is part of the
+arrangement, not the agent's residual discretion."* If routing to the tool is
+itself discretionary, then so is the commitment, and the difference between
+this arrangement and a prompt rule is smaller than §2 claims. Nothing in M6
+tests that difference.
+
+`DDD-arch-06` does not cover this. It conditions the dataset on the **surface
+stratum** — surface versus non-surface, and interception mode — and states
+that the base rate of surface-touching edits is unrecoverable. The **routing
+stratum** is a further and larger conditioning it does not mention: what
+fraction of edits reached the classifier at all. On this repository that
+fraction is unknown and, with the current instrumentation, unknowable.
+
+The What surface has already met this problem and answered it: `product
+domain new` on the CLI is not intercepted, and `ddd what --strict` is the
+gate that catches what the write path misses. Code has no equivalent gate.
+Supplying one — a coverage check that reads the declared seams against the
+`pub` surface actually present in the tree — is the obvious shape, and is
+filed here as an observation rather than a claim, because it is a decision
+for the principal and not a finding M6 established.
+
 ---
 
 ## 6. Proposed status changes — for acceptance, not applied
