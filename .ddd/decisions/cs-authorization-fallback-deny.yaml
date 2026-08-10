@@ -1,0 +1,30 @@
+format: 2
+id: dec/cs/authorization-fallback-deny
+title: Hosts declare a deny-by-default fallback authorization policy
+rationale: >
+  DDD-cs-authz-01 measured the default: an endpoint with no attribute answers
+  200 OK, and the same endpoint answers a challenge once a fallback policy is
+  set, with its own code unchanged. So the choice is not whether to govern
+  each endpoint but which way silence points.
+
+
+  Deny-by-default is adopted because the failure modes are asymmetric. A
+  wrongly protected endpoint is discovered by the first person who needs it;
+  a wrongly open one is discovered by whoever finds it first, and nothing in
+  the build reports either. This closes the predicate by composition rather
+  than by a rule, which means it is one line in the composition root and
+  therefore also one line to delete — worth an arch test rather than trust.
+
+
+  Not implied: a fallback requiring only an authenticated user admits every
+  authenticated caller. That is a stated default rather than a correct one,
+  and per-endpoint authorization remains a decision this does not make.
+
+
+  Scope: governed ASP.NET Core hosts under Context& engagement.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-cs-authz-01
+    status: reported
+    changed: 2026-08-07
+date: 2026-08-07

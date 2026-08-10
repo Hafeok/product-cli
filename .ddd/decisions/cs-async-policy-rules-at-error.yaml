@@ -1,0 +1,29 @@
+format: 2
+id: dec/cs/async-policy-rules-at-error
+title: CA2007 and CA2016 run at error severity in governed C# repos
+rationale: >
+  The continuation context and the cancellation token are policy arguments
+  like culture and comparison, so they belong under the same treatment as
+  dec/cs/policy-rules-at-error: SDK rules, no package to add, cost is
+  severity only.
+
+
+  What each buys is not the same and the difference is worth carrying.
+  CA2007 reports every await that takes SynchronizationContext.Current, which
+  is the whole of its predicate case. CA2016 reports only a method that holds
+  a token and drops it; a method exposing no token at all is not reported and
+  cannot be, so adopting this decision closes forwarding and leaves presence
+  open. A repo that reads a green CA2016 as "cancellation is handled" has
+  misread it, and DDD-cs-pol-04 is the entry that says so.
+
+
+  Scope: governed C# engagement repos, operative where a manifest cites it.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-cs-pol-03
+    status: reported
+    changed: 2026-08-07
+  - claim: DDD-cs-pol-04
+    status: reported
+    changed: 2026-08-07
+date: 2026-08-07
