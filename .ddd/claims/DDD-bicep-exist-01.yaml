@@ -1,0 +1,26 @@
+format: 4
+id: DDD-bicep-exist-01
+statement: >
+  The linter catches only the degenerate case. `no-unused-existing-resources`
+  reports an existing reference nobody consumes, which is the one shape that
+  carries no assumption at all; a reference that is actually used — and so
+  actually assumes the resource exists and stays — draws nothing from either
+  tool. The rule that fires is the one that matters least.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain, both directions. An unused
+  `existing` Key Vault drew `Warning no-unused-existing-resources`. The same
+  reference consumed by an output — `output kvUri string =
+  existingKv.properties.vaultUri` — drew nothing from the linter and no
+  PSRule finding. Neither run reported the ordering or ownership assumption.
+falsifier: >
+  A rule from either tool that reports a consumed existing reference as
+  carrying an undeclared dependency, or a means of expressing the ownership
+  assumption in the template such that its absence becomes detectable.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  target: "Azure Resource Manager"
+  tool: "Bicep CLI 0.37.4; PSRule.Rules.Azure 1.47.0"
+predicate: pred/configuration/external-dependency-declared

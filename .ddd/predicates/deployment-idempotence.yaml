@@ -1,0 +1,43 @@
+predicate:
+  id: pred/execution/deployment-idempotence
+  format: 1
+  name: Deployment idempotence
+  statement: >
+    Accept a deployment c iff re-running it against a target already in the
+    state c describes changes nothing — no replacement, no deletion, no
+    property drift — where the target's current state is the ground.
+
+  artifact_class: execution
+
+  ground:
+    - fact: the template and parameter values c deploys
+      provenance: controlled
+    - fact: the target's current state, and which property changes the
+        provider implements as delete-and-recreate
+      provenance: observed
+
+  tolerance: >
+    A re-run produces no change. Any Delete or Replace in the predicted
+    change set is a reject, whether or not the resource is judged
+    reconstructible.
+
+  rejection_witness: >
+    The predicted change set, and the first Delete or Replace in it with the
+    property that forces it.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-bicep-idem-01   # not build-closable; the criterion form needs a target
+
+  proxy_gap: >
+    A clean predicted change set proxies a safe re-run. The prediction is
+    itself a model of the provider's behaviour, and the properties it gets
+    wrong are exactly the ones whose replacement semantics are undocumented.
+
+  notes: >
+    The observed ground item settles this by signature, as
+    predicate-format.md says it must: the target's state does not exist at
+    build time, so no static arrangement closes this predicate. What DAD §5.3
+    proposes is not a check but a criterion evaluated where the ground is —
+    a what-if run against the real target, asserted structurally.
