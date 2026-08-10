@@ -1,0 +1,37 @@
+format: 2
+id: dec/cs/disposal-rules-at-error
+title: CA1001 and CA2000 run at error severity, with their unreliability recorded
+rationale: >
+  Field-held disposal is the one part of the disposal family the SDK
+  analyzers reach, and DDD-cs-disp-02 shows they reach it from both ends —
+  CA1001 on a type owning a disposable field without being disposable,
+  CA2000 on a caller that drops a correct owner. At error, the common leak
+  shape stops compiling.
+
+
+  Adopted with an unusual caveat, because DDD-cs-disp-05 measured it: CA2000
+  is neither sound nor complete, and it errs in both directions in the same
+  file — reporting a site where disposal is written, staying silent on a
+  container hand-off where disposal appears nowhere. Running it at error
+  therefore buys real coverage and also guarantees some false rejections. The
+  suppression path exists for exactly that, and ontology rule 4 makes each
+  suppression cite a risk-acceptance record, which is the right cost: an
+  argued exception rather than a downgraded severity.
+
+
+  What it does not buy: async disposal where a type implements both
+  interfaces (DDD-cs-disp-03), container hand-off (DDD-cs-disp-04), and
+  HttpClient lifetime, which satisfies the predicate outright
+  (DDD-cs-disp-06). Those stay with judgment.
+
+
+  Scope: governed C# engagement repos, operative where a manifest cites it.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-cs-disp-02
+    status: reported
+    changed: 2026-08-07
+  - claim: DDD-cs-disp-05
+    status: reported
+    changed: 2026-08-07
+date: 2026-08-07

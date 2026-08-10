@@ -1,0 +1,30 @@
+format: 4
+id: DDD-bicep-diag-01
+statement: >
+  PSRule closes the presence half of
+  pred/configuration/diagnostic-retention-declared and the retention half was
+  not observed closed. A resource with no diagnostic settings is reported;
+  whether a stated retention is checked for a value was not exercised here,
+  so the claim covers presence only and the retention half stands open until
+  someone runs it.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain: a Key Vault declared without
+  diagnostic settings failed Azure.KeyVault.Logs under PSRule, while the DAD
+  §5.2 linter configuration reported nothing about diagnostics for any
+  resource in the template. No rule concerning a retention *value* appeared
+  in the failure set, but the probe also never declared a diagnostic setting
+  with a retention to test — so this is absence of an observation, not
+  observation of an absence, and is written that way deliberately.
+falsifier: >
+  A run in which a declared diagnostic setting with a missing or zero
+  retention is reported — which would extend this closure to the second half
+  — or a resource with no settings that PSRule does not report, which would
+  narrow the first.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  target: "Azure Resource Manager"
+  tool: "Bicep CLI 0.37.4; PSRule.Rules.Azure 1.47.0"
+predicate: pred/configuration/diagnostic-retention-declared

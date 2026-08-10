@@ -1,0 +1,41 @@
+format: 2
+id: dec/bicep/linter-at-error
+title: The Bicep core linter runs at error severity, with the name heuristic named
+rationale: >
+  The DAD §5.2 rule set at error is cheap and demonstrated: DDD-bicep-ver-01
+  shows use-recent-api-versions carrying a full rejection witness — the
+  version, its age in days, and the acceptable alternatives — and
+  DDD-bicep-sec-01 shows the secret rules covering both the leak and the
+  missing annotation, in cooperation with PSRule.
+
+
+  Adopted with its limit stated, because DDD-bicep-sec-02 measured it: the
+  entire secret chain keys off the parameter's identifier. The same
+  unannotated secret that drew findings from both tools as `adminPassword`
+  drew nothing from either once renamed to `seedValue`. So this decision
+  buys enforcement for secrets that look like secrets, and buys nothing at
+  all for the ones that do not. Naming conventions for secret-bearing
+  parameters are therefore load-bearing governance here rather than style,
+  which is an unusual thing to have to write down and is exactly why it is
+  written down.
+
+
+  Correction carried from the seed: the DAD §5.2 configuration lists
+  secure-parameter-default, while the rule that actually fires on an
+  unannotated secret parameter is secure-secrets-in-params. A repo adopting
+  the configuration verbatim should expect that difference.
+
+
+  Scope: governed Bicep repositories under Context& engagement.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-bicep-ver-01
+    status: reported
+    changed: 2026-08-07
+  - claim: DDD-bicep-sec-01
+    status: reported
+    changed: 2026-08-07
+  - claim: DDD-bicep-sec-02
+    status: reported
+    changed: 2026-08-07
+date: 2026-08-07

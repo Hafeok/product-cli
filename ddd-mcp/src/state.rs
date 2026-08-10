@@ -83,6 +83,17 @@ pub fn opt_str(args: &Value, key: &str) -> Option<String> {
         .map(str::to_string)
 }
 
+/// Optional string argument with no normalisation at all.
+///
+/// [`opt_str`] trims and treats blank as absent, which is right for names,
+/// ids, and prose. It is wrong for anything whose value *is* the payload:
+/// `apply_edit`'s `new_text` is a whole file, and trimming it silently
+/// deletes the trailing newline plus any leading blank line, on every
+/// language. Callers holding content reach for this instead.
+pub fn raw_str(args: &Value, key: &str) -> Option<String> {
+    args.get(key).and_then(Value::as_str).map(str::to_string)
+}
+
 /// Optional integer argument.
 pub fn opt_u64(args: &Value, key: &str) -> Option<u64> {
     args.get(key).and_then(Value::as_u64)

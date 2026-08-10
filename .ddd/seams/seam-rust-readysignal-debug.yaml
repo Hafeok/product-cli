@@ -1,0 +1,14 @@
+format: 1
+id: seam/rust/readysignal-debug
+boundary: enum ReadySignal in ddd-lsp/src/adapter/mod.rs
+verdict_knowledge: Deriving Debug publishes the discriminant and the readiness method name into anything that formats the value, which is what makes a host that never becomes ready diagnosable from a test failure message rather than only from a debugger. The cost absorbed is that the derived form now names the notification method an adapter waits on, so it becomes part of what a caller may come to depend on reading.
+contract_location: ddd-lsp/src/adapter/mod.rs#ReadySignal
+obligations:
+- the derived output is diagnostic only — no caller parses it, and no test asserts on its exact text
+- adding a variant changes what Debug prints, so a variant addition carries this seam forward rather than being silent
+metadata:
+  kind: enum
+  reference_count: 9
+  signature: enum ReadySignal
+  symbol: ReadySignal
+  visibility: public

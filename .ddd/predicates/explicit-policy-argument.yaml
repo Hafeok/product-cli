@@ -1,0 +1,49 @@
+predicate:
+  id: pred/code/explicit-policy-argument
+  format: 1
+  name: Explicit policy argument
+  statement: >
+    Accept code c iff every call in c to an API whose result depends on an
+    ambient policy — string comparison, culture, clock or time zone — names
+    that policy at the call site rather than taking whatever G supplies by
+    default.
+
+  artifact_class: code
+
+  ground:
+    - fact: the overload set of each called API and which of its parameters
+        carry policy
+      provenance: controlled
+    - fact: the call sites in c and which policy arguments each supplies
+      provenance: controlled
+    - fact: the ambient policy actually in force where no argument names one
+      provenance: observed
+
+  tolerance: >
+    Every call to a policy-bearing overload names its policy. An omission is
+    a reject whether or not the ambient default happens to be right in the
+    environment the author had in mind.
+
+  rejection_witness: >
+    The call site, the policy parameter left unsupplied, and the overload
+    that would have accepted it.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-cs-pol-01   # closed for comparison + culture by CA1305/1307/1309
+    - DDD-cs-pol-02   # ...but not for the ambient clock
+    - DDD-cs-pol-03   # continuation context — closed by CA2007
+    - DDD-cs-pol-04   # cancellation — CA2016 closes forwarding, not presence
+
+  proxy_gap: >
+    Explicitness proxies correctness. A call can name a policy and name the
+    wrong one — ordinal where the domain wanted culture-aware collation. That
+    residue belongs to domain judgment; this predicate only asks that the
+    choice be made at the site rather than inherited from the environment.
+
+  notes: >
+    The observed ground item is why the tolerance is written as explicitness
+    rather than as correctness: the ambient culture and clock do not exist at
+    build time, so no static arrangement can judge the outcome — only whether
+    the outcome was left to them.

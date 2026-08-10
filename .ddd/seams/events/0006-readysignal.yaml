@@ -1,0 +1,19 @@
+format: 1
+id: seam-event/6
+at: 2026-08-10T08:07:09Z
+language: rust
+artifact_class: code
+mode: enforce
+file: ddd-lsp/src/adapter/mod.rs
+symbol: ReadySignal
+container: ''
+kind: enum
+change: decorator-changed
+visibility: public
+signature: enum ReadySignal
+reference_count: 9
+rule: rs-derive-change
+rule_claim: a derive or attribute change on a public item adds or removes trait impls callers may depend on; `#[derive(..)]` is trait-impl authorship in attribute syntax
+outcome: applied-linked
+linked_declaration: seam/rust/readysignal-debug
+extra: {}

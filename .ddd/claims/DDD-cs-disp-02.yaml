@@ -1,0 +1,31 @@
+format: 4
+id: DDD-cs-disp-02
+statement: >
+  Field-held ownership is outside `using` but inside the analyzer set: the
+  language closes nothing here, while CA1001 reports a type that owns a
+  disposable field without being disposable, and CA2000 reports a caller that
+  drops a correctly-owned instance. This case is analyzer-closable rather
+  than open, which is a different allocation from the rest of the family.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain with AnalysisMode=All. A sealed Holder
+  with a `private readonly Res _r` and no IDisposable yields
+  `CA1001: Type 'Holder' owns disposable field(s) '_r' but is not disposable`,
+  and the instance is observed undisposed at exit. Separately, a GoodHolder
+  that does implement IDisposable, constructed by a caller that never
+  disposes it, yields CA2000 at the construction site.
+falsifier: >
+  A field-held disposable that neither CA1001 nor CA2000 reports under these
+  settings — for instance ownership reaching a field through a path the
+  declaration-shape rule does not model.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "SDK-bundled .NET analyzers at AnalysisLevel=latest, AnalysisMode=All"
+predicate: pred/code/deterministic-disposal
+refines:
+  - DDD-cs-disp-01

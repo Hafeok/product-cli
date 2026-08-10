@@ -1,0 +1,38 @@
+format: 2
+id: dec/ddd/rust-host-is-real
+title: The Rust adapter's acceptance runs against real rust-analyzer, not a mock dialect
+rationale: >
+  `dec/ddd/fixtures-not-sdk` keeps workspace CI hermetic by testing the C# and
+  Bicep paths against committed fixtures plus a mock LSP host, because the
+  .NET SDK is a heavyweight foreign prerequisite CI has no other reason to
+  carry. That rationale does not extend to Rust: rust-analyzer is a component
+  of the toolchain this repository already pins, so the real host costs one
+  entry in `rust-toolchain.toml` and one `components:` line in the workflow.
+
+
+  Two things follow, and both are why this is worth a decision rather than a
+  preference. The adapter's acceptance is measured against the server whose
+  output it actually parses, so a rust-analyzer change that moves symbol
+  kinds, impl-block naming, or the readiness protocol fails the suite instead
+  of passing a mock that was written to agree with the adapter. And the
+  session's own constraint holds — all Rust knowledge stays in the adapter
+  module, because no Rust dialect is added to `ddd-lsp/src/mock/parse.rs`.
+
+
+  The tests do not skip when the component is absent. A silent skip is the
+  adoption trap M5 recorded twice — a green exit code standing in for a check
+  that never ran — so a missing rust-analyzer fails with the `rustup component
+  add` line in the message.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-detect-02
+    status: reported
+    changed: 2026-08-06
+  - claim: DDD-arch-02
+    status: projected
+    changed: 2026-08-02
+date: 2026-08-10
+notes: >
+  DDD-arch-02 is pinned as a basis because running against the real host is
+  what makes its LSP-sufficiency question answerable for a third language
+  rather than answerable only against a mock built to agree.

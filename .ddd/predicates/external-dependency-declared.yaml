@@ -1,0 +1,44 @@
+predicate:
+  id: pred/configuration/external-dependency-declared
+  format: 1
+  name: External dependency declared
+  statement: >
+    Accept a reference to a pre-existing resource c iff the assumptions it
+    encodes are stated — that the resource exists at deployment time, and who
+    owns its lifecycle — rather than being implied by the reference itself.
+
+  artifact_class: configuration
+
+  ground:
+    - fact: the existing-resource references c declares and what they resolve
+        against
+      provenance: controlled
+    - fact: whether the referenced resource exists when this deployment runs
+      provenance: observed
+    - fact: which team or template owns its lifecycle
+      provenance: institutional
+
+  tolerance: >
+    Every existing reference names its owner and its ordering assumption. A
+    reference that merely resolves is a reject: resolution today says nothing
+    about who may delete it tomorrow.
+
+  rejection_witness: >
+    The reference, the resource it assumes, and the absence of a stated owner
+    or ordering guarantee.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-bicep-exist-01   # only the unused case is caught; the assumption is not
+
+  proxy_gap: >
+    A resolving reference proxies a satisfied dependency. It resolves at
+    compile time against a name, not against a deployed resource, so the
+    check passes in exactly the environments where the resource is absent.
+
+  notes: >
+    The institutional item is the one nothing can reach: ownership lives in
+    an org chart, not in a template. That is why this predicate asks for a
+    declaration rather than a check — the fact needed is not in the artifact
+    and cannot be put there by any tool.

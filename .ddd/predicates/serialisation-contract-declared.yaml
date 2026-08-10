@@ -1,0 +1,48 @@
+predicate:
+  id: pred/data/serialisation-contract-declared
+  format: 1
+  name: Serialisation contract declared
+  statement: >
+    Accept a serialisation configuration c iff each element of the wire
+    contract — member naming, enum representation, unknown-member handling,
+    null handling and temporal format — is stated in c, rather than inherited
+    from the serialiser's defaults in G.
+
+  artifact_class: data
+
+  ground:
+    - fact: the serialiser options c configures
+      provenance: controlled
+    - fact: the serialiser's default for each element c leaves unset
+      provenance: institutional
+    - fact: what the consumer on the other side of the wire actually accepts
+      provenance: observed
+
+  tolerance: >
+    Every element of the contract stated explicitly. Relying on a default is
+    a reject even where the default is the value that would have been chosen,
+    because the next version of the serialiser owns that value and the
+    contract's owner does not.
+
+  rejection_witness: >
+    The contract element left unset and the default that silently supplied
+    it.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-cs-ser-01   # every element defaults silently; nothing reports it
+
+  proxy_gap: >
+    A stated contract proxies an interoperable one. Both sides can state
+    their contracts explicitly and state them differently; agreement is a
+    property of the pair, not of either configuration.
+
+  notes: >
+    The institutional ground item is the point. The defaults are not wrong,
+    they are simply owned by someone else — a serialiser major version may
+    change them, and the contract moves without anything in the repo
+    changing. This is why DAD §4.2 reaches for an approved-output snapshot
+    rather than an analyzer: the closure available here is a recorded
+    accepted shape, which is a third mode alongside analyzer-closed and
+    review-closed.

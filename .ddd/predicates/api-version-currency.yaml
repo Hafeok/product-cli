@@ -1,0 +1,45 @@
+predicate:
+  id: pred/configuration/api-version-currency
+  format: 1
+  name: Resource API version currency
+  statement: >
+    Accept an infrastructure template c iff every resource declaration in c
+    names a provider API version within the currency bound stated in G,
+    rather than whichever version was current when the declaration was
+    written.
+
+  artifact_class: configuration
+
+  ground:
+    - fact: the API version each resource declaration names
+      provenance: controlled
+    - fact: the versions the provider currently publishes, and their ages
+      provenance: institutional
+    - fact: the currency bound the repo declares
+      provenance: controlled
+
+  tolerance: >
+    Whatever bound the repo states — the DAD §5.2 configuration uses 730 days.
+    A version outside the bound is a reject even where the deployment still
+    succeeds, because the behaviour being relied on is undeclared.
+
+  rejection_witness: >
+    The resource, the version it names, that version's age, and the
+    acceptable versions at check time.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-bicep-ver-01   # closed by the linter, at a bound the repo sets
+
+  proxy_gap: >
+    Currency proxies correctness of behaviour. A recent version can change
+    defaults the template relied on, so satisfying the bound can itself alter
+    behaviour — the check keeps the decision visible rather than keeping the
+    deployment stable.
+
+  notes: >
+    The institutional item is the provider's release cadence, which is why
+    this predicate can go from satisfied to violated with no edit to the
+    repo: the ground moves on its own. That is unusual in this seed and it is
+    what makes a declared bound, rather than a fixed list, the right tolerance.

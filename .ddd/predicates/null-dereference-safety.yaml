@@ -1,0 +1,55 @@
+predicate:
+  id: pred/code/null-dereference-safety
+  format: 1
+  name: Null-dereference safety
+  statement: >
+    Accept code c iff every reference-type dereference in c is provably
+    non-null at its point of use, given the nullability contract in G.
+
+  artifact_class: code
+
+  ground:
+    - fact: the declared nullability annotations of every type and member c
+        references, including those carried by its dependencies' reference
+        assemblies
+      provenance: controlled
+    - fact: the compiler's null-state flow analysis at each dereference site
+      provenance: controlled
+    - fact: the actual nullness of values entering c from outside the
+        compilation — deserialised payloads, reflection results, ORM
+        materialisation, unmanaged interop
+      provenance: observed
+
+  tolerance: >
+    No dereference of a possibly-null reference on any path. The null-state
+    analysis must reach every dereference site; a site the analysis cannot
+    reach is a reject, not a pass.
+
+  rejection_witness: >
+    The dereference site, and the null-state path that reaches it with the
+    reference possibly-null.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-cs-nrt-01   # the bounded closure: within the compilation
+    - DDD-cs-nrt-02   # ...not across deserialisation
+    - DDD-cs-nrt-03   # ...not across reflection
+    - DDD-cs-nrt-04   # ...not across `!`, and `!` is unreportable
+    - DDD-cs-nrt-05   # ...not across an unloaded required EF navigation
+    - DDD-cs-nrt-06   # ...but EF scalar materialisation does close it, loudly
+    - DDD-cs-nrt-07   # ...not across unmanaged interop
+
+  proxy_gap: >
+    Compile-time null-state proxies runtime null-safety. They diverge exactly
+    where G's annotations are asserted rather than checked — at every channel
+    through which a value enters without the compiler having seen its
+    provenance.
+
+  notes: >
+    The observed ground item is why no purely static arrangement closes this
+    predicate outright. That follows from the signature, not from any finding
+    about a particular language: values arriving from outside the compilation
+    do not exist at build time. Closure claims about C# therefore state a
+    bounded closure, and the boundary clauses are where the observed item
+    bites.

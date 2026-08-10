@@ -1,0 +1,32 @@
+format: 2
+id: DDD-adapter-03
+statement: >
+  Adding a member to a public C# enum is contract-forming — a consumer's
+  exhaustive switch expression over that enum stops being exhaustive — and
+  the §9.1 policy table has no row for it, so the change class passes the
+  interceptor unclassified. LSP kind 22 normalizes to `enum-member`, which is
+  absent from DECL_KINDS, so the symbol is dropped in the adapter's facts()
+  before any policy row is consulted.
+status: reported
+evidence: >
+  Compiler behaviour reproduced on .NET SDK 8.0.413 (C# 12), net8.0: an enum
+  of three members with a consumer switch expression covering two yields
+  `warning CS8509: The switch expression does not handle all possible values
+  of its input type (it is not exhaustive). For example, the pattern
+  'Status.Escalated' is not covered.` Default severity is warning, so the
+  break is silent unless the mechanical store is on; the DAD §4.1
+  .editorconfig sets CS8509 to error, which is the arrangement this claim
+  assumes. Table gap verified by reading ddd-lsp/src/adapter/csharp.rs:
+  DECL_KINDS lists class, interface, struct, enum, method, property, field,
+  constructor, event, interface-member — the enum type, never its members —
+  and protocol.rs kind_name maps LSP kind 22 to `enum-member`.
+falsifier: >
+  An enum-member addition that no consumer can break on — for instance if
+  every governed consumer's switch carries a discard arm, making exhaustive
+  matching moot — or a C# version in which the compiler stops treating enum
+  switch expressions as exhaustiveness-checked.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+depends_on:
+  - DDD-adapter-01

@@ -1,0 +1,31 @@
+format: 4
+id: DDD-bicep-rbac-01
+statement: >
+  pred/configuration/authorization-scope-declared is open, and open in the
+  strong sense: neither tool evaluated the role assignment at all. The
+  assignment is not merely unjudged, it is absent from both tools' findings,
+  so an ungoverned scope leaves no trace anywhere in the pipeline.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain. A
+  Microsoft.Authorization/roleAssignments resource granting Contributor at
+  resource-group scope drew nothing from the DAD §5.2 linter configuration
+  and produced no PSRule finding of any kind — the only failures in that run
+  were Azure.AppService.AvailabilityZone and Azure.Resource.UseTags, both
+  about other resources in the same template.
+
+
+  Routing correction: an earlier probe's Azure.KeyVault.RBAC failure was read
+  as covering this item. It does not — that rule concerns a vault's
+  authorization model, not the scope an assignment is made at — and it is not
+  cited here.
+falsifier: >
+  A rule from either tool that reports a role assignment's scope, or that
+  reports role assignments as a class requiring justification.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  target: "Azure Resource Manager"
+  tool: "Bicep CLI 0.37.4; PSRule.Rules.Azure 1.47.0"
+predicate: pred/configuration/authorization-scope-declared

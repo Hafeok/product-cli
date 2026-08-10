@@ -1,0 +1,44 @@
+predicate:
+  id: pred/configuration/authorization-scope-declared
+  format: 1
+  name: Authorization assignment scope declared
+  statement: >
+    Accept a role assignment c iff the scope it is made at — subscription,
+    resource group, or individual resource — is stated as the intended
+    blast radius, rather than following from where the declaration happens
+    to sit in the template.
+
+  artifact_class: configuration
+
+  ground:
+    - fact: the assignment's target scope and role definition
+      provenance: controlled
+    - fact: the resources that scope will contain over time
+      provenance: observed
+    - fact: the least privilege the principal actually needs
+      provenance: inferred
+
+  tolerance: >
+    Every assignment states its scope as a decision. A scope inherited from
+    the declaration's position is a reject even when it is the correct scope,
+    because a resource group's contents grow and the assignment grows with
+    them.
+
+  rejection_witness: >
+    The assignment, the scope it takes effect at, and the absence of a
+    decision naming that scope.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-bicep-rbac-01   # open — neither tool evaluates the assignment at all
+
+  proxy_gap: >
+    A stated scope proxies least privilege. Naming the resource group as
+    deliberate does not make Contributor over it the smallest grant that
+    works.
+
+  notes: >
+    The observed item is why this cannot be settled once: the scope is fixed
+    at deployment but its extent is not, because resources are added to the
+    group later by people who never saw the assignment.

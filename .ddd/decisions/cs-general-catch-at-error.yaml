@@ -1,0 +1,26 @@
+format: 2
+id: dec/cs/general-catch-at-error
+title: CA1031 runs at error severity; a general catch cites a decision or does not compile
+rationale: >
+  The second manifest candidate. DDD-cs-fail-01 establishes that CA1031
+  reports the general-catch shape from the SDK analyzers alone. Raising it to
+  error makes the DAD §6.2 reading operational: `catch (Exception)` stops
+  being something a reviewer might notice and becomes something a build
+  rejects, so the escape has to be argued for rather than defaulted into.
+
+
+  What this does not buy is stated in the claim: CA1031 checks the breadth of
+  the caught type and nothing about the continuation. A narrowed catch with
+  an empty body still compiles. That residual is real and stays allocated to
+  review until the DAD §4.4 escape-site analyzer exists, which is a separate
+  entry because it is a build-a-thing decision rather than a severity one.
+
+
+  Scope as with dec/cs/policy-rules-at-error: governed C# engagement repos,
+  operative where a manifest cites it.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-cs-fail-01
+    status: reported
+    changed: 2026-08-07
+date: 2026-08-07

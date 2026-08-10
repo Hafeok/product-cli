@@ -1,4 +1,4 @@
-format: 1
+format: 2
 id: DDD-method-01
 statement: >
   Keeping closure status out of definitional entries prevents stale-confidence
@@ -13,4 +13,5 @@ falsifier: >
   separate claim graph drifted stale.
 owner: none
 changed: 2026-08-02
+revalidate_by: 2028-08-07
 depends_on: []

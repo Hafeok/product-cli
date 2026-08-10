@@ -1,0 +1,28 @@
+format: 4
+id: DDD-bicep-ver-01
+statement: >
+  pred/configuration/api-version-currency is closed by the Bicep linter at a
+  bound the repo declares. `use-recent-api-versions` reports every resource
+  whose API version exceeds maxAgeInDays, names the age and lists the
+  acceptable versions, and runs at whatever severity bicepconfig.json sets.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain with the DAD §5.2 configuration
+  (maxAgeInDays 730, level error). A storage account declared at
+  2019-06-01 produced
+  `Error use-recent-api-versions: '2019-06-01' is 2624 days old, should be no
+  more than 730 days old, or the most recent. Acceptable versions:
+  2025-01-01`, and a Key Vault at 2023-07-01 produced the same at 1133 days.
+  The rejection witness the predicate asks for is exactly what the diagnostic
+  carries.
+falsifier: >
+  A resource declaration whose API version exceeds the configured bound and
+  that the linter does not report — or a bound the linter cannot express, so
+  that currency must be judged by hand.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  target: "Azure Resource Manager"
+  tool: "Bicep CLI 0.37.4"
+predicate: pred/configuration/api-version-currency

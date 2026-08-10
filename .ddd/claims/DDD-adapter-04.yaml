@@ -1,0 +1,71 @@
+format: 2
+id: DDD-adapter-04
+statement: >
+  Adding a language costs more than an adapter plus a policy table whenever
+  the new host's *lifecycle* protocol differs in shape from the incumbents'.
+  The contract-surface half of PRD §11's mitigation held for Rust — every
+  Rust semantic assumption landed inside the adapter module — but the host
+  half did not: two assumptions about how a language server announces itself
+  were baked into the language-neutral LSP layer and had to be generalised
+  before the third adapter could be written at all. DDD-adapter-01 does not
+  cover this, because its falsifier is scoped to contract-surface knowledge
+  and says nothing about host wiring.
+status: reported
+evidence: >
+  Measured at M6 against rust-analyzer 1.95.0, with a pre-registered
+  classification filed before any code was written
+  (docs/ddd-m6-experiment.md, commit a8871da).
+
+
+  Assumption 1 — one fixed client-capability set serves every host.
+  `ddd-lsp/src/host.rs::initialize` sent a capability literal with no adapter
+  hook. rust-analyzer emits `experimental/serverStatus` only when the client
+  declares `experimental.serverStatusNotification: true`; probed both ways
+  against the same crate, the capability yields the notification at t+0.15s
+  and its absence yields zero such notifications for the life of the process.
+  Fix: `Adapter::extra_capabilities`, deep-merged over the common set.
+
+
+  Assumption 2 — readiness is the arrival of a distinctly-named notification.
+  That is Roslyn's shape: `workspace/projectInitializationComplete` is sent
+  once and means ready, so `ServerState::flags` recorded method names only.
+  rust-analyzer repeats one method and carries the answer in the payload —
+  `quiescent: false` at t+0.15s, `quiescent: true` at t+3.92s — so a
+  name-only flag reports Ready while the index is still building, which is
+  the exact dishonesty `Readiness::Loading` exists to prevent. Fix: a
+  `ReadySignal` variant taking a payload predicate, plus
+  `ServerState::last_params`.
+
+
+  Cost: 66 added / 6 deleted in adapter/mod.rs, 33/19 in host.rs, 9/0 in
+  client.rs, 3/2 each in the C# and Bicep adapters to restate one field —
+  about 114 added lines outside the new adapter, against 840 inside it.
+  Nothing in the interceptor, the classifier, the surface vocabulary, the MCP
+  layer, or the config schema had to move.
+falsifier: >
+  (a) The false half dies if a future language server integrates with
+  near-zero host wiring: a fourth host needing neither a capability
+  announcement of its own nor a readiness shape outside the two now
+  expressible, and no change to the LSP layer to admit it. That would show
+  the 114 lines were rust-analyzer's alone rather than a per-server budget
+  line, and PRD §11's re-priced row would be overstating the cost.
+
+
+  (b) The true half dies if contract-surface leakage appears at language four
+  with an LSP host: a contract-surface assumption in the fourth LSP-hosted
+  adapter that cannot be localised to its adapter module and forces a change
+  to the classifier, the surface vocabulary, or the interceptor. That would
+  show the contract-surface half was not confirmed at M6, only untested at
+  n=3 — and would take DDD-adapter-01 down with it. A non-LSP artifact class
+  does not test this; M7's HTML+CSS pair is therefore outside it, because its
+  contract surface is stylesheets and class vocabulary rather than symbols.
+
+
+  (c) Both halves die if the M6 changes are shown to have been avoidable: a
+  readiness signal for rust-analyzer that is both honest about indexing and
+  expressible as a bare notification method name.
+owner: none
+changed: 2026-08-10
+revalidate_by: 2027-02-10
+depends_on:
+  - DDD-adapter-01

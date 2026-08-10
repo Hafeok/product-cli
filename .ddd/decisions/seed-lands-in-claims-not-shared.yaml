@@ -1,0 +1,34 @@
+format: 2
+id: dec/ddd/seed-lands-in-claims-not-shared
+title: The M5 closure-claim seed is filed in claims/; shared/ is earned by observed inheritance
+rationale: >
+  Settles PRD §14 question 5. `shared/` is described in PRD §6 as entries
+  intended for promotion to a future central catalog. Intent is cheap to
+  declare and, once declared, indistinguishable in the store from a
+  transferability that was actually observed — which is what DDD-method-05
+  says the field cannot honestly carry at authoring time.
+
+
+  The asymmetry decides it. Promoting later is a file move plus a note, and
+  the promoting act can cite the repo that inherited the entry — PRD §12's
+  fourth success criterion is exactly that observation. Filing early is not
+  recoverable: nothing downstream can tell a predicted-transferable entry
+  from a proven one, so the error is silent, which is the failure mode this
+  milestone exists to avoid.
+
+
+  The C# seed sharpens it further. Those claims are version-indexed to a
+  language and SDK version, and an entry inherited into a repo on a different
+  SDK is worse than no entry — it is a closure finding that does not hold
+  there, carrying the authority of the catalog. Version-indexed claims should
+  cross a repo boundary only when someone has checked the index against the
+  destination.
+
+
+  No schema change: promotion is a path move, and the entry keeps its id.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-method-05
+    status: projected
+    changed: 2026-08-07
+date: 2026-08-07

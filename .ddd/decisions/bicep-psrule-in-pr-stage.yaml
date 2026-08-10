@@ -1,0 +1,38 @@
+format: 2
+id: dec/bicep/psrule-in-pr-stage
+title: PSRule for Azure runs in the PR stage, and its expansion is asserted
+rationale: >
+  Network exposure and diagnostic settings are unreachable by the Bicep
+  linter and reachable by PSRule — DDD-bicep-net-01 and DDD-bicep-diag-01
+  measured both halves. Neither predicate is closable in an arrangement that
+  runs only the linter, so the second tool earns its place in the PR stage
+  where the DAD §5.1 ground table puts static checks.
+
+
+  The load-bearing part of this decision is the second clause. PSRule's Bicep
+  expansion requires the standalone Bicep CLI on PATH and every parameter
+  resolvable; when either is missing it emits "no matching rules were found"
+  and reports zero failures — indistinguishable, in an exit code, from a
+  clean run. A gate that passes vacuously is worse than no gate, because it
+  reports assurance it did not obtain. So adopting PSRule means asserting
+  that expansion happened: a minimum evaluated-resource count, or a fixture
+  template with a known failure that must fail. Absent that assertion this
+  decision buys nothing and hides that fact.
+
+
+  Not covered by either tool, and staying with judgment: role assignment
+  scope (DDD-bicep-rbac-01), which neither evaluates at all; the ownership
+  assumption in a consumed `existing` reference (DDD-bicep-exist-01); and
+  sizing values (DDD-bicep-sku-01), where PSRule reaches only consequences.
+
+
+  Scope: governed Bicep repositories under Context& engagement.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-bicep-net-01
+    status: reported
+    changed: 2026-08-07
+  - claim: DDD-bicep-diag-01
+    status: reported
+    changed: 2026-08-07
+date: 2026-08-07

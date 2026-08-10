@@ -1,0 +1,27 @@
+format: 4
+id: DDD-cs-tc-03
+statement: >
+  A downcast from `object` defers the check rather than removing it. Routing
+  a value through an `object`-typed intermediate erases what the compiler
+  knew, so the conversion is unverified at build time; the CLR's cast check
+  still runs and rejects the mismatch.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain: `object o = "text"; var n = (int)o;`
+  builds clean under TreatWarningsAsErrors and throws InvalidCastException.
+  Same shape as DDD-cs-tc-02 and filed separately because the mechanism
+  differs — the binder versus the cast check — and either could change
+  without the other.
+falsifier: >
+  An `object` downcast to an incompatible type that succeeds and yields a
+  usable value of the target type, rather than throwing at the cast.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+predicate: pred/code/static-type-conformance
+refines:
+  - DDD-cs-tc-01

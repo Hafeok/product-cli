@@ -18,7 +18,7 @@ use crate::turtle;
 
 /// The entry format versions this tool validates against; each entry is
 /// checked against the version it declares (PRD §6).
-pub const SUPPORTED_FORMATS: &[u32] = &[1, 2, 3];
+pub const SUPPORTED_FORMATS: &[u32] = &[1, 2, 3, 4];
 
 /// Run every check over the store; empty means conformant.
 pub fn validate_store(store: &DddStore) -> Vec<Violation> {
@@ -53,7 +53,7 @@ fn format_checks(store: &DddStore) -> Vec<Violation> {
             out.push(fault(
                 id,
                 "format",
-                format!("declares format {format}; this tool validates formats 1-3"),
+                format!("declares format {format}; this tool validates formats 1-4"),
             ));
         }
     };
@@ -88,32 +88,8 @@ fn format_checks(store: &DddStore) -> Vec<Violation> {
 /// is a violation, so v1 entries never change meaning silently (PRD §6).
 fn format_gate_checks(store: &DddStore) -> Vec<Violation> {
     let mut out = Vec::new();
-    for c in &store.claims {
-        if c.format < 2 && c.revalidate_by.is_some() {
-            out.push(fault(
-                &c.id,
-                "revalidate_by",
-                "revalidate_by is a format-2 field — declare `format: 2`".to_string(),
-            ));
-        }
-    }
-    for d in &store.decisions {
-        let pinned = d.based_on.iter().filter(|b| b.pin().is_some()).count();
-        if d.format < 2 && pinned > 0 {
-            out.push(fault(
-                &d.id,
-                "based_on",
-                "pinned basedOn edges are format 2 — declare `format: 2`".to_string(),
-            ));
-        }
-        if d.format >= 2 && pinned < d.based_on.len() {
-            out.push(fault(
-                &d.id,
-                "based_on",
-                "a format-2 decision pins every basedOn edge with the claim's status plus changed date at decision time (rule 6)".to_string(),
-            ));
-        }
-    }
+    out.extend(store.claims.iter().flat_map(claim_format_gates));
+    out.extend(store.decisions.iter().flat_map(decision_format_gates));
     if let Some(c) = &store.config {
         out.extend(config_gate_checks(c));
     }
@@ -125,6 +101,55 @@ fn format_gate_checks(store: &DddStore) -> Vec<Violation> {
                 "pattern obligations are a format-3 field — declare `format: 3`".to_string(),
             ));
         }
+    }
+    out
+}
+
+/// Claim gates: `revalidate_by` is format 2, `version_index` format 4, and
+/// an index that names no version anchors nothing.
+fn claim_format_gates(c: &Claim) -> Vec<Violation> {
+    let mut out = Vec::new();
+    if c.format < 2 && c.revalidate_by.is_some() {
+        out.push(fault(
+            &c.id,
+            "revalidate_by",
+            "revalidate_by is a format-2 field — declare `format: 2`".to_string(),
+        ));
+    }
+    match &c.version_index {
+        Some(_) if c.format < 4 => out.push(fault(
+            &c.id,
+            "version_index",
+            "version_index is a format-4 field — declare `format: 4`".to_string(),
+        )),
+        Some(v) if v.is_empty() => out.push(fault(
+            &c.id,
+            "version_index",
+            "a version_index must anchor at least one of language/sdk/target/tool".to_string(),
+        )),
+        _ => {}
+    }
+    out
+}
+
+/// Decision gates: pins are format 2, and a format-2 decision pins every
+/// edge or none (rule 6) — a half-pinned decision hides its basis loss.
+fn decision_format_gates(d: &crate::decision::Decision) -> Vec<Violation> {
+    let mut out = Vec::new();
+    let pinned = d.based_on.iter().filter(|b| b.pin().is_some()).count();
+    if d.format < 2 && pinned > 0 {
+        out.push(fault(
+            &d.id,
+            "based_on",
+            "pinned basedOn edges are format 2 — declare `format: 2`".to_string(),
+        ));
+    }
+    if d.format >= 2 && pinned < d.based_on.len() {
+        out.push(fault(
+            &d.id,
+            "based_on",
+            "a format-2 decision pins every basedOn edge with the claim's status plus changed date at decision time (rule 6)".to_string(),
+        ));
     }
     out
 }

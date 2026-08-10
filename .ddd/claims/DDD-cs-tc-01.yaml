@@ -1,0 +1,28 @@
+format: 4
+id: DDD-cs-tc-01
+statement: >
+  The C# compiler's static type checking closes
+  pred/code/static-type-conformance for values flowing between statically
+  typed sites, with no opt-in required — unlike the nullable analysis, this
+  arrangement is on by default. It closes nothing for values crossing a site
+  that exits the type system, and the refining claims separate the two ways
+  of exiting: deferring the check to runtime, and removing it.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain. An incompatible assignment yields
+  CS0029, a cast between unrelated sealed types yields CS0030, and a call to
+  an undeclared member yields CS1061 — all compile errors without any
+  project setting. The refining claims each build clean under the same
+  project, which is the same boundary observed from outside.
+falsifier: >
+  A conversion between statically typed sites that the compiler accepts and
+  the runtime then rejects, with neither `dynamic`, an `object`-typed
+  intermediate, nor an unsafe reinterpretation on the path.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+predicate: pred/code/static-type-conformance

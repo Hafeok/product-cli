@@ -1,4 +1,4 @@
-format: 1
+format: 2
 id: DDD-method-02
 statement: >
   Mined pattern instances lack a principal and become escaped decisions; the
@@ -12,4 +12,5 @@ falsifier: >
   time without curation.
 owner: none
 changed: 2026-08-02
+revalidate_by: 2028-08-07
 depends_on: []

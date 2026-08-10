@@ -1,0 +1,32 @@
+format: 4
+id: DDD-cs-map-02
+statement: >
+  The meaning-conformance obligation is not closable by the mapper's own
+  validation, and the failure is silent in exactly the case the convention
+  handles well. A destination member matched by name to a source member of a
+  different meaning passes AssertConfigurationIsValid and maps a wrong value
+  with no diagnostic anywhere.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain, alongside DDD-cs-map-01 in one run. A
+  fully covered destination whose Total is populated by convention from the
+  source's Total — where the domain meant total including tax — passes the
+  assertion and yields Total=100. The uncovered case in the same run threw.
+  So the validator reports absence and is silent on wrongness, which is the
+  opposite of the ranking the risk deserves.
+falsifier: >
+  A configuration-time or analysis-time check that reports a
+  convention-matched pair whose meanings differ — which would require the
+  meanings to be expressed somewhere the checker can read, and would move
+  this obligation off judgment.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "AutoMapper 13.0.1"
+predicate: pred/composition/convention-mapping
+refines:
+  - DDD-cs-map-01

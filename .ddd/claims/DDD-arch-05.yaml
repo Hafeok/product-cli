@@ -1,0 +1,56 @@
+format: 2
+id: DDD-arch-05
+statement: >
+  Same-session declaration matching admits a surface event when the
+  declaration names the symbol OR when its contract_location contains the
+  file path (ddd-mcp/src/intercept.rs, match_declarations). The file arm
+  makes the interceptor's enforce-mode guarantee degrade with file size: one
+  authored declaration admits every later surface event in that file for the
+  life of the serve process, including symbols whose demand was never
+  examined. What enforce mode then guarantees is not that every contract
+  change was declared, but that every file carrying a contract change had
+  some declaration in it.
+
+
+  The consequence reaches further than admission. link_seam_metadata writes
+  the matched event's LSP-derived facts onto the matched declaration, so a
+  file-arm match does not merely admit an unexamined symbol — it overwrites
+  the machine-authored structural fields of the declaration it matched with
+  another symbol's facts. The degraded guarantee is therefore not only weaker
+  than enforce mode claims; it silently corrupts the correspondence record it
+  is supposed to produce.
+status: reported
+evidence: >
+  First observed 2026-08-10, on the first enforce-mode edit ever run against
+  this repository (M6 governed tail). The edit added two pub items —
+  DEFAULT_COMMAND and host_command — to ddd-lsp/src/adapter/rust.rs. Two
+  declarations were authored, one per symbol. Both surface events linked to
+  the first, because match_declarations returns the first hit and the file arm
+  matched:
+
+
+    seam-event/3  symbol: DEFAULT_COMMAND  linked: seam/rust/default-command
+    seam-event/4  symbol: host_command     linked: seam/rust/default-command
+
+
+  seam-event/4 is verbatim the instance this claim's own falsifier names: a
+  linked_declaration whose seam names a symbol other than the row's own.
+
+
+  The corruption followed. .ddd/seams/seam-rust-default-command.yaml — a
+  declaration about a const — now carries symbol: host_command, kind: fn,
+  signature: fn host_command() -> Vec<String>. seam/rust/host-command was
+  never matched and carries no LSP facts at all. The corrupted entry is left
+  in place with a notes field recording why; correcting it earlier would have
+  deleted the observation.
+falsifier: >
+  Enforce-mode sessions in which file-arm matches are rare or always cover
+  symbols the declarant did examine — i.e. the broad arm admits nothing that
+  a symbol-granular rule would have demanded separately. The correspondence
+  rows can answer this directly: a linked_declaration whose seam names a
+  symbol other than the row's own is an instance of the gap.
+owner: Emil
+changed: 2026-08-10
+revalidate_by: 2027-02-07
+depends_on:
+  - DDD-arch-03

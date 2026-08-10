@@ -53,6 +53,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ steps.rust.outputs.version }}
+          # rust-analyzer is the ddd Rust adapter's language host; its
+          # acceptance tests run against the real server rather than a mock
+          # (dec/ddd/rust-host-is-real). Kept in step with the components
+          # list in rust-toolchain.toml.
+          components: rust-analyzer
 
       - uses: Swatinem/rust-cache@v2
 

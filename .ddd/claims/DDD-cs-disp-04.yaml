@@ -1,0 +1,31 @@
+format: 4
+id: DDD-cs-disp-04
+statement: >
+  Ownership transferred into a container is open: neither the language nor
+  the analyzer set sees it. Handing a freshly constructed disposable to a
+  method that stores it in a collection produces no diagnostic, because
+  CA2000's escape analysis stops at the call and CA1001 models a field whose
+  type is disposable, not a field holding a collection of disposables.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain with AnalysisMode=All. A Registry
+  holding `private readonly List<Res> _items` with an `Add(Res)` that stores
+  and never disposes, called as `Reg.Add(new Res())`, draws no CA2000 at the
+  construction site and no CA1001 on Registry. The same build reports CA2000
+  elsewhere in the file, so the analyzer was running and simply does not
+  reach this shape.
+falsifier: >
+  A diagnostic under these settings on a disposable handed to a
+  collection-holding container with no disposal path — from CA1001, CA2000,
+  CA2213 or any successor rule.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "SDK-bundled .NET analyzers at AnalysisLevel=latest, AnalysisMode=All"
+predicate: pred/code/deterministic-disposal
+refines:
+  - DDD-cs-disp-01

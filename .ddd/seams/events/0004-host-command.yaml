@@ -1,0 +1,19 @@
+format: 1
+id: seam-event/4
+at: 2026-08-10T08:05:34Z
+language: rust
+artifact_class: code
+mode: enforce
+file: ddd-lsp/src/adapter/rust.rs
+symbol: host_command
+container: ''
+kind: fn
+change: added
+visibility: public
+signature: fn host_command() -> Vec<String>
+reference_count: 0
+rule: rs-add-exposed
+rule_claim: a new `pub` item is contract surface
+outcome: applied-linked
+linked_declaration: seam/rust/default-command
+extra: {}

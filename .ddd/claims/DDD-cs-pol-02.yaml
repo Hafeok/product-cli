@@ -1,0 +1,31 @@
+format: 4
+id: DDD-cs-pol-02
+statement: >
+  The clock is not covered. `DateTime.Now` draws no diagnostic from the SDK
+  analyzer set at AnalysisMode=All, so the ambient-time-zone case of
+  pred/code/explicit-policy-argument is open in the arrangement that closes
+  the comparison and culture cases. Closing it requires adding an analyzer
+  package, which is a dependency decision rather than a severity setting.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain in the same probe build that produced
+  CA1305, CA1307 and CA1309: `internal static DateTime Stamp() =>
+  DateTime.Now;` drew nothing. The analyzers were demonstrably running, so
+  this is absence of a rule rather than absence of analysis. DAD §4.1 names
+  Meziantou.Analyzer as the package that carries the rule; that package was
+  not exercised here and its rule id is therefore not cited.
+falsifier: >
+  An SDK-bundled rule at some AnalysisMode that reports ambient-clock or
+  ambient-time-zone use, which would make this closable by severity alone
+  like its siblings.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "SDK-bundled .NET analyzers at AnalysisLevel=latest, AnalysisMode=All"
+predicate: pred/code/explicit-policy-argument
+refines:
+  - DDD-cs-pol-01

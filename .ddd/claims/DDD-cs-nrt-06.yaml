@@ -1,0 +1,36 @@
+format: 4
+id: DDD-cs-nrt-06
+statement: >
+  EF Core scalar materialisation is not a null-dereference hole, contrary to
+  the suspicion this seed was written to check. A NULL column read into a
+  non-nullable reference property does not silently produce a null-typed
+  value: the provider's reader throws during materialisation. The static gap
+  is real — nothing at compile time checks the property's nullability against
+  the column's — but the arrangement closes the predicate at runtime, at the
+  data boundary, rather than leaking a null onward.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain: a legacy-shaped table
+  `Persons (Id INTEGER PRIMARY KEY, Name TEXT NULL)` holding a NULL, mapped
+  to `public string Name { get; set; } = "";`. `db.Persons.First()` throws
+  `System.InvalidOperationException: The data is NULL at ordinal 1. This
+  method can't be called on NULL values. Check using IsDBNull before calling.`
+  from Microsoft.Data.Sqlite.SqliteValueReader.GetString — before the entity
+  is handed back, so no dereference of a null ever occurs.
+falsifier: >
+  A provider or a mapping configuration under these settings that materialises
+  a NULL column into a non-nullable reference property and returns the entity,
+  making the failure a NullReferenceException at some later dereference. Only
+  the Sqlite provider was exercised; another provider behaving differently
+  falsifies this as stated and narrows it to Sqlite.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "Microsoft.EntityFrameworkCore.Sqlite 8.0.8"
+predicate: pred/code/null-dereference-safety
+refines:
+  - DDD-cs-nrt-01

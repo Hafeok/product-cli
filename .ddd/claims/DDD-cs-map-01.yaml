@@ -1,0 +1,28 @@
+format: 4
+id: DDD-cs-map-01
+statement: >
+  The member-coverage obligation of pred/composition/convention-mapping is
+  mechanically closable at startup: AutoMapper's AssertConfigurationIsValid
+  throws when a destination member has no source and no explicit ignore, so
+  coverage need not be reviewed by hand provided the assertion is actually
+  run.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain. A destination carrying a ShippingCode
+  member the source cannot supply yields AutoMapperConfigurationException
+  from AssertConfigurationIsValid. The closure is conditional on the
+  assertion executing — it is a startup or test-time check, not a build-time
+  one, so a repo that configures the mapper without asserting has this
+  obligation open rather than closed.
+falsifier: >
+  An uncovered destination member that AssertConfigurationIsValid accepts,
+  which would leave coverage to review alongside meaning.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "AutoMapper 13.0.1"
+predicate: pred/composition/convention-mapping

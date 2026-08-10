@@ -1,0 +1,44 @@
+predicate:
+  id: pred/execution/transaction-boundary-declared
+  format: 1
+  name: Transaction boundary declared
+  statement: >
+    Accept a unit of work c iff the extent of its atomicity is stated — which
+    writes commit together, under which isolation level — rather than being
+    whatever extent the persistence calls in c happen to produce.
+
+  artifact_class: execution
+
+  ground:
+    - fact: the persistence calls in c and their order
+      provenance: controlled
+    - fact: which writes the author intended to commit or fail together
+      provenance: inferred
+    - fact: the isolation level the provider applies when none is stated, and
+        the interleavings actually observed under load
+      provenance: observed
+
+  tolerance: >
+    Every unit of work states its extent explicitly. An extent that emerges
+    from where the persistence calls happen to sit is a reject even when it
+    coincides with the intended one.
+
+  rejection_witness: >
+    Two writes the author intended to be atomic, and the commit that
+    separates them.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-cs-tx-01   # nothing states the intent, so nothing can check it
+
+  proxy_gap: >
+    A declared boundary proxies a correct one. An explicit transaction can be
+    drawn around the wrong set of writes, and stating the isolation level does
+    not make it the right level for the observed interleavings.
+
+  notes: >
+    The inferred item is the intent: nothing in the code says which writes
+    belong together, so the boundary is only ever recoverable by reading the
+    author's mind. That is what makes SaveChanges placement a governing
+    decision rather than a formatting one.

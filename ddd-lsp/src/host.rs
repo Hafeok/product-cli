@@ -77,7 +77,7 @@ impl Host {
         }
         if self.client.is_none() {
             let client = LspClient::spawn(&self.command, &self.root)?;
-            initialize(&client, &self.root)?;
+            initialize(&client, &self.root, self.adapter)?;
             if self.adapter.needs_open_handshake {
                 announce_workspace(&client, &self.root)?;
             }
@@ -89,13 +89,10 @@ impl Host {
 
     /// Non-blocking readiness probe; spawns lazily on first ask.
     pub fn readiness(&mut self) -> Result<Readiness> {
-        let flag = self.adapter.ready_flag;
+        let signal = self.adapter.ready;
         let started = {
             let client = self.client()?;
-            match flag {
-                None => true,
-                Some(f) => client.state.flags.lock().map(|s| s.contains(f)).unwrap_or(false),
-            }
+            signal.satisfied(&client.state)
         };
         let since = self.started_at.map(|t| t.elapsed().as_millis()).unwrap_or(0);
         if started {
@@ -109,7 +106,7 @@ impl Host {
                 detail: format!(
                     "{} is loading the workspace (waiting for {}); retry shortly",
                     self.adapter.language,
-                    flag.unwrap_or("initialization")
+                    signal.describe()
                 ),
             })
         }
@@ -234,29 +231,46 @@ fn end_position(text: &str) -> Value {
     json!({"line": last, "character": lines.last().map(|l| l.chars().count()).unwrap_or(0)})
 }
 
-/// The `initialize`/`initialized` handshake every LSP host expects.
-fn initialize(client: &LspClient, root: &Path) -> Result<()> {
+/// The `initialize`/`initialized` handshake every LSP host expects, with
+/// the adapter's extra capabilities merged over the common set.
+fn initialize(client: &LspClient, root: &Path, adapter: &Adapter) -> Result<()> {
     let root_uri = to_uri(root);
+    let mut capabilities = json!({
+        "textDocument": {
+            "synchronization": {"didSave": true},
+            "publishDiagnostics": {},
+            "documentSymbol": {"hierarchicalDocumentSymbolSupport": true},
+            "diagnostic": {},
+        },
+        "workspace": {"workspaceFolders": true, "configuration": true},
+        "window": {"workDoneProgress": true},
+    });
+    merge(&mut capabilities, (adapter.extra_capabilities)());
     client.request(
         "initialize",
         json!({
             "processId": std::process::id(),
             "rootUri": root_uri,
             "workspaceFolders": [{"uri": root_uri, "name": "workspace"}],
-            "capabilities": {
-                "textDocument": {
-                    "synchronization": {"didSave": true},
-                    "publishDiagnostics": {},
-                    "documentSymbol": {"hierarchicalDocumentSymbolSupport": true},
-                    "diagnostic": {},
-                },
-                "workspace": {"workspaceFolders": true, "configuration": true},
-                "window": {"workDoneProgress": true},
-            },
+            "capabilities": capabilities,
         }),
         Duration::from_secs(30),
     )?;
     client.notify("initialized", json!({}))
+}
+
+/// Deep-merge `extra` into `base`: objects recurse, everything else
+/// overwrites. Keeps an adapter's capability additions from clobbering a
+/// sibling key of the common set.
+fn merge(base: &mut Value, extra: Value) {
+    match (base, extra) {
+        (Value::Object(b), Value::Object(e)) => {
+            for (k, v) in e {
+                merge(b.entry(k).or_insert(Value::Null), v);
+            }
+        }
+        (b, e) => *b = e,
+    }
 }
 
 /// The Roslyn-style workspace announcement: find the solution (or the

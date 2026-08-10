@@ -1,0 +1,26 @@
+format: 4
+id: DDD-cs-ord-01
+statement: >
+  pred/code/deterministic-sequence-order is open in the SDK analyzer set.
+  Positional selection over an unordered sequence draws no diagnostic at any
+  AnalysisMode, so nothing mechanical distinguishes a First() over an ordered
+  source from a First() over an arbitrary one, and the residual falls
+  entirely to review.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain at AnalysisMode=All: `xs.First()`,
+  `xs.Take(3)` and an ordered control `xs.OrderBy(o => o.Id).First()` in one
+  build produced no ordering diagnostic of any kind. Other rules fired in the
+  same build (CA1812, CA2234), so the analyzers were running.
+falsifier: >
+  A rule in the SDK set, or reachable by severity configuration alone, that
+  reports a positional selection over a sequence with no established order.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "SDK-bundled .NET analyzers at AnalysisLevel=latest, AnalysisMode=All"
+predicate: pred/code/deterministic-sequence-order

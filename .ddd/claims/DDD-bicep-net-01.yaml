@@ -1,0 +1,27 @@
+format: 4
+id: DDD-bicep-net-01
+statement: >
+  pred/configuration/network-exposure-declared is closed by PSRule for Azure
+  and not by the Bicep linter. The linter has no rule for network surface at
+  all; PSRule reports an unset firewall per resource type, so this predicate
+  is closable only in an arrangement that runs the second tool.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain. A storage account and a Key Vault
+  declared with no network properties drew nothing from the DAD §5.2 linter
+  configuration, and failed Azure.Storage.Firewall and Azure.KeyVault.Firewall
+  under PSRule in the same template. Related exposure rules failed in the
+  same run — Azure.Storage.BlobPublicAccess, Azure.Storage.LocalAuth,
+  Azure.Storage.MinTLS — so the coverage is per-property rather than a single
+  network verdict.
+falsifier: >
+  A resource type whose network surface neither tool reports, or a linter
+  rule set that covers network exposure — the second would make this closable
+  without the PSRule dependency.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  target: "Azure Resource Manager"
+  tool: "Bicep CLI 0.37.4; PSRule.Rules.Azure 1.47.0"
+predicate: pred/configuration/network-exposure-declared

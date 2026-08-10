@@ -1,0 +1,53 @@
+predicate:
+  id: pred/composition/convention-mapping
+  format: 3
+  name: Convention-based mapping
+  statement: >
+    Accept a mapping configuration c iff every destination member is either
+    populated from a source member whose meaning it shares, or declared
+    unmapped, with every non-identity conversion named — rather than bound by
+    a naming convention in G.
+
+  artifact_class: composition
+
+  ground:
+    - fact: the member sets of the source and destination types, and the
+        convention by which the mapper pairs them
+      provenance: controlled
+    - fact: the configured overrides, ignores and conversions
+      provenance: controlled
+    - fact: whether a matched pair of members means the same thing
+      provenance: inferred
+
+  tolerance: >
+    Every destination member accounted for, and every convention-matched pair
+    confirmed rather than assumed. A pair that matches by name is a reject
+    until someone states that the meanings correspond.
+
+  rejection_witness: >
+    The destination member, and either the absence of any source for it or
+    the unconfirmed convention match that populated it.
+
+  obligations:
+    - member-coverage
+    - meaning-conformance
+    - conversion-declaration
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-cs-map-01   # coverage is mechanical — the config assertion closes it
+    - DDD-cs-map-02   # meaning is not — a wrong-meaning match passes clean
+
+  proxy_gap: >
+    Coverage proxies correctness, and the two come apart precisely where the
+    convention succeeds. An unmapped member is loud; a member mapped from the
+    wrong source of the same name is silent, and the mapper's own validation
+    reports the first while passing the second.
+
+  notes: >
+    The inferred ground item is what makes this a pattern rather than a
+    checkable rule: whether Total means net or gross is not in either type,
+    so no configuration validator can reach it. This is the DAD §6.2 reading
+    — mapping decided by convention is mapping decided by nobody — expressed
+    as the one obligation the tooling cannot discharge.

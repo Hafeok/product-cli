@@ -1,0 +1,10 @@
+format: 1
+id: seam/rust/host-command
+boundary: fn host_command in ddd-lsp/src/adapter/rust.rs
+verdict_knowledge: 'A caller learns that resolving rust-analyzer is the adapter''s problem, not the caller''s: spawning a working host needs no knowledge of how the toolchain installs it, and in particular no knowledge that the PATH shim resolves against the current directory''s toolchain and fails in a directory with no rust-toolchain.toml. What the caller absorbs in exchange is a subprocess call to rustup at spawn time, and the fact that the answer depends on the working directory the caller is in when it asks.'
+contract_location: ddd-lsp/src/adapter/rust.rs#host_command
+obligations:
+- returns a runnable command or the bare binary name — never an empty vector
+- 'the rustup probe is best-effort: a missing or failing rustup falls back rather than erroring'
+metadata:
+  symbol: host_command

@@ -1,0 +1,41 @@
+predicate:
+  id: pred/configuration/diagnostic-retention-declared
+  format: 1
+  name: Diagnostic settings and retention declared
+  statement: >
+    Accept a resource declaration c iff the diagnostic data it emits, and how
+    long that data is kept, are stated in c — rather than absent, which
+    yields no record at all.
+
+  artifact_class: configuration
+
+  ground:
+    - fact: the diagnostic settings c declares and their retention values
+      provenance: controlled
+    - fact: the retention the platform applies where none is stated
+      provenance: institutional
+    - fact: the window an investigation actually needs after an incident
+      provenance: observed
+
+  tolerance: >
+    Diagnostic settings present, and a retention stated for each. Absence is
+    a reject and not a neutral state: with no setting there is no data, and
+    the decision is only discovered when someone needs the record.
+
+  rejection_witness: >
+    The resource, and the absent diagnostic setting or unstated retention.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-bicep-diag-01   # presence is PSRule-closable; retention was not observed
+
+  proxy_gap: >
+    Present settings proxy an investigable system. Logs can be enabled,
+    retained, and still not carry the dimension an incident turns on.
+
+  notes: >
+    The observed item is the one that makes retention genuinely hard: the
+    window needed is known only after the incident that needs it, so the
+    tolerance can demand that a value be stated but cannot say which value is
+    right.

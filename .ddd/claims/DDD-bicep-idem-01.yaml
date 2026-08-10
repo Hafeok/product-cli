@@ -1,0 +1,33 @@
+format: 4
+id: DDD-bicep-idem-01
+statement: >
+  pred/execution/deployment-idempotence is not closable at build time, and
+  that is a property of its signature rather than a gap in the tooling. No
+  static check reports it, and none could: the ground is the target's current
+  state. The criterion form available is a what-if run asserted against a
+  real target, which relocates the check to the stage where the ground exists
+  rather than strengthening any build-time rule.
+status: reported
+evidence: >
+  Demonstrated negatively on the indexed toolchain: across every probe run in
+  this seed, neither the DAD §5.2 linter configuration nor PSRule produced
+  any finding concerning re-run behaviour, replacement semantics, or
+  deletion — the categories are absent from both rule sets rather than
+  present and passing.
+
+
+  Cited, not exercised: that a structural what-if assertion supplies the
+  criterion is DAD §5.3's proposal, and it was not run here because no Azure
+  subscription was available in this environment. The claim reports the
+  absence of a build-time check and does not report that what-if works.
+falsifier: >
+  A build-time check that reports non-idempotent deployment shapes without
+  consulting a target — which would contradict the predicate's observed
+  ground item and mean the signature was written wrong.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  target: "Azure Resource Manager"
+  tool: "Bicep CLI 0.37.4; PSRule.Rules.Azure 1.47.0"
+predicate: pred/execution/deployment-idempotence

@@ -1,0 +1,30 @@
+format: 4
+id: DDD-bicep-def-01
+statement: >
+  pred/configuration/parameter-default-governed is review-closed over a
+  mechanically complete worklist. No linter or PSRule rule reports a
+  parameter default as a governing decision, so the judgment stays with a
+  human; but the set that judgment must cover is extractable from the
+  compiled template, so the review can be checked for completeness even
+  though it cannot be checked for correctness.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain. Compiling the probe template and
+  reading `parameters[*].defaultValue` from the ARM JSON enumerated 3 of 3
+  parameters carrying defaults — a literal, a function call and a
+  resourceGroup() expression — with no ambiguity about the set. Neither the
+  DAD §5.2 linter configuration nor PSRule reported any of them; the linter's
+  only default-related rule is secure-parameter-default, which concerns
+  secure parameters rather than defaults as such.
+falsifier: >
+  A parameter default that does not appear in the compiled template's
+  parameter block — which would break the completeness of the worklist and
+  reduce this to ordinary review. Or a rule that judges defaults, which would
+  move it off review entirely.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  target: "Azure Resource Manager"
+  tool: "Bicep CLI 0.37.4; PSRule.Rules.Azure 1.47.0"
+predicate: pred/configuration/parameter-default-governed

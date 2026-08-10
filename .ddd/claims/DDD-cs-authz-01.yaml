@@ -1,0 +1,31 @@
+format: 4
+id: DDD-cs-authz-01
+statement: >
+  An endpoint carrying no authorization attribute is anonymous, and the
+  arrangement that changes this is a declared fallback policy rather than any
+  analyzer. So pred/interface/endpoint-authorization-explicit is closable —
+  but by composition, not by a rule: setting AuthorizationOptions.FallbackPolicy
+  makes silence mean deny, which converts every unattributed endpoint from an
+  unstated default into a stated one.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain against a running host, both cases
+  identical but for the fallback. `app.MapGet("/no-attribute", ...)` with
+  authentication and authorization registered and no fallback policy answers
+  200 OK to an unauthenticated request. The same endpoint with
+  `FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser()
+  .Build()` answers 302 Found — the challenge — without the endpoint's own
+  code changing at all.
+falsifier: >
+  A host configuration in which an unattributed endpoint is denied by default
+  without a fallback policy, or one in which a declared fallback fails to
+  cover endpoints that state nothing.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "ASP.NET Core 8 (Microsoft.AspNetCore.App shared framework)"
+predicate: pred/interface/endpoint-authorization-explicit

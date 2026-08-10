@@ -1,13 +1,40 @@
-format: 1
+format: 2
 id: DDD-adapter-01
 statement: >
   Per-language contract-surface definitions expressed as adapter policy
   tables are falsifiable against where boundary defects actually occur;
   wrong rows get fixed in the adapter, never in the core.
-status: projected
+status: reported
+evidence: >
+  M6 (2026-08-10) added a third language and looked for the falsifier without
+  finding it. Every Rust contract-surface assumption localised to the adapter
+  module: graded visibility (pub / pub(crate) / pub(super) / pub(in path)),
+  container capping, trait definitions, trait members, trait impls as boundary
+  participation with no keyword to key on, and derive changes as trait-impl
+  authorship. ddd-core/src/surface.rs — the contract-surface vocabulary — is
+  byte-identical to its pre-M6 state, as are classify.rs and protocol.rs.
+
+
+  The orphan-impl case tested the second clause directly. PolicyRow has no
+  matcher over SymbolFacts.extra, so it could not be expressed as a row; the
+  adapter absorbed it into its own kind normalisation (trait-impl-unresolved)
+  and the core did not move. A shape the table could not name was fixed in the
+  adapter, which is what the clause claims.
+
+
+  Corroboration from the other direction: DDD-adapter-03 reports that the C#
+  table drops enum-member before any row is consulted. The Rust table lists
+  enum-member in DECL_KINDS and demands a variant addition on a pub enum. The
+  gap was adapter-local — a second adapter did not inherit it.
+
+
+  Scope note: this evidence is contract-surface only. The host-lifecycle cost
+  M6 measured (2 leakage instances, 114 lines) is outside this statement and
+  is filed as DDD-adapter-04.
 falsifier: >
   A boundary defect class that no policy-table row could have named — i.e.
   contract-surface knowledge that cannot be localised to a language adapter.
 owner: none
-changed: 2026-08-02
+changed: 2026-08-10
+revalidate_by: 2027-02-07
 depends_on: []

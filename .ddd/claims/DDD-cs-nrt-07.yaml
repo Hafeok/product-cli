@@ -1,0 +1,31 @@
+format: 4
+id: DDD-cs-nrt-07
+statement: >
+  The closure does not extend across unmanaged interop. A DllImport
+  declaration names its own return nullability, the compiler takes the
+  declaration on trust, and the marshaller will hand back null for a NULL
+  pointer regardless of what was declared.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain:
+  `[DllImport("libc", CharSet = CharSet.Ansi)] static extern string
+  getenv(string name);` — a non-nullable declared return — called with an
+  unset variable name. Builds clean under Nullable enable plus
+  TreatWarningsAsErrors; the returned value is null and dereferencing it
+  throws NullReferenceException. Nothing in the compilation could have known
+  better: the declaration is the only ground the analysis has, and it is an
+  assertion by the author rather than a fact about the callee.
+falsifier: >
+  A marshalling configuration under these settings that faults at the interop
+  boundary when a NULL pointer meets a non-nullable declared return, rather
+  than passing null through to the caller.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+predicate: pred/code/null-dereference-safety
+refines:
+  - DDD-cs-nrt-01

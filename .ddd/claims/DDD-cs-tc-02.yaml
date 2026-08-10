@@ -1,0 +1,28 @@
+format: 4
+id: DDD-cs-tc-02
+statement: >
+  `dynamic` defers the check rather than removing it. Member binding on a
+  dynamic expression is not performed at compile time, so the predicate's
+  tolerance — no conversion deferred to runtime — is not met; but the runtime
+  binder does perform the check and fails loudly at the offending site.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain: `dynamic d = 42; d.Frobnicate();`
+  builds clean under TreatWarningsAsErrors and throws
+  RuntimeBinderException. The failure names the missing member and occurs at
+  the call, so the rejection witness the predicate asks for exists — it is
+  produced at runtime instead of at build time.
+falsifier: >
+  A dynamic member access that binds to something the static type does not
+  have and returns a value rather than throwing — which would move this from
+  a deferred check to a removed one.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+predicate: pred/code/static-type-conformance
+refines:
+  - DDD-cs-tc-01

@@ -1,4 +1,4 @@
-format: 1
+format: 2
 id: dec/ddd/lsp-as-seam
 title: The LSP protocol is the seam to language intelligence
 rationale: >
@@ -8,5 +8,12 @@ rationale: >
   table per new language, by design).
 principal: Emil (Context&)
 based_on:
-  - DDD-arch-02
+  - claim: DDD-arch-02
+    status: projected
+    changed: 2026-08-02
 date: 2026-08-02
+notes: >
+  Pin backfilled at M5 from git, not from the present: the decision was filed
+  in 136aa55 (2026-08-02) and DDD-arch-02 has not been touched since, so
+  the status and changed values above are the claim's state at decision time,
+  recovered rather than assumed. Not a re-decision.

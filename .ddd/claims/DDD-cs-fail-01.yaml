@@ -1,0 +1,28 @@
+format: 4
+id: DDD-cs-fail-01
+statement: >
+  The SDK analyzer set closes the broadest case of
+  pred/code/failure-behaviour-declared: CA1031 reports a clause catching
+  System.Exception, which is the shape the DAD checklist calls an escape
+  essentially always. It closes only the breadth of the caught type, not the
+  continuation — a clause that narrows its type and then absorbs the failure
+  silently satisfies CA1031.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain with AnalysisMode=All: `try { Work(); }
+  catch (Exception) { }` drew CA1031 twice in the probe build. The residual
+  is visible in the rule's own scope — CA1031 is a check on the caught type,
+  so it has nothing to say about an empty body under a narrow type.
+falsifier: >
+  A `catch (Exception)` under these settings that CA1031 does not report, or
+  an SDK rule that additionally reports an absorbed failure under a narrowed
+  type — the second would extend this closure past breadth to continuation.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "SDK-bundled .NET analyzers at AnalysisLevel=latest, AnalysisMode=All"
+predicate: pred/code/failure-behaviour-declared

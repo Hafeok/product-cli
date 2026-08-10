@@ -1,0 +1,39 @@
+format: 2
+id: DDD-arch-07
+statement: >
+  An argument accessor that normalises — trims whitespace, treats blank as
+  absent — is correct for names, ids, and prose and silently destructive for
+  any argument whose value is content. Sharing one accessor across both
+  makes the damage invisible at the call site, because the handler that
+  reads a whole file looks identical to the handler that reads a symbol
+  name.
+status: reported
+evidence: >
+  Found at M6 by inspecting files the interceptor had written during this
+  repo's own governed session. `ddd-mcp/src/state.rs::opt_str` applies
+  `str::trim` and filters blank to `None`; `intercept.rs::resolve_new_text`
+  read `new_text` — a whole file — through it. Every file written through
+  `ddd_apply_edit` therefore lost its trailing newline, and would have lost
+  any leading blank line too; `new_text: ""` was additionally read as absent
+  rather than as an instruction to empty the file. Six files in this
+  workspace were observed mangled before the fix, against a control file
+  edited outside the interceptor which kept its newline.
+
+
+  Language-neutral: nothing about the defect is Rust-shaped, and the C# and
+  Bicep paths had the same behaviour since M4. It is classified as a core
+  bug rather than as leakage in docs/ddd-m6-experiment.md for that reason —
+  it was wrong for every language, and Rust only made it visible.
+
+
+  Fixed at M6 by `state.rs::raw_str`, a non-normalising accessor documented
+  against `opt_str`, declared as a seam (`seam/mcp/raw-str`).
+falsifier: >
+  A content-carrying argument read through `opt_str` whose value is provably
+  unharmed by trimming — or a demonstration that the trailing-newline loss
+  was introduced elsewhere in the write path rather than by the accessor.
+owner: none
+changed: 2026-08-10
+revalidate_by: 2027-02-10
+depends_on:
+  - DDD-arch-04
