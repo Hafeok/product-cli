@@ -1,0 +1,45 @@
+predicate:
+  id: pred/configuration/parameter-default-governed
+  format: 1
+  name: Parameter default governed
+  statement: >
+    Accept an infrastructure template c iff every parameter default in c is
+    accounted for by a stated decision — a value chosen for all callers who
+    do not override it — rather than a convenience left in place.
+
+  artifact_class: configuration
+
+  ground:
+    - fact: the parameters c declares and which of them carry a default
+      provenance: controlled
+    - fact: which callers take the default rather than overriding it
+      provenance: observed
+    - fact: whether the default suits those callers
+      provenance: inferred
+
+  tolerance: >
+    Every default accounted for. An unaccounted default is a reject even
+    where it is the value that would have been chosen, because a default is
+    binding on every caller who does not think about it.
+
+  rejection_witness: >
+    The parameter, its default value, and the absence of a decision naming
+    that parameter.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-bicep-def-01   # judgment-decided, but over a mechanically complete set
+
+  proxy_gap: >
+    An accounted default proxies a correct one. A decision can name the
+    parameter, state a value, and be wrong for the environments that quietly
+    inherit it.
+
+  notes: >
+    Worth recording for its shape rather than its difficulty. The judgment
+    here is not mechanisable, but the *enumeration* is: the set of parameters
+    carrying a default is readable from the compiled template. DAD §11 files
+    enumeration completeness as the load-bearing gap with no mechanical
+    check — for this artifact class there is one, so a review over these can
+    be complete rather than merely diligent.
