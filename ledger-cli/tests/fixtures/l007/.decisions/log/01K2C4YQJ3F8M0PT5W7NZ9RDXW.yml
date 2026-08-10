@@ -1,0 +1,19 @@
+# L007 — the statement was edited after sealing; the stored digest is
+# left behind. This file's hash is deliberately stale: it is NOT
+# refreshed by the fixture updater.
+format: 1
+id: cs:01K2C4YQJ3F8M0PT5W7NZ9RDXW
+created_at: 2026-08-10T09:14:22Z
+created_by: fixture-human@example
+decisions:
+  - id: dec:fixture.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDXV
+    created_at: 2026-08-10T09:14:22Z
+    created_by: fixture-human@example
+versions:
+  - decision: dec:fixture.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDXV
+    hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+    set: ledger-fixture
+    statement: Monetary amounts may use double after all.
+    allocation: constraint
+    discharge: [analyzer:DEC001-no-float-money]
+    tolerance_floor_at_creation: T1

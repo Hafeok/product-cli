@@ -1,0 +1,19 @@
+# L002 — the escape states its exposure and its acceptor, but is never
+# scheduled for review, so it is an escape nobody comes back to.
+format: 1
+id: cs:01K2C4YQJ3F8M0PT5W7NZ9RDXW
+created_at: 2026-08-10T09:14:22Z
+created_by: fixture-human@example
+decisions:
+  - id: dec:fixture.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDXV
+    created_at: 2026-08-10T09:14:22Z
+    created_by: fixture-human@example
+versions:
+  - decision: dec:fixture.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDXV
+    hash: sha256:3106b4a2596a9d7fa11716a4081dedee436761e4a3e1ab26756d6980ec8b2315
+    set: ledger-fixture
+    statement: Export column order matches the legacy CSV contract.
+    allocation: escaped
+    exposure: Downstream consumer may break silently.
+    accepted_by: fixture-human@example
+    tolerance_floor_at_creation: T1

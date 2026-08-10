@@ -1,0 +1,25 @@
+# L006 — the acceptor resolves to a model identity. Acceptance cannot
+# be delegated (§9.3).
+format: 1
+id: cs:01K2C4YQJ3F8M0PT5W7NZ9RDXW
+created_at: 2026-08-10T09:14:22Z
+created_by: fixture-human@example
+decisions:
+  - id: dec:fixture.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDXV
+    created_at: 2026-08-10T09:14:22Z
+    created_by: fixture-human@example
+versions:
+  - decision: dec:fixture.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDXV
+    hash: sha256:6e8bedf516cbf54c1a20416f33df5afc556b6f318345ad81d26e7b2657444b6d
+    set: ledger-fixture
+    statement: Monetary amounts use decimal, never double.
+    allocation: constraint
+    discharge: [analyzer:DEC001-no-float-money]
+    tolerance_floor_at_creation: T1
+acceptances:
+  - id: acc:01K2C4YQJ3F8M0PT5W7NZ9RDXX
+    decision: dec:fixture.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDXV
+    version: sha256:6e8bedf516cbf54c1a20416f33df5afc556b6f318345ad81d26e7b2657444b6d
+    actor: claude@example.com
+    at: 2026-08-10T09:20:00Z
+    expires_at: 2027-08-10

@@ -1,0 +1,9 @@
+# Fixture set for the verify gate. The floor is a floor: a member may
+# override up, never down (§4.2.1).
+format: 1
+id: ledger-fixture
+title: Fixture set for the verify gate
+tolerance_floor: T2
+ground: characterised
+owner: fixture-human@example
+created_at: 2026-08-10

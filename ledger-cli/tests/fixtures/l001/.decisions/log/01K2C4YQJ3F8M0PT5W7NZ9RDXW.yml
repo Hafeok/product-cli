@@ -1,0 +1,15 @@
+# L001 — the decision is enumerated but allocated to no store.
+format: 1
+id: cs:01K2C4YQJ3F8M0PT5W7NZ9RDXW
+created_at: 2026-08-10T09:14:22Z
+created_by: fixture-human@example
+decisions:
+  - id: dec:fixture.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDXV
+    created_at: 2026-08-10T09:14:22Z
+    created_by: fixture-human@example
+versions:
+  - decision: dec:fixture.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDXV
+    hash: sha256:19e2269564f1da052ef510d5e8395a1e8d15b3596be7d07a37d8abdc276199e5
+    set: ledger-fixture
+    statement: Monetary amounts use decimal, never double.
+    tolerance_floor_at_creation: T1
