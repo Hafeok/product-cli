@@ -1,0 +1,14 @@
+format: 1
+id: seam/mcp/raw-str
+boundary: fn raw_str in ddd-mcp/src/state.rs
+verdict_knowledge: 'A handler author learns that this argument surface has two reading disciplines and must choose between them: opt_str normalises, raw_str does not. Publishing the second one makes the choice visible at the call site instead of leaving every handler to inherit trimming it never asked for — which is how apply_edit came to delete the trailing newline of every file it wrote, in every language, silently.'
+contract_location: ddd-mcp/src/state.rs#raw_str
+obligations:
+- any handler whose argument value is content rather than a name reads through this, not opt_str
+- the two accessors stay adjacent and documented against each other, so the choice is not made by accident
+metadata:
+  kind: fn
+  reference_count: 2
+  signature: 'fn raw_str(args: &Value, key: &str) -> Option<String>'
+  symbol: raw_str
+  visibility: public

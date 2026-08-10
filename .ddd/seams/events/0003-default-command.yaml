@@ -1,0 +1,19 @@
+format: 1
+id: seam-event/3
+at: 2026-08-10T08:05:33Z
+language: rust
+artifact_class: code
+mode: enforce
+file: ddd-lsp/src/adapter/rust.rs
+symbol: DEFAULT_COMMAND
+container: ''
+kind: const
+change: added
+visibility: public
+signature: 'const DEFAULT_COMMAND: &[&str]'
+reference_count: 2
+rule: rs-add-exposed
+rule_claim: a new `pub` item is contract surface
+outcome: applied-linked
+linked_declaration: seam/rust/default-command
+extra: {}

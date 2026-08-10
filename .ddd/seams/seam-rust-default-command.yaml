@@ -1,0 +1,15 @@
+format: 1
+id: seam/rust/default-command
+boundary: const DEFAULT_COMMAND in ddd-lsp/src/adapter/rust.rs
+verdict_knowledge: A consumer learns which binary this adapter expects to speak LSP to, so it can vendor, pin, or containerise that binary without reading the adapter source. Publishing it as a slice of arguments rather than a command string also encodes that the host is invoked argv-shaped, never through a shell, which is what makes the value safe to hand to a process spawner unquoted.
+contract_location: ddd-lsp/src/adapter/rust.rs#DEFAULT_COMMAND
+obligations:
+- the value stays in step with ADAPTER.default_command — they are the same command, named once
+- any change to it is a change to what a governed repo must have installed, so it carries a seam amendment
+metadata:
+  kind: fn
+  reference_count: 0
+  signature: fn host_command() -> Vec<String>
+  symbol: host_command
+  visibility: public
+notes: 'The metadata block on this entry is known-wrong and is left in place as evidence, not as a record. It carries symbol: host_command, kind: fn, signature: fn host_command() -> Vec<String> — the facts of a different symbol in the same file. Cause: enforce-mode match_declarations still admits the file arm, so the second surface event of the same edit matched this declaration by filename and link_seam_metadata then wrote that event''s facts here. See seam-event/4, whose linked_declaration names this entry while its symbol is host_command. That is verbatim the falsifier dec/ddd/enforce-matching-tightens-to-symbol pre-registered for itself, and the corruption of a machine-authored field is what DDD-arch-04 says makes the correspondence dataset unfalsifiable. Correct on the same commit as that decision; correcting it earlier would delete the observation.'

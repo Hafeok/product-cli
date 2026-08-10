@@ -12,28 +12,6 @@ use ddd_lsp::adapter;
 use ddd_lsp::host::{Host, Readiness};
 use ddd_lsp::protocol::{flatten_symbols, to_uri, RawSymbol};
 
-/// rust-analyzer resolved through rustup, because the bare PATH shim resolves
-/// against the *current directory's* toolchain — and a tempdir has no
-/// `rust-toolchain.toml`, so the shim would pick a toolchain that may not
-/// carry the component.
-fn rust_analyzer() -> String {
-    if let Ok(out) = std::process::Command::new("rustup").args(["which", "rust-analyzer"]).output() {
-        if out.status.success() {
-            let path = String::from_utf8_lossy(&out.stdout).trim().to_string();
-            if !path.is_empty() {
-                return path;
-            }
-        }
-    }
-    if std::process::Command::new("rust-analyzer").arg("--version").output().is_ok() {
-        return "rust-analyzer".to_string();
-    }
-    panic!(
-        "rust-analyzer not available. It is a pinned component of this toolchain \
-         (rust-toolchain.toml) — install it with `rustup component add rust-analyzer`."
-    );
-}
-
 fn fixture(rel: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../ddd-cli/tests/fixtures/rust")
@@ -51,9 +29,23 @@ pub fn fixture_crate() -> tempfile::TempDir {
     tmp
 }
 
+/// The adapter's own resolved host command, with the loud failure a missing
+/// toolchain component deserves — a silent skip would be a green exit code
+/// standing in for a check that never ran.
+fn host_command() -> Vec<String> {
+    let command = adapter::rust::host_command();
+    let program = command.first().cloned().unwrap_or_default();
+    assert!(
+        std::process::Command::new(&program).arg("--version").output().is_ok(),
+        "cannot run `{program}`. rust-analyzer is a pinned component of this toolchain \
+         (rust-toolchain.toml) — install it with `rustup component add rust-analyzer`."
+    );
+    command
+}
+
 fn rust_host(root: &Path) -> Host {
     let a = adapter::for_language("rust").expect("rust adapter registered");
-    Host::new(a, vec![rust_analyzer()], root.to_path_buf())
+    Host::new(a, host_command(), root.to_path_buf())
 }
 
 fn symbols(host: &mut Host, file: &Path) -> Vec<RawSymbol> {

@@ -10,24 +10,17 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{json, Value};
 
-/// rust-analyzer resolved through rustup; a tempdir has no toolchain file,
-/// so the bare PATH shim can resolve to a toolchain without the component.
-fn rust_analyzer() -> String {
-    if let Ok(out) = std::process::Command::new("rustup").args(["which", "rust-analyzer"]).output() {
-        if out.status.success() {
-            let path = String::from_utf8_lossy(&out.stdout).trim().to_string();
-            if !path.is_empty() {
-                return path;
-            }
-        }
-    }
-    if std::process::Command::new("rust-analyzer").arg("--version").output().is_ok() {
-        return "rust-analyzer".to_string();
-    }
-    panic!(
-        "rust-analyzer not available. It is a pinned component of this toolchain \
+/// The adapter's own resolved host command as a YAML flow sequence, with the
+/// loud failure a missing toolchain component deserves.
+fn host_command_yaml() -> String {
+    let command = ddd_lsp::adapter::rust::host_command();
+    let program = command.first().cloned().unwrap_or_default();
+    assert!(
+        std::process::Command::new(&program).arg("--version").output().is_ok(),
+        "cannot run `{program}`. rust-analyzer is a pinned component of this toolchain \
          (rust-toolchain.toml) — install it with `rustup component add rust-analyzer`."
     );
+    serde_json::to_string(&command).unwrap_or_else(|_| "[]".to_string())
 }
 
 fn fixture(rel: &str) -> String {
@@ -49,8 +42,8 @@ fn repo(mode: &str) -> (tempfile::TempDir, product_mcp::ToolRegistry) {
     std::fs::write(
         tmp.path().join(".ddd/config.yaml"),
         format!(
-            "format: 3\nintercept: warn\nignore: []\nintercept_by_class:\n  code: {mode}\nadapter:\n  rust:\n    command: [\"{}\"]\n",
-            rust_analyzer()
+            "format: 3\nintercept: warn\nignore: []\nintercept_by_class:\n  code: {mode}\nadapter:\n  rust:\n    command: {}\n",
+            host_command_yaml()
         ),
     )
     .expect("config");
@@ -284,8 +277,8 @@ fn the_crate_visible_row_flips_with_the_library_posture() {
     std::fs::write(
         tmp.path().join(".ddd/config.yaml"),
         format!(
-            "format: 3\nintercept: warn\nignore: []\nintercept_by_class:\n  code: warn\nadapter:\n  rust:\n    command: [\"{}\"]\n    internal_is_surface: true\n",
-            rust_analyzer()
+            "format: 3\nintercept: warn\nignore: []\nintercept_by_class:\n  code: warn\nadapter:\n  rust:\n    command: {}\n    internal_is_surface: true\n",
+            host_command_yaml()
         ),
     )
     .expect("config");

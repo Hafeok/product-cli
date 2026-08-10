@@ -17,7 +17,7 @@ use ddd_lsp::protocol::{flatten_symbols, position_params, to_uri};
 use ddd_lsp::surface::{ChangeKind, SurfaceEvent};
 use serde_json::{json, Value};
 
-use crate::state::{opt_str, req_str, ServeState};
+use crate::state::{opt_str, raw_str, req_str, ServeState};
 use crate::state::Declared;
 
 pub fn apply_edit(state: &ServeState, args: &Value) -> Result<Value, String> {
@@ -128,7 +128,8 @@ fn read_or_empty(file: &Path) -> Result<String, String> {
 }
 
 fn resolve_new_text(args: &Value, old_text: &str) -> Result<String, String> {
-    if let Some(text) = opt_str(args, "new_text") {
+    // `raw_str`: this value is a whole file, so trimming it loses a newline.
+    if let Some(text) = raw_str(args, "new_text") {
         return Ok(text);
     }
     let edits = args

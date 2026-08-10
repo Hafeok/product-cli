@@ -1,10 +1,27 @@
-# .ddd/config.yaml — repo-level DDD governance configuration (format v2).
-format: 2
+# .ddd/config.yaml — repo-level DDD governance configuration (format v3).
+format: 3
 
 # Interception mode for contract-surface edits: enforce | warn | off (PRD §8).
+# The global default stays `warn` for any artifact class not named below.
 intercept: warn
 
+# Per-artifact-class modes. `code` is this workspace's own Rust sources
+# (dec/ddd/rust-class-enforced-here): from M6 on, a contract-surface edit is
+# rejected until a seam declaration covers it. Note the granularity limit
+# recorded on that decision — the key is the artifact class, not the
+# language, so the C# adapter shares this entry.
+intercept_by_class:
+  code: enforce
+
+# Per-language adapter switches. `pub(crate)` is Rust's `internal`, so it
+# rides the same switch; left at the default (off) per the app-repo posture
+# in dec/ddd/internal-not-surface.
+adapter:
+  rust:
+    internal_is_surface: false
+
 # Globs the interceptor plus detection skip. The M2 fixtures carry config
-# files for the tests, not for this repo's governance.
+# files for the tests, not for this repo's governance; the M6 Rust fixture
+# crate is fixture source, not governed source.
 ignore:
   - "ddd-cli/tests/fixtures/**"

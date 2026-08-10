@@ -27,7 +27,7 @@ use crate::surface::{PolicyRow, SymbolFacts};
 /// sends `experimental/serverStatus` repeatedly and puts the answer in the
 /// payload. Both shapes are declared here so [`crate::host::Host`] stays
 /// out of the business of knowing which host is which.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum ReadySignal {
     /// Ready once the `initialized` handshake completes.
     AfterInitialized,

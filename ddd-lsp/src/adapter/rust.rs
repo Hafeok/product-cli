@@ -18,12 +18,42 @@ use serde_json::{json, Value};
 use crate::adapter::{rust_facts, Adapter, AdapterFlags, ReadySignal};
 use crate::surface::{ChangeKind, PolicyRow};
 
+/// The host command as the adapter names it. Exposed so callers that spawn
+/// the host themselves — the acceptance tests, and any consumer bypassing
+/// `HostManager` — do not restate the binary name.
+pub const DEFAULT_COMMAND: &[&str] = &["rust-analyzer"];
+
+/// The host command with the toolchain's own rust-analyzer resolved, when
+/// rustup can name it.
+///
+/// `rust-analyzer` on PATH is usually the rustup shim, and the shim resolves
+/// against the *current directory's* toolchain. A directory carrying no
+/// `rust-toolchain.toml` therefore gets the default toolchain, which may not
+/// have the component installed at all — the shim then exits with `Unknown
+/// binary 'rust-analyzer'` rather than starting a server. Asking rustup for
+/// the path sidesteps that; with no rustup present the bare name is returned
+/// and PATH decides, which is the behaviour a packaged install wants.
+pub fn host_command() -> Vec<String> {
+    let resolved = std::process::Command::new("rustup")
+        .args(["which", "rust-analyzer"])
+        .output()
+        .ok()
+        .filter(|out| out.status.success())
+        .and_then(|out| String::from_utf8(out.stdout).ok())
+        .map(|path| path.trim().to_string())
+        .filter(|path| !path.is_empty());
+    match resolved {
+        Some(path) => vec![path],
+        None => DEFAULT_COMMAND.iter().map(|s| s.to_string()).collect(),
+    }
+}
+
 pub const ADAPTER: Adapter = Adapter {
     language: "rust",
     artifact_class: "code",
     extensions: &["rs"],
     language_id: "rust",
-    default_command: &["rust-analyzer"],
+    default_command: DEFAULT_COMMAND,
     ready: ReadySignal::NotificationWhere("experimental/serverStatus", quiescent),
     extra_capabilities: capabilities,
     needs_open_handshake: false,
