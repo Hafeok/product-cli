@@ -1,0 +1,29 @@
+format: 4
+id: DDD-bicep-sec-01
+statement: >
+  Once a parameter carries `@secure()`, containment is checked twice over by
+  independent tools: the Bicep linter's output and secure-value rules, and
+  PSRule's Azure.Deployment.OutputSecretValue. Where the annotation is
+  missing, both tools switch to reporting the missing annotation rather than
+  falling silent — the linter as secure-secrets-in-params, PSRule as
+  Azure.Deployment.SecureParameter.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain, by differencing two runs of the same
+  template that differ only in the annotation. With `@secure()` present,
+  Azure.Deployment.OutputSecretValue fails on `output pw string =
+  adminPassword`. With it removed, that rule stops firing and
+  Azure.Deployment.SecureParameter fails in its place — a clean swap, one
+  rule each way, with the total failure count unchanged at 14. The linter
+  reported secure-secrets-in-params on the same unannotated parameter.
+falsifier: >
+  A template in which removing `@secure()` silences the output check without
+  any rule reporting the missing annotation — which would make the two checks
+  jointly evadable rather than jointly covering.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  target: "Azure Resource Manager"
+  tool: "Bicep CLI 0.37.4; PSRule.Rules.Azure 1.47.0"
+predicate: pred/configuration/deployment-secret-containment

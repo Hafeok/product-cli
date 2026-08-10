@@ -1,0 +1,29 @@
+format: 4
+id: DDD-bicep-sec-02
+statement: >
+  The whole chain rests on a name heuristic, and renaming the parameter
+  defeats every layer at once. Both tools decide that a value may be a secret
+  by looking at its identifier; a secret parameter whose name does not read
+  like one is neither required to be annotated nor prevented from leaving
+  through an output, and nothing reports anything.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain. The unannotated parameter that drew
+  both secure-secrets-in-params and Azure.Deployment.SecureParameter as
+  `adminPassword` drew nothing from either tool once renamed to `seedValue`,
+  with the template otherwise unchanged and still emitting it as a deployment
+  output. The linter's own message states the mechanism — "may represent a
+  secret (according to its name)".
+falsifier: >
+  A check under these settings that reaches an unannotated secret whose
+  identifier gives no clue — by dataflow from a Key Vault reference, by type,
+  or by any means that does not read the name.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  target: "Azure Resource Manager"
+  tool: "Bicep CLI 0.37.4; PSRule.Rules.Azure 1.47.0"
+predicate: pred/configuration/deployment-secret-containment
+refines:
+  - DDD-bicep-sec-01
