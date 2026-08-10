@@ -55,7 +55,8 @@ fn fails_only_with(fixture: &str, code: &str) {
     let text = stderr(&out);
     assert_eq!(out.status.code(), Some(1), "{fixture} should fail the gate:\n{text}");
     assert!(text.contains(&format!("[{code}]")), "{fixture} should report {code}:\n{text}");
-    for other in ["L001", "L002", "L003", "L004", "L005", "L006", "L007", "L008", "L009", "SCHEMA"]
+    for other in
+        ["L001", "L002", "L003", "L004", "L005", "L006", "L007", "L008", "L009", "L010", "SCHEMA"]
     {
         if other != code {
             assert!(
@@ -111,6 +112,11 @@ fn l007_a_stored_hash_that_does_not_match_recomputed_content() {
 #[test]
 fn l008_an_acceptance_signing_a_hash_no_version_carries() {
     fails_only_with("l008", "L008");
+}
+
+#[test]
+fn l010_a_judgment_exercised_by_a_model_identity() {
+    fails_only_with("l010", "L010");
 }
 
 #[test]

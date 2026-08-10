@@ -1,9 +1,9 @@
 //! The gate — the whole of L0's checking surface.
 //!
 //! One pass over the log produces every finding: the parse gate, then the
-//! nine classes. Failing for exactly those reasons is the milestone's
-//! measure of success, so the orchestration here is deliberately flat —
-//! there is no place for a rule to hide.
+//! ten classes. Failing for exactly those reasons is the format's measure of
+//! success, so the orchestration here is deliberately flat — there is no
+//! place for a rule to hide.
 //!
 //! Pendency is not a violation. A decision that is enumerated and allocated
 //! but not yet signed is the normal state of work in progress; it is
@@ -12,6 +12,7 @@
 
 pub mod disposition;
 pub mod integrity;
+pub mod state;
 pub mod view;
 
 use chrono::NaiveDate;
@@ -73,6 +74,7 @@ pub fn verify(store: &Store, opts: &Options) -> Report {
     findings.extend(disposition::expired(&view, opts.today));
     findings.extend(disposition::stranded(&view, store));
     findings.extend(disposition::model_acceptor(&view));
+    findings.extend(disposition::model_judge(&view));
     findings.extend(integrity::hash_mismatch(&view));
     findings.extend(integrity::dangling_acceptance(&view));
 

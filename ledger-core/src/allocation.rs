@@ -153,6 +153,16 @@ impl Allocation {
         }
     }
 
+    /// The named actor exercising this judgment, when this is one. Verify
+    /// class `L010` runs over exactly this: a judgment allocated to a model
+    /// is demand riding on a prior, not sitting in a store.
+    pub fn judgment_actor(&self) -> Option<&Identity> {
+        match self {
+            Self::Judgment { actor } => Some(actor),
+            _ => None,
+        }
+    }
+
     /// The pointers this allocation discharges through.
     pub fn discharge(&self) -> &[DischargeRef] {
         match self {

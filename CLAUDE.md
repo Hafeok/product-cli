@@ -294,7 +294,8 @@ ontology, no graph — the RDF index is L2 and does not exist yet.
   acceptance, and needs a migration note — it is never a quiet fix.
 - **Gate** — `ledger verify [--gate readiness|completeness] [--json]
   [--today YYYY-MM-DD] [--no-blame]`. Fails for a schema fault plus classes
-  `L001`–`L009` and **nothing else**; adding a tenth is a format-spec change.
+  `L001`–`L010` and **nothing else**; adding an eleventh is a format-spec
+  change (`L010` itself shipped that way, as spec v1.1).
   Exit `0` conformant, `1` findings, `2` could not run. Runs in CI.
   Allocated-awaiting-acceptance is *status*, not a failure.
 - **Acceptance is the principal's, never an agent's.** Do not create

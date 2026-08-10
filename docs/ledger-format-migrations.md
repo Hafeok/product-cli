@@ -19,6 +19,26 @@ only adds an unhashed field.
 
 ---
 
+## Spec v1.1 — the tenth class, `L010` (2026-08-10)
+
+An **amendment to the specification document**, not a `format` bump and not
+a `CANONICAL_FORM` bump: no file schema changes, no hashed field changes
+meaning, every existing acceptance stays valid.
+
+v1.0's §6 stated the gap plainly: the model-identity rule was scoped to
+`accepted-by`, and the classes were closed at nine — so a *judgment
+allocated to a model actor* passed the gate. Ruled by the principal
+(2026-08-10): the gap closes as `L010` — a `judgment`'s `actor` refused by
+the §3.2 identity rules fails the gate. The class runs under both gates and
+judges latest versions only, like every allocation rule.
+
+**Migration note:** the amendment is additive and stricter. A store that was
+conformant under v1.0 may newly fail `L010` — that is the point, not a
+regression. The remedy is a new version reallocating the judgment to an
+accountable human actor (or to another store); there is nothing to rewrite,
+because history is append-only. The "exactly nine" contract is now "exactly
+ten" everywhere it is asserted, including the closed-enum count test.
+
 ## Format 1 / `ledger.decision-version.v1` (L0)
 
 The baseline. Two file schemas — the set file and the change-set log file —

@@ -250,13 +250,38 @@ fn schema_findings_from_the_store_reach_the_report() {
 }
 
 #[test]
+fn l010_a_judgment_exercised_by_a_model_identity() {
+    let mut raw = testkit::version();
+    raw.allocation = Some(AllocationKind::Judgment);
+    raw.discharge.clear();
+    raw.actor = Some(testkit::identity("claude@example.com"));
+    let report = run(testkit::changeset(vec![testkit::sealed(raw)], Vec::new()));
+    assert_eq!(classes(&report), vec![VerifyClass::L010]);
+}
+
+#[test]
+fn l010_judges_the_latest_version_only() {
+    let mut first = testkit::version();
+    first.allocation = Some(AllocationKind::Judgment);
+    first.discharge.clear();
+    first.actor = Some(testkit::identity("claude@example.com"));
+    let first = testkit::sealed(first);
+    let mut second = testkit::version();
+    second.parent = Some(first.hash.clone());
+    let second = testkit::sealed(second);
+    let acceptance = testkit::acceptance(&second);
+    let report = run(testkit::changeset(vec![first, second], vec![acceptance]));
+    assert!(report.is_conformant(), "the reallocated judgment is history: {:?}", report.findings);
+}
+
+#[test]
 fn every_class_the_enum_declares_is_reachable_here() {
     // A class with no test is a class nobody knows fires. L009 is exercised
     // in the CLI's fixture suite, where a real repository exists.
     let named: Vec<&str> = ALL_CLASSES.iter().map(|c| c.code()).collect();
     assert_eq!(
         named,
-        ["SCHEMA", "L001", "L002", "L003", "L004", "L005", "L006", "L007", "L008", "L009"]
+        ["SCHEMA", "L001", "L002", "L003", "L004", "L005", "L006", "L007", "L008", "L009", "L010"]
     );
 }
 

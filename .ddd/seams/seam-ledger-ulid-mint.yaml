@@ -1,0 +1,13 @@
+format: 1
+id: seam/ledger/ulid-mint
+boundary: pub struct UlidMint with encode_ulid in ledger-core/src/mint.rs
+verdict_knowledge: 'A caller learns that id generation is the deliberately-injectable half of authoring: a ULID is 48 bits of millisecond time plus 80 bits of entropy, both supplied by a closure, so tests mint reproducibly and production mints from the wall clock — and every minted id is validated by the same rules `crate::id` applies to ids read from files, so a minting bug cannot ship an id the loader would refuse. L0 deliberately minted nothing; this surface is where that omission closes.'
+contract_location: ledger-core/src/mint.rs#UlidMint
+obligations:
+- every minted id passes crate::id::validate_ulid, checked at mint time, not trusted
+- the timestamp field cannot overflow the leading character; encode_ulid masks to 48 bits
+- determinism is the test seam — UlidMint::fixed reproduces sequences exactly, and nothing in the wall-clock path is reachable from it
+metadata:
+  kind: struct
+  symbol: UlidMint
+  visibility: public

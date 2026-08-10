@@ -77,14 +77,18 @@ fn verifying_without_a_store_says_how_to_make_one() {
 }
 
 #[test]
-fn the_surface_is_the_format_plus_the_gate() {
-    // L1's authoring verbs are deliberately absent; adding one is a
-    // milestone decision, not a drive-by.
+fn the_surface_is_the_format_the_verbs_and_the_graph() {
+    // L1's verbs and L2's graph commands are here; L3's merge and L4's
+    // federation are deliberately absent — adding one is a milestone
+    // decision, not a drive-by.
     let mut cmd = Command::cargo_bin("ledger").expect("binary");
     let out = cmd.arg("--help").output().expect("run");
     let text = stdout(&out);
-    assert!(text.contains("init") && text.contains("verify"), "{text}");
-    for later in ["accept", "allocate", "revoke", "coverage", "merge"] {
-        assert!(!text.contains(&format!("  {later}")), "{later} is not an L0 command: {text}");
+    for present in ["init", "verify", "accept", "add", "allocate", "revoke", "status", "supersede"]
+    {
+        assert!(text.contains(&format!("  {present}")), "{present} is missing: {text}");
+    }
+    for later in ["merge", "fetch", "instruments", "import"] {
+        assert!(!text.contains(&format!("  {later}")), "{later} is not shipped yet: {text}");
     }
 }
