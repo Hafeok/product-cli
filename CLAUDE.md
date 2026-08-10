@@ -272,6 +272,45 @@ new` on the CLI is not intercepted; `ddd what --strict` is the gate there.
 `product-mcp` therefore depends on `ddd-core` (pure library). **`product-core`
 must stay ddd-free** — that is the downstream-consumer contract.
 
+## Decision ledger (`.decisions/`, the `ledger` binary)
+
+A third stack — `ledger-core` / `ledger-cli` — is the decision **record
+substrate** ([PRD](docs/decision-ledger-prd.md)). L0 shipped: the file format
+and the CI gate, nothing else. Separate store (`.decisions/`), separate
+ontology, no graph — the RDF index is L2 and does not exist yet.
+
+- **Format** — [`docs/ledger-format-v1.md`](docs/ledger-format-v1.md) is
+  normative and is what an outside implementation (the Org Ledger) imports;
+  the code follows it, not the other way round. Migrations:
+  `docs/ledger-format-migrations.md`. Two files: `sets/<id>.yml` declares a
+  tolerance **floor**, `log/<ulid>.yml` is an append-only change-set holding
+  decisions, versions, acceptances and revocations. Never edit a log file
+  after writing it — a correction is a new version, a reversal a revocation.
+- **Hashing** — acceptance signs a version *hash*, never an id. YAML is the
+  file format; canonical JSON is the hash form. `canon::canonical_json`
+  destructures `VersionRaw` with **no `..` rest pattern**, so adding a wire
+  field is a compile error until someone decides whether it is hashed. A
+  change to the canonical form bumps `CANONICAL_FORM`, invalidates every
+  acceptance, and needs a migration note — it is never a quiet fix.
+- **Gate** — `ledger verify [--gate readiness|completeness] [--json]
+  [--today YYYY-MM-DD] [--no-blame]`. Fails for a schema fault plus classes
+  `L001`–`L009` and **nothing else**; adding a tenth is a format-spec change.
+  Exit `0` conformant, `1` findings, `2` could not run. Runs in CI.
+  Allocated-awaiting-acceptance is *status*, not a failure.
+- **Acceptance is the principal's, never an agent's.** Do not create
+  `acceptances:` entries under any framing, including fixtures — fixture
+  acceptances use `fixture-human@example` and live only under
+  `ledger-cli/tests/fixtures/`. Filing decisions, versions and allocations is
+  fine; signing them is not.
+- **Authoring by hand** — L0 mints no ids and seals no versions (`ledger add`
+  is L1). Write `hash: sha256:000…0`, run `ledger verify`, and paste the full
+  digest the `L007` finding reports.
+- Fixture hashes refresh with
+  `UPDATE_FIXTURES=1 cargo test -p ledger-cli --test gate`.
+
+**`ledger-core` must stay graph-free** at L0 — no oxigraph, no SPARQL. It
+reuses `product-core` only for `ProductError` and `fileops`.
+
 Agent-facing context lives in three places, all **derived from
 `WHAT_POLICY`** so a new row cannot leave one describing an older table:
 

@@ -380,7 +380,7 @@ Five numbers. Without them the tool is ceremony.
 Prefixed **L0–L5** — the ddd tool's track keeps M1–M8 (its kickoff prompts shipped under those
 names); unprefixed "M*n*" in any cross-document reference means the ddd track.
 
-**L0 — Format and gate.** File schema, canonicalisation, hashing, `verify`. No graph, no merge. Deliverable: a CI gate that fails on unallocated decisions, incomplete escapes, and expired acceptances. *This alone is usable and carries a large share of the value.*
+**L0 — Format and gate. SHIPPED 2026-08-10.** File schema, canonicalisation, hashing, `verify`. No graph, no merge. Deliverable: a CI gate that fails on unallocated decisions, incomplete escapes, and expired acceptances. *This alone is usable and carries a large share of the value.* Implemented as the `ledger-core` / `ledger-cli` workspace members; the format is specified independently in `ledger-format-v1.md` (the document the Org Ledger imports) with its migration record in `ledger-format-migrations.md`. The gate fails for a schema fault plus nine classes and nothing else; pendency is status, not a violation.
 
 **L1 — Local operations.** `add`, `allocate`, `escape`, `accept`, `revoke`, `status`, `log`, `blame`, semantic `diff`.
 
@@ -405,7 +405,21 @@ Named, not filled. Each should be settled before the milestone that depends on i
 
 - **OD-1 — Relationship to `decision-cli` (`dec`).** `decision-cli` is the execution-side orchestration harness. This tool is a record-side store. They share a domain and possibly a binary. Options: subcommand of `dec`, sibling binary sharing a Rust crate, or fully separate. Blocks naming and L0 packaging. *Leaning, not settled: sibling workspace member sharing crates, consistent with the ddd tool's delivery decision — requires the `dec` context to confirm.*
 - **OD-2 — Relationship to `product-cli` / `.product/`. RESOLVED 2026-08-04.** The ledger is a workspace member of the `product-cli` repo, its RDF materialized view built on the same `product-core` graph infrastructure the ddd tool reuses (Oxigraph-class store, SHACL, PROV-O). `.decisions/` log remains the source of truth; the index stays rebuildable — the byte-identical rebuild test is unchanged. `.product/` is neither replaced nor consumed: it keeps its own ontology. The ddd tool's `.ddd/decisions/` is the **bootstrap form** and migrates to `dec:` ids at ddd M8; ddd manifest entries, seam declarations, and risk acceptances become ledger entries (their checkers are already `DischargeRef` types: `analyzer:ID`, `whatif:assertion`, `otel:metric+expectation`). The ddd basis-pin (claim status + `changed` at decision time) is superseded by version-hash references — basis loss becomes pinned-hash ≠ current-hash, mechanically exact. Basis: the sibling-on-`product-core` decision and the store-philosophy match (source-of-truth files, derived graph), both settled in the ddd PRD.
-- **OD-3 — Signing.** Is `accepted-by` a claimed identity (git-config style, trust-on-review) or cryptographically signed (GPG/sigstore)? Trust model differs sharply for regulated tolerance tiers. Blocks L1. *The workbench (L5) raises the stakes: it is where signing UX lives, so OD-3's answer now shapes two milestones.*
+- **OD-3 — Signing. RESOLVED 2026-08-10 (principal: Emil).** `accepted-by` is a
+  **claimed identity, trust-on-review**, sourced from git config at accept time. There is no
+  `--as` override: changing identity means changing git config, one source of truth. **Identity
+  resolves by email**, not by display name — §4.4 requires `accepted-by` to *resolve* to a human
+  identity, and an address resolves where a display name decorates; it also makes the blame check
+  robust against the punctuation drift real `user.name` values carry. Two mechanical
+  corroborations carry the load a signature would: (a) an acceptance's `accepted-by` must match
+  the commit author of the commit that introduced it — mismatch is a failure, the ninth verify
+  class; (b) the never-a-model-identity rule extends to CI and bot identities. An optional,
+  schema-reserved `signature` field — format unspecified, empty at L0 — keeps the cryptographic
+  upgrade additive rather than a migration. The org product resolves identity properly via Entra;
+  the dev product does not pretend to. Two limits are stated in `ledger-format-v1.md` rather than
+  hidden: the model-identity list is a floor and not a proof, and an acceptance with no
+  introducing commit is *skipped*, never failed — otherwise no acceptance could ever be
+  committed. Shipped in L0 as classes `L006` and `L009`.
 - **OD-4 — Tolerance granularity. RESOLVED 2026-08-10 (principal: Emil).** Per-set **floor** with
   per-decision **up-only override** (§4.2.1). Below-floor states are unrepresentable rather than
   policed; effective tier is hashed content; floor-raising re-opens stranded acceptances;

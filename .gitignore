@@ -30,3 +30,4 @@ tests/__pycache__/
 # but an editor's C# language server restores the project on sight.
 ddd-cli/tests/fixtures/csharp/obj/
 ddd-cli/tests/fixtures/csharp/bin/
+.decisions/index/

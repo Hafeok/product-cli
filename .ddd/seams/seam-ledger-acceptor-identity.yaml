@@ -1,0 +1,13 @@
+format: 1
+id: seam/ledger/acceptor-identity
+boundary: pub struct Identity with model_or_bot_reason in ledger-core/src/identity.rs
+verdict_knowledge: 'A caller learns that an acceptor identity is an email normalised at parse — not a display name — and that the refusal of model and CI identities is one predicate rather than a check each call site writes. It also learns what the predicate cannot do: the list catches the identities a CI system or agent harness produces by default and is a floor, not a proof, which is why §9.3''s guarantee rests on this plus the blame check rather than on this alone. A caller who mistook it for a proof would over-trust an acceptance.'
+contract_location: ledger-core/src/identity.rs#Identity
+obligations:
+- normalisation stays at parse, because an escaped version's accepted_by is hashed content and two casings must not make two hashes
+- model tokens match whole tokens, never substrings, so people named Claudia and Alain are not refused
+- the list's incompleteness stays stated in docs/ledger-format-v1.md §3.2 rather than implied away
+metadata:
+  kind: struct
+  symbol: Identity
+  visibility: public

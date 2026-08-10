@@ -1,0 +1,13 @@
+format: 1
+id: seam/ledger/tolerance-floor
+boundary: pub struct Tolerance with private fields in ledger-core/src/tier.rs
+verdict_knowledge: 'A caller learns that a below-floor tolerance is not merely invalid but unconstructible: the fields are private and Tolerance::new is the only way in, so §4.2.1''s "unrepresentable rather than policed" is enforced by the type instead of by a reviewer. The boundary exists so that every write path — L0''s parse, and L1''s allocate/escape/accept — inherits the rejection without restating it, which is what stops the rule from drifting into a check one caller forgets.'
+contract_location: ledger-core/src/tier.rs#Tolerance
+obligations:
+- the fields stay private and no second constructor is added, or the guarantee reduces to a convention
+- 'an override equal to the floor stays rejected: it is not above the floor and it would add noise to the version hash'
+- is_stranded_below reads the live set floor against the pinned one, so raising a floor never silently grandfathers a member
+metadata:
+  kind: struct
+  symbol: Tolerance
+  visibility: public

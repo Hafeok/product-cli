@@ -12,6 +12,9 @@ on:
       - 'product-core/**'
       - 'product-mcp/**'
       - 'product-cli/**'
+      - 'ledger-core/**'
+      - 'ledger-cli/**'
+      - '.decisions/**'
       - 'xtask/**'
       - 'docs/**'
       - 'conventions/**'
@@ -26,6 +29,9 @@ on:
       - 'product-core/**'
       - 'product-mcp/**'
       - 'product-cli/**'
+      - 'ledger-core/**'
+      - 'ledger-cli/**'
+      - '.decisions/**'
       - 'xtask/**'
       - 'docs/**'
       - 'conventions/**'
@@ -74,6 +80,12 @@ jobs:
       - name: Clippy
         # Zero-unwrap policy (#![deny(clippy::unwrap_used)] across the workspace).
         run: cargo clippy --workspace -- -D warnings -D clippy::unwrap_used
+
+      - name: Ledger gate
+        # L0 of docs/decision-ledger-prd.md: the decision record must be
+        # readable, unallocated decisions and stale acceptances must not
+        # reach main. Exit 1 = findings, exit 2 = the gate could not run.
+        run: cargo run -q -p ledger-cli --bin ledger -- verify
 
       - name: Convention check (xtask)
         # Enforces every CTX rule registered under xtask/src/checks/.

@@ -1,0 +1,14 @@
+format: 1
+id: seam/ledger/blame-attribution
+boundary: pub fn introducing_author with the Attribution enum in ledger-core/src/blame.rs
+verdict_knowledge: 'A caller learns that git attribution is consulted through a tri-state — an author, not-committed, or no-repository — rather than an Option, so the difference between "this acceptance is attributed to somebody else" and "there is nothing to attribute yet" cannot be collapsed into a single falsy value. That collapse is precisely the bug that would make an uncommitted acceptance fail the gate, which would make an acceptance impossible to commit at all.'
+contract_location: ledger-core/src/blame.rs#introducing_author
+obligations:
+- NotCommitted and NoRepository stay distinguishable from Author, and both are reported to the user rather than silently passing
+- lookup stays on the pickaxe over the acceptance id, not git blame over line positions, because an entry's lines move with formatting while its introducing commit does not
+- author emails are lowercased so comparison matches a normalised Identity
+metadata:
+  kind: fn
+  symbol: introducing_author
+  visibility: public
+  signature: 'fn introducing_author(root: &Path, file: &Path, needle: &str) -> Attribution'

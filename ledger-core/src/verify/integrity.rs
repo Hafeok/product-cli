@@ -29,10 +29,15 @@ pub fn hash_mismatch(view: &View) -> Vec<Finding> {
                 Finding::new(
                     VerifyClass::L007,
                     &v.raw.decision.to_string(),
+                    // The recomputed digest is given in full, not shortened.
+                    // L0 mints no ids and seals no versions — `ledger add`
+                    // is L1 — so hand-authoring a log file is the only way
+                    // in, and this line is where the author gets the hash to
+                    // write. Shortening it would make the format
+                    // unusable by the audience the spec is written for.
                     format!(
-                        "stored hash {} does not match content, which hashes to {}",
-                        v.raw.hash.short(),
-                        computed.short()
+                        "stored hash {} does not match content, which hashes to {computed}",
+                        v.raw.hash.short()
                     ),
                 )
             })

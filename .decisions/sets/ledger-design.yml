@@ -1,0 +1,28 @@
+# The Decision Ledger's own settled design — the ledger's first content is
+# the decisions that produced it.
+#
+# Floor T1. T2 is money, identity, data loss, regulatory: the format's
+# decisions are not that. T0 is trivial consequence and a short lifetime:
+# they are emphatically not that either — this format is an import surface
+# for the org product, its lifetime is measured in years, and a
+# canonicalisation error silently invalidates every acceptance ever made.
+# T1, "normal product surface", is the honest reading.
+#
+# The entries that genuinely touch identity and accountability carry an
+# up-only override to T2 (§4.2.1). That is the mechanism working as designed
+# rather than a floor drawn wrong: a set whose members *constantly* override
+# upward has its floor in the wrong place, and one in three is not that.
+format: 1
+id: ledger-design
+title: Decision Ledger — the settled design of the record substrate
+tolerance_floor: T1
+ground: characterised
+owner: emk@delegate.dk
+created_at: 2026-08-10
+notes: |
+  Membership is derived, not listed here: a version names its set. The
+  denominator for coverage is therefore every decision filed into
+  `ledger-design`, and — per §8 — nothing verifies that the enumeration is
+  complete. This set enumerates the open decisions that were *resolved*; the
+  ones still open (OD-1, OD-5, OD-6, OD-7) are named in the PRD and are not
+  yet decisions here, which is exactly the gap the honest limit describes.

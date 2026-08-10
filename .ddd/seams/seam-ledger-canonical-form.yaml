@@ -1,0 +1,14 @@
+format: 1
+id: seam/ledger/canonical-form
+boundary: pub fn canonical_json / canonical_bytes in ledger-core/src/canon.rs
+verdict_knowledge: 'A caller learns that the bytes a version hash is taken over are produced by one function with a published specification, not by whatever serialiser is nearest. Publishing it makes the Org Ledger''s import surface a named thing an outside implementation can be conformance-tested against — docs/ledger-format-v1.md §4 plus its pinned vector — instead of an accident of this crate''s serde attributes. The verdict it encodes: two byte sequences that differ only in formatting must reach the same digest, and any other difference must not.'
+contract_location: ledger-core/src/canon.rs#canonical_json
+obligations:
+- the exhaustive destructure of VersionRaw keeps no `..` rest pattern, so a new wire field breaks the build until someone decides whether it is hashed
+- any change to the algorithm bumps CANONICAL_FORM and files a note in docs/ledger-format-migrations.md, because every existing acceptance is invalidated by it
+- the pinned conformance vector in docs/ledger-format-v1.md §4.4 moves in the same commit as the algorithm, never after
+metadata:
+  kind: fn
+  symbol: canonical_json
+  visibility: public
+  signature: 'fn canonical_json(raw: &VersionRaw) -> String'

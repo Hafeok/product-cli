@@ -1,0 +1,14 @@
+format: 1
+id: seam/ledger/version-hash
+boundary: pub fn version_hash plus the VersionHash type in ledger-core/src/hash.rs
+verdict_knowledge: 'A caller learns that the digest is domain-separated by a prefix carrying the canonical-form version, so a hash computed under one reading of the fields can never collide with a hash computed under another, and a future entity type cannot collide with a decision version. Without the boundary a caller would reasonably hash the canonical bytes directly and get a different, silently-incompatible answer.'
+contract_location: ledger-core/src/hash.rs#version_hash
+obligations:
+- the prefix is bumped whenever a hashed field changes meaning, and never otherwise
+- VersionHash parses only `sha256:` plus 64 lowercase hex, so one digest has exactly one spelling and comparison is textual
+- the short form is display-only and is never compared
+metadata:
+  kind: fn
+  symbol: version_hash
+  visibility: public
+  signature: 'fn version_hash(raw: &VersionRaw) -> VersionHash'

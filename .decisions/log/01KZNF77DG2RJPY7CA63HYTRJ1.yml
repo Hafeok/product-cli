@@ -1,0 +1,94 @@
+# The ledger's first change-set: the decisions that produced the ledger.
+#
+# `created_by` is a model identity on purpose. §9.3 says models may propose
+# enumerations, allocations and discharge procedures, and that acceptance
+# cannot be delegated — so the format distinguishes who *typed* from who
+# *signs*. These entries were proposed by a model at the principal's
+# direction and carry no acceptances: they sit allocated-awaiting-acceptance,
+# which the gate reports as status and never as a failure. The `accept`
+# commands are the principal's to run, and arrive with L1.
+format: 1
+id: cs:01KZNF77DG2RJPY7CA63HYTRJ1
+created_at: 2026-08-10T09:14:22Z
+created_by: claude-opus-5@anthropic.invalid
+note: >-
+  File the three resolved open decisions — OD-2, OD-3, OD-4 — as the first
+  content of the ledger-design set.
+
+decisions:
+  - id: dec:hafeok.ledger/01KZNF77DH65H2EPWS68QNJ0H9
+    created_at: 2026-08-10T09:14:22Z
+    created_by: claude-opus-5@anthropic.invalid
+  - id: dec:hafeok.ledger/01KZNF77DJCPD82TDA9HV1X61F
+    created_at: 2026-08-10T09:14:22Z
+    created_by: claude-opus-5@anthropic.invalid
+  - id: dec:hafeok.ledger/01KZNF77DK5F2FA25EVYR60TD3
+    created_at: 2026-08-10T09:14:22Z
+    created_by: claude-opus-5@anthropic.invalid
+
+versions:
+  # OD-2 — where the ledger lives. No extra-actor can hold this: it is a
+  # structural resolution a named person applies, so it is a judgment and
+  # says so, rather than pointing at an analyzer that does not exist.
+  - decision: dec:hafeok.ledger/01KZNF77DH65H2EPWS68QNJ0H9
+    hash: sha256:3c59453e863b50d3043744b1bd517523e8d430498e78dd5f86df0c7be6b1f11f
+    set: ledger-design
+    statement: >-
+      The ledger is a workspace member of the product-cli repo and builds its
+      materialized view on the same product-core graph infrastructure the ddd
+      tool reuses; the .decisions/ files remain the source of truth with the
+      index rebuildable, and .product/ is neither replaced nor consumed.
+    allocation: judgment
+    actor: emk@delegate.dk
+    tolerance_floor_at_creation: T1
+    based_on:
+      - prd:decision-ledger-prd#12.OD-2
+      - prd:decision-ledger-prd#5
+      - prd:ddd-cli-prd#6
+
+  # OD-3 — who may sign. Overridden up to T2: this is the identity and
+  # accountability decision, and misplacing it is exactly the consequence
+  # class T2 names. Both corroborations are shipped verify rules, so the
+  # discharge pointers resolve to something that actually runs.
+  - decision: dec:hafeok.ledger/01KZNF77DJCPD82TDA9HV1X61F
+    hash: sha256:49a072d08e26ec357944f2cc6d46a0b17d9daf61b4a29a676b5a69949c44bfa4
+    set: ledger-design
+    statement: >-
+      accepted-by is a claimed identity resolved by email from git config and
+      trusted on review, corroborated mechanically by refusing model and CI
+      identities and by requiring an acceptance's actor to match the author of
+      the commit that introduced it; the signature field is reserved and empty
+      so a cryptographic upgrade is additive rather than a migration.
+    allocation: constraint
+    discharge:
+      - analyzer:ledger-verify.L006
+      - analyzer:ledger-verify.L009
+    tolerance_floor_at_creation: T1
+    tolerance_override: T2
+    based_on:
+      - prd:decision-ledger-prd#12.OD-3
+      - prd:decision-ledger-prd#9.3
+      - prd:decision-ledger-prd#4.4
+      - format:ledger-format-v1#3.2
+
+  # OD-4 — how tolerance is scoped. Encoded: the below-floor state is
+  # unconstructible through the API, and the two rules below catch it in a
+  # hand-edited file and catch a member stranded by a raised floor.
+  - decision: dec:hafeok.ledger/01KZNF77DK5F2FA25EVYR60TD3
+    hash: sha256:f72357e05ac4ad508d3affc9f7b44a06ae66c6770e83fc277008ce9d7369e826
+    set: ledger-design
+    statement: >-
+      A set's tolerance is a floor and a version may override it only upward,
+      so a below-floor state is unconstructible rather than policed; the
+      effective tier is hashed content via the floor pinned at version
+      creation, and raising a set's floor strands every member below it until
+      re-accepted at the new floor.
+    allocation: constraint
+    discharge:
+      - analyzer:ledger-verify.L004
+      - analyzer:ledger-verify.L005
+    tolerance_floor_at_creation: T1
+    based_on:
+      - prd:decision-ledger-prd#12.OD-4
+      - prd:decision-ledger-prd#4.2.1
+      - format:ledger-format-v1#3.3

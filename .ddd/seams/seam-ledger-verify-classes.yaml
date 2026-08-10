@@ -1,0 +1,13 @@
+format: 1
+id: seam/ledger/verify-classes
+boundary: pub enum VerifyClass with ALL_CLASSES in ledger-core/src/finding.rs
+verdict_knowledge: 'A caller learns the closed set of reasons the gate can fail, and that the set is the deliverable rather than an implementation detail: L0''s stated measure of success is that verify fails for a schema fault plus nine named classes and nothing else. Publishing the enum lets CI, the format document, and L1''s operations agree on one vocabulary, and makes a tenth reason a visible specification change instead of a quiet regression in how strict the gate got.'
+contract_location: ledger-core/src/finding.rs#VerifyClass
+obligations:
+- a new variant lands in the same commit as its row in docs/ledger-format-v1.md §5.2 and its fixture under ledger-cli/tests/fixtures/
+- pendency never becomes a class; the gate polices violations, not work in progress
+- the code strings are stable identifiers, cited by discharge pointers in the ledger itself, so they are not renamed for tidiness
+metadata:
+  kind: enum
+  symbol: VerifyClass
+  visibility: public
