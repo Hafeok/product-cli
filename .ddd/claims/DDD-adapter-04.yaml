@@ -43,13 +43,27 @@ evidence: >
   Nothing in the interceptor, the classifier, the surface vocabulary, the MCP
   layer, or the config schema had to move.
 falsifier: >
-  A fourth language whose host needs neither a capability announcement of its
-  own nor a readiness shape outside the two now expressible — i.e. the
-  generalisation made at M6 turns out to have been the last one, and the LSP
-  layer absorbs new hosts without further change. Equally falsified if the
-  two changes are shown to have been avoidable: a readiness signal for
-  rust-analyzer that is both honest about indexing and expressible as a bare
-  notification method name.
+  (a) The false half dies if a future language server integrates with
+  near-zero host wiring: a fourth host needing neither a capability
+  announcement of its own nor a readiness shape outside the two now
+  expressible, and no change to the LSP layer to admit it. That would show
+  the 114 lines were rust-analyzer's alone rather than a per-server budget
+  line, and PRD §11's re-priced row would be overstating the cost.
+
+
+  (b) The true half dies if contract-surface leakage appears at language four
+  with an LSP host: a contract-surface assumption in the fourth LSP-hosted
+  adapter that cannot be localised to its adapter module and forces a change
+  to the classifier, the surface vocabulary, or the interceptor. That would
+  show the contract-surface half was not confirmed at M6, only untested at
+  n=3 — and would take DDD-adapter-01 down with it. A non-LSP artifact class
+  does not test this; M7's HTML+CSS pair is therefore outside it, because its
+  contract surface is stylesheets and class vocabulary rather than symbols.
+
+
+  (c) Both halves die if the M6 changes are shown to have been avoidable: a
+  readiness signal for rust-analyzer that is both honest about indexing and
+  expressible as a bare notification method name.
 owner: none
 changed: 2026-08-10
 revalidate_by: 2027-02-10
