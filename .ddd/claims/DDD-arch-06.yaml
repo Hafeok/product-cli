@@ -1,0 +1,28 @@
+format: 2
+id: DDD-arch-06
+statement: >
+  The correspondence dataset is conditioned on classified-surface outcomes.
+  A non-surface apply returns before any row is written; an off-mode apply
+  skips classification entirely; and on a rejected enforce-mode edit only the
+  unmatched events are logged, so the matched subset of that same edit leaves
+  no row either. Quantities computed over the rows are therefore conditional
+  on the surface stratum, and the base rate — what fraction of edits touch
+  contract surface — is not recoverable from the dataset.
+status: reported
+evidence: >
+  ddd-mcp/src/intercept.rs as implemented: the `mode == "off"` early return;
+  the `surface.is_empty()` early return that writes disk without calling
+  log_events; and the reject path, which builds `only_unmatched` and passes
+  that subset to log_events. Stated as a known limit in the M3+M4 report
+  ("every interception outcome is logged" = every classified surface
+  outcome).
+falsifier: >
+  A logging path that writes a row for a non-surface or off-mode apply, or
+  for the matched events of a rejected edit — which would make the rows a
+  sample of edits rather than of surface events, and the base rate
+  recoverable after all.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+depends_on:
+  - DDD-arch-04

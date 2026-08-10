@@ -13,3 +13,4 @@ falsifier: >
   re-deriving the facts despite the pre-fill (wasted tool calls).
 owner: none
 changed: 2026-08-06
+revalidate_by: 2027-02-06

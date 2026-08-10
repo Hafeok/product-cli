@@ -1,0 +1,19 @@
+format: 2
+id: DDD-method-05
+statement: >
+  Whether a closure claim transfers to another repo is not knowable when it
+  is authored; it is established only by a second repo inheriting it without
+  re-litigation. Filing an entry into shared/ at authoring time therefore
+  records a prediction about transferability as though it were a property of
+  the entry, and the prediction is not marked as one anywhere in the store.
+status: projected
+falsifier: >
+  A body of entries filed into shared/ at authoring time whose observed
+  transfer rate matched that of entries promoted on evidence — i.e.
+  authoring-time judgment of transferability proving as reliable as observed
+  inheritance.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-02-07
+depends_on:
+  - DDD-method-01

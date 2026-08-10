@@ -1,0 +1,24 @@
+format: 2
+id: DDD-arch-05
+statement: >
+  Same-session declaration matching admits a surface event when the
+  declaration names the symbol OR when its contract_location contains the
+  file path (ddd-mcp/src/intercept.rs, match_declarations). The file arm
+  makes the interceptor's enforce-mode guarantee degrade with file size: one
+  authored declaration admits every later surface event in that file for the
+  life of the serve process, including symbols whose demand was never
+  examined. What enforce mode then guarantees is not that every contract
+  change was declared, but that every file carrying a contract change had
+  some declaration in it.
+status: projected
+falsifier: >
+  Enforce-mode sessions in which file-arm matches are rare or always cover
+  symbols the declarant did examine — i.e. the broad arm admits nothing that
+  a symbol-granular rule would have demanded separately. The correspondence
+  rows can answer this directly: a linked_declaration whose seam names a
+  symbol other than the row's own is an instance of the gap.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-02-07
+depends_on:
+  - DDD-arch-03

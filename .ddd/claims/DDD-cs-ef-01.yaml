@@ -1,0 +1,31 @@
+format: 4
+id: DDD-cs-ef-01
+statement: >
+  EF Core supplies tracking and cascade behaviour by convention when the
+  model states neither, and both defaults are consequential: queries track
+  every entity they return, and a required relationship deletes its
+  dependents. Neither draws a diagnostic, and neither appears anywhere in the
+  source — they exist only in the built model.
+status: reported
+evidence: >
+  Read off the built model on the indexed toolchain:
+  `ChangeTracker.QueryTrackingBehavior` is TrackAll, and the foreign key of a
+  required reference navigation reports `DeleteBehavior.Cascade`. Neither was
+  configured; both came from the modelling conventions. Tracking additionally
+  has a call-site override in AsNoTracking, so it engages
+  pred/code/explicit-policy-argument as well — cascade has no call-site form
+  at all and can only be stated in the model.
+falsifier: >
+  A modelling convention set under which an unconfigured required
+  relationship does not cascade, or an unconfigured context does not track —
+  which would mean the defaults are not the ones a governed repo must
+  displace.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "Microsoft.EntityFrameworkCore.Sqlite 8.0.8"
+predicate: pred/data/persistence-defaults-declared

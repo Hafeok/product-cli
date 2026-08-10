@@ -1,0 +1,31 @@
+format: 2
+id: dec/cs/policy-rules-at-error
+title: Comparison and format-provider rules run at error severity in governed C# repos
+rationale: >
+  The first manifest candidate this seed produces. DDD-cs-pol-01 establishes
+  that CA1305, CA1307, CA1309 and CA1310 close the comparison and culture
+  cases of pred/code/explicit-policy-argument using the SDK's own analyzers —
+  no package to add, no cost beyond severity. At their default severity they
+  are suggestions, which constrains nothing; at error they convert a standing
+  review question into a build failure, which is the whole of the DAD §4.1
+  argument.
+
+
+  Scope: governed C# repositories under Context& engagement, not this
+  workspace, which is Rust and has no C# to govern. The entry is filed here
+  because the catalog is where determinations live; it becomes operative in
+  a repo whose manifest cites it.
+
+
+  Not covered, and deliberately not implied: the ambient clock. DDD-cs-pol-02
+  records that DateTime.Now draws nothing from this rule set, so a repo
+  adopting this decision has closed three of the four cases in the predicate
+  and should not read it as having closed the fourth. Closing that one needs
+  an added analyzer package, which is a dependency decision with its own
+  cost and belongs in its own entry.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-cs-pol-01
+    status: reported
+    changed: 2026-08-07
+date: 2026-08-07

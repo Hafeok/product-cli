@@ -1,4 +1,4 @@
-format: 1
+format: 2
 id: DDD-arch-02
 statement: >
   The LSP protocol carries enough information (symbols, visibility,
@@ -10,4 +10,5 @@ falsifier: >
   events and requires compiler-API access to detect.
 owner: none
 changed: 2026-08-02
+revalidate_by: 2027-02-07
 depends_on: []

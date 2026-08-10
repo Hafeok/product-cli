@@ -1,0 +1,33 @@
+format: 4
+id: DDD-cs-conc-02
+statement: >
+  Concurrency control does not resist the P(c, G) form, contrary to the
+  routing this checklist item was expected to take. Declaring a property
+  IsConcurrencyToken makes the lost update raise, and the presence of a token
+  per entity is readable from the built model — so the predicate is checkable
+  by a model assertion, and only the choice of which entities need one stays
+  with judgment.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain, against the DDD-cs-conc-01 run as its
+  control. The same two-context sequence over a model configuring
+  `Property(d => d.Version).IsConcurrencyToken()` throws
+  DbUpdateConcurrencyException on the second commit, where the unconfigured
+  model committed silently. Token presence was read off
+  `IEntityType.GetProperties().Where(p => p.IsConcurrencyToken)`, which is
+  what an assertion would walk.
+falsifier: >
+  A model whose concurrency tokens cannot be enumerated at startup, or an
+  entity for which the token is present and the lost update still commits
+  silently — either would remove the mechanical half of this closure.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "Microsoft.EntityFrameworkCore.Sqlite 8.0.8"
+predicate: pred/data/persistence-defaults-declared
+refines:
+  - DDD-cs-conc-01

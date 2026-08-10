@@ -1,0 +1,44 @@
+predicate:
+  id: pred/configuration/network-exposure-declared
+  format: 1
+  name: Network exposure declared
+  statement: >
+    Accept a resource declaration c iff the network surface it exposes —
+    public network access, firewall rules, private endpoint use — is stated
+    in c, rather than inherited from the provider's default for the resource
+    type in G.
+
+  artifact_class: configuration
+
+  ground:
+    - fact: the network properties c sets
+      provenance: controlled
+    - fact: the provider default applied to each property c leaves unset
+      provenance: institutional
+    - fact: what can actually reach the resource once deployed
+      provenance: observed
+
+  tolerance: >
+    Every network-surface property stated. An unset property is a reject:
+    provider defaults for these have historically been permissive and are
+    owned by the provider, not by the template.
+
+  rejection_witness: >
+    The resource, the network property left unset, and the default that
+    applies in its place.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-bicep-net-01   # closed by PSRule, not by the linter
+
+  proxy_gap: >
+    A stated network surface proxies a reachable-only-by-the-intended one. A
+    firewall can be configured explicitly and configured open; the check
+    establishes that someone chose, not that they chose well.
+
+  notes: >
+    The institutional item is why silence is a reject rather than a
+    deferral: an unset property does not mean "no opinion", it means the
+    provider's opinion, and that opinion can change between API versions —
+    which couples this predicate to pred/configuration/api-version-currency.

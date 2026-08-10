@@ -1,0 +1,44 @@
+predicate:
+  id: pred/configuration/resource-capacity-governed
+  format: 1
+  name: Resource capacity governed
+  statement: >
+    Accept a resource declaration c iff every sizing value it fixes — SKU,
+    tier, capacity — is accounted for by a stated decision, rather than
+    written inline as the value that worked.
+
+  artifact_class: configuration
+
+  ground:
+    - fact: the sizing values c fixes, per resource
+      provenance: controlled
+    - fact: the load and availability the resource must actually serve
+      provenance: observed
+    - fact: the cost each value commits to
+      provenance: institutional
+
+  tolerance: >
+    Every sizing value accounted for. An inline value with no decision naming
+    it is a reject: it commits cost and capacity for as long as nobody
+    revisits it, which is indefinitely.
+
+  rejection_witness: >
+    The resource, the sizing value it fixes, and the absence of a decision
+    naming it.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-bicep-sku-01   # review-closed over an enumerable set; tools reach only consequences
+
+  proxy_gap: >
+    An accounted sizing value proxies a right-sized system. A decision can
+    name the SKU, justify it against last quarter's load, and be wrong for
+    next quarter's.
+
+  notes: >
+    Same shape as pred/configuration/parameter-default-governed: the judgment
+    needs the observed item and cannot be mechanised, but the set of values
+    requiring judgment is readable from the compiled template. The two
+    predicates are separate because a default binds callers while a sizing
+    value binds cost, and they are argued about by different people.

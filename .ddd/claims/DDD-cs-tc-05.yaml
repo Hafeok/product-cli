@@ -1,0 +1,34 @@
+format: 4
+id: DDD-cs-tc-05
+statement: >
+  Unmanaged marshalling removes the check the same way, and neither of the
+  two removal sites is gated by `AllowUnsafeBlocks`. Marshal.PtrToStructure
+  reads whatever the declared layout says, past the end of the allocation if
+  the layout is wider, so the project-level switch teams treat as "unsafe
+  code is off" does not cover the unsafe surface reachable through ordinary
+  BCL calls.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain, in a project that does not set
+  AllowUnsafeBlocks (so it defaults to false): 4 bytes allocated with
+  AllocHGlobal and written 0x41414141, then read as an 8-byte
+  `[StructLayout(LayoutKind.Sequential)] struct Wide { int A; int B; }`.
+  Builds clean under TreatWarningsAsErrors, throws nothing, and returns
+  A=41414141 with B read from beyond the allocation. The same project
+  compiles the DDD-cs-tc-04 Unsafe.As case, which is the gating observation:
+  both are method calls, not `unsafe` blocks.
+falsifier: >
+  A default project configuration under these settings in which either
+  Unsafe.As or Marshal.PtrToStructure fails to compile without
+  AllowUnsafeBlocks, or in which the marshaller bounds-checks the source
+  allocation against the declared layout.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+predicate: pred/code/static-type-conformance
+refines:
+  - DDD-cs-tc-01

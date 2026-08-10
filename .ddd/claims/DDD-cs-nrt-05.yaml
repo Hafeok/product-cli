@@ -1,0 +1,34 @@
+format: 4
+id: DDD-cs-nrt-05
+statement: >
+  The closure does not extend across EF Core's required reference
+  navigations. A navigation declared non-nullable and initialised with the
+  `= null!` idiom that EF's own documentation prescribes is null on any query
+  that does not Include it, so the dereference the compiler proved safe
+  faults at runtime whenever the load path differs from the one the author
+  had in mind.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain against SQLite in-memory:
+  `public Customer Customer { get; set; } = null!;` on an Order, then
+  `db.Orders.First().Customer.Name.Length` without Include. Builds clean
+  under Nullable enable plus TreatWarningsAsErrors; throws
+  NullReferenceException at runtime. The escape is prescribed rather than
+  accidental — `= null!` is the documented way to satisfy CS8618 for a
+  required navigation, so following the guidance is what creates the site.
+falsifier: >
+  An EF configuration under these settings in which an unloaded required
+  navigation faults at the query rather than at the dereference — the
+  provider refusing to hand back a half-materialised graph, as it does for a
+  NULL scalar column (DDD-cs-nrt-06).
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "Microsoft.EntityFrameworkCore.Sqlite 8.0.8"
+predicate: pred/code/null-dereference-safety
+refines:
+  - DDD-cs-nrt-01

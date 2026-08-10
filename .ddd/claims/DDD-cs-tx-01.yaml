@@ -1,0 +1,29 @@
+format: 4
+id: DDD-cs-tx-01
+statement: >
+  pred/execution/transaction-boundary-declared is open, and structurally so:
+  the boundary is wherever SaveChanges was called, no ambient transaction
+  exists unless one is opened explicitly, and nothing in the code records
+  which writes were meant to commit together — so there is no stated intent
+  for any checker to compare the actual extent against.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain. `db.Database.CurrentTransaction` is
+  null before any explicit call, and a two-step unit of work whose second
+  step throws leaves the first step committed: one row survives. The commit
+  extent was decided by the placement of a call, silently and without a
+  diagnostic. Nothing in the SDK analyzer set reports it, and nothing could
+  — the intended extent is not expressed anywhere to be violated.
+falsifier: >
+  A means of stating intended atomicity in the code that a checker can read —
+  an attribute, a scope type, a convention a rule could enforce — which would
+  turn the inferred ground item into a controlled one and make this checkable.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "Microsoft.EntityFrameworkCore.Sqlite 8.0.8"
+predicate: pred/execution/transaction-boundary-declared

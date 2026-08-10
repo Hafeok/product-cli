@@ -1,0 +1,44 @@
+predicate:
+  id: pred/execution/failure-policy-declared
+  format: 1
+  name: Process-boundary failure policy declared
+  statement: >
+    Accept a process-boundary call c iff its behaviour under failure —
+    timeout, retry count, backoff, idempotency on replay, and the disposition
+    of a partial or poison result — is stated for c, rather than left to a
+    library default or to no policy at all.
+
+  artifact_class: execution
+
+  ground:
+    - fact: the configured policy values on the client or pipeline c uses
+      provenance: controlled
+    - fact: the library default that applies to each unset element
+      provenance: institutional
+    - fact: the failure distribution the boundary actually exhibits — rates,
+        latencies, partial-failure modes
+      provenance: observed
+
+  tolerance: >
+    Every element stated for every boundary. An unset element is a reject
+    whether or not its default is survivable, because survivability is a
+    property of the observed distribution and not of the code.
+
+  rejection_witness: >
+    The boundary call and the policy element with no configured value.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-cs-proc-01   # open — the defaults are silent and mostly absent
+
+  proxy_gap: >
+    A stated policy proxies a survivable one. Retry counts and backoffs can
+    be stated precisely and still be wrong for the observed distribution;
+    stating them makes them reviewable, not correct.
+
+  notes: >
+    The observed ground item means no build-time arrangement can close this,
+    which follows from the signature. What an arrangement can do is force the
+    values to be stated — which is why the resilience-pipeline registration
+    is a pattern candidate rather than an analyzer rule.

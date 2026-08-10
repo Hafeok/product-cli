@@ -1,0 +1,33 @@
+format: 4
+id: DDD-cs-disp-03
+statement: >
+  Async disposal is open in exactly one shape: a type implementing both
+  IDisposable and IAsyncDisposable, used with a sync `using`. The statement
+  binds to Dispose, so cleanup written in DisposeAsync never runs, and nothing
+  reports it. Where the type implements only IAsyncDisposable the compiler
+  refuses the statement outright, so the gap is not async disposal in general
+  — it is the ambiguity created by implementing both.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain. A type with a no-op Dispose and the
+  real work in DisposeAsync, used as `using (var a = new AsyncRes()) { }`,
+  builds with no diagnostic from the full analyzer set and is observed
+  unflushed at exit. The contrasting case compiles to
+  `error CS8418: type used in a using statement must implement
+  'System.IDisposable'. Did you mean 'await using' rather than 'using'?` —
+  the compiler names both the fault and the fix when it can see one.
+falsifier: >
+  A diagnostic from the language or the analyzer set that reports a sync
+  `using` over a type implementing both interfaces, which would move this
+  case from open to analyzer-closable.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "SDK-bundled .NET analyzers at AnalysisLevel=latest, AnalysisMode=All"
+predicate: pred/code/deterministic-disposal
+refines:
+  - DDD-cs-disp-01

@@ -1,0 +1,29 @@
+format: 4
+id: DDD-bicep-sku-01
+statement: >
+  No tool judges a sizing value; PSRule reaches only consequences of one.
+  pred/configuration/resource-capacity-governed is therefore review-closed,
+  and as with parameter defaults the worklist is mechanically complete — sku
+  blocks are readable from the compiled template.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain. An App Service plan fixing
+  `{name: P1v3, tier: PremiumV3, capacity: 3}` drew nothing from the DAD §5.2
+  linter configuration. PSRule failed Azure.AppService.AvailabilityZone —
+  which is a consequence of the sizing choice, zone redundancy, rather than a
+  finding about the choice — and Azure.Resource.UseTags, which is unrelated.
+  Reading `resources[*].sku` off the compiled ARM JSON enumerated the block
+  exactly, so the set requiring judgment is extractable even though the
+  judgment is not.
+falsifier: >
+  A rule from either tool that reports a sizing value as ungoverned rather
+  than reporting a downstream property it implies — or a sizing value that
+  does not surface in the compiled template, which would break the
+  completeness of the worklist.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  target: "Azure Resource Manager"
+  tool: "Bicep CLI 0.37.4; PSRule.Rules.Azure 1.47.0"
+predicate: pred/configuration/resource-capacity-governed

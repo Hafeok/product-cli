@@ -1,0 +1,38 @@
+format: 2
+id: dec/cs/unsafe-reinterpretation-banned
+title: Unsafe.As and Marshal.PtrToStructure are banned symbols, not reviewed ones
+rationale: >
+  DDD-cs-tc-04 and DDD-cs-tc-05 separate the type-conformance holes into two
+  kinds, and only one of them is survivable by review. `dynamic` and object
+  downcasts defer the check: they fail loudly at the site, so a mistake
+  surfaces. Unsafe.As and Marshal.PtrToStructure remove the check: the
+  reinterpretation returns a plausible wrong answer — Length 3 read off an
+  int[] header, a struct field read past the end of its allocation — and
+  nothing anywhere reports it.
+
+
+  A residual with no rejection witness cannot be allocated to review, because
+  review has nothing to find. So these are banned by symbol rather than
+  watched, which needs a banned-symbols analyzer and a documented exception
+  path, and is a dependency decision rather than a severity one.
+
+
+  The reason this is not obvious, and the reason it is filed: neither call
+  site requires AllowUnsafeBlocks. The demonstration project never set it, so
+  it defaulted to false, and both compiled. The project switch that teams
+  read as "unsafe code is off" does not cover the unsafe surface reachable
+  through ordinary BCL method calls, and a repo relying on that switch is
+  relying on something it does not do.
+
+
+  Scope: governed C# engagement repos. Interop-heavy components will need the
+  exception path; that it is an exception with a name is the point.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-cs-tc-04
+    status: reported
+    changed: 2026-08-07
+  - claim: DDD-cs-tc-05
+    status: reported
+    changed: 2026-08-07
+date: 2026-08-07

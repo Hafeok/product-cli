@@ -1,0 +1,47 @@
+predicate:
+  id: pred/code/deterministic-sequence-order
+  format: 1
+  name: Deterministic sequence order
+  statement: >
+    Accept code c iff every positional selection over a sequence in c —
+    First, Single, Last, Take, ElementAt — reads from a sequence whose order
+    is established in G, rather than from one whose order is incidental.
+
+  artifact_class: code
+
+  ground:
+    - fact: the positional selections in c and the sequence expressions that
+        reach them
+      provenance: controlled
+    - fact: whether the producing source guarantees an order — an ORDER BY,
+        an explicit ordering operator, or a documented ordered contract
+      provenance: inferred
+    - fact: the order the source actually returns on a given execution
+      provenance: observed
+
+  tolerance: >
+    Every positional selection is preceded by an established ordering, or
+    reads a source whose contract states one. An incidental order that holds
+    in practice is a reject.
+
+  rejection_witness: >
+    The positional call and the sequence expression reaching it with no
+    ordering established on any path.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-cs-ord-01   # open — no rule in the SDK set reports it
+
+  proxy_gap: >
+    An established ordering proxies a deterministic result. Ordering by a
+    non-unique key still leaves ties resolved arbitrarily, so a satisfied
+    check can still yield a different element on a different execution.
+
+  notes: >
+    The inferred item is the load-bearing one, and it is the reason this
+    reads as a choice point rather than a bug: `IEnumerable<T>` carries no
+    orderedness in its type, and neither does a SQL result set without an
+    ORDER BY. Nothing in the ground distinguishes an ordered sequence from an
+    arbitrary one, so any checker must infer it — which is why the incidental
+    case survives testing and surfaces on a different provider or plan.

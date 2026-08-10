@@ -1,0 +1,28 @@
+format: 4
+id: DDD-cs-conc-01
+statement: >
+  With no concurrency token configured, concurrent modification resolves to
+  last-write-wins with no exception, no diagnostic and no record that an
+  update was lost. The DAD checklist's reading is exact: last-write-wins is
+  not a policy anyone selected, it is what happens when nobody selects one.
+status: reported
+evidence: >
+  Reproduced on the indexed toolchain. Two contexts read the same row; the
+  first wrote "written by A" and committed, the second then wrote "written by
+  B" and committed without raising. The surviving value is "written by B" and
+  A's update is gone. The entity carried no concurrency token — confirmed by
+  walking the model, which reported none — because none was configured and
+  the conventions add none.
+falsifier: >
+  An unconfigured entity under these settings whose concurrent modification
+  raises, or a convention that adds a concurrency token where the model
+  states none.
+owner: Emil
+changed: 2026-08-07
+revalidate_by: 2027-08-07
+version_index:
+  language: "C# 12"
+  sdk: "8.0.413"
+  target: net8.0
+  tool: "Microsoft.EntityFrameworkCore.Sqlite 8.0.8"
+predicate: pred/data/persistence-defaults-declared

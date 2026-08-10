@@ -1,0 +1,45 @@
+predicate:
+  id: pred/interface/endpoint-authorization-explicit
+  format: 1
+  name: Endpoint authorization explicit
+  statement: >
+    Accept an exposed endpoint c iff the authorization required to reach it
+    is stated — by an attribute on c, or by a declared default in G that
+    applies when c states nothing.
+
+  artifact_class: interface
+
+  ground:
+    - fact: the endpoints exposed and the authorization metadata each carries
+      provenance: controlled
+    - fact: the default policy the host applies to an endpoint carrying no
+        metadata
+      provenance: controlled
+    - fact: who in fact reaches the endpoint once deployed
+      provenance: observed
+
+  tolerance: >
+    No endpoint reachable under a policy nobody stated. An endpoint with no
+    attribute is acceptable only where a declared fallback covers it; absent
+    that, silence is a reject.
+
+  rejection_witness: >
+    The endpoint, its absent authorization metadata, and the absence of a
+    fallback policy that would have covered it.
+
+  depends_on: []
+
+  closure_claims:
+    - DDD-cs-authz-01   # the default is anonymous; a fallback policy inverts it
+
+  proxy_gap: >
+    A stated requirement proxies a correct one. A fallback policy that only
+    requires authentication admits every authenticated caller, which is a
+    stated default and still the wrong one for an administrative endpoint.
+
+  notes: >
+    Both controlled ground items are the reason this is closable at all: the
+    endpoint set and the fallback policy are both readable from the
+    composition. What is not closable is the third item — that the right
+    people reach it — which is why the predicate asks for a stated policy
+    rather than a correct one.
