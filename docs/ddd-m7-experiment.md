@@ -394,7 +394,14 @@ its place.
 
 ## 7. Proposed status consequences — for the principal, not applied
 
-Nothing below has been applied to the graph.
+Nothing below was applied when this section was written. **Ruled
+2026-08-10 (Emil): all three accepted** — §7.1 applied as the promotion
+to `established` with the evidence extended on `DDD-adapter-01`, §7.2
+filed as `.ddd/claims/DDD-adapter-05.yaml`, §7.3 applied to the PRD §11
+risk row, and the §7.4 working entries plus the 19 staged seam
+declarations accepted as reviewed. The §6.1 vocabulary-granule
+observation stays an observation — deferring it was costless and no
+decision was taken.
 
 ### 7.1 `DDD-adapter-01` — survived its scheduled falsification attempt; **strengthen**
 
