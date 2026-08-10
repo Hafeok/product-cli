@@ -20,6 +20,7 @@ predicate:
 
   artifact_class:      # what c ranges over — exactly one of:
                        #   code | configuration | execution | interface | data | composition
+                       #   | html-css (the governed markup+styling pair, admitted at M7)
 
   ground:              # what the check must see; each item carries provenance
     - fact:            #   the required information

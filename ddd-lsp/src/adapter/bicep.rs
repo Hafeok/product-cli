@@ -20,10 +20,12 @@ pub const ADAPTER: Adapter = Adapter {
     ready: ReadySignal::AfterInitialized,
     extra_capabilities: no_extra_capabilities,
     needs_open_handshake: false,
+    hosted: true,
     facts,
     policy,
     visibility_rank,
     posture_warning,
+    enrich: None,
 };
 
 fn posture_warning(_file: &std::path::Path, _flags: &AdapterFlags) -> Option<String> {

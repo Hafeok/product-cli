@@ -1,0 +1,6 @@
+:root {
+  --color-ok: #1a7f37;
+  --gap: 1.5rem;
+}
+.btn { color: #ff0000; }
+.card { margin: var(--gap); }

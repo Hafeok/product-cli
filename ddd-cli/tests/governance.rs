@@ -364,3 +364,139 @@ fn regenerate_bicep_sarif_from_a_real_lint() {
     assert_eq!(runs.len(), 1);
     assert!(runs[0].results.iter().any(|r| r.rule_id == "no-unused-params"), "{text}");
 }
+
+// ------------------------------------------------------------- M7 webpair
+
+/// A repo carrying the committed webpair fixtures: the pair on disk, both
+/// web-tool configs at the root, their JSON outputs plus the token file
+/// registered in `detect` (format 4).
+fn webpair_repo() -> tempfile::TempDir {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    ddd_core::init::apply_init(&ddd_core::init::plan_init(tmp.path())).expect("init");
+    for rel in ["webpair/page.html", "webpair/style.css"] {
+        let content = std::fs::read_to_string(fixture(rel)).expect("fixture");
+        write(tmp.path(), rel, &content);
+    }
+    write(
+        tmp.path(),
+        ".stylelintrc.json",
+        &std::fs::read_to_string(fixture("webpair/.stylelintrc.json")).expect("fixture"),
+    );
+    write(
+        tmp.path(),
+        ".htmlvalidate.json",
+        &std::fs::read_to_string(fixture("webpair/.htmlvalidate.json")).expect("fixture"),
+    );
+    for rel in ["webpair/stylelint.out.json", "webpair/htmlvalidate.out.json"] {
+        let content = std::fs::read_to_string(fixture(rel)).expect("fixture");
+        write(tmp.path(), rel, &content);
+    }
+    write(
+        tmp.path(),
+        ".ddd/config.yaml",
+        "format: 4\nintercept: warn\nignore: []\ndetect:\n  stylelint: [\"webpair/stylelint.out.json\"]\n  htmlvalidate: [\"webpair/htmlvalidate.out.json\"]\n  tokens: [\"webpair/style.css\"]\npair:\n  units:\n    - html: [\"webpair/*.html\"]\n      css: [\"webpair/style.css\"]\n  ignore_classes: [\"js-*\"]\n",
+    );
+    tmp
+}
+
+/// Manifests governing one stylelint rule, one html-validate rule, and the
+/// token file's custom properties, each mapping to a decision.
+fn govern_webpair(root: &Path) {
+    write(root, ".ddd/claims/DDD-web-t.yaml", &claim_yaml("DDD-web-t"));
+    write(root, ".ddd/decisions/tokens.yaml", &decision_yaml("dec/web/token-discipline", "DDD-web-t"));
+    write(root, ".ddd/decisions/markup.yaml", &decision_yaml("dec/web/markup-validity", "DDD-web-t"));
+    write(
+        root,
+        ".ddd/manifest/stylelint.yaml",
+        "format: 1\nrules:\n  - rule_id: declaration-property-value-disallowed-list\n    severity: error\n    decision: dec/web/token-discipline\n",
+    );
+    write(
+        root,
+        ".ddd/manifest/htmlvalidate.yaml",
+        "format: 1\nrules:\n  - rule_id: no-dup-class\n    severity: error\n    decision: dec/web/markup-validity\n",
+    );
+    write(
+        root,
+        ".ddd/manifest/tokens.yaml",
+        "format: 1\nrules:\n  - rule_id: \"--color-ok\"\n    severity: color\n    decision: dec/web/token-discipline\n  - rule_id: \"--gap\"\n    severity: dimension\n    decision: dec/web/token-discipline\n",
+    );
+}
+
+/// The M2 join, live for the web namespaces: configured + emitted rules
+/// with no manifest entry are UNGOVERNED escapes.
+#[test]
+fn webpair_ungoverned_rules_and_tokens_are_found() {
+    let tmp = webpair_repo();
+    ddd(tmp.path())
+        .arg("diff")
+        .assert()
+        .failure()
+        .stdout(
+            predicate::str::contains("UNGOVERNED stylelint/declaration-property-value-disallowed-list")
+                .and(predicate::str::contains("UNGOVERNED htmlvalidate/no-dup-class"))
+                .and(predicate::str::contains("UNGOVERNED tokens/--color-ok")),
+        );
+}
+
+/// Governed: diff clean, and `why` resolves a stylelint rule id and a
+/// design token to their decisions through the same manifest path.
+#[test]
+fn webpair_governed_diffs_clean_and_why_resolves_rule_and_token() {
+    let tmp = webpair_repo();
+    govern_webpair(tmp.path());
+    ddd(tmp.path()).arg("validate").assert().success();
+    ddd(tmp.path())
+        .arg("diff")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("governance diff clean"));
+    ddd(tmp.path())
+        .args(["why", "declaration-property-value-disallowed-list"])
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("governed by:")
+                .and(predicate::str::contains("dec/web/token-discipline")),
+        );
+    // The token file is a manifest of design decisions: a token resolves.
+    ddd(tmp.path())
+        .args(["why", "--", "--color-ok"])
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("severity color")
+                .and(predicate::str::contains("dec/web/token-discipline")),
+        );
+}
+
+/// Both class-contract directions in `report escapes`: an orphan class and
+/// a dead selector are findings, not folklore; the check states coverage.
+#[test]
+fn webpair_report_escapes_carries_both_contract_directions() {
+    let tmp = webpair_repo();
+    govern_webpair(tmp.path());
+    ddd(tmp.path())
+        .args(["report", "escapes"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("== html+css pair contract ==").and(
+            predicate::str::contains("clean — 1 unit(s)"),
+        ));
+    // Break both directions: consume an undefined class, strand a selector.
+    let html = std::fs::read_to_string(tmp.path().join("webpair/page.html")).expect("read");
+    write(
+        tmp.path(),
+        "webpair/page.html",
+        &html.replace("class=\"btn\"", "class=\"btn btn-primary\""),
+    );
+    let css = std::fs::read_to_string(tmp.path().join("webpair/style.css")).expect("read");
+    write(tmp.path(), "webpair/style.css", &format!("{css}.ghost {{ color: red; }}\n"));
+    ddd(tmp.path())
+        .args(["report", "escapes"])
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::contains("orphan-class `btn-primary`")
+                .and(predicate::str::contains("dead-selector `.ghost`")),
+        );
+}

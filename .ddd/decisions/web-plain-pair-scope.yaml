@@ -1,0 +1,17 @@
+format: 2
+id: dec/web/plain-pair-scope
+title: The pair adapter governs plain HTML+CSS only; Razor/Blazor deferred, JS/TS out
+rationale: >
+  The M7 governed unit is the plain HTML+CSS pair. Razor/Blazor routes
+  partly through the C# adapter and is deferred until demand evidence
+  exists; JS/TS is out of scope entirely — a `<script>` tag's contents are
+  opaque bytes to this adapter, never parsed. Context&'s visual
+  deliverables are single-file HTML+CSS, so the plain pair is where the
+  demand is; widening the class before that demand shifts would buy
+  adapter surface no observed failure asks for.
+principal: Emil (Context&)
+based_on:
+  - claim: DDD-web-01
+    status: reported
+    changed: 2026-08-10
+date: 2026-08-10

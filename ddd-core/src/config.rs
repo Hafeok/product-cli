@@ -40,6 +40,35 @@ pub struct DddConfig {
     /// (format 3), e.g. `adapter.csharp.internal_is_surface`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub adapter: Option<BTreeMap<String, AdapterEntry>>,
+    /// The HTML+CSS pair map plus its class-contract thresholds (format 4).
+    /// The keys are routing data; what a pair *means* stays in the
+    /// `htmlcss` adapter (M7, same rule as `adapter.*`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pair: Option<PairConfig>,
+}
+
+/// The governed HTML+CSS pairs plus the thresholds the class-contract
+/// check reads (format 4). Thresholds are data, never code.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PairConfig {
+    /// The pair units: each is one governed HTML+owned-CSS seam.
+    #[serde(default)]
+    pub units: Vec<PairUnit>,
+    /// Decorative one-off class globs, exempt from the class contract.
+    #[serde(default)]
+    pub ignore_classes: Vec<String>,
+}
+
+/// One governed pair: the HTML documents and the CSS they own, as
+/// repo-relative globs.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PairUnit {
+    #[serde(default)]
+    pub html: Vec<String>,
+    #[serde(default)]
+    pub css: Vec<String>,
 }
 
 /// One language's adapter switches (format 3).
@@ -91,6 +120,19 @@ pub struct DetectConfig {
     /// `--sarif` on the CLI appends to this list.
     #[serde(default)]
     pub sarif: Vec<String>,
+    /// stylelint JSON output files — the emitted source for the
+    /// `stylelint` namespace (format 4).
+    #[serde(default)]
+    pub stylelint: Vec<String>,
+    /// html-validate JSON output files — the emitted source for the
+    /// `htmlvalidate` namespace (format 4).
+    #[serde(default)]
+    pub htmlvalidate: Vec<String>,
+    /// Design-token stylesheets: each registered file's custom properties
+    /// become the configured source for the `tokens` namespace, so a token
+    /// resolves through `why` to its decision (format 4).
+    #[serde(default)]
+    pub tokens: Vec<String>,
 }
 
 impl DiffConfig {
@@ -145,6 +187,7 @@ impl Default for DddConfig {
             detect: None,
             intercept_by_class: None,
             adapter: None,
+            pair: None,
         }
     }
 }

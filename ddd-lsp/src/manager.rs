@@ -103,6 +103,7 @@ impl HostManager {
     pub fn warm_all(&mut self, languages: Option<&[String]>) -> Vec<(String, Result<Readiness>)> {
         let selected: Vec<&'static str> = adapter::all()
             .iter()
+            .filter(|a| a.hosted)
             .map(|a| a.language)
             .filter(|l| languages.map(|ls| ls.iter().any(|x| x == l)).unwrap_or(true))
             .collect();

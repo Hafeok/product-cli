@@ -172,6 +172,18 @@ fn config_gate_checks(c: &crate::config::DddConfig) -> Vec<Violation> {
             "intercept_by_class/adapter sections are format 3 — declare `format: 3`".to_string(),
         ));
     }
+    let detect_v4 = c
+        .detect
+        .as_ref()
+        .map(|d| !d.stylelint.is_empty() || !d.htmlvalidate.is_empty() || !d.tokens.is_empty())
+        .unwrap_or(false);
+    if c.format < 4 && (c.pair.is_some() || detect_v4) {
+        out.push(fault(
+            "config.yaml",
+            "format",
+            "the pair section plus detect.stylelint/htmlvalidate/tokens are format 4 — declare `format: 4`".to_string(),
+        ));
+    }
     out.extend(intercept_mode_checks(c));
     out
 }

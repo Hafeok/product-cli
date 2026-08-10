@@ -6,6 +6,7 @@
 //! language beyond routing into `ddd-lsp`'s adapter registry.
 
 pub mod dispatch;
+pub mod edits;
 pub mod govern_tools;
 pub mod intercept;
 pub mod lang_tools;

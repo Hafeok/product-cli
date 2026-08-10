@@ -17,7 +17,8 @@ use ddd_lsp::protocol::{flatten_symbols, position_params, to_uri};
 use ddd_lsp::surface::{ChangeKind, SurfaceEvent};
 use serde_json::{json, Value};
 
-use crate::state::{opt_str, raw_str, req_str, ServeState};
+use crate::edits::{read_or_empty, resolve_new_text};
+use crate::state::{opt_str, req_str, ServeState};
 use crate::state::Declared;
 
 pub fn apply_edit(state: &ServeState, args: &Value) -> Result<Value, String> {
@@ -42,37 +43,55 @@ pub fn apply_edit(state: &ServeState, args: &Value) -> Result<Value, String> {
         }
         return Ok(json!({"status": "applied", "intercepted": false, "mode": "off"}));
     }
+    if !adapter.hosted {
+        // A hostless producer (the HTML+CSS pair): classification runs on
+        // source text alone — no document to open, no references to count.
+        return intercept(state, None, adapter, &flags, &config, &mode, &file, &old_text, &new_text);
+    }
     crate::lang_tools::with_ready_host(state, args, Some(&file), |host| {
-        intercept(state, host, adapter, &flags, &mode, &file, &old_text, &new_text)
+        intercept(state, Some(host), adapter, &flags, &config, &mode, &file, &old_text, &new_text)
     })
 }
 
 /// The classified path: diff the symbol surfaces, decide per PRD §8.
-/// The caller holds the manager lock through `host` — nothing here may
-/// lock the manager again.
+/// The caller holds the manager lock through a `Some` host — nothing here
+/// may lock the manager again. `None` is the hostless path: empty symbol
+/// slices in (the facts fn parses text), no reference counts out.
 #[allow(clippy::too_many_arguments)]
 fn intercept(
     state: &ServeState,
-    host: &mut Host,
+    mut host: Option<&mut Host>,
     adapter: &'static Adapter,
     flags: &ddd_lsp::adapter::AdapterFlags,
+    config: &ddd_core::config::DddConfig,
     mode: &str,
     file: &Path,
     old_text: &str,
     new_text: &str,
 ) -> Result<Value, String> {
-    host.ensure_open(file).map_err(|e| e.to_string())?;
-    let before = symbols(host, file)?;
-    host.overlay(file, new_text).map_err(|e| e.to_string())?;
-    let after = symbols(host, file)?;
-    let events = classify_edit(adapter, flags, old_text, &before, new_text, &after);
+    let (before, after) = match host.as_deref_mut() {
+        Some(h) => {
+            h.ensure_open(file).map_err(|e| e.to_string())?;
+            let before = symbols(h, file)?;
+            h.overlay(file, new_text).map_err(|e| e.to_string())?;
+            (before, symbols(h, file)?)
+        }
+        None => (Vec::new(), Vec::new()),
+    };
+    let mut events = classify_edit(adapter, flags, old_text, &before, new_text, &after);
+    if let Some(enrich) = adapter.enrich {
+        enrich(&state.root, file, config, &mut events);
+    }
     let surface: Vec<SurfaceEvent> = events.into_iter().filter(|e| e.surface).collect();
     if surface.is_empty() {
         write_disk(file, new_text)?;
         return Ok(json!({"status": "applied", "intercepted": true, "mode": mode,
                           "surface_events": 0}));
     }
-    let counts = reference_counts(host, file, old_text, new_text, &surface);
+    let counts = match host.as_deref_mut() {
+        Some(h) => reference_counts(h, file, old_text, new_text, &surface),
+        None => vec![None; surface.len()],
+    };
     let warning = (adapter.posture_warning)(file, flags);
     let rel = state.rel_display(file);
     if mode == "warn" {
@@ -103,7 +122,9 @@ fn intercept(
         }));
     }
     // Reject: put the host back on the disk state, demand declarations.
-    host.overlay(file, old_text).map_err(|e| e.to_string())?;
+    if let Some(h) = host {
+        h.overlay(file, old_text).map_err(|e| e.to_string())?;
+    }
     let unmatched: Vec<usize> =
         matches.iter().enumerate().filter(|(_, m)| m.is_none()).map(|(i, _)| i).collect();
     let only_unmatched: Vec<SurfaceEvent> =
@@ -122,71 +143,6 @@ fn intercept(
 
 fn write_disk(file: &Path, new_text: &str) -> Result<(), String> {
     product_core::fileops::write_file_atomic(file, new_text).map_err(|e| e.to_string())
-}
-
-fn read_or_empty(file: &Path) -> Result<String, String> {
-    if file.exists() {
-        std::fs::read_to_string(file).map_err(|e| format!("{}: {e}", file.display()))
-    } else {
-        Ok(String::new())
-    }
-}
-
-fn resolve_new_text(args: &Value, old_text: &str) -> Result<String, String> {
-    // `raw_str`: this value is a whole file, so trimming it loses a newline.
-    if let Some(text) = raw_str(args, "new_text") {
-        return Ok(text);
-    }
-    let edits = args
-        .get("edits")
-        .and_then(Value::as_array)
-        .ok_or("give `new_text` (full content) or `edits` (range edits)")?;
-    apply_range_edits(old_text, edits)
-}
-
-/// Apply LSP-style range edits (applied last-to-first so earlier offsets
-/// stay valid).
-fn apply_range_edits(text: &str, edits: &[Value]) -> Result<String, String> {
-    let mut offsets: Vec<(usize, usize, String)> = Vec::new();
-    for edit in edits {
-        let pos = |leaf: &str| -> Result<usize, String> {
-            let line = edit.pointer(&format!("/range/{leaf}/line")).and_then(Value::as_u64);
-            let ch = edit.pointer(&format!("/range/{leaf}/character")).and_then(Value::as_u64);
-            match (line, ch) {
-                (Some(l), Some(c)) => byte_offset(text, l as usize, c as usize),
-                _ => Err("edit range missing line/character".to_string()),
-            }
-        };
-        let new = edit
-            .get("new_text")
-            .or_else(|| edit.get("newText"))
-            .and_then(Value::as_str)
-            .ok_or("edit missing new_text")?;
-        offsets.push((pos("start")?, pos("end")?, new.to_string()));
-    }
-    offsets.sort_by_key(|e| std::cmp::Reverse(e.0));
-    let mut out = text.to_string();
-    for (start, end, new) in offsets {
-        if start > end || end > out.len() {
-            return Err("edit range out of bounds".to_string());
-        }
-        out.replace_range(start..end, &new);
-    }
-    Ok(out)
-}
-
-fn byte_offset(text: &str, line: usize, character: usize) -> Result<usize, String> {
-    let mut offset = 0usize;
-    for (i, l) in text.split_inclusive('\n').enumerate() {
-        if i == line {
-            return Ok(offset + character.min(l.len()));
-        }
-        offset += l.len();
-    }
-    if line == 0 {
-        return Ok(character.min(text.len()));
-    }
-    Err(format!("line {line} beyond end of file"))
 }
 
 fn symbols(host: &mut Host, file: &Path) -> Result<Vec<ddd_lsp::protocol::RawSymbol>, String> {
