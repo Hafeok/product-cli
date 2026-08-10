@@ -124,6 +124,31 @@ fn cs_visibility_flip_is_judged_at_the_more_exposed_side() {
     assert!(surface_rules(&cs(CS_BASE, &sideways)).is_empty());
 }
 
+/// `dec/ddd/enum-member-gap-priced`: the DDD-adapter-03 hole, closed. A
+/// member added to a public enum is demanded; the same edit on an internal
+/// enum is not (the app-repo posture caps it below EXPOSED).
+#[test]
+fn cs_enum_member_addition_triggers_on_public_enum_not_internal() {
+    let grown = edit(CS_BASE, "    Active,\n", "    Active,\n    Escalated,\n");
+    let evts = cs(CS_BASE, &grown);
+    assert_eq!(surface_rules(&evts), vec!["cs-enum-member"], "{evts:?}");
+    let added: Vec<_> = evts.iter().filter(|e| e.facts.name == "Escalated").collect();
+    assert_eq!(added[0].facts.kind, "enum-member");
+    assert_eq!(added[0].facts.visibility, "public");
+    let internal_grown = edit(CS_BASE, "    On,\n", "    On,\n    Auto,\n");
+    let evts = cs(CS_BASE, &internal_grown);
+    assert!(surface_rules(&evts).is_empty(), "{evts:?}");
+    assert_eq!(evts[0].rule, Some("cs-internal-nonsurface"));
+}
+
+/// Removal breaks consumers the same way (their arms stop compiling), so the
+/// row demands it too.
+#[test]
+fn cs_enum_member_removal_is_surface() {
+    let shrunk = edit(CS_BASE, "    Active,\n    Suspended,\n", "    Active,\n");
+    assert_eq!(surface_rules(&cs(CS_BASE, &shrunk)), vec!["cs-enum-member"]);
+}
+
 #[test]
 fn cs_container_visibility_caps_members() {
     let after = edit(

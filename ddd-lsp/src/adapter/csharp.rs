@@ -40,9 +40,12 @@ fn posture_warning(file: &std::path::Path, flags: &AdapterFlags) -> Option<Strin
     }
 }
 
+/// `enum-member` is present per `dec/ddd/enum-member-gap-priced`: LSP kind 22
+/// used to be dropped here before any row was consulted, which is the silent
+/// hole `DDD-adapter-03` reports.
 const DECL_KINDS: &[&str] = &[
-    "class", "interface", "struct", "enum", "method", "property", "field", "constructor",
-    "event", "interface-member",
+    "class", "interface", "struct", "enum", "enum-member", "method", "property", "field",
+    "constructor", "event", "interface-member",
 ];
 const EXPOSED: &[&str] = &["public", "protected"];
 
@@ -67,6 +70,15 @@ const BASE_ROWS: &[PolicyRow] = &[
         exported_only: false,
         surface: true,
         claim: "a new or changed member on an exposed interface forces every implementor",
+    },
+    PolicyRow {
+        id: "cs-enum-member",
+        changes: &[ChangeKind::Added, ChangeKind::Removed],
+        kinds: &["enum-member"],
+        visibilities: EXPOSED,
+        exported_only: false,
+        surface: true,
+        claim: "a member added to or removed from an exposed enum breaks every consumer whose switch expression was exhaustive (DDD-adapter-03)",
     },
     PolicyRow {
         id: "cs-add-exposed",
@@ -168,7 +180,16 @@ fn facts(text: &str, symbols: &[RawSymbol], flags: &AdapterFlags) -> Vec<SymbolF
         if !DECL_KINDS.contains(&kind.as_str()) {
             continue;
         }
-        let decl = declaration_slice(&lines, sym.start_line as usize);
+        // An enum member is one line with no terminator token, so the
+        // generic slice would run on into the following declarations.
+        let decl = if kind == "enum-member" {
+            lines
+                .get(sym.start_line as usize)
+                .map(|l| l.trim().trim_end_matches(',').to_string())
+                .unwrap_or_default()
+        } else {
+            declaration_slice(&lines, sym.start_line as usize)
+        };
         let own_vis = declared_visibility(&decl, sym);
         let container_vis =
             effective.get(&sym.container).cloned().unwrap_or_else(|| "public".to_string());
@@ -304,8 +325,11 @@ fn declared_visibility(decl: &str, sym: &RawSymbol) -> String {
     default_visibility(sym)
 }
 
+/// Interface members (container kind 11) and enum members (container kind
+/// 10) carry no modifier and are as exposed as their container — the cap in
+/// [`cap_visibility`] brings them down to it.
 fn default_visibility(sym: &RawSymbol) -> String {
-    if sym.container_kind == 11 {
+    if sym.container_kind == 11 || sym.container_kind == 10 {
         "public".to_string()
     } else if sym.container.is_empty() {
         "internal".to_string()
