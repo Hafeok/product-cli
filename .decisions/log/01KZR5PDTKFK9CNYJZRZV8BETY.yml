@@ -1,0 +1,22 @@
+format: 1
+id: cs:01KZR5PDTKFK9CNYJZRZV8BETY
+created_at: 2026-08-11T10:25:37.615835823Z
+created_by: noreply@anthropic.com
+decisions:
+- id: dec:hafeok.ledger/01KZR5PDTKMT7Z7R29AXMFRCWV
+  created_at: 2026-08-11T10:25:37.615835823Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ledger/01KZR5PDTKMT7Z7R29AXMFRCWV
+  hash: sha256:b72a4aef034bead5739179511d64b1decc9e76cb2a9f3d382953f291cceeb2d7
+  set: ledger-design
+  statement: 'Acceptances never survive reconciliation. Acceptance signs a version hash; a reconciliation that produces a new version produces an unaccepted version — the prior acceptances remain in the log as historical facts about the exact versions they signed, and the reconciled version awaits fresh acceptance. No transfer, no inheritance, no close-enough: the same law as revise — content moves, acceptance does not follow it.'
+  allocation: constraint
+  discharge:
+  - analyzer:ledger-merge.reconciled-version-unaccepted
+  tolerance_floor_at_creation: T1
+  tolerance_override: T2
+  based_on:
+  - prd:decision-ledger-prd#4.3
+  - format:ledger-format-migrations#format-2-spec-v1.3
+  - ruling:emil-2026-08-11#acceptance-never-transfers
