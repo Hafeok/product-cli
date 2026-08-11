@@ -1,0 +1,25 @@
+format: 1
+id: cs:01KZRBQ3YWP1VJ67E7QRCC7YYD
+created_at: 2026-08-11T12:10:51.735665866Z
+created_by: noreply@anthropic.com
+decisions:
+- id: dec:hafeok.ledger/01KZRBQ3YVCY8NJDR5RJ7QYFDK
+  created_at: 2026-08-11T12:10:51.735665866Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ledger/01KZRBQ3YVCY8NJDR5RJ7QYFDK
+  hash: sha256:3eda836d811b3d4f0671e71cbaff92c4e6e5db7a6bde078b8ae4133ef9c8f43b
+  set: ledger-design
+  statement: 'Acceptance signing upgrades from claimed identity to certificate-based signatures at the next free spec revision — v1.4 / format 3, since L3 consumed v1.2 and v1.3 — additive, in the signature field L0 reserved. Five rulings: (1) the signature covers a canonical acceptance payload — decision id, version hash, actor identity, signing timestamp — detached, never a commit signature: an acceptance must attest that a named human bound themselves to a specific version hash, and a payload signature survives export, replay into another substrate, and entry movement, where a commit signature attests only that someone committed; L009 is unchanged and independent, blame attesting authorship while the signature attests acceptance. (2) Formats are git''s own gpg.format trio — openpgp, ssh, x509 — with X.509 the bridge to the org product, where Entra-issued certificates make dev-side and org-side identity one mechanism. (3) Tier-gated, not universal: signature required above the tolerance floor (T2 signed; T1 claimed identity from git config as today), the dev-side analogue of the org product''s step-up auth derived from the same OD-4 floor mechanism — and because the floor is up-only, the signature requirement cannot be shopped out of either. (4) The trust root — an allowed-signers set recording which keys are authorised for which identity — is a governed artifact: itself a set of decisions, living in the ledger. The bootstrap regress does not close: the first trust-root entry is an explicitly-named genesis entry, self-attested and conspicuous, never disguised as ordinary. (5) Validity is judged at the recorded signing timestamp, so routine key rotation never retroactively invalidates history; a since-revoked key raises a review finding — acceptances exist under a since-revoked key — never auto-invalidation. This is OD-3''s scheduled upgrade path, not a reversal: claimed identity was always the L0 answer and the reserved field was the planned door. Basis, typed honestly: ruling 1 rests on a constraint — a commit signature structurally cannot bind a named human to a version hash across substrates — while the mechanism choices in rulings 2–4 rest on a stated preference for git-native signing and Entra-aligned org identity; no measured claim exists here and none is manufactured. Open sub-questions for the L6 session: whether the signature payload reuses the format''s canonicalisation or takes a distinct domain-separation prefix; where allowed-signers entries live in the store layout; whether X.509 chain validation runs in-process or shells out to git.'
+  allocation: constraint
+  discharge:
+  - analyzer:ledger-signing.tier-signature-required
+  - analyzer:ledger-signing.revoked-key-review
+  tolerance_floor_at_creation: T1
+  tolerance_override: T2
+  based_on:
+  - prd:decision-ledger-prd#4.5
+  - prd:decision-ledger-prd#11-L6
+  - ruling:emil-2026-08-11#certificate-signing
+  - constraint:commit-signature-cannot-bind-version-hash
+  - preference:git-native-signing-entra-alignment
