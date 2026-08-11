@@ -174,6 +174,65 @@ Consequences, priced:
 - Expired acceptances are a verify failure, not a warning
 - No mutation of any object after write; corrections are new versions, reversals are Revocations
 
+### 4.5 Acceptance signatures — planned, not implemented (OD-3's scheduled upgrade)
+
+Ruled 2026-08-11 (principal: Emil), scheduled as milestone **L6** and spec
+**v1.4 / `format: 3`** — the migration record's original "populating
+`signature` is a `format: 2`" slot was consumed by L3's `merged_from`, so the
+signing bump renumbers; nothing else about the plan changes. **None of this
+is implemented.** The normative answer today remains OD-3's claimed identity;
+this section exists so an L6 session can be prompted from it alone. It lives
+under the data model because the signature is a property of the `Acceptance`
+entity and its canonical payload — the sibling of §4.3's version hash — and
+because the trust root is itself ledger content, not an external integration.
+
+Five rulings:
+
+1. **Sign the acceptance payload, not the commit.** The signature covers a
+   canonical payload — decision id, version hash, actor identity, signing
+   timestamp — and is stored detached, in the `signature` field L0 reserved.
+   A signed commit attests that someone committed; an acceptance must attest
+   that a named human bound themselves to a specific version hash. The
+   payload signature survives export, replay into another substrate (the Org
+   Ledger import), and entry movement; a commit signature survives none of
+   those. `L009`'s blame check is unchanged and independent: blame attests
+   authorship of the introducing commit, the signature attests acceptance.
+2. **Formats are git's own** — `gpg.format`: `openpgp` | `ssh` | `x509`.
+   SSH and X.509 are the practical paths; X.509 is the bridge to the org
+   product, where Entra-issued certificates make dev-side and org-side
+   identity one mechanism rather than two.
+3. **Tier-gated, not universal.** A signature is required above the
+   tolerance floor: T2 acceptances are signed; T1 keeps today's claimed
+   identity from git config. This is the dev-side analogue of the org
+   product's step-up auth, derived from the same OD-4 floor mechanism — and
+   because the floor is up-only, the signature requirement cannot be shopped
+   out of either.
+4. **The trust root is a governed artifact.** An allowed-signers set (git's
+   `gpg.ssh.allowedSignersFile` is the precedent; X.509 uses CA trust)
+   records which keys are authorised for which identity. It is itself a set
+   of decisions and lives in the ledger. The bootstrap regress does not
+   close: the first trust-root entry is an explicitly-named **genesis**
+   entry, self-attested and conspicuous, never disguised as ordinary.
+5. **Validity at signing time; revocation raises a finding.** Signature
+   validity is evaluated against the recorded signing timestamp, so routine
+   key rotation does not retroactively invalidate history. A key revoked
+   after the fact produces a review trigger — "acceptances exist under a
+   since-revoked key" — never auto-invalidation.
+
+Two verify classes are **named now, implemented at L6**, joining the file
+gate by the same spec-amendment mechanism that added `L010` (the closed
+count of ten becomes twelve when the revision lands):
+
+- **`L011`** — an acceptance whose effective tier requires a signature
+  carries none, or carries one that does not verify against the trust root
+  as of its signing timestamp.
+- **`L012`** — acceptances exist under a since-revoked key: a review
+  trigger per ruling 5, reported as a finding, never as retroactive
+  invalidation of the acceptance.
+
+Hashing is unaffected throughout: the signature is *over* the version hash,
+never inside it — no digest moves and `CANONICAL_FORM` stays `v1`.
+
 ---
 
 ## 5. Storage architecture
@@ -396,7 +455,7 @@ Five numbers. Without them the tool is ceremony.
 
 ## 11. Milestones
 
-Prefixed **L0–L5** — the ddd tool's track keeps M1–M8 (its kickoff prompts shipped under those
+Prefixed **L0–L6** — the ddd tool's track keeps M1–M8 (its kickoff prompts shipped under those
 names); unprefixed "M*n*" in any cross-document reference means the ddd track.
 
 **L0 — Format and gate. SHIPPED 2026-08-10.** File schema, canonicalisation, hashing, `verify`. No graph, no merge. Deliverable: a CI gate that fails on unallocated decisions, incomplete escapes, and expired acceptances. *This alone is usable and carries a large share of the value.* Implemented as the `ledger-core` / `ledger-cli` workspace members; the format is specified independently in `ledger-format-v1.md` (the document the Org Ledger imports) with its migration record in `ledger-format-migrations.md`. The gate fails for a schema fault plus nine classes and nothing else; pendency is status, not a violation.
@@ -429,6 +488,26 @@ findings; cross-namespace fetch for seam decisions; `instruments`; toolchain int
 LLM-as-staff, every mutation a ledger append. Signing UX per OD-3. Until it ships, curation runs
 on the PR-review interim.
 
+**L6 — Certificate-based acceptance signing. RULED 2026-08-11; UNIMPLEMENTED.**
+The §4.5 rulings, delivered: spec v1.4 / `format: 3` with the reserved
+`signature` field live; payload canonicalisation for signatures (the
+canonical acceptance payload — decision id, version hash, actor, signing
+timestamp — detached signature over it, never over a commit); the three git
+formats (`gpg.format` openpgp | ssh | x509, X.509 as the Entra bridge to the
+org product); tier gating (signature required above the tolerance floor —
+T2 signed, T1 claimed — riding OD-4's up-only floor so the requirement
+cannot be shopped out of); trust-root entries in the ledger with an
+explicitly-named genesis entry; revocation-as-finding (validity judged at
+signing time); and the verification wiring for `L011`/`L012` (ten file-gate
+classes become twelve by the `L010` mechanism). **No code exists for any of
+this** — no format v1.4 parsing, no signature verification, no classes
+wired; §4.5 plus this row is the whole deliverable so far, and an L6
+session should be promptable from the PRD alone. Open sub-questions that
+session must settle: whether the signature payload reuses §4-of-the-format's
+canonicalisation or takes a distinct domain-separation prefix; where
+allowed-signers entries live in the store layout; whether X.509 chain
+validation runs in-process or shells out to git.
+
 ---
 
 ## 12. Open decisions
@@ -451,7 +530,11 @@ Named, not filled. Each should be settled before the milestone that depends on i
   the dev product does not pretend to. Two limits are stated in `ledger-format-v1.md` rather than
   hidden: the model-identity list is a floor and not a proof, and an acceptance with no
   introducing commit is *skipped*, never failed — otherwise no acceptance could ever be
-  committed. Shipped in L0 as classes `L006` and `L009`.
+  committed. Shipped in L0 as classes `L006` and `L009`. *Upgrade scheduled 2026-08-11:
+  §4.5 / L6 populate the reserved `signature` field with certificate-based, tier-gated
+  signing (spec v1.4 / `format: 3`). Claimed identity was always the L0 answer and the
+  reserved field was the planned door — L6 walks through it. A scheduled stage of this
+  resolution, not a reversal of it.*
 - **OD-4 — Tolerance granularity. RESOLVED 2026-08-10 (principal: Emil).** Per-set **floor** with
   per-decision **up-only override** (§4.2.1). Below-floor states are unrepresentable rather than
   policed; effective tier is hashed content; floor-raising re-opens stranded acceptances;
