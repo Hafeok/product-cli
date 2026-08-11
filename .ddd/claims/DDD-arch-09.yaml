@@ -12,9 +12,8 @@ evidence: >
   events by symbol (the file arm dropped at enforce per
   dec/ddd/enforce-matching-tightens-to-symbol), with no subject content
   hash and no base revision on the declaration — any same-session edit
-  touching the declared symbol is applied-linked. Reported by the 2026-08
-  PRD review (lands at docs/reviews/ddd-cli-prd-review-2026-08.md;
-  document pending receipt).
+  touching the declared symbol is applied-linked. Reported by the 2026-08 PRD review
+  (docs/reviews/ddd-cli-prd-review-2026-08.md).
 falsifier: >
   A demonstration that symbol-scoped session matching cannot link a
   declaration to a change other than the one it was written for — e.g.

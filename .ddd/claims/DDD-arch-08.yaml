@@ -12,8 +12,8 @@ evidence: >
   arrive that way, and neither `ddd diff` nor `ddd report escapes`
   computes contract-surface coverage after the fact. The M6 report §5.3
   ("routing to the interceptor is voluntary") states the same limit for
-  the tool's own repo. Reported by the 2026-08 PRD review (lands at
-  docs/reviews/ddd-cli-prd-review-2026-08.md; document pending receipt).
+  the tool's own repo. Reported by the 2026-08 PRD review
+  (docs/reviews/ddd-cli-prd-review-2026-08.md).
 falsifier: >
   A demonstration that every contract-surface change in a governed repo
   necessarily routes through ddd_apply_edit — an edit-path inventory
