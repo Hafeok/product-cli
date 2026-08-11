@@ -137,7 +137,7 @@ fn claim_format_gates(c: &Claim) -> Vec<Violation> {
 /// loss. Typed bases are format 5; a format-5 decision types every basis,
 /// a claim basis always pins, and a non-claim basis states what it is.
 fn decision_format_gates(d: &crate::decision::Decision) -> Vec<Violation> {
-    use crate::decision::{BasedOn, BasisType};
+    use crate::decision::BasedOn;
     let mut out = Vec::new();
     let mut push = |path: &str, message: String| out.push(fault(&d.id, path, message));
     let claim_edges = d.based_on.iter().filter(|b| b.claim_id().is_some()).count();
@@ -162,30 +162,45 @@ fn decision_format_gates(d: &crate::decision::Decision) -> Vec<Violation> {
         );
     }
     for basis in &d.based_on {
-        let BasedOn::Typed(t) = basis else { continue };
-        match t.basis_type {
-            BasisType::Claim => push(
-                "based_on",
-                "a `type: claim` basis pins claim/status/changed like any claim edge — a claim basis with no pin hides its basis loss".to_string(),
-            ),
-            BasisType::RiskAcceptance => {
-                if t.reference.as_deref().map(str::trim).unwrap_or("").is_empty() {
-                    push(
-                        "based_on",
-                        "a `type: risk-acceptance` basis must `ref:` the risk-acceptance record it rests on".to_string(),
-                    );
-                }
+        if let BasedOn::Typed(t) = basis {
+            out.extend(typed_basis_gates(&d.id, t));
+        }
+    }
+    out
+}
+
+/// A typed non-claim basis states what it rests on: a claim type must pin
+/// (so it never parses here), risk-acceptance refs its record, the rest
+/// carry a statement.
+fn typed_basis_gates(id: &str, t: &crate::decision::TypedBasis) -> Vec<Violation> {
+    use crate::decision::BasisType;
+    let blank = |o: &Option<String>| o.as_deref().map(str::trim).unwrap_or("").is_empty();
+    let mut out = Vec::new();
+    match t.basis_type {
+        BasisType::Claim => out.push(fault(
+            id,
+            "based_on",
+            "a `type: claim` basis pins claim/status/changed like any claim edge — a claim basis with no pin hides its basis loss".to_string(),
+        )),
+        BasisType::RiskAcceptance => {
+            if blank(&t.reference) {
+                out.push(fault(
+                    id,
+                    "based_on",
+                    "a `type: risk-acceptance` basis must `ref:` the risk-acceptance record it rests on".to_string(),
+                ));
             }
-            _ => {
-                if t.statement.as_deref().map(str::trim).unwrap_or("").is_empty() {
-                    push(
-                        "based_on",
-                        format!(
-                            "a `type: {}` basis must state what it rests on (`statement:`)",
-                            t.basis_type.as_str()
-                        ),
-                    );
-                }
+        }
+        _ => {
+            if blank(&t.statement) {
+                out.push(fault(
+                    id,
+                    "based_on",
+                    format!(
+                        "a `type: {}` basis must state what it rests on (`statement:`)",
+                        t.basis_type.as_str()
+                    ),
+                ));
             }
         }
     }

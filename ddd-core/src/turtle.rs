@@ -80,38 +80,7 @@ pub fn to_turtle(store: &DddStore) -> String {
             triple(&mut out, &s, &prop("refines"), &iri(r));
         }
     }
-    for d in &store.decisions {
-        let class = match d.kind {
-            DecisionKind::Decision => "Decision",
-            DecisionKind::RiskAcceptance => "RiskAcceptance",
-        };
-        let s = typed(&mut out, &d.id, class);
-        for basis in &d.based_on {
-            match basis.claim_id() {
-                Some(claim) => triple(&mut out, &s, &prop("basedOn"), &iri(claim)),
-                None => {
-                    triple(
-                        &mut out,
-                        &s,
-                        &prop("hasBasis"),
-                        &format!("\"{}\"", basis.basis_type().as_str()),
-                    );
-                    // Only a risk-acceptance basis cites a record the
-                    // ontology checks; other types' refs are free pointers.
-                    if let crate::decision::BasedOn::Typed(t) = basis {
-                        if t.basis_type == crate::decision::BasisType::RiskAcceptance {
-                            if let Some(r) = t.reference.as_deref().filter(|r| !r.trim().is_empty()) {
-                                triple(&mut out, &s, &prop("basisCites"), &iri(r));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if !d.principal.trim().is_empty() {
-            triple(&mut out, &s, &prop("principal"), &format!("\"{}\"", escape(&d.principal)));
-        }
-    }
+    decision_triples(store, &mut out);
     manifest_triples(store, &mut out);
     for p in &store.patterns {
         let s = typed(&mut out, &p.id, "PatternInstance");
@@ -123,6 +92,36 @@ pub fn to_turtle(store: &DddStore) -> String {
         typed(&mut out, &s.id, "Seam");
     }
     out
+}
+
+fn decision_triples(store: &DddStore, out: &mut String) {
+    for d in &store.decisions {
+        let class = match d.kind {
+            DecisionKind::Decision => "Decision",
+            DecisionKind::RiskAcceptance => "RiskAcceptance",
+        };
+        let s = typed(out, &d.id, class);
+        for basis in &d.based_on {
+            match basis.claim_id() {
+                Some(claim) => triple(out, &s, &prop("basedOn"), &iri(claim)),
+                None => {
+                    triple(out, &s, &prop("hasBasis"), &format!("\"{}\"", basis.basis_type().as_str()));
+                    // Only a risk-acceptance basis cites a record the
+                    // ontology checks; other types' refs are free pointers.
+                    if let crate::decision::BasedOn::Typed(t) = basis {
+                        if t.basis_type == crate::decision::BasisType::RiskAcceptance {
+                            if let Some(r) = t.reference.as_deref().filter(|r| !r.trim().is_empty()) {
+                                triple(out, &s, &prop("basisCites"), &iri(r));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if !d.principal.trim().is_empty() {
+            triple(out, &s, &prop("principal"), &format!("\"{}\"", escape(&d.principal)));
+        }
+    }
 }
 
 fn manifest_triples(store: &DddStore, out: &mut String) {
