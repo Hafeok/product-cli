@@ -9,6 +9,7 @@
 mod add;
 mod common;
 mod declare;
+mod diff_cmd;
 mod evolve;
 mod graph_cmds;
 mod init;
@@ -117,6 +118,14 @@ pub enum Commands {
         #[arg(long)]
         notes: Option<String>,
     },
+    /// Decision-level change between two revisions (semantic, never textual)
+    Diff {
+        /// `<ref>..<ref>`, or `<ref>` to compare against the working tree
+        spec: String,
+        /// Emit the report as JSON
+        #[arg(long)]
+        json: bool,
+    },
     /// Price an escape: exposure stated, review date set, acceptor claimed
     Escape {
         decision: String,
@@ -218,6 +227,7 @@ fn dispatch(command: Commands, root: Option<PathBuf>) -> Result<i32, String> {
         Commands::Declare { set, title, tolerance_floor, ground, owner, notes } => {
             declare::run(root, declare::Flags { set, title, tolerance_floor, ground, owner, notes })
         }
+        Commands::Diff { spec, json } => diff_cmd::run(root, &spec, json),
         Commands::Escape { decision, exposure, review_by } => {
             evolve::escape(root, &decision, exposure, &review_by)
         }
