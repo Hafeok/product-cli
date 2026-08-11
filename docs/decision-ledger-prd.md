@@ -254,6 +254,25 @@ Merge is per-decision. For each decision present on either side, find the common
 
 **A conflict is a question for a named acceptor, never an automatic resolution.** No `-X ours`. No auto-merge strategy. The tool presents both allocations, the ancestor, and requires an `accept` to resolve. This is the single most important behavioural constraint in the design: silently merging two different allocations of the same decision manufactures escape while displaying success.
 
+Inherited from the L1+L2 report (PR #32, "Open edges L3 inherits"):
+
+- **Merge reconciles divergent version chains, not files.** L1's stale-parent
+  refusal (`revise` against a parent that is no longer latest refuses, naming
+  L3) marks exactly where a per-decision merge base becomes necessary: two
+  writers revising from one parent each hold a change-set the other's store
+  refuses. What merge resolves is those chains — the log files themselves are
+  append-only and never in conflict.
+- **"Latest" must derive from the parent DAG, not ULID order.** The shipped L1
+  computes latest as ULID order of change-sets — the single-writer leak,
+  named: ULIDs order by one clock, and two writers' clocks prove nothing
+  about parenthood. The parent DAG (which the `G002` shape already polices)
+  is the authority; L3 derives latest from it.
+- **The supersession-fork refusal becomes an arbitration point at merge.**
+  One-superseder-per-decision is a write-time refusal in L1; when two sides
+  each superseded the same decision independently, merge cannot refuse
+  retroactively — it surfaces the fork as a conflict for a named acceptor,
+  per this section's stance.
+
 ---
 
 ## 8. Coverage
@@ -382,11 +401,16 @@ names); unprefixed "M*n*" in any cross-document reference means the ddd track.
 
 **L0 — Format and gate. SHIPPED 2026-08-10.** File schema, canonicalisation, hashing, `verify`. No graph, no merge. Deliverable: a CI gate that fails on unallocated decisions, incomplete escapes, and expired acceptances. *This alone is usable and carries a large share of the value.* Implemented as the `ledger-core` / `ledger-cli` workspace members; the format is specified independently in `ledger-format-v1.md` (the document the Org Ledger imports) with its migration record in `ledger-format-migrations.md`. The gate fails for a schema fault plus nine classes and nothing else; pendency is status, not a violation.
 
-**L1 — Local operations. SHIPPED 2026-08-10.** `declare`, `add`, `allocate`, `escape`, `revise`, `supersede`, `accept`, `revoke`, `status`, `log`, `blame` — every verb a thin shell over the gate: it builds its change-set, runs the same `verify` pass over the store-as-it-would-be, and refuses any write that introduces a finding (same class, same message; no second validation copy). ULID minting with injectable time/entropy; identity from git config per OD-3. Shipped with spec v1.1 (`L010`, the judgment-actor gap closed by the principal's ruling). Deferred from the original row: semantic `diff` (needs store-at-revision loading — L3's merge base), and `accept --class` operational semantics (the row never listed it; the scope field parses per format v1).
+**L1 — Local operations. SHIPPED 2026-08-10.** `declare`, `add`, `allocate`, `escape`, `revise`, `supersede`, `accept`, `revoke`, `status`, `log`, `blame` — every verb a thin shell over the gate: it builds its change-set, runs the same `verify` pass over the store-as-it-would-be, and refuses any write that introduces a finding (same class, same message; no second validation copy). ULID minting with injectable time/entropy; identity from git config per OD-3. Shipped with spec v1.1 (`L010`, the judgment-actor gap closed by the principal's ruling). Deferred from the original row: semantic `diff` (needs store-at-revision loading — L3's merge base), and `accept --class` operational semantics (the row never listed it; the scope field parses per format v1). The open tension on precommitment, noted here because this row owns it: a class-scoped acceptance still signs one version hash — §9.3's precommitment promises acceptance over a *class* of entries, but §4's law is that acceptance signs a content hash, and no hash ranges over future members of a class. Settling what `--class` mechanically signs is part of its deferred semantics.
 
 **L2 — Graph and coverage. SHIPPED 2026-08-10.** Embedded RDF index (`index/ledger.ttl`, byte-deterministic Turtle over the log), PROV-O acceptance provenance, `based_on` read as open-vocabulary graph edges, SHACL-style shape checks (`G001`–`G003`, a distinct `verify` stage outside the file gate's closed ten), `coverage` with the seven-state disposition vocabulary per set/namespace plus walkable supersession chains, `reindex` with the byte-identical rebuild test in CI. Built on `product-core`'s oxigraph/SPARQL infrastructure per OD-2 — `ledger-core` still has no direct graph dependency.
 
-**L3 — Merge.** Per-decision merge base, conflict classes from §7, no auto-resolution.
+**L3 — Merge.** Per-decision merge base, conflict classes from §7, no auto-resolution. Scope
+inherited from the L1+L2 report: merge reconciles divergent *version chains*, not files; "latest"
+derives from the parent DAG rather than ULID order (retiring L1's single-writer leak; `G002`
+already polices the DAG); the one-superseder-per-decision write refusal becomes an arbitration
+point at merge (§7); and semantic `diff <ref>..<ref>` lands here — it needs store-at-revision
+loading, which is the merge base.
 
 **L4 — Federation and instruments.** The upstreams manifest and lockfile (§9.4): SHA-pinned
 transitive resolution, basis-cone loading, diamond surfacing, cross-repo drift in `report`

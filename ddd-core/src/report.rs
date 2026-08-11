@@ -47,6 +47,13 @@ pub struct BasisCoverage {
     pub pinned: usize,
     /// Unpinned edges, as (decision, claim) pairs.
     pub unpinned: Vec<UnpinnedBasis>,
+    /// Format-5 non-claim bases — no pin to check; nothing statused to move.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub non_claim: usize,
+}
+
+fn is_zero(n: &usize) -> bool {
+    *n == 0
 }
 
 /// A `based_on` edge carrying no pin, so its claim may have moved unseen.
@@ -129,10 +136,15 @@ fn basis_scan(store: &DddStore) -> (Vec<BasisLoss>, BasisCoverage) {
     for d in &store.decisions {
         for basis in &d.based_on {
             let Some(pin) = basis.pin() else {
-                coverage.unpinned.push(UnpinnedBasis {
-                    decision: d.id.clone(),
-                    claim: basis.claim_id().to_string(),
-                });
+                // A non-claim basis carries no pin by design; only a claim
+                // edge without one is an uncheckable gap worth listing.
+                match basis.claim_id() {
+                    Some(claim) => coverage.unpinned.push(UnpinnedBasis {
+                        decision: d.id.clone(),
+                        claim: claim.to_string(),
+                    }),
+                    None => coverage.non_claim += 1,
+                }
                 continue;
             };
             coverage.pinned += 1;

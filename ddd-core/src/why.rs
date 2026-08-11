@@ -97,7 +97,10 @@ fn render_decision(store: &DddStore, d: &Decision, depth: usize) -> String {
     if !d.based_on.is_empty() {
         out.push_str(&format!("{p}  basedOn:\n"));
         for basis in &d.based_on {
-            let id = basis.claim_id();
+            let Some(id) = basis.claim_id() else {
+                out.push_str(&render_typed_basis(basis, depth + 2));
+                continue;
+            };
             match store.claims.iter().find(|c| c.id == id) {
                 Some(c) => {
                     out.push_str(&render_claim(c, depth + 2));
@@ -114,6 +117,23 @@ fn render_decision(store: &DddStore, d: &Decision, depth: usize) -> String {
                 None => out.push_str(&format!("{p}    {id} (claim not found)\n")),
             }
         }
+    }
+    out
+}
+
+/// A format-5 non-claim basis: its type, statement, and ref.
+fn render_typed_basis(basis: &crate::decision::BasedOn, depth: usize) -> String {
+    let p = pad(depth);
+    let crate::decision::BasedOn::Typed(t) = basis else {
+        return String::new();
+    };
+    let mut out = format!("{p}basis ({})", t.basis_type.as_str());
+    if let Some(s) = t.statement.as_deref().filter(|s| !s.trim().is_empty()) {
+        out.push_str(&format!(" — {}", s.trim()));
+    }
+    out.push('\n');
+    if let Some(r) = t.reference.as_deref().filter(|r| !r.trim().is_empty()) {
+        out.push_str(&format!("{p}  ref: {r}\n"));
     }
     out
 }

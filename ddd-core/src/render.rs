@@ -80,9 +80,21 @@ fn decisions_section(b: &mut String, store: &DddStore) {
     }
 }
 
-/// One basedOn edge with its pin state against the current claim.
+/// One basis with its pin state against the current claim; a format-5
+/// non-claim basis renders its type and statement instead of a pin.
 fn basis_line(b: &mut String, store: &DddStore, basis: &crate::decision::BasedOn) {
-    let id = basis.claim_id();
+    let Some(id) = basis.claim_id() else {
+        if let crate::decision::BasedOn::Typed(t) = basis {
+            let statement = t
+                .statement
+                .as_deref()
+                .or(t.reference.as_deref())
+                .map(|s| format!(" — {}", esc(s.trim())))
+                .unwrap_or_default();
+            let _ = writeln!(b, "<li>basis <code>{}</code>{statement}</li>", t.basis_type.as_str());
+        }
+        return;
+    };
     let current = store.claims.iter().find(|c| c.id == id);
     let state = match (basis.pin(), current) {
         (_, None) => "<span class=\"bad\">claim not found</span>".to_string(),

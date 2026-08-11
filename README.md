@@ -105,7 +105,7 @@ The workspace also ships `ddd` (crates `ddd-core`, `ddd-lsp`, `ddd-mcp`,
 `ddd-cli`), a separate tool over a separate store: a repo-local `.ddd/` graph
 of predicates, closure claims, decisions, analyzer/linter manifests, pattern
 instances, seam declarations, and interception event rows
-([PRD](docs/ddd-cli-prd.md), formats: [migrations](docs/ddd-format-migrations.md)).
+([spec](docs/ddd-v1-spec.md), [umbrella PRD](docs/ddd-cli-prd.md), formats: [migrations](docs/ddd-format-migrations.md)).
 
 ```bash
 cargo run -p ddd-cli -- init        # scaffold .ddd/

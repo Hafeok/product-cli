@@ -1,0 +1,19 @@
+format: 2
+id: DDD-method-06
+statement: >
+  Mandatory claim-basis manufactures weak claims: when ontology rule 3
+  requires every decision to rest on a claim, decisions whose real basis
+  is a constraint, mandate, preference, experiment, or priced risk get
+  backfilled with claims invented to pass validation — the exact
+  corruption of the claim graph the rule exists to prevent.
+status: projected
+falsifier: >
+  An audit of basis quality after typed basis (format 5) ships: if the
+  pre-format-5 decisions' claim bases audit as genuine — each basedOn
+  claim would have been filed on its own merits, none exists only to
+  satisfy rule 3 — the manufactured-claims mechanism did not operate
+  here and the claim dies.
+owner: none
+changed: 2026-08-11
+revalidate_by: 2027-02-11
+depends_on: []

@@ -176,6 +176,57 @@ The field is what a promoting repo checks before inheriting an entry
 SDK the destination does not run is worse than no entry, because it carries
 the catalog's authority without holding there.
 
+## Format 5 (PRD review, 2026-08)
+
+Formats 1–4 remain valid unchanged. Format 5 exists for one ruling: a
+decision's basis becomes **typed** — `claim | constraint | mandate |
+preference | experiment | risk-acceptance`. Forcing claim-basis where none
+exists manufactures weak claims to pass validation, the exact corruption
+the graph exists to prevent; the non-claim types are honest first-class
+bases instead. The `basedOn → claim` edge remains the load-bearing form
+where a claim *is* the basis.
+
+### Decisions: typed `based_on` entries
+
+A format-5 decision types **every** basis. A claim basis is the format-2
+pinned shape plus `type: claim` — the pin discipline (rule 6) carries
+forward unchanged. A non-claim basis states what it rests on; a
+`risk-acceptance` basis refs the record it rests on (which must exist in
+`decisions/` with `kind: risk-acceptance` — checked by the ontology rules):
+
+```yaml
+format: 5
+id: dec/x/y
+# ...
+based_on:
+  - type: claim
+    claim: DDD-cat-01
+    status: reported
+    changed: 2026-08-02
+  - type: preference
+    statement: Four documents beat one implementable-contract PRD
+  - type: risk-acceptance
+    ref: risk/rule/ca2007
+```
+
+Ontology rule 3 is restated accordingly: "every decision has ≥1 `basedOn`
+claim" becomes **"every decision has ≥1 typed basis"** — satisfied by a
+claim edge or by a format-5 non-claim basis. `ddd why` renders the basis
+type; basis-loss detection (`ddd report escapes`) still checks claim pins
+and counts non-claim bases separately (they carry no status that could
+move). Declaring a type under formats 1–4, leaving a basis untyped under
+format 5, a `type: claim` basis without its pin, and a non-claim basis
+with no `statement:` (or, for `risk-acceptance`, no `ref:`) are each
+validation violations.
+
+**Migrating a v1–v2 decision:** nothing forces a migration — existing
+entries stay valid under their declared format, and their untyped edges
+*read as* `type: claim` implicitly (that is what they always were; the
+plan-gate call here is no mechanical rewrite, so decision-time records
+stay byte-identical). Move to `format: 5` only when filing or re-filing a
+decision whose basis is genuinely not a claim — that is a re-decision of
+its basis, note it in `notes`.
+
 **Migrating a v1–v3 claim:** set `format: 4` and add `version_index` if the
 claim is a closure finding whose truth depends on a toolchain version. Claims
 about method, architecture or scope need no index and should stay at their

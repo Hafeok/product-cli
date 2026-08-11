@@ -1,6 +1,6 @@
 //! LSP-backed language intelligence for the ddd governance surface.
 //!
-//! Implements PRD M3 (`docs/ddd-cli-prd.md` §5.1): the tool is an LSP
+//! Implements PRD M3 (`docs/ddd-v1-spec.md` §3): the tool is an LSP
 //! *client* hosting per-language servers as stdio children — lazy start,
 //! health check, restart on crash. The LSP protocol is the only seam to
 //! language intelligence; nothing here links Roslyn or Bicep APIs. All

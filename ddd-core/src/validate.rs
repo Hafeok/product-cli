@@ -18,7 +18,7 @@ use crate::turtle;
 
 /// The entry format versions this tool validates against; each entry is
 /// checked against the version it declares (PRD §6).
-pub const SUPPORTED_FORMATS: &[u32] = &[1, 2, 3, 4];
+pub const SUPPORTED_FORMATS: &[u32] = &[1, 2, 3, 4, 5];
 
 /// Run every check over the store; empty means conformant.
 pub fn validate_store(store: &DddStore) -> Vec<Violation> {
@@ -53,7 +53,7 @@ fn format_checks(store: &DddStore) -> Vec<Violation> {
             out.push(fault(
                 id,
                 "format",
-                format!("declares format {format}; this tool validates formats 1-4"),
+                format!("declares format {format}; this tool validates formats 1-5"),
             ));
         }
     };
@@ -133,23 +133,76 @@ fn claim_format_gates(c: &Claim) -> Vec<Violation> {
 }
 
 /// Decision gates: pins are format 2, and a format-2 decision pins every
-/// edge or none (rule 6) — a half-pinned decision hides its basis loss.
+/// claim edge or none (rule 6) — a half-pinned decision hides its basis
+/// loss. Typed bases are format 5; a format-5 decision types every basis,
+/// a claim basis always pins, and a non-claim basis states what it is.
 fn decision_format_gates(d: &crate::decision::Decision) -> Vec<Violation> {
+    use crate::decision::BasedOn;
     let mut out = Vec::new();
+    let mut push = |path: &str, message: String| out.push(fault(&d.id, path, message));
+    let claim_edges = d.based_on.iter().filter(|b| b.claim_id().is_some()).count();
     let pinned = d.based_on.iter().filter(|b| b.pin().is_some()).count();
+    let typed = d.based_on.iter().filter(|b| b.is_typed()).count();
     if d.format < 2 && pinned > 0 {
-        out.push(fault(
-            &d.id,
-            "based_on",
-            "pinned basedOn edges are format 2 — declare `format: 2`".to_string(),
-        ));
+        push("based_on", "pinned basedOn edges are format 2 — declare `format: 2`".to_string());
     }
-    if d.format >= 2 && pinned < d.based_on.len() {
-        out.push(fault(
-            &d.id,
+    if d.format >= 2 && pinned < claim_edges {
+        push(
             "based_on",
-            "a format-2 decision pins every basedOn edge with the claim's status plus changed date at decision time (rule 6)".to_string(),
-        ));
+            "a format-2 decision pins every basedOn claim edge with the claim's status plus changed date at decision time (rule 6)".to_string(),
+        );
+    }
+    if d.format < 5 && typed > 0 {
+        push("based_on", "typed bases are format 5 — declare `format: 5`".to_string());
+    }
+    if d.format >= 5 && typed < d.based_on.len() {
+        push(
+            "based_on",
+            "a format-5 decision types every basis (claim | constraint | mandate | preference | experiment | risk-acceptance)".to_string(),
+        );
+    }
+    for basis in &d.based_on {
+        if let BasedOn::Typed(t) = basis {
+            out.extend(typed_basis_gates(&d.id, t));
+        }
+    }
+    out
+}
+
+/// A typed non-claim basis states what it rests on: a claim type must pin
+/// (so it never parses here), risk-acceptance refs its record, the rest
+/// carry a statement.
+fn typed_basis_gates(id: &str, t: &crate::decision::TypedBasis) -> Vec<Violation> {
+    use crate::decision::BasisType;
+    let blank = |o: &Option<String>| o.as_deref().map(str::trim).unwrap_or("").is_empty();
+    let mut out = Vec::new();
+    match t.basis_type {
+        BasisType::Claim => out.push(fault(
+            id,
+            "based_on",
+            "a `type: claim` basis pins claim/status/changed like any claim edge — a claim basis with no pin hides its basis loss".to_string(),
+        )),
+        BasisType::RiskAcceptance => {
+            if blank(&t.reference) {
+                out.push(fault(
+                    id,
+                    "based_on",
+                    "a `type: risk-acceptance` basis must `ref:` the risk-acceptance record it rests on".to_string(),
+                ));
+            }
+        }
+        _ => {
+            if blank(&t.statement) {
+                out.push(fault(
+                    id,
+                    "based_on",
+                    format!(
+                        "a `type: {}` basis must state what it rests on (`statement:`)",
+                        t.basis_type.as_str()
+                    ),
+                ));
+            }
+        }
     }
     out
 }

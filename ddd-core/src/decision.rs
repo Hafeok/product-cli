@@ -1,11 +1,15 @@
 //! Decision entries — volitional resolutions `basedOn` claims, by a principal.
 //!
 //! One flat YAML file per entry under `.ddd/decisions/`. Two kinds share the
-//! directory: `decision` (requires ≥1 `based_on` claim — ontology rule 3) plus
+//! directory: `decision` (requires ≥1 typed basis — ontology rule 3) plus
 //! `risk-acceptance` (the record a manifest suppression must cite — rule 4).
 //! Both require a named principal. Format 2 (PRD §6 rule 6) pins each
 //! `based_on` edge with the claim's status and `changed` value at decision
-//! time, so basis loss is detectable by comparing pin to current.
+//! time, so basis loss is detectable by comparing pin to current. Format 5
+//! types each basis (`claim | constraint | mandate | preference | experiment
+//! | risk-acceptance`) — a claim edge stays the load-bearing form where a
+//! claim is the basis; the other types are honest first-class bases, so no
+//! decision has to manufacture a weak claim to pass validation.
 
 use serde::{Deserialize, Serialize};
 
@@ -38,21 +42,30 @@ pub struct Decision {
     pub notes: Option<String>,
 }
 
-/// One `based_on` edge: a plain claim id (format 1) or a pinned edge
-/// carrying the claim's status plus `changed` at decision time (format 2).
+/// One basis entry: a plain claim id (format 1), a pinned claim edge
+/// carrying the claim's status plus `changed` at decision time (format 2),
+/// or a typed non-claim basis (format 5). A format-5 claim basis is the
+/// pinned form with `type: claim` declared.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum BasedOn {
     /// Format 1: the claim id alone — basis loss is not detectable.
     Plain(String),
     /// Format 2: the id plus the pin taken when the decision was made.
+    /// Format 5 adds `type: claim` on the same shape.
     Pinned(BasisPin),
+    /// Format 5: a non-claim basis, typed from the ruled vocabulary.
+    Typed(TypedBasis),
 }
 
 /// The pin on a format-2 `based_on` edge (PRD §6 rule 6).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BasisPin {
+    /// Format 5: the declared basis type; when present it must be `claim`
+    /// (any other type carries no pin and parses as `TypedBasis`).
+    #[serde(rename = "type", default, skip_serializing_if = "Option::is_none")]
+    pub basis_type: Option<BasisType>,
     /// The claim id the edge lands on.
     pub claim: String,
     /// The claim's status at decision time.
@@ -61,20 +74,85 @@ pub struct BasisPin {
     pub changed: String,
 }
 
-impl BasedOn {
-    /// The claim id the edge points at, pinned or not.
-    pub fn claim_id(&self) -> &str {
+/// A format-5 non-claim basis. What it rests on is stated, not statused:
+/// `statement` says what the constraint/mandate/preference/experiment is;
+/// `ref` points at a record where one exists (required for
+/// `risk-acceptance`, whose record lives in `decisions/`).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TypedBasis {
+    /// The basis type; never `claim` after validation (a claim basis pins).
+    #[serde(rename = "type")]
+    pub basis_type: BasisType,
+    /// What this basis is, in one honest sentence.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub statement: Option<String>,
+    /// A record the basis resolves to (`risk/...` for risk-acceptance;
+    /// optional pointer — a doc anchor, an id — for the other types).
+    #[serde(rename = "ref", default, skip_serializing_if = "Option::is_none")]
+    pub reference: Option<String>,
+}
+
+/// The ruled basis-type vocabulary (format 5).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum BasisType {
+    Claim,
+    Constraint,
+    Mandate,
+    Preference,
+    Experiment,
+    RiskAcceptance,
+}
+
+impl BasisType {
+    /// The kebab-case label, as filed.
+    pub fn as_str(self) -> &'static str {
         match self {
-            Self::Plain(id) => id,
-            Self::Pinned(pin) => &pin.claim,
+            Self::Claim => "claim",
+            Self::Constraint => "constraint",
+            Self::Mandate => "mandate",
+            Self::Preference => "preference",
+            Self::Experiment => "experiment",
+            Self::RiskAcceptance => "risk-acceptance",
+        }
+    }
+}
+
+impl BasedOn {
+    /// The claim id the edge points at; `None` for a non-claim basis.
+    pub fn claim_id(&self) -> Option<&str> {
+        match self {
+            Self::Plain(id) => Some(id),
+            Self::Pinned(pin) => Some(&pin.claim),
+            Self::Typed(_) => None,
         }
     }
 
     /// The pin, when the edge carries one.
     pub fn pin(&self) -> Option<&BasisPin> {
         match self {
-            Self::Plain(_) => None,
             Self::Pinned(pin) => Some(pin),
+            Self::Plain(_) | Self::Typed(_) => None,
+        }
+    }
+
+    /// The basis type: declared on format-5 entries, `claim` implicitly on
+    /// format 1–2 edges (the migration note states this reading).
+    pub fn basis_type(&self) -> BasisType {
+        match self {
+            Self::Plain(_) => BasisType::Claim,
+            Self::Pinned(pin) => pin.basis_type.unwrap_or(BasisType::Claim),
+            Self::Typed(t) => t.basis_type,
+        }
+    }
+
+    /// Whether the entry declares a type (the format-5 feature).
+    pub fn is_typed(&self) -> bool {
+        match self {
+            Self::Plain(_) => false,
+            Self::Pinned(pin) => pin.basis_type.is_some(),
+            Self::Typed(_) => true,
         }
     }
 }
@@ -106,8 +184,10 @@ mod tests {
         .expect("parse");
         assert_eq!(d.kind, DecisionKind::Decision);
         assert_eq!(d.based_on.len(), 1);
-        assert_eq!(d.based_on[0].claim_id(), "DDD-a-1");
+        assert_eq!(d.based_on[0].claim_id(), Some("DDD-a-1"));
         assert!(d.based_on[0].pin().is_none());
+        assert_eq!(d.based_on[0].basis_type(), BasisType::Claim);
+        assert!(!d.based_on[0].is_typed());
     }
 
     #[test]
@@ -115,12 +195,43 @@ mod tests {
         let text = "format: 2\nid: dec/x/y\ntitle: T\nrationale: R\nprincipal: Emil\nbased_on:\n  - claim: DDD-a-1\n    status: reported\n    changed: 2026-08-02\n";
         let d: Decision = serde_yaml::from_str(text).expect("parse");
         let pin = d.based_on[0].pin().expect("pinned");
-        assert_eq!(d.based_on[0].claim_id(), "DDD-a-1");
+        assert_eq!(d.based_on[0].claim_id(), Some("DDD-a-1"));
         assert_eq!(pin.status, ClaimStatus::Reported);
         assert_eq!(pin.changed, "2026-08-02");
         let out = serde_yaml::to_string(&d).expect("serialize");
         let back: Decision = serde_yaml::from_str(&out).expect("reparse");
         assert!(back.based_on[0].pin().is_some(), "pin lost on round-trip:\n{out}");
+    }
+
+    #[test]
+    fn a_format_five_typed_claim_basis_parses_as_a_pinned_edge() {
+        let text = "format: 5\nid: dec/x/y\ntitle: T\nrationale: R\nprincipal: Emil\nbased_on:\n  - type: claim\n    claim: DDD-a-1\n    status: reported\n    changed: 2026-08-02\n";
+        let d: Decision = serde_yaml::from_str(text).expect("parse");
+        assert_eq!(d.based_on[0].claim_id(), Some("DDD-a-1"));
+        assert!(d.based_on[0].pin().is_some());
+        assert_eq!(d.based_on[0].basis_type(), BasisType::Claim);
+        assert!(d.based_on[0].is_typed());
+        let out = serde_yaml::to_string(&d).expect("serialize");
+        let back: Decision = serde_yaml::from_str(&out).expect("reparse");
+        assert!(back.based_on[0].is_typed(), "type lost on round-trip:\n{out}");
+    }
+
+    #[test]
+    fn a_format_five_non_claim_basis_round_trips_with_its_type() {
+        let text = "format: 5\nid: dec/x/y\ntitle: T\nrationale: R\nprincipal: Emil\nbased_on:\n  - type: preference\n    statement: Four documents beat one\n  - type: risk-acceptance\n    ref: risk/rule/ca2007\n";
+        let d: Decision = serde_yaml::from_str(text).expect("parse");
+        assert_eq!(d.based_on[0].basis_type(), BasisType::Preference);
+        assert_eq!(d.based_on[0].claim_id(), None);
+        assert!(d.based_on[0].pin().is_none());
+        assert_eq!(d.based_on[1].basis_type(), BasisType::RiskAcceptance);
+        let out = serde_yaml::to_string(&d).expect("serialize");
+        let back: Decision = serde_yaml::from_str(&out).expect("reparse");
+        assert_eq!(back.based_on[0].basis_type(), BasisType::Preference);
+        assert_eq!(back.based_on[1].basis_type(), BasisType::RiskAcceptance);
+        match &back.based_on[1] {
+            BasedOn::Typed(t) => assert_eq!(t.reference.as_deref(), Some("risk/rule/ca2007")),
+            other => panic!("expected typed basis, got {other:?}"),
+        }
     }
 
     #[test]

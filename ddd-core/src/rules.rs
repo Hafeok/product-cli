@@ -61,7 +61,9 @@ pub const REFINES_TARGET_EXISTS: SparqlRule = SparqlRule {
     message: |row| format!("§6 rule 2: refines target '{}' does not exist in claims/", bound(row, "t")),
 };
 
-/// §6 rule 3 — every decision has at least one `basedOn` edge.
+/// §6 rule 3 — every decision has at least one typed basis: a `basedOn`
+/// claim edge (type `claim`, the load-bearing form where a claim is the
+/// basis) or a format-5 non-claim basis.
 pub const DECISION_HAS_BASIS: SparqlRule = SparqlRule {
     id: "ddd-decision-has-basis",
     focus_var: "d",
@@ -71,9 +73,10 @@ pub const DECISION_HAS_BASIS: SparqlRule = SparqlRule {
       SELECT ?d WHERE {
         ?d a <https://decisiondriven.design/ns#Decision> .
         FILTER NOT EXISTS { ?d <https://decisiondriven.design/ns#basedOn> ?c }
+        FILTER NOT EXISTS { ?d <https://decisiondriven.design/ns#hasBasis> ?b }
       }
     "#,
-    message: |_| "§6 rule 3: every decision needs at least one basedOn edge to an existing claim — none declared".to_string(),
+    message: |_| "§6 rule 3: every decision needs at least one typed basis — a basedOn claim or a format-5 non-claim basis; none declared".to_string(),
 };
 
 /// §6 rule 3 — every `basedOn` edge lands on an existing claim.
@@ -89,6 +92,25 @@ pub const BASIS_EXISTS: SparqlRule = SparqlRule {
       }
     "#,
     message: |row| format!("§6 rule 3: basedOn claim '{}' does not exist in claims/", bound(row, "c")),
+};
+
+/// §6 rule 3 — a `type: risk-acceptance` basis resolves to a risk
+/// acceptance that exists (the same demand rule 4 makes of suppressions).
+pub const BASIS_CITATION_IS_RISK_ACCEPTANCE: SparqlRule = SparqlRule {
+    id: "ddd-basis-citation-is-risk-acceptance",
+    focus_var: "d",
+    path: "based_on",
+    severity: "violation",
+    select: r#"
+      SELECT ?d ?r WHERE {
+        ?d <https://decisiondriven.design/ns#basisCites> ?r .
+        FILTER NOT EXISTS { ?r a <https://decisiondriven.design/ns#RiskAcceptance> }
+      }
+    "#,
+    message: |row| format!(
+        "§6 rule 3: risk-acceptance basis '{}' does not exist in decisions/ (kind: risk-acceptance)",
+        bound(row, "r")
+    ),
 };
 
 /// §6 rule 3 — every volitional entry names its principal.
@@ -223,6 +245,7 @@ pub static ONTOLOGY_RULES: &[SparqlRule] = &[
     REFINES_TARGET_EXISTS,
     DECISION_HAS_BASIS,
     BASIS_EXISTS,
+    BASIS_CITATION_IS_RISK_ACCEPTANCE,
     PRINCIPAL_NAMED,
     MANIFEST_GOVERNED,
     MANIFEST_DECISION_EXISTS,
