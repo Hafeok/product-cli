@@ -87,7 +87,26 @@ pub fn to_turtle(store: &DddStore) -> String {
         };
         let s = typed(&mut out, &d.id, class);
         for basis in &d.based_on {
-            triple(&mut out, &s, &prop("basedOn"), &iri(basis.claim_id()));
+            match basis.claim_id() {
+                Some(claim) => triple(&mut out, &s, &prop("basedOn"), &iri(claim)),
+                None => {
+                    triple(
+                        &mut out,
+                        &s,
+                        &prop("hasBasis"),
+                        &format!("\"{}\"", basis.basis_type().as_str()),
+                    );
+                    // Only a risk-acceptance basis cites a record the
+                    // ontology checks; other types' refs are free pointers.
+                    if let crate::decision::BasedOn::Typed(t) = basis {
+                        if t.basis_type == crate::decision::BasisType::RiskAcceptance {
+                            if let Some(r) = t.reference.as_deref().filter(|r| !r.trim().is_empty()) {
+                                triple(&mut out, &s, &prop("basisCites"), &iri(r));
+                            }
+                        }
+                    }
+                }
+            }
         }
         if !d.principal.trim().is_empty() {
             triple(&mut out, &s, &prop("principal"), &format!("\"{}\"", escape(&d.principal)));

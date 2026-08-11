@@ -32,6 +32,7 @@ fn pinned_decision(id: &str, claim: &str, status: ClaimStatus, changed: &str) ->
         rationale: "R".into(),
         principal: "Emil".into(),
         based_on: vec![BasedOn::Pinned(BasisPin {
+        basis_type: None,
             claim: claim.into(),
             status,
             changed: changed.into(),

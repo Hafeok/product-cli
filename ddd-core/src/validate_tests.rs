@@ -161,7 +161,7 @@ fn rule2_refines_cycles_are_violations() {
 fn rule3_a_decision_without_basis_is_a_violation() {
     let mut s = DddStore::default();
     s.decisions.push(decision("dec/a/orphan", &[]));
-    assert_names(&validate_store(&s), "dec/a/orphan", "at least one basedOn");
+    assert_names(&validate_store(&s), "dec/a/orphan", "at least one typed basis");
 }
 
 #[test]
