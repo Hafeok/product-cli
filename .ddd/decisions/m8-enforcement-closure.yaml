@@ -1,0 +1,29 @@
+format: 5
+id: dec/ddd/m8-enforcement-closure
+title: M8 expands to enforcement closure, not ledger integration alone
+rationale: >
+  M8 is the Decision Ledger integration plus the chain the review
+  demands: repository-diff contract-surface validation in CI sharing the
+  interception classifier, and declarations that sign the change they
+  discharge (subject symbol, before/after content hash, base revision —
+  the ledger's acceptance-signs-hash law applied to seams). Content-hash
+  basis pins pull forward into M8 with it. Interception governs the
+  governed path; CI governs the repository — the boundary claim the
+  review broke is replaced, not patched. Ruled at the 2026-08 PRD review.
+principal: Emil (Context&)
+based_on:
+  - type: claim
+    claim: DDD-arch-08
+    status: reported
+    changed: 2026-08-11
+  - type: claim
+    claim: DDD-arch-09
+    status: reported
+    changed: 2026-08-11
+date: 2026-08-11
+notes: >
+  Awaiting the principal's per-entry ratification (M5 batch discipline).
+  The roadmap statement of this scope, with the chain as M8's acceptance
+  (change -> detected contract event -> justified obligation ->
+  declaration signing the change -> durable discharge -> authoritative
+  CI result), lands in docs/ddd-roadmap.md at the document split.

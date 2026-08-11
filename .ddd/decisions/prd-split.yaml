@@ -1,0 +1,27 @@
+format: 5
+id: dec/ddd/prd-split
+title: The PRD splits; it stops being the sole implementable contract
+rationale: >
+  docs/ddd-cli-prd.md becomes a short umbrella (thesis, product identity,
+  index, history note) over four documents with one job each:
+  ddd-v1-spec.md — the implementable contract for what exists (M1-M7 as
+  built); ddd-adrs.md — the settled architecture decisions with their
+  bases; ddd-research-protocol.md — the correspondence dataset design and
+  experiment protocols with predicted and observed strictly separated;
+  ddd-roadmap.md — M8 at its enforcement-closure scope plus the filed
+  follow-ups. Ruled at the 2026-08 PRD review.
+principal: Emil (Context&)
+based_on:
+  - type: preference
+    statement: >
+      One document serving as spec, research protocol, decision record,
+      and roadmap at once serves none of them as a contract an
+      implementer can pick up cold; four documents with one job each
+      beat one that owns everything.
+date: 2026-08-11
+notes: >
+  Awaiting the principal's per-entry ratification (M5 batch discipline).
+  The split itself executes once the review document is committed at
+  docs/reviews/ddd-cli-prd-review-2026-08.md — the spec's normative
+  invariants section quotes the review near-verbatim, so the split
+  cannot honestly land before the review text does.
