@@ -82,56 +82,81 @@ pub fn load(repo_root: &Path) -> Store {
 
 fn load_sets(dir: &Path, store: &mut Store) {
     for path in yaml_files(dir) {
-        let label = file_label(&path);
-        match read_yaml::<DecisionSet>(&path) {
-            Ok(set) => {
-                check_format(&label, set.format, store);
-                if let Err(e) = DecisionSet::validate_id(&set.id) {
-                    store.schema_findings.push(Finding::schema(&label, e));
-                }
-                if stem(&path) != set.id {
-                    store.schema_findings.push(Finding::schema(
-                        &label,
-                        format!("declares id `{}` but is filed as `{}`", set.id, stem(&path)),
-                    ));
-                }
-                if store.sets.iter().any(|s| s.id == set.id) {
-                    store
-                        .schema_findings
-                        .push(Finding::schema(&label, format!("set `{}` is declared twice", set.id)));
-                }
-                store.sets.push(set);
-            }
-            Err(msg) => store.schema_findings.push(parse_fault("set", &label, &msg)),
+        match std::fs::read_to_string(&path) {
+            Ok(text) => take_set(store, &file_label(&path), &stem(&path), &text),
+            Err(e) => store.schema_findings.push(Finding::schema(&file_label(&path), e.to_string())),
         }
     }
 }
 
 fn load_log(dir: &Path, store: &mut Store) {
     for path in yaml_files(dir) {
-        let label = file_label(&path);
-        match read_yaml::<ChangeSet>(&path) {
-            Ok(file) => {
-                check_format(&label, file.format, store);
-                if stem(&path) != file.id.ulid() {
-                    store.schema_findings.push(Finding::schema(
-                        &label,
-                        format!("declares id `{}` but is filed as `{}.yml`", file.id, stem(&path)),
-                    ));
-                }
-                if store.log.iter().any(|c| c.file.id == file.id) {
-                    store.schema_findings.push(Finding::schema(
-                        &label,
-                        format!("change-set `{}` appears twice", file.id),
-                    ));
-                }
-                for fault in file.acceptances.iter().flat_map(|a| a.schema_faults()) {
-                    store.schema_findings.push(fault);
-                }
-                store.log.push(LoggedChangeSet { path, file });
-            }
-            Err(msg) => store.schema_findings.push(parse_fault("change-set", &label, &msg)),
+        match std::fs::read_to_string(&path) {
+            Ok(text) => take_log(store, path.clone(), &file_label(&path), &stem(&path), &text),
+            Err(e) => store.schema_findings.push(Finding::schema(&file_label(&path), e.to_string())),
         }
+    }
+}
+
+/// Parse one set file's text into the store. Shared by the disk loader and
+/// the at-revision loader, so both readings apply identical rules.
+pub(crate) fn take_set(store: &mut Store, label: &str, stem: &str, text: &str) {
+    match serde_yaml::from_str::<DecisionSet>(text) {
+        Ok(set) => {
+            check_format(label, set.format, store);
+            if let Err(e) = DecisionSet::validate_id(&set.id) {
+                store.schema_findings.push(Finding::schema(label, e));
+            }
+            if stem != set.id {
+                store.schema_findings.push(Finding::schema(
+                    label,
+                    format!("declares id `{}` but is filed as `{stem}`", set.id),
+                ));
+            }
+            if store.sets.iter().any(|s| s.id == set.id) {
+                store
+                    .schema_findings
+                    .push(Finding::schema(label, format!("set `{}` is declared twice", set.id)));
+            }
+            store.sets.push(set);
+        }
+        Err(e) => store.schema_findings.push(parse_fault("set", label, &e.to_string())),
+    }
+}
+
+/// Parse one change-set file's text into the store. Shared like [`take_set`].
+pub(crate) fn take_log(store: &mut Store, path: PathBuf, label: &str, stem: &str, text: &str) {
+    match serde_yaml::from_str::<ChangeSet>(text) {
+        Ok(file) => {
+            check_format(label, file.format, store);
+            if stem != file.id.ulid() {
+                store.schema_findings.push(Finding::schema(
+                    label,
+                    format!("declares id `{}` but is filed as `{stem}.yml`", file.id),
+                ));
+            }
+            if store.log.iter().any(|c| c.file.id == file.id) {
+                store.schema_findings.push(Finding::schema(
+                    label,
+                    format!("change-set `{}` appears twice", file.id),
+                ));
+            }
+            for fault in file.acceptances.iter().flat_map(|a| a.schema_faults()) {
+                store.schema_findings.push(fault);
+            }
+            // `merged_from` is the format-2 field: a file using it must
+            // declare the format that defines it.
+            if file.format < crate::format::MERGE_FORMAT
+                && file.versions.iter().any(|v| v.merged_from.is_some())
+            {
+                store.schema_findings.push(Finding::schema(
+                    label,
+                    "carries `merged_from`, a format 2 field — declare `format: 2`",
+                ));
+            }
+            store.log.push(LoggedChangeSet { path, file });
+        }
+        Err(e) => store.schema_findings.push(parse_fault("change-set", label, &e.to_string())),
     }
 }
 
@@ -157,11 +182,6 @@ fn yaml_files(dir: &Path) -> Vec<PathBuf> {
         .collect();
     out.sort();
     out
-}
-
-fn read_yaml<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T, String> {
-    let text = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
-    serde_yaml::from_str(&text).map_err(|e| e.to_string())
 }
 
 fn stem(path: &Path) -> String {

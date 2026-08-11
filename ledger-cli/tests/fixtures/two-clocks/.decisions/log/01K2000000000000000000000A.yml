@@ -1,0 +1,22 @@
+# The revision, filed under a ULID that sorts *before* its parent's file.
+# Its `parent` link is the authority; the acceptance signs this tip.
+format: 1
+id: cs:01K2000000000000000000000A
+created_at: 2026-08-10T09:20:00Z
+created_by: fixture-human@example
+versions:
+  - decision: dec:fixture.two-clocks/01K2C4YQJ3F8M0PT5W7NZ9RDXV
+    parent: sha256:b825a4d357dde085dbc6730ae80e5effc89a5b75da9a54f4d51009ffda1ab8bb
+    hash: sha256:c754a1e1e9f6947e3a496d5056729b1e91fc15271b1998850c99ab3076347a86
+    set: two-clocks
+    statement: The second writer's revision.
+    allocation: constraint
+    discharge: [analyzer:DEC001-no-float-money]
+    tolerance_floor_at_creation: T1
+acceptances:
+  - id: acc:01K2C4YQJ3F8M0PT5W7NZ9RDXX
+    decision: dec:fixture.two-clocks/01K2C4YQJ3F8M0PT5W7NZ9RDXV
+    version: sha256:c754a1e1e9f6947e3a496d5056729b1e91fc15271b1998850c99ab3076347a86
+    actor: fixture-human@example
+    at: 2026-08-10T09:25:00Z
+    expires_at: 2027-08-10

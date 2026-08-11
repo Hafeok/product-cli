@@ -77,18 +77,22 @@ fn verifying_without_a_store_says_how_to_make_one() {
 }
 
 #[test]
-fn the_surface_is_the_format_the_verbs_and_the_graph() {
-    // L1's verbs and L2's graph commands are here; L3's merge and L4's
-    // federation are deliberately absent — adding one is a milestone
-    // decision, not a drive-by.
+fn the_surface_is_the_format_the_verbs_the_graph_and_merge() {
+    // L1's verbs, L2's graph commands, and L3's merge/diff are here; L4's
+    // federation is deliberately absent — adding a command is a milestone
+    // decision, not a drive-by. The merge driver itself is plumbing and
+    // stays out of the help.
     let mut cmd = Command::cargo_bin("ledger").expect("binary");
     let out = cmd.arg("--help").output().expect("run");
     let text = stdout(&out);
-    for present in ["init", "verify", "accept", "add", "allocate", "revoke", "status", "supersede"]
-    {
+    for present in [
+        "init", "verify", "accept", "add", "allocate", "revoke", "status", "supersede", "diff",
+        "merge",
+    ] {
         assert!(text.contains(&format!("  {present}")), "{present} is missing: {text}");
     }
-    for later in ["merge", "fetch", "instruments", "import"] {
+    for later in ["fetch", "instruments", "import", "upstreams"] {
         assert!(!text.contains(&format!("  {later}")), "{later} is not shipped yet: {text}");
     }
+    assert!(!text.contains("merge-driver"), "the driver is plumbing, not surface: {text}");
 }

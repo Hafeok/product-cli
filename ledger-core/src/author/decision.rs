@@ -109,6 +109,7 @@ fn first_version(decision: &DecisionId, args: &AddArgs, floor: Tier) -> VersionR
     let mut raw = VersionRaw {
         decision: decision.clone(),
         parent: None,
+        merged_from: None,
         hash: crate::hash::VersionHash::zero(),
         set: args.set.clone(),
         statement: args.statement.clone(),

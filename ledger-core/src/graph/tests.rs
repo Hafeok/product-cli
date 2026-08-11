@@ -86,9 +86,126 @@ fn graph_findings_fail_verify_as_a_distinct_stage() {
 }
 
 #[test]
-fn the_graph_class_set_is_closed_at_three() {
-    assert_eq!(super::ALL_GRAPH_CLASSES.len(), 3);
+fn g004_a_forked_version_chain() {
+    // One root, two children claiming it as parent: two writers diverged.
+    let root = testkit::sealed(testkit::version());
+    let mut left = testkit::version();
+    left.parent = Some(root.hash.clone());
+    left.statement = "the left writer's revision".into();
+    let mut right = testkit::version();
+    right.parent = Some(root.hash.clone());
+    right.statement = "the right writer's revision".into();
+    let store = testkit::store(testkit::changeset(
+        vec![root, testkit::sealed(left), testkit::sealed(right)],
+        Vec::new(),
+    ));
+    let findings = graph_findings(&store);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].class, GraphClass::G004);
+    assert_eq!(findings[0].subject, testkit::decision_id().to_string());
+    assert!(findings[0].message.contains("merge --resolve"), "{findings:?}");
+}
+
+#[test]
+fn a_linear_chain_is_not_a_fork() {
+    let root = testkit::sealed(testkit::version());
+    let mut child = testkit::version();
+    child.parent = Some(root.hash.clone());
+    child.statement = "a revision, single-writer".into();
+    let store =
+        testkit::store(testkit::changeset(vec![root, testkit::sealed(child)], Vec::new()));
+    assert_eq!(graph_findings(&store), Vec::new());
+}
+
+#[test]
+fn a_reconciliation_closes_the_fork_it_names() {
+    // The G004 store, plus the arbitration act: a version extending the
+    // left tip that names the right tip as merged_from. One tip remains.
+    let root = testkit::sealed(testkit::version());
+    let mut left = testkit::version();
+    left.parent = Some(root.hash.clone());
+    left.statement = "the left writer's revision".into();
+    let left = testkit::sealed(left);
+    let mut right = testkit::version();
+    right.parent = Some(root.hash.clone());
+    right.statement = "the right writer's revision".into();
+    let right = testkit::sealed(right);
+    let mut reconciled = left.clone();
+    reconciled.parent = Some(left.hash.clone());
+    reconciled.merged_from = Some(right.hash.clone());
+    let reconciled = testkit::sealed(reconciled);
+    let mut cs = testkit::changeset(vec![root, left, right, reconciled], Vec::new());
+    cs.format = crate::format::MERGE_FORMAT;
+    let store = testkit::store(cs);
+    assert_eq!(graph_findings(&store), Vec::new());
+}
+
+#[test]
+fn g002_also_polices_a_dangling_merged_from() {
+    let root = testkit::sealed(testkit::version());
+    let mut merged = testkit::version();
+    merged.parent = Some(root.hash.clone());
+    merged.merged_from = Some(testkit::zero_hash());
+    merged.statement = "a reconciliation closing nothing".into();
+    let mut cs = testkit::changeset(vec![root, testkit::sealed(merged)], Vec::new());
+    cs.format = crate::format::MERGE_FORMAT;
+    let findings = graph_findings(&testkit::store(cs));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].class, GraphClass::G002);
+    assert!(findings[0].message.contains("closed nothing"), "{findings:?}");
+}
+
+#[test]
+fn g005_two_live_claimants_superseding_one_decision() {
+    let target = testkit::sealed(testkit::version());
+    let mut first = testkit::version();
+    first.decision = "dec:hafeok.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDY5".parse().expect("id");
+    first.statement = "the first claimant".into();
+    first.supersedes = Some(testkit::decision_id());
+    let mut second = testkit::version();
+    second.decision = "dec:hafeok.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDY6".parse().expect("id");
+    second.statement = "the second claimant".into();
+    second.supersedes = Some(testkit::decision_id());
+    let store = testkit::store(testkit::changeset(
+        vec![target, testkit::sealed(first), testkit::sealed(second)],
+        Vec::new(),
+    ));
+    let findings = graph_findings(&store);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].class, GraphClass::G005);
+    assert_eq!(findings[0].subject, testkit::decision_id().to_string());
+    assert!(findings[0].message.contains("merge --resolve"), "{findings:?}");
+}
+
+#[test]
+fn a_withdrawn_supersession_claim_clears_g005() {
+    // The arbitration: the losing claimant's next version drops the edge.
+    let target = testkit::sealed(testkit::version());
+    let mut first = testkit::version();
+    first.decision = "dec:hafeok.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDY5".parse().expect("id");
+    first.statement = "the first claimant".into();
+    first.supersedes = Some(testkit::decision_id());
+    let first = testkit::sealed(first);
+    let mut second = testkit::version();
+    second.decision = "dec:hafeok.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDY6".parse().expect("id");
+    second.statement = "the second claimant".into();
+    second.supersedes = Some(testkit::decision_id());
+    let second = testkit::sealed(second);
+    let mut withdrawn = second.clone();
+    withdrawn.parent = Some(second.hash.clone());
+    withdrawn.supersedes = None;
+    let withdrawn = testkit::sealed(withdrawn);
+    let store = testkit::store(testkit::changeset(
+        vec![target, first, second, withdrawn],
+        Vec::new(),
+    ));
+    assert_eq!(graph_findings(&store), Vec::new());
+}
+
+#[test]
+fn the_graph_class_set_is_closed_at_five() {
+    assert_eq!(super::ALL_GRAPH_CLASSES.len(), 5);
     let codes: Vec<&str> = super::ALL_GRAPH_CLASSES.iter().map(|c| c.code()).collect();
-    assert_eq!(codes, ["G001", "G002", "G003"]);
+    assert_eq!(codes, ["G001", "G002", "G003", "G004", "G005"]);
     assert!(super::ALL_GRAPH_CLASSES.iter().all(|c| !c.title().is_empty()));
 }

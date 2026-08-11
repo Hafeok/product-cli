@@ -68,14 +68,17 @@ pub fn canonical_json(raw: &VersionRaw) -> String {
     // pin is history, the override is authored, and keeping them apart is
     // what lets override-rate-per-set (§10) come out of hashed content.
     let VersionRaw {
-        decision, parent, hash: _, set, statement, allocation, discharge, discharge_stage,
-        actor, expectation, exposure, accepted_by, review_by, tolerance_floor_at_creation,
-        tolerance_override, based_on, supersedes,
+        decision, parent, merged_from, hash: _, set, statement, allocation, discharge,
+        discharge_stage, actor, expectation, exposure, accepted_by, review_by,
+        tolerance_floor_at_creation, tolerance_override, based_on, supersedes,
     } = raw;
     let mut m = Map::new();
     for (key, value) in [
         ("decision", Some(decision.to_string())),
         ("parent", parent.as_ref().map(ToString::to_string)),
+        // Hashed when present; omitted when absent, which is what keeps
+        // every format-1 digest stable under the format-2 addition.
+        ("merged_from", merged_from.as_ref().map(ToString::to_string)),
         ("set", Some(set.clone())),
         ("statement", Some(statement.clone())),
         ("allocation", allocation.map(|a| a.as_str().to_string())),

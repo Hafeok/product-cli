@@ -126,6 +126,52 @@ fn the_graph_stage_reports_through_verify_with_exit_one() {
     assert!(err.contains("[G001]"), "{err}");
 }
 
+// ---------------------------------------------------------------------------
+// Latest derives from the parent DAG, not from ULID order (L3).
+// ---------------------------------------------------------------------------
+
+#[test]
+fn latest_follows_the_parent_dag_when_ulid_order_contradicts_it() {
+    // The two-clocks fixture files the *root* version under the later ULID:
+    // a writer whose clock runs ahead. ULID order would call the root
+    // latest and the signed revision historical; the parent DAG knows the
+    // revision is the tip, so the store is conformant and decided.
+    let root = fixtures().join("two-clocks");
+    let out = ledger(&root, &["verify", "--today", "2026-08-10", "--no-blame"]);
+    assert_eq!(out.status.code(), Some(0), "{}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        stdout(&out).contains("conformant"),
+        "{}",
+        stdout(&out)
+    );
+
+    let status = ledger(&root, &["status", "--today", "2026-08-10"]);
+    let text = stdout(&status);
+    assert!(text.contains("[c754a1e1e9f6] decided"), "the DAG tip is latest: {text}");
+    assert!(!text.contains("awaiting"), "the acceptance signs the tip, not history: {text}");
+}
+
+#[test]
+fn g004_a_forked_chain_fails_verify_and_names_both_tips() {
+    // The forked fixture is what a plain git merge of two branches' logs
+    // produces: one parent, two divergent revisions. No file is malformed;
+    // the graph stage names the fork and the store is non-conformant until
+    // a human arbitrates.
+    let root = fixtures().join("forked");
+    let out = ledger(&root, &["verify", "--today", "2026-08-10", "--no-blame"]);
+    assert_eq!(out.status.code(), Some(1), "{}", String::from_utf8_lossy(&out.stderr));
+    let err = String::from_utf8_lossy(&out.stderr).into_owned();
+    assert!(err.contains("[G004]"), "{err}");
+    assert!(err.contains("merge --resolve"), "{err}");
+    for cls in ["L001", "L007", "SCHEMA", "G001", "G002", "G003"] {
+        assert!(!err.contains(&format!("[{cls}]")), "the fork isolates: {err}");
+    }
+
+    let status = ledger(&root, &["status", "--today", "2026-08-10"]);
+    let text = stdout(&status);
+    assert!(text.contains("chain forked into 2 tips"), "{text}");
+}
+
 /// Point the file's `supersedes:` at a ULID nobody filed.
 fn regex_replace_supersedes(text: &str) -> String {
     let mut out = String::new();

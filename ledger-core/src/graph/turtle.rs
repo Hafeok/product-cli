@@ -187,6 +187,9 @@ fn emit_version(t: &mut Triples, v: &VersionRaw, cs_iri: &str) {
     if let Some(parent) = &v.parent {
         t.add(&iri, "prov:wasRevisionOf", hash_iri(parent));
     }
+    if let Some(closed) = &v.merged_from {
+        t.add(&iri, "ledger:mergedFrom", hash_iri(closed));
+    }
 }
 
 fn emit_acceptance(t: &mut Triples, a: &Acceptance, cs_iri: &str) {

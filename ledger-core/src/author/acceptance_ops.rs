@@ -28,20 +28,32 @@ pub struct RevokeArgs {
     pub reason: String,
 }
 
+/// The one hash an acceptance may sign: the tip of the parent DAG. A
+/// forked chain has no signable tip — signing either side would bless one
+/// writer's content over the other's without an arbitration on record.
+fn signable_tip(
+    view: &View,
+    decision: &DecisionId,
+) -> Result<crate::hash::VersionHash, AuthorError> {
+    let subject = decision.to_string();
+    if view.is_forked(&subject) {
+        return Err(AuthorError::Conflict(format!(
+            "the version chain of {decision} is forked — there is no one latest version to sign; `ledger merge --resolve` arbitrates first"
+        )));
+    }
+    view.latest
+        .get(&subject)
+        .and_then(|i| view.versions.get(*i))
+        .map(|v| v.raw.hash.clone())
+        .ok_or_else(|| AuthorError::Usage(format!("{decision} has no filed version to accept")))
+}
+
 impl Author {
     /// Sign the latest version of a decision as the configured identity.
     pub fn accept(&mut self, args: AcceptArgs) -> Result<Applied, AuthorError> {
         let store = self.load();
         let view = View::build(&store);
-        let subject = args.decision.to_string();
-        let latest = view
-            .latest
-            .get(&subject)
-            .and_then(|i| view.versions.get(*i))
-            .ok_or_else(|| {
-                AuthorError::Usage(format!("{} has no filed version to accept", args.decision))
-            })?;
-        let hash = latest.raw.hash.clone();
+        let hash = signable_tip(&view, &args.decision)?;
         self.refuse_duplicate(&view, &args.decision, &hash)?;
         let acceptance = Acceptance {
             id: self.mint.mint_id("acc").map_err(AuthorError::Io)?,

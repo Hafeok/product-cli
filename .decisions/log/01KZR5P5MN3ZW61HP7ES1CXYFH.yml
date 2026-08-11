@@ -1,0 +1,22 @@
+format: 1
+id: cs:01KZR5P5MN3ZW61HP7ES1CXYFH
+created_at: 2026-08-11T10:25:29.231725932Z
+created_by: noreply@anthropic.com
+decisions:
+- id: dec:hafeok.ledger/01KZR5P5MM1WW16RXT5ERWSCWJ
+  created_at: 2026-08-11T10:25:29.231725932Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ledger/01KZR5P5MM1WW16RXT5ERWSCWJ
+  hash: sha256:c937a631dce1ac8e674bb20b60dad897b070da952be458fe284228d919f73883
+  set: ledger-design
+  statement: 'Merge is two mechanisms, never one: a git merge driver registered for .decisions/** completes the mechanical majority — disjoint decisions, disjoint sets, append-only log interleaving — and refuses anything requiring judgment with the conflict preserved and named, while ledger merge --resolve presents each conflict (both chains, the common parent, the consequences) and records the human''s arbitration as an ordinary ledger act. No auto-resolution under any framing — not last-write-wins, not newest-ULID, not longest-chain, not identical-content: if two humans decided, a human reconciles, and a merge never succeeds by picking.'
+  allocation: constraint
+  discharge:
+  - analyzer:ledger-merge.no-auto-resolution
+  tolerance_floor_at_creation: T1
+  tolerance_override: T2
+  based_on:
+  - prd:decision-ledger-prd#7
+  - prd:decision-ledger-prd#11-L3
+  - ruling:emil-2026-08-11#merge-two-mechanisms

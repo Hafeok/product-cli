@@ -405,12 +405,20 @@ names); unprefixed "M*n*" in any cross-document reference means the ddd track.
 
 **L2 — Graph and coverage. SHIPPED 2026-08-10.** Embedded RDF index (`index/ledger.ttl`, byte-deterministic Turtle over the log), PROV-O acceptance provenance, `based_on` read as open-vocabulary graph edges, SHACL-style shape checks (`G001`–`G003`, a distinct `verify` stage outside the file gate's closed ten), `coverage` with the seven-state disposition vocabulary per set/namespace plus walkable supersession chains, `reindex` with the byte-identical rebuild test in CI. Built on `product-core`'s oxigraph/SPARQL infrastructure per OD-2 — `ledger-core` still has no direct graph dependency.
 
-**L3 — Merge.** Per-decision merge base, conflict classes from §7, no auto-resolution. Scope
-inherited from the L1+L2 report: merge reconciles divergent *version chains*, not files; "latest"
-derives from the parent DAG rather than ULID order (retiring L1's single-writer leak; `G002`
-already polices the DAG); the one-superseder-per-decision write refusal becomes an arbitration
-point at merge (§7); and semantic `diff <ref>..<ref>` lands here — it needs store-at-revision
-loading, which is the merge base.
+**L3 — Merge. SHIPPED 2026-08-11.** Per-decision merge base, conflict classes from §7, no
+auto-resolution. Scope inherited from the L1+L2 report, delivered as ruled: merge reconciles
+divergent *version chains*, not files; "latest" derives from the parent DAG rather than ULID
+order (retiring L1's single-writer leak; graph stage `G004` names a forked chain, `G005` a
+competing supersession); the one-superseder-per-decision write refusal became an arbitration
+point at merge (§7); semantic `diff <ref>..<ref>` landed on store-at-revision loading. Merge is
+two mechanisms: a git merge driver for `.decisions/**` (`ledger merge --install`) settles the
+mechanical majority and refuses judgment cases non-zero with the conflict preserved, and
+`ledger merge --resolve` presents each conflict — both chains, the common parent, the
+consequences — and records the arbitration as an ordinary act (spec v1.3 / format 2: the
+reconciled version closes the other tip via `merged_from`, hashed, with every format-1 digest
+unchanged). Acceptances never survive reconciliation: a reconciled version awaits a fresh
+signature, always. `ledger merge <ref>` is the read-only plan; every arbitration passes the
+same delta-gate — file classes and graph classes — as any other write.
 
 **L4 — Federation and instruments.** The upstreams manifest and lockfile (§9.4): SHA-pinned
 transitive resolution, basis-cone loading, diamond surfacing, cross-repo drift in `report`

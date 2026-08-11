@@ -11,11 +11,17 @@
 //! field means must bump that one too, because acceptances signed under the
 //! old reading would otherwise silently re-point.
 
-/// The format version written by this tool.
+/// The format version written by this tool for ordinary acts.
 pub const CURRENT_FORMAT: u32 = 1;
 
+/// The format a merge-arbitration change-set declares: format 2 adds the
+/// optional `merged_from` field on a version (the other tip a reconciliation
+/// closed). A file declares the format it actually needs, so a store that
+/// never merged stays readable to a format-1 implementation.
+pub const MERGE_FORMAT: u32 = 2;
+
 /// Every format version this tool can validate an entry against.
-pub const SUPPORTED_FORMATS: &[u32] = &[1];
+pub const SUPPORTED_FORMATS: &[u32] = &[1, 2];
 
 /// Whether an entry declaring `format: n` can be validated here.
 pub fn is_supported(n: u32) -> bool {
@@ -40,6 +46,11 @@ mod tests {
     #[test]
     fn an_unknown_format_names_what_is_known() {
         assert!(!is_supported(9));
-        assert_eq!(unsupported_message(9), "declares format 9; this tool validates format(s) 1");
+        assert_eq!(unsupported_message(9), "declares format 9; this tool validates format(s) 1, 2");
+    }
+
+    #[test]
+    fn the_merge_format_is_supported() {
+        assert!(is_supported(MERGE_FORMAT));
     }
 }

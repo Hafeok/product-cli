@@ -1,10 +1,16 @@
 # Decision Ledger — Entry Format v1
 
-**Status:** normative for `format: 1`. Specification revision **v1.1**
-(2026-08-10): adds gate class `L010`, closing the judgment-actor gap §6
-flagged at v1.0 — see `ledger-format-migrations.md`. The file schemas and
-the canonical form are unchanged; existing stores may newly fail `L010`,
-and that is the point of the amendment.
+**Status:** normative for `format: 1` and `format: 2`. Specification
+revision **v1.3** (2026-08-11, L3): introduces `format: 2`, which adds one
+optional version field, `merged_from` — the other tip a merge arbitration
+closed. The field is hashed when present and omitted when absent, so
+**every format-1 digest is unchanged** and `CANONICAL_FORM` does not bump;
+the graph stage gains `G005` (competing supersession). Revision **v1.2**
+(2026-08-11) defined "latest" as derived from the version parent DAG
+rather than file or ULID order (§5.2) and added `G004`, the forked-chain
+shape (§8). Revision v1.1 (2026-08-10) added gate class `L010`. The file
+gate's ten classes are unchanged by all three revisions — see
+`ledger-format-migrations.md`.
 **Scope:** L0 of `decision-ledger-prd.md` — the file format, the canonical
 form, the version hash, and the `verify` gate. No graph, no index, no merge,
 no coverage query, no federation. (The L2 graph stage reports through the
@@ -204,6 +210,7 @@ decisions:                              # identity objects, first appearance onl
 versions:
   - decision: dec:hafeok.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDXV
     parent: sha256:...                  # optional; absent on the first version
+    merged_from: sha256:...             # format 2 only: the tip a merge closed
     hash: sha256:...                    # the stored digest (§4)
     set: ledger-design
     statement: Monetary amounts use decimal, never double.
@@ -257,6 +264,16 @@ a shippable state, which is what `L001` says.
 cryptographic upgrade (OD-3) is additive rather than a migration; its format
 is deliberately unspecified.
 
+`merged_from` (spec v1.3) exists only at `format: 2` — a format-1 file
+carrying it is a schema fault. It names the *other tip* a merge
+arbitration closed: a reconciled version extends its `parent` chain and
+closes the divergent chain it settled against, which is how a fork
+(`G004`) heals inside the DAG. A file declares the format it actually
+needs, so a store that never merged remains a pure format-1 store. The
+reconciled version is a new version: no acceptance survives reconciliation
+— prior acceptances keep signing exactly the historical versions they
+named, and the reconciled content awaits a fresh signature.
+
 `based_on` is a list of single-token basis pointers. Its vocabulary is
 **open** at L0 — nothing dereferences a basis pointer yet, and closing the
 vocabulary now would reject adopters' existing reference schemes for no gain.
@@ -279,11 +296,17 @@ styles — from the surface a second implementation has to reproduce.
 Exactly these keys, and no others:
 
 ```
-decision · parent · set · statement · allocation · discharge ·
-discharge_stage · actor · expectation · exposure · accepted_by ·
-review_by · tolerance_floor_at_creation · tolerance_override ·
-based_on · supersedes
+decision · parent · merged_from · set · statement · allocation ·
+discharge · discharge_stage · actor · expectation · exposure ·
+accepted_by · review_by · tolerance_floor_at_creation ·
+tolerance_override · based_on · supersedes
 ```
+
+`merged_from` joined the set at spec v1.3 (`format: 2`). Because an absent
+key is omitted from the canonical object (§4.2 step 3), every version
+written before the field existed canonicalises to the same bytes as
+before: no digest moved, no acceptance was invalidated, and
+`CANONICAL_FORM` stays `v1`.
 
 Outside the hash: the `hash` field itself (including it would be circular),
 everything at change-set level (`format`, `id`, `created_at`, `created_by`,
@@ -414,6 +437,18 @@ Notes that are part of the specification, not implementation detail:
   `L005` and `L010`. An acceptance of a superseded version was already
   invalidated when the hash moved; reporting it again is noise on a resolved
   fact.
+- **"Latest" derives from the parent DAG, never from file or ULID order**
+  (spec v1.2). The latest version of a decision is the unique version whose
+  hash no other version of the same decision names as `parent`.
+  Content-identical filings (one hash filed more than once) are one version.
+  ULIDs order by one clock, and two writers' clocks prove nothing about
+  parenthood — deriving latest from change-set order was the single-writer
+  leak the L1 report named, retired here. A chain that cannot name one tip —
+  two versions unclaimed as parents, the store two divergent writers leave
+  behind — has no latest: an implementation must not resolve the ambiguity
+  by any ordering heuristic. The reference implementation reports it as
+  `G004` (§8) and refuses authoring verbs against the forked decision until
+  a recorded arbitration (`ledger merge --resolve`) settles the chain.
 - **A revoked acceptance is not judged** for expiry.
 - **`L008` checks the pair.** An acceptance naming one decision while signing
   another's hash is signing nothing about the decision it claims to accept.
@@ -515,19 +550,33 @@ parent; both `prov:wasGeneratedBy` their change-set). `based_on` tokens
 become `ledger:basedOn` literals exactly as written — the vocabulary stays
 open at this milestone; the graph exposes it and does not police it.
 
-`ledger verify` additionally runs three SPARQL shape checks over the
-emitted graph — cross-entry referential integrity the per-file schema
-cannot name. They report as a **distinct stage** of the same command, with
+`ledger verify` additionally runs SPARQL shape checks over the emitted
+graph — cross-entry referential integrity the per-file schema cannot
+name. They report as a **distinct stage** of the same command, with
 unchanged exit semantics (findings exit `1`):
 
 | Code | Fails when |
 |---|---|
 | `G001` | a `supersedes` edge targets a decision no change-set filed |
-| `G002` | a version's `parent` hash matches no filed version of its decision |
+| `G002` | a version's `parent` (or `merged_from`) hash matches no filed version of its decision |
 | `G003` | a version names a decision no change-set introduced |
+| `G004` | a decision's version chain forks into more than one tip (spec v1.2) |
+| `G005` | one decision is superseded by two live claimants (spec v1.3) |
 
-The graph classes are closed the same way the file classes are: a `G004`
-is a change to this section. Coverage (`ledger coverage`) reports the
+`G004` is the state two divergent writers leave behind — a plain git merge
+of two branches' logs, each having revised the same decision from the same
+parent. No file is malformed; the *store* cannot name a latest version, so
+it is non-conformant until a recorded arbitration (`ledger merge
+--resolve`) extends one chain past the fork, closing the other tip via
+`merged_from`. A tip, for both `G004` and `G005`, is a version no other
+version of the decision claims by `parent` *or* `merged_from`.
+
+`G005` is the write-time one-superseder-per-decision refusal met across
+branches, where it cannot refuse retroactively: each side's claim was
+legal alone. Only live claims count — a claimant whose next version drops
+the edge has withdrawn, which is exactly the arbitration act `ledger merge
+--resolve` records for the losing side. The graph classes are closed the
+same way the file classes are: a `G006` is a change to this section. Coverage (`ledger coverage`) reports the
 seven-state disposition vocabulary — `undecided`, `awaiting-acceptance`,
 `decided`, `escaped-priced`, `escape-review-due`, `expired`, `superseded`
 — per set and per namespace, with supersession chains walked to their
