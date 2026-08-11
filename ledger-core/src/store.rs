@@ -144,6 +144,16 @@ pub(crate) fn take_log(store: &mut Store, path: PathBuf, label: &str, stem: &str
             for fault in file.acceptances.iter().flat_map(|a| a.schema_faults()) {
                 store.schema_findings.push(fault);
             }
+            // `merged_from` is the format-2 field: a file using it must
+            // declare the format that defines it.
+            if file.format < crate::format::MERGE_FORMAT
+                && file.versions.iter().any(|v| v.merged_from.is_some())
+            {
+                store.schema_findings.push(Finding::schema(
+                    label,
+                    "carries `merged_from`, a format 2 field — declare `format: 2`",
+                ));
+            }
             store.log.push(LoggedChangeSet { path, file });
         }
         Err(e) => store.schema_findings.push(parse_fault("change-set", label, &e.to_string())),

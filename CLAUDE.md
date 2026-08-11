@@ -326,10 +326,25 @@ store (`.decisions/`), separate ontology.
   supersession chains walked to their tips and the §8 honest limit stated.
 - **Latest derives from the parent DAG, never ULID order** (spec v1.2, L3's
   first inheritance): a decision's latest version is the unique tip of its
-  `parent` chain — `verify::view::View` derives it, every consumer (`status`,
-  `coverage`, the gate rules, the verbs) reads it. A chain with two tips is
-  *forked* (`G004`): no ordering heuristic may pick a side, verbs refuse the
-  decision, and only a recorded arbitration settles it.
+  `parent`/`merged_from` chain — `verify::view::View` derives it, every
+  consumer (`status`, `coverage`, the gate rules, the verbs) reads it. A
+  chain with two tips is *forked* (`G004`): no ordering heuristic may pick a
+  side, verbs refuse the decision, and only a recorded arbitration settles it.
+- **Merge (L3)** — two mechanisms, never one. `ledger merge --install`
+  registers a git merge driver for `.decisions/**` that settles mechanical
+  cases and exits non-zero on judgment (divergent floor, edited log, ULID
+  collision), conflict preserved. `ledger merge <ref>` is the read-only plan
+  (per-decision classification against the merge base); `ledger merge
+  --resolve` presents each conflict — both chains, common parent,
+  consequences — and records the arbitration as an ordinary act: a
+  reconciled version whose `merged_from` (format 2, hashed, spec v1.3)
+  closes the losing tip, or a withdrawal of a losing supersession claim.
+  Conflict classes: divergent-revision, divergent-allocation,
+  competing-supersession (`G005`), divergent-floor, edited-log-file,
+  ulid-collision. **No auto-resolution under any framing**, and acceptances
+  never survive reconciliation — a reconciled version always awaits a fresh
+  signature. `ledger diff <ref>..<ref>` (semantic, on
+  `revision::load_at`) reports decision-level change between revisions.
 - Fixture hashes refresh with
   `UPDATE_FIXTURES=1 cargo test -p ledger-cli --test gate`.
 

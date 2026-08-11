@@ -63,6 +63,25 @@ const SHAPES: &[Shape] = &[
         },
     },
     Shape {
+        // The same class as a dangling parent: `merged_from` is the other
+        // edge of the revision DAG, and a reconciliation naming a tip
+        // nobody filed closed nothing.
+        class: GraphClass::G002,
+        select: "SELECT ?d ?closed WHERE { \
+                 ?v <urn:ledger:ns#ofDecision> ?d . \
+                 ?v <urn:ledger:ns#mergedFrom> ?closed . \
+                 FILTER NOT EXISTS { ?closed <urn:ledger:ns#ofDecision> ?d } }",
+        message: |row| {
+            (
+                term(row, "d"),
+                format!(
+                    "merged_from {} matches no filed version of this decision — the reconciliation closed nothing",
+                    term(row, "closed")
+                ),
+            )
+        },
+    },
+    Shape {
         class: GraphClass::G003,
         select: "SELECT DISTINCT ?d WHERE { \
                  ?v <urn:ledger:ns#ofDecision> ?d . \
@@ -76,6 +95,9 @@ const SHAPES: &[Shape] = &[
         },
     },
     Shape {
+        // A tip is a version no other version of the decision claims, by
+        // `parent` or by `merged_from` — a reconciliation closes the tip it
+        // names, which is exactly how an arbitration heals this shape.
         class: GraphClass::G004,
         select: "SELECT ?d ?a ?b WHERE { \
                  ?a a <urn:ledger:ns#DecisionVersion> . \
@@ -88,9 +110,17 @@ const SHAPES: &[Shape] = &[
                    ?ca <urn:ledger:ns#ofDecision> ?d . \
                    ?ca <http://www.w3.org/ns/prov#wasRevisionOf> ?a } \
                  FILTER NOT EXISTS { \
+                   ?ma a <urn:ledger:ns#DecisionVersion> . \
+                   ?ma <urn:ledger:ns#ofDecision> ?d . \
+                   ?ma <urn:ledger:ns#mergedFrom> ?a } \
+                 FILTER NOT EXISTS { \
                    ?cb a <urn:ledger:ns#DecisionVersion> . \
                    ?cb <urn:ledger:ns#ofDecision> ?d . \
-                   ?cb <http://www.w3.org/ns/prov#wasRevisionOf> ?b } }",
+                   ?cb <http://www.w3.org/ns/prov#wasRevisionOf> ?b } \
+                 FILTER NOT EXISTS { \
+                   ?mb a <urn:ledger:ns#DecisionVersion> . \
+                   ?mb <urn:ledger:ns#ofDecision> ?d . \
+                   ?mb <urn:ledger:ns#mergedFrom> ?b } }",
         message: |row| {
             (
                 term(row, "d"),
@@ -98,6 +128,41 @@ const SHAPES: &[Shape] = &[
                     "the version chain forks: {} and {} are both tips — two writers diverged, and only `ledger merge --resolve` may settle which content stands",
                     short_hash(&term(row, "a")),
                     short_hash(&term(row, "b"))
+                ),
+            )
+        },
+    },
+    Shape {
+        // Two live claimants superseding one decision: L1's write-time
+        // refusal met across branches, where it cannot refuse retroactively.
+        // Only tips claim — a withdrawn edge (a new version without it) is
+        // history, which is exactly how an arbitration settles this shape.
+        class: GraphClass::G005,
+        select: "SELECT ?d ?a ?b WHERE { \
+                 ?va <urn:ledger:ns#supersedes> ?d . \
+                 ?va <urn:ledger:ns#ofDecision> ?a . \
+                 ?vb <urn:ledger:ns#supersedes> ?d . \
+                 ?vb <urn:ledger:ns#ofDecision> ?b . \
+                 FILTER(STR(?a) < STR(?b)) \
+                 FILTER NOT EXISTS { \
+                   ?ca <urn:ledger:ns#ofDecision> ?a . \
+                   ?ca <http://www.w3.org/ns/prov#wasRevisionOf> ?va } \
+                 FILTER NOT EXISTS { \
+                   ?maa <urn:ledger:ns#ofDecision> ?a . \
+                   ?maa <urn:ledger:ns#mergedFrom> ?va } \
+                 FILTER NOT EXISTS { \
+                   ?cb <urn:ledger:ns#ofDecision> ?b . \
+                   ?cb <http://www.w3.org/ns/prov#wasRevisionOf> ?vb } \
+                 FILTER NOT EXISTS { \
+                   ?mab <urn:ledger:ns#ofDecision> ?b . \
+                   ?mab <urn:ledger:ns#mergedFrom> ?vb } }",
+        message: |row| {
+            (
+                term(row, "d"),
+                format!(
+                    "superseded by both {} and {} — the write-time fork refusal is now an arbitration; `ledger merge --resolve` settles which claim stands",
+                    term(row, "a"),
+                    term(row, "b")
                 ),
             )
         },

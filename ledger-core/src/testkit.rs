@@ -43,6 +43,7 @@ pub fn version() -> VersionRaw {
     VersionRaw {
         decision: decision_id(),
         parent: None,
+        merged_from: None,
         hash: zero_hash(),
         set: "ledger-design".into(),
         statement: "Monetary amounts use decimal, never double.".into(),

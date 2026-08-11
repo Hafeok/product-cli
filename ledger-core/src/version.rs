@@ -89,6 +89,12 @@ pub struct VersionRaw {
     pub decision: DecisionId,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parent: Option<VersionHash>,
+    /// The other tip a merge arbitration closed (format 2): a reconciled
+    /// version extends its `parent` chain and names the chain it settled
+    /// against, so the fork heals in the DAG itself. Hashed when present;
+    /// absent on every ordinary version, so format-1 digests are unchanged.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub merged_from: Option<VersionHash>,
     pub hash: VersionHash,
     pub set: String,
     pub statement: String,

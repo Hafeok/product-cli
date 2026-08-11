@@ -14,6 +14,8 @@ mod evolve;
 mod graph_cmds;
 mod init;
 mod inspect;
+mod merge_cmd;
+mod resolve_cmd;
 mod sign;
 mod verify;
 
@@ -142,6 +144,32 @@ pub enum Commands {
         #[arg(long, value_name = "SET")]
         set: Option<String>,
     },
+    /// Reconcile divergent version chains: plan, arbitrate, or install
+    Merge {
+        /// Revision to plan a merge with (read-only; exit 1 on conflicts)
+        rev: Option<String>,
+        /// Present each conflict and record the arbitration as a ledger act
+        #[arg(long)]
+        resolve: bool,
+        /// Register the merge driver and .decisions/.gitattributes
+        #[arg(long)]
+        install: bool,
+        /// Emit the plan as JSON
+        #[arg(long)]
+        json: bool,
+    },
+    /// The git merge driver: three-way judge one .decisions/ file
+    #[command(hide = true)]
+    MergeDriver {
+        /// %O — the merge ancestor's version of the file
+        base: PathBuf,
+        /// %A — ours; the result is left here
+        ours: PathBuf,
+        /// %B — theirs
+        theirs: PathBuf,
+        /// %P — the repo-relative pathname
+        path: String,
+    },
     /// Rebuild the RDF index under .decisions/index/ from the log
     Reindex,
     /// Restate a decision as a new version; prior acceptances become history
@@ -233,6 +261,12 @@ fn dispatch(command: Commands, root: Option<PathBuf>) -> Result<i32, String> {
         }
         Commands::Init => init::run(root),
         Commands::Log { set } => inspect::log(root, set.as_deref()),
+        Commands::Merge { rev, resolve, install, json } => {
+            merge_cmd::run(root, merge_cmd::Flags { rev, resolve, install, json })
+        }
+        Commands::MergeDriver { base, ours, theirs, path } => {
+            merge_cmd::driver(&base, &ours, &theirs, &path)
+        }
         Commands::Reindex => graph_cmds::reindex(root),
         Commands::Revise { decision, statement, based_on, parent } => {
             evolve::revise(root, &decision, statement, &based_on, parent.as_deref())

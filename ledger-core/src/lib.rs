@@ -29,6 +29,7 @@ pub mod hash;
 pub mod id;
 pub mod identity;
 pub mod init;
+pub mod merge;
 pub mod mint;
 pub mod render;
 pub mod revision;

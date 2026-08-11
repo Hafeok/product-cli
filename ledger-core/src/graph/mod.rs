@@ -41,11 +41,14 @@ pub enum GraphClass {
     /// A version chain with more than one tip: two writers diverged, and
     /// only a recorded arbitration (`ledger merge --resolve`) may settle it.
     G004,
+    /// One decision superseded by two live claimants: the write-time fork
+    /// refusal met across branches, where only an arbitration can settle it.
+    G005,
 }
 
 /// Every graph class, in report order.
 pub const ALL_GRAPH_CLASSES: &[GraphClass] =
-    &[GraphClass::G001, GraphClass::G002, GraphClass::G003, GraphClass::G004];
+    &[GraphClass::G001, GraphClass::G002, GraphClass::G003, GraphClass::G004, GraphClass::G005];
 
 impl GraphClass {
     pub fn code(self) -> &'static str {
@@ -54,6 +57,7 @@ impl GraphClass {
             Self::G002 => "G002",
             Self::G003 => "G003",
             Self::G004 => "G004",
+            Self::G005 => "G005",
         }
     }
 
@@ -63,6 +67,7 @@ impl GraphClass {
             Self::G002 => "parent hash matches no filed version of the decision",
             Self::G003 => "version names a decision no change-set introduced",
             Self::G004 => "version chain forks into more than one tip",
+            Self::G005 => "decision superseded by two live claimants",
         }
     }
 }

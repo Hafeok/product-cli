@@ -125,9 +125,14 @@ impl<'a> View<'a> {
             for &i in &indices {
                 nodes.entry(self.versions[i].raw.hash.to_string()).or_insert(i);
             }
+            // A hash is claimed — no longer a tip — when a version names it
+            // as `parent` or closes it as `merged_from` (a reconciliation).
             let claimed: BTreeSet<String> = indices
                 .iter()
-                .filter_map(|&i| self.versions[i].raw.parent.as_ref())
+                .flat_map(|&i| {
+                    let raw = self.versions[i].raw;
+                    raw.parent.iter().chain(raw.merged_from.iter())
+                })
                 .map(|h| h.to_string())
                 .collect();
             let tips: Vec<usize> = nodes
