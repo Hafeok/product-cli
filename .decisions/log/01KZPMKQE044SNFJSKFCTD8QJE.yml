@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZPMKQE044SNFJSKFCTD8QJE
+created_at: 2026-08-10T20:07:48.926649489Z
+created_by: noreply@anthropic.com
+decisions:
+- id: dec:hafeok.ledger/01KZPMKQE09JGD5BC3S3ACXJDJ
+  created_at: 2026-08-10T20:07:48.926649489Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ledger/01KZPMKQE09JGD5BC3S3ACXJDJ
+  hash: sha256:60c40bd47192e3e8ad99e0d08bdd7998561757ae424eb666ef7f14ef464ad73a
+  set: ledger-design
+  statement: Revise against an explicitly stated parent that is no longer the latest version is a refusal naming L3, never a quiet fork or a merge; the log's single-writer assumption is stated at the one place it bites, so per-decision merge arrives at L3 against a refusal, not against silent divergence.
+  allocation: constraint
+  discharge:
+  - test:verbs::every_write_refusal_carries_the_gate_class
+  tolerance_floor_at_creation: T1
+  based_on:
+  - prd:decision-ledger-prd#7
+  - prd:decision-ledger-prd#3.4

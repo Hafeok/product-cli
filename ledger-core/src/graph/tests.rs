@@ -1,0 +1,94 @@
+//! Determinism of the emission, plus each graph shape provoked.
+
+use crate::testkit;
+use crate::verify::{self, Options};
+
+use super::shapes::graph_findings;
+use super::turtle::emit;
+use super::GraphClass;
+
+fn opts() -> Options {
+    Options { gate: None, today: testkit::date("2026-08-10"), blame: false }
+}
+
+#[test]
+fn two_emissions_of_one_store_are_the_same_bytes() {
+    let sealed = testkit::sealed(testkit::version());
+    let acceptance = testkit::acceptance(&sealed);
+    let store = testkit::store(testkit::changeset(vec![sealed], vec![acceptance]));
+    assert_eq!(emit(&store), emit(&store));
+}
+
+#[test]
+fn the_emission_carries_prov_attribution_and_open_basis_tokens() {
+    let sealed = testkit::sealed(testkit::version());
+    let acceptance = testkit::acceptance(&sealed);
+    let store = testkit::store(testkit::changeset(vec![sealed], vec![acceptance]));
+    let ttl = emit(&store);
+    assert!(ttl.contains("prov:wasAttributedTo <mailto:fixture-human@example>"), "{ttl}");
+    assert!(ttl.contains("ledger:basedOn \"prd:decision-ledger-prd#4.2.1\""), "{ttl}");
+    assert!(ttl.contains("ledger:signsVersion"), "{ttl}");
+}
+
+#[test]
+fn a_conformant_store_has_no_graph_findings() {
+    let sealed = testkit::sealed(testkit::version());
+    let acceptance = testkit::acceptance(&sealed);
+    let store = testkit::store(testkit::changeset(vec![sealed], vec![acceptance]));
+    assert_eq!(graph_findings(&store), Vec::new());
+}
+
+#[test]
+fn g001_a_supersession_edge_to_nowhere() {
+    let mut raw = testkit::version();
+    raw.supersedes = Some("dec:hafeok.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDY9".parse().expect("id"));
+    let store = testkit::store(testkit::changeset(vec![testkit::sealed(raw)], Vec::new()));
+    let findings = graph_findings(&store);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].class, GraphClass::G001);
+    assert!(findings[0].subject.contains("dec:hafeok.ledger/"), "{findings:?}");
+    assert!(findings[0].message.contains("01K2C4YQJ3F8M0PT5W7NZ9RDY9"), "{findings:?}");
+}
+
+#[test]
+fn g002_a_parent_hash_nobody_filed() {
+    let mut raw = testkit::version();
+    raw.parent = Some(testkit::zero_hash());
+    let store = testkit::store(testkit::changeset(vec![testkit::sealed(raw)], Vec::new()));
+    let findings = graph_findings(&store);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].class, GraphClass::G002);
+}
+
+#[test]
+fn g003_a_version_whose_decision_was_never_introduced() {
+    let sealed = testkit::sealed(testkit::version());
+    let mut cs = testkit::changeset(vec![sealed], Vec::new());
+    cs.decisions.clear();
+    let store = testkit::store(cs);
+    let findings = graph_findings(&store);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].class, GraphClass::G003);
+    assert_eq!(findings[0].subject, testkit::decision_id().to_string());
+}
+
+#[test]
+fn graph_findings_fail_verify_as_a_distinct_stage() {
+    let mut raw = testkit::version();
+    raw.supersedes = Some("dec:hafeok.ledger/01K2C4YQJ3F8M0PT5W7NZ9RDY9".parse().expect("id"));
+    let store = testkit::store(testkit::changeset(vec![testkit::sealed(raw)], Vec::new()));
+    let report = verify::verify(&store, &opts());
+    assert!(report.findings.is_empty(), "the file stage is clean: {:?}", report.findings);
+    assert!(!report.is_conformant(), "the graph stage still fails the run");
+    let text = crate::render::render(&report);
+    assert!(text.contains("graph stage — 1 finding(s):"), "{text}");
+    assert!(text.contains("[G001]"), "{text}");
+}
+
+#[test]
+fn the_graph_class_set_is_closed_at_three() {
+    assert_eq!(super::ALL_GRAPH_CLASSES.len(), 3);
+    let codes: Vec<&str> = super::ALL_GRAPH_CLASSES.iter().map(|c| c.code()).collect();
+    assert_eq!(codes, ["G001", "G002", "G003"]);
+    assert!(super::ALL_GRAPH_CLASSES.iter().all(|c| !c.title().is_empty()));
+}

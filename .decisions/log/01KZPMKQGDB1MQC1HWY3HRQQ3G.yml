@@ -1,0 +1,22 @@
+format: 1
+id: cs:01KZPMKQGDB1MQC1HWY3HRQQ3G
+created_at: 2026-08-10T20:07:49.002945653Z
+created_by: noreply@anthropic.com
+decisions:
+- id: dec:hafeok.ledger/01KZPMKQGDY97FFRJYE2RQ5W0Q
+  created_at: 2026-08-10T20:07:49.002945653Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ledger/01KZPMKQGDY97FFRJYE2RQ5W0Q
+  hash: sha256:cc9afc0da9e021e8bab76f2c23962f60e89e3711a1f3150ab1e451838152a58f
+  set: ledger-design
+  statement: Cross-entry referential integrity is a distinct graph stage of verify — G001 dangling supersession target, G002 dangling parent hash, G003 undeclared decision identity — closed at three, reported by the same command with unchanged exit semantics, and deliberately outside the file gate's ten-class import surface so an outside implementation of the format need not run a graph.
+  allocation: criterion
+  discharge:
+  - test:graph_tests::the_graph_class_set_is_closed_at_three
+  - test:graph_tests::graph_findings_fail_verify_as_a_distinct_stage
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - format:ledger-format-v1#8
+  - prd:decision-ledger-prd#12.OD-2

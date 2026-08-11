@@ -1,0 +1,14 @@
+format: 1
+id: seam/ledger/write-refusal
+boundary: pub Author verbs with AuthorError::Refused in ledger-core/src/author/mod.rs
+verdict_knowledge: 'A caller learns that every authoring verb is a thin shell over the gate: a verb builds the change-set it intends to append, runs the same verify pass CI runs over the store as it would look afterwards, and refuses to write anything that introduces a finding — with the identical class and message verify would report one command later. There is no second validation copy to drift; the refusal vocabulary IS the gate vocabulary. The one sanctioned exception is an unallocated add, which is the enumerated-but-unallocated intermediate state the format represents on purpose.'
+contract_location: ledger-core/src/author/mod.rs#Author
+obligations:
+- no verb grows a validation rule of its own; a new refusal reason is first a verify class (a format-spec change), then automatically a refusal
+- the delta is computed against the store as it stands, so a broken store stays repairable — pre-existing findings never block an unrelated act
+- the log stays append-only through this surface; verbs create files, never edit one
+- revise against a stale stated parent refuses with a conflict naming L3 — the single-writer stance is explicit, not incidental
+metadata:
+  kind: struct
+  symbol: Author
+  visibility: public

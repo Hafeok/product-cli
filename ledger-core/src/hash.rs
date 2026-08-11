@@ -35,6 +35,14 @@ impl VersionHash {
     pub fn short(&self) -> &str {
         self.hex().get(..12).unwrap_or(self.hex())
     }
+
+    /// The all-zero digest — the documented placeholder a hand-authored
+    /// entry writes before `verify` reports the real one, and the value a
+    /// writer holds while assembling a version it will seal with
+    /// [`version_hash`]. Never valid as a stored digest: `L007` fails it.
+    pub fn zero() -> Self {
+        Self(format!("sha256:{}", "0".repeat(64)))
+    }
 }
 
 impl FromStr for VersionHash {

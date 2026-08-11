@@ -1,9 +1,15 @@
 # Decision Ledger — Entry Format v1
 
-**Status:** normative for `format: 1`.
+**Status:** normative for `format: 1`. Specification revision **v1.1**
+(2026-08-10): adds gate class `L010`, closing the judgment-actor gap §6
+flagged at v1.0 — see `ledger-format-migrations.md`. The file schemas and
+the canonical form are unchanged; existing stores may newly fail `L010`,
+and that is the point of the amendment.
 **Scope:** L0 of `decision-ledger-prd.md` — the file format, the canonical
 form, the version hash, and the `verify` gate. No graph, no index, no merge,
-no coverage query, no federation.
+no coverage query, no federation. (The L2 graph stage reports through the
+same `verify` command but is a distinct stage outside this document's
+class set; see §8.)
 **Audience:** an implementer building a second implementation of this format,
 working from this document alone. Where this document and the reference
 implementation (`ledger-core`) disagree, this document wins.
@@ -374,8 +380,9 @@ every one of them fail.
 
 ## 5. The gate
 
-`ledger verify` fails for a **schema fault** or one of **nine classes**, and
-for nothing else. A tenth reason is a change to this document.
+`ledger verify` fails for a **schema fault** or one of **ten classes**, and
+for nothing else. An eleventh reason is a change to this document — `L010`
+itself arrived that way, as the spec v1.1 amendment.
 
 ### 5.1 The parse gate
 
@@ -386,7 +393,7 @@ from §3.6 that is not met (except the escape's, which is `L002`); a
 non-empty `signature`; a version naming an undeclared set; a revocation
 naming an acceptance nobody filed.
 
-### 5.2 The nine
+### 5.2 The ten
 
 | Code | Fails when |
 |---|---|
@@ -399,12 +406,14 @@ naming an acceptance nobody filed.
 | `L007` | a stored `hash` does not equal the recomputed canonical hash |
 | `L008` | an acceptance's `(decision, version)` pair matches no filed version |
 | `L009` | an acceptance's actor is not the author of the commit that introduced it |
+| `L010` | a `judgment`'s `actor` is refused by §3.2 (spec v1.1) |
 
 Notes that are part of the specification, not implementation detail:
 
-- **Only the latest version of a decision is judged** by `L001`, `L003` and
-  `L005`. An acceptance of a superseded version was already invalidated when
-  the hash moved; reporting it again is noise on a resolved fact.
+- **Only the latest version of a decision is judged** by `L001`, `L003`,
+  `L005` and `L010`. An acceptance of a superseded version was already
+  invalidated when the hash moved; reporting it again is noise on a resolved
+  fact.
 - **A revoked acceptance is not judged** for expiry.
 - **`L008` checks the pair.** An acceptance naming one decision while signing
   another's hash is signing nothing about the decision it claims to accept.
@@ -423,7 +432,7 @@ Notes that are part of the specification, not implementation detail:
 `--gate readiness` blocks produce and runs every class except `L002` and
 `L003`, which are dispositions that must hold at release rather than
 preconditions for starting. `--gate completeness` blocks release and runs
-all nine. With no flag, all nine run.
+all ten. With no flag, all ten run.
 
 | Exit | Meaning |
 |---|---|
@@ -442,10 +451,11 @@ Stated so an adopter meets them in this document rather than in production.
 
 - **`L009` cannot see uncommitted work**, by construction (§5.2). A repository
   with no git history has the check skipped entirely.
-- **`L006` does not cover a `judgment`'s `actor`**, nor `actor:` discharge
-  pointers. §4.4 of the PRD scopes the rule to `accepted-by`, and the nine
-  classes are closed. A judgment allocated to a model is therefore
-  representable. This is a real gap and a candidate for L1.
+- **`actor:` discharge pointers are not covered by `L006` or `L010`.** The
+  judgment-actor half of the gap v1.0 flagged here closed as `L010` in spec
+  v1.1; a *discharge pointer* naming a model identity remains representable.
+  A pointer is a reference to where discharge happens, not an allocation of
+  accountability, so extending the rule there is a separate decision.
 - **The model-identity list is a floor** (§3.2), not a proof.
 - **`constraint` carries no discharge requirement.** §4.4 does not impose one,
   so neither does this format — a constraint with no encoder is possible and
@@ -478,3 +488,48 @@ second copy of the rules:
 | `status` | `verify::view::View` — latest versions, live acceptances, pendency |
 | `blame` | `blame::introducing_author` |
 | `diff` | `canon::canonical_json`, field by field |
+
+L1 shipped against this table (2026-08-10); every verb routes through the
+listed surface via a delta-gate — the verb refuses at write exactly the
+findings `verify` would report afterwards. Semantic `diff <ref>..<ref>`
+alone is deferred: it needs store-at-revision loading, which arrives with
+L3's per-decision merge base.
+
+---
+
+## 8. The graph stage (L2)
+
+**Outside the import surface.** Sections 1–5 are what an outside
+implementation of the *format* reproduces; this section describes the
+reference implementation's L2 graph stage, which an outside implementation
+may skip without losing format conformance. The file gate's closed ten
+classes (§5) are unchanged by it.
+
+The `.decisions/index/` cache holds the RDF materialisation of the log
+(`index/ledger.ttl`), rebuilt by `ledger reindex`. The log is the source of
+truth; the emission is byte-deterministic, so deleting the index and
+rebuilding reproduces it byte-identically — the PRD §5 correctness test,
+run in CI. Acceptance provenance is PROV-O (an acceptance
+`prov:wasAttributedTo` its actor; a version `prov:wasRevisionOf` its
+parent; both `prov:wasGeneratedBy` their change-set). `based_on` tokens
+become `ledger:basedOn` literals exactly as written — the vocabulary stays
+open at this milestone; the graph exposes it and does not police it.
+
+`ledger verify` additionally runs three SPARQL shape checks over the
+emitted graph — cross-entry referential integrity the per-file schema
+cannot name. They report as a **distinct stage** of the same command, with
+unchanged exit semantics (findings exit `1`):
+
+| Code | Fails when |
+|---|---|
+| `G001` | a `supersedes` edge targets a decision no change-set filed |
+| `G002` | a version's `parent` hash matches no filed version of its decision |
+| `G003` | a version names a decision no change-set introduced |
+
+The graph classes are closed the same way the file classes are: a `G004`
+is a change to this section. Coverage (`ledger coverage`) reports the
+seven-state disposition vocabulary — `undecided`, `awaiting-acceptance`,
+`decided`, `escaped-priced`, `escape-review-due`, `expired`, `superseded`
+— per set and per namespace, with supersession chains walked to their
+tips, and always states §8-of-the-PRD's honest limit: coverage is measured
+against the enumerated set, and nothing verifies the set itself.

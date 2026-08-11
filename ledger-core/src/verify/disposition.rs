@@ -1,10 +1,11 @@
 //! Rules over what a decision is allocated to, at what tier, by whom.
 //!
-//! Four of the nine classes: `L001` unallocated, `L003` expired acceptance,
+//! Five of the ten classes: `L001` unallocated, `L003` expired acceptance,
 //! `L005` stranded below a raised floor, `L006` an acceptor who is not an
-//! accountable actor. `L002` and `L004` are raised earlier — an unpriced
-//! escape and a below-floor override are unrepresentable in the domain type,
-//! so they surface when the wire form is assembled rather than here.
+//! accountable actor, `L010` a judgment exercised by one. `L002` and `L004`
+//! are raised earlier — an unpriced escape and a below-floor override are
+//! unrepresentable in the domain type, so they surface when the wire form is
+//! assembled rather than here.
 
 use chrono::NaiveDate;
 
@@ -100,6 +101,29 @@ pub fn model_acceptor(view: &View) -> Vec<Finding> {
     from_acceptances
         .chain(from_escapes)
         .map(|(subject, message)| Finding::new(VerifyClass::L006, &subject, message))
+        .collect()
+}
+
+/// `L010` — a judgment whose named actor is a model or a CI identity.
+///
+/// The spec v1.1 amendment. L0 scoped the model-identity rule to acceptors
+/// (`L006`), so a *judgment* allocated to a model actor passed — yet a
+/// judgment is exercised per run by an accountable actor (§2.1), and a model
+/// is pinnable only distributionally. Judged on latest versions only, like
+/// every allocation rule.
+pub fn model_judge(view: &View) -> Vec<Finding> {
+    view.latest_versions()
+        .filter_map(|v| {
+            let parsed = v.parsed.as_ref()?;
+            let actor = parsed.allocation.as_ref()?.judgment_actor()?;
+            reject(actor).map(|why| {
+                Finding::new(
+                    VerifyClass::L010,
+                    &parsed.decision.to_string(),
+                    format!("judgment actor {why} — a judgment is exercised by a named accountable actor (§2.1, spec v1.1)"),
+                )
+            })
+        })
         .collect()
 }
 

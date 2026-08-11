@@ -1,10 +1,11 @@
 //! The closed set of reasons `ledger verify` fails.
 //!
-//! This enum *is* L0's contract. The gate fails for a schema fault or one of
-//! nine semantic classes, and for nothing else — a tenth reason is a change
-//! to the format specification, not an implementation detail. Adding a
-//! variant here without a row in `docs/ledger-format-v1.md` is caught by the
-//! `every_class_is_specified` test.
+//! This enum *is* the file gate's contract. The gate fails for a schema
+//! fault or one of ten semantic classes, and for nothing else — an eleventh
+//! reason is a change to the format specification, not an implementation
+//! detail (`L010` arrived exactly that way, as the spec v1.1 amendment).
+//! Adding a variant here without a row in `docs/ledger-format-v1.md` is
+//! caught by the `every_class_is_specified` test.
 //!
 //! "Allocated, awaiting acceptance" is deliberately absent. The gate polices
 //! violations, not pendency: a decision that is enumerated and allocated but
@@ -48,6 +49,9 @@ pub enum VerifyClass {
     /// An acceptance whose actor is not the author of the commit that
     /// introduced it.
     L009,
+    /// A judgment whose named actor resolves to a model or CI identity
+    /// (spec v1.1 — the judgment-actor gap L0 left open).
+    L010,
 }
 
 /// Every class, in report order. The list the format document mirrors.
@@ -62,6 +66,7 @@ pub const ALL_CLASSES: &[VerifyClass] = &[
     VerifyClass::L007,
     VerifyClass::L008,
     VerifyClass::L009,
+    VerifyClass::L010,
 ];
 
 impl VerifyClass {
@@ -78,6 +83,7 @@ impl VerifyClass {
             Self::L007 => "L007",
             Self::L008 => "L008",
             Self::L009 => "L009",
+            Self::L010 => "L010",
         }
     }
 
@@ -94,6 +100,7 @@ impl VerifyClass {
             Self::L007 => "stored hash does not match recomputed content",
             Self::L008 => "acceptance signs a hash matching no stored version",
             Self::L009 => "acceptance actor is not the author of its introducing commit",
+            Self::L010 => "judgment actor resolves to a model or CI identity",
         }
     }
 
@@ -178,12 +185,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn there_are_exactly_nine_semantic_classes_plus_the_parse_gate() {
-        // The success measure for L0: the gate fails for these reasons and
-        // no others. A tenth class is a format-specification change.
-        assert_eq!(ALL_CLASSES.len(), 10);
+    fn there_are_exactly_ten_semantic_classes_plus_the_parse_gate() {
+        // The gate fails for these reasons and no others. An eleventh class
+        // is a format-specification change — L010 itself shipped as the spec
+        // v1.1 amendment, moving this count from nine to ten.
+        assert_eq!(ALL_CLASSES.len(), 11);
         let semantic = ALL_CLASSES.iter().filter(|c| **c != VerifyClass::Schema).count();
-        assert_eq!(semantic, 9);
+        assert_eq!(semantic, 10);
     }
 
     #[test]

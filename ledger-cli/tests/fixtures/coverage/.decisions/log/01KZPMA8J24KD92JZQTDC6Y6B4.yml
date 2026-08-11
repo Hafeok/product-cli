@@ -1,0 +1,17 @@
+format: 1
+id: cs:01KZPMA8J24KD92JZQTDC6Y6B4
+created_at: 2026-08-10T20:02:38.785291905Z
+created_by: fixture-human@example
+decisions:
+- id: dec:fixture.coverage/01KZPMA8J2790WM58JNC6XFX2E
+  created_at: 2026-08-10T20:02:38.785291905Z
+  created_by: fixture-human@example
+versions:
+- decision: dec:fixture.coverage/01KZPMA8J2790WM58JNC6XFX2E
+  hash: sha256:9552309e1b57fad749835acc8f1176842fc617abe1111a835613f469c14d5de0
+  set: coverage-fixture
+  statement: d2 awaiting acceptance.
+  allocation: constraint
+  discharge:
+  - analyzer:DEC001
+  tolerance_floor_at_creation: T1

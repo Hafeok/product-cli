@@ -1,9 +1,9 @@
 //! The gate — the whole of L0's checking surface.
 //!
 //! One pass over the log produces every finding: the parse gate, then the
-//! nine classes. Failing for exactly those reasons is the milestone's
-//! measure of success, so the orchestration here is deliberately flat —
-//! there is no place for a rule to hide.
+//! ten classes. Failing for exactly those reasons is the format's measure of
+//! success, so the orchestration here is deliberately flat — there is no
+//! place for a rule to hide.
 //!
 //! Pendency is not a violation. A decision that is enumerated and allocated
 //! but not yet signed is the normal state of work in progress; it is
@@ -12,6 +12,7 @@
 
 pub mod disposition;
 pub mod integrity;
+pub mod state;
 pub mod view;
 
 use chrono::NaiveDate;
@@ -45,6 +46,9 @@ impl Options {
 #[derive(Debug, Default, Serialize)]
 pub struct Report {
     pub findings: Vec<Finding>,
+    /// The L2 graph stage: cross-entry shape findings (`G001`–`G003`),
+    /// distinct from the file gate's closed ten classes.
+    pub graph: Vec<crate::graph::GraphFinding>,
     /// Entries that loaded cleanly, for the summary line.
     pub entries: usize,
     /// Decisions the log carries.
@@ -58,9 +62,10 @@ pub struct Report {
 }
 
 impl Report {
-    /// Whether the gate passes.
+    /// Whether the gate passes: no file-stage findings, no graph-stage
+    /// findings. Two stages, one exit discipline.
     pub fn is_conformant(&self) -> bool {
-        self.findings.is_empty()
+        self.findings.is_empty() && self.graph.is_empty()
     }
 }
 
@@ -73,6 +78,7 @@ pub fn verify(store: &Store, opts: &Options) -> Report {
     findings.extend(disposition::expired(&view, opts.today));
     findings.extend(disposition::stranded(&view, store));
     findings.extend(disposition::model_acceptor(&view));
+    findings.extend(disposition::model_judge(&view));
     findings.extend(integrity::hash_mismatch(&view));
     findings.extend(integrity::dangling_acceptance(&view));
 
@@ -94,6 +100,8 @@ pub fn verify(store: &Store, opts: &Options) -> Report {
     findings.sort_by(|a, b| (a.class, &a.subject).cmp(&(b.class, &b.subject)));
     findings.dedup();
     report.findings = findings;
+    // The graph stage: structural integrity, so it runs under both gates.
+    report.graph = crate::graph::shapes::graph_findings(store);
     report
 }
 

@@ -275,9 +275,9 @@ must stay ddd-free** — that is the downstream-consumer contract.
 ## Decision ledger (`.decisions/`, the `ledger` binary)
 
 A third stack — `ledger-core` / `ledger-cli` — is the decision **record
-substrate** ([PRD](docs/decision-ledger-prd.md)). L0 shipped: the file format
-and the CI gate, nothing else. Separate store (`.decisions/`), separate
-ontology, no graph — the RDF index is L2 and does not exist yet.
+substrate** ([PRD](docs/decision-ledger-prd.md)). L0–L2 shipped: the file
+format, the CI gate, the L1 authoring verbs, and the L2 graph. Separate
+store (`.decisions/`), separate ontology.
 
 - **Format** — [`docs/ledger-format-v1.md`](docs/ledger-format-v1.md) is
   normative and is what an outside implementation (the Org Ledger) imports;
@@ -294,7 +294,8 @@ ontology, no graph — the RDF index is L2 and does not exist yet.
   acceptance, and needs a migration note — it is never a quiet fix.
 - **Gate** — `ledger verify [--gate readiness|completeness] [--json]
   [--today YYYY-MM-DD] [--no-blame]`. Fails for a schema fault plus classes
-  `L001`–`L009` and **nothing else**; adding a tenth is a format-spec change.
+  `L001`–`L010` and **nothing else**; adding an eleventh is a format-spec
+  change (`L010` itself shipped that way, as spec v1.1).
   Exit `0` conformant, `1` findings, `2` could not run. Runs in CI.
   Allocated-awaiting-acceptance is *status*, not a failure.
 - **Acceptance is the principal's, never an agent's.** Do not create
@@ -302,14 +303,34 @@ ontology, no graph — the RDF index is L2 and does not exist yet.
   acceptances use `fixture-human@example` and live only under
   `ledger-cli/tests/fixtures/`. Filing decisions, versions and allocations is
   fine; signing them is not.
-- **Authoring by hand** — L0 mints no ids and seals no versions (`ledger add`
-  is L1). Write `hash: sha256:000…0`, run `ledger verify`, and paste the full
-  digest the `L007` finding reports.
+- **Authoring (L1)** — every verb is a thin shell over the gate: `declare`,
+  `add`, `allocate`, `escape`, `revise`, `supersede`, `accept`, `revoke`,
+  `status`, `log`, `blame`. A verb builds its change-set, runs the same
+  `verify` pass over the store-as-it-would-be, and refuses any write that
+  introduces a finding — same class, same message, **no second validation
+  copy** (the one sanctioned exception: an unallocated `add` is the
+  enumerated-but-unallocated intermediate state). Identity comes from git
+  config (OD-3, no `--as`); ULIDs mint via `mint::UlidMint` with injectable
+  time/entropy. `revise` against a stale stated parent refuses — merge is L3.
+  Hand-authoring still works: write `hash: sha256:000…0`, run `ledger
+  verify`, paste the digest the `L007` finding reports.
+- **Graph (L2)** — `ledger reindex` materialises `.decisions/index/ledger.ttl`
+  (byte-deterministic Turtle; delete-and-rebuild is byte-identical, tested in
+  CI). PROV-O provenance; `based_on` becomes open-vocabulary `ledger:basedOn`
+  edges. `verify` additionally runs SPARQL shapes `G001`–`G003` (dangling
+  supersession target / parent hash / undeclared decision identity) as a
+  **distinct graph stage** outside the file gate's closed ten. `ledger
+  coverage [--set … --json]` reports the seven-state disposition vocabulary
+  (undecided · awaiting-acceptance · decided · escaped-priced ·
+  escape-review-due · expired · superseded) per set and namespace, with
+  supersession chains walked to their tips and the §8 honest limit stated.
 - Fixture hashes refresh with
   `UPDATE_FIXTURES=1 cargo test -p ledger-cli --test gate`.
 
-**`ledger-core` must stay graph-free** at L0 — no oxigraph, no SPARQL. It
-reuses `product-core` only for `ProductError` and `fileops`.
+**`ledger-core` has no direct graph dependency** — no oxigraph, no SPARQL
+engine of its own. Its L2 graph stage rides `product_core::pf::sparql_rules`
+(OD-2); beyond that it reuses `product-core` only for `ProductError` and
+`fileops`.
 
 Agent-facing context lives in three places, all **derived from
 `WHAT_POLICY`** so a new row cannot leave one describing an older table:

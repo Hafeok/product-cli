@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZPMKQD0BEDBD3HWCT4CJHA4
+created_at: 2026-08-10T20:07:48.894121357Z
+created_by: noreply@anthropic.com
+decisions:
+- id: dec:hafeok.ledger/01KZPMKQCZN533QXQAKT2G4M0K
+  created_at: 2026-08-10T20:07:48.894121357Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ledger/01KZPMKQCZN533QXQAKT2G4M0K
+  hash: sha256:26ff121fab6cb0d2749cf6ab281685a89d72f2baa694e49a4bf2f2a8cf0889b1
+  set: ledger-design
+  statement: Every authoring verb refuses at write by running the same verify pass CI runs over the store as it would look after the append, rejecting any fresh finding with the identical class and message; no second validation copy exists. The one sanctioned intermediate state is an unallocated add, which writes and leaves L001 to the gate.
+  allocation: constraint
+  discharge:
+  - analyzer:ledger-verify.delta-gate
+  - test:verbs::every_write_refusal_carries_the_gate_class
+  tolerance_floor_at_creation: T1
+  based_on:
+  - format:ledger-format-v1#7
+  - prd:decision-ledger-prd#11.L1

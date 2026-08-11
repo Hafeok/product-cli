@@ -1,0 +1,13 @@
+format: 1
+id: seam/ledger/disposition-states
+boundary: pub enum DispositionState with states() in ledger-core/src/verify/state.rs
+verdict_knowledge: 'A caller learns the closed seven-state vocabulary a decision''s situation is reported in — undecided, awaiting-acceptance, decided, escaped-priced, escape-review-due, expired, superseded — and that it is derived from the same View the gate rules read, so status, coverage and verify can never disagree about where a decision stands. Supersession is terminal and overrides every other reading; only latest versions are judged, mirroring the gate.'
+contract_location: ledger-core/src/verify/state.rs#DispositionState
+obligations:
+- the vocabulary is closed at seven; an eighth state is a specification change with its row in docs/ledger-format-v1.md §8
+- the kebab-case names are stable identifiers rendered in reports and JSON alike, never renamed for tidiness
+- every state is derivable from View alone — no state may require consulting the index, or the index stops being disposable
+metadata:
+  kind: enum
+  symbol: DispositionState
+  visibility: public

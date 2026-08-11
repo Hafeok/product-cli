@@ -1,12 +1,19 @@
 //! Subcommand surface for the `ledger` binary.
 //!
-//! L0 is the format plus the gate, so the surface is deliberately two
-//! commands. The authoring verbs — `add`, `allocate`, `escape`, `accept`,
-//! `revoke`, `status`, `log`, `blame`, `diff` — are L1, and every one of
-//! them will call the same `ledger-core` validators this gate calls rather
-//! than growing a second copy of the rules.
+//! L0 was the format plus the gate; L1 adds the authoring verbs and L2 the
+//! graph. Every authoring verb is a thin shell over the same `ledger-core`
+//! validators the gate calls — a verb refuses at write exactly what
+//! `verify` would fail one command later, and no second copy of the rules
+//! exists on this side of the crate boundary.
 
+mod add;
+mod common;
+mod declare;
+mod evolve;
+mod graph_cmds;
 mod init;
+mod inspect;
+mod sign;
 mod verify;
 
 use std::path::PathBuf;
@@ -19,11 +26,148 @@ pub const EXIT_OK: i32 = 0;
 pub const EXIT_VIOLATIONS: i32 = 1;
 pub const EXIT_ERROR: i32 = 2;
 
-/// The L0 command surface. Keep the variant list sorted.
+/// The command surface. Keep the variant list sorted.
 #[derive(Subcommand)]
 pub enum Commands {
+    /// Sign the latest version of a decision (identity from git config)
+    Accept {
+        /// The decision id, `dec:<namespace>/<ulid>`
+        decision: String,
+        /// When this signature goes stale (YYYY-MM-DD)
+        #[arg(long, value_name = "DATE")]
+        expires: Option<String>,
+    },
+    /// Mint a decision and file its first version into a set
+    Add {
+        #[arg(long, value_name = "SET")]
+        set: String,
+        #[arg(long)]
+        statement: String,
+        /// Owning scope of the new id; inferred when the store speaks one
+        #[arg(long, value_name = "NS")]
+        namespace: Option<String>,
+        /// Allocation store: constraint | criterion | judgment
+        #[arg(long, value_name = "STORE")]
+        store: Option<String>,
+        /// Discharge pointer(s), e.g. analyzer:DEC001 (repeatable)
+        #[arg(long, value_name = "REF")]
+        discharge: Vec<String>,
+        /// Criterion stage: pr | dev | staging | prod
+        #[arg(long, value_name = "STAGE")]
+        stage: Option<String>,
+        /// Expectation, required when a discharge is otel:
+        #[arg(long)]
+        expectation: Option<String>,
+        /// The named actor, for a judgment
+        #[arg(long, value_name = "IDENTITY")]
+        actor: Option<String>,
+        /// Up-only tolerance override, strictly above the set floor
+        #[arg(long, value_name = "TIER")]
+        tolerance_override: Option<String>,
+        /// Basis pointer(s) this decision rests on (repeatable)
+        #[arg(long, value_name = "BASIS")]
+        based_on: Vec<String>,
+    },
+    /// Allocate (or re-allocate) a decision by filing its next version
+    Allocate {
+        decision: String,
+        /// Allocation store: constraint | criterion | judgment
+        #[arg(long, value_name = "STORE")]
+        store: String,
+        #[arg(long, value_name = "REF")]
+        discharge: Vec<String>,
+        #[arg(long, value_name = "STAGE")]
+        stage: Option<String>,
+        #[arg(long)]
+        expectation: Option<String>,
+        #[arg(long, value_name = "IDENTITY")]
+        actor: Option<String>,
+    },
+    /// Who signed which version of a decision, and who committed it
+    Blame {
+        decision: String,
+    },
+    /// Disposition coverage per set, per namespace, with supersession chains
+    Coverage {
+        /// Limit to one set
+        #[arg(long, value_name = "SET")]
+        set: Option<String>,
+        /// Emit the report as JSON
+        #[arg(long)]
+        json: bool,
+        /// Judge expiry against this date instead of today
+        #[arg(long, value_name = "DATE")]
+        today: Option<String>,
+    },
+    /// Declare a decision set: floor, ground, owner
+    Declare {
+        #[arg(long, value_name = "ID")]
+        set: String,
+        /// Human title; defaults to the set id
+        #[arg(long)]
+        title: Option<String>,
+        #[arg(long, value_name = "TIER")]
+        tolerance_floor: String,
+        /// characterised | uncharacterised
+        #[arg(long, default_value = "characterised")]
+        ground: String,
+        /// Defaults to the git-config identity
+        #[arg(long, value_name = "IDENTITY")]
+        owner: Option<String>,
+        #[arg(long)]
+        notes: Option<String>,
+    },
+    /// Price an escape: exposure stated, review date set, acceptor claimed
+    Escape {
+        decision: String,
+        #[arg(long)]
+        exposure: String,
+        #[arg(long, value_name = "DATE")]
+        review_by: String,
+    },
     /// Scaffold the .decisions/ store: the §5 layout plus the ignore line
     Init,
+    /// Walk the change-sets in creation order
+    Log {
+        /// Only change-sets touching this set
+        #[arg(long, value_name = "SET")]
+        set: Option<String>,
+    },
+    /// Rebuild the RDF index under .decisions/index/ from the log
+    Reindex,
+    /// Restate a decision as a new version; prior acceptances become history
+    Revise {
+        decision: String,
+        #[arg(long)]
+        statement: String,
+        #[arg(long, value_name = "BASIS")]
+        based_on: Vec<String>,
+        /// The hash believed to be the tip; refused when stale (merge is L3)
+        #[arg(long, value_name = "HASH")]
+        parent: Option<String>,
+    },
+    /// Reverse a prior acceptance, with the reason on record
+    Revoke {
+        acceptance: String,
+        #[arg(long)]
+        reason: String,
+    },
+    /// Every decision's disposition state, grouped by set
+    Status {
+        /// Judge expiry against this date instead of today
+        #[arg(long, value_name = "DATE")]
+        today: Option<String>,
+    },
+    /// Record that one decision supersedes another (never amend)
+    Supersede {
+        /// The decision being superseded
+        decision: String,
+        /// The successor decision
+        #[arg(long, value_name = "DEC")]
+        by: String,
+        #[arg(long)]
+        reason: Option<String>,
+    },
     /// Run the gate over the log (exit 1 on findings, 2 on failure to run)
     Verify {
         /// Limit to one gate: `readiness` blocks produce, `completeness`
@@ -44,17 +188,52 @@ pub enum Commands {
 
 /// Dispatch, mapping every outcome to an exit code.
 pub fn run(command: Commands, root: Option<PathBuf>) -> i32 {
-    let result = match command {
-        Commands::Init => init::run(root),
-        Commands::Verify { gate, json, today, no_blame } => {
-            verify::run(root, verify::Args { gate, json, today, blame: !no_blame })
-        }
-    };
+    let result = dispatch(command, root);
     match result {
         Ok(code) => code,
         Err(message) => {
             eprintln!("error: {message}");
             EXIT_ERROR
+        }
+    }
+}
+
+fn dispatch(command: Commands, root: Option<PathBuf>) -> Result<i32, String> {
+    match command {
+        Commands::Accept { decision, expires } => sign::accept(root, &decision, expires.as_deref()),
+        Commands::Add {
+            set, statement, namespace, store, discharge, stage, expectation, actor,
+            tolerance_override, based_on,
+        } => add::run(root, add::Flags {
+            set, statement, namespace, store, discharge, stage, expectation, actor,
+            tolerance_override, based_on,
+        }),
+        Commands::Allocate { decision, store, discharge, stage, expectation, actor } => {
+            evolve::allocate(root, &decision, &store, &discharge, stage.as_deref(), expectation, actor.as_deref())
+        }
+        Commands::Blame { decision } => inspect::blame(root, &decision),
+        Commands::Coverage { set, json, today } => {
+            graph_cmds::coverage(root, set.as_deref(), json, today.as_deref())
+        }
+        Commands::Declare { set, title, tolerance_floor, ground, owner, notes } => {
+            declare::run(root, declare::Flags { set, title, tolerance_floor, ground, owner, notes })
+        }
+        Commands::Escape { decision, exposure, review_by } => {
+            evolve::escape(root, &decision, exposure, &review_by)
+        }
+        Commands::Init => init::run(root),
+        Commands::Log { set } => inspect::log(root, set.as_deref()),
+        Commands::Reindex => graph_cmds::reindex(root),
+        Commands::Revise { decision, statement, based_on, parent } => {
+            evolve::revise(root, &decision, statement, &based_on, parent.as_deref())
+        }
+        Commands::Revoke { acceptance, reason } => sign::revoke(root, &acceptance, reason),
+        Commands::Status { today } => inspect::status(root, today.as_deref()),
+        Commands::Supersede { decision, by, reason } => {
+            evolve::supersede(root, &decision, &by, reason)
+        }
+        Commands::Verify { gate, json, today, no_blame } => {
+            verify::run(root, verify::Args { gate, json, today, blame: !no_blame })
         }
     }
 }

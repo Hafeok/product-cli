@@ -1,0 +1,15 @@
+format: 1
+id: cs:01KZPMA8PSTE42V7GE8H747PG7
+created_at: 2026-08-10T20:02:38.935812899Z
+created_by: fixture-human@example
+versions:
+- decision: dec:fixture.coverage/01KZPMA8NTH1TT0RQACSKY539B
+  parent: sha256:8b8459ed3f42d46e24582375a29db78f9184d21b59d91e349902c0d3ae97ea5f
+  hash: sha256:e592b930a3e97496fc8ee724c65126f82bdcbb75065847a435a4760f3bb8f201
+  set: coverage-fixture
+  statement: d5 escape past review.
+  allocation: escaped
+  exposure: imports may drift silently
+  accepted_by: fixture-human@example
+  review_by: 2026-09-01
+  tolerance_floor_at_creation: T1

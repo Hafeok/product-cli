@@ -1,0 +1,17 @@
+format: 1
+id: cs:01KZPMA8QWE8B74CGR8M5RC1MX
+created_at: 2026-08-10T20:02:38.969991122Z
+created_by: fixture-human@example
+decisions:
+- id: dec:fixture.coverage/01KZPMA8QV1Y46EKZ5973TER8A
+  created_at: 2026-08-10T20:02:38.969991122Z
+  created_by: fixture-human@example
+versions:
+- decision: dec:fixture.coverage/01KZPMA8QV1Y46EKZ5973TER8A
+  hash: sha256:b59536f02c9184a238a17a4d236102757d065c93183e634aaefe55415437bcf0
+  set: coverage-fixture
+  statement: d6 acceptance expires.
+  allocation: constraint
+  discharge:
+  - analyzer:DEC005
+  tolerance_floor_at_creation: T1

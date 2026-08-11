@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZPMKQF4BQA4HH2P4QEEYN8V
+created_at: 2026-08-10T20:07:48.961695368Z
+created_by: noreply@anthropic.com
+decisions:
+- id: dec:hafeok.ledger/01KZPMKQF39R0CHVHSZ5Y366Y7
+  created_at: 2026-08-10T20:07:48.961695368Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ledger/01KZPMKQF39R0CHVHSZ5Y366Y7
+  hash: sha256:41dd29431ec3b4307528592afa01d14329cf7c8c09a1e4fc59170a3016e07852
+  set: ledger-design
+  statement: Coverage and status report one closed seven-state disposition vocabulary — undecided, awaiting-acceptance, decided, escaped-priced, escape-review-due, expired, superseded — derived from the same View the gate rules read, with supersession terminal; an eighth state is a specification change.
+  allocation: criterion
+  discharge:
+  - test:state_tests::the_vocabulary_is_closed_at_seven
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - format:ledger-format-v1#8
+  - prd:decision-ledger-prd#8

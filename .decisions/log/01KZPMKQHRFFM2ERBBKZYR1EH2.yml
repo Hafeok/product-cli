@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZPMKQHRFFM2ERBBKZYR1EH2
+created_at: 2026-08-10T20:07:49.046037555Z
+created_by: noreply@anthropic.com
+decisions:
+- id: dec:hafeok.ledger/01KZPMKQHR3S989H1CPZDFYK5Q
+  created_at: 2026-08-10T20:07:49.046037555Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ledger/01KZPMKQHR3S989H1CPZDFYK5Q
+  hash: sha256:db533d1bf931164969445d87819fada9ecceaec88d77c267d01f70a74dfcb6fa
+  set: ledger-design
+  statement: The RDF index is derived from the log by a byte-deterministic emission that reads nothing but the log, so deleting .decisions/index/ and rebuilding reproduces identical bytes; the rebuild comparison runs in CI, making the disposability of the index a tested property rather than a design intention.
+  allocation: criterion
+  discharge:
+  - test:graph::the_rebuild_is_byte_identical_after_deleting_the_index
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - prd:decision-ledger-prd#5
+  - format:ledger-format-v1#8

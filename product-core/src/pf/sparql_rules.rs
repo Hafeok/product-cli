@@ -49,6 +49,31 @@ pub fn run_rules(ttl: &str, rules: &[SparqlRule]) -> Vec<Violation> {
     out
 }
 
+/// Run one SPARQL SELECT over a Turtle projection, returning each row's
+/// bindings as **raw term strings** (IRIs in `<>`, literals quoted) keyed by
+/// variable name. The generic query surface downstream graph consumers
+/// (the decision ledger's L2 shapes, per its OD-2) build on, so oxigraph
+/// stays this crate's dependency alone.
+pub fn select(ttl: &str, query: &str) -> Result<Vec<BTreeMap<String, String>>, String> {
+    let store = load(ttl)?;
+    let QueryResults::Solutions(solutions) = store.query(query).map_err(|e| e.to_string())? else {
+        return Ok(Vec::new());
+    };
+    let vars: Vec<String> = solutions.variables().iter().map(|v| v.as_str().to_string()).collect();
+    let mut out = Vec::new();
+    for sol in solutions {
+        let sol = sol.map_err(|e| e.to_string())?;
+        let mut row = BTreeMap::new();
+        for var in &vars {
+            if let Some(term) = sol.get(var.as_str()) {
+                row.insert(var.clone(), term.to_string());
+            }
+        }
+        out.push(row);
+    }
+    Ok(out)
+}
+
 fn load(ttl: &str) -> Result<Store, String> {
     let store = Store::new().map_err(|e| e.to_string())?;
     store
