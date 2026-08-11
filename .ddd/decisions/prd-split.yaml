@@ -20,7 +20,7 @@ based_on:
       beat one that owns everything.
 date: 2026-08-11
 notes: >
-  Awaiting the principal's per-entry ratification (M5 batch discipline).
+  Ratified 2026-08-11 (Emil): accepted as filed.
   The split itself executes once the review document is committed at
   docs/reviews/ddd-cli-prd-review-2026-08.md — the spec's normative
   invariants section quotes the review near-verbatim, so the split
