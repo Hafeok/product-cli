@@ -327,6 +327,59 @@ fn supersede_builds_a_walkable_chain_and_refuses_forking_it() {
     assert_eq!(rows.get(&first.to_string()).expect("row").state.as_str(), "superseded");
 }
 
+/// A store whose one decision two writers forked: one revised through the
+/// verb; the other branch's change-set (same parent, different content)
+/// lands as a file of its own — what a git merge of two logs leaves.
+fn forked_store(dir: &Path) -> (Author, DecisionId) {
+    let mut a = author(dir);
+    declare(&mut a);
+    let id = add_constraint(&mut a);
+    let args = ReviseArgs {
+        statement: "The left writer's revision.".into(),
+        based_on: Vec::new(),
+        expected_parent: None,
+    };
+    a.revise(&id, args).expect("left revision");
+    let store = crate::store::load(dir);
+    let versions = store.log.iter().flat_map(|c| &c.file.versions);
+    let left = versions.filter(|v| v.parent.is_some()).next_back().expect("the left revision");
+    let mut right = left.clone();
+    right.statement = "The right writer's revision.".into();
+    right.hash = crate::hash::version_hash(&right);
+    let mut cs = testkit::changeset(vec![right], Vec::new());
+    cs.decisions.clear();
+    cs.id = "cs:01K2C4YQJ3F8M0PT5W7NZ9RD99".parse().expect("id");
+    let path = dir.join(".decisions/log").join(cs.file_name());
+    std::fs::write(&path, serde_yaml::to_string(&cs).expect("yaml")).expect("write");
+    (a, id)
+}
+
+#[test]
+fn a_forked_chain_refuses_revision_rather_than_burying_the_conflict() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let (mut a, id) = forked_store(dir.path());
+    let err = a
+        .revise(&id, ReviseArgs {
+            statement: "Extending either tip buries the conflict.".into(),
+            based_on: Vec::new(),
+            expected_parent: None,
+        })
+        .expect_err("revise on a fork");
+    assert!(matches!(err, AuthorError::Conflict(_)), "{err}");
+    assert!(err.to_string().contains("merge --resolve"), "{err}");
+}
+
+#[test]
+fn a_forked_chain_has_no_signable_tip() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let (mut a, id) = forked_store(dir.path());
+    let err = a
+        .accept(AcceptArgs { decision: id, expires_at: None })
+        .expect_err("accept on a fork");
+    assert!(matches!(err, AuthorError::Conflict(_)), "{err}");
+    assert!(err.to_string().contains("no one latest version"), "{err}");
+}
+
 #[test]
 fn declare_refuses_a_second_declaration_of_the_same_set() {
     let dir = tempfile::tempdir().expect("tempdir");

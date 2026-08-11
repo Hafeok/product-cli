@@ -137,6 +137,11 @@ impl Author {
     ) -> Result<Applied, AuthorError> {
         let store = self.load();
         let view = View::build(&store);
+        if view.is_forked(&id.to_string()) {
+            return Err(AuthorError::Conflict(format!(
+                "the version chain of {id} is forked — two writers diverged, and extending either tip would bury the conflict; `ledger merge --resolve` arbitrates first"
+            )));
+        }
         let latest = view
             .latest
             .get(&id.to_string())

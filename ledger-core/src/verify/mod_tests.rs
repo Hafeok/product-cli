@@ -285,3 +285,80 @@ fn every_class_the_enum_declares_is_reachable_here() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// Latest derives from the parent DAG, not from file or ULID order.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn latest_is_the_dag_tip_whichever_file_order_the_ulids_impose() {
+    let root = testkit::sealed(testkit::version());
+    let mut child = testkit::version();
+    child.parent = Some(root.hash.clone());
+    child.statement = "the second writer's revision".into();
+    let child = testkit::sealed(child);
+    let child_hash = child.hash.clone();
+
+    // Same two versions, both file orders.
+    for versions in [vec![root.clone(), child.clone()], vec![child.clone(), root.clone()]] {
+        let store = testkit::store(testkit::changeset(versions, Vec::new()));
+        let view = crate::verify::view::View::build(&store);
+        let tip = view
+            .latest
+            .get(&testkit::decision_id().to_string())
+            .and_then(|i| view.versions.get(*i))
+            .expect("a latest version");
+        assert_eq!(tip.raw.hash, child_hash, "the DAG tip is latest under either order");
+        assert!(view.forked.is_empty());
+    }
+}
+
+#[test]
+fn a_forked_chain_is_recorded_and_the_representative_is_order_independent() {
+    let root = testkit::sealed(testkit::version());
+    let mut left = testkit::version();
+    left.parent = Some(root.hash.clone());
+    left.statement = "the left writer's revision".into();
+    let left = testkit::sealed(left);
+    let mut right = testkit::version();
+    right.parent = Some(root.hash.clone());
+    right.statement = "the right writer's revision".into();
+    let right = testkit::sealed(right);
+
+    let id = testkit::decision_id().to_string();
+    let mut picks = Vec::new();
+    for versions in [
+        vec![root.clone(), left.clone(), right.clone()],
+        vec![right.clone(), root.clone(), left.clone()],
+    ] {
+        let store = testkit::store(testkit::changeset(versions, Vec::new()));
+        let view = crate::verify::view::View::build(&store);
+        assert!(view.is_forked(&id), "two tips from one parent is a fork");
+        assert_eq!(view.forked.get(&id).map(Vec::len), Some(2));
+        let pick = view
+            .latest
+            .get(&id)
+            .and_then(|i| view.versions.get(*i))
+            .map(|v| v.raw.hash.clone())
+            .expect("a representative");
+        picks.push(pick);
+    }
+    assert_eq!(picks[0], picks[1], "the stand-in tip does not depend on file order");
+}
+
+#[test]
+fn a_content_identical_version_filed_twice_is_one_node_not_a_fork() {
+    // Both sides of a merge may carry the same act; the same hash is the
+    // same version, wherever it was filed.
+    let root = testkit::sealed(testkit::version());
+    let mut child = testkit::version();
+    child.parent = Some(root.hash.clone());
+    child.statement = "the second writer's revision".into();
+    let child = testkit::sealed(child);
+    let store = testkit::store(testkit::changeset(
+        vec![root, child.clone(), child],
+        Vec::new(),
+    ));
+    let view = crate::verify::view::View::build(&store);
+    assert!(view.forked.is_empty(), "one hash filed twice is one node");
+}
+

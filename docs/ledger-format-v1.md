@@ -1,10 +1,13 @@
 # Decision Ledger — Entry Format v1
 
-**Status:** normative for `format: 1`. Specification revision **v1.1**
-(2026-08-10): adds gate class `L010`, closing the judgment-actor gap §6
-flagged at v1.0 — see `ledger-format-migrations.md`. The file schemas and
-the canonical form are unchanged; existing stores may newly fail `L010`,
-and that is the point of the amendment.
+**Status:** normative for `format: 1`. Specification revision **v1.2**
+(2026-08-11): defines "latest" as derived from the version parent DAG
+rather than file or ULID order (§5.2), and the reference implementation's
+graph stage gains `G004`, the forked-chain shape (§8) — see
+`ledger-format-migrations.md`. Revision v1.1 (2026-08-10) added gate class
+`L010`, closing the judgment-actor gap §6 flagged at v1.0. The file
+schemas, the canonical form, and the file gate's ten classes are unchanged
+by both revisions.
 **Scope:** L0 of `decision-ledger-prd.md` — the file format, the canonical
 form, the version hash, and the `verify` gate. No graph, no index, no merge,
 no coverage query, no federation. (The L2 graph stage reports through the
@@ -414,6 +417,18 @@ Notes that are part of the specification, not implementation detail:
   `L005` and `L010`. An acceptance of a superseded version was already
   invalidated when the hash moved; reporting it again is noise on a resolved
   fact.
+- **"Latest" derives from the parent DAG, never from file or ULID order**
+  (spec v1.2). The latest version of a decision is the unique version whose
+  hash no other version of the same decision names as `parent`.
+  Content-identical filings (one hash filed more than once) are one version.
+  ULIDs order by one clock, and two writers' clocks prove nothing about
+  parenthood — deriving latest from change-set order was the single-writer
+  leak the L1 report named, retired here. A chain that cannot name one tip —
+  two versions unclaimed as parents, the store two divergent writers leave
+  behind — has no latest: an implementation must not resolve the ambiguity
+  by any ordering heuristic. The reference implementation reports it as
+  `G004` (§8) and refuses authoring verbs against the forked decision until
+  a recorded arbitration (`ledger merge --resolve`) settles the chain.
 - **A revoked acceptance is not judged** for expiry.
 - **`L008` checks the pair.** An acceptance naming one decision while signing
   another's hash is signing nothing about the decision it claims to accept.
@@ -515,7 +530,7 @@ parent; both `prov:wasGeneratedBy` their change-set). `based_on` tokens
 become `ledger:basedOn` literals exactly as written — the vocabulary stays
 open at this milestone; the graph exposes it and does not police it.
 
-`ledger verify` additionally runs three SPARQL shape checks over the
+`ledger verify` additionally runs four SPARQL shape checks over the
 emitted graph — cross-entry referential integrity the per-file schema
 cannot name. They report as a **distinct stage** of the same command, with
 unchanged exit semantics (findings exit `1`):
@@ -525,9 +540,14 @@ unchanged exit semantics (findings exit `1`):
 | `G001` | a `supersedes` edge targets a decision no change-set filed |
 | `G002` | a version's `parent` hash matches no filed version of its decision |
 | `G003` | a version names a decision no change-set introduced |
+| `G004` | a decision's version chain forks into more than one tip (spec v1.2) |
 
-The graph classes are closed the same way the file classes are: a `G004`
-is a change to this section. Coverage (`ledger coverage`) reports the
+`G004` is the state two divergent writers leave behind — a plain git merge
+of two branches' logs, each having revised the same decision from the same
+parent. No file is malformed; the *store* cannot name a latest version, so
+it is non-conformant until a recorded arbitration (`ledger merge
+--resolve`) extends one chain past the fork. The graph classes are closed
+the same way the file classes are: a `G005` is a change to this section. Coverage (`ledger coverage`) reports the
 seven-state disposition vocabulary — `undecided`, `awaiting-acceptance`,
 `decided`, `escaped-priced`, `escape-review-due`, `expired`, `superseded`
 — per set and per namespace, with supersession chains walked to their

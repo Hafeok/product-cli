@@ -1,0 +1,8 @@
+# Fixture set: latest derives from the parent DAG, not ULID order.
+format: 1
+id: two-clocks
+title: Two writers, two clocks
+tolerance_floor: T1
+ground: characterised
+owner: fixture-human@example
+created_at: 2026-08-10

@@ -1,0 +1,14 @@
+# The left writer's revision of the common parent.
+format: 1
+id: cs:01K2C4YQJ3F8M0PT5W7NZ9RDY0
+created_at: 2026-08-10T10:00:00Z
+created_by: fixture-human@example
+versions:
+  - decision: dec:fixture.forked/01K2C4YQJ3F8M0PT5W7NZ9RDXV
+    parent: sha256:29fb5a0a3934f4e3bc307b6ea03a9932a6a9a85f04cb2d97a87917000b790a39
+    hash: sha256:a289f499364f39b3cf0f3e63fde5d887296e2f2e7db969b59c46201fd4fa3684
+    set: forked
+    statement: The left writer's revision.
+    allocation: constraint
+    discharge: [analyzer:DEC001-no-float-money]
+    tolerance_floor_at_creation: T1

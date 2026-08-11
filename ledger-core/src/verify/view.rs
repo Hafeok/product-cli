@@ -6,6 +6,17 @@
 //! rebuilt from the log every run is exactly the property §5's rebuild test
 //! exists to protect.
 //!
+//! **Latest derives from the parent DAG, never from ULID order.** ULIDs
+//! order by one clock, and two writers' clocks prove nothing about
+//! parenthood: the latest version of a decision is the unique version no
+//! other version of the same decision names as `parent`. A chain with more
+//! than one such tip is *forked* — two writers diverged — which the graph
+//! stage reports as `G004` and only `ledger merge --resolve` may settle.
+//! For a forked decision the map still holds a deterministic representative
+//! (the tip with the lexically smallest hash — clock-free, so the reading
+//! is stable under any file ordering), but nothing may treat that pick as
+//! a resolution: the store is non-conformant until a human arbitrates.
+//!
 //! Assembling each wire version into its domain form happens here too, so a
 //! file that cannot describe a version reports once rather than once per
 //! rule that trips over it.
@@ -35,8 +46,13 @@ pub struct ViewedAcceptance<'a> {
 /// The whole log, read.
 pub struct View<'a> {
     pub versions: Vec<ViewedVersion<'a>>,
-    /// Decision id to the index of its latest version in `versions`.
+    /// Decision id to the index of its latest version in `versions` — the
+    /// tip of the parent DAG, not the last file visited.
     pub latest: BTreeMap<String, usize>,
+    /// Decisions whose parent DAG carries more than one tip: two writers
+    /// diverged, and no reading of the store may resolve that silently.
+    /// Indices of every tip, ordered by hash.
+    pub forked: BTreeMap<String, Vec<usize>>,
     /// Every `(decision, hash)` pair a version was filed under.
     pub stored: BTreeSet<(String, String)>,
     pub acceptances: Vec<ViewedAcceptance<'a>>,
@@ -46,12 +62,14 @@ pub struct View<'a> {
 }
 
 impl<'a> View<'a> {
-    /// Read the store. Change-sets are visited in ULID order — which is
-    /// creation order — so "latest" means what it says.
+    /// Read the store. Change-sets are visited in ULID order for a
+    /// deterministic base, but "latest" is derived from the parent DAG
+    /// afterwards — file order proves nothing about parenthood.
     pub fn build(store: &'a Store) -> Self {
         let mut view = Self {
             versions: Vec::new(),
             latest: BTreeMap::new(),
+            forked: BTreeMap::new(),
             stored: BTreeSet::new(),
             acceptances: Vec::new(),
             revoked: BTreeSet::new(),
@@ -68,6 +86,7 @@ impl<'a> View<'a> {
                 view.revoked.insert(revocation.acceptance.to_string());
             }
         }
+        view.derive_latest();
         view.check_revocations(store);
         view.check_sets(store);
         view
@@ -82,8 +101,55 @@ impl<'a> View<'a> {
             }
         };
         self.stored.insert((raw.decision.to_string(), raw.hash.to_string()));
-        self.latest.insert(raw.decision.to_string(), self.versions.len());
         self.versions.push(ViewedVersion { raw, path, parsed });
+    }
+
+    /// Derive each decision's latest version from its parent DAG.
+    ///
+    /// A version is a *tip* when no version of the same decision names its
+    /// hash as `parent`. Content-identical filings (one hash filed twice —
+    /// both sides of a merge carrying the same act) collapse to their first
+    /// appearance. One tip is the latest; several tips are a fork, recorded
+    /// for `G004` and the merge machinery, with the lexically smallest hash
+    /// standing in so every reading of the store stays total and
+    /// order-independent. No tip at all is only representable when stored
+    /// hashes lie (`L007` fails such a store); the last filing stands in.
+    fn derive_latest(&mut self) {
+        let mut by_decision: BTreeMap<String, Vec<usize>> = BTreeMap::new();
+        for (i, viewed) in self.versions.iter().enumerate() {
+            by_decision.entry(viewed.raw.decision.to_string()).or_default().push(i);
+        }
+        for (decision, indices) in by_decision {
+            // hash -> first index filing it; BTreeMap order = hash order.
+            let mut nodes: BTreeMap<String, usize> = BTreeMap::new();
+            for &i in &indices {
+                nodes.entry(self.versions[i].raw.hash.to_string()).or_insert(i);
+            }
+            let claimed: BTreeSet<String> = indices
+                .iter()
+                .filter_map(|&i| self.versions[i].raw.parent.as_ref())
+                .map(|h| h.to_string())
+                .collect();
+            let tips: Vec<usize> = nodes
+                .iter()
+                .filter(|(hash, _)| !claimed.contains(*hash))
+                .map(|(_, &i)| i)
+                .collect();
+            match tips.as_slice() {
+                [] => {
+                    if let Some(&last) = indices.last() {
+                        self.latest.insert(decision, last);
+                    }
+                }
+                [tip] => {
+                    self.latest.insert(decision, *tip);
+                }
+                [first, ..] => {
+                    self.latest.insert(decision.clone(), *first);
+                    self.forked.insert(decision, tips);
+                }
+            }
+        }
     }
 
     /// A revocation naming an acceptance nobody filed is a dangling
@@ -119,6 +185,11 @@ impl<'a> View<'a> {
     /// The latest version of every decision, in id order.
     pub fn latest_versions(&self) -> impl Iterator<Item = &ViewedVersion<'a>> {
         self.latest.values().filter_map(|i| self.versions.get(*i))
+    }
+
+    /// Whether this decision's chain has diverged into more than one tip.
+    pub fn is_forked(&self, decision: &str) -> bool {
+        self.forked.contains_key(decision)
     }
 
     /// Whether this acceptance has been revoked.

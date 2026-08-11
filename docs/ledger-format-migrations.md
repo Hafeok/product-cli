@@ -19,6 +19,35 @@ only adds an unhashed field.
 
 ---
 
+## Spec v1.2 — latest from the parent DAG; `G004` (2026-08-11)
+
+An **amendment to the specification document**, not a `format` bump and
+not a `CANONICAL_FORM` bump: no file schema changes, no hashed field
+changes meaning, every existing acceptance stays valid.
+
+The shipped L1 computed a decision's latest version by ULID order of
+change-sets — the single-writer leak the L1+L2 report named: ULIDs order
+by one clock, and two writers' clocks prove nothing about parenthood. As
+of v1.2, §5.2 defines "latest" as **the unique version whose hash no
+other version of the same decision names as `parent`** — the parent DAG
+(which `G002` already polices) is the authority, and file order is not
+consulted. Content-identical filings of one hash are one version.
+
+A chain with more than one tip has **no** latest, and no ordering
+heuristic may pick one. The reference implementation's graph stage gains
+`G004` (forked version chain) for exactly that state, and its authoring
+verbs refuse to extend or sign a forked decision. The remedy is an
+arbitration recorded through `ledger merge --resolve` (L3), never a
+silent resolution.
+
+**Migration note:** a single-writer store is unaffected — a linear chain's
+tip is the same version ULID order found, so no hash moves and no
+acceptance is disturbed. A store already carrying interleaved clocks may
+change which version `status`/`coverage`/the gate judge as latest; the DAG
+reading is the correct one and the ULID reading was the defect. A store
+carrying an undetected fork newly fails `G004` — that is the point of the
+amendment.
+
 ## Spec v1.1 — the tenth class, `L010` (2026-08-10)
 
 An **amendment to the specification document**, not a `format` bump and not

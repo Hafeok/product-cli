@@ -46,7 +46,7 @@ impl Options {
 #[derive(Debug, Default, Serialize)]
 pub struct Report {
     pub findings: Vec<Finding>,
-    /// The L2 graph stage: cross-entry shape findings (`G001`–`G003`),
+    /// The L2 graph stage: cross-entry shape findings (`G001`–`G004`),
     /// distinct from the file gate's closed ten classes.
     pub graph: Vec<crate::graph::GraphFinding>,
     /// Entries that loaded cleanly, for the summary line.

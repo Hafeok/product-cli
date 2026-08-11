@@ -10,7 +10,7 @@
 //! dependency, never this one's.
 //!
 //! Graph findings are a **distinct stage** of `verify`, outside the file
-//! gate's closed ten classes: `G001`–`G003`, reported by the same command
+//! gate's closed ten classes: `G001`–`G004`, reported by the same command
 //! with unchanged exit semantics.
 
 pub mod index;
@@ -38,10 +38,14 @@ pub enum GraphClass {
     G002,
     /// A version naming a decision no change-set ever introduced.
     G003,
+    /// A version chain with more than one tip: two writers diverged, and
+    /// only a recorded arbitration (`ledger merge --resolve`) may settle it.
+    G004,
 }
 
 /// Every graph class, in report order.
-pub const ALL_GRAPH_CLASSES: &[GraphClass] = &[GraphClass::G001, GraphClass::G002, GraphClass::G003];
+pub const ALL_GRAPH_CLASSES: &[GraphClass] =
+    &[GraphClass::G001, GraphClass::G002, GraphClass::G003, GraphClass::G004];
 
 impl GraphClass {
     pub fn code(self) -> &'static str {
@@ -49,6 +53,7 @@ impl GraphClass {
             Self::G001 => "G001",
             Self::G002 => "G002",
             Self::G003 => "G003",
+            Self::G004 => "G004",
         }
     }
 
@@ -57,6 +62,7 @@ impl GraphClass {
             Self::G001 => "supersession target is not a filed decision",
             Self::G002 => "parent hash matches no filed version of the decision",
             Self::G003 => "version names a decision no change-set introduced",
+            Self::G004 => "version chain forks into more than one tip",
         }
     }
 }

@@ -317,13 +317,19 @@ store (`.decisions/`), separate ontology.
 - **Graph (L2)** — `ledger reindex` materialises `.decisions/index/ledger.ttl`
   (byte-deterministic Turtle; delete-and-rebuild is byte-identical, tested in
   CI). PROV-O provenance; `based_on` becomes open-vocabulary `ledger:basedOn`
-  edges. `verify` additionally runs SPARQL shapes `G001`–`G003` (dangling
-  supersession target / parent hash / undeclared decision identity) as a
-  **distinct graph stage** outside the file gate's closed ten. `ledger
-  coverage [--set … --json]` reports the seven-state disposition vocabulary
-  (undecided · awaiting-acceptance · decided · escaped-priced ·
+  edges. `verify` additionally runs SPARQL shapes `G001`–`G004` (dangling
+  supersession target / parent hash / undeclared decision identity / forked
+  version chain) as a **distinct graph stage** outside the file gate's closed
+  ten. `ledger coverage [--set … --json]` reports the seven-state disposition
+  vocabulary (undecided · awaiting-acceptance · decided · escaped-priced ·
   escape-review-due · expired · superseded) per set and namespace, with
   supersession chains walked to their tips and the §8 honest limit stated.
+- **Latest derives from the parent DAG, never ULID order** (spec v1.2, L3's
+  first inheritance): a decision's latest version is the unique tip of its
+  `parent` chain — `verify::view::View` derives it, every consumer (`status`,
+  `coverage`, the gate rules, the verbs) reads it. A chain with two tips is
+  *forked* (`G004`): no ordering heuristic may pick a side, verbs refuse the
+  decision, and only a recorded arbitration settles it.
 - Fixture hashes refresh with
   `UPDATE_FIXTURES=1 cargo test -p ledger-cli --test gate`.
 

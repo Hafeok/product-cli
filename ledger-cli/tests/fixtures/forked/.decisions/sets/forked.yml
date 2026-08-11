@@ -1,0 +1,8 @@
+# Fixture set: a version chain forked by two divergent writers (G004).
+format: 1
+id: forked
+title: A chain two writers forked
+tolerance_floor: T1
+ground: characterised
+owner: fixture-human@example
+created_at: 2026-08-10

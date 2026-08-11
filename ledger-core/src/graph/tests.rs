@@ -86,9 +86,41 @@ fn graph_findings_fail_verify_as_a_distinct_stage() {
 }
 
 #[test]
-fn the_graph_class_set_is_closed_at_three() {
-    assert_eq!(super::ALL_GRAPH_CLASSES.len(), 3);
+fn g004_a_forked_version_chain() {
+    // One root, two children claiming it as parent: two writers diverged.
+    let root = testkit::sealed(testkit::version());
+    let mut left = testkit::version();
+    left.parent = Some(root.hash.clone());
+    left.statement = "the left writer's revision".into();
+    let mut right = testkit::version();
+    right.parent = Some(root.hash.clone());
+    right.statement = "the right writer's revision".into();
+    let store = testkit::store(testkit::changeset(
+        vec![root, testkit::sealed(left), testkit::sealed(right)],
+        Vec::new(),
+    ));
+    let findings = graph_findings(&store);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].class, GraphClass::G004);
+    assert_eq!(findings[0].subject, testkit::decision_id().to_string());
+    assert!(findings[0].message.contains("merge --resolve"), "{findings:?}");
+}
+
+#[test]
+fn a_linear_chain_is_not_a_fork() {
+    let root = testkit::sealed(testkit::version());
+    let mut child = testkit::version();
+    child.parent = Some(root.hash.clone());
+    child.statement = "a revision, single-writer".into();
+    let store =
+        testkit::store(testkit::changeset(vec![root, testkit::sealed(child)], Vec::new()));
+    assert_eq!(graph_findings(&store), Vec::new());
+}
+
+#[test]
+fn the_graph_class_set_is_closed_at_four() {
+    assert_eq!(super::ALL_GRAPH_CLASSES.len(), 4);
     let codes: Vec<&str> = super::ALL_GRAPH_CLASSES.iter().map(|c| c.code()).collect();
-    assert_eq!(codes, ["G001", "G002", "G003"]);
+    assert_eq!(codes, ["G001", "G002", "G003", "G004"]);
     assert!(super::ALL_GRAPH_CLASSES.iter().all(|c| !c.title().is_empty()));
 }

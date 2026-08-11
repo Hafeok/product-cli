@@ -75,7 +75,40 @@ const SHAPES: &[Shape] = &[
             )
         },
     },
+    Shape {
+        class: GraphClass::G004,
+        select: "SELECT ?d ?a ?b WHERE { \
+                 ?a a <urn:ledger:ns#DecisionVersion> . \
+                 ?a <urn:ledger:ns#ofDecision> ?d . \
+                 ?b a <urn:ledger:ns#DecisionVersion> . \
+                 ?b <urn:ledger:ns#ofDecision> ?d . \
+                 FILTER(STR(?a) < STR(?b)) \
+                 FILTER NOT EXISTS { \
+                   ?ca a <urn:ledger:ns#DecisionVersion> . \
+                   ?ca <urn:ledger:ns#ofDecision> ?d . \
+                   ?ca <http://www.w3.org/ns/prov#wasRevisionOf> ?a } \
+                 FILTER NOT EXISTS { \
+                   ?cb a <urn:ledger:ns#DecisionVersion> . \
+                   ?cb <urn:ledger:ns#ofDecision> ?d . \
+                   ?cb <http://www.w3.org/ns/prov#wasRevisionOf> ?b } }",
+        message: |row| {
+            (
+                term(row, "d"),
+                format!(
+                    "the version chain forks: {} and {} are both tips — two writers diverged, and only `ledger merge --resolve` may settle which content stands",
+                    short_hash(&term(row, "a")),
+                    short_hash(&term(row, "b"))
+                ),
+            )
+        },
+    },
 ];
+
+/// Display form of a hash term: the first 12 hex characters.
+fn short_hash(term: &str) -> String {
+    let hex = term.strip_prefix("sha256:").unwrap_or(term);
+    hex.get(..12).unwrap_or(hex).to_string()
+}
 
 /// Run every shape over the store's emitted graph. An engine fault surfaces
 /// as a finding on the shape itself rather than a panic or a silent pass —

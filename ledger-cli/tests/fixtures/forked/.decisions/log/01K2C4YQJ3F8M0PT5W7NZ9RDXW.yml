@@ -1,0 +1,20 @@
+# The common parent, then each writer's divergent revision of it — the
+# store a plain git merge of two branches' logs produces. Nothing here is
+# individually malformed; the graph stage names the fork (G004), and only
+# `ledger merge --resolve` may settle which content stands.
+format: 1
+id: cs:01K2C4YQJ3F8M0PT5W7NZ9RDXW
+created_at: 2026-08-10T09:14:22Z
+created_by: fixture-human@example
+decisions:
+  - id: dec:fixture.forked/01K2C4YQJ3F8M0PT5W7NZ9RDXV
+    created_at: 2026-08-10T09:14:22Z
+    created_by: fixture-human@example
+versions:
+  - decision: dec:fixture.forked/01K2C4YQJ3F8M0PT5W7NZ9RDXV
+    hash: sha256:29fb5a0a3934f4e3bc307b6ea03a9932a6a9a85f04cb2d97a87917000b790a39
+    set: forked
+    statement: The statement both writers started from.
+    allocation: constraint
+    discharge: [analyzer:DEC001-no-float-money]
+    tolerance_floor_at_creation: T1

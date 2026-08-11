@@ -67,6 +67,12 @@ fn member_line(view: &View, row: &crate::verify::state::StateRow) -> String {
     if let Some(by) = &row.superseded_by {
         line.push_str(&format!(" by {by}"));
     }
+    if view.is_forked(&row.decision) {
+        line.push_str(&format!(
+            " — chain forked into {} tips, awaiting `ledger merge --resolve`",
+            view.forked.get(&row.decision).map(Vec::len).unwrap_or_default()
+        ));
+    }
     line
 }
 
