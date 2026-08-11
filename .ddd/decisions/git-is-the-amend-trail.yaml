@@ -1,4 +1,4 @@
-format: 2
+format: 5
 id: dec/ddd/git-is-the-amend-trail
 title: Amendments leave no in-file trail; the committed graph's history is the record
 rationale: >
@@ -8,7 +8,22 @@ rationale: >
   store that is not under version control.
 principal: Emil (Context&)
 based_on:
-  - claim: DDD-method-04
-    status: projected
-    changed: 2026-08-07
+  - type: constraint
+    statement: >-
+      The store is committed files under version control, so the substrate
+      already records every amendment — author, date, diff — and an in-file
+      trail can only be a second copy that drifts from the authoritative
+      one.
 date: 2026-08-07
+notes: >
+  Basis re-typed 2026-08-11, following the 2026-08 basis-quality audit: a
+  re-decision of the basis per format 5, not an edit. The decision is
+  structurally forced — the trail exists because the store's substrate is
+  git, whether or not any in-file field repeats it — so its honest basis is
+  the constraint stated above; no measured finding is involved. The prior
+  citation of DDD-method-04 is dropped: that claim restates this same
+  constraint in claim form, filed the same day as the decision with nothing
+  behind it beyond the restatement — the rule-3 filler the audit classes as
+  manufactured. The claim itself is not retired here; claim fates are the
+  F-batch's. Format 2 -> 5 per docs/ddd-format-migrations.md. Awaiting the
+  principal's ruling.

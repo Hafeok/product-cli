@@ -1,4 +1,4 @@
-format: 2
+format: 5
 id: dec/ddd/predicates-carry-no-status
 title: Predicates carry no status; enforcement is structural
 rationale: >
@@ -7,12 +7,32 @@ rationale: >
   entry, naming ontology rule 1), not by convention or review.
 principal: Emil (Context&)
 based_on:
-  - claim: DDD-method-01
-    status: reported
-    changed: 2026-08-02
+  - type: mandate
+    statement: >-
+      The framework corpus's predicate format (predicate-format.md,
+      predicate-definition.md) requires the split — status, boundary
+      clauses and falsifiers live on claims only — and ontology rule 1
+      enforces it by schema.
 date: 2026-08-02
 notes: >
   Pin backfilled at M5 from git, not from the present: the decision was filed
   in 136aa55 (2026-08-02) and DDD-method-01 has not been touched since, so
   the status and changed values above are the claim's state at decision time,
   recovered rather than assumed. Not a re-decision.
+
+
+  Basis re-typed 2026-08-11, following the 2026-08 basis-quality audit: a
+  re-decision of the basis per format 5, not an edit (the backfilled pin
+  the paragraph above describes is superseded by the drop below; it stays
+  on record here). The split is not adopted because a claim measured it
+  working — it is required by the framework corpus this tool implements,
+  and the mandate above names that requirement and its schema-level
+  enforcement. The prior citation of DDD-method-01 is dropped: this very
+  decision seals that claim's falsifier — once predicates carry no status,
+  no predicate with an embedded status can exist to be observed staying
+  accurate, so the claim cannot be killed by the store it governs. A claim
+  this decision makes unfalsifiable cannot serve as this decision's basis;
+  that defect is the audit's F-8 finding, to be filed as a claim in its
+  own right. The claim itself is not retired here; claim fates are the
+  F-batch's. Format 2 -> 5 per docs/ddd-format-migrations.md. Awaiting the
+  principal's ruling.

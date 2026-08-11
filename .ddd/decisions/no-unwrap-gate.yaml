@@ -1,4 +1,4 @@
-format: 2
+format: 5
 id: dec/rust/no-unwrap
 title: Deny clippy::unwrap_used workspace-wide
 rationale: >
@@ -10,7 +10,28 @@ rationale: >
   the workspace config is what `ddd diff` verifies the manifest against.
 principal: Emil (Context&)
 based_on:
-  - claim: DDD-gates-01
+  - type: constraint
+    statement: >-
+      The workspace error model routes every failure through ProductError
+      to a defined exit code; an unwrap is a panic path that structurally
+      bypasses that contract, so denying the lint is what keeps the error
+      model total.
+  - type: claim
+    claim: DDD-gates-01
     status: reported
     changed: 2026-08-06
 date: 2026-08-06
+notes: >
+  Basis re-typed 2026-08-11, following the 2026-08 basis-quality audit: a
+  re-decision of the basis per format 5, not an edit. The gate is forced by
+  the workspace's error contract — every failure maps to a ProductError
+  exit code, and a panic path bypasses that contract structurally — stated
+  as the constraint above; no measured finding makes it so. DDD-gates-01 is
+  retained as a secondary basis, pin unchanged: as the sole ground it was
+  the manufactured-grade citation the audit found, but it genuinely reports
+  the cost side (the lint has held workspace-wide without a waiver
+  request), and its falsifier — waiver pressure, or a class of code where
+  the lint produces worse handling than the unwrap it replaced — remains
+  independently observable. Retained as the cost check, not the ground; its
+  fate as a claim is the F-batch's. Format 2 -> 5 per
+  docs/ddd-format-migrations.md. Awaiting the principal's ruling.
