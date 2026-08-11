@@ -244,7 +244,7 @@ A second workspace stack — `ddd-core` / `ddd-lsp` / `ddd-mcp` / `ddd-cli` —
 governs *decisions* over a repo-local `.ddd/` store (predicates, falsifiable
 claims, decisions, analyzer/linter manifests, patterns, seams). Separate
 ontology, separate store, shared storage conventions
-([PRD](docs/ddd-cli-prd.md)). `ddd validate | diff | report escapes | why |
+([spec](docs/ddd-v1-spec.md); [umbrella PRD](docs/ddd-cli-prd.md)). `ddd validate | diff | report escapes | why |
 render | what | serve`.
 
 **The What is a governed contract surface** (`ddd what`,

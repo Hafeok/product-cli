@@ -1,6 +1,6 @@
 //! Decision-Driven Design governance graph — the `.ddd/` store library.
 //!
-//! Implements PRD M1 (`docs/ddd-cli-prd.md`): a repo-local YAML graph of
+//! Implements PRD M1 (`docs/ddd-v1-spec.md`): a repo-local YAML graph of
 //! predicates, closure claims, decisions, analyzer/linter manifests, pattern
 //! instances, seam declarations; ontology validation via the `pf` SPARQL rule
 //! engine over a `ddd:` Turtle projection; `why` resolution from any governed
