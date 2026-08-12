@@ -1,4 +1,4 @@
-format: 2
+format: 5
 id: dec/ddd/internal-not-surface
 title: internal is not C# contract surface by default; library repos flip per-repo
 rationale: >
@@ -10,7 +10,29 @@ rationale: >
   question 2 with the stated default.
 principal: Emil (Context&)
 based_on:
-  - claim: DDD-adapter-02
+  - type: mandate
+    statement: >-
+      The principal's ruling settling PRD §14 question 2: Context&
+      repositories are application repositories, so the app-repo posture is
+      the required default and the library posture is an explicit per-repo
+      config flip.
+  - type: claim
+    claim: DDD-adapter-02
     status: projected
     changed: 2026-08-06
 date: 2026-08-06
+notes: >
+  Basis re-typed 2026-08-12, following the 2026-08 basis-quality audit: a
+  re-decision of the basis per format 5, not an edit. The default posture is
+  not a measured finding — it is required by who this tool serves. The
+  principal ruled PRD §14 question 2 for Context&'s repo population, which
+  is application repositories; the mandate above names that requirement.
+  DDD-adapter-02 is retained as a secondary basis, pin unchanged: as the
+  ground of the decision it is the manufactured-grade citation the audit
+  found (projected, filed with the decision, no evidence), but it does
+  state the exposure the default carries, and its falsifier — a boundary
+  defect traced to an internal member consumed across a boundary — is the
+  live tripwire for revisiting the mandate. Retained as the check on the
+  ruling, not its ground; its fate as a claim is the F-batch's. Format
+  2 -> 5 per docs/ddd-format-migrations.md.
+  Ratified 2026-08-12 (Emil): accepted as filed (8b7a410).

@@ -1,0 +1,31 @@
+format: 2
+id: DDD-method-07
+statement: >
+  Self-sealed falsifiers are a failure mode distinct from manufactured
+  claims: a decision can remove the arrangement under which its own
+  grounding claim's falsifier could ever be observed, leaving a claim that
+  cannot be killed by the store it governs. Three standing instances
+  (basis-quality audit 2026-08, docs/audits/basis-quality-2026-08.md §3.1):
+  DDD-arch-04's study needs the declarant-supplied structural fields that
+  dec/ddd/amend-explicit-evidence-frozen abolished; DDD-method-01's
+  accurate-embedded-status predicate is a schema rejection under
+  dec/ddd/predicates-carry-no-status; DDD-method-05's authoring-time
+  shared/ body is forbidden by dec/ddd/seed-lands-in-claims-not-shared. A
+  manufactured claim is weak and visible; a self-sealed falsifier looks
+  strong and is untestable.
+status: projected
+falsifier: >
+  One of the three named falsifier conditions is actually observed while
+  its sealing decision stands — in this store or in any store governed by
+  the same decisions — or a re-audit of the three cases identifies a
+  concrete observation route the 2026-08 grading missed and re-grades the
+  case present under the audit's pre-registered §1.3 criteria. Either is a
+  negative result a future basis-quality audit can genuinely produce: it
+  shows the seal was never a seal. An F-batch falsifier repair retires an
+  instance by ruling, not by observation, and does not fire this; the
+  claim dies when no standing instance survives scrutiny, not when the
+  instances are repaired away.
+owner: none
+changed: 2026-08-12
+revalidate_by: 2027-02-12
+depends_on: []

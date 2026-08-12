@@ -1,0 +1,32 @@
+format: 1
+id: risk/ddd/undeclared-what-boundaries
+kind: risk-acceptance
+title: The 24 undeclared What boundaries stay undeclared; exposure accepted until review
+rationale: >
+  Exposure accepted: `ddd what --strict` reports 24 undeclared boundaries
+  over 121 classified elements — 8 in acme, 16 in product-cli. While they
+  stay undeclared, a change to any of them goes unrecorded, and the What
+  surface has no green baseline against which a future regression could be
+  measured. The exposure is bounded two ways: both graphs are demonstration
+  content with no second party that reads their elements across a boundary
+  (DDD-what-04), and nothing enforces these boundaries in either direction —
+  `ddd what --strict` is not wired into CI, and What write interception
+  inherits the global `intercept: warn`.
+
+
+  Review by 2027-02-07, carried mechanically by DDD-what-04's
+  `revalidate_by` (`report escapes` raises it then; basis loss raises it
+  sooner if the claim moves). The trigger to pay rather than re-defer is
+  whichever arrives first: this workspace gaining a genuinely governed
+  surface of its own, or a first engagement repo bringing a What graph with
+  a real second party.
+principal: Emil (Context&)
+date: 2026-08-07
+notes: >
+  Filed 2026-08-12 in the basis-quality re-typing session. This record
+  makes explicit the risk acceptance that
+  dec/ddd/what-boundaries-priced-not-paid ruled on 2026-08-07 — that
+  decision's format-5 `risk-acceptance` basis must ref a record of this
+  kind, and none existed. It restates the already-ruled acceptance with its
+  exposure and review date; it does not re-decide it.
+  Ratified 2026-08-12 (Emil): accepted as filed (8b7a410).

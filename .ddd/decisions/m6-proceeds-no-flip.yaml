@@ -1,4 +1,4 @@
-format: 2
+format: 5
 id: dec/ddd/m6-proceeds-no-flip
 title: M6 proceeds as the Rust adapter; the M6/M7 flip condition does not fire
 rationale: >
@@ -27,7 +27,13 @@ rationale: >
   escaped decision in the making — the exact shape this tool exists to catch.
 principal: Emil (Context&)
 based_on:
-  - claim: DDD-adapter-01
+  - type: mandate
+    statement: >-
+      The stated default the principal set for the M6/M7 sequencing: with
+      the flip condition unfiled and therefore unevaluable against filed
+      evidence, the evaluation resolves by that default and M6 proceeds.
+  - type: claim
+    claim: DDD-adapter-01
     status: projected
     changed: 2026-08-02
 date: 2026-08-10
@@ -55,3 +61,23 @@ notes: >
   time; nothing is re-litigated, the pin stays at its decision-time value
   per PRD §6 rule 6, and this note is the record that the moved edge was
   looked at.
+
+
+  Basis re-typed 2026-08-12, following the 2026-08 basis-quality audit
+  (F-7e): a re-decision of the basis per format 5, not an edit. The
+  rationale's own deciding phrase — "the condition therefore could not be
+  evaluated against filed evidence; it was resolved by the stated
+  default" — argues from the principal's stated default, which is a
+  mandate, now stated above. The audit also records the content mismatch:
+  DDD-adapter-01 is about policy-table localisation and says nothing about
+  the flip condition — genuine, but about something else. It is retained
+  as a secondary basis, pin unchanged, with that made explicit: it never
+  grounded the flip evaluation, but it is the tracked stake of proceeding —
+  the first paragraph above records why the edge points at the
+  adapter-cost claim, and its movement (projected -> reported ->
+  established) was raised by basis loss and looked at twice, record-keeping
+  the edge is still doing. Format 2 -> 5 per
+  docs/ddd-format-migrations.md.
+  Ratified 2026-08-12 (Emil): accepted as filed (8531938) — the retained
+  edge is a claim being watched, with the content mismatch explicit so it
+  is not later read as ground.
