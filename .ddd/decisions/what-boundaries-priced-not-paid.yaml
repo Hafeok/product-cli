@@ -46,7 +46,7 @@ based_on:
     changed: 2026-08-07
 date: 2026-08-07
 notes: >
-  Basis re-typed 2026-08-11, following the 2026-08 basis-quality audit: a
+  Basis re-typed 2026-08-12, following the 2026-08 basis-quality audit: a
   re-decision of the basis per format 5, not an edit. The rationale opens
   with the word "Exposure" and prices it; the ruling is an acceptance of
   that priced risk, not a consequence of any measured claim — so its honest
@@ -58,4 +58,5 @@ notes: >
   manufactured citations it is genuinely load-bearing — it bounds the
   exposure (demonstration content, no second party) and carries the review
   date mechanically through its `revalidate_by`. Format 2 -> 5 per
-  docs/ddd-format-migrations.md. Awaiting the principal's ruling.
+  docs/ddd-format-migrations.md.
+  Ratified 2026-08-12 (Emil): accepted as filed (8b7a410).

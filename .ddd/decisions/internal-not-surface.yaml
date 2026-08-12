@@ -22,7 +22,7 @@ based_on:
     changed: 2026-08-06
 date: 2026-08-06
 notes: >
-  Basis re-typed 2026-08-11, following the 2026-08 basis-quality audit: a
+  Basis re-typed 2026-08-12, following the 2026-08 basis-quality audit: a
   re-decision of the basis per format 5, not an edit. The default posture is
   not a measured finding — it is required by who this tool serves. The
   principal ruled PRD §14 question 2 for Context&'s repo population, which
@@ -34,5 +34,5 @@ notes: >
   defect traced to an internal member consumed across a boundary — is the
   live tripwire for revisiting the mandate. Retained as the check on the
   ruling, not its ground; its fate as a claim is the F-batch's. Format
-  2 -> 5 per docs/ddd-format-migrations.md. Awaiting the principal's
-  ruling.
+  2 -> 5 per docs/ddd-format-migrations.md.
+  Ratified 2026-08-12 (Emil): accepted as filed (8b7a410).
