@@ -77,4 +77,7 @@ notes: >
   adapter-cost claim, and its movement (projected -> reported ->
   established) was raised by basis loss and looked at twice, record-keeping
   the edge is still doing. Format 2 -> 5 per
-  docs/ddd-format-migrations.md. Awaiting the principal's ruling.
+  docs/ddd-format-migrations.md.
+  Ratified 2026-08-12 (Emil): accepted as filed (8531938) — the retained
+  edge is a claim being watched, with the content mismatch explicit so it
+  is not later read as ground.
