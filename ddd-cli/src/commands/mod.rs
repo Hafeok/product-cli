@@ -1,5 +1,6 @@
 //! Subcommand surface for the `ddd` binary.
 
+mod bind;
 mod diff;
 mod diff_contracts;
 mod init;
@@ -20,6 +21,17 @@ use product_core::error::{ProductError, Result};
 /// The M1-M4 command surface (PRD §7). Keep the variant list sorted.
 #[derive(Subcommand)]
 pub enum Commands {
+    /// File the declarations a failing diff-contracts gate demands (post-hoc bindings)
+    Bind {
+        /// <base>..<head>, or <base> to bind against the working tree
+        range: String,
+        /// Seconds to wait for a lazily started language host
+        #[arg(long, default_value = "180")]
+        wait: u64,
+        /// verdict_knowledge for freshly created declarations
+        #[arg(long)]
+        verdict: Option<String>,
+    },
     /// Declared vs. detected rules: UNGOVERNED / STALE / UNCITED_SUPPRESSION
     Diff {
         /// SARIF file(s) with emitted diagnostics (adds to config detect.sarif)
@@ -126,6 +138,7 @@ pub enum ReportWhat {
 
 pub fn run(cmd: Commands, root: Option<PathBuf>) -> Result<()> {
     match cmd {
+        Commands::Bind { range, wait, verdict } => bind::run(root, range, wait, verdict),
         Commands::Diff { sarif, json } => diff::run(root, sarif, json),
         Commands::DiffContracts { range, json, wait } => {
             diff_contracts::run(root, range, json, wait)

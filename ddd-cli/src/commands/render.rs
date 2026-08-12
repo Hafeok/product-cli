@@ -15,7 +15,11 @@ pub fn run(
     let detected = ddd_core::detect::detect(&repo_root, store.config.as_ref(), &sarif);
     let today = today.unwrap_or_else(|| chrono::Local::now().format("%Y-%m-%d").to_string());
     let escapes = ddd_core::report::report_escapes(&store, &detected, &today);
-    let html = ddd_core::render::render_html(&store, &escapes, &today);
+    let ledger = chrono::NaiveDate::parse_from_str(&today, "%Y-%m-%d")
+        .ok()
+        .and_then(|date| ddd_core::ledger_gate::ledger_section(&repo_root, &store, date));
+    let html =
+        ddd_core::render::render_html_with_ledger(&store, &escapes, ledger.as_ref(), &today);
     let out = out.unwrap_or_else(|| repo_root.join(".ddd/render.html"));
     product_core::fileops::write_file_atomic(&out, &html)?;
     println!(

@@ -42,7 +42,7 @@ pub fn run(root: Option<PathBuf>, range: String, json: bool, wait: u64) -> Resul
 }
 
 /// `a..b` → (a, Some(b)); `a` → (a, None) = base against the working tree.
-fn parse_range(range: &str) -> Result<(&str, Option<&str>)> {
+pub fn parse_range(range: &str) -> Result<(&str, Option<&str>)> {
     match range.split_once("..") {
         Some((a, b)) if a.is_empty() || b.is_empty() => Err(ProductError::ConfigError(format!(
             "malformed range `{range}` — expected <base>..<head> or <base>"

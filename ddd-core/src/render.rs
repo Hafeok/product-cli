@@ -13,6 +13,18 @@ use crate::store::DddStore;
 
 /// The whole page as one string; the caller owns writing it to disk.
 pub fn render_html(store: &DddStore, escapes: &EscapesReport, today: &str) -> String {
+    render_html_with_ledger(store, escapes, None, today)
+}
+
+/// The full projection, with the ledger's reading when the repo carries a
+/// `.decisions/` store (M8: instruments computed by the ledger, surfaced
+/// here — this page projects, it never computes a second verdict).
+pub fn render_html_with_ledger(
+    store: &DddStore,
+    escapes: &EscapesReport,
+    ledger: Option<&crate::ledger_gate::LedgerSection>,
+    today: &str,
+) -> String {
     let mut b = String::with_capacity(32 * 1024);
     let _ = writeln!(b,
         "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>DDD governance graph</title>\n<style>{CSS}</style>\n</head>\n<body>\n<h1>DDD governance graph</h1>\n<p class=\"muted\">A static projection of <code>.ddd/</code> — regenerated, never edited. Cadence judged against {}.</p>",
@@ -22,9 +34,58 @@ pub fn render_html(store: &DddStore, escapes: &EscapesReport, today: &str) -> St
     decisions_section(&mut b, store);
     manifest_section(&mut b, store);
     escapes_section(&mut b, escapes);
+    if let Some(section) = ledger {
+        ledger_section(&mut b, section);
+    }
     seams_section(&mut b, store);
     b.push_str("</body>\n</html>\n");
     b
+}
+
+/// The ledger's verdict, projected: gates, pendency, dispositions, and
+/// exact pin drift — computed by `ledger verify`, restated here.
+fn ledger_section(b: &mut String, s: &crate::ledger_gate::LedgerSection) {
+    b.push_str("<h2>Decision ledger</h2>\n");
+    let verdict = |ok: bool| if ok { "conformant" } else { "findings" };
+    let _ = writeln!(
+        b,
+        "<p>readiness: <span class=\"chip {}\">{}</span> · completeness: <span class=\"chip {}\">{}</span> · {} awaiting acceptance</p>",
+        if s.readiness { "established" } else { "retired" },
+        verdict(s.readiness),
+        if s.completeness { "established" } else { "retired" },
+        verdict(s.completeness),
+        s.awaiting_acceptance
+    );
+    let counts: Vec<String> =
+        s.dispositions.iter().map(|(k, v)| format!("{} {}", esc(k), v)).collect();
+    let _ = writeln!(b, "<p class=\"muted\">dispositions: {}</p>", counts.join(" · "));
+    if s.pin_drift.is_empty() {
+        let _ = writeln!(
+            b,
+            "<p class=\"ok\">basis pins exact — {} claim-token pin(s) checked</p>",
+            s.pins_checked
+        );
+        return;
+    }
+    b.push_str("<table><tr><th>decision</th><th>marker</th><th>claim</th><th>pinned</th><th>current</th></tr>\n");
+    for d in &s.pin_drift {
+        let who = d.historical.as_deref().unwrap_or(&d.decision);
+        let _ = writeln!(
+            b,
+            "<tr><td><code>{}</code></td><td>{}</td><td><code>{}</code></td><td class=\"muted\">{}</td><td class=\"muted\">{}</td></tr>",
+            esc(who),
+            esc(&d.marker),
+            esc(&d.claim),
+            esc(short_hash(&d.pinned)),
+            esc(d.current.as_deref().map(short_hash).unwrap_or("claim no longer exists")),
+        );
+    }
+    b.push_str("</table>\n");
+}
+
+fn short_hash(hash: &str) -> &str {
+    let hex = hash.strip_prefix("sha256:").unwrap_or(hash);
+    hex.get(..12).unwrap_or(hex)
 }
 
 /// The page's stylesheet — a real `.css` asset so the M7 pair governance

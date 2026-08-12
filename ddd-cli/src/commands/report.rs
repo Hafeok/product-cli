@@ -19,12 +19,16 @@ pub fn run(
     let report = ddd_core::report::report_escapes(&store, &detected, &today);
     let config = store.config.clone().unwrap_or_default();
     let pair = ddd_lsp::adapter::htmlcss_pair::check_pairs(&repo_root, &config);
+    let today_date = chrono::NaiveDate::parse_from_str(&today, "%Y-%m-%d")
+        .map_err(|e| ProductError::ConfigError(format!("--today: {e}")))?;
+    let ledger = ddd_core::ledger_gate::ledger_section(&repo_root, &store, today_date);
     if json {
         let out = serde_json::json!({
             "today": today,
             "clean": report.is_clean() && pair.is_clean(),
             "escapes": report,
             "pair": pair,
+            "ledger": ledger,
         });
         println!(
             "{}",
@@ -33,7 +37,47 @@ pub fn run(
         return Ok(());
     }
     print_report(&report, &pair, &today);
+    if let Some(section) = &ledger {
+        print_ledger(section);
+    }
     Ok(())
+}
+
+/// Readiness and completeness are the ledger's verdicts, restated —
+/// `ddd` delegates to `ledger verify` and grows no second rulebook (M8).
+fn print_ledger(s: &ddd_core::ledger_gate::LedgerSection) {
+    println!("\n== decision ledger (delegated to `ledger verify`) ==");
+    println!(
+        "readiness: {} · completeness: {} · {} awaiting acceptance",
+        if s.readiness { "conformant" } else { "FINDINGS" },
+        if s.completeness { "conformant" } else { "FINDINGS" },
+        s.awaiting_acceptance
+    );
+    for f in &s.findings {
+        println!("  {f}");
+    }
+    let counts: Vec<String> =
+        s.dispositions.iter().map(|(k, v)| format!("{k} {v}")).collect();
+    println!("dispositions: {}", counts.join(" · "));
+    if s.pin_drift.is_empty() {
+        println!("basis pins exact — {} claim-token pin(s) checked", s.pins_checked);
+    }
+    for d in &s.pin_drift {
+        let who = d.historical.as_deref().unwrap_or(&d.decision);
+        let current = d.current.as_deref().unwrap_or("claim no longer exists");
+        println!(
+            "pin drift ({}): {who} — {} pinned {}, now {}",
+            d.marker,
+            d.claim,
+            short(&d.pinned),
+            short(current)
+        );
+    }
+}
+
+fn short(hash: &str) -> &str {
+    let hex = hash.strip_prefix("sha256:").unwrap_or(hash);
+    hex.get(..12).unwrap_or(hex)
 }
 
 fn print_report(

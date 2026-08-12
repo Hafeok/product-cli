@@ -23,6 +23,7 @@ pub mod gitrev;
 pub mod editorconfig;
 pub mod htmlvalidateconfig;
 pub mod init;
+pub mod ledger_gate;
 pub mod manifest;
 pub mod pattern;
 pub mod predicate;

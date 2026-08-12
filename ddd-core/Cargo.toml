@@ -17,6 +17,7 @@ path = "src/lib.rs"
 workspace = true
 
 [dependencies]
+chrono       = "0.4"
 ledger-core  = { path = "../ledger-core", version = "0.6.0" }
 product-core = { path = "../product-core", version = "0.6.0" }
 serde      = { version = "1", features = ["derive"] }
