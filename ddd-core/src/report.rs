@@ -81,6 +81,13 @@ pub struct BasisLoss {
     /// `None` when the claim no longer exists at all.
     pub current_status: Option<ClaimStatus>,
     pub current_changed: Option<String>,
+    /// Format-6 pins: the content hash pinned at decision time — when
+    /// present, loss is the exact comparison against `current_content`
+    /// (M8, invariant 2), not the status+date heuristic.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pinned_content: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub current_content: Option<String>,
 }
 
 impl EscapesReport {
@@ -149,25 +156,40 @@ fn basis_scan(store: &DddStore) -> (Vec<BasisLoss>, BasisCoverage) {
             };
             coverage.pinned += 1;
             let current = store.claims.iter().find(|c| c.id == pin.claim);
-            let moved = match current {
-                Some(c) => c.status != pin.status || c.changed != pin.changed,
-                None => true,
-            };
-            if moved {
-                losses.push(BasisLoss {
-                    decision: d.id.clone(),
-                    claim: pin.claim.clone(),
-                    pinned_status: pin.status,
-                    pinned_changed: pin.changed.clone(),
-                    current_status: current.map(|c| c.status),
-                    current_changed: current.map(|c| c.changed.clone()),
-                });
+            if let Some(loss) = pin_loss(&d.id, pin, current) {
+                losses.push(loss);
             }
         }
     }
     losses.sort_by(|a, b| (&a.decision, &a.claim).cmp(&(&b.decision, &b.claim)));
     coverage.unpinned.sort_by(|a, b| (&a.decision, &a.claim).cmp(&(&b.decision, &b.claim)));
     (losses, coverage)
+}
+
+/// Judge one pinned edge. A format-6 content pin is authoritative: hash
+/// equality is exact and subsumes the status+date heuristic (the hash
+/// covers both). Pins without one keep the heuristic.
+fn pin_loss(
+    decision: &str,
+    pin: &crate::decision::BasisPin,
+    current: Option<&crate::claim::Claim>,
+) -> Option<BasisLoss> {
+    let current_content = current.map(crate::basis_pin::claim_content_hash);
+    let moved = match (current, &pin.content) {
+        (None, _) => true,
+        (Some(_), Some(pinned)) => current_content.as_deref() != Some(pinned.as_str()),
+        (Some(c), None) => c.status != pin.status || c.changed != pin.changed,
+    };
+    moved.then(|| BasisLoss {
+        decision: decision.to_string(),
+        claim: pin.claim.clone(),
+        pinned_status: pin.status,
+        pinned_changed: pin.changed.clone(),
+        current_status: current.map(|c| c.status),
+        current_changed: current.map(|c| c.changed.clone()),
+        pinned_content: pin.content.clone(),
+        current_content: pin.content.as_ref().and(current_content),
+    })
 }
 
 #[cfg(test)]

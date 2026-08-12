@@ -84,6 +84,106 @@ pub struct SkippedFile {
     pub reason: String,
 }
 
+/// A contract-surface change no signed declaration discharges — the CI
+/// finding invariant 5 exists for.
+#[derive(Debug, Serialize)]
+pub struct Undischarged {
+    pub id: String,
+    pub file: String,
+    pub symbol: String,
+    pub reason: String,
+}
+
+/// Judge every surface event in the report against the store's signed
+/// bindings. A file's transition is discharged by a *chain* of bindings
+/// composing from its before-hash to its after-hash (each hop was
+/// individually classified and signed at edit time); an event is
+/// discharged when a binding on such a chain names its symbol. A
+/// declaration that does not bind to the change it claims to discharge
+/// is a finding, not a warning (M8 ruling).
+pub fn check_discharge(
+    report: &ContractDiffReport,
+    seams: &[crate::seam::SeamDeclaration],
+) -> Vec<Undischarged> {
+    let mut out = Vec::new();
+    for file in &report.files {
+        let bindings: Vec<&crate::binding::SeamBinding> = seams
+            .iter()
+            .flat_map(|s| s.bindings.iter())
+            .filter(|b| b.file == file.file)
+            .collect();
+        let on_path = on_path_bindings(&bindings, &file.before, &file.after);
+        for e in file.events.iter().filter(|e| e.event.surface) {
+            let symbol = &e.event.facts.name;
+            let reason = match &on_path {
+                None => format!(
+                    "no signed binding chain composes {} -> {} for this file",
+                    short(&file.before),
+                    short(&file.after)
+                ),
+                Some(chain) if !chain.iter().any(|b| &b.symbol == symbol) => format!(
+                    "a binding chain covers the file transition, but no binding on it names `{symbol}`"
+                ),
+                Some(_) => continue,
+            };
+            out.push(Undischarged {
+                id: e.id.clone(),
+                file: file.file.clone(),
+                symbol: symbol.clone(),
+                reason,
+            });
+        }
+    }
+    out
+}
+
+/// The bindings lying on some chain from `from` to `to`, or `None` when
+/// no chain exists. Forward-reachability from `from` intersected with
+/// backward-reachability from `to` over the binding edges.
+fn on_path_bindings<'a>(
+    bindings: &[&'a crate::binding::SeamBinding],
+    from: &str,
+    to: &str,
+) -> Option<Vec<&'a crate::binding::SeamBinding>> {
+    let mut forward = reach(bindings, from, |b| (&b.before, &b.after));
+    forward.insert(from.to_string());
+    if !forward.contains(to) {
+        return None;
+    }
+    let mut backward = reach(bindings, to, |b| (&b.after, &b.before));
+    backward.insert(to.to_string());
+    Some(
+        bindings
+            .iter()
+            .filter(|b| forward.contains(&b.before) && backward.contains(&b.after))
+            .copied()
+            .collect(),
+    )
+}
+
+fn reach<'a>(
+    bindings: &[&'a crate::binding::SeamBinding],
+    start: &str,
+    edge: impl Fn(&'a crate::binding::SeamBinding) -> (&'a String, &'a String),
+) -> std::collections::BTreeSet<String> {
+    let mut seen = std::collections::BTreeSet::new();
+    let mut frontier = vec![start.to_string()];
+    while let Some(node) = frontier.pop() {
+        for b in bindings {
+            let (tail, head) = edge(b);
+            if tail == &node && seen.insert(head.clone()) {
+                frontier.push(head.clone());
+            }
+        }
+    }
+    seen
+}
+
+fn short(hash: &str) -> &str {
+    let hex = hash.strip_prefix("sha256:").unwrap_or(hash);
+    hex.get(..12).unwrap_or(hex)
+}
+
 /// The stable finding id for one classified change:
 /// `contract/<language>/<file>#<container>/<symbol>@<change>`, with
 /// whitespace in symbol names collapsed to `-` so the id stays one token.

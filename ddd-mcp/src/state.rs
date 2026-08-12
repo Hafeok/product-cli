@@ -1,9 +1,11 @@
-//! Serve-time shared state — LSP hosts plus same-session declarations.
+//! Serve-time shared state — the per-language LSP hosts.
 //!
 //! One [`ServeState`] lives for the whole `ddd serve` process. The host
-//! manager holds the per-language children; the session log records seam
-//! plus pattern declarations filed *through this process*, which is what
-//! "a matching declaration in the same session" means in PRD §8.
+//! manager holds the per-language children. There is no session log: M8
+//! retired same-session declaration matching (`DDD-arch-09` — it
+//! discharged whatever change next touched the symbol); the interceptor
+//! matches against *stored* seam declarations whose signed bindings name
+//! the exact transition.
 
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -11,43 +13,15 @@ use std::sync::Mutex;
 use ddd_lsp::HostManager;
 use serde_json::Value;
 
-/// One declaration filed during this serve session.
-#[derive(Debug, Clone)]
-pub struct Declared {
-    /// The entry id (`seam/...` or `pat/...`).
-    pub id: String,
-    /// Where the declaration says the contract lives.
-    pub contract_location: String,
-    /// The symbol the declaration names, when it names one.
-    pub symbol: Option<String>,
-}
-
-#[derive(Default)]
-pub struct SessionLog {
-    pub declared: Vec<Declared>,
-}
-
 pub struct ServeState {
     pub root: PathBuf,
     pub manager: Mutex<HostManager>,
-    pub session: Mutex<SessionLog>,
 }
 
 impl ServeState {
     pub fn new(root: PathBuf) -> Self {
         let manager = Mutex::new(HostManager::new(root.clone()));
-        Self { root, manager, session: Mutex::new(SessionLog::default()) }
-    }
-
-    /// Record a declaration for same-session matching.
-    pub fn record_declaration(&self, id: &str, contract_location: &str, symbol: Option<String>) {
-        if let Ok(mut log) = self.session.lock() {
-            log.declared.push(Declared {
-                id: id.to_string(),
-                contract_location: contract_location.to_string(),
-                symbol,
-            });
-        }
+        Self { root, manager }
     }
 
     /// Resolve a tool `file` argument against the repo root.

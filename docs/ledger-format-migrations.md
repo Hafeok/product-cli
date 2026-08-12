@@ -19,6 +19,41 @@ only adds an unhashed field.
 
 ---
 
+## Format 3 / Spec v1.4 — the `contract:` discharge scheme (2026-08-12, ddd M8)
+
+A **`format` bump without a `CANONICAL_FORM` bump**, by the same
+reasoning as format 2: `format: 3` adds exactly one discharge scheme,
+`contract:<boundary>` — the repository-diff contract check as a
+discharge kind (M8 ruling 5: the CI contract-check discharge kind is
+added through this amendment procedure, at the current version, with
+this note). A `contract:` pointer names a declared boundary (a
+`seam/...` declaration id or a `file#symbol` contract location) whose
+changes are validated in CI by the shared classifier: every
+contract-surface change in a revision range must be discharged by a
+declaration signing that exact transition.
+
+Rules that arrive with it:
+
+- A writer declares `format: 3` only on a change-set that actually
+  carries a `contract:` pointer — a store that never uses the scheme
+  remains pure format 1/2. A lower-format file carrying one is a schema
+  fault (the `merged_from` rule, applied to a scheme).
+- Hashing is unaffected: a discharge pointer was always hashed by its
+  string form, so no digest moves, no acceptance is invalidated, and the
+  hash prefix stays `ledger.decision-version.v1`.
+- The scheme's *resolution* (does the named boundary exist; is the CI
+  check actually wired) is not the file gate's business — same posture
+  as every other scheme at L0.
+
+**Renumbering note:** the L6 signing revision, which had renumbered from
+`format: 2` to `format: 3` when L3 consumed its slot, renumbers a second
+time to **spec v1.5 / `format: 4`**. Nothing else about the L6 plan
+changes; it remains ruled and unimplemented.
+
+**Migration note:** nothing to migrate. Existing stores stay valid; the
+first consumers of the scheme are the ddd M8 migration's seam-declaration
+entries.
+
 ## Format 2 / Spec v1.3 — `merged_from`; `G005` (2026-08-11, L3)
 
 A **`format` bump without a `CANONICAL_FORM` bump**, and the reasoning is
@@ -138,11 +173,13 @@ Recorded now so the shape of the change is not a surprise.
   further `format` bump with a migration path for entries that carry none
   (this entry originally said `format: 2`, a number since consumed by L3's
   `merged_from`). Hashing is unaffected: `expires_at` is not hashed.
-- **OD-3 — signatures. Scheduled 2026-08-11 as milestone L6 / spec v1.4 /
-  `format: 3`; unimplemented.** This entry originally read "populating
+- **OD-3 — signatures. Scheduled 2026-08-11 as milestone L6 / spec v1.5 /
+  `format: 4`; unimplemented.** This entry originally read "populating
   `signature` is a `format: 2`" — that number was consumed by L3's
-  `merged_from`, so the signing bump renumbers to `format: 3`; nothing else
-  about the plan changes. What the revision will occupy (PRD §4.5):
+  `merged_from`, and the renumbered `format: 3` slot in turn by M8's
+  `contract:` scheme, so the signing bump renumbers to `format: 4`;
+  nothing else about the plan changes. What the revision will occupy
+  (PRD §4.5):
   `signature` goes live as a detached, certificate-based signature (git's
   `gpg.format` trio — `openpgp` | `ssh` | `x509`) over a canonical
   acceptance payload — decision id, version hash, actor, signing timestamp —

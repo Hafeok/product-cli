@@ -5,6 +5,7 @@
 //! graph plus per-language LSP hosts. The core here never names a
 //! language beyond routing into `ddd-lsp`'s adapter registry.
 
+pub mod bind;
 pub mod dispatch;
 pub mod edits;
 pub mod govern_tools;

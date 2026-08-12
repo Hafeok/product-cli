@@ -176,6 +176,69 @@ The field is what a promoting repo checks before inheriting an entry
 SDK the destination does not run is worse than no entry, because it carries
 the catalog's authority without holding there.
 
+## Format 6 (M8, 2026-08)
+
+Formats 1–5 remain valid unchanged. Format 6 exists for the two M8
+capabilities: declarations that sign the change they discharge, and
+basis loss as an exact content comparison. Both hash forms ride the
+ledger's canonical-JSON law (`ledger_core::canon`'s primitives) under
+their own domain prefixes — one canonicalisation scheme, per-payload
+field sets.
+
+### Seams: signed `bindings` (seam format 2)
+
+A seam declaration's entry family moves to `format: 2` when it carries
+`bindings` — the signed transitions the declaration discharges:
+
+```yaml
+format: 2
+id: seam/rust/added
+# ...
+bindings:
+  - symbol: added
+    file: src/lib.rs
+    before: sha256:…          # parent-state content hash, or `absent`
+    after: sha256:…           # proposed-state content hash
+    base_revision: <commit>   # where the parent state is committed
+    hash: sha256:…            # ddd.seam-binding.v1 over the five fields
+```
+
+A binding's parent state must be committed — a dirty file refuses to
+bind (M8 ruling 2) — and matching is by signature only: same-session
+matching is retired (M8 ruling 4, closing `DDD-arch-09`). Declaring
+`bindings` under seam format 1 is a validation violation; a stored
+binding hash that does not recompute is a violation.
+
+### Decisions: content-hash pins
+
+A format-6 decision pins **every** claim edge with `content:` — the
+hash of the claim's canonical content at decision time
+(`ddd.claim-content.v1`). Basis loss becomes pinned-hash ≠ current-hash,
+mechanically exact (spec invariant 2); status and `changed` stay on the
+pin as the human-readable record, and since both are part of the hashed
+content, hash equality subsumes the old heuristic:
+
+```yaml
+format: 6
+based_on:
+  - type: claim
+    claim: DDD-arch-08
+    status: reported
+    changed: 2026-08-11
+    content: sha256:…
+```
+
+Declaring `content` under formats 1–5 is a violation; a format-6
+decision with a claim pin missing `content` is a violation.
+
+**Migrating a v2–v5 decision:** set `format: 6` and add `content:` to
+every claim pin. The pinned hash is the claim's content *at decision
+time*: when the claim's current status+changed still equal the pin,
+hash the current content; when the pin records drift that was
+deliberately kept (a re-affirmed edge), recover the claim's content at
+the pinned state from git history and hash that — the recorded drift
+then keeps reporting as basis loss, exactly as before, now exactly.
+
 ## Format 5 (PRD review, 2026-08)
 
 Formats 1–4 remain valid unchanged. Format 5 exists for one ruling: a

@@ -28,7 +28,13 @@ pub const CANONICAL_FORM: &str = "ledger.decision-version.v1";
 /// Normalise a string the way canonicalisation requires, in order:
 /// line endings to LF, NFC, then leading/trailing ASCII whitespace removed.
 /// A value that ends up empty is treated as absent.
-fn norm(s: &str) -> Option<String> {
+///
+/// Public together with [`put`]/[`put_set`] as the law's primitives: a
+/// payload type outside this crate (the M8 seam-binding hash, the ddd
+/// content pins) builds its canonical object from these, under its own
+/// domain-separation prefix — one canonicalisation law, explicit
+/// per-payload field sets, never a second scheme.
+pub fn norm(s: &str) -> Option<String> {
     let unified = s.replace("\r\n", "\n").replace('\r', "\n");
     let composed: String = unified.nfc().collect();
     let trimmed = composed.trim_matches(|c: char| c.is_ascii_whitespace());
@@ -36,7 +42,7 @@ fn norm(s: &str) -> Option<String> {
 }
 
 /// Insert a string field, omitting it when it normalises to nothing.
-fn put(map: &mut Map<String, Value>, key: &str, value: Option<String>) {
+pub fn put(map: &mut Map<String, Value>, key: &str, value: Option<String>) {
     if let Some(v) = value.as_deref().and_then(norm) {
         map.insert(key.to_string(), Value::String(v));
     }
@@ -45,7 +51,7 @@ fn put(map: &mut Map<String, Value>, key: &str, value: Option<String>) {
 /// Insert a list field as a deduplicated, code-point-sorted array of the
 /// members' canonical string forms. A discharge list and a basis list are
 /// *sets*: reordering them in a file is formatting, not meaning.
-fn put_set(map: &mut Map<String, Value>, key: &str, items: impl Iterator<Item = String>) {
+pub fn put_set(map: &mut Map<String, Value>, key: &str, items: impl Iterator<Item = String>) {
     let sorted: BTreeSet<String> = items.filter_map(|s| norm(&s)).collect();
     if !sorted.is_empty() {
         let array = sorted.into_iter().map(Value::String).collect();

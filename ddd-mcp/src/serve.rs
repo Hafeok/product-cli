@@ -2,9 +2,8 @@
 //!
 //! Builds a registry carrying only the `ddd_*` tools (a governed C#/Bicep
 //! repo's agent has no use for the `product_*` framework surface) with a
-//! dispatcher bound to one [`ServeState`] — the hosts plus session
-//! declarations live for the process, which defines "same session" for
-//! the interceptor (PRD §8).
+//! dispatcher bound to one [`ServeState`] — the per-language hosts live
+//! for the process; declaration matching reads the stored graph (M8).
 
 use std::path::PathBuf;
 use std::sync::Arc;

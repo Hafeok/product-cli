@@ -1,7 +1,12 @@
 # Decision Ledger — Entry Format v1
 
-**Status:** normative for `format: 1` and `format: 2`. Specification
-revision **v1.3** (2026-08-11, L3): introduces `format: 2`, which adds one
+**Status:** normative for `format: 1`, `format: 2` and `format: 3`.
+Specification revision **v1.4** (2026-08-12, ddd M8): introduces
+`format: 3`, which adds one discharge scheme, `contract:` — the
+repository-diff contract check as a discharge kind (§3.4). No field
+changes, no hashed-meaning changes: **every existing digest is
+unchanged** and `CANONICAL_FORM` does not bump. Revision **v1.3**
+(2026-08-11, L3) introduced `format: 2`, which adds one
 optional version field, `merged_from` — the other tip a merge arbitration
 closed. The field is hashed when present and omitted when absent, so
 **every format-1 digest is unchanged** and `CANONICAL_FORM` does not bump;
@@ -9,7 +14,7 @@ the graph stage gains `G005` (competing supersession). Revision **v1.2**
 (2026-08-11) defined "latest" as derived from the version parent DAG
 rather than file or ULID order (§5.2) and added `G004`, the forked-chain
 shape (§8). Revision v1.1 (2026-08-10) added gate class `L010`. The file
-gate's ten classes are unchanged by all three revisions — see
+gate's ten classes are unchanged by all four revisions — see
 `ledger-format-migrations.md`.
 **Scope:** L0 of `decision-ledger-prd.md` — the file format, the canonical
 form, the version hash, and the `verify` gate. No graph, no index, no merge,
@@ -161,10 +166,21 @@ A typed pointer, wire form `scheme:payload`:
 | `whatif` | pre-deployment assertion | `whatif:no-public-network` |
 | `otel` | metric name | `otel:dec.004.deadletter` |
 | `actor` | an identity (§3.2) | `actor:emk@delegate.dk` |
+| `contract` | a declared boundary (seam id or `file#symbol`) | `contract:seam/ledger/verify-classes` |
 
 An unknown scheme is a schema fault: a pointer nothing can ever resolve is
 prose, and prose is what this format exists to replace. Nothing *resolves*
 these at L0.
+
+`contract` is the **format 3** scheme (spec v1.4, added through this
+document's amendment procedure for the ddd M8 integration): the decision
+is discharged by the repository-diff contract check — a change to the
+named boundary in any revision range must carry a declaration signing
+that exact change, validated in CI by the shared classifier. A file
+carrying a `contract:` pointer declares `format: 3`; a lower-format file
+carrying one is a schema fault, and a store that never uses the scheme
+stays a pure format-1/2 store. Hashing is unaffected: a discharge pointer
+was always hashed by its string form.
 
 `discharge_stage` is one of `pr | dev | staging | prod`, the ground table's
 stages. Discharging later than the ground allowed is waste; earlier is
@@ -262,10 +278,13 @@ a shippable state, which is what `L001` says.
 
 `signature` is reserved and must be empty under `format: 1`. It exists so a
 cryptographic upgrade (OD-3) is additive rather than a migration; its format
-is deliberately unspecified. That upgrade is now scheduled — spec v1.4 /
-`format: 3`, PRD §4.5 / milestone L6 — and remains **planned, not
-normative**: under every format this document specifies, a non-empty
-`signature` is still a schema fault (§6, last bullet).
+is deliberately unspecified. That upgrade is now scheduled — spec v1.5 /
+`format: 4`, PRD §4.5 / milestone L6 (renumbered a second time: its
+original `format: 2` slot was consumed by L3's `merged_from`, and its
+`format: 3` slot by the M8 `contract:` scheme; nothing else about the
+plan changes) — and remains **planned, not normative**: under every
+format this document specifies, a non-empty `signature` is still a
+schema fault (§6, last bullet).
 
 `merged_from` (spec v1.3) exists only at `format: 2` — a format-1 file
 carrying it is a schema fault. It names the *other tip* a merge
@@ -508,8 +527,9 @@ Stated so an adopter meets them in this document rather than in production.
   milestone. Late-discovery rate is the lagging proxy.
 - **ULID generation is not specified here** because L0 mints no ids. L1's
   `add` needs it.
-- **Planned, not yet normative — spec v1.4 / `format: 3` (PRD §4.5,
-  milestone L6; ruled 2026-08-11, unimplemented).** The signing revision:
+- **Planned, not yet normative — spec v1.5 / `format: 4` (PRD §4.5,
+  milestone L6; ruled 2026-08-11, unimplemented; renumbered by the M8
+  `contract:` scheme consuming `format: 3`).** The signing revision:
   `signature` goes live as a detached, certificate-based signature (git's
   `gpg.format` trio — `openpgp` | `ssh` | `x509`) over a canonical
   acceptance payload — decision id, version hash, actor, signing timestamp
@@ -524,7 +544,7 @@ Stated so an adopter meets them in this document rather than in production.
   taking the closed class count from **ten to twelve** when that revision
   lands. Hashing is unaffected: the signature is *over* the version hash,
   never inside it, so no digest moves and `CANONICAL_FORM` stays `v1`.
-  Until v1.4 ships, everything in §§1–5 stands exactly as written.
+  Until that revision ships, everything in §§1–5 stands exactly as written.
 
 ---
 

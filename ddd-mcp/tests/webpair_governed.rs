@@ -22,8 +22,26 @@ fn write(root: &Path, rel: &str, content: &str) {
     std::fs::write(path, content).expect("write");
 }
 
+/// Run `git` in `root`, asserting success.
+fn git(root: &Path, args: &[&str]) {
+    let out = std::process::Command::new("git")
+        .current_dir(root)
+        .args(args)
+        .output()
+        .unwrap_or_else(|e| panic!("git {args:?}: {e}"));
+    assert!(out.status.success(), "git {args:?}: {}", String::from_utf8_lossy(&out.stderr));
+}
+
+/// Commit the whole tree, so every governed file's parent state is
+/// committed — the precondition for binding (M8 ruling 2).
+fn commit_all(root: &Path) {
+    git(root, &["add", "-A"]);
+    git(root, &["commit", "-qm", "init"]);
+}
+
 /// A governed temp repo with the pair map on and the html-css class in the
-/// given mode.
+/// given mode — all committed, because enforce mode only binds against
+/// committed parent state (M8).
 fn repo(mode: &str) -> (tempfile::TempDir, product_mcp::ToolRegistry) {
     let tmp = tempfile::tempdir().expect("tempdir");
     ddd_core::init::apply_init(&ddd_core::init::plan_init(tmp.path())).expect("init");
@@ -36,6 +54,10 @@ fn repo(mode: &str) -> (tempfile::TempDir, product_mcp::ToolRegistry) {
     );
     write(tmp.path(), "site/page.html", &fixture("page.html"));
     write(tmp.path(), "site/style.css", &fixture("style.css"));
+    git(tmp.path(), &["init", "-q"]);
+    git(tmp.path(), &["config", "user.email", "t@example.com"]);
+    git(tmp.path(), &["config", "user.name", "T"]);
+    commit_all(tmp.path());
     let (_state, registry) = ddd_mcp::serve::build_registry(tmp.path().to_path_buf());
     (tmp, registry)
 }
@@ -79,14 +101,20 @@ fn token_change_runs_the_full_loop_with_pair_facts_on_the_row() {
     assert!(!std::fs::read_to_string(tmp.path().join("site/style.css"))
         .expect("read")
         .contains("--color-warn"));
+    // The template carries the pre-computed binding for this transition.
+    let binding = rejected["demands"][0]["template"]["binding"].clone();
+    assert_eq!(binding["symbol"], "--color-warn", "{rejected}");
+    assert_eq!(binding["file"], "site/style.css", "{rejected}");
+    assert!(binding["base_revision"].is_string(), "{rejected}");
 
-    // 2. Declare the seam the demand names.
+    // 2. Declare the seam the demand names, signing the demanded transition.
     call(&registry, "ddd_declare_seam", json!({
         "id": "seam/web/color-warn-token",
         "boundary": "design token --color-warn in site/style.css",
         "contract_location": "site/style.css#--color-warn",
         "symbol": "--color-warn",
         "verdict_knowledge": "consumers learn the degraded-state colour without knowing its value; retiring or retyping it breaks every var() site",
+        "binding": binding,
     }));
 
     // 3. Re-apply → applied, linked; the row carries the pair facts.
@@ -123,6 +151,7 @@ fn class_vocabulary_change_runs_the_full_loop() {
         "contract_location": "site/style.css#badge",
         "symbol": "badge",
         "verdict_knowledge": "markup learns a status chip exists; removing the class strands every element consuming it",
+        "binding": rejected["demands"][0]["template"]["binding"],
     }));
     let applied =
         call(&registry, "ddd_apply_edit", json!({"file": "site/style.css", "new_text": edited}));

@@ -125,8 +125,10 @@ fn to_rows<'a, T: serde::Serialize + 'a>(items: impl Iterator<Item = &'a T>) -> 
     items.filter_map(|i| serde_json::to_value(i).ok()).collect()
 }
 
-/// `ddd_declare_seam`: file the declaration, record it for same-session
-/// matching, warn when the boundary absorbs no demand.
+/// `ddd_declare_seam`: file the declaration, warn when the boundary
+/// absorbs no demand. A `binding` block signs the exact transition the
+/// declaration discharges (M8): its parent state must be committed —
+/// a dirty file refuses to bind, naming the constraint.
 pub fn declare_seam(state: &ServeState, args: &Value) -> ToolResult {
     let id = req_str(args, "id")?;
     if !id.starts_with("seam/") {
@@ -136,17 +138,89 @@ pub fn declare_seam(state: &ServeState, args: &Value) -> ToolResult {
     let existing: Option<ddd_core::seam::SeamDeclaration> =
         amend_target(state, &path, &id, args)?;
     let amending = existing.is_some();
-    let seam = seam_entry(args, &id, existing)?;
+    let mut seam = seam_entry(args, &id, existing)?;
+    let bound = match args.get("binding") {
+        Some(spec) => Some(attach_binding(state, &mut seam, spec)?),
+        None => None,
+    };
     write_yaml(&path, &seam)?;
-    let symbol = seam.metadata.get("symbol").and_then(|v| v.as_str()).map(str::to_string);
-    state.record_declaration(&id, &seam.contract_location, symbol);
     let warning = seam.verdict_knowledge.trim().is_empty().then_some(
         "verdict_knowledge is empty — this boundary declares seam cost with no demand absorbed (PRD §8); state what the boundary encodes about the verdict; pass `amend: true` to fill it in",
     );
     Ok(json!({
         "status": outcome(amending), "id": id, "path": state.rel_display(&path),
-        "warning": warning,
+        "binding": bound, "warning": warning,
     }))
+}
+
+/// Verify and append a signed binding. Edit-time form (no
+/// `base_revision`): the file must be clean against HEAD and `before`
+/// must equal the committed parent's hash. Post-hoc form (explicit
+/// `base_revision`, the CI-remedy path): `before` is verified against
+/// that committed revision instead.
+fn attach_binding(
+    state: &ServeState,
+    seam: &mut ddd_core::seam::SeamDeclaration,
+    spec: &Value,
+) -> Result<Value, String> {
+    let get = |k: &str| {
+        spec.get(k)
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(str::to_string)
+            .ok_or_else(|| format!("binding.{k} is required"))
+    };
+    let (symbol, file, before, after) = (get("symbol")?, get("file")?, get("before")?, get("after")?);
+    let base_revision = match spec.get("base_revision").and_then(Value::as_str) {
+        Some(rev) if !rev.trim().is_empty() => {
+            let rev = ddd_core::gitrev::rev_parse(&state.root, rev.trim())?;
+            verify_before(state, &rev, &file, &before)?;
+            rev
+        }
+        _ => {
+            let head = ddd_core::gitrev::head(&state.root).map_err(|_| {
+                "the repository has no HEAD commit — a declaration binds against committed \
+                 parent state, and there is none to bind against (M8 ruling 2)"
+                    .to_string()
+            })?;
+            let disk = std::fs::read(state.root.join(&file)).ok();
+            let at_head = ddd_core::gitrev::bytes_at(&state.root, &head, &file)?;
+            if disk != at_head {
+                return Err(format!(
+                    "{file} is dirty against HEAD ({}) — a declaration never binds uncommitted \
+                     parent state; commit the current state first (M8 ruling 2, the ledger's \
+                     construction-limit precedent)",
+                    &head[..12.min(head.len())]
+                ));
+            }
+            verify_before(state, &head, &file, &before)?;
+            head
+        }
+    };
+    let binding =
+        ddd_core::binding::SeamBinding::seal(&symbol, &file, &before, &after, &base_revision);
+    if !seam.bindings.iter().any(|b| b.hash == binding.hash) {
+        seam.bindings.push(binding.clone());
+    }
+    seam.format = seam.format.max(2);
+    serde_json::to_value(&binding).map_err(|e| e.to_string())
+}
+
+/// The binding's `before` must equal the parent state actually committed
+/// at `rev` — a declaration signs a reproducible transition or nothing.
+fn verify_before(state: &ServeState, rev: &str, file: &str, before: &str) -> Result<(), String> {
+    let committed = ddd_core::gitrev::bytes_at(&state.root, rev, file)?
+        .map(|b| ddd_core::contracts::content_hash(&b))
+        .unwrap_or_else(|| ddd_core::contracts::ABSENT.to_string());
+    if committed != before {
+        return Err(format!(
+            "binding.before is {before} but {file} at {} is {committed} — the declaration \
+             would not sign the transition it claims to discharge",
+            &rev[..12.min(rev.len())]
+        ));
+    }
+    Ok(())
 }
 
 /// Build the entry to write. On amend, judgement fields take the supplied
@@ -171,6 +245,7 @@ fn seam_entry(
             contract_location: req_str(args, "contract_location")?,
             obligations: string_list(args, "obligations"),
             metadata,
+            bindings: Vec::new(),
             notes: opt_str(args, "notes"),
         });
     };
@@ -185,6 +260,7 @@ fn seam_entry(
             None => prev.obligations,
         },
         metadata: prev.metadata,
+        bindings: prev.bindings,
         notes: opt_str(args, "notes").or(prev.notes),
     })
 }
@@ -223,7 +299,6 @@ pub fn declare_pattern(state: &ServeState, args: &Value) -> ToolResult {
         notes: opt_str(args, "notes").or_else(|| existing.as_ref().and_then(|e| e.notes.clone())),
     };
     write_yaml(&path, &entry)?;
-    state.record_declaration(&id, &instance, None);
     Ok(json!({
         "status": outcome(existing.is_some()), "id": id, "path": state.rel_display(&path),
     }))

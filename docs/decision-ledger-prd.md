@@ -177,9 +177,11 @@ Consequences, priced:
 ### 4.5 Acceptance signatures — planned, not implemented (OD-3's scheduled upgrade)
 
 Ruled 2026-08-11 (principal: Emil), scheduled as milestone **L6** and spec
-**v1.4 / `format: 3`** — the migration record's original "populating
-`signature` is a `format: 2`" slot was consumed by L3's `merged_from`, so the
-signing bump renumbers; nothing else about the plan changes. **None of this
+**v1.5 / `format: 4`** — the migration record's original "populating
+`signature` is a `format: 2`" slot was consumed by L3's `merged_from`, and
+the renumbered `format: 3` slot by ddd M8's `contract:` discharge scheme
+(spec v1.4), so the signing bump renumbers again; nothing else about the
+plan changes. **None of this
 is implemented.** The normative answer today remains OD-3's claimed identity;
 this section exists so an L6 session can be prompted from it alone. It lives
 under the data model because the signature is a property of the `Acceptance`
@@ -489,7 +491,7 @@ LLM-as-staff, every mutation a ledger append. Signing UX per OD-3. Until it ship
 on the PR-review interim.
 
 **L6 — Certificate-based acceptance signing. RULED 2026-08-11; UNIMPLEMENTED.**
-The §4.5 rulings, delivered: spec v1.4 / `format: 3` with the reserved
+The §4.5 rulings, delivered: spec v1.5 / `format: 4` with the reserved
 `signature` field live; payload canonicalisation for signatures (the
 canonical acceptance payload — decision id, version hash, actor, signing
 timestamp — detached signature over it, never over a commit); the three git
@@ -532,7 +534,7 @@ Named, not filled. Each should be settled before the milestone that depends on i
   introducing commit is *skipped*, never failed — otherwise no acceptance could ever be
   committed. Shipped in L0 as classes `L006` and `L009`. *Upgrade scheduled 2026-08-11:
   §4.5 / L6 populate the reserved `signature` field with certificate-based, tier-gated
-  signing (spec v1.4 / `format: 3`). Claimed identity was always the L0 answer and the
+  signing (spec v1.5 / `format: 4`). Claimed identity was always the L0 answer and the
   reserved field was the planned door — L6 walks through it. A scheduled stage of this
   resolution, not a reversal of it.*
 - **OD-4 — Tolerance granularity. RESOLVED 2026-08-10 (principal: Emil).** Per-set **floor** with

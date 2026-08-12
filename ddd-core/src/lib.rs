@@ -7,7 +7,9 @@
 //! id to its decision chain. Own ontology, own namespace — nothing here
 //! extends the What/How vocabulary. Pure library: no clap, no MCP.
 
+pub mod basis_pin;
 pub mod bicepconfig;
+pub mod binding;
 pub mod cargolints;
 pub mod claim;
 pub mod config;

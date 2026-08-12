@@ -174,7 +174,7 @@ fn graph_query() -> ToolDef {
 fn declare_seam() -> ToolDef {
     tool(
         "ddd_declare_seam",
-        "File a seam declaration (boundary + verdict_knowledge + contract_location). Empty verdict_knowledge files with a seam-cost-without-demand warning. Pass amend:true to revise a filed seam — boundary and contract_location are required only when filing.",
+        "File a seam declaration (boundary + verdict_knowledge + contract_location). Empty verdict_knowledge files with a seam-cost-without-demand warning. Pass amend:true to revise a filed seam — boundary and contract_location are required only when filing. Pass `binding` (copy it from the rejection demand) to sign the exact transition this declaration discharges; a dirty parent state refuses to bind.",
         true,
         json!({
             "id": {"type": "string", "description": "seam/<area>/<name>"},
@@ -183,6 +183,7 @@ fn declare_seam() -> ToolDef {
             "contract_location": {"type": "string", "description": "Required when filing; frozen on amend"},
             "obligations": {"type": "array", "items": {"type": "string"}},
             "symbol": {"type": "string", "description": "The symbol this seam covers (links interceptor demands)"},
+            "binding": {"type": "object", "description": "The signed transition this declaration discharges: {symbol, file, before, after[, base_revision]} — pre-filled on the rejection demand; base_revision defaults to HEAD (the file must be clean against it); pass it explicitly only for the post-hoc CI-remedy path over an already-committed transition"},
             "notes": {"type": "string"},
             "amend": {"type": "boolean", "description": "Revise the filed seam; omitted fields keep their filed values, and contract_location plus LSP-derived metadata are frozen"},
         }),
