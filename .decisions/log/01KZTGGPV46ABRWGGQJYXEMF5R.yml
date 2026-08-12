@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGPV46ABRWGGQJYXEMF5R
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/rust-class-enforced-here (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGPV4CM246FBEPP9V7RN5
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGPV4CM246FBEPP9V7RN5
+  hash: sha256:acfcedfbc0b1a34d3ecb453ce381e073498597c9a4ca3ab523b0c9b1941e7188
+  set: ddd-governance
+  statement: This workspace runs the code artifact class under enforce once the Rust adapter ships
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/rust-class-enforced-here@sha256:6ad383372e42faa18c3d1677c463eda9003aa23b5e6e4c0764e0f54d5e4bd327
+  - experiment:docs/ddd-m6-experiment.md

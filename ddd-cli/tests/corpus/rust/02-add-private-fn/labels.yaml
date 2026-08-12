@@ -1,0 +1,6 @@
+case: 02-add-private-fn
+note: "A new private fn `also_private`; private items are never contract surface."
+surface: []
+non_surface:
+  - symbol: also_private
+    change: added

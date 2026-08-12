@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZTGGHXCR4GMGPR87TJ7WNG9
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/cs/startup-assertions-required (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGHXBQGSCZBFKXKRN7A13
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGHXBQGSCZBFKXKRN7A13
+  hash: sha256:62778c1de921e2b48f570fd9b3c420f082234ec8b6ee7be0e65ae0ba5335212e
+  set: ddd-governance
+  statement: Assertion-closed obligations must be asserted in a test, not merely available
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/cs/startup-assertions-required@sha256:7fc55d506e174957f750484e11df63ccbae57e248613f264d82a6a83d3da1233
+  - claim:DDD-cs-map-01@sha256:2feea53016e439d68466358a9cdecc971c2011f3411b1b555dfcd817a9cb6004
+  - claim:DDD-cs-conc-02@sha256:2349eea522e48a4bc524ce01265ec6150a4b31f4885e9bf296ca5080af21bc5b

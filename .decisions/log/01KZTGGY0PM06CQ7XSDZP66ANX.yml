@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGGY0PM06CQ7XSDZP66ANX
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/ledger/blame-attribution (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGGY0PQX1B7BB199FNTWAJ
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGY0PQX1B7BB199FNTWAJ
+  hash: sha256:4583590d9c8ead7f0ed166d46149e3e718a8a13c9f884efeddee041e8a0af5d7
+  set: ddd-governance
+  statement: pub fn introducing_author with the Attribution enum in ledger-core/src/blame.rs
+  allocation: criterion
+  discharge:
+  - contract:seam/ledger/blame-attribution
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/ledger/blame-attribution@sha256:9067d93daacdd4180fda4c8a278c53ceb23449c3dd958080b2eafb458a123b9c

@@ -27,7 +27,7 @@ pub fn facts(text: &str, symbols: &[RawSymbol], flags: &AdapterFlags) -> Vec<Sym
             continue;
         }
         let head = decl_start(&lines, sym.start_line as usize);
-        let decl = declaration_slice(&lines, head);
+        let decl = declaration_slice(&lines, head, sym.end_line as usize);
         let container_vis =
             effective.get(&sym.container).cloned().unwrap_or_else(|| "public".to_string());
         let vis = visibility_of(sym, &kind, &decl, &container_vis, &types);
@@ -70,7 +70,8 @@ fn type_visibilities(lines: &[&str], symbols: &[RawSymbol]) -> BTreeMap<String, 
         {
             continue;
         }
-        let decl = declaration_slice(lines, decl_start(lines, sym.start_line as usize));
+        let decl =
+            declaration_slice(lines, decl_start(lines, sym.start_line as usize), sym.end_line as usize);
         map.insert(
             base_name(&sym.name).to_string(),
             declared_visibility(&decl).unwrap_or_else(|| "private".to_string()),
@@ -242,11 +243,16 @@ fn decl_start(lines: &[&str], start: usize) -> usize {
 /// The declaration text from its first line to the body or terminator,
 /// whitespace-collapsed. Bodies (`{`), terminators (`;`), and initialisers
 /// (`=`) are cut at depth zero only, so generic bounds, default type
-/// parameters, and `where` clauses survive intact.
-fn declaration_slice(lines: &[&str], start: usize) -> String {
+/// parameters, and `where` clauses survive intact. The slice never runs
+/// past `last` — the symbol's own range end — so a terminator-less
+/// declaration (an enum member, a struct field) cannot absorb unrelated
+/// text below it and report a phantom signature change (a false-demand
+/// source the classifier corpus caught).
+fn declaration_slice(lines: &[&str], start: usize, last: usize) -> String {
+    let span = last.saturating_sub(start).saturating_add(1).min(8);
     let mut decl = String::new();
     let (mut paren, mut angle, mut bracket) = (0i32, 0i32, 0i32);
-    for line in lines.iter().skip(start).take(8) {
+    for line in lines.iter().skip(start).take(span) {
         let mut piece: &str = line;
         let mut done = false;
         let mut prev = '\0';

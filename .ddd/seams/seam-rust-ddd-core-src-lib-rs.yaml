@@ -1,0 +1,44 @@
+format: 2
+id: seam/rust/ddd-core-src-lib-rs
+boundary: contract surface of ddd-core/src/lib.rs
+verdict_knowledge: 'Downstream crates learn the M8 module surface: gitrev, contracts, binding, basis_pin, concordance, ledger_gate join the store library without touching the pure-pf contract.'
+contract_location: ddd-core/src/lib.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: basis_pin
+  file: ddd-core/src/lib.rs
+  before: sha256:242f95d44c9be7a66878be6687cf923d0684c7ce1950351d8aad2314a364beca
+  after: sha256:6f1bb26354ff88cf862053010e16b0cc9b6e701e32528438fc2a7daf42a92d87
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:706256e6b87616ce73442c950006ed52852bf28a3776845d230cb8c890406c07
+- symbol: binding
+  file: ddd-core/src/lib.rs
+  before: sha256:242f95d44c9be7a66878be6687cf923d0684c7ce1950351d8aad2314a364beca
+  after: sha256:6f1bb26354ff88cf862053010e16b0cc9b6e701e32528438fc2a7daf42a92d87
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:e82203ca900b9e3cb48dfc409afbcc3bd490b8e09ccf2aa3aba5ded1ffd34cd4
+- symbol: concordance
+  file: ddd-core/src/lib.rs
+  before: sha256:242f95d44c9be7a66878be6687cf923d0684c7ce1950351d8aad2314a364beca
+  after: sha256:6f1bb26354ff88cf862053010e16b0cc9b6e701e32528438fc2a7daf42a92d87
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:84dbf992f91e2c281362b791c27a949d9e37d6d9b394d057605c0bb97fad6b4e
+- symbol: contracts
+  file: ddd-core/src/lib.rs
+  before: sha256:242f95d44c9be7a66878be6687cf923d0684c7ce1950351d8aad2314a364beca
+  after: sha256:6f1bb26354ff88cf862053010e16b0cc9b6e701e32528438fc2a7daf42a92d87
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:52d82f375583c2be05f5fc5307270e41ee2e78821504b0bb76a5479a71236321
+- symbol: gitrev
+  file: ddd-core/src/lib.rs
+  before: sha256:242f95d44c9be7a66878be6687cf923d0684c7ce1950351d8aad2314a364beca
+  after: sha256:6f1bb26354ff88cf862053010e16b0cc9b6e701e32528438fc2a7daf42a92d87
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:69e95460460460e883a80497b549bf7e7cdcca5c1f85dd68f09a88947c94d5f5
+- symbol: ledger_gate
+  file: ddd-core/src/lib.rs
+  before: sha256:242f95d44c9be7a66878be6687cf923d0684c7ce1950351d8aad2314a364beca
+  after: sha256:6f1bb26354ff88cf862053010e16b0cc9b6e701e32528438fc2a7daf42a92d87
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:cd2e510ca7451e4d78188735ed40d3a93e2017c4c3166f4b2db8bd4e259ec43b

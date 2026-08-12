@@ -34,6 +34,7 @@ pub fn run(root: Option<PathBuf>, flags: Flags) -> Result<i32, String> {
         )?,
         tolerance_override: flags.tolerance_override.as_deref().map(parse_tier).transpose()?,
         based_on: parse_based_on(&flags.based_on)?,
+        note: None,
     };
     finish(author.add(args))
 }

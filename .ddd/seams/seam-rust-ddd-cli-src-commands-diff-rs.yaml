@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ddd-cli-src-commands-diff-rs
+boundary: contract surface of ddd-cli/src/commands/diff.rs
+verdict_knowledge: 'CLI users learn diff can answer in machine-readable form with the same exit semantics.'
+contract_location: ddd-cli/src/commands/diff.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: run
+  file: ddd-cli/src/commands/diff.rs
+  before: sha256:458699f508777dbafe30e3fbd4568873fa686924f83779b3ba96e37691ea61fd
+  after: sha256:9b9de0dbeead65a67317a9e54ed2782252606994427f336f29cee5a9599c194f
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:bd353176fb7b6d9eb85b9f8048c3a147cf82e0d0988f2cbe23b7efa4f80f6b0e

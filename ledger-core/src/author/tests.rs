@@ -94,6 +94,7 @@ fn an_unallocated_add_is_the_one_sanctioned_pendency() {
             allocation: AllocationArgs::default(),
             tolerance_override: None,
             based_on: Vec::new(),
+            note: None,
         })
         .expect("unallocated add writes");
     assert!(applied.lines.iter().any(|l| l.contains("unallocated")), "{:?}", applied.lines);

@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ddd-lsp-src-host-rs
+boundary: contract surface of ddd-lsp/src/host.rs
+verdict_knowledge: 'Host callers learn a document can be opened with supplied text (a committed state the disk no longer carries), so the diff path can classify deletions and historical states through the same overlay mechanics.'
+contract_location: ddd-lsp/src/host.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: open_with_text
+  file: ddd-lsp/src/host.rs
+  before: sha256:92742e9a98e06992bb6a910d8a7f34e5be1009eafdebf8a97d75b24101ba7d13
+  after: sha256:190003612377c91a7547f15468d4e8d118062918cd90f647315db75b94cabf28
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:0e3335341246996cb61ae6b364114a725ffb672fef0ed23eb2416a91b7084b5e

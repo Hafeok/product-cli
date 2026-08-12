@@ -1,0 +1,6 @@
+case: 01-token-added
+note: "A new design token is a new stylesheet parameter."
+surface:
+  - symbol: --ink-muted
+    change: added
+non_surface: []

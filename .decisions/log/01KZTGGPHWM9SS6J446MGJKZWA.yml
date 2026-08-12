@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGPHWM9SS6J446MGJKZWA
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/report-coverage-explicit (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGPHW32QV7DN8RF4Q243Q
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGPHW32QV7DN8RF4Q243Q
+  hash: sha256:b7f1d7676e999f3ac4587882adc074ca0a3a05000c2cd07a751b6dcbf09ab766
+  set: ddd-governance
+  statement: Escape-report sections state their coverage; uncheckable is a note, not an escape
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/report-coverage-explicit@sha256:620436c9cd2e0ff08dbcb416b7c69c73aec72e24a81c1599288692c5d4416439
+  - claim:DDD-method-03@sha256:345503e95a49f81bef2cf14714a7f48c1de78540adb2d7ea63d8094c18088cf1

@@ -18,6 +18,7 @@ pub mod jsonrpc;
 pub mod manager;
 pub mod mock;
 pub mod protocol;
+pub mod revdiff;
 /// The contract-surface vocabulary, owned by `ddd-core` because the policy
 /// table mechanism is language-neutral; re-exported here so adapters keep
 /// reaching it as `crate::surface`.

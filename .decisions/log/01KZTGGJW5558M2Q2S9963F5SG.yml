@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGJW5558M2Q2S9963F5SG
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/curation-over-mining (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGJW50DDJHMF4CERVQRJ3
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGJW50DDJHMF4CERVQRJ3
+  hash: sha256:230835de0daf9c0876daceef966311a0ac2ebda523bb93efaf7bf21b4d6d8a93
+  set: ddd-governance
+  statement: Curation over mining; detection is conformance checking
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/curation-over-mining@sha256:ca9b80ea0646581713ab16df9d3600a777d881965cf2369bf347b9820bd671f2
+  - claim:DDD-method-02@sha256:5855ac6aedc1d5ff0c28a86edbd77729dc8501c3f72cd34bd92048207f69c1d3

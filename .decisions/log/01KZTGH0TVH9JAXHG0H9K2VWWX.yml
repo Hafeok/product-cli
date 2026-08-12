@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGH0TVH9JAXHG0H9K2VWWX
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/ledger/verify-classes (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGH0TTYTBXQC4H17FKKQ16
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGH0TTYTBXQC4H17FKKQ16
+  hash: sha256:7e9aab6edf5f58293893f335556ab2d92a8dda2e8cb5fb5c41dcfbe961c0c36a
+  set: ddd-governance
+  statement: pub enum VerifyClass with ALL_CLASSES in ledger-core/src/finding.rs
+  allocation: criterion
+  discharge:
+  - contract:seam/ledger/verify-classes
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/ledger/verify-classes@sha256:0317e363853b38c4e142ac59041f2b830460bf685abe50c1e6a087a831bc77c1

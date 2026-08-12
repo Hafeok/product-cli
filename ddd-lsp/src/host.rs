@@ -147,6 +147,27 @@ impl Host {
         Ok(())
     }
 
+    /// Ensure the document is open on the host with the supplied text —
+    /// the diff path's entry for files that do not exist on disk (deleted
+    /// at head, or a committed state the working tree has moved past).
+    /// Already-open documents are overlaid instead.
+    pub fn open_with_text(&mut self, path: &Path, text: &str) -> Result<()> {
+        self.client()?;
+        if self.open_docs.contains_key(path) {
+            return self.overlay(path, text);
+        }
+        let language_id = self.adapter.language_id;
+        let client = self.client()?;
+        client.notify(
+            "textDocument/didOpen",
+            json!({"textDocument": {
+                "uri": to_uri(path), "languageId": language_id, "version": 1, "text": text,
+            }}),
+        )?;
+        self.open_docs.insert(path.to_path_buf(), (1, text.to_string()));
+        Ok(())
+    }
+
     /// Replace the file's content on the host (overlay for classification;
     /// the disk is untouched). Sent as one whole-document *range* change:
     /// Roslyn negotiates incremental sync and drops documents on

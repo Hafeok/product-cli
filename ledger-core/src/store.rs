@@ -154,6 +154,19 @@ pub(crate) fn take_log(store: &mut Store, path: PathBuf, label: &str, stem: &str
                     "carries `merged_from`, a format 2 field — declare `format: 2`",
                 ));
             }
+            // `contract:` discharge pointers are format 3 (spec v1.4): a
+            // file using the scheme must declare the format defining it.
+            if file.format < crate::format::CONTRACT_FORMAT
+                && file
+                    .versions
+                    .iter()
+                    .any(|v| v.discharge.iter().any(|d| d.is_contract()))
+            {
+                store.schema_findings.push(Finding::schema(
+                    label,
+                    "carries a `contract:` discharge pointer, a format 3 scheme — declare `format: 3`",
+                ));
+            }
             store.log.push(LoggedChangeSet { path, file });
         }
         Err(e) => store.schema_findings.push(parse_fault("change-set", label, &e.to_string())),

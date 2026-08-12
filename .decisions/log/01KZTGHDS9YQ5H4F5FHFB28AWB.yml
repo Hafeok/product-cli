@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGHDS9YQ5H4F5FHFB28AWB
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/web/token-surface (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGHDS9ZYW4ZT944RV1D4N7
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGHDS9ZYW4ZT944RV1D4N7
+  hash: sha256:113e30526a5fbb266fada3d168bc5c583319c82e224e63066aba2287c3731acb
+  set: ddd-governance
+  statement: design token --surface in ddd-core/assets/render.css
+  allocation: criterion
+  discharge:
+  - contract:seam/web/token-surface
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/web/token-surface@sha256:446cf3e9688ade77f7aa8d19e8db20bc808e68abf5e6f51d7cb5512ebd52011e

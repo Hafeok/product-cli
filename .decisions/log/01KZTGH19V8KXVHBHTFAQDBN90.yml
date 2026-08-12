@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGH19V8KXVHBHTFAQDBN90
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/ledger/version-hash (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGH19T9A0F4X2N3M2S4N6F
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGH19T9A0F4X2N3M2S4N6F
+  hash: sha256:7b556095acf32708df7e87be15cabc292e04e130c6d5f4e477063186201a75a8
+  set: ddd-governance
+  statement: pub fn version_hash plus the VersionHash type in ledger-core/src/hash.rs
+  allocation: criterion
+  discharge:
+  - contract:seam/ledger/version-hash
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/ledger/version-hash@sha256:d9634a3f94a4de8990e2d89bc976bbe83d8d44a2ae74c9b7d54b9b4466d674ce

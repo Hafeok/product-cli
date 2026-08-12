@@ -1,0 +1,10 @@
+case: 01-add-pub-fn
+note: "A new pub fn `added` appears at top level; nothing else changes. Guard rows: the listed unchanged neighbours (enum members / fields below or beside the edit) must raise no demand — they caught the declaration-slice bleed fixed in rust_facts.rs."
+surface:
+  - symbol: added
+    change: added
+non_surface:
+  - symbol: Red
+    change: any
+  - symbol: Green
+    change: any

@@ -25,11 +25,16 @@ dist = false
 ddd-core     = { path = "../ddd-core", version = "0.6.0" }
 ddd-lsp      = { path = "../ddd-lsp", version = "0.6.0" }
 ddd-mcp      = { path = "../ddd-mcp", version = "0.6.0" }
+ledger-core  = { path = "../ledger-core", version = "0.6.0" }
 product-core = { path = "../product-core", version = "0.6.0" }
 chrono       = "0.4"
 clap         = { version = "4", features = ["derive"] }
+serde_json   = "1"
+serde_yaml   = "0.9"
 
 [dev-dependencies]
 assert_cmd = "2"
 predicates = "3"
+serde      = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
 tempfile   = "3"

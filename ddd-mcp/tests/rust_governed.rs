@@ -30,8 +30,27 @@ fn fixture(rel: &str) -> String {
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()))
 }
 
+/// Run `git` in `root`, asserting success.
+fn git(root: &Path, args: &[&str]) {
+    let out = std::process::Command::new("git")
+        .current_dir(root)
+        .args(args)
+        .output()
+        .unwrap_or_else(|e| panic!("git {args:?}: {e}"));
+    assert!(out.status.success(), "git {args:?}: {}", String::from_utf8_lossy(&out.stderr));
+}
+
+/// Commit the whole tree, so every governed file's parent state is
+/// committed — the precondition for binding (M8 ruling 2).
+fn commit_all(root: &Path) {
+    git(root, &["add", "-A"]);
+    git(root, &["commit", "-qm", "init"]);
+}
+
 /// A governed fixture crate: `.ddd/` scaffold, format-3 config binding the
-/// Rust adapter to the real host, the `code` class at `mode`.
+/// Rust adapter to the real host, the `code` class at `mode` — all
+/// committed, because enforce mode only binds against committed parent
+/// state (M8).
 fn repo(mode: &str) -> (tempfile::TempDir, product_mcp::ToolRegistry) {
     let tmp = tempfile::tempdir().expect("tempdir");
     ddd_core::init::apply_init(&ddd_core::init::plan_init(tmp.path())).expect("init");
@@ -47,6 +66,10 @@ fn repo(mode: &str) -> (tempfile::TempDir, product_mcp::ToolRegistry) {
         ),
     )
     .expect("config");
+    git(tmp.path(), &["init", "-q"]);
+    git(tmp.path(), &["config", "user.email", "t@example.com"]);
+    git(tmp.path(), &["config", "user.name", "T"]);
+    commit_all(tmp.path());
     let (_state, registry) = ddd_mcp::serve::build_registry(tmp.path().to_path_buf());
     (tmp, registry)
 }
@@ -315,6 +338,12 @@ fn a_pub_item_is_rejected_until_a_seam_is_declared() {
     // Facts pre-filled, judgment blank (dec/ddd/rejection-facts-prefilled).
     assert_eq!(demand["template"]["verdict_knowledge"], json!(""));
     assert!(demand["template"]["signature"].is_null() || demand["surface"]["signature"].is_string());
+    // The template carries the pre-computed binding for this transition.
+    let binding = demand["template"]["binding"].clone();
+    assert_eq!(binding["symbol"], json!("added"), "{demand}");
+    assert_eq!(binding["file"], json!("src/lib.rs"), "{demand}");
+    assert!(binding["before"].is_string() && binding["after"].is_string(), "{demand}");
+    assert!(binding["base_revision"].is_string(), "{demand}");
 
     call(
         &registry,
@@ -325,6 +354,7 @@ fn a_pub_item_is_rejected_until_a_seam_is_declared() {
             "contract_location": "src/lib.rs#added",
             "symbol": "added",
             "verdict_knowledge": "callers learn that a u32 maps to a u32 with no failure mode, so no error path is owed on this side",
+            "binding": binding,
         }),
     );
 
@@ -393,6 +423,7 @@ fn a_trait_impl_addition_is_rejected_until_a_seam_is_declared() {
             "contract_location": "src/lib.rs#impl std::fmt::Debug for Person",
             "symbol": "impl std::fmt::Debug for Person",
             "verdict_knowledge": "callers learn that Person may be formatted for diagnostics, which commits the name field to appearing in logs and makes it a disclosure surface rather than an internal field",
+            "binding": demand["template"]["binding"],
         }),
     );
 

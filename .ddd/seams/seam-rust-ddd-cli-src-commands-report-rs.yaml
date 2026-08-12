@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ddd-cli-src-commands-report-rs
+boundary: contract surface of ddd-cli/src/commands/report.rs
+verdict_knowledge: 'Report readers learn the ledger''s verdicts arrive delegated — readiness, completeness, dispositions, exact pin drift — restated from ledger verify, never recomputed.'
+contract_location: ddd-cli/src/commands/report.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: run
+  file: ddd-cli/src/commands/report.rs
+  before: sha256:8ef37bc9b7684c3e914185c4097f6802d0be01b0bf6b92ba4b08315264edc659
+  after: sha256:a0fd9d83acf1567633392f55b0daa033c0a52c0c4d8703e1e863b896800675f1
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:811151b566b9f5a46a5b0025ff67b00ac0e56fbd607fe98070408338a46885e0

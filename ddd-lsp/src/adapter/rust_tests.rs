@@ -10,13 +10,27 @@ use crate::adapter::rust_facts::facts;
 use crate::protocol::RawSymbol;
 
 fn sym(name: &str, kind: u64, container: &str, container_kind: u64, line: u64) -> RawSymbol {
+    sym_span(name, kind, container, container_kind, line, line)
+}
+
+/// A symbol whose range spans several lines, the way rust-analyzer reports
+/// any declaration with a body: `end` is the item's last line, which caps
+/// how far the signature slice may read (the corpus-caught bleed fix).
+fn sym_span(
+    name: &str,
+    kind: u64,
+    container: &str,
+    container_kind: u64,
+    line: u64,
+    end: u64,
+) -> RawSymbol {
     RawSymbol {
         name: name.to_string(),
         kind,
         container: container.to_string(),
         container_kind,
         start_line: line,
-        end_line: line,
+        end_line: end,
         sel_line: line,
         sel_char: 0,
         detail: None,
@@ -113,11 +127,29 @@ where
     unimplemented!()
 }
 ";
-    let f = facts_of(text, &[sym("convert", 12, "", 0, 0)]);
+    let f = facts_of(text, &[sym_span("convert", 12, "", 0, 0, 5)]);
     assert_eq!(
         find(&f, "convert").signature,
         "fn convert<T: Into<String>>(t: T) -> Result<String, Error> where T: Clone,"
     );
+}
+
+/// The corpus-caught false-demand source: an enum member has no `{`/`;`/`=`
+/// terminator, so an unbounded slice would absorb the lines below the enum —
+/// then any edit down there reported a phantom signature change on the
+/// member. The symbol's own range end caps the slice instead.
+#[test]
+fn a_terminator_less_declaration_never_reads_past_its_own_range() {
+    let before = "pub enum Colour {\n    Red,\n}\n\npub fn a() -> u32 { 1 }\n";
+    let after = "pub enum Colour {\n    Red,\n}\n\npub fn b(x: u32) -> u32 { x }\n";
+    let symbols = [
+        sym_span("Colour", 10, "", 0, 0, 2),
+        sym("Red", 22, "Colour", 10, 1),
+    ];
+    let sig_before = find(&facts_of(before, &symbols), "Red").signature.clone();
+    let sig_after = find(&facts_of(after, &symbols), "Red").signature.clone();
+    assert_eq!(sig_before, "Red,");
+    assert_eq!(sig_before, sig_after, "an unchanged member must keep its signature");
 }
 
 #[test]

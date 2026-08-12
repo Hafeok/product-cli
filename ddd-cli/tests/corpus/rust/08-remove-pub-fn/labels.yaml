@@ -1,0 +1,10 @@
+case: 08-remove-pub-fn
+note: "Removing pub fn `describe` removes contract surface. Guard rows: the listed unchanged neighbours (enum members / fields below or beside the edit) must raise no demand — they caught the declaration-slice bleed fixed in rust_facts.rs."
+surface:
+  - symbol: describe
+    change: removed
+non_surface:
+  - symbol: Red
+    change: any
+  - symbol: Green
+    change: any

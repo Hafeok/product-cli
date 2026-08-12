@@ -1,0 +1,6 @@
+case: 05-promote-private-fn
+note: "Visibility promotion private -> pub moves the contract boundary."
+surface:
+  - symbol: internal_helper
+    change: visibility-changed
+non_surface: []

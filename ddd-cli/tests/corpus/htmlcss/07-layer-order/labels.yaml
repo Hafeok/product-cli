@@ -1,0 +1,6 @@
+case: 07-layer-order
+note: "Reordering the @layer statement re-ranks every rule's cascade authority at once."
+surface:
+  - symbol: "@layer"
+    change: signature-changed
+non_surface: []

@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGN7C2W9GMC2GYWY7NCPD
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/pins-at-m2 (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGN7CTBMP82NEQWYGNP11
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGN7CTBMP82NEQWYGNP11
+  hash: sha256:bd13a8a0308afebee595acb21d3c0f35bb05a3ab09d3453fa2b93b1e539fa41d
+  set: ddd-governance
+  statement: Add basedOn status pins as an M2 format bump, not deferred
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/pins-at-m2@sha256:da00f99f1ef80434cf129edead8f5fa6320347c7384f3327b3347e8a330b346a
+  - claim:DDD-method-02@sha256:5855ac6aedc1d5ff0c28a86edbd77729dc8501c3f72cd34bd92048207f69c1d3

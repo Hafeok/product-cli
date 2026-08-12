@@ -1,0 +1,86 @@
+format: 2
+id: seam/rust/ddd-core-src-binding-rs
+boundary: contract surface of ddd-core/src/binding.rs
+verdict_knowledge: 'Callers learn that a declaration signs a transition, not a state: five fields (symbol, file, before, after, base revision) sealed under the ledger''s canonical-JSON law, with the hash recomputable so a stored binding that does not recompute signs nothing.'
+contract_location: ddd-core/src/binding.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: BINDING_FORM
+  file: ddd-core/src/binding.rs
+  before: absent
+  after: sha256:ded5e0323735a0445ea597021f8544187168f53a54708c9ae2730c68f4254c1a
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:3c1793f45095f5b4825fdfb3e93b215d9bd45b5f1f11bc38cb2515c9e376d80a
+- symbol: impl SeamBinding
+  file: ddd-core/src/binding.rs
+  before: absent
+  after: sha256:ded5e0323735a0445ea597021f8544187168f53a54708c9ae2730c68f4254c1a
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:c44cb4b2428bca49a17d548face25ef6b8d6eafda905d417cd1b517dafa0d29b
+- symbol: SeamBinding
+  file: ddd-core/src/binding.rs
+  before: absent
+  after: sha256:ded5e0323735a0445ea597021f8544187168f53a54708c9ae2730c68f4254c1a
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:19d8cff359d99d2957e55d55e6a02aacabba2eabea6df5bacd4dbbfa3efa667e
+- symbol: after
+  file: ddd-core/src/binding.rs
+  before: absent
+  after: sha256:ded5e0323735a0445ea597021f8544187168f53a54708c9ae2730c68f4254c1a
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:3ea2e9e19c774904cd20fced58f3edf02d4352350f30fe5daf0d49bc1ac15a71
+- symbol: base_revision
+  file: ddd-core/src/binding.rs
+  before: absent
+  after: sha256:ded5e0323735a0445ea597021f8544187168f53a54708c9ae2730c68f4254c1a
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:8479adf881f06a4cc337494d5423229d90d787725762b002c153dd84646eae72
+- symbol: before
+  file: ddd-core/src/binding.rs
+  before: absent
+  after: sha256:ded5e0323735a0445ea597021f8544187168f53a54708c9ae2730c68f4254c1a
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:fdf4045f25affb9e88630c73afe4101335050cbee98e2806861f6dfa7d937e77
+- symbol: file
+  file: ddd-core/src/binding.rs
+  before: absent
+  after: sha256:ded5e0323735a0445ea597021f8544187168f53a54708c9ae2730c68f4254c1a
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:f35aa5e556dff8640fbcf5aac89b710385a1856fc4d6750b24fdae114d9ecb49
+- symbol: hash
+  file: ddd-core/src/binding.rs
+  before: absent
+  after: sha256:ded5e0323735a0445ea597021f8544187168f53a54708c9ae2730c68f4254c1a
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:10a3f16b2f7fbef5b94e9c8502e9b73e04bc18a1df2043510de79c77046aff2f
+- symbol: symbol
+  file: ddd-core/src/binding.rs
+  before: absent
+  after: sha256:ded5e0323735a0445ea597021f8544187168f53a54708c9ae2730c68f4254c1a
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:e0b082d1a726af498b884b765388a9224cdfa39437c25d8e3ac4923157782f6f
+- symbol: canonical_json
+  file: ddd-core/src/binding.rs
+  before: absent
+  after: sha256:ded5e0323735a0445ea597021f8544187168f53a54708c9ae2730c68f4254c1a
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:d77dab22b452f91bef326a636f40d2aa9171ac09d1237ad04a8ea0cc6cd8861c
+- symbol: computed_hash
+  file: ddd-core/src/binding.rs
+  before: absent
+  after: sha256:ded5e0323735a0445ea597021f8544187168f53a54708c9ae2730c68f4254c1a
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:c752a31d93094888e557cb1ae9faa883abe41b069af8ca5b1f5457643954e6c8
+- symbol: seal
+  file: ddd-core/src/binding.rs
+  before: absent
+  after: sha256:ded5e0323735a0445ea597021f8544187168f53a54708c9ae2730c68f4254c1a
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:91d0d27cd85552c21ad9bbe3a7c7ed82859efbad2dae2516317a0ab21dbd1143
+- symbol: signs
+  file: ddd-core/src/binding.rs
+  before: absent
+  after: sha256:ded5e0323735a0445ea597021f8544187168f53a54708c9ae2730c68f4254c1a
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:9581fad1c05b12aa00a817c71691f01437a603ad700823e3c9ff84624a66dd07

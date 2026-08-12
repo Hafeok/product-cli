@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGH919RY8CY8XBJHJR9WZ6
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/web/render-warn (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGH919SYFNSGA1BYPXXSG7
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGH919SYFNSGA1BYPXXSG7
+  hash: sha256:8a74967b633733ea9cbf4b58bee72951a2ea1f49f3af35b0d61c33dbefe4852a
+  set: ddd-governance
+  statement: class warn in ddd-core/assets/render.css
+  allocation: criterion
+  discharge:
+  - contract:seam/web/render-warn
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/web/render-warn@sha256:396e3051949b68eb4b3b6d9876489372a25abb5db4d567c8d8260544e178673f

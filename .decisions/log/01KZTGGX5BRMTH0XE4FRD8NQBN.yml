@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZTGGX5BRMTH0XE4FRD8NQBN
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from risk/ddd/undeclared-what-boundaries (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGX5ABSQ2PVTQ32NPKVNE
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGX5ABSQ2PVTQ32NPKVNE
+  hash: sha256:d80ac6250c5e51b3b3933b5b99eb547f83e930adf504fa647ab7c67804dff5dd
+  set: ddd-governance
+  statement: The 24 undeclared What boundaries stay undeclared; exposure accepted until review
+  allocation: escaped
+  exposure: '24 undeclared What boundaries over 121 classified elements (8 acme, 16 product-cli): changes to them go unrecorded and the What surface has no green baseline. Bounded: both graphs are demonstration content with no second party, and nothing enforces these boundaries in either direction.'
+  accepted_by: emk@delegate.dk
+  review_by: 2027-02-07
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:risk/ddd/undeclared-what-boundaries@sha256:edad50e6bc07fa289a16a81a2724238b1f1dee5dcc50c752dde6a81568a72ae2

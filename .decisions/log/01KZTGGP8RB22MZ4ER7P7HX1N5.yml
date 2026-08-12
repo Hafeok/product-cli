@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGP8RB22MZ4ER7P7HX1N5
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/rejection-facts-prefilled (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGP8R9PHR599ZE9RV3BDC
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGP8R9PHR599ZE9RV3BDC
+  hash: sha256:94bbdafe03e996eefb52fdd8b7e4a1bf40be5d71d86ab4f11f16320ff734e743
+  set: ddd-governance
+  statement: apply_edit rejections pre-fill the facts, never the judgment
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/rejection-facts-prefilled@sha256:fbd14e4c5db542aba72d5b361823b1bd73a6c147fae5965ebe83e07e705e3e30
+  - claim:DDD-friction-01@sha256:50bd29eebb699ad253b4aaa01f09ed0aaba0f5aa607742bed98fb1417a842ade

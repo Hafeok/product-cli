@@ -1,0 +1,8 @@
+format: 1
+id: ddd-governance
+title: DDD governance — the migrated record of the .ddd store (M8)
+tolerance_floor: T1
+ground: characterised
+owner: emk@delegate.dk
+created_at: 2026-08-12
+notes: 'Every entry here was migrated from `.ddd/` at ddd M8 (bootstrap form retired as the record; the .ddd files remain as pinned content artifacts). Migrated entries land allocated-awaiting-acceptance: a git-recorded ratification attests a commit, not a signature over a content hash, so nothing here was accepted on the principal''s behalf.'

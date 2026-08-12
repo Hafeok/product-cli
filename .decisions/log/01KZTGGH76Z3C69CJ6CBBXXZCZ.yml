@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGH76Z3C69CJ6CBBXXZCZ
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/cs/authorization-fallback-deny (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGH76M8P8WE7BBP7958G8
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGH76M8P8WE7BBP7958G8
+  hash: sha256:f07f29705837c43920ceaf8f961391a13ab3e2979828d7b298abd761d5cecdb6
+  set: ddd-governance
+  statement: Hosts declare a deny-by-default fallback authorization policy
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/cs/authorization-fallback-deny@sha256:18c8e08b57baa4322022626ab191c6609813419fd50ae15da5127b81a11fc20b
+  - claim:DDD-cs-authz-01@sha256:c88efd53c4e32fdc5cce2843a125d7efdd406bcbab85758778ed93642cc76e93

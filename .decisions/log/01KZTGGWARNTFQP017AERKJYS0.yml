@@ -1,0 +1,29 @@
+format: 1
+id: cs:01KZTGGWARNTFQP017AERKJYS0
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/web/render-status-palette (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGWARF9G6KQGNNZ2239QF
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGWARF9G6KQGNNZ2239QF
+  hash: sha256:c68d5c09bfc178aad5a31610760d1ef9c724790881fa7de920ccb56480eeabf4
+  set: ddd-governance
+  statement: The render page's ink plus status palette is tokenised, one decision for the set
+  allocation: constraint
+  discharge:
+  - analyzer:tokens/--ink
+  - analyzer:tokens/--ink-muted
+  - analyzer:tokens/--ink-faint
+  - analyzer:tokens/--status-ok
+  - analyzer:tokens/--status-bad
+  - analyzer:tokens/--status-warn
+  - analyzer:tokens/--on-chip
+  - analyzer:tokens/--surface
+  - analyzer:tokens/--surface-raised
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/web/render-status-palette@sha256:47497dc1cb717c4e0566b005400527de4b4295619f67d5bee5e0209ac1df9211
+  - claim:DDD-web-02@sha256:dae8a5e400b2c28278ad5c4a0acfd07cd7049892745055f598b7a3b7e597b9f1

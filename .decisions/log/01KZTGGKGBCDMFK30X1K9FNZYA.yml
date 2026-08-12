@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGKGBCDMFK30X1K9FNZYA
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/fixtures-not-sdk (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGKGB3QCVQTH1H1E1BC5H
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGKGB3QCVQTH1H1E1BC5H
+  hash: sha256:2891afedef2df97860be7258e8022e6a0824e5384ed116ae5b05c098ebfc9c2a
+  set: ddd-governance
+  statement: Test against committed SARIF; no .NET SDK in workspace CI
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/fixtures-not-sdk@sha256:7a9be76d84e9999fbc2bd450ad785e37000e587530f9f00eb0a8250a94b5636c
+  - claim:DDD-detect-02@sha256:3f6f184890412b277b6eb90efa1ce3cd5fde0af5afd01671e4a02b35f367acf9

@@ -21,8 +21,26 @@ fn write(root: &Path, rel: &str, content: &str) {
     std::fs::write(path, content).expect("write");
 }
 
+/// Run `git` in `root`, asserting success.
+fn git(root: &Path, args: &[&str]) {
+    let out = std::process::Command::new("git")
+        .current_dir(root)
+        .args(args)
+        .output()
+        .unwrap_or_else(|e| panic!("git {args:?}: {e}"));
+    assert!(out.status.success(), "git {args:?}: {}", String::from_utf8_lossy(&out.stderr));
+}
+
+/// Commit the whole tree, so every governed file's parent state is
+/// committed — the precondition for binding (M8 ruling 2).
+fn commit_all(root: &Path) {
+    git(root, &["add", "-A"]);
+    git(root, &["commit", "-qm", "init"]);
+}
+
 /// A governed temp repo: `.ddd/` scaffold, format-3 config binding both
-/// adapters to the mock host, the fixture sources on disk.
+/// adapters to the mock host, the fixture sources on disk — all committed,
+/// because enforce mode only binds against committed parent state (M8).
 fn repo(config_tail: &str) -> (tempfile::TempDir, product_mcp::ToolRegistry) {
     let tmp = tempfile::tempdir().expect("tempdir");
     ddd_core::init::apply_init(&ddd_core::init::plan_init(tmp.path())).expect("init");
@@ -37,6 +55,10 @@ fn repo(config_tail: &str) -> (tempfile::TempDir, product_mcp::ToolRegistry) {
     write(tmp.path(), "Library.cs", &fixture("csharp/Library.cs"));
     write(tmp.path(), "Api.csproj", "<Project Sdk=\"Microsoft.NET.Sdk\" />");
     write(tmp.path(), "storage-module.bicep", &fixture("bicep/storage-module.bicep"));
+    git(tmp.path(), &["init", "-q"]);
+    git(tmp.path(), &["config", "user.email", "t@example.com"]);
+    git(tmp.path(), &["config", "user.name", "T"]);
+    commit_all(tmp.path());
     let (_state, registry) = ddd_mcp::serve::build_registry(tmp.path().to_path_buf());
     (tmp, registry)
 }
@@ -166,19 +188,27 @@ fn m4_full_loop_csharp_reject_declare_reapply() {
     assert_eq!(demand["surface"]["rule"], "cs-add-exposed");
     assert!(demand["surface"]["reference_count"].is_u64(), "{demand}");
     assert_eq!(demand["template"]["verdict_knowledge"], "");
+    // The template carries the pre-computed binding for this transition.
+    let binding = demand["template"]["binding"].clone();
+    assert_eq!(binding["symbol"], "Pong", "{demand}");
+    assert_eq!(binding["file"], "Library.cs", "{demand}");
+    assert!(binding["before"].is_string() && binding["after"].is_string(), "{demand}");
+    assert!(binding["base_revision"].is_string(), "{demand}");
     assert!(std::fs::read_to_string(tmp.path().join("Library.cs")).expect("read").contains("Ping"));
     assert!(!std::fs::read_to_string(tmp.path().join("Library.cs")).expect("read").contains("Pong"));
 
-    // 2. Declare the seam the demand names.
+    // 2. Declare the seam the demand names, signing the demanded transition.
     let declared = call(&registry, "ddd_declare_seam", json!({
         "id": "seam/csharp/pong",
         "boundary": "method Pong in Library.cs",
         "contract_location": "Library.cs#Pong",
         "symbol": "Pong",
         "verdict_knowledge": "callers learn whether the service answers",
+        "binding": binding,
     }));
     assert_eq!(declared["status"], "filed", "{declared}");
     assert!(declared["warning"].is_null(), "{declared}");
+    assert!(declared["binding"]["hash"].is_string(), "{declared}");
 
     // 3. Re-apply → applied, linked to the declaration.
     let applied = call(&registry, "ddd_apply_edit", json!({"file": "Library.cs", "new_text": edited}));
@@ -232,6 +262,7 @@ fn m4_full_loop_bicep_param_change() {
         "contract_location": "storage-module.bicep",
         "symbol": "replicas",
         "verdict_knowledge": "deployers choose redundancy; the module encodes the allowed range",
+        "binding": demand["template"]["binding"],
     }));
     let applied = call(&registry, "ddd_apply_edit",
         json!({"file": "storage-module.bicep", "new_text": edited}));
@@ -314,12 +345,16 @@ fn m4_amend_fills_in_the_warned_verdict_knowledge() {
         "    public void Ping() { }\n",
         "    public void Ping() { }\n    public void Pong() { }\n",
     );
-    call(&registry, "ddd_apply_edit", json!({"file": "Library.cs", "new_text": edited}));
+    let rejected = call(&registry, "ddd_apply_edit", json!({"file": "Library.cs", "new_text": edited}));
+    assert_eq!(rejected["status"], "rejected", "{rejected}");
 
     // File it warned: the boundary declares cost with no demand absorbed.
+    // The binding still signs the demanded transition, so the re-apply
+    // below discharges.
     let warned = call(&registry, "ddd_declare_seam", json!({
         "id": "seam/csharp/pong", "boundary": "method Pong in Library.cs",
         "contract_location": "Library.cs#Pong", "symbol": "Pong", "verdict_knowledge": "",
+        "binding": rejected["demands"][0]["template"]["binding"],
     }));
     assert_eq!(warned["status"], "filed");
     assert!(warned["warning"].is_string(), "{warned}");
@@ -475,6 +510,10 @@ fn m4_real_roslyn_full_loop() {
     write(tmp.path(), "Library.cs", &fixture("csharp/Library.cs"));
     write(tmp.path(), "Api.csproj",
         "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup></Project>");
+    git(tmp.path(), &["init", "-q"]);
+    git(tmp.path(), &["config", "user.email", "t@example.com"]);
+    git(tmp.path(), &["config", "user.name", "T"]);
+    commit_all(tmp.path());
     let (_state, registry) = ddd_mcp::serve::build_registry(tmp.path().to_path_buf());
     let out = call(&registry, "ddd_warmup", json!({"wait_ms": 240_000}));
     assert_eq!(out["hosts"][0]["readiness"]["state"], "ready", "{out}");
@@ -488,6 +527,7 @@ fn m4_real_roslyn_full_loop() {
         "id": "seam/csharp/pong", "boundary": "method Pong in Library.cs",
         "contract_location": "Library.cs#Pong", "symbol": "Pong",
         "verdict_knowledge": "callers learn whether the service answers",
+        "binding": rejected["demands"][0]["template"]["binding"],
     }));
     let applied = call(&registry, "ddd_apply_edit", json!({"file": "Library.cs", "new_text": edited}));
     assert_eq!(applied["status"], "applied", "{applied}");
@@ -511,21 +551,39 @@ fn m7_enforce_links_each_symbol_to_its_own_declaration() {
         "    public void Ping() { }\n",
         "    public void Ping() { }\n    public void Alpha() { }\n    public void Beta(int n) { }\n",
     );
+    // One rejection raises one demand per symbol, each carrying its own
+    // pre-computed binding.
+    let rejected = call(&registry, "ddd_apply_edit", json!({"file": "Library.cs", "new_text": edited}));
+    assert_eq!(rejected["status"], "rejected", "{rejected}");
+    let demands = rejected["demands"].as_array().expect("demands").clone();
+    let binding_for = |symbol: &str| {
+        demands
+            .iter()
+            .find(|d| d["surface"]["symbol"] == symbol)
+            .unwrap_or_else(|| panic!("no demand for {symbol}: {demands:?}"))["template"]["binding"]
+            .clone()
+    };
     call(&registry, "ddd_declare_seam", json!({
         "id": "seam/csharp/alpha", "boundary": "method Alpha in Library.cs",
         "contract_location": "Library.cs#Alpha", "symbol": "Alpha",
         "verdict_knowledge": "callers learn the alpha outcome",
+        "binding": binding_for("Alpha"),
     }));
     call(&registry, "ddd_declare_seam", json!({
         "id": "seam/csharp/beta", "boundary": "method Beta in Library.cs",
         "contract_location": "Library.cs#Beta", "symbol": "Beta",
         "verdict_knowledge": "callers learn the beta count",
+        "binding": binding_for("Beta"),
     }));
     let applied = call(&registry, "ddd_apply_edit", json!({"file": "Library.cs", "new_text": edited}));
     assert_eq!(applied["status"], "applied", "{applied}");
 
     // Every applied-linked row links the declaration naming its own symbol.
+    let mut linked_symbols = Vec::new();
     for row in event_rows(tmp.path()) {
+        if row["outcome"] != "applied-linked" {
+            continue;
+        }
         let (symbol, linked) = (row["symbol"].as_str().expect("symbol"),
                                 row["linked_declaration"].as_str().expect("linked"));
         match symbol {
@@ -533,7 +591,10 @@ fn m7_enforce_links_each_symbol_to_its_own_declaration() {
             "Beta" => assert_eq!(linked, "seam/csharp/beta", "{row}"),
             other => panic!("unexpected row symbol {other}"),
         }
+        linked_symbols.push(symbol.to_string());
     }
+    assert!(linked_symbols.contains(&"Alpha".to_string()), "{linked_symbols:?}");
+    assert!(linked_symbols.contains(&"Beta".to_string()), "{linked_symbols:?}");
 
     // Each declaration carries its own symbol's facts — the mis-attribution
     // seam-event/4 produced can no longer occur.
@@ -544,9 +605,10 @@ fn m7_enforce_links_each_symbol_to_its_own_declaration() {
     assert!(beta.contains("signature: void Beta(int n)"), "{beta}");
 }
 
-/// The file arm is gone from enforce mode: a same-session declaration whose
+/// The file arm is gone from enforce mode: a stored declaration whose
 /// contract_location names the file but whose symbol is a different one
-/// admits nothing.
+/// admits nothing — and under M8 a declaration with no signed binding
+/// discharges nothing at all, however its location matches.
 #[test]
 fn m7_enforce_rejects_a_file_arm_only_declaration() {
     let (tmp, registry) = repo("intercept: enforce\n");
@@ -595,4 +657,84 @@ fn m7_warn_keeps_the_file_arm_and_never_writes_metadata() {
     assert_eq!(row["linked_declaration"], "seam/bicep/storage", "{row}");
     let seam = std::fs::read_to_string(tmp.path().join(".ddd/seams/seam-bicep-storage.yaml")).expect("seam");
     assert!(!seam.contains("symbol: replicas"), "file-arm match wrote metadata: {seam}");
+}
+
+/// M8 ruling 2: enforce mode never binds uncommitted parent state. A
+/// governed file that is dirty against HEAD rejects the surface edit
+/// outright, and a binding attempt against the dirty file refuses by name.
+#[test]
+fn m8_dirty_parent_state_refuses_to_bind() {
+    let (tmp, registry) = repo("intercept: enforce\n");
+    warm(&registry);
+    // Dirty the governed file after the initial commit: disk != HEAD.
+    let cs = fixture("csharp/Library.cs");
+    let dirty = format!("// uncommitted local drift\n{cs}");
+    std::fs::write(tmp.path().join("Library.cs"), &dirty).expect("dirty write");
+
+    let edited = dirty.replace(
+        "    public void Ping() { }\n",
+        "    public void Ping() { }\n    public void Pong() { }\n",
+    );
+    let out = call(&registry, "ddd_apply_edit", json!({"file": "Library.cs", "new_text": edited}));
+    assert_eq!(out["status"], "rejected", "{out}");
+    let reason = out["reason"].as_str().expect("reason");
+    assert!(
+        reason.contains("never binds uncommitted parent state") || reason.contains("M8 ruling 2"),
+        "{reason}"
+    );
+    assert!(!std::fs::read_to_string(tmp.path().join("Library.cs")).expect("read").contains("Pong"));
+
+    // Declaring a binding whose file is dirty refuses, naming the constraint.
+    let err = registry
+        .call_tool("ddd_declare_seam", &json!({
+            "id": "seam/csharp/pong", "boundary": "method Pong in Library.cs",
+            "contract_location": "Library.cs#Pong", "symbol": "Pong",
+            "verdict_knowledge": "callers learn whether the service answers",
+            "binding": {
+                "symbol": "Pong", "file": "Library.cs",
+                "before": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+                "after": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            },
+        }))
+        .expect_err("a dirty file must refuse to bind");
+    assert!(err.contains("dirty against HEAD"), "{err}");
+}
+
+/// A signed binding discharges exactly the transition it names (M8, spec
+/// invariant 3): the same symbol arriving via a different edit — different
+/// proposed content — stays rejected; only the signed edit applies.
+#[test]
+fn m8_a_binding_does_not_discharge_a_different_transition() {
+    let (tmp, registry) = repo("intercept: enforce\n");
+    warm(&registry);
+    let cs = fixture("csharp/Library.cs");
+    let e1 = cs.replace(
+        "    public void Ping() { }\n",
+        "    public void Ping() { }\n    public void Pong() { }\n",
+    );
+    let e2 = cs.replace(
+        "    public void Ping() { }\n",
+        "    public void Ping() { }\n    public void Pong() { System.Console.WriteLine(\"pong\"); }\n",
+    );
+
+    let rejected = call(&registry, "ddd_apply_edit", json!({"file": "Library.cs", "new_text": e1}));
+    assert_eq!(rejected["status"], "rejected", "{rejected}");
+    call(&registry, "ddd_declare_seam", json!({
+        "id": "seam/csharp/pong", "boundary": "method Pong in Library.cs",
+        "contract_location": "Library.cs#Pong", "symbol": "Pong",
+        "verdict_knowledge": "callers learn whether the service answers",
+        "binding": rejected["demands"][0]["template"]["binding"],
+    }));
+
+    // E2 adds the same symbol but lands different content — not the
+    // transition the binding signs.
+    let still = call(&registry, "ddd_apply_edit", json!({"file": "Library.cs", "new_text": e2}));
+    assert_eq!(still["status"], "rejected", "{still}");
+    assert!(!std::fs::read_to_string(tmp.path().join("Library.cs")).expect("read").contains("Pong"));
+
+    // E1 exactly is what was signed.
+    let applied = call(&registry, "ddd_apply_edit", json!({"file": "Library.cs", "new_text": e1}));
+    assert_eq!(applied["status"], "applied", "{applied}");
+    assert_eq!(applied["linked"][0], "seam/csharp/pong");
+    assert!(std::fs::read_to_string(tmp.path().join("Library.cs")).expect("read").contains("Pong"));
 }

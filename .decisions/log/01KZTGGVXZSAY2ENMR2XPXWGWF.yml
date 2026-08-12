@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGVXZSAY2ENMR2XPXWGWF
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/web/plain-pair-scope (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGVXY1K4WNBMVYWQADFK1
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGVXY1K4WNBMVYWQADFK1
+  hash: sha256:f3306665895b96b4357c3130bf64a519c6228581904ff421d81cf09912195d33
+  set: ddd-governance
+  statement: The pair adapter governs plain HTML+CSS only; Razor/Blazor deferred, JS/TS out
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/web/plain-pair-scope@sha256:e2e50850ce698af90c983904f69e4279de376197827153a506628136c6b3f666
+  - claim:DDD-web-01@sha256:52dbd3f9def0d330c373eca14a640feba676d2a694a4abb20c9eede2f22b69b9

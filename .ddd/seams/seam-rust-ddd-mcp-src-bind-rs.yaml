@@ -1,0 +1,74 @@
+format: 2
+id: seam/rust/ddd-mcp-src-bind-rs
+boundary: contract surface of ddd-mcp/src/bind.rs
+verdict_knowledge: 'Interceptor callers learn matching is by signature alone: a transition binds only when a stored declaration signs its exact symbol, file, hashes, and base revision — and a dirty parent state refuses with the constraint named.'
+contract_location: ddd-mcp/src/bind.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: advisory_links
+  file: ddd-mcp/src/bind.rs
+  before: absent
+  after: sha256:70f95f23dc0e5d69377df544d837fbaaa2b6c06d733a809aa796cac2b022f563
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:81f2de35218e7b19e1474cef8c55112e7e758dd87dcb6ad8b6ad400b63aa464d
+- symbol: match_bindings
+  file: ddd-mcp/src/bind.rs
+  before: absent
+  after: sha256:70f95f23dc0e5d69377df544d837fbaaa2b6c06d733a809aa796cac2b022f563
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:688a9b132524a2a77ac687698d51bb67e09a03211c6c975d1fe469e244bc5275
+- symbol: impl Transition
+  file: ddd-mcp/src/bind.rs
+  before: absent
+  after: sha256:70f95f23dc0e5d69377df544d837fbaaa2b6c06d733a809aa796cac2b022f563
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:0c8f40fce0dd33a193c350508d69e1e943c0d9ddadbebd668419c327a23943ba
+- symbol: Transition
+  file: ddd-mcp/src/bind.rs
+  before: absent
+  after: sha256:70f95f23dc0e5d69377df544d837fbaaa2b6c06d733a809aa796cac2b022f563
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:c9fd3b47b860933467a9e7b8ed58a4b0b1cd75064cc215a931fdcd94fd62a23e
+- symbol: after
+  file: ddd-mcp/src/bind.rs
+  before: absent
+  after: sha256:70f95f23dc0e5d69377df544d837fbaaa2b6c06d733a809aa796cac2b022f563
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:16c0f6657eaaf0f47e196930499a4b0b26c1e9a62c68d4b19e05ee745dbba7a0
+- symbol: before
+  file: ddd-mcp/src/bind.rs
+  before: absent
+  after: sha256:70f95f23dc0e5d69377df544d837fbaaa2b6c06d733a809aa796cac2b022f563
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:0f8a73907d3ae95d4d45159e5c5a090ff1758f473253c051c5a5a96218882169
+- symbol: committed_parent
+  file: ddd-mcp/src/bind.rs
+  before: absent
+  after: sha256:70f95f23dc0e5d69377df544d837fbaaa2b6c06d733a809aa796cac2b022f563
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:60d976c779c55b38d8178594f14954f65d4c88c464e24a6161c10422a96afa9b
+- symbol: head
+  file: ddd-mcp/src/bind.rs
+  before: absent
+  after: sha256:70f95f23dc0e5d69377df544d837fbaaa2b6c06d733a809aa796cac2b022f563
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:f044bc7f0727698d3f46483836dc53116b8c8a0b5f69c1805046eaa2279168da
+- symbol: rel
+  file: ddd-mcp/src/bind.rs
+  before: absent
+  after: sha256:70f95f23dc0e5d69377df544d837fbaaa2b6c06d733a809aa796cac2b022f563
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:6e63e4a17259f83422bbdf8a7985b343cc0c757de918fc4b596eb56ff3a8c280
+- symbol: dirty_reason
+  file: ddd-mcp/src/bind.rs
+  before: absent
+  after: sha256:70f95f23dc0e5d69377df544d837fbaaa2b6c06d733a809aa796cac2b022f563
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:39bb7b03ce138618a84860b3a0a7c36e0e7d8f11d74e7dc90a821e3b7fd1c63f
+- symbol: of
+  file: ddd-mcp/src/bind.rs
+  before: absent
+  after: sha256:70f95f23dc0e5d69377df544d837fbaaa2b6c06d733a809aa796cac2b022f563
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:a276f7a681ba5f9004796739d05612fa53cf5eb03c52b93ece28b5588cb4fe11

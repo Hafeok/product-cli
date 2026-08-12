@@ -39,8 +39,10 @@ the repository.
   (DAD — what an engagement runs; this tool is its enforcement substrate)
 - Record substrate: [`decision-ledger-prd.md`](decision-ledger-prd.md)
   (canonical for the decision record; `ledger-format-v1.md` is what an
-  outside implementation imports). `.ddd/decisions/` is the bootstrap
-  form until M8.
+  outside implementation imports). The M8 migration (2026-08) made the
+  ledger the record of `.ddd` governance: the `.ddd` files remain as
+  pinned content artifacts, and `.ddd/concordance.yaml` maps the ids
+  permanently.
 
 ## History note
 

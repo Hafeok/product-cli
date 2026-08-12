@@ -36,6 +36,7 @@ fn pinned_decision(id: &str, claim: &str, status: ClaimStatus, changed: &str) ->
             claim: claim.into(),
             status,
             changed: changed.into(),
+            content: None,
         })],
         date: None,
         notes: None,

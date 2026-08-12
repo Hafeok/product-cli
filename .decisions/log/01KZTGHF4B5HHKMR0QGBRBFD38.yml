@@ -1,0 +1,19 @@
+format: 1
+id: cs:01KZTGHF4B5HHKMR0QGBRBFD38
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Filed by the M8 migration (not decided by it): three migrated edges carry the watched: marker — DDD-adapter-02 on dec/ddd/internal-not-surface; DDD-gates-01 on dec/rust/no-unwrap; DDD-adapter-01 on dec/ddd/m6-proceeds-no-flip — and the marker''s standing needs the principal''s ruling.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGHF4B718YCRCKCGVM7XWA
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGHF4B718YCRCKCGVM7XWA
+  hash: sha256:339d575ede35ff42fbbab0b836c07fc3a55de8f79c5c1a9035bc3b4fd40a2ebd
+  set: ddd-governance
+  statement: 'A watched-not-grounding edge — a claim a decision tracks without resting on — is either a distinct edge kind in the ddd ontology or is retired at the F-batch; until ruled, migrated watched edges carry the explicit watched: marker and are never read as ground.'
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - handoff:basis-quality-retyping-2026-08-12#watched-not-grounding

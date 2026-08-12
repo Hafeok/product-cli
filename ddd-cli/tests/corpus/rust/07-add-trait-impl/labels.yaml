@@ -1,0 +1,11 @@
+case: 07-add-trait-impl
+note: "A new trait impl on a reachable type is implicit contract participation; the method body inside it stays private. Guard rows: the listed unchanged neighbours (enum members / fields below or beside the edit) must raise no demand — they caught the declaration-slice bleed fixed in rust_facts.rs."
+surface:
+  - symbol: "impl Greeter for Widget"
+    change: added
+non_surface:
+  - symbol: greet
+    change: added
+    container: "impl Greeter for Widget"
+  - symbol: id
+    change: any

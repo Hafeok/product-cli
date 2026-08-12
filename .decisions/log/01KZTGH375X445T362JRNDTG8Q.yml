@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGH375X445T362JRNDTG8Q
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/rust/host-command (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGH375TYC2TTVXZWA2EGWZ
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGH375TYC2TTVXZWA2EGWZ
+  hash: sha256:a6ca433c56523633bb40ae7bcf02897f334e71ecc84a5cb56f89baff7805a4ff
+  set: ddd-governance
+  statement: fn host_command in ddd-lsp/src/adapter/rust.rs
+  allocation: criterion
+  discharge:
+  - contract:seam/rust/host-command
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/rust/host-command@sha256:8677d2a5a8001afddc33080640fa94a77625e4e5b5e4aa159d03a94c32231eb2

@@ -11,9 +11,9 @@ use crate::decision::{BasedOn, BasisPin};
 fn declared_formats_beyond_the_known_set_are_named() {
     let mut s = DddStore::default();
     let mut p = pred("pred/a/x");
-    p.format = 6;
+    p.format = 7;
     s.predicates.push(p);
-    assert_names(&validate_store(&s), "pred/a/x", "declares format 6");
+    assert_names(&validate_store(&s), "pred/a/x", "declares format 7");
 }
 
 #[test]
@@ -66,18 +66,18 @@ fn a_version_index_anchoring_nothing_is_a_violation() {
 }
 
 #[test]
-fn format_five_is_a_known_format() {
+fn format_six_is_a_known_format() {
     let mut s = DddStore::default();
     let mut c = claim("DDD-a-1");
-    c.format = 5;
+    c.format = 6;
     s.claims.push(c);
     assert!(validate_store(&s).is_empty(), "{}", msgs(&validate_store(&s)));
 
     let mut ahead = DddStore::default();
     let mut c2 = claim("DDD-a-2");
-    c2.format = 6;
+    c2.format = 7;
     ahead.claims.push(c2);
-    assert_names(&validate_store(&ahead), "DDD-a-2", "formats 1-5");
+    assert_names(&validate_store(&ahead), "DDD-a-2", "formats 1-6");
 }
 
 #[test]
@@ -90,6 +90,7 @@ fn pinned_edges_under_format_one_are_a_violation() {
         claim: "DDD-a-1".into(),
         status: ClaimStatus::Projected,
         changed: "2026-08-01".into(),
+        content: None,
     })];
     s.decisions.push(d);
     assert_names(&validate_store(&s), "dec/a/adopt", "format 2");
@@ -113,6 +114,7 @@ fn a_format_two_decision_must_pin_every_edge() {
         claim: "DDD-a-1".into(),
         status: ClaimStatus::Projected,
         changed: "2026-08-01".into(),
+        content: None,
     })];
     ok.decisions.push(d2);
     assert!(validate_store(&ok).is_empty(), "{}", msgs(&validate_store(&ok)));
@@ -179,6 +181,7 @@ fn a_conformant_format_five_decision_validates_green() {
             claim: "DDD-a-1".into(),
             status: ClaimStatus::Projected,
             changed: "2026-08-01".into(),
+            content: None,
         }),
         typed(BasisType::Preference, Some("four documents beat one"), None),
         typed(BasisType::RiskAcceptance, None, Some("risk/a/priced")),

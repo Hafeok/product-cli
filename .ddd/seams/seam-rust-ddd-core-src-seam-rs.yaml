@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ddd-core-src-seam-rs
+boundary: contract surface of ddd-core/src/seam.rs
+verdict_knowledge: 'Consumers of a declaration learn it may carry signed bindings (seam format 2): the append-only discharge record of exactly which transitions this boundary account has discharged.'
+contract_location: ddd-core/src/seam.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: bindings
+  file: ddd-core/src/seam.rs
+  before: sha256:3deb83c9a702f8acf7e407a3f75db3dbfefa147c45f5f4485cdec5b1135e8a51
+  after: sha256:5b5dfa695aad8e3867df94121c6c482fc00b2107f9f372d7ef0e4ddfcc3a727c
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:69fe0ce649537d043045d049c0dbbdeb185f0a8d888daba9ce1ef3168c0bb3a2

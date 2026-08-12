@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGMEAJTX88HKBWPVYRQV9
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/lsp-as-seam (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGMEACBFMTC1RJJ8T90GS
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGMEACBFMTC1RJJ8T90GS
+  hash: sha256:207dbd376b5c06e5e03a175bc044670a2af4c18b7fb41226a527c87742a192a4
+  set: ddd-governance
+  statement: The LSP protocol is the seam to language intelligence
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/lsp-as-seam@sha256:95730cf5de6848654de80494bbd8c11c52b3d69aecce71fb0456975ada9be908
+  - claim:DDD-arch-02@sha256:59438c314ac52ad702940f4c9e615c75db4f075b45cbe4eb61533d50a8824154

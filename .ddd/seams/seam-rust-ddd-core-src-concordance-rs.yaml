@@ -1,0 +1,98 @@
+format: 2
+id: seam/rust/ddd-core-src-concordance-rs
+boundary: contract surface of ddd-core/src/concordance.rs
+verdict_knowledge: 'Callers learn that historical ids are permanent aliases: the concordance maps both directions forever, and an id that deliberately did not migrate states its disposition instead of being absent.'
+contract_location: ddd-core/src/concordance.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: load
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:d3a345e8fbbbb4b7a688aa4494f28cd353d4fff08b2d8d138bd10ca22efac070
+- symbol: path
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:a68d007afc3aa4ab17509a17d76641afea2723ca2df8f5b31a260505e328119b
+- symbol: impl Concordance
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:1827c771abcf0537f785a44f5a633e757684d436111e731d9fd6139a7f8cf2c5
+- symbol: Concordance
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:2167b7ccb5aa0a30a1c43332dec39afcce2130c80ceae53dd6fb6214bde0ffd9
+- symbol: Row
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:bb515f0370289c5fb9703eadfe0af3350e552e5727d2260e281c2add73f3ba21
+- symbol: format
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:dfe6c898028d779d0634e31a59f5d55e8232af877d69f0429727918766279ab6
+- symbol: note
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:8bece100d98fa7df69e93cd70ba3b1ec53f8806150c475427a9e1176781d62b7
+- symbol: rows
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:6d0dd9aea63631d80f25558bcdd5a044a62a0c9c1bd00c5f0779e4faa0af9e19
+- symbol: disposition
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:c6461d550e16efe7ae9e501565f03560b07c435deb0b9f5208650d5bf67ffcaf
+- symbol: historical
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:24effff2872bca366443901cae43b9fcd3406050bce60c07a60eb19316e72148
+- symbol: kind
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:38554495932a7c718b83f0832c0052029f2d81abaa3ac37913dc5c0554d03f81
+- symbol: ledger
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:a49dfed76c8feef8d40fa1f13893d423cf037e628874bac297ec49ab16d9380b
+- symbol: historical_of
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:3a3be9b7012d539d54ad6bf6199ffb6c17e299ed5a2b5a1398da668570ddfad1
+- symbol: ledger_of
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:4ed5c0b93e3fe1384260a8431b6c5ddcd3d69810bbc0e139be987e65ff351660
+- symbol: row
+  file: ddd-core/src/concordance.rs
+  before: absent
+  after: sha256:92328bcc287ab49ea280f6b3765c421db7db895038a40ee4f5c0c16eeeb48f16
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:bd7a391fd5330f3e63fe5e0860b910939df2be8ac0f578965077b4e83707d8f1

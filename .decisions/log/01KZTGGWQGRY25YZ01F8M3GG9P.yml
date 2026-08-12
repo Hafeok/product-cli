@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZTGGWQGRY25YZ01F8M3GG9P
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/web/token-discipline (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGWQGN5BKXV9MV384XZYR
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGWQGN5BKXV9MV384XZYR
+  hash: sha256:ace3901b3f5cdb4bb5d88f6f134612a468b7cf96f16e1f84cd623fb4822ea81f
+  set: ddd-governance
+  statement: Raw colour values are banned where a token exists (stylelint, error)
+  allocation: constraint
+  discharge:
+  - analyzer:stylelint/declaration-property-value-disallowed-list
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/web/token-discipline@sha256:5a5f9ae84b79c2d478c48d60fda759cea87185d839d437663da1f3c03b0412e3
+  - claim:DDD-web-02@sha256:dae8a5e400b2c28278ad5c4a0acfd07cd7049892745055f598b7a3b7e597b9f1

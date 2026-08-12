@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ledger-core-src-author-decision-rs
+boundary: contract surface of ledger-core/src/author/decision.rs
+verdict_knowledge: 'Authoring callers learn an add can carry a change-set note and that the written file declares its needed format — the migration''s per-entry provenance rides this.'
+contract_location: ledger-core/src/author/decision.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: note
+  file: ledger-core/src/author/decision.rs
+  before: sha256:eee50abb32f763d7ab36acb7a66010f59534aa259d72c48fe1823b541af7d9ef
+  after: sha256:73022db1d32437eeb66ef5a43f33765f6563e65626c0946ded3ed38f564cab34
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:1a382b72b0250aeb28b6fcd35f6c1b92e8953d1db3665e3ce65ea745910244f3

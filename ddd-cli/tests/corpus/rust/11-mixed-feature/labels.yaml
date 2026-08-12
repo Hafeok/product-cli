@@ -1,0 +1,14 @@
+case: 11-mixed-feature
+note: "Naturalistic feature edit: one new pub fn, one new private helper, one private body-only change (the body change should produce no event at all). Guard rows: the listed unchanged neighbours (enum members / fields below or beside the edit) must raise no demand — they caught the declaration-slice bleed fixed in rust_facts.rs."
+surface:
+  - symbol: emit
+    change: added
+non_surface:
+  - symbol: scratch
+    change: added
+  - symbol: internal_helper
+    change: any
+  - symbol: Red
+    change: any
+  - symbol: Green
+    change: any

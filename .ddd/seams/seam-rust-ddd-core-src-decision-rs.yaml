@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ddd-core-src-decision-rs
+boundary: contract surface of ddd-core/src/decision.rs
+verdict_knowledge: 'Consumers learn a claim pin may carry the claim''s content hash at decision time (format 6), which is what turns basis loss from a status+date heuristic into an exact comparison.'
+contract_location: ddd-core/src/decision.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: content
+  file: ddd-core/src/decision.rs
+  before: sha256:288328f772c3e9e6f1fb88330aff0806035fdf729dd0da02b7af1b978788cca5
+  after: sha256:22e7901af1fe61a02f486b79b73cf19cc48379e1aa363a340df4ff052cb003c7
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:09cfcbd0507c6ddb14c26b427f0a5b98d2539bbebe568cda1e259ce0cf81dbe9

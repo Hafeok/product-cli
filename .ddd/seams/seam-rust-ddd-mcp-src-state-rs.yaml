@@ -1,0 +1,56 @@
+format: 2
+id: seam/rust/ddd-mcp-src-state-rs
+boundary: contract surface of ddd-mcp/src/state.rs
+verdict_knowledge: 'Serve-state consumers learn there is no session log to consult: the process holds hosts only, and every discharge question is answered from the stored graph.'
+contract_location: ddd-mcp/src/state.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: Declared
+  file: ddd-mcp/src/state.rs
+  before: sha256:e417cbe54cf17fef848f7065deb35e4c537bb9e86a0c58da10a0679e665d96a2
+  after: sha256:62b997bd8cd9bfe53445e3bf18cc697f2144986f49657e4b3d2037e36b5b0647
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:3267ea97fe08a51b330a2e25a32e4518864198d7ee2a90d24ce9df771dcebfd4
+- symbol: SessionLog
+  file: ddd-mcp/src/state.rs
+  before: sha256:e417cbe54cf17fef848f7065deb35e4c537bb9e86a0c58da10a0679e665d96a2
+  after: sha256:62b997bd8cd9bfe53445e3bf18cc697f2144986f49657e4b3d2037e36b5b0647
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:6227f20cbdc830559817f7d5d409c9f6d1f74d6e0b215c242e0a6094223fbc2f
+- symbol: contract_location
+  file: ddd-mcp/src/state.rs
+  before: sha256:e417cbe54cf17fef848f7065deb35e4c537bb9e86a0c58da10a0679e665d96a2
+  after: sha256:62b997bd8cd9bfe53445e3bf18cc697f2144986f49657e4b3d2037e36b5b0647
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:047940d1e277db66809d551c0e493c1435cbc18833bb89f974571fe3f1ad31a7
+- symbol: id
+  file: ddd-mcp/src/state.rs
+  before: sha256:e417cbe54cf17fef848f7065deb35e4c537bb9e86a0c58da10a0679e665d96a2
+  after: sha256:62b997bd8cd9bfe53445e3bf18cc697f2144986f49657e4b3d2037e36b5b0647
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:c367bcf6123132eeac4d5fc3dffd23863793519ee6f3922566ed58077b781970
+- symbol: symbol
+  file: ddd-mcp/src/state.rs
+  before: sha256:e417cbe54cf17fef848f7065deb35e4c537bb9e86a0c58da10a0679e665d96a2
+  after: sha256:62b997bd8cd9bfe53445e3bf18cc697f2144986f49657e4b3d2037e36b5b0647
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:296b10987e1597e1f7051f035068742b8f78ae59dcaaae145e022699dad0d034
+- symbol: session
+  file: ddd-mcp/src/state.rs
+  before: sha256:e417cbe54cf17fef848f7065deb35e4c537bb9e86a0c58da10a0679e665d96a2
+  after: sha256:62b997bd8cd9bfe53445e3bf18cc697f2144986f49657e4b3d2037e36b5b0647
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:bf3caf98118cf52c5dbbd55e91c665d82f098dd2228bb33d11ec17a3dc3dc7e4
+- symbol: declared
+  file: ddd-mcp/src/state.rs
+  before: sha256:e417cbe54cf17fef848f7065deb35e4c537bb9e86a0c58da10a0679e665d96a2
+  after: sha256:62b997bd8cd9bfe53445e3bf18cc697f2144986f49657e4b3d2037e36b5b0647
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:9620ee3b42d8be66353bbd1d07f9aa288103e68868218361677b715a5a8dee8f
+- symbol: record_declaration
+  file: ddd-mcp/src/state.rs
+  before: sha256:e417cbe54cf17fef848f7065deb35e4c537bb9e86a0c58da10a0679e665d96a2
+  after: sha256:62b997bd8cd9bfe53445e3bf18cc697f2144986f49657e4b3d2037e36b5b0647
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:78802905d0cc1ce2b9196e18c165c4e692e8189383346600d94fabce77d48f1c

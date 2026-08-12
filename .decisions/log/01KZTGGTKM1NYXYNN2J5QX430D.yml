@@ -1,0 +1,24 @@
+format: 1
+id: cs:01KZTGGTKM1NYXYNN2J5QX430D
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: |-
+  Migrated from dec/rust/no-unwrap (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+  Edge DDD-gates-01 is watched, not grounding (re-typing handoff): the ontology question is filed as question/ddd/watched-edge-kind; this edge must not be read as ground.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGTKM7T8Y6GY78TGJRNB8
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGTKM7T8Y6GY78TGJRNB8
+  hash: sha256:15fc86a5ad4771b6ca6449df2bf8f64c7b77dcbab28b67ede5ffa57b82681a0a
+  set: ddd-governance
+  statement: Deny clippy::unwrap_used workspace-wide
+  allocation: constraint
+  discharge:
+  - analyzer:clippy/clippy::unwrap_used
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/rust/no-unwrap@sha256:989fbea70c2af55bbc94eacbe1413a05cce9b7f922fe5cd843f6d90bcb4aaf20
+  - constraint:dec/rust/no-unwrap
+  - watched:DDD-gates-01@sha256:6f500ee8ef3bcbef7ce1a1d6ce2c093d61858f7a01bb3685b1c0f56aa32b4395

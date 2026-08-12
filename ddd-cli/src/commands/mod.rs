@@ -1,7 +1,11 @@
 //! Subcommand surface for the `ddd` binary.
 
+mod bind;
 mod diff;
+mod diff_contracts;
 mod init;
+mod migrate;
+mod migrate_plan;
 mod render;
 mod report;
 mod serve;
@@ -17,14 +21,48 @@ use product_core::error::{ProductError, Result};
 /// The M1-M4 command surface (PRD §7). Keep the variant list sorted.
 #[derive(Subcommand)]
 pub enum Commands {
+    /// File the declarations a failing diff-contracts gate demands (post-hoc bindings)
+    Bind {
+        /// <base>..<head>, or <base> to bind against the working tree
+        range: String,
+        /// Seconds to wait for a lazily started language host
+        #[arg(long, default_value = "180")]
+        wait: u64,
+        /// verdict_knowledge for freshly created declarations
+        #[arg(long)]
+        verdict: Option<String>,
+    },
     /// Declared vs. detected rules: UNGOVERNED / STALE / UNCITED_SUPPRESSION
     Diff {
         /// SARIF file(s) with emitted diagnostics (adds to config detect.sarif)
         #[arg(long, value_name = "FILE")]
         sarif: Vec<PathBuf>,
+        /// Emit the report as JSON (stable finding ids, CI-consumable)
+        #[arg(long)]
+        json: bool,
+    },
+    /// Contract-surface events in a revision range, via the shared classifier
+    DiffContracts {
+        /// <base>..<head>, or <base> to diff against the working tree
+        range: String,
+        /// Emit the report as JSON (stable finding ids, CI-consumable)
+        #[arg(long)]
+        json: bool,
+        /// Seconds to wait for a lazily started language host
+        #[arg(long, default_value = "180")]
+        wait: u64,
     },
     /// Scaffold the .ddd/ store: the §6 layout plus config.yaml
     Init,
+    /// Migrate .ddd governance records into the decision ledger (M8)
+    MigrateLedger {
+        /// The owning namespace the dec: ids are minted under
+        #[arg(long, default_value = "hafeok.ddd")]
+        namespace: String,
+        /// The ledger set the migrated entries file into
+        #[arg(long, default_value = "ddd-governance")]
+        set: String,
+    },
     /// Project the graph to one static, self-contained HTML file
     Render {
         /// Output file (default: .ddd/render.html)
@@ -45,7 +83,11 @@ pub enum Commands {
     /// Start the ddd_* MCP server over stdio (language tools + interceptor)
     Serve,
     /// Schema + ontology validation of the graph (exit 1 on violations)
-    Validate,
+    Validate {
+        /// Emit the report as JSON (stable finding ids, CI-consumable)
+        #[arg(long)]
+        json: bool,
+    },
     /// Pre-load the LSP hosts (Roslyn solution load) so tools answer warm
     Warmup {
         /// Limit to one language (repeatable); default warms every adapter
@@ -88,19 +130,27 @@ pub enum ReportWhat {
         /// Judge cadence against this date instead of today (YYYY-MM-DD)
         #[arg(long, value_name = "DATE")]
         today: Option<String>,
+        /// Emit the report as JSON (stable finding ids, CI-consumable)
+        #[arg(long)]
+        json: bool,
     },
 }
 
 pub fn run(cmd: Commands, root: Option<PathBuf>) -> Result<()> {
     match cmd {
-        Commands::Diff { sarif } => diff::run(root, sarif),
+        Commands::Bind { range, wait, verdict } => bind::run(root, range, wait, verdict),
+        Commands::Diff { sarif, json } => diff::run(root, sarif, json),
+        Commands::DiffContracts { range, json, wait } => {
+            diff_contracts::run(root, range, json, wait)
+        }
         Commands::Init => init::run(root),
+        Commands::MigrateLedger { namespace, set } => migrate::run(root, namespace, set),
         Commands::Render { out, sarif, today } => render::run(root, out, sarif, today),
         Commands::Report { what } => match what {
-            ReportWhat::Escapes { sarif, today } => report::run(root, sarif, today),
+            ReportWhat::Escapes { sarif, today, json } => report::run(root, sarif, today, json),
         },
         Commands::Serve => serve::run(root),
-        Commands::Validate => validate::run(root),
+        Commands::Validate { json } => validate::run(root, json),
         Commands::Warmup { language, timeout } => serve::warmup(root, language, timeout),
         Commands::What { product, all, strict } => what::run(root, product, all, strict),
         Commands::Why { id, sarif } => why::run(root, &id, sarif),

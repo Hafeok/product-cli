@@ -68,6 +68,7 @@ fn seam(id: &str, element: &str) -> crate::seam::SeamDeclaration {
         contract_location: what_ref(element),
         obligations: Vec::new(),
         metadata: Default::default(),
+        bindings: Vec::new(),
         notes: None,
     }
 }
