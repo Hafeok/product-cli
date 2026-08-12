@@ -4,9 +4,14 @@ use std::path::PathBuf;
 
 use ddd_core::config::FindingSeverity;
 use ddd_core::report::EscapesReport;
-use product_core::error::Result;
+use product_core::error::{ProductError, Result};
 
-pub fn run(root: Option<PathBuf>, sarif: Vec<PathBuf>, today: Option<String>) -> Result<()> {
+pub fn run(
+    root: Option<PathBuf>,
+    sarif: Vec<PathBuf>,
+    today: Option<String>,
+    json: bool,
+) -> Result<()> {
     let repo_root = super::resolve_root(root)?;
     let store = ddd_core::store::load(&repo_root.join(ddd_core::store::STORE_DIR));
     let detected = ddd_core::detect::detect(&repo_root, store.config.as_ref(), &sarif);
@@ -14,6 +19,19 @@ pub fn run(root: Option<PathBuf>, sarif: Vec<PathBuf>, today: Option<String>) ->
     let report = ddd_core::report::report_escapes(&store, &detected, &today);
     let config = store.config.clone().unwrap_or_default();
     let pair = ddd_lsp::adapter::htmlcss_pair::check_pairs(&repo_root, &config);
+    if json {
+        let out = serde_json::json!({
+            "today": today,
+            "clean": report.is_clean() && pair.is_clean(),
+            "escapes": report,
+            "pair": pair,
+        });
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&out).map_err(|e| ProductError::IoError(e.to_string()))?
+        );
+        return Ok(());
+    }
     print_report(&report, &pair, &today);
     Ok(())
 }

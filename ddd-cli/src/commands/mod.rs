@@ -1,6 +1,7 @@
 //! Subcommand surface for the `ddd` binary.
 
 mod diff;
+mod diff_contracts;
 mod init;
 mod render;
 mod report;
@@ -22,6 +23,20 @@ pub enum Commands {
         /// SARIF file(s) with emitted diagnostics (adds to config detect.sarif)
         #[arg(long, value_name = "FILE")]
         sarif: Vec<PathBuf>,
+        /// Emit the report as JSON (stable finding ids, CI-consumable)
+        #[arg(long)]
+        json: bool,
+    },
+    /// Contract-surface events in a revision range, via the shared classifier
+    DiffContracts {
+        /// <base>..<head>, or <base> to diff against the working tree
+        range: String,
+        /// Emit the report as JSON (stable finding ids, CI-consumable)
+        #[arg(long)]
+        json: bool,
+        /// Seconds to wait for a lazily started language host
+        #[arg(long, default_value = "180")]
+        wait: u64,
     },
     /// Scaffold the .ddd/ store: the §6 layout plus config.yaml
     Init,
@@ -45,7 +60,11 @@ pub enum Commands {
     /// Start the ddd_* MCP server over stdio (language tools + interceptor)
     Serve,
     /// Schema + ontology validation of the graph (exit 1 on violations)
-    Validate,
+    Validate {
+        /// Emit the report as JSON (stable finding ids, CI-consumable)
+        #[arg(long)]
+        json: bool,
+    },
     /// Pre-load the LSP hosts (Roslyn solution load) so tools answer warm
     Warmup {
         /// Limit to one language (repeatable); default warms every adapter
@@ -88,19 +107,25 @@ pub enum ReportWhat {
         /// Judge cadence against this date instead of today (YYYY-MM-DD)
         #[arg(long, value_name = "DATE")]
         today: Option<String>,
+        /// Emit the report as JSON (stable finding ids, CI-consumable)
+        #[arg(long)]
+        json: bool,
     },
 }
 
 pub fn run(cmd: Commands, root: Option<PathBuf>) -> Result<()> {
     match cmd {
-        Commands::Diff { sarif } => diff::run(root, sarif),
+        Commands::Diff { sarif, json } => diff::run(root, sarif, json),
+        Commands::DiffContracts { range, json, wait } => {
+            diff_contracts::run(root, range, json, wait)
+        }
         Commands::Init => init::run(root),
         Commands::Render { out, sarif, today } => render::run(root, out, sarif, today),
         Commands::Report { what } => match what {
-            ReportWhat::Escapes { sarif, today } => report::run(root, sarif, today),
+            ReportWhat::Escapes { sarif, today, json } => report::run(root, sarif, today, json),
         },
         Commands::Serve => serve::run(root),
-        Commands::Validate => validate::run(root),
+        Commands::Validate { json } => validate::run(root, json),
         Commands::Warmup { language, timeout } => serve::warmup(root, language, timeout),
         Commands::What { product, all, strict } => what::run(root, product, all, strict),
         Commands::Why { id, sarif } => why::run(root, &id, sarif),
