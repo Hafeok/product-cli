@@ -1,4 +1,4 @@
-format: 2
+format: 5
 id: dec/ddd/rust-class-enforced-here
 title: This workspace runs the code artifact class under enforce once the Rust adapter ships
 rationale: >
@@ -32,15 +32,30 @@ rationale: >
   per-class entry does not cover.
 principal: Emil (Context&)
 based_on:
-  - claim: DDD-friction-01
-    status: projected
-    changed: 2026-08-06
-  - claim: DDD-friction-02
-    status: projected
-    changed: 2026-08-07
+  - type: experiment
+    statement: >-
+      Adopted to find out: running this workspace's own artifact class
+      under enforce is the first live reading of the friction falsifier
+      (DDD-friction-01, DDD-friction-02) on a real repo, and the
+      declarations it produces are the first correspondence rows.
+    ref: docs/ddd-m6-experiment.md
 date: 2026-08-10
 notes: >
   The friction reading this produces is optimistic by a known amount:
   `dec/ddd/enforce-matching-tightens-to-symbol` is deliberately not
   implemented in this session, so enforce-mode matching still admits the file
   arm. See docs/ddd-m6-experiment.md §1.1.
+
+
+  Basis re-typed 2026-08-12, following the 2026-08 basis-quality audit
+  (F-7f): a re-decision of the basis per format 5, not an edit. The
+  rationale is honestly self-described — "running the tail of this session
+  governed is the first live reading of the friction falsifier on a real
+  repo" — which is the experiment type: adopted to find out. The prior
+  citations of DDD-friction-01 and DDD-friction-02 are dropped as bases
+  and named in the experiment statement instead: they are the claims this
+  decision exists to test, not claims it rests on — its own rationale says
+  both "have no ground in this repo at all", so a decision resting on them
+  would invert the direction of evidence. Neither claim is retired here;
+  claim fates are the F-batch's. Format 2 -> 5 per
+  docs/ddd-format-migrations.md. Awaiting the principal's ruling.
