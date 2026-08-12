@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZTGGH25SFKCGSFCXJMTM7VC
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/cs/async-policy-rules-at-error (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGH252JQYS5W79V8E1NXW
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGH252JQYS5W79V8E1NXW
+  hash: sha256:e79289ab2dc65a1df0b907a3f3f4a9d0b9eb957bff73ec1f635257170a218f06
+  set: ddd-governance
+  statement: CA2007 and CA2016 run at error severity in governed C# repos
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/cs/async-policy-rules-at-error@sha256:0f4b3fb787d385cbbc5a5451a90b16edbb648051ccea73bb88c90ce0914fd4ee
+  - claim:DDD-cs-pol-03@sha256:1a4951a253a66bdaae42da85428d22b73d7783c89def4f85fe551e356d6a0211
+  - claim:DDD-cs-pol-04@sha256:758b82ec1baab9b344607db6337b03813d2cc1a830fc285f943c0b185e44beaf

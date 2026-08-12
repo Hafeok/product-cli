@@ -12,9 +12,14 @@ on:
       - 'product-core/**'
       - 'product-mcp/**'
       - 'product-cli/**'
+      - 'ddd-core/**'
+      - 'ddd-lsp/**'
+      - 'ddd-mcp/**'
+      - 'ddd-cli/**'
       - 'ledger-core/**'
       - 'ledger-cli/**'
       - '.decisions/**'
+      - '.ddd/**'
       - 'xtask/**'
       - 'docs/**'
       - 'conventions/**'
@@ -29,9 +34,14 @@ on:
       - 'product-core/**'
       - 'product-mcp/**'
       - 'product-cli/**'
+      - 'ddd-core/**'
+      - 'ddd-lsp/**'
+      - 'ddd-mcp/**'
+      - 'ddd-cli/**'
       - 'ledger-core/**'
       - 'ledger-cli/**'
       - '.decisions/**'
+      - '.ddd/**'
       - 'xtask/**'
       - 'docs/**'
       - 'conventions/**'
@@ -46,6 +56,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The contract-surface gate diffs against the PR base, which a
+          # depth-1 clone does not carry.
+          fetch-depth: 0
 
       # Single source of truth for the Rust version is rust-toolchain.toml.
       # Parse its channel field and pass it to the action so local builds and
@@ -86,6 +100,20 @@ jobs:
         # readable, unallocated decisions and stale acceptances must not
         # reach main. Exit 1 = findings, exit 2 = the gate could not run.
         run: cargo run -q -p ledger-cli --bin ledger -- verify
+
+      - name: DDD governance gate
+        # Schema + ontology validation of the .ddd graph (M8: runs in CI
+        # alongside the ledger gate — both stores are contract surfaces).
+        run: cargo run -q -p ddd-cli --bin ddd -- validate
+
+      - name: Contract-surface gate (repo diff)
+        # M8, spec invariant 5: every contract-surface change in the PR
+        # range must be discharged by a declaration signing that exact
+        # change — regardless of how the edit was made. Uses the same
+        # classifier as the interceptor (invariant 4); rust-analyzer is
+        # the Rust host, installed as a toolchain component above.
+        if: github.event_name == 'pull_request'
+        run: cargo run -q -p ddd-cli --bin ddd -- diff-contracts "${{ github.event.pull_request.base.sha }}..HEAD" --wait 600
 
       - name: Convention check (xtask)
         # Enforces every CTX rule registered under xtask/src/checks/.

@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGV067R92981RZ569H0GT
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/web/htmlcss-enforce (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGV06DE3NXC5D8EQ2C17Z
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGV06DE3NXC5D8EQ2C17Z
+  hash: sha256:a91155ebcce755c1e39862460be0af496201f8a6cc9db766868a1711696f008f
+  set: ddd-governance
+  statement: Interception for the html-css artifact class is enforce on this repo
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/web/htmlcss-enforce@sha256:4998fb4bcb4d458c2af5105735b533770bb2ac1c95f98222a3bf1d199538cb74
+  - claim:DDD-web-01@sha256:52dbd3f9def0d330c373eca14a640feba676d2a694a4abb20c9eede2f22b69b9

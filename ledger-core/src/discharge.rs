@@ -36,6 +36,11 @@ pub enum DischargeRef {
     Otel(String),
     /// A named actor — the discharge for a `judgment`.
     Actor(Identity),
+    /// The repository-diff contract check (format 3, spec v1.4 — ddd M8):
+    /// changes to the named boundary (a `seam/...` declaration id or a
+    /// `file#symbol` contract location) are validated in CI by the shared
+    /// classifier, e.g. `contract:seam/ledger/verify-classes`.
+    Contract(String),
 }
 
 impl DischargeRef {
@@ -48,7 +53,14 @@ impl DischargeRef {
             Self::WhatIf(_) => "whatif",
             Self::Otel(_) => "otel",
             Self::Actor(_) => "actor",
+            Self::Contract(_) => "contract",
         }
+    }
+
+    /// Whether this pointer rides the repo-diff contract check, which is
+    /// what gates the change-set's `format` at 3 (spec v1.4).
+    pub fn is_contract(&self) -> bool {
+        matches!(self, Self::Contract(_))
     }
 
     /// Whether this pointer names a production telemetry metric, which
@@ -59,7 +71,7 @@ impl DischargeRef {
 }
 
 /// Every scheme this format version defines, for the error message.
-const SCHEMES: &str = "analyzer | test | policy | whatif | otel | actor";
+const SCHEMES: &str = "analyzer | test | policy | whatif | otel | actor | contract";
 
 impl FromStr for DischargeRef {
     type Err = String;
@@ -79,6 +91,7 @@ impl FromStr for DischargeRef {
             "whatif" => Ok(Self::WhatIf(body.to_string())),
             "otel" => Ok(Self::Otel(body.to_string())),
             "actor" => body.parse().map(Self::Actor),
+            "contract" => Ok(Self::Contract(body.to_string())),
             other => Err(format!("`{other}` is not a discharge scheme — expected one of {SCHEMES}")),
         }
     }
@@ -87,7 +100,12 @@ impl FromStr for DischargeRef {
 impl fmt::Display for DischargeRef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Analyzer(b) | Self::Test(b) | Self::Policy(b) | Self::WhatIf(b) | Self::Otel(b) => {
+            Self::Analyzer(b)
+            | Self::Test(b)
+            | Self::Policy(b)
+            | Self::WhatIf(b)
+            | Self::Otel(b)
+            | Self::Contract(b) => {
                 write!(f, "{}:{b}", self.scheme())
             }
             Self::Actor(i) => write!(f, "actor:{i}"),

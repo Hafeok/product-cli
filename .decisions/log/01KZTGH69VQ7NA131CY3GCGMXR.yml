@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGH69VQ7NA131CY3GCGMXR
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/web/render-muted (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGH69V9E6KQAJ3R1V8JA46
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGH69V9E6KQAJ3R1V8JA46
+  hash: sha256:b13f88bec8ded1016d3e198ebf834faf432c3b02e124adbadf86eae5136fcea8
+  set: ddd-governance
+  statement: class muted in ddd-core/assets/render.css
+  allocation: criterion
+  discharge:
+  - contract:seam/web/render-muted
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/web/render-muted@sha256:1d34fac1a6a65efda310c5e09721412deb6c2ce17a6ed65622d22cf8106c542b

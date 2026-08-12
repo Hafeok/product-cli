@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ddd-core-src-render-rs
+boundary: contract surface of ddd-core/src/render.rs
+verdict_knowledge: 'Render consumers learn the page can project the ledger''s reading (gates, pendency, dispositions, pin drift) while remaining a projection — it computes no verdict of its own.'
+contract_location: ddd-core/src/render.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: render_html_with_ledger
+  file: ddd-core/src/render.rs
+  before: sha256:1040a8244c0ffc514a3b35fd4c6f12760ae35f0bdf6e25cdee1cf659bc4c277b
+  after: sha256:44a433cd63f3fdc5a6bfc31e5d844679c188e32cb07e0b2a6e671e6584379383
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:d3297bce01e5287cc69d541bb0dfe062ff64a32fc6afd1344554877c3e477d48

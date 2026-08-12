@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ddd-cli-src-commands-migrate-rs
+boundary: contract surface of ddd-cli/src/commands/migrate.rs
+verdict_knowledge: 'CLI users learn the migration is one-shot (a concordance refuses a second run), files everything allocated-awaiting-acceptance, and signs nothing on the principal''s behalf.'
+contract_location: ddd-cli/src/commands/migrate.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: run
+  file: ddd-cli/src/commands/migrate.rs
+  before: absent
+  after: sha256:d00f4c656db5c057e32d0127ae58108f362f62112c79af95abf3437d7790eaac
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:bcca815e3c50bd8409736ab44cdef70850eb2a933285bcbe98786ddef22c2c5f

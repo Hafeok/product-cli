@@ -72,6 +72,11 @@ pub struct BasisPin {
     pub status: ClaimStatus,
     /// The claim's `changed` date at decision time.
     pub changed: String,
+    /// Format 6 (M8): the hash of the claim's canonical content at
+    /// decision time (`crate::basis_pin`). Basis loss becomes
+    /// pinned-hash ≠ current-hash — mechanically exact (invariant 2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content: Option<String>,
 }
 
 /// A format-5 non-claim basis. What it rests on is stated, not statused:

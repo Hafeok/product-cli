@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGSFEM9JH6TYTENN4KKD3
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/what-published-qualifier (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGSFECY2REBK9HESM5Y25
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGSFECY2REBK9HESM5Y25
+  hash: sha256:e28fd11fcd01eefba15a55db9bf042bbf0e82dc1fbcd3e43634836b454998f50
+  set: ddd-governance
+  statement: Events, commands and views are surface only when a Translation carries them
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/what-published-qualifier@sha256:54f444735b06784da1fc8302fae4e74cf56c7aefd96e7ad82619e6e6b2d49e1b
+  - claim:DDD-what-03@sha256:3a0f93eb2db50ca44a674b5bee814cda6c90c22b708f7e17dc07b89f16047488

@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGH581BJJ0MMXYK4CAK7YR
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/web/render-chip (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGH58176ZFN8JGZA3RV2ZP
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGH58176ZFN8JGZA3RV2ZP
+  hash: sha256:28029adb113cc576702c4577cb94dba50fb521970c0b3a8c254034ee3ca7ecdd
+  set: ddd-governance
+  statement: class chip in ddd-core/assets/render.css
+  allocation: criterion
+  discharge:
+  - contract:seam/web/render-chip
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/web/render-chip@sha256:1749ec0f467c934944a3fd4c0ea10b3712a516cf569aa4a731b8d0217f8fbd93

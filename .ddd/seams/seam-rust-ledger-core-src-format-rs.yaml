@@ -1,0 +1,20 @@
+format: 2
+id: seam/rust/ledger-core-src-format-rs
+boundary: contract surface of ledger-core/src/format.rs
+verdict_knowledge: 'Format consumers learn format 3 exists for the contract: scheme and that a change-set declares the format it actually needs, computed rather than assumed.'
+contract_location: ledger-core/src/format.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: CONTRACT_FORMAT
+  file: ledger-core/src/format.rs
+  before: sha256:c2c23381c4b5d43e20d1a0dab1b97a93c85e460b4e9c185254a01c154a3ef5c6
+  after: sha256:cce9de3208cd6c1b4f5bb81f83eeca707814d51053dc8763531c601f86c62181
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:91c024c37b222994cc6621d2f7db3f64165299f348f40d9993352bdb8e686586
+- symbol: needed_for
+  file: ledger-core/src/format.rs
+  before: sha256:c2c23381c4b5d43e20d1a0dab1b97a93c85e460b4e9c185254a01c154a3ef5c6
+  after: sha256:cce9de3208cd6c1b4f5bb81f83eeca707814d51053dc8763531c601f86c62181
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:cfd38c2467e3e762941c7a1960e6c9688edf5364457b8ac5a3633aa417348dbd

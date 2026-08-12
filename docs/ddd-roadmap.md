@@ -4,19 +4,24 @@ Split out of the PRD per `dec/ddd/prd-split`. History (M1–M7, shipped)
 lives in the umbrella's history note and the experiment reports; this
 document holds only what is still ahead.
 
-## M8 — Enforcement closure
+## M8 — Enforcement closure. SHIPPED 2026-08-12.
 
-Scope per `dec/ddd/m8-enforcement-closure` (based on `DDD-arch-08`,
-`DDD-arch-09`): the Decision Ledger integration **plus the chain that
-makes enforcement close over the repository**, not only the governed
-path. The acceptance for M8 is the chain, end to end:
+Delivered per `dec/ddd/m8-enforcement-closure`; the report is
+[`ddd-m8-report.md`](ddd-m8-report.md), the invariant table as it
+actually stands is the spec §2. The chain, end to end, is the shipped
+acceptance:
 
 > **change → detected contract event → justified obligation →
 > declaration signing the change → durable discharge → authoritative
 > CI result**
 
-Interception governs the governed path; CI governs the repository — M8
-is where the second half becomes true.
+Interception governs the governed path; CI governs the repository — as
+of M8 both halves are true (spec invariant 5 carries one named
+residual: direct pushes to the default branch sit outside the
+pull-request gate). The section below records the scope as planned;
+deviations are in the report, not silently reconciled here.
+
+### Scope as planned (2026-08-11)
 
 ### Components
 
@@ -42,17 +47,18 @@ is where the second half becomes true.
    (the ledger's acceptance-signs-hash law applied to seams; spec
    invariant 3, closing `DDD-arch-09`).
 
-### Open at M8 planning (name them before writing the M8 prompt)
+### The rulings that settled the open questions (Emil, 2026-08-12)
 
-- **Signing semantics:** whether the signed subject covers the
-  post-change content only or the before/after pair, and what
-  `base_revision` pins against in a dirty working tree (index? HEAD?
-  the interception-time overlay?).
-- **Classifier sharing mechanism:** library call (ddd-core grows a
-  diff-over-two-revisions entry point) vs. re-serving through the MCP
-  surface; CI needs the hostless path or committed host output.
-- **Session vs. signature:** whether same-session matching survives as a
-  low-latency convenience over the signed form, or is retired.
+- **Signing semantics:** the before/after pair plus base revision — a
+  declaration discharges a transition, not a state. Dirty working tree
+  refuses to bind; pins are against HEAD, never uncommitted state.
+- **Classifier sharing mechanism:** a library entry point
+  (`ddd_lsp::revdiff`), hostless where the adapters support it — MCP is
+  a path, not a boundary; routing the authoritative gate back through
+  it would rebuild the flaw (spec invariant 4: one classifier).
+- **Session vs. signature:** retired, not layered — a convenience path
+  admitting the exact defect the milestone closes is a governed-path
+  bypass by design.
 
 ## Filed follow-ups (independent of M8)
 

@@ -18,7 +18,7 @@ use crate::turtle;
 
 /// The entry format versions this tool validates against; each entry is
 /// checked against the version it declares (PRD §6).
-pub const SUPPORTED_FORMATS: &[u32] = &[1, 2, 3, 4, 5];
+pub const SUPPORTED_FORMATS: &[u32] = &[1, 2, 3, 4, 5, 6];
 
 /// Run every check over the store; empty means conformant.
 pub fn validate_store(store: &DddStore) -> Vec<Violation> {
@@ -53,7 +53,7 @@ fn format_checks(store: &DddStore) -> Vec<Violation> {
             out.push(fault(
                 id,
                 "format",
-                format!("declares format {format}; this tool validates formats 1-5"),
+                format!("declares format {format}; this tool validates formats 1-6"),
             ));
         }
     };
@@ -90,6 +90,7 @@ fn format_gate_checks(store: &DddStore) -> Vec<Violation> {
     let mut out = Vec::new();
     out.extend(store.claims.iter().flat_map(claim_format_gates));
     out.extend(store.decisions.iter().flat_map(decision_format_gates));
+    out.extend(store.seams.iter().flat_map(seam_format_gates));
     if let Some(c) = &store.config {
         out.extend(config_gate_checks(c));
     }
@@ -99,6 +100,36 @@ fn format_gate_checks(store: &DddStore) -> Vec<Violation> {
                 &p.id,
                 "obligations",
                 "pattern obligations are a format-3 field — declare `format: 3`".to_string(),
+            ));
+        }
+    }
+    out
+}
+
+/// Seam gates: signed bindings are seam format 2 (M8), and a stored
+/// binding hash that does not recompute is a violation — a binding whose
+/// hash has drifted signs nothing.
+fn seam_format_gates(s: &crate::seam::SeamDeclaration) -> Vec<Violation> {
+    let mut out = Vec::new();
+    if s.format < 2 && !s.bindings.is_empty() {
+        out.push(fault(
+            &s.id,
+            "bindings",
+            "signed bindings are a format-2 field — declare `format: 2`".to_string(),
+        ));
+    }
+    for b in &s.bindings {
+        if b.hash != b.computed_hash() {
+            out.push(fault(
+                &s.id,
+                "bindings",
+                format!(
+                    "binding for `{}` in {} stores hash {} but its content hashes to {} — the binding signs nothing",
+                    b.symbol,
+                    b.file,
+                    b.hash,
+                    b.computed_hash()
+                ),
             ));
         }
     }
@@ -159,6 +190,19 @@ fn decision_format_gates(d: &crate::decision::Decision) -> Vec<Violation> {
         push(
             "based_on",
             "a format-5 decision types every basis (claim | constraint | mandate | preference | experiment | risk-acceptance)".to_string(),
+        );
+    }
+    let content_pins = d.based_on.iter().filter(|b| b.pin().is_some_and(|p| p.content.is_some())).count();
+    if d.format < 6 && content_pins > 0 {
+        push(
+            "based_on",
+            "content-hash pins are format 6 — declare `format: 6`".to_string(),
+        );
+    }
+    if d.format >= 6 && content_pins < pinned {
+        push(
+            "based_on",
+            "a format-6 decision pins every claim edge with the claim's content hash (M8, invariant 2)".to_string(),
         );
     }
     for basis in &d.based_on {

@@ -1,0 +1,6 @@
+case: 03-token-retype
+note: "Retyping a token color -> dimension is a contract change even though the token name survives."
+surface:
+  - symbol: --accent
+    change: signature-changed
+non_surface: []

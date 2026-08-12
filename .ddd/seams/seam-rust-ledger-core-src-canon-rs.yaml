@@ -1,0 +1,26 @@
+format: 2
+id: seam/rust/ledger-core-src-canon-rs
+boundary: contract surface of ledger-core/src/canon.rs
+verdict_knowledge: 'Dependent crates learn the canonicalisation law''s primitives (norm, put, put_set) are the one shared implementation: every new payload type builds its explicit field set on them under its own domain prefix, never a second scheme.'
+contract_location: ledger-core/src/canon.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: norm
+  file: ledger-core/src/canon.rs
+  before: sha256:b7c97a06137972571d7f268d5b6ea268e3b7379bdb6c7a0d93f21c84a7da944f
+  after: sha256:fdc7316ddac2a89c09aec8b08cbd4b4e4e123f57ed44c9e95b91df54fe2cf3cf
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:4cdda8353691d088a39b3af19cd6be24c08f0d38fc0fcc59c2e9baaea360ca8b
+- symbol: put
+  file: ledger-core/src/canon.rs
+  before: sha256:b7c97a06137972571d7f268d5b6ea268e3b7379bdb6c7a0d93f21c84a7da944f
+  after: sha256:fdc7316ddac2a89c09aec8b08cbd4b4e4e123f57ed44c9e95b91df54fe2cf3cf
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:9ec1c0e827fdb1761ca9a1ced788a8ca553e19477b7e175b11416eaa6567624c
+- symbol: put_set
+  file: ledger-core/src/canon.rs
+  before: sha256:b7c97a06137972571d7f268d5b6ea268e3b7379bdb6c7a0d93f21c84a7da944f
+  after: sha256:fdc7316ddac2a89c09aec8b08cbd4b4e4e123f57ed44c9e95b91df54fe2cf3cf
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:d9c1c774497961033761605331b0f721d5c1f1aff4ad69131bbe5bf916c18094

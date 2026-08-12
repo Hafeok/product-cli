@@ -1,0 +1,6 @@
+case: 06-add-pub-crate-method
+note: "A new pub(crate) method under the default app-repo posture (internal_is_surface off) is not contract surface."
+surface: []
+non_surface:
+  - symbol: tag
+    change: added

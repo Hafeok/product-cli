@@ -1,0 +1,32 @@
+format: 2
+id: seam/rust/ddd-cli-src-commands-mod-rs
+boundary: contract surface of ddd-cli/src/commands/mod.rs
+verdict_knowledge: 'CLI users learn the M8 verbs exist on the sorted surface: bind, diff-contracts, migrate-ledger, plus --json on the CI-facing commands.'
+contract_location: ddd-cli/src/commands/mod.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: Bind
+  file: ddd-cli/src/commands/mod.rs
+  before: sha256:b488e5dcb7bde680180291c4ab3b65c80f9fcb4fa4354cbf646b9cd2ec593ae8
+  after: sha256:7dd38d1825a4292c74d18acc551fe5bf4e9e76a054eb0e6b3aed302ee530f657
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:b53debd6384a5c607b730e9a6815e378d9973bc56ad897a4cafb3ef844a63768
+- symbol: DiffContracts
+  file: ddd-cli/src/commands/mod.rs
+  before: sha256:b488e5dcb7bde680180291c4ab3b65c80f9fcb4fa4354cbf646b9cd2ec593ae8
+  after: sha256:7dd38d1825a4292c74d18acc551fe5bf4e9e76a054eb0e6b3aed302ee530f657
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:29b7cb0521a3a23fb3aaaf6df3d15a192495ad44b34f13749342e8067990df94
+- symbol: MigrateLedger
+  file: ddd-cli/src/commands/mod.rs
+  before: sha256:b488e5dcb7bde680180291c4ab3b65c80f9fcb4fa4354cbf646b9cd2ec593ae8
+  after: sha256:7dd38d1825a4292c74d18acc551fe5bf4e9e76a054eb0e6b3aed302ee530f657
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:2139c2c208fba57fe48ae03fb707399b8ec3a33fdffdda8e650064c555c935c4
+- symbol: Validate
+  file: ddd-cli/src/commands/mod.rs
+  before: sha256:b488e5dcb7bde680180291c4ab3b65c80f9fcb4fa4354cbf646b9cd2ec593ae8
+  after: sha256:7dd38d1825a4292c74d18acc551fe5bf4e9e76a054eb0e6b3aed302ee530f657
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:6d9388f03e9d613eb86e97b8413f83a199cacce9c9dc153dc9f38c74b2ae171f

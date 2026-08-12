@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGNGD5AYC7DPKGMSQ59EH
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/prd-split (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGNGC09PHHCRB0S0971YH
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGNGC09PHHCRB0S0971YH
+  hash: sha256:d3dcdd7661eb6f194fc6a3bd31a593471f161d79cec8fe5006b5354ce2ab07ba
+  set: ddd-governance
+  statement: The PRD splits; it stops being the sole implementable contract
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/prd-split@sha256:5858ff40ec6b340cc92106dbe1ef4d2dbddf1485def33afa7957c0f285301cbb
+  - preference:dec/ddd/prd-split

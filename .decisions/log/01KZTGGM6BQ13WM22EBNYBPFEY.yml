@@ -1,0 +1,23 @@
+format: 1
+id: cs:01KZTGGM6BQ13WM22EBNYBPFEY
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: |-
+  Migrated from dec/ddd/internal-not-surface (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+  Edge DDD-adapter-02 is watched, not grounding (re-typing handoff): the ontology question is filed as question/ddd/watched-edge-kind; this edge must not be read as ground.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGM6BRXDVPSDRNKW1B5YJ
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGM6BRXDVPSDRNKW1B5YJ
+  hash: sha256:b161914784a00c2bf3c97e06c77c56aacde03c23d9954e51257c5ebfe8793b62
+  set: ddd-governance
+  statement: internal is not C# contract surface by default; library repos flip per-repo
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/internal-not-surface@sha256:6f97e6d0f9f75adfc8efae96597127c5ec34c48e58627d80cbe220a8b6cc4735
+  - mandate:dec/ddd/internal-not-surface
+  - watched:DDD-adapter-02@sha256:b333063d5058614855329b2dd8a1d1c5f8732ab243a2d2f9ebfa3bf95f2f5fda

@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGKQDBWWQTNVC3XY937GD
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/git-is-the-amend-trail (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGKQDQFWMACNN8QNE9Z65
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGKQDQFWMACNN8QNE9Z65
+  hash: sha256:a2540a890f20829f8f3f3d9a0f00836766e66962fe801830dbd1f252d3adb8fa
+  set: ddd-governance
+  statement: Amendments leave no in-file trail; the committed graph's history is the record
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/git-is-the-amend-trail@sha256:989b6496d54f7ea0350c620cfe2fd3855e9513647cb024b29d4d2e996ec52dbe
+  - constraint:dec/ddd/git-is-the-amend-trail

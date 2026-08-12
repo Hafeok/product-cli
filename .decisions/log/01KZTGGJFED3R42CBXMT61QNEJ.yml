@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZTGGJFED3R42CBXMT61QNEJ
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/amend-explicit-evidence-frozen (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGJFEP2A4MK7W2B1572D2
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGJFEP2A4MK7W2B1572D2
+  hash: sha256:ac2c96164b9c792e63f9aea2a53c136920aa761cdf598a9d9beed9e96f177b41
+  set: ddd-governance
+  statement: Declarations amend through an explicit flag; LSP-derived evidence is frozen
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/amend-explicit-evidence-frozen@sha256:ac26379f661fa208b70e8d89fa4ce166551f44c9ce7e2c3a2286f477e8dfd94f
+  - claim:DDD-friction-02@sha256:9f1779e5d93f7bf8826fd645f2d669d17dc09d34545c033082c06e14010f116f
+  - claim:DDD-arch-04@sha256:ff0a4b35dd96804d7e2300fdbf12ff9a3c4bbbbcdc8f34ee9c40298def4a2e0e

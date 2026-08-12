@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGQFE31C777RCBP4MVH5C
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/sarif-unification (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGQFE7AMJ86TRBBS24NJE
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGQFE7AMJ86TRBBS24NJE
+  hash: sha256:b4e8152bbbc16b3b16f1082de0184d2bf73238cb45f97367d020d018812c9fff
+  set: ddd-governance
+  statement: Unify detection on SARIF ingestion with thin invocation adapters
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/sarif-unification@sha256:6df0ce0a008f67d81713946d73605530410b64441fb00f83c7423bcc14f3db56
+  - claim:DDD-detect-01@sha256:7ebb03685f7a8103bb0d998eefad400a2c80c13825871829bba9774a6fa114c4

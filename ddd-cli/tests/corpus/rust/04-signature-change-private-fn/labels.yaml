@@ -1,0 +1,6 @@
+case: 04-signature-change-private-fn
+note: "The same shape of signature change on a private fn — no caller outside the file can see it."
+surface: []
+non_surface:
+  - symbol: internal_helper
+    change: signature-changed

@@ -64,6 +64,7 @@ fn build(
             contract_location: ddd_core::what::what_ref(&element),
             obligations: string_list(args, "obligations"),
             metadata: Default::default(),
+            bindings: Vec::new(),
             notes: opt_str(args, "notes"),
         });
     };
@@ -78,6 +79,7 @@ fn build(
             None => prev.obligations,
         },
         metadata: prev.metadata,
+        bindings: prev.bindings,
         notes: opt_str(args, "notes").or(prev.notes),
     })
 }

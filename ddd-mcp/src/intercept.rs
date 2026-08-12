@@ -1,12 +1,15 @@
 //! The `apply_edit` interceptor — PRD §8 outcome semantics, exactly.
 //!
-//! Non-surface applies. Surface with a matching same-session declaration
-//! applies plus links. Surface without one rejects with a structured
-//! demand: LSP-derived facts pre-filled, judgment fields blank
-//! (`dec/ddd/rejection-facts-prefilled`). Mode per artifact class:
-//! `enforce` rejects, `warn` applies with a warning, `off` skips
-//! classification. Every classified surface outcome logs one row under
-//! `.ddd/seams/events/` — the correspondence dataset.
+//! Non-surface applies. Surface with a stored declaration whose signed
+//! binding names this exact transition applies plus links (M8: matching
+//! is by signature — subject symbol, before/after content hash, base
+//! revision — never by session). Surface without one rejects with a
+//! structured demand: LSP-derived facts pre-filled, the binding
+//! pre-computed, judgment fields blank
+//! (`dec/ddd/rejection-facts-prefilled`). A dirty parent state refuses to
+//! bind at all. Mode per artifact class: `enforce` rejects, `warn`
+//! applies with a warning, `off` skips classification. Every classified
+//! surface outcome logs one row under `.ddd/seams/events/`.
 
 use std::path::Path;
 
@@ -17,9 +20,9 @@ use ddd_lsp::protocol::{flatten_symbols, position_params, to_uri};
 use ddd_lsp::surface::{ChangeKind, SurfaceEvent};
 use serde_json::{json, Value};
 
+use crate::bind::{self, Transition};
 use crate::edits::{read_or_empty, resolve_new_text};
 use crate::state::{opt_str, req_str, ServeState};
-use crate::state::Declared;
 
 pub fn apply_edit(state: &ServeState, args: &Value) -> Result<Value, String> {
     let file = state.resolve_file(&req_str(args, "file")?);
@@ -94,24 +97,35 @@ fn intercept(
     };
     let warning = (adapter.posture_warning)(file, flags);
     let rel = state.rel_display(file);
+    let transition = Transition::of(&state.root, file, &rel, old_text, new_text);
+    let seams = load_seams(state);
     if mode == "warn" {
-        // Advisory matching keeps the file arm; the rows carry the generous
-        // link, but declaration metadata stays symbol-exact (enforce-only)
-        // so a broad match can never overwrite another symbol's facts.
-        let matches = match_declarations(state, &rel, &surface, false);
+        let matches = bind::advisory_links(&seams, &surface, &transition);
         let rows =
             log_events(state, adapter, mode, &rel, &surface, &counts, "applied-warned", &matches)?;
         write_disk(file, new_text)?;
         return Ok(json!({
             "status": "applied", "intercepted": true, "mode": "warn",
-            "warning": "contract-surface change applied unverified — declare the seam (ddd_declare_seam) or switch this class to enforce",
-            "surface": demands(&surface, &counts, adapter, &rel),
+            "warning": "contract-surface change applied unverified — declare the seam with a signed binding (ddd_declare_seam) or switch this class to enforce",
+            "surface": demands(&surface, &counts, adapter, &rel, &transition),
             "events_logged": rows, "posture_warning": warning,
         }));
     }
-    let matches = match_declarations(state, &rel, &surface, true);
+    if !transition.committed_parent {
+        // Restore the host overlay; nothing may bind to a dirty parent.
+        if let Some(h) = host {
+            h.overlay(file, old_text).map_err(|e| e.to_string())?;
+        }
+        let rows = log_events(state, adapter, mode, &rel, &surface, &counts, "rejected", &[])?;
+        return Ok(json!({
+            "status": "rejected", "mode": "enforce",
+            "reason": transition.dirty_reason(),
+            "events_logged": rows, "posture_warning": warning,
+        }));
+    }
+    let matches = bind::match_bindings(&seams, &surface, &transition);
     if matches.iter().all(Option::is_some) {
-        let linked: Vec<String> = matches.iter().flatten().map(|d| d.id.clone()).collect();
+        let linked: Vec<String> = matches.iter().flatten().cloned().collect();
         let rows =
             log_events(state, adapter, mode, &rel, &surface, &counts, "applied-linked", &matches)?;
         link_seam_metadata(state, &surface, &counts, &matches);
@@ -134,11 +148,15 @@ fn intercept(
         log_events(state, adapter, mode, &rel, &only_unmatched, &unmatched_counts, "rejected", &[])?;
     Ok(json!({
         "status": "rejected", "mode": "enforce",
-        "reason": "contract-surface change without a matching same-session declaration (PRD §8)",
-        "demands": demands(&only_unmatched, &unmatched_counts, adapter, &rel),
-        "next": "file ddd_declare_seam (or ddd_declare_pattern) covering each demanded surface, then re-apply this edit",
+        "reason": "contract-surface change without a stored declaration signing this transition (PRD §8, M8)",
+        "demands": demands(&only_unmatched, &unmatched_counts, adapter, &rel, &transition),
+        "next": "file ddd_declare_seam with the pre-computed `binding` (or ddd_declare_pattern) covering each demanded surface, then re-apply this edit",
         "events_logged": rows, "posture_warning": warning,
     }))
+}
+
+fn load_seams(state: &ServeState) -> Vec<ddd_core::seam::SeamDeclaration> {
+    ddd_core::store::load(&state.root.join(ddd_core::store::STORE_DIR)).seams
 }
 
 fn write_disk(file: &Path, new_text: &str) -> Result<(), String> {
@@ -194,12 +212,15 @@ fn count_at(host: &mut Host, file: &Path, line: u64, character: u64) -> Option<u
         .map(|r| ddd_lsp::protocol::normalize_locations(&r).len() as u64)
 }
 
-/// PRD §8 + settled question 3: facts pre-filled, judgment blank.
+/// PRD §8 + settled question 3: facts pre-filled, judgment blank. The
+/// `binding` block is the exact transition the declaration must sign —
+/// copy it into `ddd_declare_seam` verbatim (M8).
 fn demands(
     events: &[SurfaceEvent],
     counts: &[Option<u64>],
     adapter: &Adapter,
     rel_file: &str,
+    t: &Transition,
 ) -> Vec<Value> {
     events
         .iter()
@@ -221,7 +242,7 @@ fn demands(
                     "rule_claim": e.rule_claim,
                     "extra": e.facts.extra,
                 },
-                "required": "a seam declaration (ddd_declare_seam) or pattern instance (ddd_declare_pattern)",
+                "required": "a seam declaration (ddd_declare_seam) or pattern instance (ddd_declare_pattern) whose signed binding names this transition",
                 "template": {
                     "id": format!("seam/{}/{}", adapter.language, slug(&e.facts.name)),
                     "boundary": format!("{} {} in {}", e.facts.kind, e.facts.name, rel_file),
@@ -229,36 +250,15 @@ fn demands(
                     "symbol": e.facts.name,
                     "verdict_knowledge": "",
                     "obligations": [],
+                    "binding": {
+                        "symbol": e.facts.name,
+                        "file": rel_file,
+                        "before": t.before,
+                        "after": t.after,
+                        "base_revision": t.head,
+                    },
                 },
             })
-        })
-        .collect()
-}
-
-/// Same-session matching (`dec/ddd/enforce-matching-tightens-to-symbol`).
-///
-/// In enforce mode a declaration covers an event only when it names the
-/// event's symbol: the file arm admitted unexamined symbols and corrupted
-/// the correspondence record (`DDD-arch-05`, seam-event/4). In warn mode
-/// the declaration is advisory and the edit applies either way, so the
-/// broad file arm stays — a generous link on a row written regardless.
-fn match_declarations(
-    state: &ServeState,
-    rel_file: &str,
-    events: &[SurfaceEvent],
-    symbol_only: bool,
-) -> Vec<Option<Declared>> {
-    let declared = state.session.lock().map(|l| l.declared.clone()).unwrap_or_default();
-    events
-        .iter()
-        .map(|e| {
-            declared
-                .iter()
-                .find(|d| {
-                    d.symbol.as_deref() == Some(e.facts.name.as_str())
-                        || (!symbol_only && d.contract_location.contains(rel_file))
-                })
-                .cloned()
         })
         .collect()
 }
@@ -273,7 +273,7 @@ fn log_events(
     events: &[SurfaceEvent],
     counts: &[Option<u64>],
     outcome: &str,
-    matches: &[Option<Declared>],
+    matches: &[Option<String>],
 ) -> Result<Vec<String>, String> {
     let ddd_dir = state.root.join(ddd_core::store::STORE_DIR);
     let mut ids = Vec::new();
@@ -297,7 +297,7 @@ fn log_events(
             rule: event.rule.map(str::to_string),
             rule_claim: event.rule_claim.map(str::to_string),
             outcome: outcome.to_string(),
-            linked_declaration: matches.get(i).and_then(|m| m.as_ref()).map(|d| d.id.clone()),
+            linked_declaration: matches.get(i).and_then(|m| m.clone()),
             extra: event.facts.extra.clone(),
         };
         ddd_core::seam_event::save(&ddd_dir, &row).map_err(|e| e.to_string())?;
@@ -322,11 +322,11 @@ fn link_seam_metadata(
     state: &ServeState,
     events: &[SurfaceEvent],
     counts: &[Option<u64>],
-    matches: &[Option<Declared>],
+    matches: &[Option<String>],
 ) {
     for (i, m) in matches.iter().enumerate() {
-        let Some(decl) = m else { continue };
-        if !decl.id.starts_with("seam/") {
+        let Some(decl_id) = m else { continue };
+        if !decl_id.starts_with("seam/") {
             continue;
         }
         let Some(event) = events.get(i) else { continue };
@@ -334,7 +334,7 @@ fn link_seam_metadata(
             .root
             .join(ddd_core::store::STORE_DIR)
             .join("seams")
-            .join(format!("{}.yaml", slug(&decl.id)));
+            .join(format!("{}.yaml", slug(decl_id)));
         let Ok(text) = std::fs::read_to_string(&path) else { continue };
         let Ok(mut seam) = serde_yaml::from_str::<ddd_core::seam::SeamDeclaration>(&text) else {
             continue;

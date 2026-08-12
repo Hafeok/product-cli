@@ -21,8 +21,12 @@ The enforcement boundary, stated honestly up front:
 Edit-time interception binds edits that arrive through `ddd_apply_edit`
 (`DDD-arch-08`: nothing binds an edit to arrive that way). The
 repository-level half — contract-surface validation over a diff, in CI,
-sharing the interception classifier — is M8 scope
-(`dec/ddd/m8-enforcement-closure`), not a v1 capability.
+sharing the interception classifier — shipped at M8
+(`dec/ddd/m8-enforcement-closure`): `ddd diff-contracts` classifies any
+revision range through the same classifier and fails on
+contract-surface changes no signed declaration discharges, and the CI
+workflow runs it over every pull request's range. Both halves of the
+sentence are now true; the residual is named at invariant 5.
 
 ---
 
@@ -97,10 +101,10 @@ Status against the build:
 | Invariant | Status today |
 |---|---|
 | 1 | **Holds.** Ontology rule 4 + three-way `why` resolution (`dec/ddd/why-resolves-three-ways`): a detected-but-unfiled rule reports as ungoverned, never as not-found. |
-| 2 | **Holds as of format 5** (typed basis, `dec/ddd/typed-basis`). The basis pin is the claim's status + `changed` date — a heuristic, per the review; the content-hash upgrade is filed for M8 (ruling: pulled into M8 with the enforcement chain, not earlier). |
-| 3 | **Not yet met.** Matching is session-scoped and symbol-exact (`DDD-arch-09`: it discharges whatever change next touches the symbol). Declaration signing (subject symbol, before/after content hash, base revision) is M8's chain. |
-| 4 | **Not yet met.** Repository-state validation does not exist; when it arrives (M8) it MUST share `ddd_lsp::classify` — two classifiers would fork the definition of contract surface. |
-| 5 | **Not yet met.** `DDD-arch-08`; M8's CI half. Until then the honest sentence above is the guarantee. |
+| 2 | **Holds as of M8.** Typed basis (format 5) plus content-hash pins: the migrated ledger record pins every claim edge by content hash (`claim:<id>@sha256:…`, `ddd.claim-content.v1`), and basis loss is pinned-hash ≠ current-hash — mechanically exact (`ddd report escapes`, ledger section). Decision format 6 carries the same pin form in-file for new decisions. The pre-format-5 in-file pins keep their decision-time status+date form (byte-identity of decision-time records outranks a rewrite); their exact pins live on the ledger entries. |
+| 3 | **Holds as of M8.** A declaration signs the change it discharges: subject symbol, before/after content hash, base revision (seam format 2 `bindings`, hashed under the ledger's canonical-JSON law). Session matching is retired; enforce-mode matching is by signature only, a dirty parent state refuses to bind, and a declaration that does not bind to the change it claims to discharge is a finding. Closes `DDD-arch-09`. |
+| 4 | **Holds as of M8.** `ddd_lsp::revdiff::diff_contracts` routes both sides of every changed file through the same `classify_edit` + adapter policy tables the interceptor uses; the diff-path-vs-edit-path identity test pins it. |
+| 5 | **Holds as of M8, with one named residual.** The CI workflow runs `ddd diff-contracts <base>..HEAD` over every pull request's range and fails on undischarged contract-surface changes, however the edit was made. The residual: a direct push to the default branch bypasses the pull-request gate — enforcement closes over the repository's integration path, and branch protection (a forge setting, not a repo artifact) is what closes the last door. |
 | 6 | **Holds.** `ddd-core` contains no language knowledge; adapters live in `ddd-lsp`, keyed by policy tables. |
 | 7 | **Holds.** `render`, `report`, `why`, `what` are read-only over the store. |
 | 8 | **Holds.** Store loads are filename-sorted; rules are declarative; `report escapes` takes `--today`-style inputs from the clock but the same store + same day reproduce byte-identically. |
@@ -195,6 +199,7 @@ never break silently).
   seams/           # declarations; seams/events/ = interception rows
   shared/          # reserved: entries intended for promotion (see below)
   config.yaml      # modes, adapters, pair map, detection sources, ignores
+  concordance.yaml # permanent id aliases from the M8 ledger migration
 ```
 
 Ontology rules (schema layer + SPARQL over the Turtle projection):
@@ -217,10 +222,13 @@ anywhere in the store is a violation; filenames are a slug of the id, not
 the identity itself. Renaming or deleting an entry is a graph edit like
 any other and lands in the same PR diff as the code it governs.
 Canonical id syntax beyond these rules (reference/version syntax,
-tombstones, cross-file transactions, hashing canonicalization) is
-**unspecified in v1 — fails loudly**: `validate` rejects what it cannot
-resolve, and the full identity model is settled at M8 where ledger `dec:`
-ids arrive.
+tombstones, cross-file transactions) is **unspecified in v1 — fails
+loudly**: `validate` rejects what it cannot resolve. The identity model
+settled at M8: governance records carry ledger `dec:` identities of
+record, the historical ids remain permanent aliases through
+`concordance.yaml`, and hashing canonicalisation is the ledger's law
+(one scheme, per-payload domain prefixes — `ddd.seam-binding.v1`,
+`ddd.claim-content.v1`, `ddd.decision-content.v1`, `ddd.seam-content.v1`).
 
 **`shared/` is import, not inheritance.** Copying an entry from another
 repo's `shared/` is a v1 *import*: nothing tracks origin, upstream
@@ -241,18 +249,22 @@ a repo that downstreams pin by SHA.
 | `ddd validate` | Schema + ontology validation | exit 1 on violation |
 | `ddd diff` | Declared vs. detected: `UNGOVERNED` / `STALE` / `UNCITED_SUPPRESSION`; per-finding severity from config | exit 1 on error-severity findings |
 | `ddd report escapes` | Diff findings + cadence violations + basis loss + pair-contract check | exit 1 on escapes |
-| `ddd why <id>` | id → decision → rationale → principal → typed bases (with pin drift) | — |
-| `ddd render` | One static, self-contained HTML projection; regenerated, never edited | — |
+| `ddd why <id>` | id → decision → rationale → principal → typed bases (with pin drift); both spellings of a migrated id resolve through the permanent concordance | — |
+| `ddd render` | One static, self-contained HTML projection (incl. the ledger's reading); regenerated, never edited | — |
 | `ddd what [--strict]` | What-graph boundaries carrying no governing declaration | exit 1 under `--strict` |
+| `ddd diff-contracts <a>..<b>` | Contract-surface events in a revision range via the shared classifier; undischarged events are findings (M8) | exit 1 on undischarged events or skipped files |
+| `ddd bind <a>..<b>` | File the declarations a failing gate demands: post-hoc signed bindings over the range's committed transitions | — |
+| `ddd migrate-ledger` | One-shot M8 migration of `.ddd` governance records into the decision ledger, with the permanent id concordance | — |
 | `ddd serve` | The `ddd_*` MCP surface (stdio) | — |
 | `ddd warmup` | Pre-load LSP hosts | — |
 
 Detection is unified on SARIF ingestion (`dec/ddd/sarif-unification`)
 plus config parsing; sources per rule are *configured* and *emitted*, and
 `diff` states when only one source covers a rule. Machine-readable
-(`--json`) output for the CI-facing commands is **not yet shipped** —
-named as a gap; lands with the M8 CI work, where a stable finding-id
-scheme is required anyway.
+(`--json`) output shipped with M8 on the CI-facing commands
+(`diff-contracts`, `validate`, `diff`, `report escapes`), with stable
+finding ids: diff findings key on `namespace/rule_id`, contract findings
+on `contract/<language>/<file>#<symbol>@<change>`.
 
 ### The rule-state model (specification)
 
@@ -302,13 +314,16 @@ Mechanics (`ddd_apply_edit`, single file per call):
    the adapter's policy table. Hostless path (HTML+CSS): classify source
    text directly.
 4. No surface events → write atomically, done. Surface events → match
-   against **same-session** declarations (the serving process's
-   in-memory log; it does not survive restart). Enforce mode matches
-   symbol-exact (`dec/ddd/enforce-matching-tightens-to-symbol`); warn
-   mode links generously but applies regardless.
+   against **stored declarations whose signed bindings name this exact
+   transition** (M8: subject symbol, before/after content hash, base
+   revision — session matching is retired). The parent state must be
+   committed: a file dirty against HEAD refuses to bind, naming the
+   constraint. Enforce mode matches symbol-exact
+   (`dec/ddd/enforce-matching-tightens-to-symbol`) *and* signature-exact;
+   warn mode links generously but applies regardless.
 5. Enforce + all matched → write, link declaration metadata, log rows.
    Any unmatched → **reject with a structured demand** (facts pre-filled
-   from the LSP, judgment fields blank,
+   from the LSP, the binding pre-computed, judgment fields blank,
    `dec/ddd/rejection-facts-prefilled`), restore the host overlay to disk
    state; the file is untouched (disk is written only on apply, so
    rejection needs no rollback).
@@ -317,14 +332,19 @@ Mechanics (`ddd_apply_edit`, single file per call):
    host exists).
 
 Gaps, stated: single-file edits only (no multi-file atomicity — a
-multi-file change is N independent interceptions); session-scoped
-matching admits discharge of unidentified changes (`DDD-arch-09`; M8's
-declaration signing closes it); one serving process is assumed — two
-concurrent servers race on event sequence numbers; formatter-only churn
-is distinguished only as far as the policy table normalizes signatures;
-and routing to the interceptor is voluntary (`DDD-arch-08`) — the
-repository-level check is M8. Interception governs the governed path;
-CI governs the repository.
+multi-file change is N independent interceptions); one serving process
+is assumed — two concurrent servers race on event sequence numbers;
+formatter-only churn is distinguished only as far as the policy table
+normalizes signatures — and a formatting commit between two signed hops
+breaks the binding chain, which then demands a fresh declaration (the
+strictness is ruled: a declaration discharges the transition it names,
+nothing adjacent); consecutive governed edits to one file serialize
+through commits (each edit's parent state must be committed — the M8
+friction cost, accepted). Routing to the interceptor remains voluntary
+(`DDD-arch-08`), and that is now priced rather than open: an edit that
+bypasses it is caught by the repository-diff gate in CI. Interception
+governs the governed path; CI governs the repository — both halves
+true as of M8.
 
 ---
 
@@ -398,8 +418,11 @@ Replacing volume-shaped criteria with checkable ones:
 2. **False-demand rate** on non-contract changes from the same corpus,
    below an agreed ceiling.
 3. **Bypass-catch:** an out-of-band contract-surface change is caught by
-   repository/CI validation (M8's acceptance; until then this criterion
-   is honestly unmeetable and says so).
+   repository/CI validation. **Met at M8**: the acceptance test commits
+   an editor-made change with git alone and asserts the finding, and the
+   gate caught its own construction — the M8 implementation diff raised
+   154 contract-surface events that had to be discharged by signed
+   declarations before its own CI gate would pass.
 4. **Determinism:** `validate`, `diff`, `render` byte-identical across
    two runs on a fixed store and version (CI-checkable today).
 5. **Declaration quality:** share of declarations judged meaningful on

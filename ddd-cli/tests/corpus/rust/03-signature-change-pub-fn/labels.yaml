@@ -1,0 +1,10 @@
+case: 03-signature-change-pub-fn
+note: "A parameter added to pub fn `describe` — a contract change for every caller. Guard rows: the listed unchanged neighbours (enum members / fields below or beside the edit) must raise no demand — they caught the declaration-slice bleed fixed in rust_facts.rs."
+surface:
+  - symbol: describe
+    change: signature-changed
+non_surface:
+  - symbol: Red
+    change: any
+  - symbol: Green
+    change: any

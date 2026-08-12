@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGH06WMVQZTB9VWQJBNBPK
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/ledger/ulid-mint (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGH06V3WDM9DKKY4XNR308
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGH06V3WDM9DKKY4XNR308
+  hash: sha256:6dedb0e280d944575022b1f30e3f4842d699864b30816b73f172d5a8020662af
+  set: ddd-governance
+  statement: pub struct UlidMint with encode_ulid in ledger-core/src/mint.rs
+  allocation: criterion
+  discharge:
+  - contract:seam/ledger/ulid-mint
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/ledger/ulid-mint@sha256:c02e7978632475409b9e5dca5fdf1fc262f56e8dde458457c298782175e4d481

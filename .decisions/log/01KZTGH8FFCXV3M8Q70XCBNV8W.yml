@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGH8FFCXV3M8Q70XCBNV8W
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/web/render-retired (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGH8FFSY9ESJA7PWK8MX1N
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGH8FFSY9ESJA7PWK8MX1N
+  hash: sha256:7b1769781afe94c4a8575e3b63be77557697aee664485a6490aabf39bb0b09c6
+  set: ddd-governance
+  statement: class retired in ddd-core/assets/render.css
+  allocation: criterion
+  discharge:
+  - contract:seam/web/render-retired
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/web/render-retired@sha256:dbdd89034c088654463a6c16903b9cfa0d813ecf47b76f96a4c62b2d459c9a2e

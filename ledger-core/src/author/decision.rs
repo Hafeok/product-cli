@@ -60,6 +60,8 @@ pub struct AddArgs {
     pub allocation: AllocationArgs,
     pub tolerance_override: Option<Tier>,
     pub based_on: Vec<BasisRef>,
+    /// Free text on the change-set — what this act was.
+    pub note: Option<String>,
 }
 
 impl Author {
@@ -80,13 +82,14 @@ impl Author {
             .parse()
             .map_err(AuthorError::Usage)?;
         let raw = first_version(&decision, &args, floor);
-        let mut candidate = self.shell(None)?;
+        let mut candidate = self.shell(args.note.clone())?;
         candidate.decisions.push(DecisionRecord {
             id: decision.clone(),
             created_at: self.now,
             created_by: self.who.clone(),
         });
         candidate.versions.push(raw);
+        candidate.format = crate::format::needed_for(&candidate);
 
         // The sanctioned intermediate state: an add with no allocation may
         // carry exactly its own L001, and nothing else.

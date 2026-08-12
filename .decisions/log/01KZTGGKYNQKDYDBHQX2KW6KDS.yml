@@ -1,0 +1,22 @@
+format: 1
+id: cs:01KZTGGKYNQKDYDBHQX2KW6KDS
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: |-
+  Migrated from dec/ddd/interceptor-not-extension (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+  Basis indeterminate (audit F-7h): the claim edge DDD-arch-03 migrates marked, not typed — awaiting the principal's ruling.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGKYN3VT9XYPATK0S0SAA
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGKYN3VT9XYPATK0S0SAA
+  hash: sha256:35b8e5784043c4a48b934c63e3b440a3bd6204015d75e9a7469727c3226d8d20
+  set: ddd-governance
+  statement: Seam detection is an edit-flow interceptor, not an LSP extension
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/interceptor-not-extension@sha256:915ba109106878fcdfa4620cf465c8b4cffbbe62a4fa0997faea49381312282d
+  - indeterminate:DDD-arch-03@sha256:8e7e53b6778bce6c2ee5fd1dc9fc193e30b59d8ab35678e6bdea112b14fa9f78

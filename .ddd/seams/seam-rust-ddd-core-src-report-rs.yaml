@@ -1,0 +1,20 @@
+format: 2
+id: seam/rust/ddd-core-src-report-rs
+boundary: contract surface of ddd-core/src/report.rs
+verdict_knowledge: 'Report consumers learn that a content pin, when present, is authoritative for basis loss — hash equality subsumes the status+date reading — and that both pin forms render side by side.'
+contract_location: ddd-core/src/report.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: current_content
+  file: ddd-core/src/report.rs
+  before: sha256:2689ffc2ce3dfa636a2331c1cd42a5045b6f845cfe452cc7ba62ce3bf9b7d501
+  after: sha256:e7dd8a3c47e53c0a468024caf67ab96b6ca7fee242f352a73db27f8445f82e14
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:a877f95c7e7ac81fd32e1c1074ffede89f935f8bfc62cf3c726593272a3cdfe3
+- symbol: pinned_content
+  file: ddd-core/src/report.rs
+  before: sha256:2689ffc2ce3dfa636a2331c1cd42a5045b6f845cfe452cc7ba62ce3bf9b7d501
+  after: sha256:e7dd8a3c47e53c0a468024caf67ab96b6ca7fee242f352a73db27f8445f82e14
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:47665af84087a0a49499f9fdd615e9b61778d67093424cdf57414b108773e337

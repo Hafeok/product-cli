@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGGYE3Y450AW44A69ZZDF0
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/ledger/canonical-form (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGGYE2K8B3Y2591J381J18
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGYE2K8B3Y2591J381J18
+  hash: sha256:678e4d67205a6c44a16508f0c89f0824e30b69828a9bb62dab45410315a4734e
+  set: ddd-governance
+  statement: pub fn canonical_json / canonical_bytes in ledger-core/src/canon.rs
+  allocation: criterion
+  discharge:
+  - contract:seam/ledger/canonical-form
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/ledger/canonical-form@sha256:df63cfd1b892401f51bc8a2ad18f224ad73fafc9c979e589d8cb33a2ce52e7a1

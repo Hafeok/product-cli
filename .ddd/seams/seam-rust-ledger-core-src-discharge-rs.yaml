@@ -1,0 +1,20 @@
+format: 2
+id: seam/rust/ledger-core-src-discharge-rs
+boundary: contract surface of ledger-core/src/discharge.rs
+verdict_knowledge: 'Format consumers learn the contract: discharge scheme (format 3, spec v1.4): a decision discharged by the repository-diff contract check over a named boundary.'
+contract_location: ledger-core/src/discharge.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: Contract
+  file: ledger-core/src/discharge.rs
+  before: sha256:2861b71a4db151c47009147676a02dfda8203257776a9aaa52e1b4b43538e4a6
+  after: sha256:638a47f676cd1d624813917b9f324be3769f95548542600a6a49cf5f987465b0
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:c2fb9cb27e2f90fad5d5d4158a9a05fdc3168c3e187219a7ac5d90f7837c846a
+- symbol: is_contract
+  file: ledger-core/src/discharge.rs
+  before: sha256:2861b71a4db151c47009147676a02dfda8203257776a9aaa52e1b4b43538e4a6
+  after: sha256:638a47f676cd1d624813917b9f324be3769f95548542600a6a49cf5f987465b0
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:507edabbf68f4fa45ba2759581d244631693f29cc54849c7594d42a798c9b57a

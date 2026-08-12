@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ddd-mcp-src-lib-rs
+boundary: contract surface of ddd-mcp/src/lib.rs
+verdict_knowledge: 'Crate consumers learn bind (signature matching) is part of the served surface; session state is not.'
+contract_location: ddd-mcp/src/lib.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: bind
+  file: ddd-mcp/src/lib.rs
+  before: sha256:18bc3b76e1238439ef06d85115767b531d21431b760a23c04e2cc816bf81335d
+  after: sha256:77fcdc914e2d568fb04437ec650d3d02faf113f1a2803e4302726b305de63477
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:93939fbdfb7e4b4595d3ff60ec4d6f46258cf9d1807d56fe8db799732b9adc0e

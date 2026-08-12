@@ -1,0 +1,56 @@
+format: 2
+id: seam/rust/ddd-core-src-gitrev-rs
+boundary: contract surface of ddd-core/src/gitrev.rs
+verdict_knowledge: 'Callers learn that both sides of any change are recoverable from git alone — revision resolution, changed paths, blob bytes, dirtiness against a commit — so classification never depends on an editing session having been present.'
+contract_location: ddd-core/src/gitrev.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: bytes_at
+  file: ddd-core/src/gitrev.rs
+  before: absent
+  after: sha256:de8424c60c0df27d34869f7eb0b3d347eda250ae4b3346ec796d933004dca1ea
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:9547122f42dfcaccdf249e60f87c979972efe293d0c0f79c349086ab33c220c0
+- symbol: changed_files
+  file: ddd-core/src/gitrev.rs
+  before: absent
+  after: sha256:de8424c60c0df27d34869f7eb0b3d347eda250ae4b3346ec796d933004dca1ea
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:04dde1b3b63f743d031af99e1d0e66b7562c6e1d978f6f9bae6e4c60e261e3d0
+- symbol: dirty_against
+  file: ddd-core/src/gitrev.rs
+  before: absent
+  after: sha256:de8424c60c0df27d34869f7eb0b3d347eda250ae4b3346ec796d933004dca1ea
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:508cfb9026e9633142af6f6a286f3037c7175a71ce108056e776c14e4a6ac196
+- symbol: head
+  file: ddd-core/src/gitrev.rs
+  before: absent
+  after: sha256:de8424c60c0df27d34869f7eb0b3d347eda250ae4b3346ec796d933004dca1ea
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:8aead049aeec0cfe0d796b2e7670a3998adb47c0595b80a96eb75f1675c6806b
+- symbol: rev_parse
+  file: ddd-core/src/gitrev.rs
+  before: absent
+  after: sha256:de8424c60c0df27d34869f7eb0b3d347eda250ae4b3346ec796d933004dca1ea
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:29632b1eb80e050a21f5d0196c3a6835a176864d2b71a2f586d44eac70215f18
+- symbol: ChangedFile
+  file: ddd-core/src/gitrev.rs
+  before: absent
+  after: sha256:de8424c60c0df27d34869f7eb0b3d347eda250ae4b3346ec796d933004dca1ea
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:c0b2fddc8e4e485a95096ea766250d8455af1a5070f2aa4ae3dfb22d35650340
+- symbol: path
+  file: ddd-core/src/gitrev.rs
+  before: absent
+  after: sha256:de8424c60c0df27d34869f7eb0b3d347eda250ae4b3346ec796d933004dca1ea
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:ebfbc94b0acbfa502e1a4c302d7802d471366b0cdc872d13526eb52e15ff0360
+- symbol: status
+  file: ddd-core/src/gitrev.rs
+  before: absent
+  after: sha256:de8424c60c0df27d34869f7eb0b3d347eda250ae4b3346ec796d933004dca1ea
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:d8936e92361aabaea1d4a24f31cb3d9d08821be7ec56f17a7d43baf3e708def0

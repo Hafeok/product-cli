@@ -30,6 +30,12 @@ pub struct SeamDeclaration {
     /// correspondence-dataset row; free-form until M4 fills it from LSP.
     #[serde(default)]
     pub metadata: BTreeMap<String, serde_yaml::Value>,
+    /// Signed transitions this declaration discharges (M8, seam format 2):
+    /// each binding names the exact change — subject symbol, before/after
+    /// content hashes, base revision. Append-only in practice: a binding,
+    /// once used, is the durable record of what was discharged.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub bindings: Vec<crate::binding::SeamBinding>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub notes: Option<String>,
 }

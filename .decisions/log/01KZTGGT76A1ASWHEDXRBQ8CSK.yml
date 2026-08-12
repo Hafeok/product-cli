@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGT76A1ASWHEDXRBQ8CSK
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/workspace-member-delivery (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGT76Q28R47FAN4Y7G0MP
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGT76Q28R47FAN4Y7G0MP
+  hash: sha256:14d83802f5738ec34ba65a2486c7bcb9efcaf39fa0a3821924de91a5a989f45f
+  set: ddd-governance
+  statement: Deliver ddd as a workspace member of product-cli
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/workspace-member-delivery@sha256:31233260e8116ccac377c0cc374633a3f548c85cb5dde90e7946592048b84ac2
+  - claim:DDD-arch-01@sha256:3f254cb78c0ed48f660043996994bc62d9b2383d04f14ec9f86001477a6990ed

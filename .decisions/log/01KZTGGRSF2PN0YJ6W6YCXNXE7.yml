@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZTGGRSF2PN0YJ6W6YCXNXE7
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/what-boundaries-priced-not-paid (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGRSFCGMZFY9ECCGWTCA7
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGRSFCGMZFY9ECCGWTCA7
+  hash: sha256:fcbf2aa9ce613fae0ecbb3f105c96e09623b26b6d4a46a21f4732bd7b159b86e
+  set: ddd-governance
+  statement: The 24 undeclared What boundaries are priced and deferred, not declared
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/what-boundaries-priced-not-paid@sha256:474a1ae1061b749729498f89a8f5177038c26121e6ab5f13f196bf0bfa188bc4
+  - risk-acceptance:risk/ddd/undeclared-what-boundaries
+  - claim:DDD-what-04@sha256:8cdbb9237e9fa9f5f36ccfe0edec60e9095c5b6a6cd77033fd6eb90b9ab5a67a

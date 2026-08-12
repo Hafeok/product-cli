@@ -17,10 +17,13 @@ path = "src/lib.rs"
 workspace = true
 
 [dependencies]
+chrono       = "0.4"
+ledger-core  = { path = "../ledger-core", version = "0.6.0" }
 product-core = { path = "../product-core", version = "0.6.0" }
 serde      = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_yaml = "0.9"
+sha2       = "0.10"
 toml       = "0.8"
 
 [dev-dependencies]

@@ -20,12 +20,32 @@ pub const CURRENT_FORMAT: u32 = 1;
 /// never merged stays readable to a format-1 implementation.
 pub const MERGE_FORMAT: u32 = 2;
 
+/// The format a change-set carrying a `contract:` discharge pointer
+/// declares (spec v1.4, ddd M8): the repository-diff contract check as a
+/// discharge kind. Same declare-what-you-need rule as format 2; hashing
+/// is untouched, so `CANONICAL_FORM` stays `v1`.
+pub const CONTRACT_FORMAT: u32 = 3;
+
 /// Every format version this tool can validate an entry against.
-pub const SUPPORTED_FORMATS: &[u32] = &[1, 2];
+pub const SUPPORTED_FORMATS: &[u32] = &[1, 2, 3];
 
 /// Whether an entry declaring `format: n` can be validated here.
 pub fn is_supported(n: u32) -> bool {
     SUPPORTED_FORMATS.contains(&n)
+}
+
+/// The format a change-set actually needs — a file declares what it
+/// uses, so stores that never merge or never cite the contract check
+/// stay readable to older implementations.
+pub fn needed_for(cs: &crate::changeset::ChangeSet) -> u32 {
+    let mut needed = CURRENT_FORMAT;
+    if cs.versions.iter().any(|v| v.merged_from.is_some()) {
+        needed = needed.max(MERGE_FORMAT);
+    }
+    if cs.versions.iter().any(|v| v.discharge.iter().any(|d| d.is_contract())) {
+        needed = needed.max(CONTRACT_FORMAT);
+    }
+    needed
 }
 
 /// The message a file declaring an unknown format fails with.
@@ -46,11 +66,19 @@ mod tests {
     #[test]
     fn an_unknown_format_names_what_is_known() {
         assert!(!is_supported(9));
-        assert_eq!(unsupported_message(9), "declares format 9; this tool validates format(s) 1, 2");
+        assert_eq!(
+            unsupported_message(9),
+            "declares format 9; this tool validates format(s) 1, 2, 3"
+        );
     }
 
     #[test]
     fn the_merge_format_is_supported() {
         assert!(is_supported(MERGE_FORMAT));
+    }
+
+    #[test]
+    fn the_contract_format_is_supported() {
+        assert!(is_supported(CONTRACT_FORMAT));
     }
 }

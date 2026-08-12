@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZTGGS4B7BTEWB4C0N0Y3JV0
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/what-policy-table (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGS4A3EA9K6PDRB42JPES
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGS4A3EA9K6PDRB42JPES
+  hash: sha256:c3b218b0c3397dca6686afeb8da585a73760b3db7c7244b6b8576ca5510b3538
+  set: ddd-governance
+  statement: The What graph is governed by a policy table over the framework's boundary kinds
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/what-policy-table@sha256:62bb4fa55e2c29d3ddec3de02723ab26fb67fc382297ba47bfe1a2ad11d0a42c
+  - claim:DDD-what-01@sha256:212b501724678746836bc5c4581bf3eaca7583932a0f59759952c18c89678514
+  - claim:DDD-what-03@sha256:3a0f93eb2db50ca44a674b5bee814cda6c90c22b708f7e17dc07b89f16047488

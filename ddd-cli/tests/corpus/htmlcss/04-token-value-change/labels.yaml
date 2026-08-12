@@ -1,0 +1,6 @@
+case: 04-token-value-change
+note: "A value-only change within the same type (#111 -> #222, both colors) is exactly what a token exists to absorb — no event expected at all."
+surface: []
+non_surface:
+  - symbol: --ink
+    change: any

@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZTGGHCB2AY2GQ6B1JP50VH0
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/cs/disposal-rules-at-error (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGHCBFNJW3X4R8FVF6TQG
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGHCBFNJW3X4R8FVF6TQG
+  hash: sha256:6ec9c163cc590597b263f7f8300a3c54ac6a31cc7fc8f22dd5d8a7c58519f3b6
+  set: ddd-governance
+  statement: CA1001 and CA2000 run at error severity, with their unreliability recorded
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/cs/disposal-rules-at-error@sha256:c9518ac4bb17f8e7da57b61cf1ed3739bce9a0a9931a1f4e54fcc134f65f1953
+  - claim:DDD-cs-disp-02@sha256:d0ddd67446016088d28df527072b8986fb8b42462ebd4cf4ac59f2eadf3a0a31
+  - claim:DDD-cs-disp-05@sha256:6adb1eff1106b7a03a3e7cb8cf7b2a8b7c677f5b3911894617eb0ff9dc8a890c

@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGNSHJMZP78SAVPB09YBM
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/predicates-carry-no-status (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGNSG6N3G6FPMTTYSHNCQ
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGNSG6N3G6FPMTTYSHNCQ
+  hash: sha256:d7b214c7a16792e9f40ed05043b7ce9191b1f17d2e554b2021083edb00bb7435
+  set: ddd-governance
+  statement: Predicates carry no status; enforcement is structural
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/predicates-carry-no-status@sha256:f06ffc44ba656676a65b79134b578f0b90514fcd260013d5698c69f467fa0d7f
+  - mandate:dec/ddd/predicates-carry-no-status

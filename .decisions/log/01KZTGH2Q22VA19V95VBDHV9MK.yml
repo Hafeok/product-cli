@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGH2Q22VA19V95VBDHV9MK
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/rust/default-command (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGH2Q154ZNDAP2ANR37GBR
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGH2Q154ZNDAP2ANR37GBR
+  hash: sha256:9446d31817ac31d4df57d26036b2de88eac249f4424322b8c06fda49372c1619
+  set: ddd-governance
+  statement: const DEFAULT_COMMAND in ddd-lsp/src/adapter/rust.rs
+  allocation: criterion
+  discharge:
+  - contract:seam/rust/default-command
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/rust/default-command@sha256:11abebb2ee61b8f678379cfee90cf0a477307b121b4c148e92533f3b00a0fbb1

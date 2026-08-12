@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGK9FH0FGZR7EE8HN4PS7
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/enum-member-gap-priced (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGK9FT56BFDWQ67J6XA54
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGK9FT56BFDWQ67J6XA54
+  hash: sha256:97c3f2952833eb3520fe89455b5271c46b9716af1fdcdfa6ebe1a4991d0d9c49
+  set: ddd-governance
+  statement: The C# enum-member gap is a named policy-table hole, priced now and closed in M6
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/enum-member-gap-priced@sha256:3f449b182c4a8b740d9f902eebf0525832744430cc5134f8bcbbfe77e84cec54
+  - claim:DDD-adapter-03@sha256:cf58484e6cfaf66af659395287709bee2d3dd830bb4132d27f1ceb0eb2402b2f

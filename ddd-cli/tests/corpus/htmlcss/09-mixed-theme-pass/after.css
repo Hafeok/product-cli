@@ -1,0 +1,18 @@
+@layer base, components;
+
+:root {
+  --ink: #000;
+  --accent: #1a7f37;
+  --gap: 12px;
+  --radius: 6px;
+}
+
+@layer base {
+}
+
+@layer components {
+  .chip {
+    color: var(--accent);
+    margin: var(--gap) var(--radius);
+  }
+}

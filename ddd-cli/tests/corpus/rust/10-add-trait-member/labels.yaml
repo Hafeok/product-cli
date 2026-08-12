@@ -1,0 +1,7 @@
+case: 10-add-trait-member
+note: "A new member on a public trait forces every implementor. The fixture deliberately leaves implementors unedited; documentSymbol is syntactic."
+surface:
+  - symbol: wave
+    change: added
+    container: Greeter
+non_surface: []

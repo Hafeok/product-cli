@@ -87,11 +87,21 @@ impl<'de> Deserialize<'de> for VersionHash {
 /// hashed field means must bump `CANONICAL_FORM` too, so acceptances signed
 /// under the old reading cannot silently re-point at the new one.
 pub fn version_hash(raw: &VersionRaw) -> VersionHash {
+    VersionHash(domain_hash(CANONICAL_FORM, &canonical_bytes(raw)))
+}
+
+/// The digest shape every payload type shares:
+/// `sha256:` + hex of `SHA-256( prefix || 0x0A || bytes )`.
+///
+/// Callers outside this crate pass their own domain-separation prefix
+/// (never [`CANONICAL_FORM`], which names the version payload) over bytes
+/// built with [`crate::canon`]'s primitives — the one law, one level up.
+pub fn domain_hash(prefix: &str, canonical_bytes: &[u8]) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(CANONICAL_FORM.as_bytes());
+    hasher.update(prefix.as_bytes());
     hasher.update(b"\n");
-    hasher.update(canonical_bytes(raw));
-    VersionHash(format!("sha256:{:x}", hasher.finalize()))
+    hasher.update(canonical_bytes);
+    format!("sha256:{:x}", hasher.finalize())
 }
 
 #[cfg(test)]

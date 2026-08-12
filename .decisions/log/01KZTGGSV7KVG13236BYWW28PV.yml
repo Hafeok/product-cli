@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGSV7KVG13236BYWW28PV
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/why-resolves-three-ways (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGSV79Y1XVDV1T3WZTVJP
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGSV79Y1XVDV1T3WZTVJP
+  hash: sha256:261b7aeca3bf5621e6eeeb2e0a4d6c626d7aecbeacac5e2d8b94159f74c69c41
+  set: ddd-governance
+  statement: why separates an unknown id from a detected-but-unfiled rule
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/why-resolves-three-ways@sha256:5efd9d93e5bf37463ea434ce555ac825eba92cd264afed258a49250e671f572f
+  - claim:DDD-method-03@sha256:345503e95a49f81bef2cf14714a7f48c1de78540adb2d7ea63d8094c18088cf1

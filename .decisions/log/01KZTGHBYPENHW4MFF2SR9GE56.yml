@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGHBYPENHW4MFF2SR9GE56
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/web/token-status-bad (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGHBYNKPRB10V6EEJQXX9B
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGHBYNKPRB10V6EEJQXX9B
+  hash: sha256:a1a257ddd68243007812aed6aa9031f58a8f3cc64a48a739fee49ef0f26f5387
+  set: ddd-governance
+  statement: design token --status-bad in ddd-core/assets/render.css
+  allocation: criterion
+  discharge:
+  - contract:seam/web/token-status-bad
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/web/token-status-bad@sha256:9582222714ac30d11bf89f8b8113515ba4f662fb23f93dc700b25b4cfb63bdfb

@@ -1,0 +1,6 @@
+case: 02-token-removed
+note: "Removing a token removes a stylesheet parameter (a consumer still references var(--gap))."
+surface:
+  - symbol: --gap
+    change: removed
+non_surface: []
