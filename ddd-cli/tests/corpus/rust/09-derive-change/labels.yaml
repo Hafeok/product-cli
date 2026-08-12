@@ -1,0 +1,6 @@
+case: 09-derive-change
+note: "A derive change on a pub struct is trait-impl authorship in attribute syntax."
+surface:
+  - symbol: Person
+    change: decorator-changed
+non_surface: []

@@ -1,0 +1,12 @@
+case: 09-mixed-theme-pass
+note: "Naturalistic theme pass: a token added, a class removed, a same-type token value tweak, a rule-body change — only the first two are surface."
+surface:
+  - symbol: --radius
+    change: added
+  - symbol: page
+    change: removed
+non_surface:
+  - symbol: --ink
+    change: any
+  - symbol: chip
+    change: any

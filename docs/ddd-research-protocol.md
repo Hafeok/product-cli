@@ -58,9 +58,9 @@ The consequences for architecture (the capability decomposition) are
 recorded in [`ddd-adrs.md`](ddd-adrs.md) §5 and specified in
 [`ddd-v1-spec.md`](ddd-v1-spec.md) §4.
 
-## 3. The hand-labelled classifier corpus (named future instrument)
+## 3. The hand-labelled classifier corpus
 
-Not yet built. A fixture set of real changes per language, hand-labelled
+A fixture set of real changes per language, hand-labelled
 contract-surface / not, measuring:
 
 - **recall** — contract changes the classifier catches;
@@ -69,8 +69,25 @@ contract-surface / not, measuring:
 
 It is the instrument behind spec success criteria 1–2 and the acceptance
 harness for policy-table amendments (a row change must not silently trade
-recall for friction). Build it no later than the M8 repository-diff work,
-which needs the same corpus to validate the shared classifier over diffs.
+recall for friction). Built with the M8 repository-diff work, which needs
+the same corpus to validate the shared classifier over diffs.
+
+**Observed — pointers, not restatement:**
+
+- Corpus: `ddd-cli/tests/corpus/{rust,htmlcss}/` (12 + 9 labelled cases);
+  harness: `ddd-cli/tests/corpus.rs`, measuring through the M8 diff path
+  (`revdiff::diff_contracts` — the shared classifier, spec invariant 4).
+  Re-run: `cargo test -p ddd-cli --test corpus -- --nocapture`.
+- Reading, 2026-08:
+  [`audits/classifier-corpus-2026-08.md`](audits/classifier-corpus-2026-08.md).
+  Rust recall 9/9, false-demand 0/19; HTML+CSS recall 10/10, false-demand
+  0/3 — after the corpus's first run caught a real false-demand source
+  (declaration-slice bleed past terminator-less declarations,
+  `rust_facts.rs`), fixed at the adapter facts layer and pinned by guard
+  rows. Labels are single-labeller (the implementing session, against fixed
+  policy-row semantics, before running the classifier) — the reading states
+  that limit; C#/Bicep corpora are the scoped follow-up pending real hosts
+  in the measurement environment.
 
 ## 4. Standing failure signals
 

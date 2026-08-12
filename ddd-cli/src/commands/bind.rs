@@ -39,30 +39,10 @@ pub fn run(root: Option<PathBuf>, range: String, wait: u64, verdict: Option<Stri
         if symbols.is_empty() {
             continue;
         }
-        let seam_id = format!("seam/{}/{}", file.language, slug(&file.file));
-        let path = ddd_core::seam::path_for(
-            &repo_root.join(ddd_core::store::STORE_DIR).join("seams"),
-            &seam_id,
-        );
-        let mut seam = ddd_core::seam::load_at(&path).unwrap_or_else(|| new_seam(
-            &seam_id,
-            &file.file,
-            verdict.as_deref(),
-        ));
-        for symbol in &symbols {
-            let binding =
-                SeamBinding::seal(symbol, &file.file, &file.before, &file.after, &report.base);
-            if !seam.bindings.iter().any(|b| b.hash == binding.hash) {
-                seam.bindings.push(binding);
-                filed += 1;
-            }
-        }
-        seam.format = seam.format.max(2);
-        warned |= seam.verdict_knowledge.trim().is_empty();
-        let yaml =
-            serde_yaml::to_string(&seam).map_err(|e| ProductError::IoError(e.to_string()))?;
-        product_core::fileops::write_file_atomic(&path, &yaml)?;
-        println!("bound {} event(s) on {} -> {seam_id}", symbols.len(), file.file);
+        let (new_bindings, empty_verdict) =
+            bind_file(&repo_root, file, &symbols, &report.base, verdict.as_deref())?;
+        filed += new_bindings;
+        warned |= empty_verdict;
     }
     println!("{filed} binding(s) filed for {range}");
     if warned {
@@ -72,6 +52,39 @@ pub fn run(root: Option<PathBuf>, range: String, wait: u64, verdict: Option<Stri
         );
     }
     Ok(())
+}
+
+/// File (or amend) one file's seam declaration: append a signed binding per
+/// undischarged symbol. Returns the count of newly filed bindings plus
+/// whether the declaration still carries an empty `verdict_knowledge`.
+fn bind_file(
+    repo_root: &std::path::Path,
+    file: &ddd_core::contracts::FileContracts,
+    symbols: &[&str],
+    base: &str,
+    verdict: Option<&str>,
+) -> Result<(usize, bool)> {
+    let seam_id = format!("seam/{}/{}", file.language, slug(&file.file));
+    let path = ddd_core::seam::path_for(
+        &repo_root.join(ddd_core::store::STORE_DIR).join("seams"),
+        &seam_id,
+    );
+    let mut seam = ddd_core::seam::load_at(&path)
+        .unwrap_or_else(|| new_seam(&seam_id, &file.file, verdict));
+    let mut filed = 0usize;
+    for symbol in symbols {
+        let binding = SeamBinding::seal(symbol, &file.file, &file.before, &file.after, base);
+        if !seam.bindings.iter().any(|b| b.hash == binding.hash) {
+            seam.bindings.push(binding);
+            filed += 1;
+        }
+    }
+    seam.format = seam.format.max(2);
+    let warned = seam.verdict_knowledge.trim().is_empty();
+    let yaml = serde_yaml::to_string(&seam).map_err(|e| ProductError::IoError(e.to_string()))?;
+    product_core::fileops::write_file_atomic(&path, &yaml)?;
+    println!("bound {} event(s) on {} -> {seam_id}", symbols.len(), file.file);
+    Ok((filed, warned))
 }
 
 fn new_seam(id: &str, file: &str, verdict: Option<&str>) -> ddd_core::seam::SeamDeclaration {

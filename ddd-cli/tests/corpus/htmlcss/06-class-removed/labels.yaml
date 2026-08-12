@@ -1,0 +1,6 @@
+case: 06-class-removed
+note: "Removing a class from the vocabulary is where dead HTML consumers are born."
+surface:
+  - symbol: chip
+    change: removed
+non_surface: []

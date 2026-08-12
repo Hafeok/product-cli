@@ -1,0 +1,8 @@
+case: 08-link-rewired
+note: "Rewiring which stylesheet the document consumes moves the pair boundary itself — one link removed, one added."
+surface:
+  - symbol: styles/base.css
+    change: removed
+  - symbol: styles/theme.css
+    change: added
+non_surface: []

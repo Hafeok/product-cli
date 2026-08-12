@@ -1,0 +1,6 @@
+case: 05-class-added
+note: "A new class joins the pair's shared vocabulary."
+surface:
+  - symbol: card
+    change: added
+non_surface: []

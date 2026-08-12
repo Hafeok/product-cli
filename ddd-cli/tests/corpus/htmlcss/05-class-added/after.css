@@ -1,0 +1,24 @@
+@layer base, components;
+
+:root {
+  --ink: #111;
+  --accent: #1a7f37;
+  --gap: 12px;
+}
+
+@layer base {
+  .page {
+    color: var(--ink);
+  }
+}
+
+@layer components {
+  .card {
+    padding: var(--gap);
+  }
+
+  .chip {
+    color: var(--accent);
+    margin: var(--gap);
+  }
+}

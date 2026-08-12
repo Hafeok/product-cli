@@ -1,0 +1,14 @@
+case: 12-mixed-refactor
+note: "Naturalistic refactor: a pub signature change beside a new pub(crate) method plus a new private struct — only the signature change is surface under the default posture. Guard rows: the listed unchanged neighbours (enum members / fields below or beside the edit) must raise no demand — they caught the declaration-slice bleed fixed in rust_facts.rs."
+surface:
+  - symbol: describe
+    change: signature-changed
+non_surface:
+  - symbol: tally
+    change: added
+  - symbol: Draft
+    change: added
+  - symbol: Red
+    change: any
+  - symbol: Green
+    change: any
