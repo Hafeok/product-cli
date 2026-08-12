@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ddd-cli-src-commands-validate-rs
+boundary: contract surface of ddd-cli/src/commands/validate.rs
+verdict_knowledge: 'CLI users learn validate can answer in machine-readable form with the same exit semantics.'
+contract_location: ddd-cli/src/commands/validate.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: run
+  file: ddd-cli/src/commands/validate.rs
+  before: sha256:0ec61bb894651ee4d649d67151decaa6f0664d8e172a3ba4501fd1e466252c72
+  after: sha256:9a1a77f934b491d63828692b189cee22649b86bfdaf22a49623710a1bef37d31
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:38c95c1ed81205a86d88412afc7ba9d7080b92293a30901427008dc794efae50

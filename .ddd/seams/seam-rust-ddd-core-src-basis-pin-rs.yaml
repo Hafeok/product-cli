@@ -1,0 +1,50 @@
+format: 2
+id: seam/rust/ddd-core-src-basis-pin-rs
+boundary: contract surface of ddd-core/src/basis_pin.rs
+verdict_knowledge: 'Callers learn the content-hash forms behind exact basis loss: claim, decision, and seam content each canonicalise under an explicit field set and its own domain prefix, so pinned-hash vs current-hash is a total, mechanical comparison.'
+contract_location: ddd-core/src/basis_pin.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: CLAIM_CONTENT_FORM
+  file: ddd-core/src/basis_pin.rs
+  before: absent
+  after: sha256:9b278ecd521479f1f0885cec4c0a5ec25dd704c6a088864f19d417d1a280c498
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:375ae98e5a149027260424059dfa2f84e5623f130fe9c09778264dcaf231f43a
+- symbol: DECISION_CONTENT_FORM
+  file: ddd-core/src/basis_pin.rs
+  before: absent
+  after: sha256:9b278ecd521479f1f0885cec4c0a5ec25dd704c6a088864f19d417d1a280c498
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:06aced12a14e592fc2343224daff3634bdc80634b1a91026c5ea2a58d5a8adde
+- symbol: SEAM_CONTENT_FORM
+  file: ddd-core/src/basis_pin.rs
+  before: absent
+  after: sha256:9b278ecd521479f1f0885cec4c0a5ec25dd704c6a088864f19d417d1a280c498
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:cfd8773bdb991c0418fd6c458c77c1d867d8d2b56bb8e617f0a27bdf30c11dc3
+- symbol: canonical_json
+  file: ddd-core/src/basis_pin.rs
+  before: absent
+  after: sha256:9b278ecd521479f1f0885cec4c0a5ec25dd704c6a088864f19d417d1a280c498
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:0df2965af96da165bcc21073ca78d4f97e0900563249915a8da504ab216ebb7c
+- symbol: claim_content_hash
+  file: ddd-core/src/basis_pin.rs
+  before: absent
+  after: sha256:9b278ecd521479f1f0885cec4c0a5ec25dd704c6a088864f19d417d1a280c498
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:19c93d641f463d556baf67aa5f9f5c03d500b9ee206e84814f89eb08086cdf2b
+- symbol: decision_content_hash
+  file: ddd-core/src/basis_pin.rs
+  before: absent
+  after: sha256:9b278ecd521479f1f0885cec4c0a5ec25dd704c6a088864f19d417d1a280c498
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:f13b4337d38dfe6e005fbafc6cb714e3e2981ef34e9bddb59f956b9bc6b533fb
+- symbol: seam_content_hash
+  file: ddd-core/src/basis_pin.rs
+  before: absent
+  after: sha256:9b278ecd521479f1f0885cec4c0a5ec25dd704c6a088864f19d417d1a280c498
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:30af57728c2525cd9884cfce26f450ac1c426e86c371be3cf66a252cebdfea64

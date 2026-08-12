@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ddd-lsp-src-revdiff-rs
+boundary: contract surface of ddd-lsp/src/revdiff.rs
+verdict_knowledge: 'Callers learn that diff-over-two-revisions classification is the same classifier as edit-time — one entry point taking a revision range, reporting skipped files explicitly rather than as clean.'
+contract_location: ddd-lsp/src/revdiff.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: diff_contracts
+  file: ddd-lsp/src/revdiff.rs
+  before: absent
+  after: sha256:e97f0e974cf93fddd44f76ba801e0fc233d5f4ce0303cc47e3912cb42f6bcb5e
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:e7d1b0b578fb8e88788fcb8fed41844689d0a5e97ddecc3dc1fc85ceb24add79

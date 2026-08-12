@@ -1,0 +1,68 @@
+format: 2
+id: seam/rust/ddd-cli-src-commands-migrate-plan-rs
+boundary: contract surface of ddd-cli/src/commands/migrate_plan.rs
+verdict_knowledge: 'Reviewers learn the migration''s judgment calls are transcribed rulings: the watched edges, the indeterminate edge, and pinned-state recovery are explicit constants and refusals, never inference.'
+contract_location: ddd-cli/src/commands/migrate_plan.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: PRINCIPAL
+  file: ddd-cli/src/commands/migrate_plan.rs
+  before: absent
+  after: sha256:dbfaa95217239a97767d45d3679b4c407fb56661216fea0fadf8560e8a7f48b5
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:99204a5041dcc1017c126f9772855f89c5d31895684afae80eca29745afba28c
+- symbol: QUESTION_ID
+  file: ddd-cli/src/commands/migrate_plan.rs
+  before: absent
+  after: sha256:dbfaa95217239a97767d45d3679b4c407fb56661216fea0fadf8560e8a7f48b5
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:7dcbe335000f90e65a1b9e70d5f48c43ed4d282cb83dedf08cfa4aca40257970
+- symbol: plan
+  file: ddd-cli/src/commands/migrate_plan.rs
+  before: absent
+  after: sha256:dbfaa95217239a97767d45d3679b4c407fb56661216fea0fadf8560e8a7f48b5
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:0efbe09c5f7830c197c95a439604c1b4b0de75b9e33bd36b3f74c2299ce5132f
+- symbol: Planned
+  file: ddd-cli/src/commands/migrate_plan.rs
+  before: absent
+  after: sha256:dbfaa95217239a97767d45d3679b4c407fb56661216fea0fadf8560e8a7f48b5
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:219438f5c0be1fc5228cd72a63220cf572d8ba16bab4313dbda7bce509cc6fc5
+- symbol: allocation
+  file: ddd-cli/src/commands/migrate_plan.rs
+  before: absent
+  after: sha256:dbfaa95217239a97767d45d3679b4c407fb56661216fea0fadf8560e8a7f48b5
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:d7e0a7aa2bda279ce6582c5ac39b19e74cd174f354320c3fc5ab68cb897d1b3e
+- symbol: based_on
+  file: ddd-cli/src/commands/migrate_plan.rs
+  before: absent
+  after: sha256:dbfaa95217239a97767d45d3679b4c407fb56661216fea0fadf8560e8a7f48b5
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:4560f58a9ac29a87bf1d0cdc5f1eed9480fc3880baeb30a8e9eeb0f6c74504ff
+- symbol: historical
+  file: ddd-cli/src/commands/migrate_plan.rs
+  before: absent
+  after: sha256:dbfaa95217239a97767d45d3679b4c407fb56661216fea0fadf8560e8a7f48b5
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:dc484088d40050bf4b4628cb6cff8124828f40d9aaf8a947c434d1374523f36d
+- symbol: kind
+  file: ddd-cli/src/commands/migrate_plan.rs
+  before: absent
+  after: sha256:dbfaa95217239a97767d45d3679b4c407fb56661216fea0fadf8560e8a7f48b5
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:8ef4d87f61822792c98fb9673cd89b75c358dbc533bbf1eb8347a6b3c8973d13
+- symbol: note
+  file: ddd-cli/src/commands/migrate_plan.rs
+  before: absent
+  after: sha256:dbfaa95217239a97767d45d3679b4c407fb56661216fea0fadf8560e8a7f48b5
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:c60b6c80af651b009d8dbca302de407259d3cb287de3c2d3285870cca6fc0dd3
+- symbol: statement
+  file: ddd-cli/src/commands/migrate_plan.rs
+  before: absent
+  after: sha256:dbfaa95217239a97767d45d3679b4c407fb56661216fea0fadf8560e8a7f48b5
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:dc784152376a39e6820e88759c84f80f4a62bf8b442870ece75efc8276fd0c39

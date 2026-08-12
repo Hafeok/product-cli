@@ -201,9 +201,11 @@ Expected and observed:
   transition it names, nothing adjacent.
 - **Measured on this milestone itself:** the M8 implementation diff
   raised **154 undischarged contract-surface events** at the phase-4
-  mark (FINAL_BIND_PLACEHOLDER by the end) — every one had to be
-  discharged by a signed declaration before the milestone's own CI gate
-  would pass. Under session matching these would have been silently
+  mark; by the end the full range carried **153 real events across 30
+  files** (the corpus-driven facts fix removed the phantom demands),
+  discharged by 30 per-file declarations carrying 149 signed bindings,
+  each with authored verdict knowledge — filed with `ddd bind`, judged
+  by hand. Under session matching these would have been silently
   dischargeable by any same-session declaration touching the symbol;
   under signing they are reviewable per-file declarations with exact
   hashes.
@@ -220,7 +222,21 @@ The hand-labelled corpus (research protocol §3) exists under
 (`cargo test -p ddd-cli --test corpus`) and reading
 ([`audits/classifier-corpus-2026-08.md`](audits/classifier-corpus-2026-08.md)).
 
-CORPUS_NUMBERS_PLACEHOLDER
+Measured over the diff path (spec success criteria 1–2):
+
+| Language | Cases | Recall | False-demand rate |
+|---|---|---|---|
+| rust | 12 | 9/9 = 100% | 0/19 = 0% |
+| htmlcss | 9 | 10/10 = 100% | 0/3 = 0% |
+
+The corpus earned its keep on first contact: it exposed phantom
+`signature-changed` demands on symbols the diffs never touched — the
+rust facts layer's declaration slice ran past terminator-less
+declarations (enum members, struct fields), a live false-demand source
+shared with the interceptor path. The fix landed at the facts layer and
+is pinned by a regression test; **labels were not bent to fit the
+classifier**. `csharp_facts` carries the same unbounded slicer — named
+in the reading as the C# follow-up's first check.
 
 Labelling provenance is disclosed in the reading: labels were produced
 by the implementing session against fixed policy-row semantics;

@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ddd-cli-src-commands-bind-rs
+boundary: contract surface of ddd-cli/src/commands/bind.rs
+verdict_knowledge: 'CLI users learn the remedy path files facts, not judgment: post-hoc bindings over committed transitions, with verdict_knowledge left to the author and warned about while blank.'
+contract_location: ddd-cli/src/commands/bind.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: run
+  file: ddd-cli/src/commands/bind.rs
+  before: absent
+  after: sha256:97724fc65c2192e959db1adcbb1a1f7fb977a2f74862b880db8265f38df3afa3
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:92291fa1d721c8fa41b013b3e2ebc9519486dccada87c8ed3325faac6f5c6115

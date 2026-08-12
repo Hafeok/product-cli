@@ -1,0 +1,20 @@
+format: 2
+id: seam/rust/ddd-cli-src-commands-diff-contracts-rs
+boundary: contract surface of ddd-cli/src/commands/diff_contracts.rs
+verdict_knowledge: 'CLI users learn the repo-diff gate''s contract: a revision range in, stable finding ids out, exit 1 on undischarged surface events or skipped files — never a clean exit over an unclassified file.'
+contract_location: ddd-cli/src/commands/diff_contracts.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: parse_range
+  file: ddd-cli/src/commands/diff_contracts.rs
+  before: absent
+  after: sha256:a32da80f55d13fc6c3ff566a4cf760d9c1a16c0e422144a5fa30c10f12808a37
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:a692e5a0c2b26b0f1c4ea48c3eb262128617db26247e6a027d2baa5aa2155125
+- symbol: run
+  file: ddd-cli/src/commands/diff_contracts.rs
+  before: absent
+  after: sha256:a32da80f55d13fc6c3ff566a4cf760d9c1a16c0e422144a5fa30c10f12808a37
+  base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
+  hash: sha256:d1052c1effe956444b69fd850670860f270b1cd1705e1c87bdb978fd60d56705
