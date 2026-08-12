@@ -70,6 +70,79 @@ pub fn canonical_json(claim: &Claim) -> String {
     Value::Object(m).to_string()
 }
 
+/// Domain-separation prefix for decision-content hashes: what a migrated
+/// ledger entry pins of its historical `.ddd` decision file.
+pub const DECISION_CONTENT_FORM: &str = "ddd.decision-content.v1";
+
+/// Domain-separation prefix for seam-content hashes. A seam's `bindings`
+/// are deliberately outside the hash: they are the append-only discharge
+/// log, each sealed by its own binding hash — routine discharge must not
+/// read as content drift on the declaration.
+pub const SEAM_CONTENT_FORM: &str = "ddd.seam-content.v1";
+
+/// The hash a migrated ledger entry pins of its decision's content.
+pub fn decision_content_hash(d: &crate::decision::Decision) -> String {
+    let crate::decision::Decision {
+        format: _, id, kind, title, rationale, principal, based_on, date, notes,
+    } = d;
+    let mut m = Map::new();
+    for (key, value) in [
+        ("id", Some(id.clone())),
+        ("kind", serde_json::to_value(kind).ok().and_then(|v| v.as_str().map(str::to_string))),
+        ("title", Some(title.clone())),
+        ("rationale", Some(rationale.clone())),
+        ("principal", Some(principal.clone())),
+        ("date", date.clone()),
+        ("notes", notes.clone()),
+    ] {
+        ledger_core::canon::put(&mut m, key, value);
+    }
+    // Bases keep their authored order — primary vs. secondary is meaning.
+    let bases: Vec<Value> = based_on.iter().filter_map(|b| serde_json::to_value(b).ok()).collect();
+    if !bases.is_empty() {
+        m.insert("based_on".to_string(), Value::Array(bases));
+    }
+    ledger_core::hash::domain_hash(DECISION_CONTENT_FORM, Value::Object(m).to_string().as_bytes())
+}
+
+/// The hash a migrated ledger entry pins of its seam declaration.
+pub fn seam_content_hash(s: &crate::seam::SeamDeclaration) -> String {
+    let crate::seam::SeamDeclaration {
+        format: _,
+        id,
+        boundary,
+        verdict_knowledge,
+        contract_location,
+        obligations,
+        metadata,
+        bindings: _,
+        notes,
+    } = s;
+    let mut m = Map::new();
+    for (key, value) in [
+        ("id", Some(id.clone())),
+        ("boundary", Some(boundary.clone())),
+        ("verdict_knowledge", Some(verdict_knowledge.clone())),
+        ("contract_location", Some(contract_location.clone())),
+        ("notes", notes.clone()),
+    ] {
+        ledger_core::canon::put(&mut m, key, value);
+    }
+    let obligations: Vec<Value> =
+        obligations.iter().map(|o| Value::String(o.clone())).collect();
+    if !obligations.is_empty() {
+        m.insert("obligations".to_string(), Value::Array(obligations));
+    }
+    let meta: Map<String, Value> = metadata
+        .iter()
+        .filter_map(|(k, v)| serde_json::to_value(v).ok().map(|j| (k.clone(), j)))
+        .collect();
+    if !meta.is_empty() {
+        m.insert("metadata".to_string(), Value::Object(meta));
+    }
+    ledger_core::hash::domain_hash(SEAM_CONTENT_FORM, Value::Object(m).to_string().as_bytes())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

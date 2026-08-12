@@ -44,7 +44,35 @@ pub fn resolve_why(store: &DddStore, detected: Option<&DetectedState>, id: &str)
 }
 
 /// Render the governance chain behind `id`, or `None` when nothing matches.
+/// Both spellings of a migrated id resolve: a `dec:` ledger identity maps
+/// back through the permanent concordance (M8 ruling 6), and a historical
+/// id that migrated renders with its ledger identity appended.
 pub fn render_why(store: &DddStore, id: &str) -> Option<String> {
+    let concordance = crate::concordance::load(&store.dir);
+    let (id, via) = match &concordance {
+        Some(c) if id.starts_with("dec:") => match c.historical_of(id) {
+            Some(historical) => (historical, Some(id)),
+            None => (id, None),
+        },
+        _ => (id, None),
+    };
+    let text = render_by_family(store, id)?;
+    let mut out = text;
+    if let Some(row) = concordance.as_ref().and_then(|c| c.row(id)) {
+        if let Some(ledger) = &row.ledger {
+            out.push_str(&format!("\nledger identity: {ledger} (concordance, permanent)"));
+        }
+        if let Some(d) = &row.disposition {
+            out.push_str(&format!("\nconcordance: {d}"));
+        }
+    }
+    if let Some(via) = via {
+        out.push_str(&format!("\nresolved from {via} via the concordance"));
+    }
+    Some(out)
+}
+
+fn render_by_family(store: &DddStore, id: &str) -> Option<String> {
     if let Some(d) = find_decision(store, id) {
         return Some(render_decision(store, d, 0));
     }

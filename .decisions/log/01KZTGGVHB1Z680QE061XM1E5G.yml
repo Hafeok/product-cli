@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZTGGVHB1Z680QE061XM1E5G
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/web/markup-validity (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGVHB66P88QKRC6P91G1J
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGVHB66P88QKRC6P91G1J
+  hash: sha256:c371dd0e6ea95e3672f2a4727fb847efa2ecfcad2a9bc0754d4f140ead1af9c4
+  set: ddd-governance
+  statement: Duplicated classes in markup are errors (html-validate, error)
+  allocation: constraint
+  discharge:
+  - analyzer:htmlvalidate/no-dup-class
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/web/markup-validity@sha256:1380828d3dba3c56f223bb508b213cc663ad2de2432f5c2ae349fe7f892c6b01
+  - claim:DDD-web-01@sha256:52dbd3f9def0d330c373eca14a640feba676d2a694a4abb20c9eede2f22b69b9

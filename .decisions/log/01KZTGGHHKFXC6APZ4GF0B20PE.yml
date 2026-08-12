@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGHHKFXC6APZ4GF0B20PE
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/cs/general-catch-at-error (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGHHKV99BGJV5EV7V460R
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGHHKV99BGJV5EV7V460R
+  hash: sha256:170f0557b9aed53771609dcec22c155dee1d62c73a5423b1d48e85c9a7a79af2
+  set: ddd-governance
+  statement: CA1031 runs at error severity; a general catch cites a decision or does not compile
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/cs/general-catch-at-error@sha256:79a39c7387eae4f054334c3ff9ef50432c71ec2f9f6f110abb8b800d9bf965fa
+  - claim:DDD-cs-fail-01@sha256:3d7f893c06f85998627825964c1ce5799d599ca5d7c0e40f97428eb721fc0634

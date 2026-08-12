@@ -1,0 +1,22 @@
+format: 1
+id: cs:01KZTGGGS1TF32NE5ZREW3A55B
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/bicep/linter-at-error (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGGS14S17F2P5K6EZEZXH
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGGS14S17F2P5K6EZEZXH
+  hash: sha256:caf1cb0aa2bc8bfa74a7b832b8da68a16f6c9ac27e45bc2ccea5a53193aa0310
+  set: ddd-governance
+  statement: The Bicep core linter runs at error severity, with the name heuristic named
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/bicep/linter-at-error@sha256:361943979907eb16454961ee34c63e166d8cdbe0240c5408e46dabf1ee517e02
+  - claim:DDD-bicep-ver-01@sha256:c40a6b60579860ac957ee51d87ebdb6c08ac764d22c5dcc441fded99fefcbbda
+  - claim:DDD-bicep-sec-01@sha256:7ae226d7041ee447a3992a01bc1d58c32b2d2f7a542260a9ba2e77c61db192f9
+  - claim:DDD-bicep-sec-02@sha256:a4e029c1f8cff8abc7f57d9189605147364c32d1f6e740e22ae48cc57a4ecee7

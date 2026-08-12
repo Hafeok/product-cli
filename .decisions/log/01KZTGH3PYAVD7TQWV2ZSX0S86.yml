@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGH3PYAVD7TQWV2ZSX0S86
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/rust/readysignal-debug (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGH3PYAF786QBW6696YNAE
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGH3PYAF786QBW6696YNAE
+  hash: sha256:cedacf2472719e15b6a6e7cfc47e42923258ab9e3f6e176a9766b8371cdd868f
+  set: ddd-governance
+  statement: enum ReadySignal in ddd-lsp/src/adapter/mod.rs
+  allocation: criterion
+  discharge:
+  - contract:seam/rust/readysignal-debug
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/rust/readysignal-debug@sha256:7e88a44f46361c729d5586e4afa020e2f3a3223fb29bc19a59b0a02120535dd2

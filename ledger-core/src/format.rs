@@ -34,6 +34,20 @@ pub fn is_supported(n: u32) -> bool {
     SUPPORTED_FORMATS.contains(&n)
 }
 
+/// The format a change-set actually needs — a file declares what it
+/// uses, so stores that never merge or never cite the contract check
+/// stay readable to older implementations.
+pub fn needed_for(cs: &crate::changeset::ChangeSet) -> u32 {
+    let mut needed = CURRENT_FORMAT;
+    if cs.versions.iter().any(|v| v.merged_from.is_some()) {
+        needed = needed.max(MERGE_FORMAT);
+    }
+    if cs.versions.iter().any(|v| v.discharge.iter().any(|d| d.is_contract())) {
+        needed = needed.max(CONTRACT_FORMAT);
+    }
+    needed
+}
+
 /// The message a file declaring an unknown format fails with.
 pub fn unsupported_message(n: u32) -> String {
     let known: Vec<String> = SUPPORTED_FORMATS.iter().map(u32::to_string).collect();

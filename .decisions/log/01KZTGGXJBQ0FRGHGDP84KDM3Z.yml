@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGGXJBQ0FRGHGDP84KDM3Z
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/ledger/acceptor-identity (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGGXJB5EYGJBCXTYPA52D2
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGXJB5EYGJBCXTYPA52D2
+  hash: sha256:a0effdebbc5d4c9ed4c38bc623c0e8b25ef020c83b6da609df2ed32c4d388bc7
+  set: ddd-governance
+  statement: pub struct Identity with model_or_bot_reason in ledger-core/src/identity.rs
+  allocation: criterion
+  discharge:
+  - contract:seam/ledger/acceptor-identity
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/ledger/acceptor-identity@sha256:cb49b6ccf8520243c361262b35c33df06ef826c98f5517be750f7fc353a7ca5b

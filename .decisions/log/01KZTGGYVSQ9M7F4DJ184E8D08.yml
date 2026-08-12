@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGGYVSQ9M7F4DJ184E8D08
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/ledger/disposition-states (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGGYVS9BH1TAJ6F7RDVC0B
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGYVS9BH1TAJ6F7RDVC0B
+  hash: sha256:873b1574074ec6dc23c8a5e90961308bca750e92240786d511aabf1a94d3ea3a
+  set: ddd-governance
+  statement: pub enum DispositionState with states() in ledger-core/src/verify/state.rs
+  allocation: criterion
+  discharge:
+  - contract:seam/ledger/disposition-states
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/ledger/disposition-states@sha256:6893ad73a1b9d742ef91ae34698681c921714308b3dfaa131c03616309a9af9e

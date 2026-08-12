@@ -12,6 +12,7 @@ pub mod bicepconfig;
 pub mod binding;
 pub mod cargolints;
 pub mod claim;
+pub mod concordance;
 pub mod config;
 pub mod configured;
 pub mod contracts;

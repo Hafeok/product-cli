@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGGZQQJ5R0F156TJ6HARS6
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/ledger/tolerance-floor (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGGZQPCF64P812DWPW00ZM
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGZQPCF64P812DWPW00ZM
+  hash: sha256:52c4fec6d50c0ad35fddcbe5465d026dc8535b588df8f23c5f8472743cfa087f
+  set: ddd-governance
+  statement: pub struct Tolerance with private fields in ledger-core/src/tier.rs
+  allocation: criterion
+  discharge:
+  - contract:seam/ledger/tolerance-floor
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/ledger/tolerance-floor@sha256:687aba9df2ffda410db7721ec801b56d81c7ad6f1244a447826b8e14607ed129

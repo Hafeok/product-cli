@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZTGGGXG6CVNYHVZWD4VSXXN
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/bicep/psrule-in-pr-stage (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGGXG10JDSZ71EVZMSHMF
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGGXG10JDSZ71EVZMSHMF
+  hash: sha256:1236ee8a7307687094e38c057c75f3c7716efe7c81b4c75479d14fdce1c71c08
+  set: ddd-governance
+  statement: PSRule for Azure runs in the PR stage, and its expansion is asserted
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/bicep/psrule-in-pr-stage@sha256:91aa837f196e4ce6dabaac821cd33b0de4db07149b4c11e84887350040452e23
+  - claim:DDD-bicep-net-01@sha256:fadb4cce8f79f45e57565526f34fb8b88d4f4264931f45e0fe78c6c787b2f1e5
+  - claim:DDD-bicep-diag-01@sha256:51c045668f55e77bd8da38878a3250ca5eea3b2363459e6733eab3f4e37b1a33

@@ -1,0 +1,23 @@
+format: 1
+id: cs:01KZTGGMPHVMNZ6GGV8YX1N9EW
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: |-
+  Migrated from dec/ddd/m6-proceeds-no-flip (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+  Edge DDD-adapter-01 is watched, not grounding (re-typing handoff): the ontology question is filed as question/ddd/watched-edge-kind; this edge must not be read as ground.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGMPHCW14AH6AJW4YSZ5Z
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGMPHCW14AH6AJW4YSZ5Z
+  hash: sha256:40a6bf92bf9436d21989c690dd6518ed0669c5b860cc58d1ed3cbf6dea3fbfac
+  set: ddd-governance
+  statement: M6 proceeds as the Rust adapter; the M6/M7 flip condition does not fire
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/m6-proceeds-no-flip@sha256:d1528525d6fa57d5d292d1e121c0595ff6a153e182bd47e870bb71d06a4c5046
+  - mandate:dec/ddd/m6-proceeds-no-flip
+  - watched:DDD-adapter-01@sha256:922a0a70f69509bfcd73325fbdc1cd5ac281b1b52281b14f56a8f519afd99f52

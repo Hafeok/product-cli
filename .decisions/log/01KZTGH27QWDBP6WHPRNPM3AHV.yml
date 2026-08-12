@@ -1,0 +1,21 @@
+format: 3
+id: cs:01KZTGH27QWDBP6WHPRNPM3AHV
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: 'Migrated from seam/mcp/raw-str (ddd M8). The declaration remains in .ddd (verdict knowledge, obligations, signed bindings) sealed by the ddd-content token; its checker is the repository-diff contract check (the contract: discharge, spec v1.4 / format 3). Awaiting the principal''s acceptance.'
+decisions:
+- id: dec:hafeok.ddd/01KZTGH27P2ZA15QPD7DA4XGQ3
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGH27P2ZA15QPD7DA4XGQ3
+  hash: sha256:17aa9fcccf5ab50763f970982c4912e465cc7c1cb07ab7eaf77145c57241a3ef
+  set: ddd-governance
+  statement: fn raw_str in ddd-mcp/src/state.rs
+  allocation: criterion
+  discharge:
+  - contract:seam/mcp/raw-str
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:seam/mcp/raw-str@sha256:e2b183656a0a0af11a363ac73310463b3fe2710c00a218fac926a81a3dc21dca

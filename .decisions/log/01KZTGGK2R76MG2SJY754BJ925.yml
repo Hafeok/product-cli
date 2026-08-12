@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGK2R76MG2SJY754BJ925
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/enforce-matching-tightens-to-symbol (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGK2Q197NGD28GKQAFQKZ
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGK2Q197NGD28GKQAFQKZ
+  hash: sha256:e93ce2ab6bc09b234d47bc9277a491a3341d8767d0c5cf9644d45e3b5356164c
+  set: ddd-governance
+  statement: Enforce-mode declaration matching tightens to symbol granularity; warn mode keeps the file arm
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/enforce-matching-tightens-to-symbol@sha256:d96c314d581b1bd6bf05ae21ea7528a3316a94028f88f5d1f56f14a73924f742
+  - claim:DDD-arch-05@sha256:c45676e5b46859c8af7fd8ddb57ae840043e60f07485e32b488620e73fc3202c

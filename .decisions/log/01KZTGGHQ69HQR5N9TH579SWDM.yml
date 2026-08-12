@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGHQ69HQR5N9TH579SWDM
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/cs/policy-rules-at-error (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGHQ536SNDFP5H3Q22D0K
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGHQ536SNDFP5H3Q22D0K
+  hash: sha256:1ec5573be3358cd56642e195ebee39f37c12d6dab25015a11fbae9d2dd3e11bf
+  set: ddd-governance
+  statement: Comparison and format-provider rules run at error severity in governed C# repos
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/cs/policy-rules-at-error@sha256:2fc491383140b659502af93cf4e4e4f1a10182e55c9f57495321110f5d71a6e2
+  - claim:DDD-cs-pol-01@sha256:4326438ff58e442e16961d2250e67c15aa36bc8094934b756c6cf9b650c58776

@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZTGGMYT8C43AZ5EXB6BZGY5
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/m8-enforcement-closure (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGMYTQ5ZV5JV8TK804S48
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGMYTQ5ZV5JV8TK804S48
+  hash: sha256:22f4ae869cd8976c2835dd16025ae326dacb0eba4870ea8caae00297b7b66dac
+  set: ddd-governance
+  statement: M8 expands to enforcement closure, not ledger integration alone
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/m8-enforcement-closure@sha256:10809139afa1eb3427c8b48facf1bc3537490c45c687416c166a2208eaa2b4d1
+  - claim:DDD-arch-08@sha256:2472d5667b5eccd6d46ba5a59bd5b4d54089adf2b7dabbe16c54caba7d5ab9e0
+  - claim:DDD-arch-09@sha256:ac229333c905ef60f28f9ffb0951904385c517eef6bf249000c61e7a98b62d71

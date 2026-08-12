@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZTGGQ4HT8J1V3A5RQ8HFBDC
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/rust-host-is-real (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGQ4HNQEEB3P4SQSZ84CX
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGQ4HNQEEB3P4SQSZ84CX
+  hash: sha256:8d3545aebe653ae95e5e2a10cfec5db57ffef3b30cd7cd4c5bf28fd844ada42f
+  set: ddd-governance
+  statement: The Rust adapter's acceptance runs against real rust-analyzer, not a mock dialect
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/rust-host-is-real@sha256:962e22e79444aa279737eb129a74b1375fd9fa8a1753a3d44826ef2a2177ca3f
+  - claim:DDD-detect-02@sha256:3f6f184890412b277b6eb90efa1ce3cd5fde0af5afd01671e4a02b35f367acf9
+  - claim:DDD-arch-02@sha256:59438c314ac52ad702940f4c9e615c75db4f075b45cbe4eb61533d50a8824154

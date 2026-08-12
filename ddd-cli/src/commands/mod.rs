@@ -3,6 +3,8 @@
 mod diff;
 mod diff_contracts;
 mod init;
+mod migrate;
+mod migrate_plan;
 mod render;
 mod report;
 mod serve;
@@ -40,6 +42,15 @@ pub enum Commands {
     },
     /// Scaffold the .ddd/ store: the §6 layout plus config.yaml
     Init,
+    /// Migrate .ddd governance records into the decision ledger (M8)
+    MigrateLedger {
+        /// The owning namespace the dec: ids are minted under
+        #[arg(long, default_value = "hafeok.ddd")]
+        namespace: String,
+        /// The ledger set the migrated entries file into
+        #[arg(long, default_value = "ddd-governance")]
+        set: String,
+    },
     /// Project the graph to one static, self-contained HTML file
     Render {
         /// Output file (default: .ddd/render.html)
@@ -120,6 +131,7 @@ pub fn run(cmd: Commands, root: Option<PathBuf>) -> Result<()> {
             diff_contracts::run(root, range, json, wait)
         }
         Commands::Init => init::run(root),
+        Commands::MigrateLedger { namespace, set } => migrate::run(root, namespace, set),
         Commands::Render { out, sarif, today } => render::run(root, out, sarif, today),
         Commands::Report { what } => match what {
             ReportWhat::Escapes { sarif, today, json } => report::run(root, sarif, today, json),

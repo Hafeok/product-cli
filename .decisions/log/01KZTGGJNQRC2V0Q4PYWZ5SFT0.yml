@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGJNQRC2V0Q4PYWZ5SFT0
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/correspondence-rows-are-stratified (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGJNQ8YPMA9JTAJ660N3M
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGJNQ8YPMA9JTAJ660N3M
+  hash: sha256:9c809cc9af26d08f65db540cd57c635f610a79e4ddfc8dc2fb1b74aa43b9554a
+  set: ddd-governance
+  statement: The correspondence dataset is a surface-stratum sample; the limit is recorded, not removed
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/correspondence-rows-are-stratified@sha256:4296b95f46e2fe989c5e838ac3ad386c1c7a141110c371fd9fde01836b849852
+  - claim:DDD-arch-06@sha256:99feab8afeb1b3c4e5cb94f9609d440a458176c38ddb6844b2ca833349fd13f2

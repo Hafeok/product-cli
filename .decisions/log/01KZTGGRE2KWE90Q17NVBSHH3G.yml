@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGRE2KWE90Q17NVBSHH3G
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/v1-scope (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGRE1ZQPF470GF85TH57F
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGRE1ZQPF470GF85TH57F
+  hash: sha256:46cbc684a179eb562930db771c75b1f7c794167e20e3ec4d50f1ca225df6aec0
+  set: ddd-governance
+  statement: 'v1 scope: local repo, C# + Bicep, build-output detection first'
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/v1-scope@sha256:5df86e3936492df4acde3a55719701aef96b5269f09a0ad6416be8833e1fca9c
+  - claim:DDD-scope-01@sha256:9e48ffba27ae6b6a16d9ac5ad621fb128738b4c74ee6a5d10383d510c49c3f86

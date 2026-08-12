@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZTGGJ34CHP029QZYF66YGXT
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/cs/unsafe-reinterpretation-banned (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGJ33J40CYGTVH0H20SK0
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGJ33J40CYGTVH0H20SK0
+  hash: sha256:f746e8f7cf42a44bd580ca51e4a3be8c735dd6a4874bff7304750e11aba08af3
+  set: ddd-governance
+  statement: Unsafe.As and Marshal.PtrToStructure are banned symbols, not reviewed ones
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/cs/unsafe-reinterpretation-banned@sha256:6b751724594bfea27a0420742b6350b3697ffe27a78b21f2586c1fd011e952f5
+  - claim:DDD-cs-tc-04@sha256:bd00846370150ea153486cfaa3cb11b0219ab7f8f4b11019af6005c88c64afd8
+  - claim:DDD-cs-tc-05@sha256:562a7fdc01b53ba4d6d3bb2a3ab481c68751274b12dc48219922d651e0301834

@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZTGGR3DDYKDZYQ9BY56AMGM
+created_at: 2026-08-12T08:13:07.215554207Z
+created_by: noreply@anthropic.com
+note: Migrated from dec/ddd/typed-basis (ddd M8). The historical entry remains in .ddd as the pinned content artifact — rationale, principal, typed bases — sealed by the ddd-content token; this ledger entry is the record of the decision, allocated and awaiting the principal's acceptance. The concordance maps both ids permanently.
+decisions:
+- id: dec:hafeok.ddd/01KZTGGR3D8F6CQKJTY0Q611HX
+  created_at: 2026-08-12T08:13:07.215554207Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZTGGR3D8F6CQKJTY0Q611HX
+  hash: sha256:fa15a5ca70ee628c56a9335a71733d3bb2c4678d74e986be827773c5fa3a8b59
+  set: ddd-governance
+  statement: A decision's basis is typed; non-claim bases are first-class
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/typed-basis@sha256:7c77e7490f01b1e235ac9b610df8ee5a1d8b596249e8b8912d50bb1235ea5e9f
+  - claim:DDD-method-06@sha256:28b97e9d9289e5eaefca72bf4b4dd5b51eccea474c59b034ccacb493beea9511
