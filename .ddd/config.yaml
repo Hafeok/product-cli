@@ -39,6 +39,9 @@ detect:
 
 # Globs the interceptor plus detection skip. The M2 fixtures carry config
 # files for the tests, not for this repo's governance; the M6 Rust fixture
-# crate is fixture source, not governed source.
+# crate is fixture source, not governed source, and the M8 classifier
+# corpus (labelled before/after case files) is measurement data under the
+# same rule.
 ignore:
   - "ddd-cli/tests/fixtures/**"
+  - "ddd-cli/tests/corpus/**"
