@@ -79,3 +79,14 @@ of dogfood (friction claim falsified); `why` unused by agents
 (governance-as-ground weakened); manifest diff producing only noise
 (warning-swamp claim needs revision). The basis-quality audit after typed
 basis shipped is filed as `DDD-method-06`'s falsifier.
+
+**Observed — pointers, not restatement:**
+
+- Basis quality, 2026-08: [`audits/basis-quality-2026-08.md`](audits/basis-quality-2026-08.md).
+  Measure pre-registered in commit `9488ba6` before any rationale text was
+  read. Over the 41 pre-format-5 decisions: 7 (17.1%) argue from a non-claim
+  basis and cite a claim regardless; 5 of those cite a claim that is itself
+  weak. `DDD-method-06`'s kill condition — "none exists only to satisfy rule
+  3" — did not fire. A status move of `projected → reported` is **proposed
+  and awaiting the principal's ruling**; the claim file is unchanged, as is
+  every other entry the audit touched on.
