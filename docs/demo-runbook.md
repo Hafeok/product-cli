@@ -709,7 +709,7 @@ whole idea) and beat 4c (the L006 refusal — the thesis).
 ```
 
 ```
-reset: HEAD=75b5472  dirty=0  seam-events=46
+reset: HEAD=25d9f91  dirty=0  seam-events=46
 ```
 
 What it does, and why each step is needed:
@@ -722,9 +722,16 @@ What it does, and why each step is needed:
    fails.
 3. `rm -f .ddd/render.html` — regenerate in pre-flight.
 
-**Verified end to end:** reset run, then beat 1 re-run from clean → `"status":
-"rejected"` in 0.043s, seam-events back to 46, declaration gone, `render.css`
-unmodified, `docs/demo/` intact.
+**Verified end to end**, against the real tag, twice: the tree was polluted
+exactly as a rehearsal leaves it (rejection + declaration + applied edit +
+generated dashboard, all committed), then reset, then beat 1 re-run from clean →
+`"status": "rejected"` in **0.052s**. Post-reset: declaration gone, seam-events
+back to 46, `render.css` unmodified, `render.html` gone, all five scripts in
+`docs/demo/` intact.
+
+Useful side-effect of that check: the two `sha256:` content hashes came back
+**byte-identical** to the first rehearsal — only `base_revision` moved, tracking
+`HEAD`. The hashes in §1 and §2a will match what you see on stage.
 
 **Requires the tag**, once, at the commit that adds this runbook:
 
