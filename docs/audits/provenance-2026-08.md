@@ -548,3 +548,73 @@ The full inventory:
 `dec/cs/policy-rules-at-error` reaches below `decision-driven-design` for **determination** — "the entry is filed here because the catalog is where determinations live" — the actor-general level's own construct. It is used as a settled term of art to justify where an entry lives, and it is defined nowhere in this repo; the only other occurrence, `docs/ddd-cli-prd.md` line 17, uses it equally undefined. Whether its upstream home is a filed claim, a definition, or a paper's related-work **cannot be determined from here**, because `actor-indexed-determination` was not cloned and has no local mirror.
 
 So the honest answer is two-part: **the stack's bottom is reached exactly once in 57 decisions, and the audit cannot tell you what it reached.** That is a smaller exposure than the corpus's shape would suggest — but it is also the one reach where "unverifiable, not absent" (constraint 5) does the most work, and where a single ruling on one word (§6) decides whether the finding exists at all.
+
+---
+
+## 10. Addendum, 2026-08-12 — the store moved under the audit
+
+**Post-hoc. Nothing in §1–§9 is restated, re-cut, or re-run.** This section
+exists because the branch carrying this audit later merged `main` at `75b5472`,
+which brought the M8 phase-3 ledger migration (`9df74c1`) — and that migration
+changes one of the two populations §2.1 measured. Leaving the document silent
+about that would make its counts read as current when they are a snapshot.
+
+### 10.1 What the audit measured, and what the store looks like now
+
+Every number in §2–§9 is the store **at `6d3dff5`**, this branch's base.
+
+| | At `6d3dff5` (measured) | At `75b5472` (after the merge) |
+|---|---|---|
+| **P1** `.ddd/decisions/*.yaml` | 45 | **45 — unchanged** |
+| **P2** ledger decisions / versions | 12 / 12 | **91 / 91** |
+| **P2** sets | `ledger-design` (12) | `ledger-design` (12) + **`ddd-governance` (79)** |
+| **P2** basis refs | 28 | **172** |
+
+The 79 new entries are the `.ddd` governance records migrated into `dec:` ids —
+the M8 work the audit's own §9 anticipated. **The reading is not re-run here.**
+Re-measuring a 7.5×-larger P2 is a separate session against the same fixed §1,
+not an edit to this one.
+
+### 10.2 The headline survives the migration — and strengthens
+
+The §8 scoping line was: *zero declared cross-repo edges; one prose reference.*
+Against the post-migration store, **172 basis refs across 91 versions carry
+these schemes**:
+
+`ddd-content` 78 · `claim` 47 · `prd` 20 · `format` 9 · `mandate` 3 ·
+`watched` 3 · `ruling` 3 · `constraint` 3 · `preference` 2 ·
+`risk-acceptance` 1 · `indeterminate` 1 · `handoff` 1 · `experiment` 1
+
+**Not one is cross-repo.** No `repo:`, no URL, no SHA pin. So the L4 scoping
+conclusion holds over a store six times the size the audit graded: the migration
+multiplied the *in-repo* edge count and added **zero** upstream edges, which is
+what §4.1 predicted a mechanical migration would do — it carries forward what
+was declared, and nothing was.
+
+### 10.3 One statement in §4.4 and §7.2 is now partly superseded
+
+Both said the watched-not-grounding relation has **no machine-readable home**.
+That was true at `6d3dff5`. It is no longer exactly true: the migration
+introduced an explicit **`watched:` basis-ref marker**, carried on three edges —
+
+- `watched:DDD-adapter-02@sha256:b333063d…` on `dec/ddd/internal-not-surface`
+- `watched:DDD-gates-01@sha256:6f500ee8…` on `dec/rust/no-unwrap`
+- `watched:DDD-adapter-01@sha256:922a0a70…` on `dec/ddd/m6-proceeds-no-flip`
+
+— alongside a ledger decision stating that the marker's standing is *"either a
+distinct edge kind in the ddd ontology or is retired at the F-batch; until
+ruled, migrated watched edges carry the explicit `watched:` marker and are never
+read as ground."*
+
+Three observations, and no proposal:
+
+1. **The marker is provisional by its own text**, so the relation has a
+   *transport* now, not a ruled ontology. §7.2's bucket remains open.
+2. **The three marked edges are exactly the three the audit identified as
+   intra-repo** in §4.4 — the secondary claim edges retained by the re-typing
+   session. The migration and the audit found the same set independently, which
+   is corroboration rather than coincidence.
+3. **It does not move §4.4's cross-repo count.** All three are in-repo claim
+   edges. The audit's one watched-not-grounding *upstream* row —
+   `ddd/workspace-member-delivery` → the What/How vocabulary — is untouched and
+   still has no home.
