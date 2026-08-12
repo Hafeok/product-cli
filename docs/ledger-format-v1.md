@@ -262,7 +262,10 @@ a shippable state, which is what `L001` says.
 
 `signature` is reserved and must be empty under `format: 1`. It exists so a
 cryptographic upgrade (OD-3) is additive rather than a migration; its format
-is deliberately unspecified.
+is deliberately unspecified. That upgrade is now scheduled — spec v1.4 /
+`format: 3`, PRD §4.5 / milestone L6 — and remains **planned, not
+normative**: under every format this document specifies, a non-empty
+`signature` is still a schema fault (§6, last bullet).
 
 `merged_from` (spec v1.3) exists only at `format: 2` — a format-1 file
 carrying it is a schema fault. It names the *other tip* a merge
@@ -505,6 +508,23 @@ Stated so an adopter meets them in this document rather than in production.
   milestone. Late-discovery rate is the lagging proxy.
 - **ULID generation is not specified here** because L0 mints no ids. L1's
   `add` needs it.
+- **Planned, not yet normative — spec v1.4 / `format: 3` (PRD §4.5,
+  milestone L6; ruled 2026-08-11, unimplemented).** The signing revision:
+  `signature` goes live as a detached, certificate-based signature (git's
+  `gpg.format` trio — `openpgp` | `ssh` | `x509`) over a canonical
+  acceptance payload — decision id, version hash, actor, signing timestamp
+  — required only when the acceptance's effective tier is above the
+  tolerance floor. The trust root (allowed signers) enters the store as
+  governed entries with an explicitly-named genesis entry. Two classes will
+  join the file gate by the same amendment mechanism that added `L010`:
+  `L011` (a signature required at the acceptance's effective tier is absent
+  or invalid against the trust root as of its signing timestamp) and `L012`
+  (acceptances exist under a since-revoked key — a review trigger, since
+  validity is judged at signing time, never retroactive invalidation) —
+  taking the closed class count from **ten to twelve** when that revision
+  lands. Hashing is unaffected: the signature is *over* the version hash,
+  never inside it, so no digest moves and `CANONICAL_FORM` stays `v1`.
+  Until v1.4 ships, everything in §§1–5 stands exactly as written.
 
 ---
 

@@ -135,10 +135,26 @@ migration. Writing them is legal where noted; nothing reads them yet.
 Recorded now so the shape of the change is not a surprise.
 
 - **OD-6 — expiry default.** If `expires_at` becomes mandatory, that is a
-  `format: 2` with a migration path for entries that carry none. Hashing is
-  unaffected: `expires_at` is not hashed.
-- **OD-3 — signatures.** Populating `signature` is a `format: 2`. Hashing is
-  unaffected: the signature is *over* the hash, not inside it.
+  further `format` bump with a migration path for entries that carry none
+  (this entry originally said `format: 2`, a number since consumed by L3's
+  `merged_from`). Hashing is unaffected: `expires_at` is not hashed.
+- **OD-3 — signatures. Scheduled 2026-08-11 as milestone L6 / spec v1.4 /
+  `format: 3`; unimplemented.** This entry originally read "populating
+  `signature` is a `format: 2`" — that number was consumed by L3's
+  `merged_from`, so the signing bump renumbers to `format: 3`; nothing else
+  about the plan changes. What the revision will occupy (PRD §4.5):
+  `signature` goes live as a detached, certificate-based signature (git's
+  `gpg.format` trio — `openpgp` | `ssh` | `x509`) over a canonical
+  acceptance payload — decision id, version hash, actor, signing timestamp —
+  required only above the tolerance floor (T2 signed, T1 claimed identity as
+  today); the trust root (allowed signers) enters the store as governed
+  entries with an explicitly-named genesis entry; the file gate gains `L011`
+  (required signature absent or invalid as of its signing timestamp) and
+  `L012` (acceptances exist under a since-revoked key — a review trigger,
+  never retroactive invalidation), its closed count of **ten becoming
+  twelve** by the same amendment mechanism as `L010`. Hashing is unaffected:
+  the signature is *over* the hash, not inside it — no digest moves,
+  `CANONICAL_FORM` stays `v1`.
 - **§9.4 — upstreams manifest.** A new file schema, not a change to these
   two. Closing the `based_on` vocabulary at that point **is** a hashed-meaning
   change and would require a `CANONICAL_FORM` bump, so the closure should
