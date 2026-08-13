@@ -31,6 +31,7 @@ any code exists, on the `product` side. §12 is a spare card, not a beat.
 ```bash
 cargo build --release                 # ~6 min cold. Do NOT do this live.
 git tag -f demo-base                  # marks the tip the demo resets to
+./docs/demo/warm-rust.sh              # ~31s — only if you might run §1a
 ./docs/demo/reset.sh                  # confirm clean: dirty=0, seam-events=46
 ./target/release/ddd render           # 0.20s — the offline fallback (§7)
 ```
@@ -45,6 +46,12 @@ demo-base is stale — resetting to it would revert demo material:
   docs/demo/reset.sh
   Fix: git tag -f demo-base   (with the demo files committed)
 ```
+
+`warm-rust.sh` goes **before** `reset.sh`, because warming means really running
+the §1a rejection, and every rejection logs a seam-event row — three runs took
+the count 46 → 49. Warm first, reset after, and the count is clean again while
+the index stays warm (verified: a post-reset run was 21.7s, not the 30.8s cold
+figure — `reset.sh` never touches `target/`).
 
 `ddd render` goes **last**, because `reset.sh` deletes `render.html` — and
 because the file it creates is untracked and shows up in step 5c's `git status`
@@ -147,8 +154,27 @@ pub fn is_silent_waiver(rule: &ConfiguredRule) -> bool {
 ```
 
 **Real output** — identical shape, `"kind": "fn"`, `"rule": "rs-add-exposed"`,
-`"symbol": "is_silent_waiver"`. **16.7s warm, ~50s cold.** Use `mcp-session.sh`,
-never `mcp-call.sh` — see F1.
+`"symbol": "is_silent_waiver"`. Use `mcp-session.sh`, never `mcp-call.sh` — see F1.
+
+**Timings, re-measured 08-13** (08-12 read 16.7s warm / ~50s cold):
+
+| | Wall clock |
+|---|---|
+| Cold — first run of the evening, index build | **30.8s** |
+| Warm | **16.0 – 21.7s** across four runs |
+| One-shot `mcp-call.sh`, *even warm* | 0.099s, `{"status":"loading"}` |
+
+**Pre-warm it in §0** with `./docs/demo/warm-rust.sh` and the cold 31s never
+lands on stage. Two things that pre-warm buys and does not buy:
+
+- It **does** survive `reset.sh` — the index lives under `target/`, which the
+  reset never touches. Verified: a post-reset run came back in 21.7s.
+- It **does not** make `mcp-call.sh` work. Re-tested with a fully warm index:
+  still `"status": "loading"` in 0.099s. The host dies with the process, so the
+  two-script split in F1 is absolute, not a warmup artifact.
+
+Even warm, this is ~17 seconds of silence against beat 1's 0.07s. Say what the
+tool is doing while it runs, or keep it in your pocket for the CSS path.
 
 ---
 
@@ -847,6 +873,9 @@ The brief asked for a small `pub fn`. It works, and it costs:
 | rust (rust-analyzer) | 16.7s warm · ~50s cold | 16.5–20.1s warm · **54.5s cold** |
 
 Cold vs warm is rust-analyzer's on-disk index. First run of the evening pays 54s.
+*(08-13 re-measure: 30.8s cold, 16.0–21.7s warm. Cold is machine- and
+cache-dependent; treat ~30–55s as the range, not 54s as the number.)*
+**`docs/demo/warm-rust.sh` pays that cost in pre-flight** — see §1a.
 
 Worse: the natural one-shot invocation **does not fail loudly, it returns
 nothing useful**:
@@ -1062,8 +1091,8 @@ actually claiming.
 - **No acceptances filed.** Verified across every rehearsal *and* the 08-13
   re-run: `.decisions/log/` held at 101 files throughout, counted before and
   after. Both refusal attempts wrote nothing.
-- The only new files are `docs/demo-runbook.md` and `docs/demo/` (six helper
-  scripts, ~130 lines total). No source, no test, no config was changed —
+- The only new files are `docs/demo-runbook.md` and `docs/demo/` (seven helper
+  scripts, ~180 lines total). No source, no test, no config was changed —
   `.gitignore` was deliberately left alone despite F14.
 - **Could not verify visually through Playwright** — the MCP server looks for
   Chrome at `/opt/google/chrome/chrome`, which is not installed. Worked around it
@@ -1114,7 +1143,8 @@ comfortable 3 minutes without losing the arc.
    green/red contrast, which is a real loss; cut this before beat 2b, never
    after.
 6. **Beat 1a / the Rust variant** — already cut. Only run it on request, and
-   only if you pre-warmed.
+   only if you pre-warmed (`docs/demo/warm-rust.sh` in §0). Warm it costs ~17s
+   of silence; cold, ~31s.
 
 **Never cut** (unchanged): beat 2b, beat 4c. Add **beat 5d** to that list — the
 un-authored/authored Decider contrast is the front-half statement of the whole
