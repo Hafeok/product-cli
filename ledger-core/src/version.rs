@@ -24,6 +24,7 @@ use crate::finding::{Finding, VerifyClass};
 use crate::hash::VersionHash;
 use crate::id::DecisionId;
 use crate::identity::Identity;
+use crate::revisit::RevisitRef;
 use crate::tier::{Tier, Tolerance};
 
 /// A pointer to the basis a version rests on: a PRD section, an upstream
@@ -119,6 +120,13 @@ pub struct VersionRaw {
     pub tolerance_override: Option<Tier>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub based_on: Vec<BasisRef>,
+    /// Claims whose death reopens this decision (format 4). Not ground:
+    /// the decision does not rest on these, so the basis-loss scan never
+    /// reads them and a movement here is a *reopen*, not a basis loss.
+    /// Hashed as a set when present; absent on every version written
+    /// before the field existed, so no format-1/2/3 digest moves.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub revisit_if: Vec<RevisitRef>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub supersedes: Option<DecisionId>,
 }
@@ -137,6 +145,9 @@ pub struct DecisionVersion {
     pub allocation: Option<Allocation>,
     pub tolerance: Tolerance,
     pub based_on: Vec<BasisRef>,
+    /// The reopen edges — kept in a field of their own, never folded into
+    /// `based_on`, so nothing downstream can read one as ground.
+    pub revisit_if: Vec<RevisitRef>,
     pub supersedes: Option<DecisionId>,
 }
 
@@ -171,6 +182,7 @@ impl DecisionVersion {
             allocation,
             tolerance,
             based_on: raw.based_on.clone(),
+            revisit_if: raw.revisit_if.clone(),
             supersedes: raw.supersedes.clone(),
         })
     }

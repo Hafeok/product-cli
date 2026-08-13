@@ -118,6 +118,7 @@ fn a_cited_suppression_is_no_finding() {
         rationale: "R".into(),
         principal: "Emil".into(),
         based_on: Vec::new(),
+        revisit_if: Vec::new(),
         date: None,
         notes: None,
     });
@@ -140,6 +141,7 @@ fn a_citation_to_a_plain_decision_stays_uncited() {
         rationale: "R".into(),
         principal: "Emil".into(),
         based_on: Vec::new(),
+        revisit_if: Vec::new(),
         date: None,
         notes: None,
     });

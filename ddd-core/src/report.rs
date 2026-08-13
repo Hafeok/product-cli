@@ -1,9 +1,11 @@
 //! Escape reporting — every escaped decision the graph can currently name.
 //!
-//! Three sections (PRD §7): the governance diff findings, claims past their
+//! Four sections (PRD §7): the governance diff findings, claims past their
 //! `revalidate_by` cadence (the stale-catalog mitigation, PRD §11), and
 //! basis loss — decisions whose pinned `based_on` status or `changed` date
-//! no longer matches the claim (PRD §6 rule 6). Cadence plus basis loss
+//! no longer matches the claim (PRD §6 rule 6), and reopen — decisions
+//! whose `revisit_if` tripwire has fired, reported as its own class
+//! because a fired tripwire is not a lost basis. Cadence plus basis loss
 //! only exist for format-2 entries, so each section also reports its own
 //! coverage: what it checked and what it could not see
 //! (`dec/ddd/report-coverage-explicit`). Coverage is a note, never an
@@ -25,6 +27,12 @@ pub struct EscapesReport {
     pub cadence_coverage: CadenceCoverage,
     pub basis_loss: Vec<BasisLoss>,
     pub basis_coverage: BasisCoverage,
+    /// Reopen edges that have fired — a distinct section, never merged
+    /// into `basis_loss`. A decision whose tripwire fired is due a fresh
+    /// look; its ground has not moved (`crate::revisit`).
+    pub reopen: Vec<crate::revisit::Reopen>,
+    /// Reopen edges checked — the coverage denominator for the section.
+    pub reopen_checked: usize,
 }
 
 /// What the cadence check could and could not see. A claim with no
@@ -92,7 +100,10 @@ pub struct BasisLoss {
 
 impl EscapesReport {
     pub fn is_clean(&self) -> bool {
-        self.diff.findings.is_empty() && self.cadence.is_empty() && self.basis_loss.is_empty()
+        self.diff.findings.is_empty()
+            && self.cadence.is_empty()
+            && self.basis_loss.is_empty()
+            && self.reopen.is_empty()
     }
 }
 
@@ -101,12 +112,15 @@ impl EscapesReport {
 pub fn report_escapes(store: &DddStore, detected: &DetectedState, today: &str) -> EscapesReport {
     let (cadence, cadence_coverage) = cadence_scan(store, today);
     let (basis_loss, basis_coverage) = basis_scan(store);
+    let (reopen, reopen_checked) = crate::revisit::reopen_scan(store);
     EscapesReport {
         diff: diff(store, detected),
         cadence,
         cadence_coverage,
         basis_loss,
         basis_coverage,
+        reopen,
+        reopen_checked,
     }
 }
 
@@ -190,6 +204,14 @@ fn pin_loss(
         pinned_content: pin.content.clone(),
         current_content: pin.content.as_ref().and(current_content),
     })
+}
+
+/// The basis scan, exposed to this crate's tests so the reopen suite can
+/// assert the separation directly: a fired reopen edge must be invisible
+/// here, and a test that cannot call this could only assert it indirectly.
+#[cfg(test)]
+pub(crate) fn basis_scan_for_tests(store: &DddStore) -> (Vec<BasisLoss>, BasisCoverage) {
+    basis_scan(store)
 }
 
 #[cfg(test)]

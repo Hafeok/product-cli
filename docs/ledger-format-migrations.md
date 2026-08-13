@@ -19,6 +19,70 @@ only adds an unhashed field.
 
 ---
 
+## Format 4 / Spec v1.5 — the `revisit_if` reopen edge (2026-08-13)
+
+A **`format` bump without a `CANONICAL_FORM` bump**, by the same
+reasoning as formats 2 and 3: `format: 4` adds exactly one optional
+version field, `revisit_if` — a list of pointers to claims whose *death
+reopens* the decision. The field is hashed when present; an absent key is
+omitted from the canonical object (spec §4.2 step 3), so every version
+written before it existed canonicalises to byte-identical content. No
+digest moves, no acceptance is invalidated, the prefix stays
+`ledger.decision-version.v1`, and the file gate's ten classes are
+unchanged.
+
+**What was ruled.** The principal ruled (2026-08-13) that a
+watched-not-grounding edge is a **distinct edge type, not a basis**: this
+claim's death reopens the decision; it is not the decision's ground. It is
+filed as its own edge with its own vocabulary, never inside `based_on`, so
+neither the basis-loss scan nor `why` reads it as ground — and a claim's
+status movement on a `revisit_if` edge produces a **reopen** finding, not a
+basis-loss finding. The two mean different things and must report
+differently. This settles the question the 2026-08 basis-quality re-typing
+session left open and the ddd M8 migration carried as a provisional
+`watched:` marker inside `based_on`.
+
+Rules that arrive with it (spec §3.7):
+
+- A writer declares `format: 4` only on a change-set that actually carries
+  a `revisit_if` — a store that never states one remains a pure
+  format-1/2/3 store. A lower-format file carrying the field is a schema
+  fault (the `merged_from` rule, applied to a field again).
+- The two edge lists canonicalise under separate keys, so one token filed
+  as ground and the same token filed as a reopen edge are different
+  content: an acceptance always names which of the two it signed.
+- Resolution — does the named claim exist, has it moved — is not the file
+  gate's business, the same posture as every discharge scheme and every
+  basis pointer at L0. The reopen finding is a consumer's report
+  (`ddd report escapes`), never an eleventh class.
+
+**Migration note.** Nothing to migrate mechanically: existing stores are
+format 1–3 and stay valid. What *was* migrated is the three provisional
+`watched:` markers the M8 migration filed inside `based_on`
+(`DDD-adapter-02` on `dec/ddd/internal-not-surface`, `DDD-gates-01` on
+`dec/rust/no-unwrap`, `DDD-adapter-01` on `dec/ddd/m6-proceeds-no-flip`).
+Each moved to a real `revisit_if` edge as a **new version filed for the
+principal's acceptance** — a re-decision of that entry's edge, not a
+silent rewrite. Their prior versions keep signing exactly the historical
+content they named; the new versions await a fresh signature. The
+`.ddd/` store adopts the same one shape at its own format 7
+(`ddd-format-migrations.md`).
+
+**Left blocked, deliberately.** The 2026-08 provenance audit's one
+*upstream* watched-not-grounding row — `dec/ddd/workspace-member-delivery`
+tracking the What/How vocabulary — is still not expressible: it needs a
+cross-repo reference shape (a repo pin plus a revision), which is the
+subject of a separate amendment that has **not landed**. `revisit_if` gives
+the relation a home; it does not give a cross-repo pointer one. That row
+stays unfiled until the cross-repo amendment lands, at which point it
+becomes expressible with no further change to this field.
+
+**Renumbering note:** the L6 signing revision, which had renumbered from
+`format: 2` to `format: 3` when L3 consumed its slot and to `format: 4`
+when M8 consumed that one, renumbers a third time to **spec v1.6 /
+`format: 5`**. Nothing else about the L6 plan changes; it remains ruled
+and unimplemented.
+
 ## Format 3 / Spec v1.4 — the `contract:` discharge scheme (2026-08-12, ddd M8)
 
 A **`format` bump without a `CANONICAL_FORM` bump**, by the same
@@ -47,8 +111,9 @@ Rules that arrive with it:
 
 **Renumbering note:** the L6 signing revision, which had renumbered from
 `format: 2` to `format: 3` when L3 consumed its slot, renumbers a second
-time to **spec v1.5 / `format: 4`**. Nothing else about the L6 plan
-changes; it remains ruled and unimplemented.
+time to **spec v1.5 / `format: 4`**. (Renumbered again by the v1.5 reopen
+edge — see the format-4 entry above; L6 now holds spec v1.6 / `format: 5`.)
+Nothing else about the L6 plan changes; it remains ruled and unimplemented.
 
 **Migration note:** nothing to migrate. Existing stores stay valid; the
 first consumers of the scheme are the ddd M8 migration's seam-declaration
@@ -173,11 +238,12 @@ Recorded now so the shape of the change is not a surprise.
   further `format` bump with a migration path for entries that carry none
   (this entry originally said `format: 2`, a number since consumed by L3's
   `merged_from`). Hashing is unaffected: `expires_at` is not hashed.
-- **OD-3 — signatures. Scheduled 2026-08-11 as milestone L6 / spec v1.5 /
-  `format: 4`; unimplemented.** This entry originally read "populating
+- **OD-3 — signatures. Scheduled 2026-08-11 as milestone L6 / spec v1.6 /
+  `format: 5`; unimplemented.** This entry originally read "populating
   `signature` is a `format: 2`" — that number was consumed by L3's
-  `merged_from`, and the renumbered `format: 3` slot in turn by M8's
-  `contract:` scheme, so the signing bump renumbers to `format: 4`;
+  `merged_from`, the renumbered `format: 3` slot in turn by M8's
+  `contract:` scheme, and `format: 4` by v1.5's `revisit_if` edge, so the
+  signing bump renumbers to `format: 5`;
   nothing else about the plan changes. What the revision will occupy
   (PRD §4.5):
   `signature` goes live as a detached, certificate-based signature (git's
@@ -195,4 +261,11 @@ Recorded now so the shape of the change is not a surprise.
 - **§9.4 — upstreams manifest.** A new file schema, not a change to these
   two. Closing the `based_on` vocabulary at that point **is** a hashed-meaning
   change and would require a `CANONICAL_FORM` bump, so the closure should
-  arrive as validation over an unchanged canonical form instead.
+  arrive as validation over an unchanged canonical form instead. The same
+  reasoning applies to `revisit_if`, whose vocabulary is open for the same
+  reason and closes by the same route.
+- **The cross-repo reference shape.** A basis or reopen pointer that names
+  a *repository* and a revision, so an edge can cross a store boundary.
+  Not landed as of 2026-08-13; the 2026-08 provenance audit's one upstream
+  watched-not-grounding row waits on it (see the format-4 entry). Whatever
+  shape it takes applies to both pointer fields — one shape, both edges.

@@ -11,9 +11,9 @@ use crate::decision::{BasedOn, BasisPin};
 fn declared_formats_beyond_the_known_set_are_named() {
     let mut s = DddStore::default();
     let mut p = pred("pred/a/x");
-    p.format = 7;
+    p.format = 8;
     s.predicates.push(p);
-    assert_names(&validate_store(&s), "pred/a/x", "declares format 7");
+    assert_names(&validate_store(&s), "pred/a/x", "declares format 8");
 }
 
 #[test]
@@ -66,18 +66,18 @@ fn a_version_index_anchoring_nothing_is_a_violation() {
 }
 
 #[test]
-fn format_six_is_a_known_format() {
+fn format_seven_is_a_known_format() {
     let mut s = DddStore::default();
     let mut c = claim("DDD-a-1");
-    c.format = 6;
+    c.format = 7;
     s.claims.push(c);
     assert!(validate_store(&s).is_empty(), "{}", msgs(&validate_store(&s)));
 
     let mut ahead = DddStore::default();
     let mut c2 = claim("DDD-a-2");
-    c2.format = 7;
+    c2.format = 8;
     ahead.claims.push(c2);
-    assert_names(&validate_store(&ahead), "DDD-a-2", "formats 1-6");
+    assert_names(&validate_store(&ahead), "DDD-a-2", "formats 1-7");
 }
 
 #[test]

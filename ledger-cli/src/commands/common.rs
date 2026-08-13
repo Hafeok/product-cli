@@ -111,3 +111,9 @@ pub fn allocation_args(
 pub fn parse_based_on(raw: &[String]) -> Result<Vec<ledger_core::version::BasisRef>, String> {
     raw.iter().map(|b| b.parse()).collect()
 }
+
+/// Reopen edges parse through their own type, never through `BasisRef` —
+/// the distinction the ruling draws is a type distinction here too.
+pub fn parse_revisit_if(raw: &[String]) -> Result<Vec<ledger_core::revisit::RevisitRef>, String> {
+    raw.iter().map(|r| r.parse()).collect()
+}

@@ -191,6 +191,9 @@ fn identity_mutations() -> Vec<Mutation> {
         ("based_on", edit(|v| {
             v.based_on = vec!["prd:decision-ledger-prd#9.4".parse().expect("basis")];
         })),
+        ("revisit_if", edit(|v| {
+            v.revisit_if = vec!["claim:DDD-adapter-02@sha256:b333063d".parse().expect("token")];
+        })),
         ("supersedes", edit(|v| v.supersedes = Some(testkit::decision_id()))),
         ("tolerance_floor_at_creation", edit(|v| v.tolerance_floor_at_creation = Tier::T0)),
         ("tolerance_override", edit(|v| v.tolerance_override = Some(Tier::T2))),
@@ -244,6 +247,35 @@ fn the_mutation_table_covers_the_whole_canonical_form() {
         assert!(json.contains(&format!("\"{field}\":")), "`{field}` is not canonicalised");
     }
     assert_eq!(json.matches("\":").count(), mutations.len(), "no field is emitted unexercised");
+}
+
+/// The same token as ground and as a reopen edge are different content.
+/// This is the ruling made mechanical: `revisit_if` is not a basis, so the
+/// two lists canonicalise to separate keys and an acceptance always names
+/// which of them it signed.
+#[test]
+fn one_token_hashes_differently_as_ground_and_as_a_reopen_edge() {
+    let token = "claim:DDD-adapter-02@sha256:b333063d";
+    let mut ground = base();
+    ground.based_on = vec![token.parse().expect("basis")];
+    ground.revisit_if = Vec::new();
+    let mut reopen = base();
+    reopen.based_on = Vec::new();
+    reopen.revisit_if = vec![token.parse().expect("token")];
+    assert_ne!(version_hash(&ground), version_hash(&reopen));
+    assert!(canonical_json(&reopen).contains("\"revisit_if\":"));
+    assert!(!canonical_json(&reopen).contains("\"based_on\":"));
+}
+
+/// A version that states no reopen edge canonicalises exactly as it did
+/// before the field existed — which is why format 4 moves no digest and
+/// invalidates no acceptance.
+#[test]
+fn an_absent_reopen_list_is_omitted_from_the_canonical_form() {
+    let mut v = base();
+    v.revisit_if = Vec::new();
+    assert!(!canonical_json(&v).contains("revisit_if"));
+    assert_eq!(version_hash(&v), version_hash(&base()));
 }
 
 #[test]

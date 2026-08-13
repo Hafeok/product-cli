@@ -60,6 +60,8 @@ pub struct AddArgs {
     pub allocation: AllocationArgs,
     pub tolerance_override: Option<Tier>,
     pub based_on: Vec<BasisRef>,
+    /// Claims whose death reopens the decision — never ground (format 4).
+    pub revisit_if: Vec<crate::revisit::RevisitRef>,
     /// Free text on the change-set — what this act was.
     pub note: Option<String>,
 }
@@ -127,6 +129,7 @@ fn first_version(decision: &DecisionId, args: &AddArgs, floor: Tier) -> VersionR
         tolerance_floor_at_creation: floor,
         tolerance_override: args.tolerance_override,
         based_on: args.based_on.clone(),
+        revisit_if: args.revisit_if.clone(),
         supersedes: None,
     };
     args.allocation.apply(&mut raw);
