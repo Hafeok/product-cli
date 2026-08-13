@@ -29,6 +29,7 @@ pub mod pattern;
 pub mod predicate;
 pub mod render;
 pub mod report;
+pub mod revisit;
 pub mod rules;
 pub mod sarif;
 pub mod seam;

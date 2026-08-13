@@ -1,0 +1,42 @@
+format: 2
+id: DDD-gates-02
+statement: >
+  A pipeline of sequentially-gated CI steps reports what broke first, not
+  what it did not check: when a step fails, every later independent gate is
+  skipped, its state for that revision is unknown, and the run still reads
+  as one red build. The masking is not hypothetical — main at 75b5472
+  carried two defects and showed one. `9df74c1` added `note` to `AddArgs`
+  and updated one of four call sites, so the test targets did not compile;
+  CI stopped there. Behind the compile error,
+  `ledger-core/src/author/tests.rs` sat at exactly the 400-line fitness
+  ceiling, and fixing the three call sites put it at 402 — a second,
+  independent gate failure that the first one hid, found only when someone
+  repaired the build by hand (7258af1). The repo already recognises this
+  failure mode one level down and fixed it there: `cargo t` is
+  `test --no-fail-fast` precisely so one failing test binary cannot hide
+  the rest (.cargo/config.toml, and CLAUDE.md says so in bold). The same
+  reasoning is not applied one level up, across the nine steps of
+  .github/workflows/product-ci.yml, each of which runs under the default
+  `if: success()`. Family: this is the shape of the M6 leakage prediction
+  and of L3's cross-file merge finding — a mechanism guarding the path it
+  can see, blind to what sits behind it.
+status: projected
+falsifier: >
+  Either of two negative results, both about whether the hazard is real
+  rather than about how the pipeline is currently wired. (a) A review of
+  this repository's red CI runs — or of local full-sequence runs
+  reproducing them — finds that in every case the steps skipped by an
+  earlier failure would themselves have passed, so the masking never
+  concealed a second defect and 75b5472 was a coincidence rather than an
+  instance. (b) The 75b5472 case is re-graded: the code-quality gate did
+  report on that run, and the second defect was visible after all, which
+  would show the observation was misread. Deliberately drafted so the
+  remedy cannot fire it: making independent gates run anyway changes what
+  *future* runs report, and says nothing about whether past masking hid
+  anything — a claim whose falsifier its own remedy satisfies is the
+  self-sealing defect DDD-method-07 names, and this is drafted to not
+  carry it.
+owner: none
+changed: 2026-08-13
+revalidate_by: 2027-02-13
+depends_on: []

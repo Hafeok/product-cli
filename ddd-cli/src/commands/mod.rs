@@ -1,6 +1,7 @@
 //! Subcommand surface for the `ddd` binary.
 
 mod bind;
+mod content_hash;
 mod diff;
 mod diff_contracts;
 mod init;
@@ -31,6 +32,11 @@ pub enum Commands {
         /// verdict_knowledge for freshly created declarations
         #[arg(long)]
         verdict: Option<String>,
+    },
+    /// The content hash a ledger entry pins of a stored decision, claim or seam
+    ContentHash {
+        /// The entry id, e.g. dec/ddd/internal-not-surface
+        id: String,
     },
     /// Declared vs. detected rules: UNGOVERNED / STALE / UNCITED_SUPPRESSION
     Diff {
@@ -139,6 +145,7 @@ pub enum ReportWhat {
 pub fn run(cmd: Commands, root: Option<PathBuf>) -> Result<()> {
     match cmd {
         Commands::Bind { range, wait, verdict } => bind::run(root, range, wait, verdict),
+        Commands::ContentHash { id } => content_hash::run(root, &id),
         Commands::Diff { sarif, json } => diff::run(root, sarif, json),
         Commands::DiffContracts { range, json, wait } => {
             diff_contracts::run(root, range, json, wait)

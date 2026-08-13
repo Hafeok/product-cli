@@ -1,4 +1,4 @@
-format: 5
+format: 7
 id: dec/rust/no-unwrap
 title: Deny clippy::unwrap_used workspace-wide
 rationale: >
@@ -16,10 +16,11 @@ based_on:
       to a defined exit code; an unwrap is a panic path that structurally
       bypasses that contract, so denying the lint is what keeps the error
       model total.
-  - type: claim
-    claim: DDD-gates-01
+revisit_if:
+  - claim: DDD-gates-01
     status: reported
     changed: 2026-08-06
+    content: sha256:6f500ee8ef3bcbef7ce1a1d6ce2c093d61858f7a01bb3685b1c0f56aa32b4395
 date: 2026-08-06
 notes: >
   Basis re-typed 2026-08-12, following the 2026-08 basis-quality audit: a
@@ -36,3 +37,15 @@ notes: >
   fate as a claim is the F-batch's. Format 2 -> 5 per
   docs/ddd-format-migrations.md.
   Ratified 2026-08-12 (Emil): accepted as filed (8b7a410).
+
+  Edge re-typed 2026-08-13, following the principal's ruling that a
+  watched-not-grounding edge is a distinct edge type: a re-decision of
+  this edge per format 7, not an edit. DDD-gates-01 moves out of
+  `based_on` and into `revisit_if`, pin carried across unchanged
+  (reported@2026-08-06, content recovered at that state by the M8
+  migration). The constraint is the ground and stays the ground; the claim
+  is the cost check, and the note above already called it that. Its
+  falsifier — waiver pressure, or a class of code where the lint produces
+  worse handling than the unwrap it replaced — is the tripwire, and firing
+  it reopens the gate rather than removing its ground. Format 5 -> 7 per
+  docs/ddd-format-migrations.md. Awaiting the principal's acceptance.

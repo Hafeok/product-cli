@@ -1,0 +1,65 @@
+format: 7
+id: dec/ddd/ci-gates-report-skipped
+title: A CI run reports which gates did not execute; independent gates run anyway
+rationale: >
+  A red build must say what it did not check, not only what broke first.
+  Two forms, and the weaker one is the floor rather than the fallback.
+
+
+  The full form: a step that does not depend on a failed step runs anyway.
+  Clippy, the ledger gate, the ddd gate, the convention check and the
+  supply-chain check are independent of each other; today a failure in any
+  of them silently cancels the rest. They run under `if: ${{ !cancelled() }}`
+  (or equivalent) so one revision produces one complete verdict.
+
+
+  The minimum viable form, which holds even where the full form cannot: the
+  run reports which gates did not execute. Some steps genuinely depend on
+  an earlier one — a gate that needs a compiled workspace cannot run
+  without one — so "run everything" is not universally available, and a
+  build that cannot run a check must say so rather than leave the reader to
+  infer a pass from a silence. Unknown and passing are different states and
+  the report must distinguish them.
+
+
+  Scope note, stated so it is not mistaken for done: this entry rules the
+  arrangement; it does not implement it. The follow-up is a workflow edit
+  plus a summary step. Its cost is that a red build stops failing fast —
+  every independent gate's own runtime is then paid on every red run, the
+  benchmark step most of all — and that cost is the point rather than a
+  regression: the run buys a complete verdict with it. The minimum-viable
+  form costs a summary step and nothing else, which is why it is the floor.
+principal: Emil (Context&)
+based_on:
+  - type: preference
+    statement: >-
+      A gate's report should distinguish "checked and passed" from "not
+      checked", because a reader who cannot tell them apart will read
+      silence as a pass — and the arrangement that produces the silence is
+      an accident of step ordering, not a judgment about what mattered.
+  - type: claim
+    claim: DDD-gates-02
+    status: projected
+    changed: 2026-08-13
+    content: sha256:65bfeff0770e7de976127d54d87c3428a6e4458d0f6b6088fc0b452a4c6cb89e
+date: 2026-08-13
+notes: >
+  Filed 2026-08-13 for the principal's acceptance; not implemented in the
+  session that filed it, by that session's own scope.
+
+
+  Allocated as a judgment rather than a criterion on purpose. Nothing
+  currently checks this arrangement, so holding to it rests on a person,
+  and a criterion would name a discharge pointer that resolves to no
+  checker — the manufactured-basis shape the 2026-08 basis-quality audit
+  found and this store now refuses. When the workflow edit lands, the
+  honest move is to re-allocate this decision to a criterion whose
+  discharge names the check that then exists; that is a new version, not an
+  edit.
+
+
+  The claim edge is genuine ground here, not a citation: DDD-gates-02 is an
+  observation of an instance that actually occurred in this repository, and
+  if that instance is re-graded away this decision loses its reason. It is
+  therefore filed in `based_on`, not `revisit_if` — the distinction the
+  2026-08-13 ruling draws, applied on its first new use.

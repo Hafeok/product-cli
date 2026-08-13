@@ -146,6 +146,19 @@ fn render_decision(store: &DddStore, d: &Decision, depth: usize) -> String {
             }
         }
     }
+    // The reopen edges render under their own heading, below the ground and
+    // visibly apart from it. `why` answers "what is this resting on"; a
+    // reopen edge is not an answer to that question, and printing it inside
+    // `basedOn:` would make it read as one.
+    if !d.revisit_if.is_empty() {
+        out.push_str(&format!("{p}  revisitIf (not ground — these reopen the decision):\n"));
+        for edge in &d.revisit_if {
+            match store.claims.iter().find(|c| c.id == edge.claim) {
+                Some(c) => out.push_str(&render_claim(c, depth + 2)),
+                None => out.push_str(&format!("{p}    {} (claim not found)\n", edge.claim)),
+            }
+        }
+    }
     out
 }
 

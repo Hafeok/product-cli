@@ -57,6 +57,7 @@ fn decision(id: &str, based_on: &[&str]) -> Decision {
         rationale: "R".into(),
         principal: "Emil".into(),
         based_on: based_on.iter().map(|s| BasedOn::from(*s)).collect(),
+        revisit_if: Vec::new(),
         date: None,
         notes: None,
     }

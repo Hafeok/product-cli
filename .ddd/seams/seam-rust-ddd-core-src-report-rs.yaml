@@ -1,7 +1,7 @@
 format: 2
 id: seam/rust/ddd-core-src-report-rs
 boundary: contract surface of ddd-core/src/report.rs
-verdict_knowledge: 'Report consumers learn that a content pin, when present, is authoritative for basis loss — hash equality subsumes the status+date reading — and that both pin forms render side by side.'
+verdict_knowledge: Report consumers learn that a content pin, when present, is authoritative for basis loss — hash equality subsumes the status+date reading — and that both pin forms render side by side.
 contract_location: ddd-core/src/report.rs
 obligations: []
 metadata: {}
@@ -18,3 +18,15 @@ bindings:
   after: sha256:e7dd8a3c47e53c0a468024caf67ab96b6ca7fee242f352a73db27f8445f82e14
   base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
   hash: sha256:47665af84087a0a49499f9fdd615e9b61778d67093424cdf57414b108773e337
+- symbol: reopen
+  file: ddd-core/src/report.rs
+  before: sha256:e7dd8a3c47e53c0a468024caf67ab96b6ca7fee242f352a73db27f8445f82e14
+  after: sha256:d9d6d9a7faefb5e3ffc807501de04810ae6138b2efc56184ad09953404e107a4
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:4786437774268db4193d869df1dd6eb8645c6e0324c1167def49c7928783e4e3
+- symbol: reopen_checked
+  file: ddd-core/src/report.rs
+  before: sha256:e7dd8a3c47e53c0a468024caf67ab96b6ca7fee242f352a73db27f8445f82e14
+  after: sha256:d9d6d9a7faefb5e3ffc807501de04810ae6138b2efc56184ad09953404e107a4
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:58aeb7a13deb891039c7823914ef5af1d68603c838e9c256de7c6986649be71b

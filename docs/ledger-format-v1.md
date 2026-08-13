@@ -1,7 +1,13 @@
 # Decision Ledger — Entry Format v1
 
-**Status:** normative for `format: 1`, `format: 2` and `format: 3`.
-Specification revision **v1.4** (2026-08-12, ddd M8): introduces
+**Status:** normative for `format: 1` through `format: 4`.
+Specification revision **v1.5** (2026-08-13): introduces `format: 4`,
+which adds one optional version field, `revisit_if` — the reopen edge,
+ruled by the principal a **distinct edge type and never a basis** (§3.7).
+The field is hashed when present and omitted when absent, so **every
+existing digest is unchanged** and `CANONICAL_FORM` does not bump; the
+file gate's ten classes are unchanged. Revision
+**v1.4** (2026-08-12, ddd M8): introduces
 `format: 3`, which adds one discharge scheme, `contract:` — the
 repository-diff contract check as a discharge kind (§3.4). No field
 changes, no hashed-meaning changes: **every existing digest is
@@ -241,6 +247,7 @@ versions:
     tolerance_floor_at_creation: T1
     tolerance_override: T2              # optional, strictly above the pin
     based_on: [prd:decision-ledger-prd#4.2.1]
+    revisit_if: [claim:DDD-adapter-02@sha256:…]   # format 4 only; not ground
     supersedes: dec:…                   # optional; no command at L0
 
 acceptances:
@@ -278,11 +285,12 @@ a shippable state, which is what `L001` says.
 
 `signature` is reserved and must be empty under `format: 1`. It exists so a
 cryptographic upgrade (OD-3) is additive rather than a migration; its format
-is deliberately unspecified. That upgrade is now scheduled — spec v1.5 /
-`format: 4`, PRD §4.5 / milestone L6 (renumbered a second time: its
-original `format: 2` slot was consumed by L3's `merged_from`, and its
-`format: 3` slot by the M8 `contract:` scheme; nothing else about the
-plan changes) — and remains **planned, not normative**: under every
+is deliberately unspecified. That upgrade is now scheduled — spec v1.6 /
+`format: 5`, PRD §4.5 / milestone L6 (renumbered a third time: its
+original `format: 2` slot was consumed by L3's `merged_from`, its
+`format: 3` slot by the M8 `contract:` scheme, and its `format: 4` slot by
+the v1.5 `revisit_if` edge; nothing else about the plan changes) — and
+remains **planned, not normative**: under every
 format this document specifies, a non-empty `signature` is still a
 schema fault (§6, last bullet).
 
@@ -300,6 +308,63 @@ named, and the reconciled content awaits a fresh signature.
 **open** at L0 — nothing dereferences a basis pointer yet, and closing the
 vocabulary now would reject adopters' existing reference schemes for no gain.
 §9.4 of the PRD closes it at L4.
+
+`revisit_if` is specified in §3.7. It is **not** part of `based_on` and
+never appears inside it.
+
+### 3.7 The reopen edge — `revisit_if` (format 4)
+
+Ruled by the principal (2026-08-13), settling the watched-edge question the
+2026-08 basis-quality re-typing session left open and the ddd M8 migration
+carried as a provisional `watched:` marker *inside* `based_on`.
+
+A `revisit_if` pointer names a claim whose **death reopens the decision**.
+That is the converse of ground, not a weaker form of it: the decision does
+not rest on the claim, so falsifying the claim does not undermine the
+decision — it obliges someone to look at it again.
+
+```yaml
+format: 4
+versions:
+  - decision: dec:hafeok.ddd/01KZ…
+    based_on: [mandate:dec/ddd/internal-not-surface]
+    revisit_if: [claim:DDD-adapter-02@sha256:b333063d…]
+```
+
+Rules:
+
+- **A reopen edge is never a basis.** It lives in its own field with its
+  own vocabulary. Writing one inside `based_on` — as a `watched:` token or
+  under any other marker — is not the way to say this, and a consumer must
+  not read `revisit_if` as ground. In the reference implementation the two
+  are distinct *types* (`RevisitRef`, `BasisRef`), so the separation is not
+  a convention anyone can forget.
+- **The two report differently.** A claim on a `based_on` edge moving
+  produces a **basis-loss** finding — the ground shifted under a standing
+  decision. A claim on a `revisit_if` edge moving produces a **reopen**
+  finding — the tripwire fired and the decision is due a fresh look. These
+  are different facts about a decision and a report that merges them tells
+  the reader neither. Neither finding is a gate class (see below).
+- **Same declare-what-you-need rule as formats 2 and 3.** A change-set
+  declares `format: 4` only when one of its versions actually carries a
+  `revisit_if`; a store that never states one stays a pure format-1/2/3
+  store, and a lower-format file carrying the field is a schema fault.
+- **The vocabulary is open**, exactly as `based_on`'s is: L0 dereferences
+  no pointer. Open is not shared — the pointer types stay distinct.
+- **Hashing.** `revisit_if` joins the hashed field set as a list (a *set*,
+  like `discharge` and `based_on`: deduplicated, code-point sorted,
+  reordering is formatting). An absent key is omitted from the canonical
+  object (§4.2 step 3), so every version written before the field existed
+  canonicalises to byte-identical content: no digest moves, no acceptance
+  is invalidated, and the prefix stays `ledger.decision-version.v1`. The
+  two lists canonicalise under **separate keys**, so one token filed as
+  ground and the same token filed as a reopen edge are different content —
+  an acceptance always names which of the two it signed.
+- **Not a gate class.** The file gate's ten classes are unchanged: nothing
+  here fails `verify`. Resolving a reopen pointer — does the claim exist,
+  has it moved — is a consumer's business at L0, the same posture every
+  discharge scheme and every basis pointer already has. An eleventh class
+  would be a further format-spec change, by the `L010` mechanism.
 
 ---
 
@@ -321,14 +386,14 @@ Exactly these keys, and no others:
 decision · parent · merged_from · set · statement · allocation ·
 discharge · discharge_stage · actor · expectation · exposure ·
 accepted_by · review_by · tolerance_floor_at_creation ·
-tolerance_override · based_on · supersedes
+tolerance_override · based_on · revisit_if · supersedes
 ```
 
-`merged_from` joined the set at spec v1.3 (`format: 2`). Because an absent
-key is omitted from the canonical object (§4.2 step 3), every version
-written before the field existed canonicalises to the same bytes as
-before: no digest moved, no acceptance was invalidated, and
-`CANONICAL_FORM` stays `v1`.
+`merged_from` joined the set at spec v1.3 (`format: 2`) and `revisit_if` at
+spec v1.5 (`format: 4`). Because an absent key is omitted from the canonical
+object (§4.2 step 3), every version written before either field existed
+canonicalises to the same bytes as before: no digest moved, no acceptance
+was invalidated, and `CANONICAL_FORM` stays `v1`.
 
 Outside the hash: the `hash` field itself (including it would be circular),
 everything at change-set level (`format`, `id`, `created_at`, `created_by`,
@@ -351,7 +416,7 @@ content.
 3. **Treat as absent**: a missing key, an explicit `null`, an empty
    collection, and any string that step 2 reduces to the empty string. Absent
    keys are omitted from the object; there is no `null` in the canonical form.
-4. **List fields are sets.** `discharge` and `based_on` are rendered as their
+4. **List fields are sets.** `discharge`, `based_on` and `revisit_if` are rendered as their
    members' canonical string forms, deduplicated, then sorted ascending by
    Unicode code point. Reordering a list in a file is formatting.
 5. Emit a JSON object with keys sorted ascending by Unicode code point, with
@@ -527,9 +592,10 @@ Stated so an adopter meets them in this document rather than in production.
   milestone. Late-discovery rate is the lagging proxy.
 - **ULID generation is not specified here** because L0 mints no ids. L1's
   `add` needs it.
-- **Planned, not yet normative — spec v1.5 / `format: 4` (PRD §4.5,
+- **Planned, not yet normative — spec v1.6 / `format: 5` (PRD §4.5,
   milestone L6; ruled 2026-08-11, unimplemented; renumbered by the M8
-  `contract:` scheme consuming `format: 3`).** The signing revision:
+  `contract:` scheme consuming `format: 3` and the v1.5 reopen edge
+  consuming `format: 4`).** The signing revision:
   `signature` goes live as a detached, certificate-based signature (git's
   `gpg.format` trio — `openpgp` | `ssh` | `x509`) over a canonical
   acceptance payload — decision id, version hash, actor, signing timestamp

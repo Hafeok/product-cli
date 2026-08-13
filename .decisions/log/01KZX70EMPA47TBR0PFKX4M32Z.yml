@@ -1,0 +1,19 @@
+format: 1
+id: cs:01KZX70EMPA47TBR0PFKX4M32Z
+created_at: 2026-08-13T09:24:46.862155863Z
+created_by: noreply@anthropic.com
+note: 'Edge re-typed per the principal''s ruling of 2026-08-13: a watched-not-grounding edge is a distinct edge type, not a basis. DDD-adapter-02 moves out of based_on and into revisit_if, pin carried across unchanged (projected@2026-08-06). The mandate is and remains the ground; the claim is the tripwire whose falsification reopens this decision. A re-decision of the edge, filed for the principal''s acceptance — not a silent rewrite. The ddd-content pin re-takes the .ddd entry at its new content.'
+versions:
+- decision: dec:hafeok.ddd/01KZTGGM6BRXDVPSDRNKW1B5YJ
+  parent: sha256:b161914784a00c2bf3c97e06c77c56aacde03c23d9954e51257c5ebfe8793b62
+  hash: sha256:fe375194d566504902badd99444e720093993341bfb330c5c5e471c7fef2dd36
+  set: ddd-governance
+  statement: internal is not C# contract surface by default; library repos flip per-repo
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/internal-not-surface@sha256:c8f26768ba31e60044448e2d3bd6f56cc7841551411b095798141aea63fc1aea
+  - mandate:dec/ddd/internal-not-surface
+  revisit_if:
+  - claim:DDD-adapter-02@sha256:b333063d5058614855329b2dd8a1d1c5f8732ab243a2d2f9ebfa3bf95f2f5fda

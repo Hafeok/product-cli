@@ -13,6 +13,7 @@
 
 use crate::hash::{version_hash, VersionHash};
 use crate::id::DecisionId;
+use crate::revisit::RevisitRef;
 use crate::verify::view::View;
 use crate::version::{BasisRef, VersionRaw};
 
@@ -29,6 +30,17 @@ pub struct EscapeArgs {
 pub struct ReviseArgs {
     pub statement: String,
     pub based_on: Vec<BasisRef>,
+    /// The reopen edges this revision states. Stated separately from
+    /// `based_on` all the way down, so re-typing an edge from ground to
+    /// watched is one act the reader can see, not a silent reclassification.
+    /// `None` leaves the inherited edges alone; `Some(vec![])` clears them —
+    /// a decision that has been reopened and re-decided drops the edge that
+    /// reopened it, and that has to be sayable.
+    pub revisit_if: Option<Vec<RevisitRef>>,
+    /// What this act was, on the change-set. A revision that re-types an
+    /// edge or restates a decision has a reason, and the reason belongs
+    /// where the filing is read — `supersede` already carries one.
+    pub note: Option<String>,
     /// The version the author believes is the tip. When stated and stale,
     /// the verb refuses — merge is L3's problem, not a quiet overwrite.
     pub expected_parent: Option<VersionHash>,
@@ -77,10 +89,13 @@ impl Author {
     /// Restate a decision. The allocation carries over unchanged; the hash
     /// moves, so every acceptance of the prior version becomes history.
     pub fn revise(&mut self, id: &DecisionId, args: ReviseArgs) -> Result<Applied, AuthorError> {
-        self.next_version(id, args.expected_parent.as_ref(), |raw| {
+        self.next_version_noted(id, args.expected_parent.as_ref(), args.note.clone(), |raw| {
             raw.statement = args.statement.clone();
             if !args.based_on.is_empty() {
                 raw.based_on = args.based_on.clone();
+            }
+            if let Some(edges) = &args.revisit_if {
+                raw.revisit_if = edges.clone();
             }
         })
         .map(|a| a.saying(format!("revised {id} — prior acceptances now sign history")))

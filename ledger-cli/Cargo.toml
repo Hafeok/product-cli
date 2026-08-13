@@ -23,6 +23,13 @@ dist = false
 
 [dependencies]
 ledger-core  = { path = "../ledger-core", version = "0.6.0" }
+# Display-only, and only for `ledger show`: the argument behind a basis
+# pointer lives in the store that pointer names, and for this repo's
+# entries that store is `.ddd/`. Kept out of `ledger-core` — the substrate
+# an outside implementation imports stays ontology-free (OD-2), and this
+# binary's read is inert when no `.ddd/` exists, the mirror of `ddd`'s own
+# inert read of `.decisions/`.
+ddd-core     = { path = "../ddd-core", version = "0.6.0" }
 chrono       = "0.4"
 clap         = { version = "4", features = ["derive"] }
 serde_json   = "1"

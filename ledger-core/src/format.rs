@@ -26,8 +26,14 @@ pub const MERGE_FORMAT: u32 = 2;
 /// is untouched, so `CANONICAL_FORM` stays `v1`.
 pub const CONTRACT_FORMAT: u32 = 3;
 
+/// The format a change-set carrying a `revisit_if` edge declares (spec
+/// v1.5): the reopen edge, ruled a distinct edge type rather than a basis.
+/// Same declare-what-you-need rule as formats 2 and 3; the field is hashed
+/// when present and omitted when absent, so `CANONICAL_FORM` stays `v1`.
+pub const REVISIT_FORMAT: u32 = 4;
+
 /// Every format version this tool can validate an entry against.
-pub const SUPPORTED_FORMATS: &[u32] = &[1, 2, 3];
+pub const SUPPORTED_FORMATS: &[u32] = &[1, 2, 3, 4];
 
 /// Whether an entry declaring `format: n` can be validated here.
 pub fn is_supported(n: u32) -> bool {
@@ -44,6 +50,9 @@ pub fn needed_for(cs: &crate::changeset::ChangeSet) -> u32 {
     }
     if cs.versions.iter().any(|v| v.discharge.iter().any(|d| d.is_contract())) {
         needed = needed.max(CONTRACT_FORMAT);
+    }
+    if cs.versions.iter().any(|v| !v.revisit_if.is_empty()) {
+        needed = needed.max(REVISIT_FORMAT);
     }
     needed
 }
@@ -68,7 +77,7 @@ mod tests {
         assert!(!is_supported(9));
         assert_eq!(
             unsupported_message(9),
-            "declares format 9; this tool validates format(s) 1, 2, 3"
+            "declares format 9; this tool validates format(s) 1, 2, 3, 4"
         );
     }
 
@@ -80,5 +89,22 @@ mod tests {
     #[test]
     fn the_contract_format_is_supported() {
         assert!(is_supported(CONTRACT_FORMAT));
+    }
+
+    #[test]
+    fn the_revisit_format_is_supported() {
+        assert!(is_supported(REVISIT_FORMAT));
+    }
+
+    #[test]
+    fn a_change_set_needs_the_revisit_format_only_when_it_carries_a_reopen_edge() {
+        let plain = crate::testkit::version();
+        assert_eq!(needed_for(&crate::testkit::changeset(vec![plain.clone()], vec![])), CURRENT_FORMAT);
+        let mut reopening = plain;
+        reopening.revisit_if = vec!["claim:DDD-x-01@sha256:abc".parse().expect("token")];
+        assert_eq!(
+            needed_for(&crate::testkit::changeset(vec![reopening], vec![])),
+            REVISIT_FORMAT
+        );
     }
 }

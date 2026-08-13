@@ -1,0 +1,38 @@
+format: 2
+id: seam/rust/ledger-cli-src-commands-basis-text-rs
+boundary: contract surface of ledger-cli/src/commands/basis_text.rs
+verdict_knowledge: "A caller learns that basis argument text is resolved from the .ddd store for display only, that the lookup tolerates the pin every content pointer carries, and that an absent .ddd store yields an empty resolver rather than an error. It also learns the boundary this respects: ledger-core stays ontology-free, so this resolution lives in the binary and never in the substrate."
+contract_location: ledger-cli/src/commands/basis_text.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: impl DddBasisText
+  file: ledger-cli/src/commands/basis_text.rs
+  before: absent
+  after: sha256:afa6cd42527c32603165cea16ea66eb7068b5bf275b9958f4b9eb6407d73e8cc
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:f12835178deb75502872acde48ba915d7cb569c96ca7243c1abd4f9318732394
+- symbol: DddBasisText
+  file: ledger-cli/src/commands/basis_text.rs
+  before: absent
+  after: sha256:afa6cd42527c32603165cea16ea66eb7068b5bf275b9958f4b9eb6407d73e8cc
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:999c1919e0f3855b1bc09e8b9761db2c0980ee9b03a12464ea3d8c865e0befbe
+- symbol: impl BasisText for DddBasisText
+  file: ledger-cli/src/commands/basis_text.rs
+  before: absent
+  after: sha256:afa6cd42527c32603165cea16ea66eb7068b5bf275b9958f4b9eb6407d73e8cc
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:2cea055e391993e20507189e7989009f394cd14c76ba5b75770a1f984c85a98b
+- symbol: load
+  file: ledger-cli/src/commands/basis_text.rs
+  before: absent
+  after: sha256:afa6cd42527c32603165cea16ea66eb7068b5bf275b9958f4b9eb6407d73e8cc
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:00ad86ac3396d9c204a3c469121dfdca6f331b86c03b3386a440aeef43334203
+- symbol: resolve
+  file: ledger-cli/src/commands/basis_text.rs
+  before: absent
+  after: sha256:afa6cd42527c32603165cea16ea66eb7068b5bf275b9958f4b9eb6407d73e8cc
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:d5c7022c38e80270d2672c05ae80c8b09398e65432a1ec0fdd9246e722f049af

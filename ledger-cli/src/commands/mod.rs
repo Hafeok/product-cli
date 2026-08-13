@@ -7,6 +7,7 @@
 //! exists on this side of the crate boundary.
 
 mod add;
+mod basis_text;
 mod common;
 mod declare;
 mod diff_cmd;
@@ -70,6 +71,12 @@ pub enum Commands {
         /// Basis pointer(s) this decision rests on (repeatable)
         #[arg(long, value_name = "BASIS")]
         based_on: Vec<String>,
+        /// Claim(s) whose death reopens this decision — never ground
+        #[arg(long, value_name = "REF")]
+        revisit_if: Vec<String>,
+        /// What this act was, recorded on the change-set
+        #[arg(long)]
+        note: Option<String>,
     },
     /// Allocate (or re-allocate) a decision by filing its next version
     Allocate {
@@ -179,6 +186,15 @@ pub enum Commands {
         statement: String,
         #[arg(long, value_name = "BASIS")]
         based_on: Vec<String>,
+        /// Reopen edge(s) this version states, replacing the inherited set
+        #[arg(long, value_name = "REF")]
+        revisit_if: Vec<String>,
+        /// Drop every inherited reopen edge (the decision was reopened)
+        #[arg(long)]
+        no_revisit_if: bool,
+        /// What this act was, recorded on the change-set
+        #[arg(long)]
+        note: Option<String>,
         /// The hash believed to be the tip; refused when stale (merge is L3)
         #[arg(long, value_name = "HASH")]
         parent: Option<String>,
@@ -188,6 +204,23 @@ pub enum Commands {
         acceptance: String,
         #[arg(long)]
         reason: String,
+    },
+    /// Decisions on screen: content, edges with their arguments, filing,
+    /// acceptance. One id, or a whole set or group in one pass.
+    Show {
+        decision: Option<String>,
+        /// Every decision in one set
+        #[arg(long, value_name = "SET")]
+        set: Option<String>,
+        /// Every decision in one weight class: mechanical | individual
+        #[arg(long, value_name = "GROUP")]
+        group: Option<String>,
+        /// Emit the screens as JSON
+        #[arg(long)]
+        json: bool,
+        /// Judge acceptance expiry against this date instead of today
+        #[arg(long, value_name = "DATE")]
+        today: Option<String>,
     },
     /// Every decision's disposition state, grouped by set
     Status {
@@ -235,32 +268,28 @@ pub fn run(command: Commands, root: Option<PathBuf>) -> i32 {
     }
 }
 
+/// Dispatch. Split in two along the line the store itself draws: verbs
+/// that append to the log, and reads that never touch it.
 fn dispatch(command: Commands, root: Option<PathBuf>) -> Result<i32, String> {
     match command {
         Commands::Accept { decision, expires } => sign::accept(root, &decision, expires.as_deref()),
         Commands::Add {
             set, statement, namespace, store, discharge, stage, expectation, actor,
-            tolerance_override, based_on,
+            tolerance_override, based_on, revisit_if, note,
         } => add::run(root, add::Flags {
             set, statement, namespace, store, discharge, stage, expectation, actor,
-            tolerance_override, based_on,
+            tolerance_override, based_on, revisit_if, note,
         }),
         Commands::Allocate { decision, store, discharge, stage, expectation, actor } => {
             evolve::allocate(root, &decision, &store, &discharge, stage.as_deref(), expectation, actor.as_deref())
         }
-        Commands::Blame { decision } => inspect::blame(root, &decision),
-        Commands::Coverage { set, json, today } => {
-            graph_cmds::coverage(root, set.as_deref(), json, today.as_deref())
-        }
         Commands::Declare { set, title, tolerance_floor, ground, owner, notes } => {
             declare::run(root, declare::Flags { set, title, tolerance_floor, ground, owner, notes })
         }
-        Commands::Diff { spec, json } => diff_cmd::run(root, &spec, json),
         Commands::Escape { decision, exposure, review_by } => {
             evolve::escape(root, &decision, exposure, &review_by)
         }
         Commands::Init => init::run(root),
-        Commands::Log { set } => inspect::log(root, set.as_deref()),
         Commands::Merge { rev, resolve, install, json } => {
             merge_cmd::run(root, merge_cmd::Flags { rev, resolve, install, json })
         }
@@ -268,17 +297,42 @@ fn dispatch(command: Commands, root: Option<PathBuf>) -> Result<i32, String> {
             merge_cmd::driver(&base, &ours, &theirs, &path)
         }
         Commands::Reindex => graph_cmds::reindex(root),
-        Commands::Revise { decision, statement, based_on, parent } => {
-            evolve::revise(root, &decision, statement, &based_on, parent.as_deref())
+        Commands::Revise {
+            decision, statement, based_on, revisit_if, no_revisit_if, note, parent
+        } => {
+            let edges = evolve::ReviseEdges {
+                based_on: &based_on, revisit_if: &revisit_if, no_revisit_if, note,
+            };
+            evolve::revise(root, &decision, statement, edges, parent.as_deref())
         }
         Commands::Revoke { acceptance, reason } => sign::revoke(root, &acceptance, reason),
-        Commands::Status { today } => inspect::status(root, today.as_deref()),
         Commands::Supersede { decision, by, reason } => {
             evolve::supersede(root, &decision, &by, reason)
         }
+        read => dispatch_read(read, root),
+    }
+}
+
+/// The read-only projections: nothing here appends to the log.
+fn dispatch_read(command: Commands, root: Option<PathBuf>) -> Result<i32, String> {
+    match command {
+        Commands::Blame { decision } => inspect::blame(root, &decision),
+        Commands::Coverage { set, json, today } => {
+            graph_cmds::coverage(root, set.as_deref(), json, today.as_deref())
+        }
+        Commands::Diff { spec, json } => diff_cmd::run(root, &spec, json),
+        Commands::Log { set } => inspect::log(root, set.as_deref()),
+        Commands::Show { decision, set, group, json, today } => {
+            inspect::show(root, inspect::ShowFlags { decision, set, group, json, today })
+        }
+        Commands::Status { today } => inspect::status(root, today.as_deref()),
         Commands::Verify { gate, json, today, no_blame } => {
             verify::run(root, verify::Args { gate, json, today, blame: !no_blame })
         }
+        // Every writing verb is handled by `dispatch`, which routes here
+        // only for what is left. Reaching this arm means a variant was
+        // added to the enum and to neither match — reported, never panicked.
+        _ => Err("internal: this subcommand is not wired into either dispatch half".to_string()),
     }
 }
 

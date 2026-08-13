@@ -58,6 +58,7 @@ pub fn version() -> VersionRaw {
         tolerance_floor_at_creation: Tier::T1,
         tolerance_override: None,
         based_on: vec!["prd:decision-ledger-prd#4.2.1".parse().expect("basis")],
+        revisit_if: Vec::new(),
         supersedes: None,
     }
 }

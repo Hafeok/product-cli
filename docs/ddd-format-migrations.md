@@ -176,6 +176,73 @@ The field is what a promoting repo checks before inheriting an entry
 SDK the destination does not run is worse than no entry, because it carries
 the catalog's authority without holding there.
 
+## Format 7 (the reopen edge, 2026-08-13)
+
+Formats 1–6 remain valid unchanged. Format 7 exists for one ruling, and
+adopts into this store the one shape the ledger format specifies at spec
+v1.5 / `format: 4` (`ledger-format-v1.md` §3.7) — the same one-shape rule
+the M8 `contract:` scheme followed.
+
+### Decisions: `revisit_if`, the reopen edge
+
+The principal ruled (2026-08-13) that a **watched-not-grounding edge is a
+distinct edge type, not a basis**: this claim's death reopens the decision;
+it is not the decision's ground.
+
+```yaml
+format: 7
+based_on:
+  - type: mandate
+    statement: >-
+      The principal's ruling settling PRD §14 question 2 …
+revisit_if:
+  - claim: DDD-adapter-02
+    status: projected
+    changed: 2026-08-06
+    content: sha256:…
+```
+
+Rules that arrive with it:
+
+- **A reopen edge is never a basis.** It lives in its own field, carries its
+  own type, and is scanned by its own pass. `based_on`'s basis-loss scan
+  cannot see it and `ddd why` renders it under its own heading, below the
+  ground and visibly apart. Declaring `revisit_if` under formats 1–6 is a
+  violation.
+- **Every reopen edge pins**, `content:` included — an unpinned tripwire
+  cannot fire, so an edge without one is a violation. The pin is the
+  claim's canonical content hash (`ddd.claim-content.v1`), exactly as a
+  format-6 claim basis pins.
+- **One claim is ground or tripwire, never both.** A claim appearing in
+  both lists on one decision is a violation: an edge read both ways is
+  precisely the conflation the distinct type exists to end.
+- **It reports as `reopen`, never as basis loss.** `ddd report escapes`
+  gains a fourth section with its own heading and its own message: a fired
+  tripwire means the decision is due a fresh look, its ground untouched.
+  A lost basis means the ground moved. Merging the two tells the reader
+  neither.
+- **It is hashed content.** `revisit_if` joins `decision_content_hash`
+  under its own key, so re-typing an edge from ground to tripwire moves the
+  decision's content hash — which is what makes the re-decision visible to
+  the ledger entry pinning it rather than a silent rewrite.
+
+**Migrating a format-5/6 decision:** set `format: 7`, move the claim edge
+out of `based_on` into `revisit_if`, and carry its pin across unchanged
+(`status`, `changed`, and the `content` hash at that pinned state — the M8
+migration's recovered hashes are the ones already in the ledger's `watched:`
+tokens). Do **not** re-pin at the claim's current state: a recorded drift is
+the record that the movement was looked at, and re-pinning would erase it.
+Then file a new ledger version for the decision, re-taking its
+`ddd-content:` pin at the entry's new content and stating the reopen edge —
+a re-decision filed for the principal's acceptance, never a silent rewrite.
+`ddd content-hash <id>` prints the pin to state.
+
+**Migrated by this amendment:** the three edges the M8 migration carried as
+provisional `watched:` markers — `DDD-adapter-02` on
+`dec/ddd/internal-not-surface`, `DDD-gates-01` on `dec/rust/no-unwrap`,
+`DDD-adapter-01` on `dec/ddd/m6-proceeds-no-flip`. The third is the one
+whose pin has drifted; it fires, now as a reopen finding.
+
 ## Format 6 (M8, 2026-08)
 
 Formats 1–5 remain valid unchanged. Format 6 exists for the two M8

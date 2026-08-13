@@ -1,0 +1,20 @@
+format: 1
+id: cs:01KZX70EQGQCB1B190TS9FZ1A2
+created_at: 2026-08-13T09:24:46.957125497Z
+created_by: noreply@anthropic.com
+note: 'Edge re-typed per the principal''s ruling of 2026-08-13: a watched-not-grounding edge is a distinct edge type, not a basis. DDD-gates-01 moves out of based_on and into revisit_if, pin carried across unchanged (reported@2026-08-06). The workspace error contract is and remains the ground; the claim is the cost check whose falsification reopens this decision. A re-decision of the edge, filed for the principal''s acceptance — not a silent rewrite. The ddd-content pin re-takes the .ddd entry at its new content.'
+versions:
+- decision: dec:hafeok.ddd/01KZTGGTKM7T8Y6GY78TGJRNB8
+  parent: sha256:15fc86a5ad4771b6ca6449df2bf8f64c7b77dcbab28b67ede5ffa57b82681a0a
+  hash: sha256:edc9c0b4dcaaaf49ffde644926154e24c29766298e5527d1d2b27d922cb040eb
+  set: ddd-governance
+  statement: Deny clippy::unwrap_used workspace-wide
+  allocation: constraint
+  discharge:
+  - analyzer:clippy/clippy::unwrap_used
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/rust/no-unwrap@sha256:d89fed3d663ff16ee6f858a38747e963f4a861ebcc2bc9664080a58e389fdc8c
+  - constraint:dec/rust/no-unwrap
+  revisit_if:
+  - claim:DDD-gates-01@sha256:6f500ee8ef3bcbef7ce1a1d6ce2c093d61858f7a01bb3685b1c0f56aa32b4395

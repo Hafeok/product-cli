@@ -368,6 +368,7 @@ pub fn accept_risk(state: &ServeState, args: &Value) -> ToolResult {
         rationale: field(args, "rationale", existing.as_ref().map(|e| e.rationale.clone()))?,
         principal: field(args, "principal", existing.as_ref().map(|e| e.principal.clone()))?,
         based_on: existing.as_ref().map(|e| e.based_on.clone()).unwrap_or_default(),
+        revisit_if: existing.as_ref().map(|e| e.revisit_if.clone()).unwrap_or_default(),
         date: Some(chrono::Utc::now().format("%Y-%m-%d").to_string()),
         notes: opt_str(args, "notes").or_else(|| existing.as_ref().and_then(|e| e.notes.clone())),
     };

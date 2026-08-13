@@ -1,0 +1,19 @@
+format: 1
+id: cs:01KZX70ET1GMR2012XKEP5EWDW
+created_at: 2026-08-13T09:24:47.037120989Z
+created_by: noreply@anthropic.com
+note: 'Edge re-typed per the principal''s ruling of 2026-08-13: a watched-not-grounding edge is a distinct edge type, not a basis. DDD-adapter-01 moves out of based_on and into revisit_if, pin carried across unchanged (projected@2026-08-02). This is the one of the three whose pin has drifted — the claim moved projected -> reported -> established — so it fires, and it now fires as a reopen finding rather than a basis-loss one. That is the correction: the ground here is the principal''s stated default and has never moved. A re-decision of the edge, filed for the principal''s acceptance.'
+versions:
+- decision: dec:hafeok.ddd/01KZTGGMPHCW14AH6AJW4YSZ5Z
+  parent: sha256:40a6bf92bf9436d21989c690dd6518ed0669c5b860cc58d1ed3cbf6dea3fbfac
+  hash: sha256:ecc4e597a4865d51aa1eec83c21796dcb64e9061c31b59d4e479405934e4f9f3
+  set: ddd-governance
+  statement: M6 proceeds as the Rust adapter; the M6/M7 flip condition does not fire
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/m6-proceeds-no-flip@sha256:3cf1f354823ec3d3850e1e6dc4d16ae5c86c06c6559b2ae4b2247e5f57f5331c
+  - mandate:dec/ddd/m6-proceeds-no-flip
+  revisit_if:
+  - claim:DDD-adapter-01@sha256:922a0a70f69509bfcd73325fbdc1cd5ac281b1b52281b14f56a8f519afd99f52

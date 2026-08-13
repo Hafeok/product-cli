@@ -618,3 +618,32 @@ Three observations, and no proposal:
    edges. The audit's one watched-not-grounding *upstream* row —
    `ddd/workspace-member-delivery` → the What/How vocabulary — is untouched and
    still has no home.
+
+### 10.4 Addendum (2026-08-13) — the relation is ruled; the upstream row is not
+
+Recorded, not re-cut: the reading above stands as taken. What changed after it
+is one ruling and its consequence for the one row §10.3 left open.
+
+The principal ruled (2026-08-13) that a watched-not-grounding edge is a
+**distinct edge type**, `revisit_if` — this claim's death reopens the decision;
+it is not the decision's ground — filed as its own edge with its own
+vocabulary, never inside `based_on`. §7.2's bucket therefore closes, and
+§10.3's observation 1 is superseded: the relation now has a ruled ontology,
+not only a transport. The three intra-repo edges §10.3 names were re-decided
+onto the real edge type, each filed for the principal's acceptance, with their
+pins carried across unchanged. `dec/ddd/m6-proceeds-no-flip`'s drifted edge —
+the only one of the three that fires — now reports as a **reopen** finding
+rather than a basis-loss one, which is the correction the ruling makes: that
+decision's ground is the principal's stated default and has never moved.
+
+§10.3's observation 3 is **unchanged and now the whole of what is open**. The
+audit's one *upstream* watched-not-grounding row —
+`dec/ddd/workspace-member-delivery` tracking the What/How vocabulary — is still
+unfiled, and the reason is precise: `revisit_if` gives the *relation* a home; it
+does not give a *cross-repo pointer* one. That needs a reference shape carrying
+a repo and a revision, which is a separate amendment that has not landed and
+was not in flight on 2026-08-13. The row is blocked on it, not forgotten. When
+that shape lands the row becomes expressible with no further change to this
+edge type — one shape, both pointer fields.
+
+§4.4's cross-repo count is untouched: still zero declared cross-repo edges.

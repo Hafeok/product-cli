@@ -38,6 +38,7 @@ fn pinned_decision(id: &str, claim: &str, status: ClaimStatus, changed: &str) ->
             changed: changed.into(),
             content: None,
         })],
+        revisit_if: Vec::new(),
         date: None,
         notes: None,
     }

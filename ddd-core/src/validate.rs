@@ -18,7 +18,11 @@ use crate::turtle;
 
 /// The entry format versions this tool validates against; each entry is
 /// checked against the version it declares (PRD §6).
-pub const SUPPORTED_FORMATS: &[u32] = &[1, 2, 3, 4, 5, 6];
+pub const SUPPORTED_FORMATS: &[u32] = &[1, 2, 3, 4, 5, 6, 7];
+
+/// The decision format that carries reopen edges (`revisit_if`), adopting
+/// the ledger's spec-v1.5 shape into this store. See `crate::revisit`.
+pub const REVISIT_FORMAT: u32 = 7;
 
 /// Run every check over the store; empty means conformant.
 pub fn validate_store(store: &DddStore) -> Vec<Violation> {
@@ -53,7 +57,7 @@ fn format_checks(store: &DddStore) -> Vec<Violation> {
             out.push(fault(
                 id,
                 "format",
-                format!("declares format {format}; this tool validates formats 1-6"),
+                format!("declares format {format}; this tool validates formats 1-7"),
             ));
         }
     };
@@ -210,6 +214,7 @@ fn decision_format_gates(d: &crate::decision::Decision) -> Vec<Violation> {
             out.extend(typed_basis_gates(&d.id, t));
         }
     }
+    out.extend(crate::revisit::gates(d));
     out
 }
 

@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ddd-core-src-validate-rs
+boundary: contract surface of ddd-core/src/validate.rs
+verdict_knowledge: "A caller learns that format 7 is the version carrying reopen edges, and that every entry is still validated against the version it declares."
+contract_location: ddd-core/src/validate.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: REVISIT_FORMAT
+  file: ddd-core/src/validate.rs
+  before: sha256:907bcb3f9c8d4edb4aa29b3059f2c59fa3399d9c8220c151495f5f40fc6e4c0a
+  after: sha256:2601d79faebd535b29e2c88d1963a337c064b4444176f4c1d83015df2dd425c2
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:4ff8035ceb8f81b3352fec6ac67e98b23c75f6e2e26f823a2e598a6b608ea490

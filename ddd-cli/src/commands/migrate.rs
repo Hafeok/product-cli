@@ -83,6 +83,10 @@ fn file_entry(
             allocation: clone_allocation(&entry.allocation),
             tolerance_override: None,
             based_on: entry.based_on.clone(),
+            // The M8 migration states no reopen edges: the three it carried
+            // as provisional `watched:` markers were re-decided into real
+            // `revisit_if` edges afterwards, as their own filed versions.
+            revisit_if: Vec::new(),
             note: Some(entry.note.clone()),
         })
         .map_err(|e| author_err(&e))?;

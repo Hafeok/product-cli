@@ -4,7 +4,9 @@ use std::path::PathBuf;
 
 use ledger_core::author::AddArgs;
 
-use super::common::{allocation_args, finish, open_author, parse_based_on, parse_tier};
+use super::common::{
+    allocation_args, finish, open_author, parse_based_on, parse_revisit_if, parse_tier,
+};
 
 pub struct Flags {
     pub set: String,
@@ -17,6 +19,8 @@ pub struct Flags {
     pub actor: Option<String>,
     pub tolerance_override: Option<String>,
     pub based_on: Vec<String>,
+    pub revisit_if: Vec<String>,
+    pub note: Option<String>,
 }
 
 pub fn run(root: Option<PathBuf>, flags: Flags) -> Result<i32, String> {
@@ -34,7 +38,8 @@ pub fn run(root: Option<PathBuf>, flags: Flags) -> Result<i32, String> {
         )?,
         tolerance_override: flags.tolerance_override.as_deref().map(parse_tier).transpose()?,
         based_on: parse_based_on(&flags.based_on)?,
-        note: None,
+        revisit_if: parse_revisit_if(&flags.revisit_if)?,
+        note: flags.note,
     };
     finish(author.add(args))
 }

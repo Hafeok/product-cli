@@ -1,4 +1,4 @@
-format: 5
+format: 7
 id: dec/ddd/internal-not-surface
 title: internal is not C# contract surface by default; library repos flip per-repo
 rationale: >
@@ -16,10 +16,11 @@ based_on:
       repositories are application repositories, so the app-repo posture is
       the required default and the library posture is an explicit per-repo
       config flip.
-  - type: claim
-    claim: DDD-adapter-02
+revisit_if:
+  - claim: DDD-adapter-02
     status: projected
     changed: 2026-08-06
+    content: sha256:b333063d5058614855329b2dd8a1d1c5f8732ab243a2d2f9ebfa3bf95f2f5fda
 date: 2026-08-06
 notes: >
   Basis re-typed 2026-08-12, following the 2026-08 basis-quality audit: a
@@ -36,3 +37,16 @@ notes: >
   ruling, not its ground; its fate as a claim is the F-batch's. Format
   2 -> 5 per docs/ddd-format-migrations.md.
   Ratified 2026-08-12 (Emil): accepted as filed (8b7a410).
+
+  Edge re-typed 2026-08-13, following the principal's ruling that a
+  watched-not-grounding edge is a distinct edge type: a re-decision of
+  this edge per format 7, not an edit. DDD-adapter-02 moves out of
+  `based_on` and into `revisit_if` — the pin is carried across unchanged
+  (projected@2026-08-06, content recovered at that state by the M8
+  migration), so nothing about what is recorded changes; what changes is
+  what the record *means* and how it reports. It never grounded this
+  decision, and the note above already said so in prose; it now says so in
+  a field. Its falsifier — a boundary defect traced to an internal member
+  consumed across a boundary — is the tripwire, and firing it reopens the
+  mandate rather than undermining it. Format 5 -> 7 per
+  docs/ddd-format-migrations.md. Awaiting the principal's acceptance.

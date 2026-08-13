@@ -68,18 +68,42 @@ pub fn put_set(map: &mut Map<String, Value>, key: &str, items: impl Iterator<Ite
 /// enumeration — is the one that bites the `pf` graph's node kinds, and it is
 /// worth closing structurally rather than by review.
 pub fn canonical_json(raw: &VersionRaw) -> String {
-    // `hash` is bound and discarded on purpose: the stored digest is what
-    // the hash is compared *to*, so including it would be circular. The two
-    // tolerance inputs are both hashed rather than the resolved tier — the
-    // pin is history, the override is authored, and keeping them apart is
-    // what lets override-rate-per-set (§10) come out of hashed content.
-    let VersionRaw {
-        decision, parent, merged_from, hash: _, set, statement, allocation, discharge,
-        discharge_stage, actor, expectation, exposure, accepted_by, review_by,
-        tolerance_floor_at_creation, tolerance_override, based_on, supersedes,
-    } = raw;
     let mut m = Map::new();
-    for (key, value) in [
+    for (key, value) in scalar_fields(raw) {
+        put(&mut m, key, value);
+    }
+    put_set(&mut m, "discharge", raw.discharge.iter().map(ToString::to_string));
+    put_set(&mut m, "based_on", raw.based_on.iter().map(ToString::to_string));
+    // Hashed like any other list field, and hashed *separately* from
+    // `based_on`: a reopen edge is authored content, so moving one is a new
+    // version, but it is never merged into the basis set — an acceptance
+    // must be able to say which of the two it signed (format 4, spec v1.5).
+    // Empty on everything written before the field existed, so `put_set`
+    // omits it and no earlier digest moves.
+    put_set(&mut m, "revisit_if", raw.revisit_if.iter().map(ToString::to_string));
+    // serde_json's map is a BTreeMap whose writer emits no insignificant
+    // whitespace, so this is key-sorted and compact by construction. Keys in
+    // this format are ASCII, where code-point order and the JCS UTF-16
+    // code-unit order coincide.
+    Value::Object(m).to_string()
+}
+
+/// The scalar half of the canonical object, and the home of the guard.
+///
+/// `hash` is bound and discarded on purpose: the stored digest is what the
+/// hash is compared *to*, so including it would be circular. The two
+/// tolerance inputs are both hashed rather than the resolved tier — the pin
+/// is history, the override is authored, and keeping them apart is what
+/// lets override-rate-per-set (§10) come out of hashed content. The three
+/// list fields are bound and discarded here because they are canonicalised
+/// as sets by the caller.
+fn scalar_fields(raw: &VersionRaw) -> [(&'static str, Option<String>); 15] {
+    let VersionRaw {
+        decision, parent, merged_from, hash: _, set, statement, allocation, discharge: _,
+        discharge_stage, actor, expectation, exposure, accepted_by, review_by,
+        tolerance_floor_at_creation, tolerance_override, based_on: _, revisit_if: _, supersedes,
+    } = raw;
+    [
         ("decision", Some(decision.to_string())),
         ("parent", parent.as_ref().map(ToString::to_string)),
         // Hashed when present; omitted when absent, which is what keeps
@@ -97,16 +121,7 @@ pub fn canonical_json(raw: &VersionRaw) -> String {
         ("tolerance_floor_at_creation", Some(tolerance_floor_at_creation.to_string())),
         ("tolerance_override", tolerance_override.map(|t| t.to_string())),
         ("supersedes", supersedes.as_ref().map(ToString::to_string)),
-    ] {
-        put(&mut m, key, value);
-    }
-    put_set(&mut m, "discharge", discharge.iter().map(ToString::to_string));
-    put_set(&mut m, "based_on", based_on.iter().map(ToString::to_string));
-    // serde_json's map is a BTreeMap whose writer emits no insignificant
-    // whitespace, so this is key-sorted and compact by construction. Keys in
-    // this format are ASCII, where code-point order and the JCS UTF-16
-    // code-unit order coincide.
-    Value::Object(m).to_string()
+    ]
 }
 
 /// The canonical bytes, as UTF-8. No trailing newline.

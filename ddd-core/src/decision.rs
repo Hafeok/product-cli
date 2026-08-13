@@ -36,6 +36,11 @@ pub struct Decision {
     /// files plain claim ids; format 2 pins each edge (rule 6).
     #[serde(default)]
     pub based_on: Vec<BasedOn>,
+    /// Format 7: claims whose *death reopens* this decision. Never ground —
+    /// a separate field, a separate type, a separate scan, so nothing can
+    /// read one as basis (`crate::revisit`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub revisit_if: Vec<crate::revisit::RevisitEdge>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub date: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

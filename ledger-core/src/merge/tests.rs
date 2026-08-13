@@ -171,6 +171,7 @@ mod acts {
             },
             tolerance_override: None,
             based_on: Vec::new(),
+            revisit_if: Vec::new(),
             note: None,
         })
         .expect("add")
@@ -200,6 +201,8 @@ mod acts {
         a.revise(&id, ReviseArgs {
             statement: "The left writer's revision.".into(),
             based_on: Vec::new(),
+            revisit_if: None,
+            note: None,
             expected_parent: None,
         })
         .expect("left revision");

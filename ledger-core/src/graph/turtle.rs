@@ -178,9 +178,7 @@ fn emit_version(t: &mut Triples, v: &VersionRaw, cs_iri: &str) {
     if let Some(over) = v.tolerance_override {
         t.add(&iri, "ledger:toleranceOverride", literal(&over.to_string()));
     }
-    for basis in &v.based_on {
-        t.add(&iri, "ledger:basedOn", literal(basis.as_str()));
-    }
+    emit_edges(t, v, &iri);
     if let Some(old) = &v.supersedes {
         t.add(&iri, "ledger:supersedes", dec_iri(old));
     }
@@ -189,6 +187,19 @@ fn emit_version(t: &mut Triples, v: &VersionRaw, cs_iri: &str) {
     }
     if let Some(closed) = &v.merged_from {
         t.add(&iri, "ledger:mergedFrom", hash_iri(closed));
+    }
+}
+
+/// The two edge kinds, under two predicates. Deliberately separate: a query
+/// walking `ledger:basedOn` is asking what a decision rests on, and a reopen
+/// edge is not an answer to that — the same reason they are separate fields
+/// on the wire.
+fn emit_edges(t: &mut Triples, v: &VersionRaw, iri: &str) {
+    for basis in &v.based_on {
+        t.add(iri, "ledger:basedOn", literal(basis.as_str()));
+    }
+    for edge in &v.revisit_if {
+        t.add(iri, "ledger:revisitIf", literal(edge.as_str()));
     }
 }
 

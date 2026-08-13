@@ -83,7 +83,7 @@ pub const SEAM_CONTENT_FORM: &str = "ddd.seam-content.v1";
 /// The hash a migrated ledger entry pins of its decision's content.
 pub fn decision_content_hash(d: &crate::decision::Decision) -> String {
     let crate::decision::Decision {
-        format: _, id, kind, title, rationale, principal, based_on, date, notes,
+        format: _, id, kind, title, rationale, principal, based_on, revisit_if, date, notes,
     } = d;
     let mut m = Map::new();
     for (key, value) in [
@@ -101,6 +101,15 @@ pub fn decision_content_hash(d: &crate::decision::Decision) -> String {
     let bases: Vec<Value> = based_on.iter().filter_map(|b| serde_json::to_value(b).ok()).collect();
     if !bases.is_empty() {
         m.insert("based_on".to_string(), Value::Array(bases));
+    }
+    // Reopen edges are authored content too, and hashed under their own
+    // key: re-typing an edge from ground to tripwire moves the decision's
+    // content hash, which is what makes the re-decision visible to the
+    // ledger entry that pins it rather than a silent rewrite.
+    let reopen: Vec<Value> =
+        revisit_if.iter().filter_map(|r| serde_json::to_value(r).ok()).collect();
+    if !reopen.is_empty() {
+        m.insert("revisit_if".to_string(), Value::Array(reopen));
     }
     ledger_core::hash::domain_hash(DECISION_CONTENT_FORM, Value::Object(m).to_string().as_bytes())
 }

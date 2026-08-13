@@ -1,0 +1,20 @@
+format: 2
+id: seam/rust/ledger-core-src-show-render-rs
+boundary: contract surface of ledger-core/src/show_render.rs
+verdict_knowledge: "A reader learns that the two edge kinds render as separate blocks with each pointer's argument indented beneath it, and that an unresolved argument leaves the pointer standing rather than a blank line implying there is nothing to read."
+contract_location: ledger-core/src/show_render.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: render
+  file: ledger-core/src/show_render.rs
+  before: absent
+  after: sha256:2a27a09eeeb8c2bea89757f5c55be58a5184ba06de4fc8b0ed51cfb9cb498aee
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:fd34234e3b9782d90323e8aad05560f680788797a9e99f924448b00e30a2bd2a
+- symbol: render_all
+  file: ledger-core/src/show_render.rs
+  before: absent
+  after: sha256:2a27a09eeeb8c2bea89757f5c55be58a5184ba06de4fc8b0ed51cfb9cb498aee
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:acb9f6fc267f7b9f809eff799e6c9db04e56eda407681666bdfc8eeec2385bbe
