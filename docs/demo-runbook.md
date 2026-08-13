@@ -1,8 +1,14 @@
 # Demo runbook — one hour, live terminal
 
-**Rehearsed 2026-08-12** on branch `claude/demo-dryrun-rehearsal-wkkjuu`, release
-binaries, this machine. Every output block below is pasted from a real run, not
-reconstructed. Every timing is `date +%s.%N` around the command.
+**Rehearsed 2026-08-12**, and **re-run end to end 2026-08-13** on branch
+`claude/demo-dryrun-rehearsal-wkkjuu`, release binaries, this machine. Every
+output block below is pasted from a real run, not reconstructed. Every timing is
+`date +%s.%N` around the command.
+
+The 08-13 pass reproduced all five beats and both spare cards. It found one
+stage-breaking defect (F14, step 5c), one near-miss data loss (F7, now fixed in
+`reset.sh`), and corrected four output blocks that were pasted short. Those
+corrections are inline below; the findings are in §8.
 
 **The spine:** transcription got cheap; judgment didn't. Agents can write the
 code; the question is which decisions were made, who answers for them, and how
@@ -12,10 +18,11 @@ anyone knows none escaped.
 made, on the `ddd`/`ledger` side. Beat 5 is the *front half* — judgment before
 any code exists, on the `product` side. §12 is a spare card, not a beat.
 
-> **Read the failure list (§8) before the polished script.** Thirteen findings;
-> three of them change what you do on stage — F1 changes which file you edit,
-> F3 keeps CI off the live path, and F9 keeps one section of the build context
-> off the projector.
+> **Read the failure list (§8) before the polished script.** Fourteen findings;
+> four of them change what you do on stage — F1 changes which file you edit,
+> F3 keeps CI off the live path, F9 keeps one section of the build context off
+> the projector, and **F14 changes a command in step 5c** without which that
+> beat's payoff line lands over a stray untracked file.
 
 ---
 
@@ -24,11 +31,25 @@ any code exists, on the `product` side. §12 is a spare card, not a beat.
 ```bash
 cargo build --release                 # ~6 min cold. Do NOT do this live.
 git tag -f demo-base                  # marks the tip the demo resets to
-./target/release/ddd render           # 0.31s — the offline fallback (§7)
 ./docs/demo/reset.sh                  # confirm clean: dirty=0, seam-events=46
+./target/release/ddd render           # 0.20s — the offline fallback (§7)
 ```
 
-Then a **dry pass of beat 1** to confirm the tool answers, and reset again.
+**Order matters here.** `git tag -f demo-base` goes first and must be re-run
+after *any* commit touching `docs/demo/` or this runbook — `reset.sh` resets to
+that tag, so material the tag does not carry is destroyed. The script now
+refuses rather than letting that happen (F7), reporting the stale paths:
+
+```
+demo-base is stale — resetting to it would revert demo material:
+  docs/demo/reset.sh
+  Fix: git tag -f demo-base   (with the demo files committed)
+```
+
+`ddd render` goes **last**, because `reset.sh` deletes `render.html` — and
+because the file it creates is untracked and shows up in step 5c's `git status`
+(F14). Then a **dry pass of beat 1** to confirm the tool answers, and reset
+again — remembering to regenerate `render.html` after that reset too.
 
 Terminal: **≥100 columns**, ≥26 rows. The widest line that *matters* is 88 chars
 (a `sha256:` in the rejection demand); below 100 cols it wraps and the binding
@@ -168,6 +189,11 @@ never `mcp-call.sh` — see F1.
 sentence is the only thing in this record a human had to write, and the tool
 files without it only under a warning (see Q&A, row 1).
 
+**Which of these hashes will match on stage:** `before` and `after` are content
+hashes and *will* match the block above. `hash` is the binding's own digest and
+covers `base_revision`, so it moves with `HEAD` — it read `c1c360707204…` on
+08-12 and `3fc2554089cd…` on 08-13. Don't read it aloud as a fixed value.
+
 ### 2b. The sharper half — a binding signs a transition, not a state
 
 **This is one command and it works. Do not cut it.** Same symbol, different
@@ -212,7 +238,7 @@ The brief expected one row carrying "symbol, hashes, base revision". **It is two
 files, not one** — worth knowing before you go looking on stage:
 
 ```bash
-tail -8 .ddd/seams/seam-htmlcss-escape-price.yaml   # the signature
+tail -7 .ddd/seams/seam-htmlcss-escape-price.yaml   # the signature
 ```
 
 ```yaml
@@ -270,9 +296,13 @@ Exit 0.
 
 Edit in the editor. Commit with plain `git`. The tool is never invoked.
 
+*(Scope the `git add` to the one file. A bare `git add -A` also sweeps in the
+untracked `.ddd/render.html` from pre-flight, which then lands in the commit and
+in the range `diff-contracts` reads.)*
+
 ```bash
 # add "  --escape-overdue: #b3261e;" to render.css in your editor
-git add -A && git commit -q -m "Add --escape-overdue token"
+git add ddd-core/assets/render.css && git commit -q -m "Add --escape-overdue token"
 ./target/release/ddd diff-contracts HEAD~1..HEAD
 ```
 
@@ -464,6 +494,19 @@ event             ev-payment-begun        Payment begun changes cart
 event             ev-refund-issued        Refund issued changes order
 read-model        rm-cart-summary         Cart summary
 read-model        rm-order-confirmation   Order confirmation
+flow              flow-checkout           Checkout (entry: ws-review-cart)
+flow              flow-refunds            Refunds
+context-of-use    cou-desktop             Desktop [form_factor=desktop]
+context-of-use    cou-phone               Phone [form_factor=phone]
+```
+
+**22 lines, not 18** — the alternation's `context` also matches `context-of-use`,
+and `flow` is in the pattern. It fits a 26-row terminal, but only just. For the
+tighter 18-line list (verified, exactly the six kinds):
+
+```bash
+./target/release/product domain list --product acme \
+  | grep -E "^(context {2,}|entity|command|event|read-model|invariant)"
 ```
 
 ```bash
@@ -499,8 +542,14 @@ Derived decider 'order-decider' for aggregate 'order' at /home/user/product-cli/
 Then, immediately:
 
 ```bash
-git status --short          # prints nothing
+git status --short -- .product/          # prints nothing
 ```
+
+**Scope it to `.product/` — this is F14 and it will bite you otherwise.** Bare
+`git status --short` prints `?? .ddd/render.html`, the untracked dashboard the
+pre-flight generates. The claim still holds — scoped, the output really is empty
+— but an unexplained line on screen at the exact moment you say "git has nothing
+to report" is the worst possible place to have to improvise.
 
 **Say this — it is the point of the step:** I just regenerated that file and git
 has nothing to report. The signature is a *function of the model*, not an
@@ -592,7 +641,7 @@ What `1.1`. Architecture that declares which model it is an architecture *of*.
 ### 5f. Build work falls out of the model
 
 ```bash
-./target/release/product build del-refunds --product acme --dry-run | tail -12
+./target/release/product build del-refunds --product acme --dry-run | tail -10
 ```
 
 ```
@@ -619,8 +668,10 @@ a demo.
 
 **Trap:** do **not** show the `## How` section of the build context. It reads
 `_(no How contract loaded)_` for every product, including this one. That is a
-real defect (F9), not a property of acme. Pipe to `tail -12` as above and it
-never appears.
+real defect (F9), not a property of acme. Pipe to `tail -10` as above and it
+never appears. (`tail -12` also keeps it off screen but adds two lines above the
+block — a blank and `(no acceptance criteria carry a runner)`. Harmless, just
+not what is pasted here.)
 
 ### 5g. The seam — one bridge exists, the rest is roadmap
 
@@ -688,6 +739,13 @@ From [`docs/ddd-m8-report.md`](ddd-m8-report.md) §4:
 excluding the demo's own declaration: 30 declarations, 149 signed bindings
 ```
 
+**Re-verified 08-13, with one clarification.** The **149 signed bindings** is a
+whole-store count and reproduces exactly: 150 during the demo, minus the one the
+demo itself files. The **30 declarations** is *not* a whole-store count — the
+store holds 64 declarations (63 before the demo files its own). 30 is the
+M8-diff subset, the per-file declarations that discharged that milestone. Say
+"thirty declarations on that milestone", not "thirty in the store".
+
 **The cost, in one sentence:** one copy-back per governed edit (the demand
 pre-fills the binding), and a second governed edit to the same file must wait for
 the first to be committed. That serialization is the largest real behavioural
@@ -700,6 +758,9 @@ Two corrections to how this is easy to say wrong:
   Quote 153, or quote both with the reason.
 - **The M8 report says `ddd validate` covered 192 entries. It is 222 today** —
   the store has grown since. Run the command rather than quoting the report.
+  Note *when* you run it: 222 is the pre-demo count, and it reads **223** any
+  time after beat 2a, because the demo's own declaration is an entry like any
+  other. Quote it in pre-flight, or say 223 and explain the extra one.
 
 ### 6b. The classifier reading
 
@@ -868,6 +929,25 @@ demo-base predates docs/demo/ — re-tag at the runbook commit
 
 Verified: the guard fires.
 
+**Recurred on 08-13, and the guard did not catch it.** The tag sat at `f45f4a9`
+while `HEAD` was `0ab76ec` — the commit that *added* `docs/demo/stage-beat1.sh`.
+The old guard only asked whether `docs/demo/` existed at the tag at all, so it
+passed, and `git reset --hard demo-base` would have deleted `stage-beat1.sh`
+without a word. Existence was the wrong question; **currency** is the right one.
+
+Fixed properly: the guard now diffs the tag against `HEAD` over `docs/demo/` and
+`docs/demo-runbook.md` and refuses on any drift, committed or not.
+
+```
+demo-base is stale — resetting to it would revert demo material:
+  docs/demo/reset.sh
+  Fix: git tag -f demo-base   (with the demo files committed)
+```
+
+Both new paths verified by triggering them deliberately: a committed-but-untagged
+script, and an uncommitted edit to `reset.sh` itself. **Re-tag after every commit
+that touches demo material** — the guard now tells you when you forgot.
+
 ### F8 — rehearsal pollutes `ddd report escapes`
 
 After a rehearsal, `ddd report escapes` lists the demo tokens as UNGOVERNED
@@ -920,8 +1000,11 @@ node(s), 0 violations` in 0.027s. Reported, not fixed.
 ### F11 — `product guide` emits a 223-character line
 
 The "Why this matters" paragraph is one unwrapped line; at 100 columns it wraps
-to three. Cosmetic, and the rest of beat 5 tops out at 88 columns. Mentioned
-only so it does not surprise you.
+to three. Cosmetic. Mentioned only so it does not surprise you.
+
+*(Correction, 08-13: "the rest of beat 5 tops out at 88 columns" was wrong —
+`product guide` also emits a 99-character line. Still inside the ≥100-column
+floor in §0, so nothing changes; the floor is doing real work here, not spare.)*
 
 ### F12 — `decider simulate` exits 1 on the un-authored Decider
 
@@ -930,22 +1013,58 @@ sound/complete` in the same register as a failure, and an audience reads red as
 broken. Narrate before you press enter. Message text is good: "§3.3 A Decider
 needs authored logic + scenarios to be simulated" says the right thing.
 
-### F13 — `ddd what` unscoped is 40× slower
+### F13 — `ddd what` unscoped scrolls (the 40× timing claim was wrong)
 
-`ddd what` walks every product under `.product/`: **1.09s** unscoped versus
-**0.025s** with `--product acme`. Not slow enough to hurt, but the unscoped form
-also dumps both products' findings — 25+ lines, scrolling. Always scope it.
+The unscoped form dumps every product's findings — **28 lines**, scrolling past
+the summary you want. Always scope it with `--product acme`.
+
+**The timing half of this finding did not reproduce and should not be said on
+stage.** The 08-12 reading was **1.09s** unscoped versus **0.025s** scoped; on
+08-13 it was **0.041s versus 0.040s** — no measurable difference. The original
+was almost certainly a cold-cache artifact. The reason to scope is the line
+count, which is real and reproduces; "40× slower" is checkable and false.
+
+### F14 — the pre-flight breaks step 5c's punchline
+
+**Severity: breaks a beat's payoff line. Found 08-13.**
+
+§0 tells you to run `ddd render`. It writes `.ddd/render.html`, which is **not
+gitignored**. Step 5c then runs `git status --short` and says *"I regenerated
+that file and git has nothing to report"* — over this:
+
+```
+?? .ddd/render.html
+```
+
+One unexplained line, at the exact moment the claim depends on emptiness. The
+claim itself is sound: scoped to `.product/`, the status is genuinely empty and
+`decider derive --force` really does rewrite the file byte-identically. Only the
+command is wrong.
+
+**Fixed in the script** (§5c now reads `git status --short -- .product/`), and
+`render` moved after `reset.sh` in the §0 ordering. Two things *not* done, on
+purpose: `.ddd/render.html` was not added to `.gitignore` (a repo change to suit
+a demo), and the beat was not dropped.
+
+The general shape is worth noting for anyone extending this runbook: **the
+pre-flight leaves untracked artifacts, and a later beat asserts on a clean tree.**
+Scope every `git status` in a demo to the directory whose cleanliness you are
+actually claiming.
 
 ### What I did **not** do
 
-- **No fixes.** Nothing above was patched to make a beat look better. F1, F4,
-  F9 and F10 are reported as found.
+- **No product fixes.** No shipped behaviour was patched to make a beat look
+  better. F1, F4, F9, F10 and F12 are reported as found, not worked around.
+  The one code change in this whole effort is to `docs/demo/reset.sh` — demo
+  scaffolding, and a data-loss guard (F7), not a beat cosmetic.
 - **No integration work** between the product flow and the ddd/ledger flow, and
   no Product Framework revision implementation. §5g states the seam as it is.
-- **No acceptances filed.** Verified across every rehearsal: `.decisions/log/`
-  held at 101 files throughout. Both refusal attempts wrote nothing.
-- The only new files are `docs/demo-runbook.md` and `docs/demo/` (five helper
-  scripts, ~100 lines total). No source, no test, no config was changed.
+- **No acceptances filed.** Verified across every rehearsal *and* the 08-13
+  re-run: `.decisions/log/` held at 101 files throughout, counted before and
+  after. Both refusal attempts wrote nothing.
+- The only new files are `docs/demo-runbook.md` and `docs/demo/` (six helper
+  scripts, ~130 lines total). No source, no test, no config was changed —
+  `.gitignore` was deliberately left alone despite F14.
 - **Could not verify visually through Playwright** — the MCP server looks for
   Chrome at `/opt/google/chrome/chrome`, which is not installed. Worked around it
   with the bundled Chromium headless screenshot; the dashboard is confirmed to
