@@ -8,9 +8,14 @@ reconstructed. Every timing is `date +%s.%N` around the command.
 code; the question is which decisions were made, who answers for them, and how
 anyone knows none escaped.
 
-> **Read the failure list (§8) before the polished script.** Two things about
-> this demo are not what the brief assumed, and one of them changes which file
-> you edit on stage.
+**The shape of the hour:** beats 1–4 are the *back half* — decisions kept once
+made, on the `ddd`/`ledger` side. Beat 5 is the *front half* — judgment before
+any code exists, on the `product` side. §12 is a spare card, not a beat.
+
+> **Read the failure list (§8) before the polished script.** Thirteen findings;
+> three of them change what you do on stage — F1 changes which file you edit,
+> F3 keeps CI off the live path, and F9 keeps one section of the build context
+> off the projector.
 
 ---
 
@@ -25,12 +30,17 @@ git tag -f demo-base                  # marks the tip the demo resets to
 
 Then a **dry pass of beat 1** to confirm the tool answers, and reset again.
 
-Terminal: **≥100 columns**, ≥26 rows. The widest line the demo prints is 88
-chars (a `sha256:` in the rejection demand). Below 100 cols it wraps and the
-binding block stops looking like a signature.
+Terminal: **≥100 columns**, ≥26 rows. The widest line that *matters* is 88 chars
+(a `sha256:` in the rejection demand); below 100 cols it wraps and the binding
+block stops looking like a signature. One line exceeds that and is expected to
+wrap — `product guide`'s prose paragraph, 223 chars (F11).
 
 **Do not run `ledger verify` bare on stage** — it prints 79 ULIDs and scrolls
 the screen. Use `ledger coverage` (4 lines) or `ledger verify | head -3`.
+
+**Beat 5 needs no staging and no reset** — it is read-only (§11). The only
+pre-flight it wants is confirming `./target/release/product` exists; the same
+`cargo build --release` produces it alongside `ddd` and `ledger`.
 
 ---
 
@@ -382,53 +392,280 @@ sentence yourself, immediately:
 
 ---
 
-## 5. Beat 5 — the swamp (fallback beat, keep under two minutes)
+## 5. Beat 5 — What → How → Build (judgment before code exists)
 
-**Wall clock: 0.03s.** Frame: *"does this help with the code we already have?"*
+**Wall clock: 0.147s across nine commands. Read-only — the tree stays clean.**
 
-Start from a lint anyone in the room has seen in a CI log:
+Beats 1–4 were the **back half**: decisions kept once made. This is the **front
+half** — judgment happening before there is any code to govern. Different
+binary, different store: `product`, over `.product/`.
 
-```bash
-./target/release/ddd why clippy::unwrap_used
-```
+**Which pass, and why this one.** The `acme` product — a shop: cart, order,
+refund. 51 nodes, every output below fits 88 columns. Chosen over the
+self-hosted `product-cli` What (257 nodes) because a room understands a refund
+without being taught the tool's own metamodel first. One consequence to know
+about before you go on stage: acme fails `--strict` (F10) and the self-hosted
+product is the one with an authored Decider, which is why step 5d crosses
+products deliberately.
 
-```
-diagnostic clippy/clippy::unwrap_used — severity deny
-  governed by:
-  decision dec/rust/no-unwrap — Deny clippy::unwrap_used workspace-wide
-    principal: Emil (Context&)
-    date: 2026-08-06
-    rationale: Every unwrap is an undeclared panic path; the workspace routes fallibility through ProductError instead. Enforced twice by arrangement, not exhortation: [workspace.lints.clippy] in the root manifest and the CI clippy gate (cargo clippy -- -D warnings -D clippy::unwrap_used). ...
-    basedOn:
-      basis (constraint) — The workspace error model routes every failure through ProductError to a defined exit code; an unwrap is a panic path that structurally bypasses that contract, so denying the lint is what keeps the error model total.
-      claim DDD-gates-01 [reported] — Denying clippy::unwrap_used workspace-wide converts every potential panic site into an explicit Result path or a reviewed expect, at negligible authoring cost in this codebase.
-        falsifier: A recurring class of code where satisfying the lint produces worse error handling than the unwrap it replaced, or waiver pressure in review.
-        evidence: The zero-unwrap policy has held across the whole workspace ... without a single waiver request; error paths route through ProductError.
-```
-
-**Say:** you did not start from the governance store. You started from a lint id
-in a build log and arrived at a named person, a dated rationale, and the
-observation that would kill the rule. Nobody wrote a wiki page.
-
-Optional second card, also instant — the whole store's disposition:
+### 5a. Where the journey stands
 
 ```bash
-./target/release/ledger coverage
+./target/release/product guide
 ```
 
 ```
-coverage — 91 decision(s)
-by set:
-  ddd-governance: awaiting-acceptance 78 · escaped-priced 1
-  ledger-design: decided 12
-by namespace:
-  hafeok.ddd: awaiting-acceptance 78 · escaped-priced 1
-  hafeok.ledger: decided 12
-the honest limit: coverage is measured against the enumerated set; nothing verifies the set itself — enumeration completeness has no mechanical check (PRD §8)
+── Your framework journey ──
+  [x] Captured a What model
+  [x] What is conformant
+  [x] How contract scaffolded
+  [x] Delivery feature carved
+  [x] Deliverable wrapped
+
+You have 5 deliverable(s). Make behaviour executable, then build.
+
+Why this matters: Where behaviour is interesting, a Decider makes it executable and is simulated sound before any code. `build` then assembles the frozen SPMC context and runs the realisation against the verification gates.
+
+Next:
+  $ product decider derive <aggregate>
+      Derive a Decider for an aggregate and `product decider simulate` it sound before realisation.
+  $ product build <deliverable>
+      Assemble the frozen build context and run the realisation against the verification gates.
 ```
 
-That last line is the tool disclosing its own blind spot on screen. If someone
-in the room is looking for the catch, hand it to them.
+**Say:** the tool knows where you are in the work and what the next act is. Note
+what it does *not* say: nothing here is about writing code yet.
+
+*(The "Why this matters" line is 223 characters and wraps to three lines — F11.)*
+
+### 5b. The What — enumeration, then conformance
+
+```bash
+./target/release/product domain list --product acme \
+  | grep -E "^(context|entity|command|event|read-model|flow|invariant)"
+```
+
+```
+context           catalog                 Catalog
+context           ordering                Ordering
+entity            cart                    Cart [ordering]
+entity            lineitem                LineItem [ordering]
+entity            order                   Order [ordering]
+entity            product-item            Product [catalog]
+invariant         cart-1                  a checking-out Cart has at least 1 LineItem
+invariant         refund-1                refund_total not greater than paid_total
+command           cmd-add-item            Add item [ordering]
+command           cmd-authorize-payment   Authorize payment [ordering]
+command           cmd-begin-payment       Begin payment [ordering]
+command           cmd-issue-refund        Issue refund [ordering]
+event             ev-item-added           Item added changes cart
+event             ev-order-placed         Order placed changes order
+event             ev-payment-begun        Payment begun changes cart
+event             ev-refund-issued        Refund issued changes order
+read-model        rm-cart-summary         Cart summary
+read-model        rm-order-confirmation   Order confirmation
+```
+
+```bash
+./target/release/product domain validate --product acme
+```
+
+```
+conformant — 51 node(s), 0 violations
+```
+
+**Say:** that is the whole product, enumerated. Commands, events, the invariants
+that constrain them. No code exists. "Conformant" is not a style check — it is
+the model's own shape rules: every event changes something, every command
+targets an aggregate, every flow is owned.
+
+**Trap:** run this **without `--strict`**. Strict adds graph-level completeness
+checks and acme fails one of them out of the box — see F10.
+
+### 5c. The hinge — What in, executable signature out
+
+This is the encoding-first move: the Decider's signature is *derived* from the
+event model, not authored.
+
+```bash
+./target/release/product decider derive order --product acme --force
+```
+
+```
+Derived decider 'order-decider' for aggregate 'order' at /home/user/product-cli/.product/products/acme/deciders/order-decider.yaml
+  handles 2 command(s), emits 2 event(s), evolves from 2 event(s), rejects 1 invariant(s)
+```
+
+Then, immediately:
+
+```bash
+git status --short          # prints nothing
+```
+
+**Say this — it is the point of the step:** I just regenerated that file and git
+has nothing to report. The signature is a *function of the model*, not an
+artifact somebody maintains. Change the event model and it changes; don't, and
+it doesn't.
+
+```bash
+./target/release/product decider show order-decider --product acme
+```
+
+```
+decider: order-decider
+decides-for: order
+handles: cmd-authorize-payment, cmd-issue-refund
+emits: ev-order-placed, ev-refund-issued
+evolves-from: ev-order-placed, ev-refund-issued
+rejects: refund-1
+```
+
+### 5d. Where judgment is still owed — the contrast pair
+
+The signature came free. The behaviour did not:
+
+```bash
+./target/release/product decider simulate order-decider --product acme
+```
+
+```
+not sound/complete — 1 finding(s):
+  - [order-decider] logic: §3.3 A Decider needs authored logic + scenarios to be simulated.
+```
+
+Exit 1. **Narrate this as you type it, or it reads as breakage (F12).**
+
+Now the same command against a Decider where the judgment *was* authored — this
+one is in the self-hosted `product-cli` product, hence no `--product` flag:
+
+```bash
+./target/release/product decider simulate e-viewgraph-decider
+```
+
+```
+sound + complete — decider 'e-viewgraph-decider': 2 scenario(s) over 2 command(s)
+```
+
+Exit 0. What the difference costs is 30 lines of YAML, and this is the shape of
+it — given / when / then, in the model's own vocabulary, before any code:
+
+```yaml
+scenarios:
+- name: first render marks the view rendered and fresh
+  given: []
+  when: cmd-render-view
+  then:
+    emit: [ev-view-refreshed]
+- name: an on-disk change is cleared by a refetch
+  given: [ev-graph-changed]
+  when: cmd-refetch-graph
+  then:
+    emit: [ev-view-refreshed]
+```
+
+**Say:** the machine derived what the Decider *is*. It cannot derive what the
+Decider should *do* — that is the judgment, and it is the only thing on this
+screen a person had to write. Same sentence as beat 4, one phase earlier.
+
+### 5e. The How
+
+```bash
+./target/release/product how show --product acme
+```
+
+```
+blueprint: acme-storefront
+version:   1.1.0
+realises:  What 1.1
+application-contract: acme-app-contract (TypeScript)
+  statements: 2
+infrastructure-contract: acme-runtime-contract satisfies acme-app-contract (2 resource(s))
+top-decisions: 2
+principles:    4
+patterns:      4
+interfaces:    2
+```
+
+**Say:** the How is versioned against the What it realises — `1.1.0` realises
+What `1.1`. Architecture that declares which model it is an architecture *of*.
+
+### 5f. Build work falls out of the model
+
+```bash
+./target/release/product build del-refunds --product acme --dry-run | tail -12
+```
+
+```
+--- Gate status ---
+deliverable 'del-refunds': not done (75% — 6/8 checks)
+  [x] domain cmd-issue-refund: conformant
+  [x] domain ev-refund-issued: conformant
+  [x] domain flow-refunds: conformant
+  [x] domain order: conformant
+  [x] domain ordering: conformant
+  [ ] behavioural-sim order-decider: 1 finding(s)
+  [ ] behavioural-conform order-decider: pending — run `decider conform`
+  [x] acceptance ac-refund-1: passing
+```
+
+**Say — this is the beat's landing:** nobody wrote that checklist. It is
+computed from the graph. "Done" is not a feeling or a ticket status; it is eight
+named checks, six green. And look at which two are red: both of them are the
+judgment we did not author in 5d. The model told us what is missing, by name.
+
+**Trap:** `--dry-run` is mandatory on stage. Without it, `build` dispatches a
+worker and actually tries to realise the deliverable — long, networked, and not
+a demo.
+
+**Trap:** do **not** show the `## How` section of the build context. It reads
+`_(no How contract loaded)_` for every product, including this one. That is a
+real defect (F9), not a property of acme. Pipe to `tail -12` as above and it
+never appears.
+
+### 5g. The seam — one bridge exists, the rest is roadmap
+
+One command joins the two halves of the hour. The ddd store classifies the
+`product` store's What against the same boundary policy table beats 1–3 ran on
+code:
+
+```bash
+./target/release/ddd what --product acme | tail -4
+```
+
+```
+UNDECLARED read-model/rm-order-confirmation — the View a Translation watches is the contract the other side reads
+UNDECLARED system/acme-admin — a system (§3.2.5) is a deployment, team and contract boundary
+UNDECLARED system/acme-shop — a system (§3.2.5) is a deployment, team and contract boundary
+8 surface element(s): 0 declared, 8 undeclared — 15 internal element(s) outside the table, 23 classified
+```
+
+0.025s scoped. **Always pass `--product`** — unscoped it walks every product and
+takes 1.09s (F13). `--strict` exits 1 instead of 0, if you want it as a gate.
+
+**The two sentences to say — verify nothing more than this:**
+
+> *"These are two tools that agree philosophically and are joined at exactly one
+> point today: the governance side can already read the product side's What and
+> tell you which boundaries carry no decision — eight here, none declared."*
+>
+> *"What is written down and not yet built is the rest of that join: a What set
+> being a decision set, and a build being 'done' only when every decision in it
+> has a discharge. Today those are two stores with two vocabularies and one
+> bridge. I'd rather show you the bridge than claim the road."*
+
+**Do not overstate this.** What is true today: `ddd what` reads
+`.product/products/*/`, classifies boundary kinds, and reports declared vs
+undeclared; `ddd what --strict` can gate it in CI. What is *not* true today: the
+`product` gate status in 5f and the ledger's disposition states in beat 4 are
+computed by different code over different stores, and neither knows about the
+other. Nothing in `product build` consults `.decisions/`.
+
+**On the design note:** the brief referred to
+`product-framework-revision-decisions-as-unit.md`. **That file is not in this
+repository** — I searched `docs/`, `spec/`, and the whole tree, including for
+its concepts, and there are no references to it anywhere. The seam described
+above is read off the flows' own behaviour, not off that document. If it exists
+elsewhere, reconcile before you quote it.
 
 ---
 
@@ -638,10 +875,73 @@ After a rehearsal, `ddd report escapes` lists the demo tokens as UNGOVERNED
 `reset.sh` clears it — but if you improvise a `report escapes` mid-demo without
 resetting first, your own demo tokens appear in it.
 
+### F9 — `product build` never loads the How, for any product
+
+**Severity: real defect. It removes the middle phase from the one artifact
+meant to show all three composed.**
+
+Every build context renders:
+
+```
+## How — apply these by pointer
+
+_(no How contract loaded)_
+```
+
+Not an acme quirk — reproduced on the self-hosted `product-cli` product too.
+`load_how()` at `product-cli/src/commands/build.rs:367` checks three paths:
+`.product/how-contract.yaml`, `.product/blueprints/<default-product>/…`, and the
+legacy `.product/archetypes/<default-product>/…`. **None of them exists in the
+current scoped layout**, where the contract lives at
+`.product/products/<name>/how-contract.yaml`. It also reads
+`default_product_name()` rather than the `--product` argument, so `--product
+acme` would look under the wrong product even if the base path were right.
+
+`product how show --product acme` reads the contract correctly — the
+contract is fine, the build adapter's resolution is not.
+
+**Not fixed** (constraint: no feature work). **Mitigation:** §5e shows the How
+as its own step, and §5f pipes to `tail -12` so the empty section never reaches
+the projector.
+
+### F10 — acme fails `domain validate --strict` out of the box
+
+```
+non-conformant — 1 violation(s):
+  - [qd-residency] constrains: §3.6 An architectural constraint must bind a real How element — 'pure-core' is not a declared decision/principle/pattern/interface.
+```
+
+Pre-existing in the shipped showcase product; nothing to do with this rehearsal.
+Non-strict is `conformant — 51 node(s), 0 violations`. **Use non-strict on
+acme.** If someone asks for strict, run it against the self-hosted product
+instead — `product domain validate --strict` is `conformant (strict) — 257
+node(s), 0 violations` in 0.027s. Reported, not fixed.
+
+### F11 — `product guide` emits a 223-character line
+
+The "Why this matters" paragraph is one unwrapped line; at 100 columns it wraps
+to three. Cosmetic, and the rest of beat 5 tops out at 88 columns. Mentioned
+only so it does not surprise you.
+
+### F12 — `decider simulate` exits 1 on the un-authored Decider
+
+That is the *content* of step 5d, not a fault — but it prints `not
+sound/complete` in the same register as a failure, and an audience reads red as
+broken. Narrate before you press enter. Message text is good: "§3.3 A Decider
+needs authored logic + scenarios to be simulated" says the right thing.
+
+### F13 — `ddd what` unscoped is 40× slower
+
+`ddd what` walks every product under `.product/`: **1.09s** unscoped versus
+**0.025s** with `--product acme`. Not slow enough to hurt, but the unscoped form
+also dumps both products' findings — 25+ lines, scrolling. Always scope it.
+
 ### What I did **not** do
 
-- **No fixes.** Nothing above was patched to make a beat look better. F1 and F4
-  are reported as found.
+- **No fixes.** Nothing above was patched to make a beat look better. F1, F4,
+  F9 and F10 are reported as found.
+- **No integration work** between the product flow and the ddd/ledger flow, and
+  no Product Framework revision implementation. §5g states the seam as it is.
 - **No acceptances filed.** Verified across every rehearsal: `.decisions/log/`
   held at 101 files throughout. Both refusal attempts wrote nothing.
 - The only new files are `docs/demo-runbook.md` and `docs/demo/` (five helper
@@ -664,22 +964,42 @@ narration — plan it that way.
 | 2 — declaration binds (a–d) | 0.14s | 8 min |
 | 3 — bypass catch (a–b) | 0.10s | 10 min |
 | 4 — acceptance is human (a–c) | 0.20s | 10 min |
-| 5 — the swamp | 0.03s | 5 min |
+| 5 — What → How → Build (a–g) | 0.15s | 5 min |
 | Numbers + falsifier (§6) | — | 8 min |
 | Q&A (§10) | — | 12 min |
-| **Total** | **~0.5s** | **~57 min** |
+| **Total** | **~0.7s** | **~57 min** |
+
+**Beat 5 replaces the swamp in the sequence; it does not add to it.** The swamp
+was cut ahead of time, not live — its content survives as an optional Q&A card
+(§12), reachable from the Q&A table when someone asks the legacy-code question.
+The hour is unchanged: 5 minutes then, 5 minutes now.
+
+**It does fit 5 minutes**, but only just, and only if you do not read the
+outputs aloud. Nine commands totalling 0.15s of machine time; the budget is
+entirely the four "say this" lines (5b, 5c, 5d, 5f). If you are running behind
+when you reach it, drop 5a and 5e first (see below) and it becomes a
+comfortable 3 minutes without losing the arc.
 
 **Cut order, first to go:**
 
-1. **Beat 5** — it is the fallback beat by construction. Drop it whole.
+1. **Beat 5a and 5e** (`guide` and `how show`) — orientation and the How
+   summary. The arc survives on 5b → 5c → 5d → 5f. Saves ~2 min.
 2. **Beat 2d** (the two files on disk) — the payoff already landed at 2b/2c.
 3. **§6b's provenance caveat** — say the headline number, drop the labelling
    discussion. *(Keep the number itself; do not quote it without the n.)*
-4. **Beat 3a** (the green half) — go straight to the bypass. You lose the
+4. **Beat 5g** (the seam) — only if you are badly over. It is 25ms and two
+   sentences, and it is the one moment the two halves of the hour touch; cutting
+   it leaves the room with two unrelated demos. Cut 5f before 5g if it comes to
+   that, but do not cut both.
+5. **Beat 3a** (the green half) — go straight to the bypass. You lose the
    green/red contrast, which is a real loss; cut this before beat 2b, never
    after.
-5. **Beat 1a / the Rust variant** — already cut. Only run it on request, and
+6. **Beat 1a / the Rust variant** — already cut. Only run it on request, and
    only if you pre-warmed.
+
+**Never cut** (unchanged): beat 2b, beat 4c. Add **beat 5d** to that list — the
+un-authored/authored Decider contrast is the front-half statement of the whole
+thesis, and it is two commands.
 
 **Never cut:** beat 2b (the reuse refusal — one command, 0.05s, and it is the
 whole idea) and beat 4c (the L006 refusal — the thesis).
@@ -697,6 +1017,8 @@ whole idea) and beat 4c (the L006 refusal — the thesis).
 | **"Can't a model just use a human's email?"** | Yes. The identity check is a floor that catches what agent harnesses produce by default; `L009` adds corroboration by requiring the acceptance's committer to match the acceptor. Neither is a cryptographic signature — the `signature` field is reserved and empty. | `ledger blame …` — the `(live, committed by …)` clause |
 | **"How do you know the classifier isn't just noisy?"** | 0 false demands over 22 non-surface labels across 21 hand-labelled cases — and the corpus caught a real false-demand bug on first run, in 6 of 12 rust cases. Single-labeller provenance is the standing caveat. | `cargo test -p ddd-cli --test corpus` (do not run live) |
 | **"Is anything unresolved?"** | 79 entries awaiting acceptance, one priced escape with a review date, and two questions explicitly awaiting a ruling. The queue is visible rather than assumed. | `ledger coverage`, `ledger verify \| head -3` |
+| **"Does this help with the code we already have?"** | Yes, and differently: you start from a symptom you already see — a lint id in a CI log — and land on a named person, a dated rationale, and the observation that would kill the rule. This is the beat that was cut from the sequence; run it here if the question comes. | **[§12, the swamp card](#12-optional-card--the-swamp-for-the-legacy-code-question)** — `ddd why clippy::unwrap_used` |
+| **"How do these two halves join up?"** | One bridge today: the governance side reads the product side's What and reports which boundaries carry no decision. The fuller join — a What set *being* a decision set — is written down and unbuilt. Don't claim more. | Beat 5g — `ddd what --product acme \| tail -4` |
 
 ---
 
@@ -744,3 +1066,70 @@ The script refuses to run if the tag predates `docs/demo/` (F7).
 **Between rehearsal and live you do *not* need:** a rebuild, a cargo clean, or
 any cache clear. rust-analyzer's warm index is worth keeping — it is the
 difference between 54s and 17s if you run the Rust variant.
+
+**Beat 5 needs no reset steps of its own — verified.** The whole
+What → How → Build pass is read-only in practice: eight of its nine commands
+never write, and `decider derive --force` rewrites `order-decider.yaml`
+byte-identically, so `git status` stays empty (that reproducibility is itself
+step 5c's point). Belt and braces, it is covered anyway: `.product/` files are
+tracked, so `git reset --hard demo-base` restores any drift. Verified by
+mutating `order-decider.yaml` by hand, running `reset.sh` → `dirty=0`, and
+re-running the full beat 5 pass from clean:
+
+```
+FULL PASS FROM CLEAN: 0.099s
+(tree clean)
+```
+
+---
+
+## 12. Optional card — the swamp (for the legacy-code question)
+
+**Not in the beat sequence.** This was beat 5 until the front-half pass replaced
+it; it answers a client question ("does this help with the code we already
+have?"), not a future-of-the-work question. Keep it in your pocket and run it
+from the Q&A table. **Under two minutes. Wall clock 0.03s.**
+
+Start from a lint anyone in the room has seen in a CI log:
+
+```bash
+./target/release/ddd why clippy::unwrap_used
+```
+
+```
+diagnostic clippy/clippy::unwrap_used — severity deny
+  governed by:
+  decision dec/rust/no-unwrap — Deny clippy::unwrap_used workspace-wide
+    principal: Emil (Context&)
+    date: 2026-08-06
+    rationale: Every unwrap is an undeclared panic path; the workspace routes fallibility through ProductError instead. Enforced twice by arrangement, not exhortation: [workspace.lints.clippy] in the root manifest and the CI clippy gate (cargo clippy -- -D warnings -D clippy::unwrap_used). ...
+    basedOn:
+      basis (constraint) — The workspace error model routes every failure through ProductError to a defined exit code; an unwrap is a panic path that structurally bypasses that contract, so denying the lint is what keeps the error model total.
+      claim DDD-gates-01 [reported] — Denying clippy::unwrap_used workspace-wide converts every potential panic site into an explicit Result path or a reviewed expect, at negligible authoring cost in this codebase.
+        falsifier: A recurring class of code where satisfying the lint produces worse error handling than the unwrap it replaced, or waiver pressure in review.
+        evidence: The zero-unwrap policy has held across the whole workspace ... without a single waiver request; error paths route through ProductError.
+```
+
+**Say:** you did not start from the governance store. You started from a lint id
+in a build log and arrived at a named person, a dated rationale, and the
+observation that would kill the rule. Nobody wrote a wiki page.
+
+Second card, also instant — the whole store's disposition:
+
+```bash
+./target/release/ledger coverage
+```
+
+```
+coverage — 91 decision(s)
+by set:
+  ddd-governance: awaiting-acceptance 78 · escaped-priced 1
+  ledger-design: decided 12
+by namespace:
+  hafeok.ddd: awaiting-acceptance 78 · escaped-priced 1
+  hafeok.ledger: decided 12
+the honest limit: coverage is measured against the enumerated set; nothing verifies the set itself — enumeration completeness has no mechanical check (PRD §8)
+```
+
+That last line is the tool disclosing its own blind spot on screen. If someone
+in the room is looking for the catch, hand it to them.
