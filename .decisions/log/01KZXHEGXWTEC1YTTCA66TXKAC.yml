@@ -1,0 +1,11 @@
+format: 1
+id: cs:01KZXHEGXWTEC1YTTCA66TXKAC
+created_at: 2026-08-13T12:27:13.720586783Z
+created_by: emk@delegate.dk
+acceptances:
+- id: acc:01KZXHEGXWPZEVYGE4D5F4CP28
+  decision: dec:hafeok.ddd/01KZTGGMPHCW14AH6AJW4YSZ5Z
+  version: sha256:ecc4e597a4865d51aa1eec83c21796dcb64e9061c31b59d4e479405934e4f9f3
+  actor: emk@delegate.dk
+  at: 2026-08-13T12:27:13.720586783Z
+  scope: version
