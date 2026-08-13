@@ -1,0 +1,44 @@
+format: 2
+id: seam/rust/ledger-cli-src-commands-evolve-rs
+boundary: contract surface of ledger-cli/src/commands/evolve.rs
+verdict_knowledge: "A caller learns that --revisit-if and --no-revisit-if state opposite things and are refused together, so a revision cannot both set and clear the reopen edges."
+contract_location: ledger-cli/src/commands/evolve.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: revise
+  file: ledger-cli/src/commands/evolve.rs
+  before: sha256:b6d1bc97f9004dc47765580d0d35732b1cc2bf9346dfbecd94d71244677d860f
+  after: sha256:ce7e3e017469f42db24e089a68f8f8bc667e4eddaf03175f65e46c2654d2ad21
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:6b79c21af63352aa7da168f23d30ff2267dae88ab64e7e8e0e75c8c5b20a6c92
+- symbol: ReviseEdges
+  file: ledger-cli/src/commands/evolve.rs
+  before: sha256:b6d1bc97f9004dc47765580d0d35732b1cc2bf9346dfbecd94d71244677d860f
+  after: sha256:ce7e3e017469f42db24e089a68f8f8bc667e4eddaf03175f65e46c2654d2ad21
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:6a775666b394256f3b8f3bd504004722be2e14a9f829424bc143e8d22ed3f9d2
+- symbol: based_on
+  file: ledger-cli/src/commands/evolve.rs
+  before: sha256:b6d1bc97f9004dc47765580d0d35732b1cc2bf9346dfbecd94d71244677d860f
+  after: sha256:ce7e3e017469f42db24e089a68f8f8bc667e4eddaf03175f65e46c2654d2ad21
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:21cd681005d4cba8d330615a654f34a46b8b4593f9aef1f8129cf628de2322e8
+- symbol: no_revisit_if
+  file: ledger-cli/src/commands/evolve.rs
+  before: sha256:b6d1bc97f9004dc47765580d0d35732b1cc2bf9346dfbecd94d71244677d860f
+  after: sha256:ce7e3e017469f42db24e089a68f8f8bc667e4eddaf03175f65e46c2654d2ad21
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:76159f66a14f49f2dd6c9b807fdab83feb4b308b35b29d2424d6aea00bedb6fc
+- symbol: note
+  file: ledger-cli/src/commands/evolve.rs
+  before: sha256:b6d1bc97f9004dc47765580d0d35732b1cc2bf9346dfbecd94d71244677d860f
+  after: sha256:ce7e3e017469f42db24e089a68f8f8bc667e4eddaf03175f65e46c2654d2ad21
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:99419b0184171b84c121195a00f964760e853b40ad0ee055bc359766a6d92cb6
+- symbol: revisit_if
+  file: ledger-cli/src/commands/evolve.rs
+  before: sha256:b6d1bc97f9004dc47765580d0d35732b1cc2bf9346dfbecd94d71244677d860f
+  after: sha256:ce7e3e017469f42db24e089a68f8f8bc667e4eddaf03175f65e46c2654d2ad21
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:a36d023355750071ee59340913a821accfecec7ea9ab419b824d4b8bbeef6a36

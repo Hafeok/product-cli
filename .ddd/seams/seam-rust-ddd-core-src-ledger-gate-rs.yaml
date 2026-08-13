@@ -1,7 +1,7 @@
 format: 2
 id: seam/rust/ddd-core-src-ledger-gate-rs
 boundary: contract surface of ddd-core/src/ledger_gate.rs
-verdict_knowledge: 'Callers learn that readiness and completeness are the ledger''s verdicts restated — ddd surfaces them without a second rulebook — and that migrated basis pins are checked exactly, marker by marker.'
+verdict_knowledge: Callers learn that readiness and completeness are the ledger's verdicts restated — ddd surfaces them without a second rulebook — and that migrated basis pins are checked exactly, marker by marker.
 contract_location: ddd-core/src/ledger_gate.rs
 obligations: []
 metadata: {}
@@ -102,3 +102,51 @@ bindings:
   after: sha256:c8a9e77a1bcdbe8b9719aa8c8f0bd8d01ce16b7315d81b2790f2cfbb15ed87fe
   base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
   hash: sha256:4bd797f767f409c661c2fe586c15702e849ff4789b3fb683dfce047507dc9f90
+- symbol: Reopened
+  file: ddd-core/src/ledger_gate.rs
+  before: sha256:c8a9e77a1bcdbe8b9719aa8c8f0bd8d01ce16b7315d81b2790f2cfbb15ed87fe
+  after: sha256:aecd5dcdae830a72861a0eced2942216020f5f5dc7b6eb7e832be1af8be8be81
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:4ccfd7cfbb5374f21c9c690b79a28cbe711f78dc07b60a720cd92717cb09a98d
+- symbol: reopen_checked
+  file: ddd-core/src/ledger_gate.rs
+  before: sha256:c8a9e77a1bcdbe8b9719aa8c8f0bd8d01ce16b7315d81b2790f2cfbb15ed87fe
+  after: sha256:aecd5dcdae830a72861a0eced2942216020f5f5dc7b6eb7e832be1af8be8be81
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:564c5d4c7f2f030cb2718d31d00398be2dc05782460fa74370442d004e93cece
+- symbol: reopened
+  file: ddd-core/src/ledger_gate.rs
+  before: sha256:c8a9e77a1bcdbe8b9719aa8c8f0bd8d01ce16b7315d81b2790f2cfbb15ed87fe
+  after: sha256:aecd5dcdae830a72861a0eced2942216020f5f5dc7b6eb7e832be1af8be8be81
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:8eec238568c173856c7df9da40617a2fd79ccd08c74e1579f23a01757a546843
+- symbol: claim
+  file: ddd-core/src/ledger_gate.rs
+  before: sha256:c8a9e77a1bcdbe8b9719aa8c8f0bd8d01ce16b7315d81b2790f2cfbb15ed87fe
+  after: sha256:aecd5dcdae830a72861a0eced2942216020f5f5dc7b6eb7e832be1af8be8be81
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:e7e4513c8ce3b6f654e8fe320ff10f09ecade063e9deeffab4a5a701b584a77f
+- symbol: current
+  file: ddd-core/src/ledger_gate.rs
+  before: sha256:c8a9e77a1bcdbe8b9719aa8c8f0bd8d01ce16b7315d81b2790f2cfbb15ed87fe
+  after: sha256:aecd5dcdae830a72861a0eced2942216020f5f5dc7b6eb7e832be1af8be8be81
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:c872e1428dacbf8f414170ab136b57e54fc7a34a005e906925b7619277659c4f
+- symbol: decision
+  file: ddd-core/src/ledger_gate.rs
+  before: sha256:c8a9e77a1bcdbe8b9719aa8c8f0bd8d01ce16b7315d81b2790f2cfbb15ed87fe
+  after: sha256:aecd5dcdae830a72861a0eced2942216020f5f5dc7b6eb7e832be1af8be8be81
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:26f29a24437eb340f5f35d455a6350281f3586f117ccf7bce600a66d032c3b1e
+- symbol: historical
+  file: ddd-core/src/ledger_gate.rs
+  before: sha256:c8a9e77a1bcdbe8b9719aa8c8f0bd8d01ce16b7315d81b2790f2cfbb15ed87fe
+  after: sha256:aecd5dcdae830a72861a0eced2942216020f5f5dc7b6eb7e832be1af8be8be81
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:4e4306ac34c340a8ffe9d359f3074c28bed4f4fceb1e4749447f092cee1d1d04
+- symbol: pinned
+  file: ddd-core/src/ledger_gate.rs
+  before: sha256:c8a9e77a1bcdbe8b9719aa8c8f0bd8d01ce16b7315d81b2790f2cfbb15ed87fe
+  after: sha256:aecd5dcdae830a72861a0eced2942216020f5f5dc7b6eb7e832be1af8be8be81
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:bbdf7694e334de1843867a65951db0f301ca24a27308bb535b9889fdb6f8147f

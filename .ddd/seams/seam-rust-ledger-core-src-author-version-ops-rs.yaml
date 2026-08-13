@@ -1,0 +1,20 @@
+format: 2
+id: seam/rust/ledger-core-src-author-version-ops-rs
+boundary: contract surface of ledger-core/src/author/version_ops.rs
+verdict_knowledge: "A caller learns that revise states its reopen edges explicitly — None leaves the inherited set alone, Some(empty) clears it — so re-typing an edge is an act a reader can see rather than a silent reclassification, and that a revision carries a note for why."
+contract_location: ledger-core/src/author/version_ops.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: note
+  file: ledger-core/src/author/version_ops.rs
+  before: sha256:b3fe0c55cd025a80e54361a9d3a7126387cf1270afe8e8d5b5857a32be56b8b9
+  after: sha256:a005b0e439e9cf9e6c0d57d438c2c462d51ac3bb9a71a875a6716c8f645f6d27
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:1e788db35686f854a0a04cd3abb03f9854caa515b978946a363b23c92843b449
+- symbol: revisit_if
+  file: ledger-core/src/author/version_ops.rs
+  before: sha256:b3fe0c55cd025a80e54361a9d3a7126387cf1270afe8e8d5b5857a32be56b8b9
+  after: sha256:a005b0e439e9cf9e6c0d57d438c2c462d51ac3bb9a71a875a6716c8f645f6d27
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:5e9522f5f1211954e433dd607f417336a5ac7813d93aec16f7446922ec17105d

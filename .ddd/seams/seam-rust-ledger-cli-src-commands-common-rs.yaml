@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ledger-cli-src-commands-common-rs
+boundary: contract surface of ledger-cli/src/commands/common.rs
+verdict_knowledge: "A caller learns that reopen pointers parse through their own type and never through BasisRef — the ruling's distinction is a type distinction at the CLI boundary too."
+contract_location: ledger-cli/src/commands/common.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: parse_revisit_if
+  file: ledger-cli/src/commands/common.rs
+  before: sha256:f65a2e2213ded96be3dd58b39dec5ff1741b45a6c5566bc8b8e68a0671d6406c
+  after: sha256:583129bd790b60851ff207b3982495a7f058b450e02e49a1268a9e1d4dab02e0
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:33d92ae290d85d4b3d60efb64e6b7b3857ca76ac81d238967dad89a18ec69987

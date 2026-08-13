@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ddd-cli-src-commands-content-hash-rs
+boundary: contract surface of ddd-cli/src/commands/content_hash.rs
+verdict_knowledge: "A caller learns that the content hash a ledger entry pins can be asked for rather than recomputed by hand — the number the M8 migration hard-coded — and that it covers the three families that carry one: decisions, claims and seams. Read-only: it computes and prints, and writes nothing."
+contract_location: ddd-cli/src/commands/content_hash.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: run
+  file: ddd-cli/src/commands/content_hash.rs
+  before: absent
+  after: sha256:a97bf8115fb7697aadda9e75ad15c02644a610ae031e248e2c21a8dd4d89a515
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:f81e2ed756531debccecd62893dbed2c2246eb4b617594f3533965bcdc91b33a

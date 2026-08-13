@@ -1,0 +1,20 @@
+format: 2
+id: seam/rust/ledger-core-src-lib-rs
+boundary: contract surface of ledger-core/src/lib.rs
+verdict_knowledge: "A consumer learns which modules are the crate's surface; revisit and show join it at spec v1.5, and neither pulls in an ontology — the substrate an outside implementation imports stays ddd-free."
+contract_location: ledger-core/src/lib.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: revisit
+  file: ledger-core/src/lib.rs
+  before: sha256:4497ab959ef5de9f0cf5cc3166d0bb34eb34ab469b5bd442cdb799fe6347782e
+  after: sha256:e975aaeacbaa8d69f774e4084027dd91f7826cb5dbd9bd8d3f7c5451d7729cfd
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:a5c24c6c0e9fc7524e0605b50601e78db7a7642e42765895b8f7930286f95208
+- symbol: show
+  file: ledger-core/src/lib.rs
+  before: sha256:4497ab959ef5de9f0cf5cc3166d0bb34eb34ab469b5bd442cdb799fe6347782e
+  after: sha256:e975aaeacbaa8d69f774e4084027dd91f7826cb5dbd9bd8d3f7c5451d7729cfd
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:265e9103bf53f77ebff282df9389a6e484e069b85ad7666058ad6ce3605aa060

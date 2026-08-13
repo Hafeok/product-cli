@@ -1,0 +1,50 @@
+format: 2
+id: seam/rust/ledger-core-src-revisit-rs
+boundary: contract surface of ledger-core/src/revisit.rs
+verdict_knowledge: "A caller learns that a reopen pointer is its own type, RevisitRef, and cannot be passed where a basis is expected — the 2026-08-13 ruling made structural rather than conventional. It also learns what the type does not do: the vocabulary is open at L0, exactly as based_on's is, so nothing here resolves a pointer or proves the claim it names exists."
+contract_location: ledger-core/src/revisit.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: impl RevisitRef
+  file: ledger-core/src/revisit.rs
+  before: absent
+  after: sha256:0ffba08454f03816b885b8cd1a87827abc8b5acc628fe4fd933566e47879c258
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:da6bcd57b4e2558994386dfe32130de0d5f1673ab2cf4604649092dd5cb688d0
+- symbol: RevisitRef
+  file: ledger-core/src/revisit.rs
+  before: absent
+  after: sha256:0ffba08454f03816b885b8cd1a87827abc8b5acc628fe4fd933566e47879c258
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:10138b020fd4630c062e204ffb572046f0e69e768fba6aad653acaafc7efdab6
+- symbol: impl Deserialize<'de> for RevisitRef
+  file: ledger-core/src/revisit.rs
+  before: absent
+  after: sha256:0ffba08454f03816b885b8cd1a87827abc8b5acc628fe4fd933566e47879c258
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:4e23bc8c2097c037e04026adac8a18e377f8e87494e0ec64a604f0f9e280b0a5
+- symbol: impl FromStr for RevisitRef
+  file: ledger-core/src/revisit.rs
+  before: absent
+  after: sha256:0ffba08454f03816b885b8cd1a87827abc8b5acc628fe4fd933566e47879c258
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:00d6dfb0334189eb15b1a6618e45b16e480974f4861e271c89e88416b5c1f01d
+- symbol: impl Serialize for RevisitRef
+  file: ledger-core/src/revisit.rs
+  before: absent
+  after: sha256:0ffba08454f03816b885b8cd1a87827abc8b5acc628fe4fd933566e47879c258
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:4d7a04fdc29160c7fe013146d537109366bec20cb9490b365b8f10959f5bf68d
+- symbol: impl fmt::Display for RevisitRef
+  file: ledger-core/src/revisit.rs
+  before: absent
+  after: sha256:0ffba08454f03816b885b8cd1a87827abc8b5acc628fe4fd933566e47879c258
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:4e2c0d14cb7de18c93d19e61e54d3af37d2f5b967fc59c5ae18b8cfcd87a7fe6
+- symbol: as_str
+  file: ledger-core/src/revisit.rs
+  before: absent
+  after: sha256:0ffba08454f03816b885b8cd1a87827abc8b5acc628fe4fd933566e47879c258
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:af56fc81fd0b526bd081555fc13ee60ee63f27cff6bc1963a03ee91f17333746

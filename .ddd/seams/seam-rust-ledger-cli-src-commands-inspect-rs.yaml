@@ -1,0 +1,50 @@
+format: 2
+id: seam/rust/ledger-cli-src-commands-inspect-rs
+boundary: contract surface of ledger-cli/src/commands/inspect.rs
+verdict_knowledge: "A caller learns that show takes exactly one selector and refuses two, so a pass never silently covers more than was asked for, and that a named id with no filed version is an error rather than an empty screen — the one outcome an acceptance pass must not mistake for nothing to sign."
+contract_location: ledger-cli/src/commands/inspect.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: show
+  file: ledger-cli/src/commands/inspect.rs
+  before: sha256:476951f002e222c357c94494aee8e36779fff0116c31eb1d52b13c9a62b06bd7
+  after: sha256:9d9732d3284a0d9115902a4fa471b6a61a090129b5c9bfebfdf462573ef7ed84
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:a855d19a45ccbc946295245f409499923b7604d7a08a348ba84f9882eeb418b1
+- symbol: ShowFlags
+  file: ledger-cli/src/commands/inspect.rs
+  before: sha256:476951f002e222c357c94494aee8e36779fff0116c31eb1d52b13c9a62b06bd7
+  after: sha256:9d9732d3284a0d9115902a4fa471b6a61a090129b5c9bfebfdf462573ef7ed84
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:5add536cc599ec2ba4fa588b8a22645b31146249c7194d56a98679250ce5f772
+- symbol: decision
+  file: ledger-cli/src/commands/inspect.rs
+  before: sha256:476951f002e222c357c94494aee8e36779fff0116c31eb1d52b13c9a62b06bd7
+  after: sha256:9d9732d3284a0d9115902a4fa471b6a61a090129b5c9bfebfdf462573ef7ed84
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:40ef767792d5567cae7eb16f259bdac65660889c96e59c1de9e09ae607523167
+- symbol: group
+  file: ledger-cli/src/commands/inspect.rs
+  before: sha256:476951f002e222c357c94494aee8e36779fff0116c31eb1d52b13c9a62b06bd7
+  after: sha256:9d9732d3284a0d9115902a4fa471b6a61a090129b5c9bfebfdf462573ef7ed84
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:a7a1f7eb74c8c13e6c7babe4c2db36e437a2aef31664c9bb7354cba72bce5c5d
+- symbol: json
+  file: ledger-cli/src/commands/inspect.rs
+  before: sha256:476951f002e222c357c94494aee8e36779fff0116c31eb1d52b13c9a62b06bd7
+  after: sha256:9d9732d3284a0d9115902a4fa471b6a61a090129b5c9bfebfdf462573ef7ed84
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:4ffcb803602521374d912dfc67f838adf316a314c4811fd82fb37a63063a8aea
+- symbol: set
+  file: ledger-cli/src/commands/inspect.rs
+  before: sha256:476951f002e222c357c94494aee8e36779fff0116c31eb1d52b13c9a62b06bd7
+  after: sha256:9d9732d3284a0d9115902a4fa471b6a61a090129b5c9bfebfdf462573ef7ed84
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:04cbd1203130f2642a0eeebb4bc2dc9d8ff907900290e178593d2b963f26d9e2
+- symbol: today
+  file: ledger-cli/src/commands/inspect.rs
+  before: sha256:476951f002e222c357c94494aee8e36779fff0116c31eb1d52b13c9a62b06bd7
+  after: sha256:9d9732d3284a0d9115902a4fa471b6a61a090129b5c9bfebfdf462573ef7ed84
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:a3ac516cf87fdcaafbb56cc31d7cabd375566c7a8716964786f9251563a71630

@@ -30,3 +30,9 @@ bindings:
   after: sha256:7dd38d1825a4292c74d18acc551fe5bf4e9e76a054eb0e6b3aed302ee530f657
   base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
   hash: sha256:6d9388f03e9d613eb86e97b8413f83a199cacce9c9dc153dc9f38c74b2ae171f
+- symbol: ContentHash
+  file: ddd-cli/src/commands/mod.rs
+  before: sha256:7dd38d1825a4292c74d18acc551fe5bf4e9e76a054eb0e6b3aed302ee530f657
+  after: sha256:d12237b829fa1a61a9de7193cc0a4fd915b0b5a257d050fd3e3a6e37e2d0b1d8
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:b681dcee1a585339bee219cdbaf0610d00df6a5bcb01e3a542d4a42684f79055

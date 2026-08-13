@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ledger-core-src-version-rs
+boundary: contract surface of ledger-core/src/version.rs
+verdict_knowledge: "A caller learns a version carries two edge lists, based_on and revisit_if, that never merge: ground and tripwire are separate fields on the wire, separate keys in the hash, and separate types. A caller reading either as the other would report a fired tripwire as a lost basis."
+contract_location: ledger-core/src/version.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: revisit_if
+  file: ledger-core/src/version.rs
+  before: sha256:9ac2885d62aea15ca6a9a778496b8a163afd424d3ce1d74da8bbc5d4714f6b43
+  after: sha256:97dee56cb7c9c9f54ad96856ab0659d80efe67036a26a5a45bb39d0d5dd28023
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:bc8027d153a6d491c11ec8bb32b48ad3e1ca8a9ef7204c42a93080ed3839390a

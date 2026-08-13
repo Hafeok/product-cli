@@ -1,0 +1,20 @@
+format: 2
+id: seam/rust/ledger-cli-src-commands-add-rs
+boundary: contract surface of ledger-cli/src/commands/add.rs
+verdict_knowledge: "A caller learns that add states reopen edges and a change-set note alongside its bases, at parity with revise."
+contract_location: ledger-cli/src/commands/add.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: note
+  file: ledger-cli/src/commands/add.rs
+  before: sha256:c8d5d0de0ec3ffe75fa4499351faa25b2607b711aa9edec7c74bc226c8b866d6
+  after: sha256:12aac600a825c3f577bc786b7f36b0fad08bf6039df0fe37b8693fa381dc2f67
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:2d8bbc41f9c9c9e64689089ff5cc07c452222f6ba384b6e370ba97abcd258145
+- symbol: revisit_if
+  file: ledger-cli/src/commands/add.rs
+  before: sha256:c8d5d0de0ec3ffe75fa4499351faa25b2607b711aa9edec7c74bc226c8b866d6
+  after: sha256:12aac600a825c3f577bc786b7f36b0fad08bf6039df0fe37b8693fa381dc2f67
+  base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
+  hash: sha256:67877c85344ffc41afde4b273b8ea40ff62f4d760bcb563882f8df8da1943008
