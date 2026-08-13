@@ -171,6 +171,7 @@ mod acts {
             },
             tolerance_override: None,
             based_on: Vec::new(),
+            note: None,
         })
         .expect("add")
         .lines

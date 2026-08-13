@@ -35,20 +35,26 @@ fn declare(a: &mut Author) {
     .expect("declare");
 }
 
+/// The constraint `add` the fixtures file, varying only in statement and override.
+fn constraint_add(statement: &str, tolerance_override: Option<Tier>) -> AddArgs {
+    AddArgs {
+        set: "verbs".into(),
+        statement: statement.into(),
+        namespace: Some("fixture.verbs".into()),
+        allocation: AllocationArgs {
+            store: Some(AllocationKind::Constraint),
+            discharge: vec!["analyzer:DEC001".parse().expect("ref")],
+            ..AllocationArgs::default()
+        },
+        tolerance_override,
+        based_on: Vec::new(),
+        note: None,
+    }
+}
+
 fn add_constraint(a: &mut Author) -> DecisionId {
     let applied = a
-        .add(AddArgs {
-            set: "verbs".into(),
-            statement: "Monetary amounts use decimal, never double.".into(),
-            namespace: Some("fixture.verbs".into()),
-            allocation: AllocationArgs {
-                store: Some(AllocationKind::Constraint),
-                discharge: vec!["analyzer:DEC001".parse().expect("ref")],
-                ..AllocationArgs::default()
-            },
-            tolerance_override: None,
-            based_on: Vec::new(),
-        })
+        .add(constraint_add("Monetary amounts use decimal, never double.", None))
         .expect("add");
     extract_decision(&applied)
 }
@@ -107,18 +113,7 @@ fn add_refuses_a_below_floor_override_with_the_gate_class() {
     let mut a = author(dir.path());
     declare(&mut a);
     let err = a
-        .add(AddArgs {
-            set: "verbs".into(),
-            statement: "An override below the floor.".into(),
-            namespace: Some("fixture.verbs".into()),
-            allocation: AllocationArgs {
-                store: Some(AllocationKind::Constraint),
-                discharge: vec!["analyzer:DEC001".parse().expect("ref")],
-                ..AllocationArgs::default()
-            },
-            tolerance_override: Some(Tier::T0),
-            based_on: Vec::new(),
-        })
+        .add(constraint_add("An override below the floor.", Some(Tier::T0)))
         .expect_err("below-floor override");
     let AuthorError::Refused(findings) = err else { panic!("expected refusal, got {err}") };
     assert!(findings.iter().any(|f| f.class == VerifyClass::L004), "{findings:?}");
