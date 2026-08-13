@@ -1,7 +1,7 @@
 format: 2
 id: seam/rust/ledger-core-src-show-rs
 boundary: contract surface of ledger-core/src/show.rs
-verdict_knowledge: "A caller learns that a decision screen is assembled from the same View the gate reads, so show can never disagree with verify about state; that a selector (one id, a set, a weight class) covers a pass in one traversal; and that the weight class is derived from the discharge rather than listed, so it cannot go stale. It also learns the limit: ledger-core resolves no basis argument itself — it takes a BasisText resolver as an input, and with NoText the pointers render bare."
+verdict_knowledge: 'A caller learns that a decision screen is assembled from the same View the gate reads, so show can never disagree with verify about state; that a selector (one id, a set, a weight class) covers a pass in one traversal; and that the weight class is derived from the discharge rather than listed, so it cannot go stale. A selector also has one canonical spelling — `group:mechanical`, `set:<id>`, `decision:<id>` — so it can enter an acceptance manifest as a single token, and a manifest taken over one selector can never be presented for another. It also learns the limit: ledger-core resolves no basis argument itself — it takes a BasisText resolver as an input, and with NoText the pointers render bare.'
 contract_location: ledger-core/src/show.rs
 obligations: []
 metadata: {}
@@ -330,3 +330,9 @@ bindings:
   after: sha256:e76012c29efe9e0b3768d3e19e0e6011727cb73fec1fb16ef06b11431fc74d10
   base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
   hash: sha256:616edfb5f65a21cdbcf2133b52e694f58e433393139381e330162e1b1a574b58
+- symbol: impl fmt::Display for Selector
+  file: ledger-core/src/show.rs
+  before: sha256:e76012c29efe9e0b3768d3e19e0e6011727cb73fec1fb16ef06b11431fc74d10
+  after: sha256:7571ea498839014c1107c389b83d39d65171054a8eac46ad938f7640dfe210f8
+  base_revision: 576efaf12b38c16ff6e5600064ed15f4000b9fed
+  hash: sha256:1e60d7044478d7b8c2696793920349a3a2b1ca04ba46088aecf0113007df5f2b

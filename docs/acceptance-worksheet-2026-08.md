@@ -208,22 +208,35 @@ borrowed identity.
 ledger show --group mechanical | less     # the read; this is the actual work
 ```
 
-Then, having read it, record the one judgment across the group:
+Then, having read it, record the one judgment across the group. Two
+invocations, not a shell loop:
 
 ```sh
-ledger show --group mechanical --json \
-  | jq -r '.[] | select(.state=="awaiting-acceptance") | .decision' \
-  | while read -r id; do ledger accept "$id"; done
+ledger accept --group mechanical                      # enumerates, writes nothing
+ledger accept --group mechanical --confirm sha256:…   # the manifest the first printed
 ```
 
-**On the loop, honestly:** the format has no group-acceptance primitive — an
+The first prints the selection — every member's id, hash, weight class and
+state — together with a **manifest**: one digest over exactly those
+`(decision, hash, standing)` triples. It writes nothing. The second signs,
+and refuses unless the store still enumerates to that same manifest: if
+anything was filed in between, the run stops and names what moved rather
+than quietly signing an entry you never read. The confirm value cannot be
+typed by accident, because only the first invocation can produce it.
+
+**What is batched, honestly:** the *act*, never the signature. The format has
+no group-acceptance primitive and this verb does not invent one — an
 acceptance signs one version hash, and `scope: class:<ref>` parses but still
-signs one version. So the loop is the only mechanism there is. What makes it
-legitimate here is that the *reading* happened once, above, for a group
-proven to be one shape; the loop records that single judgment 33 times
-rather than making 33 judgments. If reading the group left you unsure about
-any single entry, pull it out and read it on its own screen first — the loop
-is not the place to resolve a doubt.
+signs one version. `--group` files 33 acceptance records, each signing its
+own hash, each through the same gate a single `ledger accept` runs. What it
+removes is 33 invocations, not 32 judgments: the *reading* still happens
+once, above, for a group proven to be one shape. If reading the group left
+you unsure about any single entry, pull it out and read it on its own screen
+first — a batch is not the place to resolve a doubt.
+
+The verb is the CLI standing in for the acceptance workbench (L5), the same
+way the PR-review surface stands in for it elsewhere. It is an interim
+affordance, recorded as one.
 
 **2 — group B, entry by entry.**
 
@@ -233,8 +246,13 @@ ledger show dec:hafeok.ddd/<ulid>
 ledger accept dec:hafeok.ddd/<ulid>
 ```
 
-Skip `dec:hafeok.ddd/01KZTGGKYN3VT9XYPATK0S0SAA`
-(`interceptor-not-extension`) per the flag above.
+`--group individual` is deliberately **not** batchable while the held entry
+stands: `ledger accept --group individual` refuses the whole run and names
+`dec:hafeok.ddd/01KZTGGKYN3VT9XYPATK0S0SAA` (`interceptor-not-extension`),
+because a batch that signed around it would make that judgment silently.
+That refusal is derived from the entry's own `indeterminate:` basis, not
+from this file, so it cannot go stale. Group B is 47 separate judgments
+anyway; the pressure to rule F-7h first is the mechanism working.
 
 **3 — check and commit.**
 
@@ -256,8 +274,12 @@ weight class — and it is the requirements input for L5, the acceptance
 workbench. A workbench designed without it would be designed against a
 guess.
 
+`ledger accept` reports its own `elapsed` on every invocation, refusals
+included, so the two grouped runs supply their half directly; the reading
+time either side of them is the part only you can record.
+
 Capture at least: total elapsed, and the split between group A (one read
-plus the loop) and group B (per-entry). If group A's per-entry cost turns
+plus the two invocations) and group B (per-entry). If group A's per-entry cost turns
 out to be near group B's, the grouping did not buy anything and L5 should
 know that too — a null result here is as useful as a positive one.
 

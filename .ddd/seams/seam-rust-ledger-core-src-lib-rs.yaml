@@ -1,7 +1,7 @@
 format: 2
 id: seam/rust/ledger-core-src-lib-rs
 boundary: contract surface of ledger-core/src/lib.rs
-verdict_knowledge: "A consumer learns which modules are the crate's surface; revisit and show join it at spec v1.5, and neither pulls in an ontology — the substrate an outside implementation imports stays ddd-free."
+verdict_knowledge: 'A consumer learns which modules are the crate''s surface; revisit and show joined it at spec v1.5, and batch and hold join it with the batched acceptance act. None pulls in an ontology — the substrate an outside implementation imports stays ddd-free — and none adds a store: hold is derived from a version''s own basis pointers, and batch holds a plan, never state carried between two invocations.'
 contract_location: ledger-core/src/lib.rs
 obligations: []
 metadata: {}
@@ -18,3 +18,15 @@ bindings:
   after: sha256:e975aaeacbaa8d69f774e4084027dd91f7826cb5dbd9bd8d3f7c5451d7729cfd
   base_revision: 15c635210dca8246aae371460e167ad7d293c2e6
   hash: sha256:265e9103bf53f77ebff282df9389a6e484e069b85ad7666058ad6ce3605aa060
+- symbol: batch
+  file: ledger-core/src/lib.rs
+  before: sha256:e975aaeacbaa8d69f774e4084027dd91f7826cb5dbd9bd8d3f7c5451d7729cfd
+  after: sha256:33fdca994a790fdc488ce4203a09b7ae82b0d52fd7c95ab52a353ba55fc70b0b
+  base_revision: 576efaf12b38c16ff6e5600064ed15f4000b9fed
+  hash: sha256:907a52289b10bb21b87b68b288e8efa38e7df2c030a1be87bfe9ce6159b415ba
+- symbol: hold
+  file: ledger-core/src/lib.rs
+  before: sha256:e975aaeacbaa8d69f774e4084027dd91f7826cb5dbd9bd8d3f7c5451d7729cfd
+  after: sha256:33fdca994a790fdc488ce4203a09b7ae82b0d52fd7c95ab52a353ba55fc70b0b
+  base_revision: 576efaf12b38c16ff6e5600064ed15f4000b9fed
+  hash: sha256:e46f7ddc46fae08408e252b358d9fe63e989efe6aaf854442d8836c19570033e

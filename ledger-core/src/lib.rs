@@ -16,6 +16,7 @@
 pub mod acceptance;
 pub mod allocation;
 pub mod author;
+pub mod batch;
 pub mod blame;
 pub mod canon;
 pub mod changeset;
@@ -26,6 +27,7 @@ pub mod finding;
 pub mod format;
 pub mod graph;
 pub mod hash;
+pub mod hold;
 pub mod id;
 pub mod identity;
 pub mod init;

@@ -302,7 +302,13 @@ store (`.decisions/`), separate ontology.
   `acceptances:` entries under any framing, including fixtures — fixture
   acceptances use `fixture-human@example` and live only under
   `ledger-cli/tests/fixtures/`. Filing decisions, versions and allocations is
-  fine; signing them is not.
+  fine; signing them is not. `ledger accept --group|--set` batches the
+  *invocation*, never the signature: it enumerates the same selection
+  `ledger show` resolves, pins it with a manifest hash, writes nothing until
+  `--confirm <manifest>` presents that hash back, and then files one
+  acceptance record per decision — each signing its own version hash,
+  through the same per-member gate. A member whose ground is filed
+  `indeterminate:` is *held* and stops the whole run by name.
 - **Authoring (L1)** — every verb is a thin shell over the gate: `declare`,
   `add`, `allocate`, `escape`, `revise`, `supersede`, `accept`, `revoke`,
   `status`, `log`, `blame`. A verb builds its change-set, runs the same

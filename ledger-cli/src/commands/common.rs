@@ -12,6 +12,7 @@ use chrono::NaiveDate;
 use ledger_core::allocation::AllocationKind;
 use ledger_core::author::{AllocationArgs, Applied, Author, AuthorError};
 use ledger_core::set::Ground;
+use ledger_core::show::{Group, Selector};
 use ledger_core::tier::Tier;
 
 use super::{resolve_root, EXIT_OK, EXIT_VIOLATIONS};
@@ -42,6 +43,26 @@ pub fn finish(result: Result<Applied, AuthorError>) -> Result<i32, String> {
             Ok(EXIT_VIOLATIONS)
         }
         Err(AuthorError::Usage(m) | AuthorError::Io(m)) => Err(m),
+    }
+}
+
+/// Exactly one selector, so a pass never silently covers more than the
+/// caller asked for. No selector at all is the whole store.
+///
+/// Shared by `show` and `accept` rather than written twice: the two must
+/// resolve a selector identically, or what a principal read would stop
+/// being what a principal signs.
+pub fn selector(
+    decision: Option<&str>,
+    set: Option<&str>,
+    group: Option<&str>,
+) -> Result<Selector, String> {
+    match (decision, set, group) {
+        (Some(id), None, None) => Ok(Selector::One(id.parse()?)),
+        (None, Some(set), None) => Ok(Selector::Set(set.to_string())),
+        (None, None, Some(group)) => Ok(Selector::Group(Group::parse(group)?)),
+        (None, None, None) => Ok(Selector::All),
+        _ => Err("name a decision, or --set, or --group — not more than one".to_string()),
     }
 }
 

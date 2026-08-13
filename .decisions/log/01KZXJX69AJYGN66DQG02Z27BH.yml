@@ -1,0 +1,28 @@
+format: 1
+id: cs:01KZXJX69AJYGN66DQG02Z27BH
+created_at: 2026-08-13T12:52:42.858805906Z
+created_by: noreply@anthropic.com
+note: Batch the invocation over an enumerated, manifest-pinned selection; leave the binding alone.
+decisions:
+- id: dec:hafeok.ledger/01KZXJX693301CZSY4XNP643XY
+  created_at: 2026-08-13T12:52:42.858805906Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ledger/01KZXJX693301CZSY4XNP643XY
+  hash: sha256:795c0fe177f378790b918b6e37abccee087f52b0523d1a626ea19318f623bc55
+  set: ledger-design
+  statement: 'ledger accept --group|--set batches the act, never the signature. One invocation produces N acceptance records, one per decision, each signing its own version hash under scope: version — never one record covering N decisions, and never a hash ranging over members. What is batched is the invocation, which is an ergonomic affordance; the binding is untouched, and every acceptance the verb produces is exactly as bound as a single accept is. Six rulings make that safe rather than merely stated. (1) The selection is enumerated and pinned, never a predicate evaluated at write time: the selector is the same one ledger show resolves — the plan is built from show''s screens rather than a second traversal, so show --group X and accept --group X cannot resolve to different sets — and it produces an explicit list of (decision, version hash, standing) triples. (2) Dry run is the default posture: the verb prints the enumeration and writes nothing; signing requires --confirm carrying the manifest hash that read produced, a value nobody types by accident because only a dry run can produce it, which is also why confirm-without-a-prior-read has no spelling. (3) A run refuses on drift: the manifest is a digest over exactly the selected triples under its own domain-separation prefix, standing included, so an acceptance filed between the read and the run moves it as surely as a revision does; a mismatching run refuses and names what moved, recovering the earlier selection by replaying the append-only log''s own prefixes rather than caching anything between the two invocations. (4) A held member stops the whole batch by name — held is derived from the record, a basis pointer in the indeterminate: scheme saying the ground is unsettled, never a hand-listed exclusion that goes stale; a batch signing around it would make that judgment silently. (5) The per-member gate is unchanged: each acceptance runs the same delta-gate a single accept runs, once alone so a failure is attributed to its decision and once combined so the write is checked as the act it is, with no batch-only leniency of any kind. (6) Identity and committer semantics are unchanged: git config identity, no --as, L009 corroboration on every record produced. The verb deliberately does not touch the L1 precommitment tension: it signs present members, enumerated at run time, and no hash it produces ranges over a future member of a class — scope: class remains unsettled. Interim status, stated so it does not quietly become the answer: this is the CLI standing in for the acceptance workbench (L5), the same way the PR-review surface stands in for it elsewhere. Basis, typed honestly: the ruling is a mandate, and two structural constraints do the rest of the work — no hash ranges over more than one version, and a selection re-evaluated between the read and the run can sign an entry nobody read. No measured claim exists here and none is manufactured.'
+  allocation: criterion
+  discharge:
+  - test:ledger-cli/tests/accept_group.rs#a_batch_files_one_acceptance_record_per_decision_each_on_its_own_hash
+  - test:ledger-cli/tests/accept_group.rs#a_held_member_stops_the_whole_batch_by_name
+  - test:ledger-cli/tests/accept_group.rs#a_member_that_fails_the_gate_alone_fails_the_batch_with_the_same_class
+  - test:ledger-cli/tests/accept_group.rs#show_and_accept_resolve_to_the_identical_set
+  discharge_stage: pr
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ruling:emil-2026-08-13#batch-the-act-never-the-signature
+  - prd:decision-ledger-prd#9.5
+  - prd:decision-ledger-prd#11-L5
+  - constraint:no-version-hash-ranges-over-more-than-one-version
+  - constraint:a-reevaluated-selection-can-sign-an-unread-entry
