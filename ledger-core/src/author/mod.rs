@@ -17,6 +17,7 @@
 mod acceptance_ops;
 mod declare;
 mod decision;
+mod group_accept;
 mod report;
 mod version_ops;
 
@@ -25,6 +26,7 @@ mod version_ops;
 mod tests;
 
 pub use acceptance_ops::{AcceptArgs, RevokeArgs};
+pub use group_accept::AcceptGroupArgs;
 pub use declare::DeclareArgs;
 pub use decision::{AddArgs, AllocationArgs};
 pub use report::{blame, log, status};
@@ -116,7 +118,7 @@ impl Author {
     /// The gate, exactly as `verify` runs it at write time: every class, no
     /// blame pass (an uncommitted acceptance is always skipped by `L009`,
     /// so consulting git here could never produce a finding).
-    fn gate(&self, store: &Store) -> Vec<Finding> {
+    pub(crate) fn gate(&self, store: &Store) -> Vec<Finding> {
         verify::verify(store, &Options { gate: None, today: self.today(), blame: false }).findings
     }
 
@@ -129,7 +131,21 @@ impl Author {
         candidate: &ChangeSet,
         allowed: impl Fn(&Finding) -> bool,
     ) -> Result<(), AuthorError> {
-        let baseline = self.gate(current);
+        self.refusal_check_against(&self.gate(current), current, candidate, allowed)
+    }
+
+    /// The same check with the baseline supplied. A batched verb gates every
+    /// member individually *and* the combined write, which is the same store
+    /// re-gated N+1 times; the baseline of an unchanged store is the same
+    /// every time, so it is computed once and handed in. One copy of the
+    /// rule, one copy of the comparison — only the redundant pass is gone.
+    pub(crate) fn refusal_check_against(
+        &self,
+        baseline: &[Finding],
+        current: &Store,
+        candidate: &ChangeSet,
+        allowed: impl Fn(&Finding) -> bool,
+    ) -> Result<(), AuthorError> {
         let mut with = Store {
             root: current.root.clone(),
             dir: current.dir.clone(),

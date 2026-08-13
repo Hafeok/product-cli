@@ -21,6 +21,8 @@
 //! sign it. Filing the signature is the principal's act (OD-3), so nothing
 //! here performs one.
 
+use std::fmt;
+
 use chrono::NaiveDate;
 use serde::Serialize;
 
@@ -57,6 +59,21 @@ pub enum Selector {
     Group(Group),
     /// Every decision the store holds.
     All,
+}
+
+/// The selector's canonical spelling — one token, so it can go inside a
+/// manifest digest without a second serialisation deciding what a selector
+/// "is". A manifest signed over `group:mechanical` cannot be presented for
+/// `set:ddd-governance`, however the flags were spelled on the way in.
+impl fmt::Display for Selector {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::One(id) => write!(f, "decision:{id}"),
+            Self::Set(set) => write!(f, "set:{set}"),
+            Self::Group(g) => write!(f, "group:{}", g.as_str()),
+            Self::All => f.write_str("all"),
+        }
+    }
 }
 
 /// The two weight classes an acceptance pass actually has.

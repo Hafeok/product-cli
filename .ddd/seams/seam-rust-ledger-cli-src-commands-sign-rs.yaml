@@ -1,0 +1,56 @@
+format: 2
+id: seam/rust/ledger-cli-src-commands-sign-rs
+boundary: contract surface of ledger-cli/src/commands/sign.rs
+verdict_knowledge: 'A caller learns that `accept` has two shapes over one meaning: naming a decision signs it immediately, while naming a selection (--set / --group, the same selector syntax `show` reads) enumerates it, pins it with a manifest hash, prints it, and writes nothing — signing then requires --confirm carrying that manifest, a value only a dry run can produce. What it cannot do is cover the whole store implicitly, and it never widens what a signature binds: the batched path files one acceptance record per decision, each on its own version hash.'
+contract_location: ledger-cli/src/commands/sign.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: accept
+  file: ledger-cli/src/commands/sign.rs
+  before: sha256:0e19154803f4141331787d3f5e7014535c3ccac89eb9fb800b364705ccec106c
+  after: sha256:b442eb694d24f6e4a87b02dcc52200ec5bfe0b744fcc291d81817787bcaf54ad
+  base_revision: 576efaf12b38c16ff6e5600064ed15f4000b9fed
+  hash: sha256:557be4e219708554f6b04f1e297d70b0412a4379630c20a7607801201828cdc5
+- symbol: AcceptFlags
+  file: ledger-cli/src/commands/sign.rs
+  before: sha256:0e19154803f4141331787d3f5e7014535c3ccac89eb9fb800b364705ccec106c
+  after: sha256:b442eb694d24f6e4a87b02dcc52200ec5bfe0b744fcc291d81817787bcaf54ad
+  base_revision: 576efaf12b38c16ff6e5600064ed15f4000b9fed
+  hash: sha256:95264e18be9dabbfb5549f1fa6ca6c7d0f1e6d8d3faf158d1d76a7d1298a8111
+- symbol: confirm
+  file: ledger-cli/src/commands/sign.rs
+  before: sha256:0e19154803f4141331787d3f5e7014535c3ccac89eb9fb800b364705ccec106c
+  after: sha256:b442eb694d24f6e4a87b02dcc52200ec5bfe0b744fcc291d81817787bcaf54ad
+  base_revision: 576efaf12b38c16ff6e5600064ed15f4000b9fed
+  hash: sha256:7c1479e065d8764075f0b8d392e2051df143852f44dd4fd238b26c8ebb05cd2c
+- symbol: decision
+  file: ledger-cli/src/commands/sign.rs
+  before: sha256:0e19154803f4141331787d3f5e7014535c3ccac89eb9fb800b364705ccec106c
+  after: sha256:b442eb694d24f6e4a87b02dcc52200ec5bfe0b744fcc291d81817787bcaf54ad
+  base_revision: 576efaf12b38c16ff6e5600064ed15f4000b9fed
+  hash: sha256:4b03a79982dd559d17bfd5223025e0de97e2da94c1484e636b9a39bf0fd428a4
+- symbol: expires
+  file: ledger-cli/src/commands/sign.rs
+  before: sha256:0e19154803f4141331787d3f5e7014535c3ccac89eb9fb800b364705ccec106c
+  after: sha256:b442eb694d24f6e4a87b02dcc52200ec5bfe0b744fcc291d81817787bcaf54ad
+  base_revision: 576efaf12b38c16ff6e5600064ed15f4000b9fed
+  hash: sha256:d514a268d6bce66e7ebdb3947630ed544486bf3c6dc36abb590eb2388c173b6e
+- symbol: group
+  file: ledger-cli/src/commands/sign.rs
+  before: sha256:0e19154803f4141331787d3f5e7014535c3ccac89eb9fb800b364705ccec106c
+  after: sha256:b442eb694d24f6e4a87b02dcc52200ec5bfe0b744fcc291d81817787bcaf54ad
+  base_revision: 576efaf12b38c16ff6e5600064ed15f4000b9fed
+  hash: sha256:24a0c7086ce602295f55e7eb69732c23896d0979a2b5f1372ec89dae20f743b5
+- symbol: json
+  file: ledger-cli/src/commands/sign.rs
+  before: sha256:0e19154803f4141331787d3f5e7014535c3ccac89eb9fb800b364705ccec106c
+  after: sha256:b442eb694d24f6e4a87b02dcc52200ec5bfe0b744fcc291d81817787bcaf54ad
+  base_revision: 576efaf12b38c16ff6e5600064ed15f4000b9fed
+  hash: sha256:9ce1c1d5bb21cef03161a272a1835bae304353ac611eba06f4f2d26083557e2a
+- symbol: set
+  file: ledger-cli/src/commands/sign.rs
+  before: sha256:0e19154803f4141331787d3f5e7014535c3ccac89eb9fb800b364705ccec106c
+  after: sha256:b442eb694d24f6e4a87b02dcc52200ec5bfe0b744fcc291d81817787bcaf54ad
+  base_revision: 576efaf12b38c16ff6e5600064ed15f4000b9fed
+  hash: sha256:a1e7324daebd6af80075a197d42464480703ad7cfe65785266ed63fe83f30f0b

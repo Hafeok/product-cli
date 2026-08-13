@@ -33,13 +33,26 @@ pub const EXIT_ERROR: i32 = 2;
 /// The command surface. Keep the variant list sorted.
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Sign the latest version of a decision (identity from git config)
+    /// Sign the latest version of a decision, or of a whole read selection
+    /// (identity from git config; one acceptance record per decision)
     Accept {
         /// The decision id, `dec:<namespace>/<ulid>`
-        decision: String,
+        decision: Option<String>,
+        /// Every decision in one set — enumerated, then confirmed
+        #[arg(long, value_name = "SET")]
+        set: Option<String>,
+        /// Every decision in one weight class: mechanical | individual
+        #[arg(long, value_name = "GROUP")]
+        group: Option<String>,
         /// When this signature goes stale (YYYY-MM-DD)
         #[arg(long, value_name = "DATE")]
         expires: Option<String>,
+        /// The manifest a dry run printed. Without it nothing is written
+        #[arg(long, value_name = "MANIFEST")]
+        confirm: Option<String>,
+        /// Emit the selection as JSON
+        #[arg(long)]
+        json: bool,
     },
     /// Mint a decision and file its first version into a set
     Add {
@@ -272,7 +285,9 @@ pub fn run(command: Commands, root: Option<PathBuf>) -> i32 {
 /// that append to the log, and reads that never touch it.
 fn dispatch(command: Commands, root: Option<PathBuf>) -> Result<i32, String> {
     match command {
-        Commands::Accept { decision, expires } => sign::accept(root, &decision, expires.as_deref()),
+        Commands::Accept { decision, set, group, expires, confirm, json } => {
+            sign::accept(root, sign::AcceptFlags { decision, set, group, expires, confirm, json })
+        }
         Commands::Add {
             set, statement, namespace, store, discharge, stage, expectation, actor,
             tolerance_override, based_on, revisit_if, note,

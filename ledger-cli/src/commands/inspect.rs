@@ -45,7 +45,11 @@ pub fn show(root: Option<PathBuf>, flags: ShowFlags) -> Result<i32, String> {
         Some(raw) => parse_date(raw)?,
         None => Utc::now().date_naive(),
     };
-    let selector = selector(&flags)?;
+    let selector = super::common::selector(
+        flags.decision.as_deref(),
+        flags.set.as_deref(),
+        flags.group.as_deref(),
+    )?;
     let store = store::load(&repo_root);
     let texts = super::basis_text::DddBasisText::load(&repo_root);
     let screens = ledger_core::show::screens(&store, &selector, today, &texts);
@@ -58,19 +62,6 @@ pub fn show(root: Option<PathBuf>, flags: ShowFlags) -> Result<i32, String> {
         print!("{}", ledger_core::show::render_all(&screens));
     }
     Ok(EXIT_OK)
-}
-
-/// Exactly one selector, so a pass never silently covers more than the
-/// caller asked for. No selector at all reads the whole store.
-fn selector(flags: &ShowFlags) -> Result<ledger_core::show::Selector, String> {
-    use ledger_core::show::{Group, Selector};
-    match (&flags.decision, &flags.set, &flags.group) {
-        (Some(id), None, None) => Ok(Selector::One(id.parse()?)),
-        (None, Some(set), None) => Ok(Selector::Set(set.clone())),
-        (None, None, Some(group)) => Ok(Selector::Group(Group::parse(group)?)),
-        (None, None, None) => Ok(Selector::All),
-        _ => Err("name a decision, or --set, or --group — not more than one".to_string()),
-    }
 }
 
 pub fn blame(root: Option<PathBuf>, decision: &str) -> Result<i32, String> {

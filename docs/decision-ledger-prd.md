@@ -439,6 +439,16 @@ staging discipline makes a PR review surface a v0 workbench — per-entry files,
 as rejection reasons, merge as acceptance. Crude but queue-shaped; curation sessions run on it
 until L5 ships.
 
+**The second interim affordance, on the CLI rather than the PR surface:** `ledger accept
+--group|--set` (2026-08-13). It batches the *invocation* over a selection `ledger show` already
+resolves — enumerated once, pinned by a manifest hash, printed, and written only against an
+explicit confirmation carrying that manifest. It batches nothing else: N decisions produce N
+acceptance records, each signing its own version hash, each through the same per-member gate a
+single accept runs, and a member the record itself marks unsettled stops the whole run. It is
+recorded here as interim, next to the PR surface and for the same reason: a queue-shaped verb is
+not a workbench, and naming it one would let the two-line loop it replaces stand in for the
+queue, the tree, and the staff that §9.5 actually describes.
+
 ---
 
 ## 10. Instruments
@@ -462,7 +472,11 @@ names); unprefixed "M*n*" in any cross-document reference means the ddd track.
 
 **L0 — Format and gate. SHIPPED 2026-08-10.** File schema, canonicalisation, hashing, `verify`. No graph, no merge. Deliverable: a CI gate that fails on unallocated decisions, incomplete escapes, and expired acceptances. *This alone is usable and carries a large share of the value.* Implemented as the `ledger-core` / `ledger-cli` workspace members; the format is specified independently in `ledger-format-v1.md` (the document the Org Ledger imports) with its migration record in `ledger-format-migrations.md`. The gate fails for a schema fault plus nine classes and nothing else; pendency is status, not a violation.
 
-**L1 — Local operations. SHIPPED 2026-08-10.** `declare`, `add`, `allocate`, `escape`, `revise`, `supersede`, `accept`, `revoke`, `status`, `log`, `blame` — every verb a thin shell over the gate: it builds its change-set, runs the same `verify` pass over the store-as-it-would-be, and refuses any write that introduces a finding (same class, same message; no second validation copy). ULID minting with injectable time/entropy; identity from git config per OD-3. Shipped with spec v1.1 (`L010`, the judgment-actor gap closed by the principal's ruling). Deferred from the original row: semantic `diff` (needs store-at-revision loading — L3's merge base), and `accept --class` operational semantics (the row never listed it; the scope field parses per format v1). The open tension on precommitment, noted here because this row owns it: a class-scoped acceptance still signs one version hash — §9.3's precommitment promises acceptance over a *class* of entries, but §4's law is that acceptance signs a content hash, and no hash ranges over future members of a class. Settling what `--class` mechanically signs is part of its deferred semantics.
+**L1 — Local operations. SHIPPED 2026-08-10.** `declare`, `add`, `allocate`, `escape`, `revise`, `supersede`, `accept`, `revoke`, `status`, `log`, `blame` — every verb a thin shell over the gate: it builds its change-set, runs the same `verify` pass over the store-as-it-would-be, and refuses any write that introduces a finding (same class, same message; no second validation copy). ULID minting with injectable time/entropy; identity from git config per OD-3. Shipped with spec v1.1 (`L010`, the judgment-actor gap closed by the principal's ruling). Deferred from the original row: semantic `diff` (needs store-at-revision loading — L3's merge base), and `accept --class` operational semantics (the row never listed it; the scope field parses per format v1). The open tension on precommitment, noted here because this row owns it: a class-scoped acceptance still signs one version hash — §9.3's precommitment promises acceptance over a *class* of entries, but §4's law is that acceptance signs a content hash, and no hash ranges over future members of a class. Settling what `--class` mechanically signs is part of its deferred semantics. **Extended
+2026-08-13** with `accept --group|--set`: a batched *invocation* over an enumerated, manifest-pinned
+selection (§9.5's second interim affordance). It deliberately leaves the precommitment tension
+exactly where this row states it — the verb signs present members, enumerated at run time, and no
+hash it produces ranges over a future member of anything.
 
 **L2 — Graph and coverage. SHIPPED 2026-08-10.** Embedded RDF index (`index/ledger.ttl`, byte-deterministic Turtle over the log), PROV-O acceptance provenance, `based_on` read as open-vocabulary graph edges, SHACL-style shape checks (`G001`–`G003`, a distinct `verify` stage outside the file gate's closed ten), `coverage` with the seven-state disposition vocabulary per set/namespace plus walkable supersession chains, `reindex` with the byte-identical rebuild test in CI. Built on `product-core`'s oxigraph/SPARQL infrastructure per OD-2 — `ledger-core` still has no direct graph dependency.
 
