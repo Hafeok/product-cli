@@ -1,6 +1,10 @@
 format: 1
 note: 'Permanent id concordance for the M8 ledger migration (ruling 6: the aliases are permanent, not transitional). Historical ids — decisions, the risk record, seams, manifest entries — remain valid forever; `ddd why` resolves either spelling. Claim ids are not re-keyed: claims remain the ddd ontology''s own.'
 rows:
+- historical: dec/ddd/ci-gates-report-skipped
+  ledger: dec:hafeok.ddd/01KZX7HW7J4FET6H3JW8EQTK0R
+  kind: decision
+  disposition: 'filed 2026-08-13, after the M8 migration: the .ddd entry carries the rationale and the typed bases, the ledger entry is the record of the decision. Same pairing the migration produced, authored rather than migrated.'
 - historical: dec/bicep/linter-at-error
   ledger: dec:hafeok.ddd/01KZTGGGS14S17F2P5K6EZEZXH
   kind: decision

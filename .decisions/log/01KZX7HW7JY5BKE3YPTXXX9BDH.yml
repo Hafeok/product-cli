@@ -1,0 +1,21 @@
+format: 1
+id: cs:01KZX7HW7JY5BKE3YPTXXX9BDH
+created_at: 2026-08-13T09:34:17.837729151Z
+created_by: noreply@anthropic.com
+note: 'The remedy for DDD-gates-02, filed for the principal''s acceptance and deliberately not implemented by the session that filed it. A red build must say what it did not check: independent gates run anyway, or — the floor, where a step genuinely depends on a failed one — the run reports which gates did not execute. Allocated as a judgment because nothing checks the arrangement yet, so holding to it rests on a person; a criterion here would name a discharge pointer that resolves to no checker. When the workflow edit lands, re-allocating to a criterion whose discharge names the check that then exists is a new version, not an edit. Cost of the follow-up: a red build stops failing fast and pays each independent gate''s runtime, the benchmark step most of all.'
+decisions:
+- id: dec:hafeok.ddd/01KZX7HW7J4FET6H3JW8EQTK0R
+  created_at: 2026-08-13T09:34:17.837729151Z
+  created_by: noreply@anthropic.com
+versions:
+- decision: dec:hafeok.ddd/01KZX7HW7J4FET6H3JW8EQTK0R
+  hash: sha256:cc17742a5bf0f674a0c4a70eaef09c4548305b1d8066ea69845b4d301852411c
+  set: ddd-governance
+  statement: A CI run reports which gates did not execute; independent gates run anyway
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ddd-content:dec/ddd/ci-gates-report-skipped@sha256:a792744a234259cdedecad0c0a8fa71f57080f95aae3a27c6b594458f0f442dd
+  - claim:DDD-gates-02@sha256:65bfeff0770e7de976127d54d87c3428a6e4458d0f6b6088fc0b452a4c6cb89e
+  - preference:dec/ddd/ci-gates-report-skipped

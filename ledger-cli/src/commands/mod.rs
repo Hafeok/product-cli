@@ -74,6 +74,9 @@ pub enum Commands {
         /// Claim(s) whose death reopens this decision — never ground
         #[arg(long, value_name = "REF")]
         revisit_if: Vec<String>,
+        /// What this act was, recorded on the change-set
+        #[arg(long)]
+        note: Option<String>,
     },
     /// Allocate (or re-allocate) a decision by filing its next version
     Allocate {
@@ -272,10 +275,10 @@ fn dispatch(command: Commands, root: Option<PathBuf>) -> Result<i32, String> {
         Commands::Accept { decision, expires } => sign::accept(root, &decision, expires.as_deref()),
         Commands::Add {
             set, statement, namespace, store, discharge, stage, expectation, actor,
-            tolerance_override, based_on, revisit_if,
+            tolerance_override, based_on, revisit_if, note,
         } => add::run(root, add::Flags {
             set, statement, namespace, store, discharge, stage, expectation, actor,
-            tolerance_override, based_on, revisit_if,
+            tolerance_override, based_on, revisit_if, note,
         }),
         Commands::Allocate { decision, store, discharge, stage, expectation, actor } => {
             evolve::allocate(root, &decision, &store, &discharge, stage.as_deref(), expectation, actor.as_deref())

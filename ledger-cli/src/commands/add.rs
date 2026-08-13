@@ -20,6 +20,7 @@ pub struct Flags {
     pub tolerance_override: Option<String>,
     pub based_on: Vec<String>,
     pub revisit_if: Vec<String>,
+    pub note: Option<String>,
 }
 
 pub fn run(root: Option<PathBuf>, flags: Flags) -> Result<i32, String> {
@@ -38,7 +39,7 @@ pub fn run(root: Option<PathBuf>, flags: Flags) -> Result<i32, String> {
         tolerance_override: flags.tolerance_override.as_deref().map(parse_tier).transpose()?,
         based_on: parse_based_on(&flags.based_on)?,
         revisit_if: parse_revisit_if(&flags.revisit_if)?,
-        note: None,
+        note: flags.note,
     };
     finish(author.add(args))
 }
