@@ -845,8 +845,13 @@ open .ddd/render.html                # or: xdg-open
 **Verified offline:** zero `<script src>`, zero `<link href>`, zero external
 image references, all CSS inline. Rendered headlessly with networking disabled
 and screenshotted — it draws. Sections: Claims (78) · Decisions (45) · Manifest
-coverage (12 rules) · **Escapes dashboard** · **Decision ledger** · Seam map (64
-declarations, 49 interception rows).
+coverage (12 rules) · **Escapes dashboard** · **Decision ledger** · Seam map.
+
+Section headings re-read from the file 08-13, generated clean in pre-flight:
+the seam map says **63 declarations, 46 interception rows**. The 64/49 above was
+captured mid-rehearsal, when the demo's own declaration and its three event rows
+were in the store — the same pre-demo/mid-demo split as the entry count in §6a.
+If you regenerate after a beat, expect the larger pair.
 
 **Scroll straight past the first screen.** It opens on the claims table — dense
 paragraph text, poor on a projector. The Escapes dashboard and Decision ledger
