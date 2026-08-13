@@ -43,6 +43,8 @@ pub struct ReviseEdges<'a> {
     /// Drop every inherited reopen edge — the decision has been reopened
     /// and re-decided, so the edge that reopened it is spent.
     pub no_revisit_if: bool,
+    /// What this act was, recorded on the change-set.
+    pub note: Option<String>,
 }
 
 pub fn revise(
@@ -65,6 +67,7 @@ pub fn revise(
         statement,
         based_on: parse_based_on(edges.based_on)?,
         revisit_if,
+        note: edges.note.clone(),
         expected_parent: parent.map(str::parse).transpose()?,
     };
     finish(author.revise(&decision(id)?, args))

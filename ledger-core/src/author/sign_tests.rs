@@ -26,6 +26,7 @@ fn accept_signs_the_tip_and_a_revision_returns_the_decision_to_awaiting() {
         statement: "Restated after acceptance.".into(),
         based_on: Vec::new(),
         revisit_if: None,
+        note: None,
         expected_parent: None,
     })
     .expect("revise");
@@ -130,6 +131,7 @@ fn forked_store(dir: &Path) -> (Author, DecisionId) {
         statement: "The left writer's revision.".into(),
         based_on: Vec::new(),
         revisit_if: None,
+        note: None,
         expected_parent: None,
     };
     a.revise(&id, args).expect("left revision");
@@ -156,6 +158,7 @@ fn a_forked_chain_refuses_revision_rather_than_burying_the_conflict() {
             statement: "Extending either tip buries the conflict.".into(),
             based_on: Vec::new(),
         revisit_if: None,
+        note: None,
             expected_parent: None,
         })
         .expect_err("revise on a fork");

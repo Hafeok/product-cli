@@ -202,6 +202,7 @@ mod acts {
             statement: "The left writer's revision.".into(),
             based_on: Vec::new(),
             revisit_if: None,
+            note: None,
             expected_parent: None,
         })
         .expect("left revision");

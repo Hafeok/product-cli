@@ -204,6 +204,7 @@ fn revise_moves_the_hash_and_a_stale_parent_is_a_conflict_not_a_merge() {
         statement: "Monetary amounts use decimal everywhere, including imports.".into(),
         based_on: Vec::new(),
         revisit_if: None,
+        note: None,
         expected_parent: Some(first_hash.clone()),
     })
     .expect("revise from the tip");
@@ -213,6 +214,7 @@ fn revise_moves_the_hash_and_a_stale_parent_is_a_conflict_not_a_merge() {
             statement: "A second fork from the same parent.".into(),
             based_on: Vec::new(),
         revisit_if: None,
+        note: None,
             expected_parent: Some(first_hash),
         })
         .expect_err("stale parent");

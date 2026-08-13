@@ -189,6 +189,9 @@ pub enum Commands {
         /// Drop every inherited reopen edge (the decision was reopened)
         #[arg(long)]
         no_revisit_if: bool,
+        /// What this act was, recorded on the change-set
+        #[arg(long)]
+        note: Option<String>,
         /// The hash believed to be the tip; refused when stale (merge is L3)
         #[arg(long, value_name = "HASH")]
         parent: Option<String>,
@@ -291,9 +294,11 @@ fn dispatch(command: Commands, root: Option<PathBuf>) -> Result<i32, String> {
             merge_cmd::driver(&base, &ours, &theirs, &path)
         }
         Commands::Reindex => graph_cmds::reindex(root),
-        Commands::Revise { decision, statement, based_on, revisit_if, no_revisit_if, parent } => {
+        Commands::Revise {
+            decision, statement, based_on, revisit_if, no_revisit_if, note, parent
+        } => {
             let edges = evolve::ReviseEdges {
-                based_on: &based_on, revisit_if: &revisit_if, no_revisit_if,
+                based_on: &based_on, revisit_if: &revisit_if, no_revisit_if, note,
             };
             evolve::revise(root, &decision, statement, edges, parent.as_deref())
         }

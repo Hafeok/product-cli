@@ -1,0 +1,17 @@
+format: 1
+id: cs:01KZX70S86QGXVCA5GW5WSY6XA
+created_at: 2026-08-13T09:24:57.730449688Z
+created_by: noreply@anthropic.com
+note: 'The principal ruled the question this decision was filed to hold open (2026-08-13). The marker is not retired at the F-batch and is not an ordinary basis: it becomes revisit_if, specified in the ledger format at spec v1.5 / format 4 and adopted by .ddd at its format 7. The three migrated edges the M8 migration carried as provisional watched: markers were re-decided onto the real edge type, each filed for acceptance. This version records the ruling; the earlier version stated the open question and remains what it always said.'
+versions:
+- decision: dec:hafeok.ddd/01KZTGHF4B718YCRCKCGVM7XWA
+  parent: sha256:339d575ede35ff42fbbab0b836c07fc3a55de8f79c5c1a9035bc3b4fd40a2ebd
+  hash: sha256:719e8970c121e017bed9858dc31420732c9723ab85ad70d7ce3315083ed3651c
+  set: ddd-governance
+  statement: 'A watched-not-grounding edge is a distinct edge type, revisit_if: this claim''s death reopens the decision; it is not the decision''s ground. It is filed as its own edge with its own vocabulary, never inside based_on, and a status movement on it produces a reopen finding, never a basis-loss one.'
+  allocation: judgment
+  actor: emk@delegate.dk
+  tolerance_floor_at_creation: T1
+  based_on:
+  - ruling:emil-2026-08-13#revisit-if-is-a-distinct-edge-type
+  - handoff:basis-quality-retyping-2026-08-12#watched-not-grounding

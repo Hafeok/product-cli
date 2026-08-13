@@ -32,10 +32,11 @@ impl DddBasisText {
     /// output a store-less adopter gets.
     pub fn load(root: &Path) -> Self {
         let mut by_pointer = BTreeMap::new();
-        if !root.join(ddd_core::store::STORE_DIR).is_dir() {
+        let dir = root.join(ddd_core::store::STORE_DIR);
+        if !dir.is_dir() {
             return Self { by_pointer };
         }
-        let store = ddd_core::store::load(root);
+        let store = ddd_core::store::load(&dir);
         for d in &store.decisions {
             index_decision(&mut by_pointer, d);
         }

@@ -73,6 +73,22 @@ fn print_ledger(s: &ddd_core::ledger_gate::LedgerSection) {
             short(current)
         );
     }
+    // The reopen edges get their own lines here too. A ledger entry whose
+    // tripwire fired is due a fresh look; saying so under "pin drift"
+    // would be the merge the ruling forbids.
+    if s.reopened.is_empty() {
+        println!("no reopen edge fired — {} checked", s.reopen_checked);
+    }
+    for r in &s.reopened {
+        let who = r.historical.as_deref().unwrap_or(&r.decision);
+        let current = r.current.as_deref().unwrap_or("claim no longer exists");
+        println!(
+            "reopen: {who} — {} pinned {}, now {}",
+            r.claim,
+            short(&r.pinned),
+            short(current)
+        );
+    }
 }
 
 fn short(hash: &str) -> &str {

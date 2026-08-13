@@ -1,4 +1,4 @@
-format: 5
+format: 7
 id: dec/ddd/m6-proceeds-no-flip
 title: M6 proceeds as the Rust adapter; the M6/M7 flip condition does not fire
 rationale: >
@@ -32,10 +32,11 @@ based_on:
       The stated default the principal set for the M6/M7 sequencing: with
       the flip condition unfiled and therefore unevaluable against filed
       evidence, the evaluation resolves by that default and M6 proceeds.
-  - type: claim
-    claim: DDD-adapter-01
+revisit_if:
+  - claim: DDD-adapter-01
     status: projected
     changed: 2026-08-02
+    content: sha256:922a0a70f69509bfcd73325fbdc1cd5ac281b1b52281b14f56a8f519afd99f52
 date: 2026-08-10
 notes: >
   M6's content is the third language adapter, which is the experiment that
@@ -81,3 +82,17 @@ notes: >
   Ratified 2026-08-12 (Emil): accepted as filed (8531938) — the retained
   edge is a claim being watched, with the content mismatch explicit so it
   is not later read as ground.
+
+  Edge re-typed 2026-08-13, following the principal's ruling that a
+  watched-not-grounding edge is a distinct edge type: a re-decision of
+  this edge per format 7, not an edit. DDD-adapter-01 moves out of
+  `based_on` and into `revisit_if`, pin carried across unchanged
+  (projected@2026-08-02, content recovered at that state by the M8
+  migration). This is the one of the three whose pin has drifted, and the
+  drift is deliberate: the claim moved projected -> reported ->
+  established, and the two paragraphs above are the record that the
+  movement was looked at each time. That drift now reports as a **reopen**
+  finding rather than a basis-loss one, which is the correction the ruling
+  makes — the ground of this decision is the principal's stated default and
+  has never moved; what moved is the stake being tracked. Format 5 -> 7 per
+  docs/ddd-format-migrations.md. Awaiting the principal's acceptance.
