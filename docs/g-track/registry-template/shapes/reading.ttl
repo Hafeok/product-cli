@@ -1,0 +1,51 @@
+# Reading tuple constraint — PRD §4.1, staged minimal per the G-1 session prompt.
+# Provenance value set is track vocabulary per g-dec-01 (product-cli
+# docs/g-track/decisions/), revisit_if pinned to the Q25/Q27/Q30 filing wave.
+# Grows at G0; nothing here is the full §4.2 act vocabulary.
+
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix reg: <https://REGISTRY-HOST.example/ns#> .
+
+reg:ReadingShape
+    a sh:NodeShape ;
+    sh:targetClass reg:Reading ;
+    sh:property [
+        sh:path reg:value ;
+        sh:minCount 1 ;
+        sh:message "A Reading carries a value (PRD §4.1)." ;
+    ] ;
+    sh:property [
+        sh:path reg:asOf ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "A Reading carries exactly one as-of — clock, not context (PRD §4.1)." ;
+    ] ;
+    sh:property [
+        sh:path reg:provenance ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:in ( reg:controlled reg:observed reg:inferred reg:institutional ) ;
+        sh:message "Provenance is one of controlled/observed/inferred/institutional (g-dec-01)." ;
+    ] ;
+    sh:property [
+        sh:path reg:assurance ;
+        sh:minCount 1 ;
+        sh:message "A Reading carries the assurance at which it was made (PRD §4.1)." ;
+    ] .
+
+# institutional requires a trust decision (Q27; PRD §4.1: fails SHACL without it).
+reg:InstitutionalReadingShape
+    a sh:NodeShape ;
+    sh:targetClass reg:Reading ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "institutional provenance requires a trust_decision reference (PRD §4.1, Q27)." ;
+        sh:prefixes reg: ;
+        sh:select """
+            PREFIX reg: <https://REGISTRY-HOST.example/ns#>
+            SELECT $this WHERE {
+                $this reg:provenance reg:institutional .
+                FILTER NOT EXISTS { $this reg:trust_decision ?td . }
+            }
+        """ ;
+    ] .

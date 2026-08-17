@@ -1,0 +1,23 @@
+# Exemplar — one assertion per file, in Turtle (the format ruled at G-1 Gate 3).
+# Underscore prefix marks it an exemplar: CI validates it, the projection build
+# excludes `_`-prefixed files. Base IRI is a generation parameter (TEMPLATE.md);
+# the placeholder parses as a valid IRI so the template validates as-is.
+#
+# The file carries exactly one asserted triple. Its Reading annotations ride on
+# the assertion node (RDF reification kept deliberately boring until the
+# vocabulary ruling A1 lands a better idiom).
+
+@prefix reg:  <https://REGISTRY-HOST.example/ns#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+reg:assertion-0001
+    a               reg:Assertion , reg:Reading ;
+    reg:subject     reg:Order ;
+    reg:predicate   reg:hasPart ;
+    reg:object      reg:OrderLine ;
+    reg:value       "Order hasPart OrderLine" ;
+    reg:asOf        "2026-08-17T00:00:00Z"^^xsd:dateTime ;
+    reg:provenance  reg:controlled ;
+    reg:assurance   "exemplar — hand-authored" ;
+    prov:wasAttributedTo <https://REGISTRY-HOST.example/agent/g1-session> .

@@ -1,0 +1,65 @@
+# SHACL validation on every change (PRD §3, authority row; G-1 session prompt step 3.2).
+# Shapes start minimal — the §4.1 Reading tuple constraint and structural
+# well-formedness — and grow at G0.
+#
+# Format: Turtle (G-1 Gate 3 ruling) — the authority file is the assertion,
+# SHACL reads it directly, zero conversion in CI.
+#
+# File rules:
+#   - `_`-prefixed files are exemplars: validated, excluded from projection builds.
+#   - graphs/canonical/founding-decision.ttl may parse to zero triples until the
+#     instance's ratifier files the founding decision; once non-empty it holds a
+#     decision node, not an assertion (decision shapes grow at G0).
+#   - every other graphs/**/*.ttl carries exactly one assertion.
+
+name: validate
+on:
+  push:
+  pull_request:
+
+jobs:
+  shacl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install validators
+        run: pip install pyshacl rdflib
+      - name: One assertion per file
+        run: |
+          python - <<'EOF'
+          import glob, os, sys
+          from rdflib import Graph
+          from rdflib.namespace import RDF, Namespace
+          REG = Namespace("https://REGISTRY-HOST.example/ns#")
+          bad = []
+          for path in glob.glob("graphs/**/*.ttl", recursive=True):
+              base = os.path.basename(path)
+              g = Graph(); g.parse(path, format="turtle")
+              if base == "founding-decision.ttl":
+                  continue  # empty slot until filled; holds a decision, not an assertion
+              n = len(list(g.subjects(RDF.type, REG.Assertion)))
+              if n != 1:
+                  bad.append(f"{path}: {n} assertions (exactly 1 required)")
+          if bad:
+              print("\n".join(bad)); sys.exit(1)
+          print("one-assertion-per-file: ok")
+          EOF
+      - name: SHACL
+        run: |
+          python - <<'EOF'
+          import glob, sys
+          from pyshacl import validate
+          from rdflib import Graph
+          data = Graph()
+          for path in glob.glob("graphs/**/*.ttl", recursive=True):
+              data.parse(path, format="turtle")
+          shapes = Graph()
+          for path in glob.glob("shapes/*.ttl"):
+              shapes.parse(path, format="turtle")
+          conforms, _, text = validate(data, shacl_graph=shapes, advanced=True)
+          print(text)
+          sys.exit(0 if conforms else 1)
+          EOF

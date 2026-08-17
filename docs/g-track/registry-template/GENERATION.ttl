@@ -1,0 +1,20 @@
+# Birth provenance of this instance — FILLED BY THE INSTANCE'S FIRST COMMIT.
+#
+# The generation act records: template version, parameters supplied,
+# generated-by, date — prov:wasAttributedTo the generation act. This is what
+# lets the instance re-pin when the template moves (TEMPLATE.md).
+#
+# Shape, to be filled (base IRI substituted at generation):
+#
+# @prefix reg:  <https://REGISTRY-HOST.example/ns#> .
+# @prefix prov: <http://www.w3.org/ns/prov#> .
+# @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+#
+# reg:this-instance
+#     a reg:Registry ;
+#     reg:templateVersion "0.1.0" ;
+#     reg:owner "{{OWNER_ORG}}" ;
+#     reg:ratifier "{{RATIFIER}}" ;
+#     reg:displayName "{{DISPLAY_NAME}}" ;
+#     prov:wasAttributedTo <generation-act IRI> ;
+#     prov:generatedAtTime "…"^^xsd:dateTime .

@@ -1,0 +1,25 @@
+format: g-track-decision/v1
+id: g-dec-02
+title: Projection-build inference is CONSTRUCT-to-fixpoint on Oxigraph, reasonable as fallback
+status: ruled
+made: 2026-08-17
+by: Emil (ruled at G-1 Gate 2; recorded by the session)
+decision: |
+  Inference at projection build (PRD §3 serving row) runs as SPARQL CONSTRUCT rules iterated to
+  fixpoint on Oxigraph — the primary mechanism. It reuses the pf::sparql_rules shape already in
+  the product-cli codebase and adds no dependency. The named fallback is the Rust `reasonable`
+  crate (OWL 2 RL materialiser, 0.4.4 at ruling time, BSD-3), whose supported rule subset must be
+  checked against the §5.2 entailments before any flip.
+region: |
+  The G-track projection-build pipeline only. Axis artefact-path (mechanically-evaluable):
+  the projection-build script and its rule set.
+basis: |
+  - G-1 verification V1/V9 (session report §2.2, dated 2026-08-17): Oxigraph healthy at 0.5.9;
+    OWL 2 RL translates mechanically to CONSTRUCT rules (SPIN OWL-RL prior art); no published
+    fixpoint benchmark exists for Oxigraph — the no-benchmark hedge is discharged by measuring
+    at G0, not by choosing conservatively now (Emil's Gate 2 ruling).
+  - Known caveat carried: Oxigraph CONSTRUCT blank-node issue (#220).
+revisit_if: |
+  Fixpoint wall-time exceeds an acceptable projection-build budget at G0 scale. On that reading,
+  this decision flips to the named fallback (`reasonable`), and the flip is recorded as a new
+  version of this decision, not an edit.
