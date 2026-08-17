@@ -1,0 +1,78 @@
+format: 5
+id: dec/ddd/rejection-payload-basis
+title: The rejection-payload lever's basis is cited upstream, not re-derived here
+rationale: >
+  The M3/M4 principal decisions are open and Emil's. This entry does not make
+  them. It files the cross-reference their basis rests on, so that when they
+  are made the ground is a citation rather than a re-derivation — and so that
+  a reader of this register can reach it.
+
+
+  The lever. A checker's rejection payload sets the per-try acceptance
+  probability, and therefore the retry economics of a small actor operating at
+  its capacity margin. A pass/fail verdict alone gives p(accept)/try 0.35,
+  E[tries] 2.9, expected cost 11.4 per act; a rich rejection payload gives
+  0.55, 1.8, and 7.3. The mechanism is that a check which explains its
+  rejection raises the weak actor's effective capacity — each retry becomes a
+  guided step rather than a fresh attempt.
+
+
+  The consequence for this repository. The shape of a rejection payload is a
+  lever on achievable actor class, not an API detail. Wherever this workspace
+  emits a rejection — a validation violation, a gate finding, a verdict event
+  on the build seam, an MCP write-tool refusal — what the payload carries
+  decides whether the next attempt is guided or blind, and therefore which
+  actor class can do the work at all.
+
+
+  Basis, upstream and unmodified: DDD-cost-11 (projected) in
+  actor-indexed-determination, the sign-flip claim, whose second region bound
+  is retry economics — the weak-actor-plus-retries crossover computable and
+  favourable. Its notes carry the lever directly: "rich rejection payloads
+  shift the retry crossover — a check that explains its rejection raises the
+  weak actor's effective capacity". The worked figures above are its
+  projection's example, decision-driven-design core/15 §4.
+
+
+  Cited, not pinned. DDD-cost-11 is upstream canon and does not exist in this
+  repository's claim store, so it is not filed as a `type: claim` basis: a pin
+  this store cannot resolve would report as basis loss forever and would be
+  the wrong kind of edge. The basis stated below is what this repository
+  actually decided; the upstream claim is named in it as the ground that was
+  read.
+principal: Emil (Context&)
+based_on:
+  - type: mandate
+    statement: >-
+      The principal's ruling of 2026-08-10, at the act-cost holding note's
+      pre-Gate-H hold: queue item 2.13 ratified as pending transfer — the
+      rejection-payload cross-reference files into product-cli's decision
+      register at the next session touching that repo, citing DDD-cost-11, and
+      no third pull request is opened for it.
+  - type: constraint
+    statement: >-
+      A basis that lives in another repository is cited by identifier and read
+      at its source, never copied into this store. Copying it would create a
+      second authority that drifts silently from the first; citing it leaves
+      one authority and makes the read auditable.
+date: 2026-08-17
+notes: >
+  Filed by the freight session, 2026-08-17 (item G-7), which is the next
+  session to touch this repository after the ruling. Deferred since Wave 2 on
+  the ruling's own terms — "next session that touches that repo" — and this is
+  it. Nothing else in this repository was changed by that session.
+
+
+  What this entry deliberately does not do. It does not decide M3 or M4, does
+  not state a payload schema, and does not oblige any existing emitter to
+  change. It records where the ground is. The M3/M4 decisions remain the
+  principal's and unmade, and when they are made this entry is what they cite
+  rather than re-deriving the retry arithmetic inside this workspace.
+
+
+  Read the source before acting on the figures. The numbers are a worked
+  example over a stipulated arrangement, not a measurement of this workspace's
+  own checkers, and DDD-cost-11 is `projected` — it carries no evidence
+  entries and its falsifier is unrun. Treating the 0.35/0.55 split as a target
+  for this repository's rejection messages would be reading a projection as a
+  measurement.
