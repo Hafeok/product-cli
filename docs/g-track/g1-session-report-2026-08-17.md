@@ -140,4 +140,255 @@ accepted as canon's improvement on the draft. Rulings recorded:
 
 # Step 2 — verification worklist (V1–V9)
 
-*(Grows row by row; holding at GATE 2 when complete.)*
+**Method.** Every row verified against live primary sources on 2026-08-17 (release feeds, official
+docs, source code at named commits), per the session prompt's discipline: asserted-from-knowledge
+claims in the PRD treated as unverified regardless of confidence. Web verification ran through four
+parallel research passes; local verification ran against the product-cli workspace at `d506ac9`.
+Consequence vocabulary per the prompt: none / edit / open-item answered / new risk. **PRD edits are
+marked, not applied** — Step 1 applied its edits on the prompt's instruction; Step 2's edits hold
+for the Gate 2 ruling, and scope cuts are proposed, never applied.
+
+**Access limit, stated first.** The corpus repos are visible to the account
+(`CleverAS-App/Android`, `CleverAS-App/Backend`, `clever-dk/Clever-iOS`) but this session cannot
+attach them: cross-tier `add_repo` is refused (session sources are Hafeok-tier). Per the prompt, no
+public repo was substituted. V3, V4 and V5 therefore split into a verified public/local half and a
+**blocked repo-dependent half**; the blocked checks are enumerated at the end of this section with
+the ask.
+
+## 2.1 Summary
+
+| # | Item | Verdict | Consequence for the PRD |
+|---|---|---|---|
+| V1 | Oxigraph | **verified — holds**, one new risk | open item 8 answered (embedded half); new risk: workspace pin 0.4 is a superseded line; CONSTRUCT-fixpoint performance undocumented |
+| V2 | ratatui | **verified — holds** | open item 12 (first half) answered; edit: drop the "asserted from knowledge" flag |
+| V3 | kotlin-lsp | **public half verified — the trouble row, as expected**; repo half blocked | new risk: typeHierarchy not implemented; AGP import experimental, silent below Gradle 8.8; fwcd fallback is end-of-life; scope cut proposed below |
+| V4 | SourceKit-LSP | **capability half verified — holds**; build/index half blocked | edit: iOS extraction requires a macOS runner with the client's Xcode and a completing build; no Linux path (confirmed) |
+| V5 | C# adapter | **local half verified — two wiring gaps**; live-run half blocked | edit: `definition` and `typeHierarchy` are not wired (additive work); Roslyn-server typeHierarchy support unverified |
+| V6 | GitHub Models / Copilot API | **verified — closes negative** | open item 9 answered: GitHub Models retired 2026-07-30; **Scaleway-only**, per the PRD's own fallback |
+| V7 | Scaleway structured outputs | **verified — holds** | open item 10 ready: three rungs with structured outputs + tool calling confirmed; Emil picks |
+| V8 | Ontology matching | **verified** | open item 11 (matching half) answered with recommendation: reimplement the small lexical+structural core in Rust; LogMap as offline calibration oracle |
+| V9 | OWL-RL at projection build | **verified — options established** | open item 11 (reasoner half): three credible options ranked; ruling stays Emil's; architecture indifferent, as the PRD stated |
+
+## 2.2 Rows in detail
+
+### V1 — Oxigraph (verified 2026-08-17)
+
+**Checked:** crates.io release history, repo activity, README conformance statement, Store API
+docs, published benchmarks, issue tracker. **Found:** healthy and active — latest 0.5.9
+(2026-06-18), eight releases in twelve months, ~monthly cadence; effectively one maintainer (Tpt)
+with commercial sponsors — bus-factor ~1 is the honest risk signal. SPARQL 1.1 Query, Update and
+Federated Query implemented, "nearly fully conformant" per README, preliminary SPARQL/RDF 1.2
+draft support; no documented conformance gap list. Full quad/named-graph support (`insert_named_graph`,
+GRAPH clauses, dataset management) — the PRD's named-graph-per-source design is covered.
+Embeddability is not a hypothesis: `product-core/Cargo.toml` already carries
+`oxigraph = "0.4"` driving the pf rule engine. **New risk:** the 0.4 line is superseded — last
+0.4.11 (2025-05-21), 0.5.0 shipped 2025-09-13 as a breaking line; staying on 0.4 means no fixes
+since May 2025. Upgrade to 0.5.x is a G0 task (API migration; 0.5.9 added thread-safe
+Transaction/BulkLoader). **CONSTRUCT performance:** no CONSTRUCT-specific or rule-fixpoint
+benchmark exists anywhere in Oxigraph's published material; the README's standing caveat is
+"SPARQL query evaluation has not been optimized yet"; BSBM (~35M triples, SELECT-heavy, run on
+0.2/0.3) is the closest proxy; known blank-node CONSTRUCT correctness issue (#220). At registry
+scale (thousands to low millions of triples) this is a watch-item, not a blocker — V9's options
+hedge it. **Consequence:** open item 8 answered for the embedded store; edit marked (upgrade note,
+§3 serving row); new risk logged (0.4 pin; fixpoint perf undocumented).
+
+### V2 — ratatui (verified 2026-08-17)
+
+**Checked:** crates.io, repo governance, licence, widget ecosystem. **Found:** the live successor
+of tui-rs (forked 2023, org-governed, ~22.3k stars); latest 0.30.2 (2026-06-19); licence **MIT**.
+The §6.1 pipeline's needs map to shipped pieces: prompt window — `ratatui-textarea` v0.9.2
+(2026-06-12), adopted into the ratatui org, or `tui-input` 0.15.4 (2026-08-10) for single-line;
+panels, status line — core `Layout`/`Block`/`Paragraph`. Production users include gitui, atuin,
+yazi, bottom. **Consequence:** open item 12's framework half answered; edit marked — §3 TUI row
+drops "asserted from knowledge; verify at G-1".
+
+### V3 — JetBrains kotlin-lsp (public half verified 2026-08-17; repo half blocked)
+
+**Checked:** the actual repo (`Kotlin/kotlin-lsp`, read-only mirror), RELEASES.md, source at HEAD
+`bd8bca2` (2026-08-16) including the Gradle importer and the registered LSP providers,
+kotlinlang.org docs, fwcd fallback repo and issues. **Found:**
+
+- Still **Alpha** (README badge and warning at HEAD); latest release v262.9593.0 (2026-07-27);
+  weekly pre-alpha builds; JDK 25 required (platform builds bundle a runtime); headless launch
+  first-class (`bin/intellij-server`; `kotlin-lsp.sh` deprecated). Apache-2.0 binary, still
+  partially closed-source (IntelliJ/Fleet proprietary parts).
+- **AGP import is now native but explicitly experimental** (moved from community workaround to
+  in-tree importer ~April 2026); no compatibility matrix exists. Source-level evidence: Android
+  variant collection **silently returns when Gradle < 8.8** — a client repo below that imports
+  with no Android variants and no error; in-repo Android fixtures use AGP 9.1.0.
+- **Operations: five of six.** definition, hover, references, documentSymbol, workspaceSymbol all
+  registered. **typeHierarchy is not implemented** — API scaffolding exists, no provider is
+  registered (inferred from source and feature-list absence; flagged as inference). Call
+  hierarchy exists; type hierarchy does not.
+- **Fallback assessment: fwcd/kotlin-language-server is end-of-life.** Self-declared deprecated
+  in favour of kotlin-lsp; last release 1.3.13 (2025-01-18); no typeHierarchy either; known-broken
+  Android classpath resolution (generated R classes, AGP variant blindness). Not a viable Android
+  fallback; plain-JVM repos only.
+
+**What breaks in the PRD's phasing.** §5.2's `rdfs:subClassOf` row names typeHierarchy as its LSP
+operation; for Kotlin that operation does not exist, so the highest-assurance hierarchy row cannot
+be extracted as specified. §5.4's "AGP support is the flag for the Android repo specifically"
+is still the right flag and still cannot be cleared from public information: whether the Android
+repo's Gradle/AGP versions clear the ≥ 8.8 floor is the **blocked repo-dependent check**.
+
+**Narrowest scope cut, proposed not applied:** G0 runs **C# + Swift**; Kotlin joins when two
+conditions clear: (a) the Android repo's Gradle version is ≥ 8.8 and kotlin-lsp demonstrably
+imports its variants (one `bin/intellij-server` run against the repo answers it), and (b) the
+Kotlin `subClassOf` extraction path is settled — either synthesised from
+implementation/typeDefinition/references plus declaration-text (the C# adapter already slices
+declaration text, so the pattern exists in-house), or deferred until kotlin-lsp ships
+typeHierarchy. Cross-codebase comparison (§5.3) degrades gracefully: agreement analysis over two
+codebases still surfaces contradictions, minus the third leg's triangulation. The cut is Emil's.
+
+### V4 — SourceKit-LSP (capability half verified 2026-08-17; build/index half blocked)
+
+**Checked:** repo at HEAD `7b387eb` (2026-08-13) — server capabilities in
+`SourceKitLSPServer.swift`, background-indexing docs, BSP docs; swift.org and Xcode release notes;
+xcode-build-server. **Found:** **all six operations implemented, typeHierarchy included**
+(prepare/supertypes/subtypes). Ships with Swift toolchains (current stable Swift 6.3, Xcode
+26.4). The index story splits by project type: SwiftPM projects get **background indexing on by
+default since Swift 6.1** — no user build required; xcodeproj/xcworkspace apps (the realistic
+shape of a client iOS repo) are **not natively supported** — they need the BSP shim
+(`xcode-build-server`, macOS-only) and **a completing Xcode/xcodebuild build is a hard
+precondition**: references, workspaceSymbol and typeHierarchy read IndexStoreDB over the unit and
+record files the build writes, and go stale until rebuilt. "The index materialises" concretely
+means: index-store unit/record files exist and IndexStoreDB serves occurrences over them. **No
+Linux path for iOS-SDK code — confirmed** (by absence, flagged as such: the iOS SDK exists only
+inside Xcode; xcode-build-server is macOS-only). **Consequence — edit marked:** §5.4's Swift row
+precondition sharpens from "must build first" to "must build first, on a macOS runner with the
+client's Xcode version, through xcode-build-server for an xcodeproj app; the extraction pipeline
+cannot run iOS extraction in a Linux container". The **blocked repo-dependent check**: the actual
+iOS repo's project shape (SwiftPM vs xcodeproj, Xcode version) and a real build+index run — both
+need the repo and a macOS machine.
+
+### V5 — the M-track C# adapter (local half verified 2026-08-17 at `d506ac9`; live-run half blocked)
+
+**Checked:** `ddd-lsp/src/adapter/csharp.rs`, `ddd-lsp/src/host.rs`, every real (non-mock)
+`request(` site in the ddd stack, `docs/ddd-v1-spec.md`. **Found:** the adapter drives
+`roslyn-language-server` (official prerelease .NET global tool, pinned expectation 5.11.0,
+readiness on `workspace/projectInitializationComplete`, `csharp-ls` documented as fallback;
+host fragility is a *standing risk* in the spec's own words). Of the declaration-level six, the
+stack **issues four**: documentSymbol (revdiff, intercept, MCP lang-tools), workspace/symbol,
+references, hover (plus signatureHelp/rename/diagnostic beyond the set). **Gaps: `definition` is
+never issued anywhere, and typeHierarchy is neither issued nor capability-declared.** Both ride
+the generic `host.request(method, params)` layer, so the wiring is additive, not structural.
+Unverified: whether `roslyn-language-server` answers typeHierarchy at all — needs a live probe.
+**Consequence — edit marked:** §5.4's C# row "extractor precondition: none" becomes "wiring:
+definition + typeHierarchy requests to be added; Roslyn typeHierarchy support to be probed".
+The **blocked repo-dependent check**: the six operations returning real results on
+`CleverAS-App/Backend` (needs the repo plus a .NET installation for the host).
+
+### V6 — GitHub Models / Copilot CLI API (verified 2026-08-17)
+
+**Checked:** docs.github.com/en/github-models, GitHub changelog, Copilot docs, plans and billing
+pages, Copilot SDK repo, ToS pages. **Found:** **GitHub Models was fully retired on 2026-07-30**
+— playground, catalogue, inference API and BYOK all gone, for existing customers included
+(closed to new customers 2026-06-16; brownouts July 16/23). GitHub's stated alternatives:
+Microsoft Foundry for API access, Copilot for GitHub-integrated workflows. Copilot itself exposes
+**no supported OpenAI-compatible chat-completions endpoint**: the official surfaces are the
+Copilot CLI programmatic mode and the Copilot SDK (GA 2026-06-02) — agent-session runtimes billed
+in AI credits, not a `/chat/completions` with `json_schema` that the PRD's provider layer could
+consume; community Copilot proxies are reverse-engineered and unsupported. **Consequence — open
+item 9 answered by the PRD's own fallback clause:** "if no or unclear, Scaleway-only and the open
+item closes that way". It closes that way: **Scaleway-only at G0**; a second provider, if wanted
+later, is a new evaluation (Microsoft Foundry being the successor GitHub itself names). Edit
+marked: §3 model-access row and §12 item 9.
+
+### V7 — Scaleway structured outputs (verified 2026-08-17)
+
+**Checked:** Scaleway Generative APIs docs — OpenAI compatibility, structured outputs, function
+calling, supported models, per-model cards, pricing, rate limits, data privacy. **Found:**
+OpenAI-compatible at `https://api.scaleway.ai/v1`; structured outputs in strict `json_schema` mode
+and tool calling documented as supported across the chat catalogue, with per-model cards
+confirming; EU (Paris) processing, zero-retention by default, no extraterritorial exposure —
+the PRD's GDPR rationale holds. Rate limits at verified identity: ~1–2M tokens/min, 600
+requests/min. **Three candidate rungs, each with structured outputs + tool calling + parallel
+tools confirmed on its model card:**
+
+| Rung | Model | Size | Price €/1M in/out |
+|---|---|---|---|
+| 1 — small instruct | `pixtral-12b-2409` (literal ≤12B) — or `gemma-4-26b-a4b-it` / `qwen3.6-35b-a3b` on the active-params reading (4B/3B active) | 12B · 26B(A4B) · 35B(A3B) | 0.20/0.20 · 0.25/0.50 · 0.25/1.50 |
+| 2 — mid coding | `qwen3-coder-30b-a3b-instruct` | 30B (A3B), 128k ctx | 0.20/0.80 |
+| 3 — best open-weight coding | `glm-5.2` (docs: best open-weight for long-horizon/coding at release, June 2026); cost runner-up `deepseek-v4-flash-0731` | frontier, 256k ctx | 1.80/5.50 · 0.40/0.80 |
+
+Caveat: `gpt-oss-120b` tool calling requires the Responses API — avoid for the ladder. First 1M
+tokens free; no production-use restriction. **Consequence:** open item 10 is decision-ready —
+verified candidates on the table, Emil picks the rungs.
+
+### V8 — ontology matching (verified 2026-08-17)
+
+**Checked:** LogMap repo and commit history, OAEI 2025 results, AML/Matcha/MELT/LLM-matcher
+landscape, Rust crate coverage, the 2026 stable-matching result. **Found:** LogMap is actively
+maintained (commits to 2026-08-07, OAEI-2025 participant) and invocable as `java -jar` — but it is
+built for the wrong problem here: its differentiator is logic-based repair over rich OWL
+axiomatisation, worthless on shallow code-extracted ontologies; its lexical layer leans
+biomedical and does nothing for camelCase/snake_case identifiers; the 2021 binary is stale
+(build-from-source + JVM in every deploy target). At registry scale (hundreds of classes,
+10⁴–10⁵ pairs) the big-ontology machinery buys nothing — runtime is a non-issue either way. No
+Rust ontology-matching crate exists; every ingredient does (strsim/rapidfuzz, petgraph,
+horned-owl, oxigraph already in-workspace, thesaurus for WordNet). Evidence bound: a
+lexical+structural core with stable-matching extraction reaches F1 0.832 on Anatomy
+(arXiv:2605.09184) — and signal weights barely matter once extraction is stable matching.
+**Consequence — open item 11's matching half answered, recommendation:** reimplement the small
+lexical + structural core as rules in Rust (~1–2 weeks: identifier-aware normalisation,
+Jaro-Winkler + token-Jaccard + TF-IDF, domain synonym table, one round of neighbourhood
+propagation, stable-matching 1:1 extraction with per-signal score breakdown for the review UI);
+run LogMap **once, offline, as a calibration oracle** for thresholds. An optional LLM-judge pass
+over top-k candidates (+2–3 days) is where the field's marginal quality now comes from and fits
+the per-triple review stage naturally — a later choice, not a G0 need.
+
+### V9 — OWL-RL at projection build (verified 2026-08-17)
+
+**Checked:** the sidecar landscape (owlrl, Jena, RDFox, EYE, HyLAR, Soufflé, Nemo, Rust crates)
+and the CONSTRUCT-rules prior art. **Found — the options, ranked, no measurement taken:**
+
+1. **`reasonable`** (Rust crate 0.4.4, 2026-05-28, BSD-3) — OWL 2 RL materialiser, the only
+   maintained in-process no-new-runtime option; caveat: not 100% of RL rules — the supported
+   subset must be checked against the entailments §5.2 needs (subclass transitivity, domain/range,
+   inverses, property chains). Integration cost: low (Cargo dependency).
+2. **CONSTRUCT-to-fixpoint on Oxigraph** — zero new dependency; reuses the exact shape of the
+   workspace's existing `pf::sparql_rules`; the OWL 2 RL/RDF rule table translates mechanically
+   (SPIN OWL-RL is the prior art). Caveats: no published fixpoint performance data (V1) and the
+   blank-node CONSTRUCT issue (#220). Integration cost: low, rules vendored in-repo.
+3. **Nemo** (knowsys, Rust, v0.10.1 2026-08-01, MIT/Apache-2.0) — Datalog engine with native RDF
+   I/O, library or `nmo` subprocess; RL rules written once in its dialect. Integration cost:
+   low-medium.
+
+Sidecars dragging in runtimes (Python owlrl 7.6.2 — slow but now with Oxigraph-store
+integration; Jena 6.2.0 — JVM and no stock OWL CLI, custom wrapper needed; RDFox — commercial,
+Samsung-owned, licence-gated) are all viable but strictly worse fits for a Rust workspace. EYE,
+HyLAR, Soufflé, whelk-rs: not credible here. **Consequence:** open item 11's reasoner half has
+its options established with integration costs; the architecture is indifferent, as the PRD
+stated (inference is a projection concern) — the ruling stays Emil's, and options 1+2 are the
+two that add zero runtimes.
+
+## 2.3 Blocked checks — the ask
+
+Cross-tier `add_repo` refuses the corpus repos from this session. The blocked checks, exactly:
+
+| Check | Needs | Discharged by |
+|---|---|---|
+| V3: Android repo's Gradle and AGP versions against the ≥ 8.8 silent floor; one kotlin-lsp import run confirming variants resolve | `CleverAS-App/Android` | a session seeded with the repo as an initial source (version read), plus any machine with JDK/`bin/intellij-server` for the import probe |
+| V4: iOS repo project shape (SwiftPM vs xcodeproj), Xcode version; a completing build + index materialisation; the six operations returning real results | `clever-dk/Clever-iOS` **and a macOS machine with the client's Xcode** | Emil's machine, or a macOS runner; not any Linux session |
+| V5: the six operations returning real results on the backend solution via `roslyn-language-server` | `CleverAS-App/Backend` + .NET installation | a session seeded with the repo, or Emil's machine |
+
+Options: (a) Emil authorises fresh sessions seeded with the CleverAS-App/clever-dk repos as
+initial sources for the two non-macOS checks; (b) the checks run on Emil's machine at G0 entry;
+(c) both — the version reads via (a) now, the build-dependent runs via (b). The session makes no
+choice.
+
+## 2.4 PRD edits marked by Step 2 (held for the Gate 2 ruling, not applied)
+
+| PRD section | Edit |
+|---|---|
+| §3 substrate, serving row | Oxigraph verified (0.5.9, 2026-06-18); note the workspace's 0.4 pin as superseded — upgrade at G0; drop "both store candidates asserted from knowledge; verify at G0" |
+| §3 substrate, TUI row | ratatui verified (MIT, 0.30.2; `ratatui-textarea` for the prompt window); drop "asserted from knowledge" |
+| §3 substrate, model access row | GitHub Models retired 2026-07-30; Scaleway-only; second-provider slot closes (Microsoft Foundry named as the successor evaluation if ever wanted) |
+| §5.2 subClassOf row | for Kotlin, typeHierarchy does not exist in kotlin-lsp; extraction path synthesised or deferred (per the Gate 2 ruling on the scope cut) |
+| §5.4 adapter table | C# row: definition + typeHierarchy wiring to add, Roslyn typeHierarchy to probe. Swift row: precondition sharpened — macOS runner, client's Xcode, xcode-build-server for xcodeproj, no Linux path. Kotlin row: Alpha; AGP experimental; Gradle ≥ 8.8 silent floor; JDK 25; no typeHierarchy; fwcd fallback end-of-life |
+| §12 open items 8, 9, 10, 11, 12 | 8: answered (Oxigraph holds; 0.5 upgrade). 9: closed Scaleway-only. 10: candidates verified, Emil picks. 11: options established (V8/V9 above), Emil rules. 12: ratatui verified (framework half) |
+
+**GATE 2 — holding** on this verification report. The rulings the gate needs: (1) the V3 scope
+cut — G0 as C# + Swift with Kotlin joining on its two conditions, or hold G0 for the Android
+checks; (2) how to discharge the blocked checks (§2.3 options); (3) leave to apply the §2.4 PRD
+edits; (4) optionally now or at G0: ladder rungs (V7 table) and the reasoner option (V9).
