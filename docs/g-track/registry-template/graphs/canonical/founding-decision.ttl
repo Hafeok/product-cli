@@ -1,0 +1,7 @@
+# The founding-decision slot — EMPTY BY DESIGN at generation (G-1 Gate 3 ruling).
+#
+# This file holds the owning organisation's decision to keep a registry, filed
+# by the instance's ratifier as the FIRST ratified content. The template
+# provides the slot; only the instance can fill it. CI passes this file while
+# it parses to zero triples; once filled, it holds one decision node and the
+# decision shapes (grown at G0) validate it.

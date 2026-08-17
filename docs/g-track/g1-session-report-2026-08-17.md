@@ -454,4 +454,48 @@ The staged CI logic was executed locally against the skeleton (pySHACL 2026-08-1
    literal shape; adds a YAML→RDF step to CI at G0). Both exemplars sit side by side for the
    comparison.
 
-**GATE 3 — holding.**
+**GATE 3 — closed with a revised ruling** (Emil, 2026-08-17), replacing the ownership question
+with a better type:
+
+1. **The skeleton is a template, not a repository.** No repository was created in this session.
+   The directory finalised as `docs/g-track/registry-template/` — a parameterised template for
+   *any* registry: owning organisation, repository name, base IRI (with the durability
+   requirement documented, no host picked), ratifier, and display name are **generation
+   parameters**, supplied when an instance is generated. Instance generation is a **G0-entry
+   step** beside the iOS build.
+2. **The template is versioned (0.1.0), and instances record it.** Every generated instance's
+   first commit fills `GENERATION.ttl`: template version, parameters supplied, generated-by,
+   date — `prov:wasAttributedTo` the generation act — which is what lets instances re-pin when
+   the template moves, by this session's own discipline.
+3. **The founding-decision slot is scaffolded** (`graphs/canonical/founding-decision.ttl`, empty
+   by design): the owning organisation's decision to keep a registry, filed by its ratifier as
+   the first ratified content. The template provides the slot; only the instance can fill it.
+4. **PRD open item 7 re-typed, not answered**: ownership is a generation parameter, answered per
+   instance. The PRD is edited accordingly (§3 authority row, §11 G0 row, §12 item 7).
+5. **Format ruled: Turtle.** The authority file is the assertion; SHACL reads it directly; zero
+   conversion in CI. The YAML exemplar is deleted. The per-claim pattern transfers (one assertion
+   per file, PR review, supersession) — the format was never the load-bearing part.
+
+Applied: `registry-skeleton/` → `registry-template/` with `TEMPLATE.md` (version, parameter
+table, generation procedure), parameterised README (`{{OWNER_ORG}}`, `{{RATIFIER}}`,
+`{{DISPLAY_NAME}}`; base-IRI placeholder kept IRI-valid so the template validates as-is),
+`GENERATION.ttl` and founding-decision slots, CI updated (slot exempt from the one-assertion rule
+while empty), YAML exemplar and `STAGING.md` removed. CI logic re-run locally after the rework:
+exemplar conforms; the slot parses at zero triples and is exempt; template conforms.
+
+---
+
+# Step 4 — close
+
+The PR against product-cli carries the manifest; this section records the close state.
+
+**Deliverables on the branch:** the edited PRD (`prd-ground-as-ontology.md`), this report, the
+track register (`decisions/g-dec-01`, `g-dec-02`), and the registry template
+(`registry-template/`, version 0.1.0). No canon repo was touched; no repository was created.
+
+**Status line: G-1 discharged; G0 is buildable.** Nothing is unpinned. The G0-entry checklist
+(Gates 2–3 rulings): generate the first registry instance (parameters supplied then); the iOS
+build on Emil's machine; the Oxigraph 0.5 upgrade as task one; the seeded-session discharges for
+V3 (Android Gradle read) and V5 (Roslyn typeHierarchy probe).
+
+**GATE 4 — Emil merges.**

@@ -1,6 +1,7 @@
-# Exemplar — one assertion per file, Turtle form. Underscore prefix marks it an
-# exemplar: CI validates it, the projection build excludes `_`-prefixed files.
-# Base IRI is a placeholder until the Gate 3 org naming (see STAGING.md).
+# Exemplar — one assertion per file, in Turtle (the format ruled at G-1 Gate 3).
+# Underscore prefix marks it an exemplar: CI validates it, the projection build
+# excludes `_`-prefixed files. Base IRI is a generation parameter (TEMPLATE.md);
+# the placeholder parses as a valid IRI so the template validates as-is.
 #
 # The file carries exactly one asserted triple. Its Reading annotations ride on
 # the assertion node (RDF reification kept deliberately boring until the
