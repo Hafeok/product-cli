@@ -8,7 +8,7 @@
 use std::collections::BTreeMap;
 
 use oxigraph::io::RdfFormat;
-use oxigraph::sparql::QueryResults;
+use oxigraph::sparql::{QueryResults, SparqlEvaluator};
 use oxigraph::store::Store;
 
 use super::validate::Violation;
@@ -56,7 +56,13 @@ pub fn run_rules(ttl: &str, rules: &[SparqlRule]) -> Vec<Violation> {
 /// stays this crate's dependency alone.
 pub fn select(ttl: &str, query: &str) -> Result<Vec<BTreeMap<String, String>>, String> {
     let store = load(ttl)?;
-    let QueryResults::Solutions(solutions) = store.query(query).map_err(|e| e.to_string())? else {
+    let QueryResults::Solutions(solutions) = SparqlEvaluator::new()
+        .parse_query(query)
+        .map_err(|e| e.to_string())?
+        .on_store(&store)
+        .execute()
+        .map_err(|e| e.to_string())?
+    else {
         return Ok(Vec::new());
     };
     let vars: Vec<String> = solutions.variables().iter().map(|v| v.as_str().to_string()).collect();
@@ -83,7 +89,13 @@ fn load(ttl: &str) -> Result<Store, String> {
 }
 
 fn run_one(store: &Store, rule: &SparqlRule) -> Result<Vec<Violation>, String> {
-    let QueryResults::Solutions(solutions) = store.query(rule.select).map_err(|e| e.to_string())? else {
+    let QueryResults::Solutions(solutions) = SparqlEvaluator::new()
+        .parse_query(rule.select)
+        .map_err(|e| e.to_string())?
+        .on_store(store)
+        .execute()
+        .map_err(|e| e.to_string())?
+    else {
         return Ok(Vec::new());
     };
     let vars: Vec<String> = solutions.variables().iter().map(|v| v.as_str().to_string()).collect();
