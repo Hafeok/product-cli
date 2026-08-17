@@ -559,8 +559,14 @@ mechanical delivery, the emitted-proxy schema, and the halt set are the product 
 section types the alternative without weakening that.
 
 **Candidate: GitHub Copilot SDK** (agent runtime; official Rust crate; verified 2026-08-17).
-Architecture: SDK client ↔ Copilot CLI in server mode over JSON-RPC. The integration shape that
-preserves the governance surface:
+Architecture: SDK client ↔ Copilot CLI in server mode over JSON-RPC.
+
+Shape A is the governed-surface integration described in the table below: first-party tools
+disabled, our three surfaces registered as custom tools, and mechanical delivery run inside the
+permission handler. Shape B, the fallback if open item 13's checks (a)–(c) fail, is the SDK with its
+own tools and no delivery — an ungoverned-baseline arm rather than an executor alternative.
+
+The integration shape that preserves the governance surface:
 
 | Loop element | SDK mechanism |
 |---|---|
@@ -716,10 +722,12 @@ Emil's rulings needed, in order of how much they change the design:
     §7.8's arm and the ladder into one experiment; the docs name OpenAI, Azure AI Foundry, and
     Anthropic — arbitrary endpoints unverified); (e) the JSON-RPC event stream carries enough
     per-call detail to populate the §4.2 act log without gaps. Each check dated, against the pinned
-    SDK version.
+    SDK version. Gated at G2 entry rather than G4 deliberately: checks (a)–(c) determine typing, not
+    readiness — a failure redirects the SDK from executor alternative to ungoverned baseline
+    (Shape B), and that redirect must be known before G2's provider work commits.
 14. **Comparison-arm scope** — whether the arm runs at G4 with the ladder or waits for a later
-    campaign; and whether the ungoverned-baseline variant (SDK with its own tools, no delivery) runs
-    alongside as the industry-default control. Emil rules at G4 planning.
+    campaign; and whether Shape B (SDK with its own tools, no delivery) runs alongside as the
+    industry-default control. Emil rules at G4 planning.
 
 ---
 
