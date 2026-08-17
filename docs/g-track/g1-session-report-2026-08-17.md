@@ -388,7 +388,35 @@ choice.
 | §5.4 adapter table | C# row: definition + typeHierarchy wiring to add, Roslyn typeHierarchy to probe. Swift row: precondition sharpened — macOS runner, client's Xcode, xcode-build-server for xcodeproj, no Linux path. Kotlin row: Alpha; AGP experimental; Gradle ≥ 8.8 silent floor; JDK 25; no typeHierarchy; fwcd fallback end-of-life |
 | §12 open items 8, 9, 10, 11, 12 | 8: answered (Oxigraph holds; 0.5 upgrade). 9: closed Scaleway-only. 10: candidates verified, Emil picks. 11: options established (V8/V9 above), Emil rules. 12: ratatui verified (framework half) |
 
-**GATE 2 — holding** on this verification report. The rulings the gate needs: (1) the V3 scope
-cut — G0 as C# + Swift with Kotlin joining on its two conditions, or hold G0 for the Android
-checks; (2) how to discharge the blocked checks (§2.3 options); (3) leave to apply the §2.4 PRD
-edits; (4) optionally now or at G0: ladder rungs (V7 table) and the reasoner option (V9).
+**GATE 2 — closed** (Emil, 2026-08-17). Commit `19058a7` stands. Rulings recorded:
+
+1. **V3 scope cut accepted as proposed.** G0 runs C# + Swift; Kotlin joins on both conditions —
+   Gradle ≥ 8.8 with one confirmed variants import, and the `subClassOf` path settled, **preferring
+   the synthesis route** (implementation/typeDefinition/references + declaration-text slicing, the
+   C# adapter's existing pattern) over waiting for kotlin-lsp typeHierarchy: no G0 leg sits on
+   JetBrains' roadmap. The n=2 qualifier recorded in §5.3: two-codebase agreement is evidence, not
+   the three-root triangulation upgrade.
+2. **Blocked checks: route (c), both.** Emil authorises fresh sessions seeded with
+   `CleverAS-App/Android` and `CleverAS-App/Backend` for the Gradle version-read and the Roslyn
+   typeHierarchy probe (discharging V3 condition (a) and V5's live probe). The iOS build (V4) runs
+   on Emil's machine at G0 entry — **a named G0-entry precondition**, not a session task.
+3. **§2.4 PRD edits: leave granted and applied**, including the Oxigraph 0.5 upgrade filed as
+   **G0 task one** (dead-line pin = live stale-ground finding, treated with that priority); open
+   item 9 closed Scaleway-only; V8's recommendation adopted (Rust lexical/structural core, LogMap
+   once-offline as calibration oracle, F1 0.832 evidence bound cited).
+4. **Rungs and reasoner both ruled now.** Ladder: `gemma-4-26b-a4b-it` (small-rung winner on
+   active-params pricing for a coding task; pixtral excluded as vision-oriented) /
+   `qwen3-coder-30b-a3b` / `glm-5.2`, plus `deepseek-v4-flash-0731` as cost-alternate fourth point;
+   prices captured in the PRD at 2026-08-17 — prices are ground with a drift rate. Reasoner:
+   CONSTRUCT-fixpoint on Oxigraph primary, `reasonable` named fallback, `revisit_if` on
+   projection-build wall-time at G0 scale — filed as track decision `g-dec-02`; the no-benchmark
+   hedge is discharged by measuring at G0.
+
+PRD open items now answered or ruled: 8, 9, 10, 11, and 12's framework half (§12 marked in place).
+
+---
+
+# Step 3 — registry repository skeleton
+
+*(Holding at GATE 3 on the skeleton; Emil names the org at the gate. Nothing is pushed to any new
+repository before that ruling.)*

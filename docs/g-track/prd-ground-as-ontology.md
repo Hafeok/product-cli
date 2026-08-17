@@ -115,13 +115,13 @@ behaviour.**
 |---|---|---|
 | Ontology vocabulary | product-cli's existing RDF vocabulary | **Assumption A1:** the axis registry uses this vocabulary, extended with act-relevant properties, not a separate one. Open ruling 25; the PRD takes the extend position. If ruled otherwise, §7.2 changes and nothing else does. |
 | **Registry authority** | a dedicated **registry repository** (org-level, new) | canonical store of ratified triples; per-triple files (the per-claim file pattern); ratification by PR merge; supersession, never rewriting; CI runs SHACL on every change. **Not** inside any codebase and **not** inside the framework canon repos — it is the organisation's ground, not the framework's. |
-| **Registry serving** | SPARQL endpoint rebuilt from the registry repo at each merge | read-only; **pinned to a ref** — every Reading served carries the ref, giving Q11 as-of semantics with no extra machinery. Local mode: product-cli embeds a triple store (Oxigraph — Rust, SPARQL 1.1, fits the workspace natively) over a pinned clone; works offline. Central mode: the same store or Fuseki/GraphDB in Azure Container Apps behind Entra ID — the O-track stack arriving early. Store choice is swappable because **the endpoint is a projection of the repo, not the source** (Q30's diagnostic, applied to our own database). **Inference runs at projection build**: entailments are recomputable, so they never enter the authority repo — each endpoint rebuild derives the inferred graph for that ref, every entailed triple `prov:wasDerivedFrom` the asserted triples plus the rule id, assurance = the rule. The repo stays pure assertion; inference inherits as-of discipline for free. Both store candidates asserted from knowledge; verify at G0. |
+| **Registry serving** | SPARQL endpoint rebuilt from the registry repo at each merge | read-only; **pinned to a ref** — every Reading served carries the ref, giving Q11 as-of semantics with no extra machinery. Local mode: product-cli embeds a triple store (Oxigraph — Rust, SPARQL 1.1, fits the workspace natively) over a pinned clone; works offline. Central mode: the same store or Fuseki/GraphDB in Azure Container Apps behind Entra ID — the O-track stack arriving early. Store choice is swappable because **the endpoint is a projection of the repo, not the source** (Q30's diagnostic, applied to our own database). **Inference runs at projection build**: entailments are recomputable, so they never enter the authority repo — each endpoint rebuild derives the inferred graph for that ref, every entailed triple `prov:wasDerivedFrom` the asserted triples plus the rule id, assurance = the rule. The repo stays pure assertion; inference inherits as-of discipline for free. *(Verified at G-1, 2026-08-17:)* Oxigraph holds — 0.5.9 (2026-06-18), active ~monthly cadence, SPARQL 1.1 Query/Update/Federated, full named-graph support; honest risk signal is a bus-factor of ~1. **The workspace's `oxigraph = "0.4"` pin is a dead line** (last 0.4.11, 2025-05-21; 0.5.0 shipped 2025-09-13 as a breaking line) — a live stale-ground finding in our own ground; **the 0.5 upgrade is G0 task one** (Gate 2 ruling). *(Ruled at G-1 Gate 2:)* inference mechanism is **CONSTRUCT-to-fixpoint on Oxigraph as primary** — it reuses the `pf::sparql_rules` shape already in the codebase and adds no dependency — with the Rust `reasonable` crate (0.4.4, BSD-3) as the named fallback; recorded as track decision `g-dec-02` with a `revisit_if`: fixpoint wall-time exceeding an acceptable projection-build budget at G0 scale flips to the fallback. The no-benchmark hedge is discharged by measuring at G0, not by choosing conservatively now. |
 | Validation | SHACL shapes, SPARQL | as-is; shapes gain the act properties in §4.2 |
 | Provenance | W3C PROV-O | `prov:wasDerivedFrom`, `prov:wasAttributedTo`, `prov:generatedAtTime`; named graph per source |
 | Decisions | the ledger (L-track) | read for governing sets; write only as proposals |
 | Code | LSP-backed language adapters (M-track) | C#, Bicep, Rust, HTML/CSS as they exist; **Swift and Kotlin added for Feature 3** (§5.4) |
-| **TUI** | Rust terminal UI in the product-cli workspace (ratatui is the expected framework — *asserted from knowledge; verify at G-1*) | prompt window, enhance panel, ground-state status line, rung and α pickers, bundle summary |
-| **Model access** | provider-agnostic layer over OpenAI-compatible chat completions + tool calling + structured outputs | The loop must run on cheap and small models; Claude is not required (Emil's ruling — cost, and the experiment in §7.7). **Scaleway Generative APIs verified 2026-08-14**: OpenAI-compatible with tool calling and structured outputs, EU-hosted (GDPR; data does not leave Europe — relevant for client corpora), catalogue spans small instruct models through current open-weight coding models on one endpoint. GitHub Copilot CLI / GitHub Models: candidate second provider, **verify at G-1**. Structured-output support is load-bearing: §7.5's required emitted-proxy field survives on small models only if the provider constrains output shape. |
+| **TUI** | Rust terminal UI in the product-cli workspace — **ratatui, verified at G-1** (2026-08-17: MIT, 0.30.2, live successor of tui-rs; `ratatui-textarea` v0.9.2 in the ratatui org covers the prompt window) | prompt window, enhance panel, ground-state status line, rung and α pickers, bundle summary |
+| **Model access** | provider-agnostic layer over OpenAI-compatible chat completions + tool calling + structured outputs | The loop must run on cheap and small models; Claude is not required (Emil's ruling — cost, and the experiment in §7.7). **Scaleway Generative APIs verified 2026-08-14**: OpenAI-compatible with tool calling and structured outputs, EU-hosted (GDPR; data does not leave Europe — relevant for client corpora), catalogue spans small instruct models through current open-weight coding models on one endpoint. *(Verified and ruled at G-1, 2026-08-17:)* **GitHub Models was fully retired on 2026-07-30**; Copilot's official surfaces (CLI programmatic mode, SDK) are agent runtimes, not OpenAI-compatible chat-completions endpoints — the second-provider slot **closes Scaleway-only** per this PRD's own fallback (open item 9). A second provider, if ever wanted, is a fresh evaluation (Microsoft Foundry is the successor GitHub itself names). Scaleway re-verified at G-1: `json_schema` strict mode plus tool calling confirmed per-model across the ladder rungs (§7.7). Structured-output support is load-bearing: §7.5's required emitted-proxy field survives on small models only if the provider constrains output shape. |
 
 ## 4. Data model additions
 
@@ -220,7 +220,7 @@ the endpoint rebuilds on merge.
 | Code structure | Proposed ontology object | Assurance | Derivation | LSP operations |
 |---|---|---|---|---|
 | Classes, records, entities, aggregates | `owl:Class` candidates | high — declared | mapping rule | documentSymbol, workspaceSymbol |
-| Inheritance, interface implementation | `rdfs:subClassOf` | high — declared | mapping rule | typeHierarchy |
+| Inheritance, interface implementation | `rdfs:subClassOf` | high — declared | mapping rule | typeHierarchy — *(ruled at G-1 Gate 2:)* where a server lacks it (kotlin-lsp, verified 2026-08-17), the hierarchy is **synthesised** from implementation/typeDefinition/references plus declaration-text slicing, the pattern the C# adapter already carries; no G0 leg sits on JetBrains' roadmap |
 | Typed properties, foreign keys | object/datatype properties with ranges | high — declared | mapping rule | documentSymbol, hover |
 | Composition and reference | relations | mid — inferred from usage | SPARQL CONSTRUCT rules to fixpoint over raw reference edges | references, definition |
 | Namespaces, modules, bounded contexts | domain axis registries (holding note §13.9's layers) — proposed axes carry the axis-registry/v1 quality mark, resolvable / nameable, with an extractor sketch per resolvable axis *(re-pinned at G-1: the format precedent is `decision-driven-design/graph/axis-registry.yaml`, seeded at v5.5.0, artefact-not-canon, 22 axes — the framework program's own instance, not this registry; its promotion path — a validator reads it, plus a ratification act — is the discipline G0's proposal graphs inherit)* | mid — structural | mapping rule + RDFS entailment | workspaceSymbol |
@@ -231,9 +231,15 @@ mapping rules, RDFS/OWL-RL entailment (subclass transitivity, domain/range propa
 property chains), CONSTRUCT rules iterated to fixpoint for usage-inferred relations, and SHACL plus
 disjointness axioms for the cross-codebase contradiction surfacing of §5.3. Cross-codebase entity
 alignment (Swift `Client` vs C# `Customer`) uses **ontology matching** — lexical plus structural
-similarity, an established field with LogMap-class tooling *(asserted from knowledge; verify at
-G-1)* — producing *candidates* for per-triple review, which is where judgement was always going to
-sit. The model's residual role is naming suggestions on the lowest-assurance row, and it defaults off.
+similarity — producing *candidates* for per-triple review, which is where judgement was always going
+to sit. *(Verified and ruled at G-1, 2026-08-17:)* the lexical/structural core is **reimplemented as
+rules in Rust** (identifier-aware normalisation, Jaro-Winkler + token-Jaccard + TF-IDF, a domain
+synonym table, one round of neighbourhood propagation, stable-matching 1:1 extraction with
+per-signal score breakdown for the review UI; every ingredient exists as maintained crates, and the
+evidence bound is F1 0.832 on OAEI Anatomy for exactly this recipe, arXiv:2605.09184). LogMap is
+alive (OAEI-2025 participant) but built for rich axiomatised ontologies and biomedical lexicons —
+wrong problem at this scale; it runs **once, offline, as the calibration oracle** for the Rust
+core's thresholds, and never ships. The model's residual role is naming suggestions on the lowest-assurance row, and it defaults off.
 
 **Why this does not trip canon's retirement of "closed predicates make intelligence unnecessary":**
 extraction is **constructively closed** — the verdict is *computed* by rule; there is no candidate
@@ -312,6 +318,12 @@ decision behind it, not a bug report. **Behavioural divergence is not a violatio
 The declaration-level LSP subset (§5.2) extracts almost only registry-layer structure, so the
 extractor and the decision's region are aligned — now on purpose rather than by accident.
 
+*(Ruled at G-1 Gate 2 — the n=2 qualifier.)* While G0 runs two codebases (C# + Swift, Kotlin
+joining on its conditions — §5.4), two-codebase comparison still surfaces contradictions, but the
+independence-triangulation assurance upgrade **weakens at n=2**: agreement between two independent
+roots is evidence, not the three-root upgrade. The upgrade's full form applies from the third root
+onward.
+
 **Independence is a field, not an assumption.** Three repos by three teams in three type systems are
 genuinely independent roots. Client models *generated* from a shared schema, or a Kotlin model written
 by copying the C#, are one source presenting as three — the correlated-failure trap. `prov:
@@ -321,11 +333,13 @@ it is.
 
 ### 5.4 Adapters for the G0 corpus
 
-| Language | Server | Status (verified 2026-08-14) | Extractor precondition |
+*(Table re-verified at G-1, 2026-08-17; the scope cut below is Emil's Gate 2 ruling.)*
+
+| Language | Server | Status (verified 2026-08-17) | Extractor precondition |
 |---|---|---|---|
-| C# | existing M-track adapter | in use | none |
-| Swift | SourceKit-LSP, bundled with Xcode and swift.org toolchains | stable; provides a source code index and cross-language support | **must build first** — the server depends on the build for module dependencies and does not update its index in the background |
-| Kotlin | JetBrains kotlin-lsp (official; K2 compiler; IntelliJ Platform) | **alpha**; partially closed-source; Gradle and Maven supported, Android Gradle Plugin **experimental** | AGP support is the flag for the Android repo specifically; fallback is the community fwcd server |
+| C# | existing M-track adapter (`roslyn-language-server`, pinned expectation 5.11.0; `csharp-ls` fallback) | in use; of the declaration-level six, four are wired (documentSymbol, workspace/symbol, references, hover) | wiring: add `definition` + `typeHierarchy` requests (additive on the generic host layer); probe whether the Roslyn server answers typeHierarchy; live-run check on the backend repo pending (Gate 2 route c) |
+| Swift | SourceKit-LSP, bundled with Xcode and swift.org toolchains | all six operations implemented, typeHierarchy included; SwiftPM projects background-index by default since Swift 6.1 | **must build first, on a macOS runner with the client's Xcode** — an xcodeproj app needs the `xcode-build-server` BSP shim and a completing build to materialise the index (unit/record files + IndexStoreDB); no Linux path for iOS-SDK code. **The iOS build is a named G0-entry precondition on Emil's machine** (Gate 2 ruling), not a session task |
+| Kotlin | JetBrains kotlin-lsp (official; K2; IntelliJ platform) | **alpha** (v262.9593.0, 2026-07-27); partially closed-source; AGP import native but **experimental**, with a **silent no-Android-import floor at Gradle < 8.8**; JDK 25 runtime; **typeHierarchy not implemented** (five of six present); fwcd fallback is end-of-life (self-deprecated, Android-broken) — not a fallback for this corpus | **joins after G0 entry, on two conditions** (Gate 2 scope cut, ruled): (a) the Android repo's Gradle clears ≥ 8.8 and one `bin/intellij-server` import run confirms variants resolve; (b) the Kotlin `subClassOf` synthesis route (§5.2) is implemented. **G0 runs C# + Swift** |
 
 Adapter maturity risk lands on the *loop's* future code-edit surface for Android, not on the
 extractor, because the extractor uses only the declaration-level subset (§5.2). Precedent for the
@@ -498,6 +512,17 @@ outputs per rung — proxy fidelity, halt rate, malformed-call rate, review yiel
 accepted change. The interesting result is the *knee*: the rung below which the arrangement stops
 compensating.
 
+**Rungs (ruled at G-1 Gate 2; all on the verified Scaleway catalogue, structured outputs + tool
+calling confirmed per model card; prices are ground with a drift rate — read 2026-08-17, € per 1M
+tokens in/out):**
+
+| Rung | Model | Rationale | Price (as-of 2026-08-17) |
+|---|---|---|---|
+| 1 — smallest viable instruct | `gemma-4-26b-a4b-it` (4B active) | wins the session's small-rung candidates on active-params pricing for a coding task: same input price as `qwen3.6-35b-a3b` (3B active) at a third of its output price; `pixtral-12b-2409` excluded as vision-oriented, not coding | 0.25 / 0.50 |
+| 2 — mid open coder | `qwen3-coder-30b-a3b-instruct` (30B, A3B, 128k ctx) | code-specialised | 0.20 / 0.80 |
+| 3 — best open agentic | `glm-5.2` (256k ctx) | the catalogue's best open-weight long-horizon/coding model at release (June 2026) | 1.80 / 5.50 |
+| 4 — cost-alternate (when budget allows) | `deepseek-v4-flash-0731` | cost-efficient long-horizon point between rungs 2 and 3 | 0.40 / 0.80 (0.08 cached input) |
+
 **The working set is the biggest lever on the knee.** The explore phase is disproportionately why
 agentic coding needs large models: long-horizon search over a repo is what small models are worst at.
 The declaration removes it — the remaining work, editing within a delivered working set against
@@ -595,7 +620,7 @@ additionally stands on, filed at v5.5.0: `DDD-ground-01…04`, `DDD-delivery-01�
 
 | Phase | Delivers | Gate |
 |---|---|---|
-| G0 | **Registry repository initialised** (structure, SHACL CI, PR ratification path); local embedded store over a clone; Reading and Act types; PROV-O wiring; **code extractor over the three-codebase corpus** (C# first, then Swift, then Kotlin); proposal graphs as registry branches; per-triple review; shared-domain intersection | Emil ratifies a first shared-domain ontology **by merging**; contradiction count reported; the "should be identical" decision filed with the extractor as its discharge |
+| G0 | **Registry repository initialised** (structure, SHACL CI, PR ratification path); **Oxigraph 0.5 upgrade as task one** (Gate 2 ruling — the 0.4 pin is a dead line, a live stale-ground finding); local embedded store over a clone; Reading and Act types; PROV-O wiring; **code extractor over the corpus — C# first, then Swift** (Kotlin joins on its two §5.4 conditions; Gate 2 scope cut); proposal graphs as registry branches; per-triple review; shared-domain intersection (n=2 qualifier, §5.3) | **G0-entry preconditions:** the iOS build completing on Emil's machine (macOS + client Xcode); the Android Gradle read and Roslyn typeHierarchy probe discharged via seeded sessions (Gate 2, route c). Gate: Emil ratifies a first shared-domain ontology **by merging**; contradiction count reported; the "should be identical" decision filed with the extractor as its discharge |
 | G1 | TUI compose + enhance + declare over the ratified ontology (`prompt.submit` extractor; enhance panel; ground-state line; declarations persisted, not yet executed) | panel renders for a corpus of real prompts; precision measured by Emil's hand-check; a declared act round-trips to disk |
 | G2 | Execute stage: the loop (ground + decisions surfaces, no LSP) consumes declared acts against one verified provider; sessions produce bundles | first declaration executed end to end; first bundle reviewed; act log complete |
 | G3 | LSP surface; code-edit acts with emitted predicates; halts complete | first code change lands through review |
@@ -624,19 +649,20 @@ Emil's rulings needed, in order of how much they change the design:
 7. **Registry repository location and name** — a new org-level repo; confirm host org and whether the
    app's organisation or Context& owns it (ownership is the accountable-principal field of every trust
    decision that references it).
-8. **Store verification** — Oxigraph (embedded, Rust) and the container serving option, asserted from
-   knowledge; verify maintenance status and SPARQL 1.1 coverage at G0 before committing the
-   workspace dependency.
-9. **Second provider** — GitHub Copilot CLI / GitHub Models as the second OpenAI-compatible target;
-   verify API surface, tool-calling and structured-output support at G-1. Scaleway is verified
-   (2026-08-14) and suffices to start.
-10. **Ladder rungs** — which models constitute the ladder's first three rungs; Emil picks from the
-    verified provider's catalogue at G-1.
-11. **Reasoner mechanics** — CONSTRUCT-to-fixpoint on Oxigraph versus a sidecar OWL-RL reasoner at
-    projection build; and whether ontology-matching tooling (LogMap-class) is invoked or its
-    lexical/structural core reimplemented as rules. Verify options at G-1; the architecture is
-    indifferent because inference is a projection concern (§3).
-12. **TUI framework** — ratatui asserted; verify at G-1. And whether declarations persist as files in
+8. ~~**Store verification**~~ — **answered at G-1** (2026-08-17): Oxigraph holds (0.5.9, active,
+   SPARQL 1.1 Query/Update, named graphs); the workspace's 0.4 pin is a dead line and the 0.5
+   upgrade is G0 task one (§3, Gate 2 ruling).
+9. ~~**Second provider**~~ — **closed Scaleway-only at G-1** (2026-08-17): GitHub Models retired
+   2026-07-30; Copilot's official surfaces are agent runtimes, not OpenAI-compatible endpoints.
+   Closed per this PRD's own fallback (§3).
+10. ~~**Ladder rungs**~~ — **ruled at G-1 Gate 2**: `gemma-4-26b-a4b-it` / `qwen3-coder-30b-a3b` /
+    `glm-5.2`, plus `deepseek-v4-flash-0731` as the cost-alternate fourth point when budget allows
+    (§7.7, prices as-of 2026-08-17).
+11. ~~**Reasoner mechanics**~~ — **ruled at G-1 Gate 2**: CONSTRUCT-to-fixpoint on Oxigraph as
+    primary, `reasonable` as named fallback, `revisit_if` on projection-build wall-time at G0
+    scale (`g-dec-02`); ontology matching reimplemented as a Rust lexical/structural core with
+    LogMap once-offline as calibration oracle (§3, §5.2).
+12. **TUI framework** — ratatui **verified at G-1** (framework half answered). Still open: whether declarations persist as files in
     the working tree (reviewable, diffable, re-executable) or only in the act log — the file option
     makes a declaration a reusable artifact and is the default position.
 
