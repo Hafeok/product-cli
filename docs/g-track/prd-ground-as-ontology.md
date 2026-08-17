@@ -121,7 +121,7 @@ behaviour.**
 | Decisions | the ledger (L-track) | read for governing sets; write only as proposals |
 | Code | LSP-backed language adapters (M-track) | C#, Bicep, Rust, HTML/CSS as they exist; **Swift and Kotlin added for Feature 3** (§5.4) |
 | **TUI** | Rust terminal UI in the product-cli workspace — **ratatui, verified at G-1** (2026-08-17: MIT, 0.30.2, live successor of tui-rs; `ratatui-textarea` v0.9.2 in the ratatui org covers the prompt window) | prompt window, enhance panel, ground-state status line, rung and α pickers, bundle summary |
-| **Model access** | provider-agnostic layer over OpenAI-compatible chat completions + tool calling + structured outputs | The loop must run on cheap and small models; Claude is not required (Emil's ruling — cost, and the experiment in §7.7). **Scaleway Generative APIs verified 2026-08-14**: OpenAI-compatible with tool calling and structured outputs, EU-hosted (GDPR; data does not leave Europe — relevant for client corpora), catalogue spans small instruct models through current open-weight coding models on one endpoint. *(Verified and ruled at G-1, 2026-08-17:)* **GitHub Models was fully retired on 2026-07-30**; Copilot's official surfaces (CLI programmatic mode, SDK) are agent runtimes, not OpenAI-compatible chat-completions endpoints — the second-provider slot **closes Scaleway-only** per this PRD's own fallback (open item 9). A second provider, if ever wanted, is a fresh evaluation (Microsoft Foundry is the successor GitHub itself names). Scaleway re-verified at G-1: `json_schema` strict mode plus tool calling confirmed per-model across the ladder rungs (§7.7). Structured-output support is load-bearing: §7.5's required emitted-proxy field survives on small models only if the provider constrains output shape. |
+| **Model access** | provider-agnostic layer over OpenAI-compatible chat completions + tool calling + structured outputs | The loop must run on cheap and small models; Claude is not required (Emil's ruling — cost, and the experiment in §7.7). **Scaleway Generative APIs verified 2026-08-14**: OpenAI-compatible with tool calling and structured outputs, EU-hosted (GDPR; data does not leave Europe — relevant for client corpora), catalogue spans small instruct models through current open-weight coding models on one endpoint. *(Verified and ruled at G-1, 2026-08-17:)* **GitHub Models was fully retired on 2026-07-30**; Copilot's official surfaces (CLI programmatic mode, SDK) are agent runtimes, not OpenAI-compatible chat-completions endpoints — the second-provider slot **closes Scaleway-only** per this PRD's own fallback (open item 9). A second provider, if ever wanted, is a fresh evaluation (Microsoft Foundry is the successor GitHub itself names). Scaleway re-verified at G-1: `json_schema` strict mode plus tool calling confirmed per-model across the ladder rungs (§7.7). Structured-output support is load-bearing: §7.5's required emitted-proxy field survives on small models only if the provider constrains output shape. The Copilot SDK is deliberately **not** listed here — it is an agent runtime, not a completions endpoint, and enters as an executor alternative (§7.8). |
 
 ## 4. Data model additions
 
@@ -510,7 +510,9 @@ makes the loop's economics close.
 a small instruct model up through the current open-weight coding models; measure the §9.1 evidence
 outputs per rung — proxy fidelity, halt rate, malformed-call rate, review yield — plus cost per
 accepted change. The interesting result is the *knee*: the rung below which the arrangement stops
-compensating.
+compensating. A **comparison arm** may join the ladder at G4: the Copilot SDK runtime (§7.8) on the
+same declared acts, conditional on open item 13. Its result reads as arrangement-versus-arrangement,
+not rung-versus-rung — report it beside the knee, never on the same axis.
 
 **Rungs (ruled at G-1 Gate 2; all on the verified Scaleway catalogue, structured outputs + tool
 calling confirmed per model card; prices are ground with a drift rate — read 2026-08-17, € per 1M
@@ -549,6 +551,49 @@ the ladder's control: it marks what the arrangement produces before any model ca
   delivered governance at a high rate, is an arrangement whose absorbable forms exclude the current
   rendering — Q28's fourth failure mode, measured. The remedy menu is the Q23 table: change the form
   before changing the model.
+
+### 7.8 Executor alternatives — the loop as an arrangement parameter
+
+The governed loop (§7.1–7.6) is the **primary executor** and the design's evidence engine: per-act
+mechanical delivery, the emitted-proxy schema, and the halt set are the product under test. This
+section types the alternative without weakening that.
+
+**Candidate: GitHub Copilot SDK** (agent runtime; official Rust crate; verified 2026-08-17).
+Architecture: SDK client ↔ Copilot CLI in server mode over JSON-RPC.
+
+Shape A is the governed-surface integration described in the table below: first-party tools
+disabled, our three surfaces registered as custom tools, and mechanical delivery run inside the
+permission handler. Shape B, the fallback if open item 13's checks (a)–(c) fail, is the SDK with its
+own tools and no delivery — an ungoverned-baseline arm rather than an executor alternative.
+
+The integration shape that preserves the governance surface:
+
+| Loop element | SDK mechanism |
+|---|---|
+| Tool surfaces (ground / decisions / LSP only) | disable first-party tools; register ours as custom tools |
+| Mechanical delivery per act (§7.2) | the per-call **permission handler** as the interception point: extract position, retrieve governing set, deliver, then approve |
+| Emitted proxy as required argument (§7.5) | required structured argument on the custom tool schema |
+| Halts (§7.6) | denial with surfaced reason |
+| Act log (§4.2) | read from the JSON-RPC event stream |
+| Declaration seeding (§6.1) | session input |
+
+**What is ceded, typed honestly:** the inner planner's context management and prompting are the
+runtime's own — an arrangement whose absorbable forms and retrieval habits we do not author. The
+bound: an agent holding only our tools can only act through governed surfaces, so escape through
+un-governed tooling is structurally excluded; escape through the planner's context handling is not,
+and lands in the delivered-vs-emitted comparison like any other actor's.
+
+**Why bother: the comparison arm.** Same declared acts, two arrangements — our loop on open-model
+rungs versus the Copilot runtime on its frontier catalogue — measured on the §9.1 outputs plus cost
+per accepted change. That is the commercial thesis (*governance substitutes for capability*) against
+the strongest available counter-arrangement, which is the comparison a customer will ask for
+regardless. Economics differ in kind, not just price: per-prompt billing against a Copilot allowance
+versus per-token — for retry-heavy governed sessions the flat-allowance shape may undercut even the
+cheap rungs. Prices and billing models are ground with a drift rate; date every figure.
+
+**Gate: verification before build.** The arm is conditional on five checks (open item 13). If any of
+the first three fails, Shape A cannot carry the governance surface and the SDK is dropped to an
+ungoverned-baseline arm only — still useful, differently typed.
 
 ## 8. Layer and repo boundaries
 
@@ -625,7 +670,7 @@ additionally stands on, filed at v5.5.0: `DDD-ground-01…04`, `DDD-delivery-01�
 | G2 | Execute stage: the loop (ground + decisions surfaces, no LSP) consumes declared acts against one verified provider; sessions produce bundles | first declaration executed end to end; first bundle reviewed; act log complete |
 | G3 | LSP surface; code-edit acts with emitted predicates; halts complete | first code change lands through review |
 | G3.5 | **Central endpoint** (container, Entra ID) for arrangements that cannot clone; connection-as-trust-decision config (§4.4) | one non-local arrangement reads the registry through it |
-| G4 | Evidence report from N sessions against §9.1, **including the model ladder (§7.7)** run on at least three rungs | Emil reads; rulings 12 and 22 get their evidence; the knee is reported |
+| G4 | Evidence report from N sessions against §9.1, **including the model ladder (§7.7)** run on at least three rungs; comparison arm per §7.8 if open item 13 cleared and Emil rules it in (open item 14) | Emil reads; rulings 12 and 22 get their evidence; the knee is reported |
 
 G4 is the point. G3 is where it looks like a product. **G0 is where the first real finding lands** —
 three codebases that should carry one domain, and the extractor saying whether they do.
@@ -669,6 +714,20 @@ Emil's rulings needed, in order of how much they change the design:
 12. **TUI framework** — ratatui **verified at G-1** (framework half answered). Still open: whether declarations persist as files in
     the working tree (reviewable, diffable, re-executable) or only in the act log — the file option
     makes a declaration a reusable artifact and is the default position.
+13. **Copilot SDK verification (G2 entry, before any Shape A build):** (a) first-party tools can be
+    fully disabled — none reachable; (b) custom tools support required structured arguments (the
+    emitted-proxy field is schema-enforced, not requested); (c) the permission handler sees full
+    arguments pre-execution and can inject delivery before approval; (d) BYOK — whether arbitrary
+    OpenAI-compatible base URLs are accepted (if yes, their runtime on our Scaleway rungs collapses
+    §7.8's arm and the ladder into one experiment; the docs name OpenAI, Azure AI Foundry, and
+    Anthropic — arbitrary endpoints unverified); (e) the JSON-RPC event stream carries enough
+    per-call detail to populate the §4.2 act log without gaps. Each check dated, against the pinned
+    SDK version. Gated at G2 entry rather than G4 deliberately: checks (a)–(c) determine typing, not
+    readiness — a failure redirects the SDK from executor alternative to ungoverned baseline
+    (Shape B), and that redirect must be known before G2's provider work commits.
+14. **Comparison-arm scope** — whether the arm runs at G4 with the ladder or waits for a later
+    campaign; and whether Shape B (SDK with its own tools, no delivery) runs alongside as the
+    industry-default control. Emil rules at G4 planning.
 
 ---
 
