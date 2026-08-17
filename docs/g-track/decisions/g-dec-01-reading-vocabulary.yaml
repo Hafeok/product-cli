@@ -1,0 +1,47 @@
+# G-track register — track decisions, not canon. First entry.
+#
+# This register holds decisions scoped to the G-track (docs/g-track/). It is not
+# actor-indexed-determination canon, not decision-driven-design canon, and not the
+# product-cli program ledger (.decisions/). Entries here follow the canon decision
+# file's shape loosely; nothing validates them yet.
+
+format: g-track-decision/v1
+id: g-dec-01
+title: The Reading tuple's unfiled vocabulary is track vocabulary, pending the Q25/Q27/Q30 wave
+status: ruled
+made: 2026-08-17
+by: Emil (ruled at G-1 Gate 1; recorded by the session)
+decision: |
+  The G-track owns, as track vocabulary with no canon claim behind it:
+
+  1. The provenance value set on Readings — controlled / observed / inferred / institutional
+     (PRD §4.1). The G-track SHACL shapes define and enforce it, including the rule that
+     `institutional` requires a `trust_decision` reference.
+  2. The Reading three-tuple's other unfiled halves — the per-reading as-of and the
+     assurance-at-which-read field (the ground-axes note's Q11 as amended at its revision 13).
+
+  Neither files upstream from the G-1 session. Canon changes get their own gated sessions, and
+  the owning session is the queued Q25/Q27/Q30 filing wave, where Q27's trust-decision mechanism
+  is the backing institutional provenance needs.
+region: |
+  The G-track only: its SHACL shapes, its Reading and Act records, its registry repository.
+  Applicability predicate (DDD-ground-01 gate): artefact-path under docs/g-track/ or the
+  registry repository's shapes — axis artefact-path, mechanically-evaluable.
+basis: |
+  - The G-1 reconciliation finding: the four-value provenance typing exists in no live canon
+    at v5.5.0 (upstream 110bf10, downstream 4848b9e); the ground-axes holding note presupposes
+    it (Q12, Q27) without canon ever having filed it.
+  - Emil's Gate 1 ruling of 2026-08-17, verbatim in the session transcript, summarised in
+    docs/g-track/g1-session-report-2026-08-17.md.
+source: |
+  The ground-axes holding note's Q12/Q27 usage (unratified), and its Q11 amendment at
+  revision 13 for the three-tuple. wasAttributedTo: the G-track.
+revisit_if: |
+  The Q25/Q27/Q30 filing wave files provenance typing (or any part of the Reading tuple) as
+  canon. This decision is superseded the moment that happens, and the track re-pins to the
+  canon claims by the G-1 session's own re-pin discipline: re-derive at a named commit, never
+  hand-patch.
+forwarded: |
+  This finding is forwarded to the Q25/Q27/Q30 filing wave as evidence: the wave's Q27 filing
+  has a named consumer waiting on it — the G-track Reading tuple. A customer strengthens the
+  filing; it does not rush it.

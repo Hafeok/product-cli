@@ -134,21 +134,24 @@ holding note's Q11 as amended:
 |---|---|---|
 | `value` | per axis range | the read |
 | `as_of` | timestamp | when read — clock, not context |
-| `provenance` | controlled / observed / inferred / institutional | holding-note vocabulary (Q12, Q27) — **not located in live canon at v5.5.0**; see note below *(re-pinned at G-1)* |
+| `provenance` | controlled / observed / inferred / institutional | **track vocabulary, candidate for the Q25/Q27/Q30 filing wave** (G-track decision `g-dec-01`; ruled at G-1 Gate 1) *(re-pinned at G-1)* |
 | `assurance` | instrument / method / trust-decision ref | at what assurance the reading was made |
 
 `institutional` provenance requires a `trust_decision` reference (Q27). A reading with `institutional`
 and no reference fails SHACL.
 
-*(Re-pinned at G-1.)* The PRD as drafted called the four-value set "canon's provenance typing". The
-G-1 reconciliation searched both canon repositories at the pinned commits and found no such typing
-filed anywhere — not in the core documents, the term registry, or the claims. The holding note
-itself presupposes it (Q12 "the existing provenance typing already supplies the scaling"; Q27 says
-the institutional slot has been carried "since the foundation document") but nothing in live canon
-carries it. The mechanism stands as designed; its basis is **unratified holding-note vocabulary,
-not canon** — UNVERIFIED — Emil review: either the typing is filed upstream before G0 consumes it,
-or the PRD's SHACL shapes own the value set as this track's vocabulary with no canon claim behind
-it.
+*(Re-pinned at G-1; ruled at Gate 1.)* The PRD as drafted called the four-value set "canon's
+provenance typing". The G-1 reconciliation searched both canon repositories at the pinned commits
+and found no such typing filed anywhere — the holding note presupposes it (Q12, Q27) but nothing in
+live canon carries it. **Emil's Gate 1 ruling:** the value set does not file upstream from this
+session; the session that owns it is the queued Q25/Q27/Q30 filing wave, where Q27's trust-decision
+mechanism is the backing institutional provenance needs. Until that wave files, the G-track SHACL
+shapes own the value set as **track vocabulary**, filed as track decision `g-dec-01`
+(`docs/g-track/decisions/`) with a `revisit_if` pinned to the wave — superseded the moment canon
+files provenance typing, the track re-pinning by this session's own discipline. The same
+disposition covers the Reading tuple's other unfiled halves (the Q11 three-tuple, assurance-on-
+reading): track vocabulary, candidate input to the wave, `wasAttributedTo` the G-track. The
+finding is forwarded to the wave as evidence — its Q27 filing now has a named consumer waiting.
 
 Readings served from the registry carry: `as_of` = the endpoint's ref, `provenance = institutional`,
 `assurance` = the trust decision by which this arrangement connected (§4.4). Local-clone readings are
@@ -364,7 +367,11 @@ rendered as a pass**. The status line shows the four-state projection canon reco
 this use — governed (covered ∧ resolved) / deliberately-open / declared-empty / **undeclared** —
 with the note's "inert" renamed to canon's declared-empty and "uncovered-undeclared" to undeclared.
 Where a governing decision's resolution is deliberately-open, any timing display uses the
-"—(open)" value (`DDD-ground-03`): a deferred verdict is not a position in time. Acting into
+"—(open)" value (`DDD-ground-03`): a deferred verdict is not a position in time. *(Ruled at G-1
+Gate 1: projection for the human, orthogonal for the machine — the status line keeps the four-state
+projection because a status line is a projection for a human arrangement mid-act, compact and
+absorbable over complete; the halt logic and the act log run on the orthogonal values; a future
+detail view is where the orthogonal triple displays raw.)* Acting into
 ungoverned ground gets its warning at compose time, before the loop's empty-governing-set halt would
 catch it. Pre-act escape detection in a status line, and the warning is dismissable: declaring an act
 into uncovered ground knowingly is legitimate (exploration), and the dismissal is recorded on the

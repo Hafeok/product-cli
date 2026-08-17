@@ -118,8 +118,26 @@ conflict between canon and the PRD.
   reasoner mechanics) — Step 2's work, not Step 1's.
 - The fallback column of §10 — never applied; no construct was rejected.
 
-**GATE 1 — holding.** Deliverables: this report (§1.1–§1.5) and the edited PRD, both committed and
-pushed on `claude/g1-reconcile-verify-initialise-g0uno2`. Questions the gate does not need but may
-take: the provenance-typing resolution path (file upstream vs track vocabulary), and whether the
-§6.2 status line should display the orthogonal values directly rather than the four-state
-projection.
+**GATE 1 — closed** (Emil, 2026-08-17). Commit `077790d` stands; both structural amendments
+accepted as canon's improvement on the draft. Rulings recorded:
+
+1. **Provenance typing: the track owns it, pending the wave.** The value set does not file
+   upstream from this session; the owning session is the queued Q25/Q27/Q30 filing wave (Q27's
+   trust-decision mechanism is the backing institutional provenance needs). The G-track SHACL
+   shapes own the value set as track vocabulary; filed as track decision `g-dec-01`
+   (`docs/g-track/decisions/g-dec-01-reading-vocabulary.yaml`) with a `revisit_if` pinned to the
+   wave. The finding is forwarded to the wave as evidence — its Q27 filing now has a named
+   consumer waiting on it. The same disposition covers the Reading tuple's other unfiled halves
+   (Q11 three-tuple, assurance-on-reading); one decision file carries all of it. The PRD's §4.1
+   is marked down from "canon's provenance typing" to "track vocabulary, candidate for the Q27
+   wave" — the mis-pin corrected in the artifact, not just the report.
+2. **Status line: projection for the human, orthogonal for the machine.** §6.2 keeps the
+   four-state projection (a status line is a projection for a human arrangement mid-act; compact
+   and absorbable beats complete); halt logic and the act log run on the orthogonal values; a
+   future detail view displays the orthogonal triple raw. Recorded in the PRD at §6.2.
+
+---
+
+# Step 2 — verification worklist (V1–V9)
+
+*(Grows row by row; holding at GATE 2 when complete.)*
