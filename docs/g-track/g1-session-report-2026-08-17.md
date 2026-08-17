@@ -149,7 +149,7 @@ marked, not applied** — Step 1 applied its edits on the prompt's instruction; 
 for the Gate 2 ruling, and scope cuts are proposed, never applied.
 
 **Access limit, stated first.** The corpus repos are visible to the account
-(`CleverAS-App/Android`, `CleverAS-App/Backend`, `clever-dk/Clever-iOS`) but this session cannot
+(`acme-app/android`, `acme-app/backend`, `acme-app/ios`) but this session cannot
 attach them: cross-tier `add_repo` is refused (session sources are Hafeok-tier). Per the prompt, no
 public repo was substituted. V3, V4 and V5 therefore split into a verified public/local half and a
 **blocked repo-dependent half**; the blocked checks are enumerated at the end of this section with
@@ -276,7 +276,7 @@ Unverified: whether `roslyn-language-server` answers typeHierarchy at all — ne
 **Consequence — edit marked:** §5.4's C# row "extractor precondition: none" becomes "wiring:
 definition + typeHierarchy requests to be added; Roslyn typeHierarchy support to be probed".
 The **blocked repo-dependent check**: the six operations returning real results on
-`CleverAS-App/Backend` (needs the repo plus a .NET installation for the host).
+`acme-app/backend` (needs the repo plus a .NET installation for the host).
 
 ### V6 — GitHub Models / Copilot CLI API (verified 2026-08-17)
 
@@ -368,11 +368,11 @@ Cross-tier `add_repo` refuses the corpus repos from this session. The blocked ch
 
 | Check | Needs | Discharged by |
 |---|---|---|
-| V3: Android repo's Gradle and AGP versions against the ≥ 8.8 silent floor; one kotlin-lsp import run confirming variants resolve | `CleverAS-App/Android` | a session seeded with the repo as an initial source (version read), plus any machine with JDK/`bin/intellij-server` for the import probe |
-| V4: iOS repo project shape (SwiftPM vs xcodeproj), Xcode version; a completing build + index materialisation; the six operations returning real results | `clever-dk/Clever-iOS` **and a macOS machine with the client's Xcode** | Emil's machine, or a macOS runner; not any Linux session |
-| V5: the six operations returning real results on the backend solution via `roslyn-language-server` | `CleverAS-App/Backend` + .NET installation | a session seeded with the repo, or Emil's machine |
+| V3: Android repo's Gradle and AGP versions against the ≥ 8.8 silent floor; one kotlin-lsp import run confirming variants resolve | `acme-app/android` | a session seeded with the repo as an initial source (version read), plus any machine with JDK/`bin/intellij-server` for the import probe |
+| V4: iOS repo project shape (SwiftPM vs xcodeproj), Xcode version; a completing build + index materialisation; the six operations returning real results | `acme-app/ios` **and a macOS machine with the client's Xcode** | Emil's machine, or a macOS runner; not any Linux session |
+| V5: the six operations returning real results on the backend solution via `roslyn-language-server` | `acme-app/backend` + .NET installation | a session seeded with the repo, or Emil's machine |
 
-Options: (a) Emil authorises fresh sessions seeded with the CleverAS-App/clever-dk repos as
+Options: (a) Emil authorises fresh sessions seeded with the acme-app repos as
 initial sources for the two non-macOS checks; (b) the checks run on Emil's machine at G0 entry;
 (c) both — the version reads via (a) now, the build-dependent runs via (b). The session makes no
 choice.
@@ -397,7 +397,7 @@ choice.
    JetBrains' roadmap. The n=2 qualifier recorded in §5.3: two-codebase agreement is evidence, not
    the three-root triangulation upgrade.
 2. **Blocked checks: route (c), both.** Emil authorises fresh sessions seeded with
-   `CleverAS-App/Android` and `CleverAS-App/Backend` for the Gradle version-read and the Roslyn
+   `acme-app/android` and `acme-app/backend` for the Gradle version-read and the Roslyn
    typeHierarchy probe (discharging V3 condition (a) and V5's live probe). The iOS build (V4) runs
    on Emil's machine at G0 entry — **a named G0-entry precondition**, not a session task.
 3. **§2.4 PRD edits: leave granted and applied**, including the Oxigraph 0.5 upgrade filed as
