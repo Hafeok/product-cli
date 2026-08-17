@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use oxigraph::io::RdfFormat;
 use oxigraph::model::Term;
-use oxigraph::sparql::QueryResults;
+use oxigraph::sparql::{QueryResults, SparqlEvaluator};
 use oxigraph::store::Store;
 
 use super::model::*;
@@ -277,7 +277,12 @@ pub(super) fn select(store: &Store, vars: &str, body: &str) -> Result<Vec<Row>> 
 }
 
 fn run(store: &Store, q: &str) -> Result<Vec<Row>> {
-    let results = store.query(q).map_err(|e| ProductError::Internal(format!("seed query: {}", e)))?;
+    let results = SparqlEvaluator::new()
+        .parse_query(q)
+        .map_err(|e| ProductError::Internal(format!("seed query: {}", e)))?
+        .on_store(store)
+        .execute()
+        .map_err(|e| ProductError::Internal(format!("seed query: {}", e)))?;
     let mut rows = Vec::new();
     if let QueryResults::Solutions(solutions) = results {
         let vars: Vec<String> = solutions.variables().iter().map(|v| v.as_str().to_string()).collect();

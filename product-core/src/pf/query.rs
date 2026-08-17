@@ -97,7 +97,7 @@ pub fn describe(graph: &DomainGraph, id: &str) -> Result<Value> {
 /// Run a raw SPARQL SELECT over the Turtle export via Oxigraph.
 pub fn sparql(graph: &DomainGraph, product: &str, query: &str) -> Result<Value> {
     use oxigraph::io::RdfFormat;
-    use oxigraph::sparql::QueryResults;
+    use oxigraph::sparql::{QueryResults, SparqlEvaluator};
     use oxigraph::store::Store;
 
     let store = Store::new()
@@ -106,8 +106,11 @@ pub fn sparql(graph: &DomainGraph, product: &str, query: &str) -> Result<Value> 
     store
         .load_from_reader(RdfFormat::Turtle, ttl.as_bytes())
         .map_err(|e| ProductError::Internal(format!("load turtle: {}", e)))?;
-    let results = store
-        .query(query)
+    let results = SparqlEvaluator::new()
+        .parse_query(query)
+        .map_err(|e| ProductError::ConfigError(format!("SPARQL error: {}", e)))?
+        .on_store(&store)
+        .execute()
         .map_err(|e| ProductError::ConfigError(format!("SPARQL error: {}", e)))?;
     match results {
         QueryResults::Solutions(solutions) => solutions_to_json(solutions),
