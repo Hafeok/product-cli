@@ -418,5 +418,40 @@ PRD open items now answered or ruled: 8, 9, 10, 11, and 12's framework half (§1
 
 # Step 3 — registry repository skeleton
 
-*(Holding at GATE 3 on the skeleton; Emil names the org at the gate. Nothing is pushed to any new
-repository before that ruling.)*
+The skeleton is staged at `docs/g-track/registry-skeleton/` on this branch — reviewable in the PR
+diff, pushed to **no new repository**: the session creates nothing under any org before the Gate 3
+ruling. On the ruling, the directory transplants verbatim to the new repository's root (per its
+`STAGING.md`).
+
+## 3.1 What is staged
+
+| Path | Content | Prompt requirement |
+|---|---|---|
+| `README.md` | one page: structure, ratification path (proposal branches → per-triple PR review → Emil merges → endpoint rebuilds on merge), validation, ownership placeholder; cites the PRD rather than restating it | step 3.3 |
+| `STAGING.md` | the transplant note; the two placeholders (org/repo name, base IRI) and the one gate ruling (file format) | — |
+| `graphs/canonical/_exemplar.ttl` + `_exemplar.yaml` | the same single assertion in both candidate per-triple forms — **Turtle or YAML is Emil's ruling at the gate**; one assertion per file, per the per-claim file pattern | step 3.1 |
+| `shapes/reading.ttl` | the §4.1 Reading tuple constraint: value/as-of/provenance/assurance required; provenance from the g-dec-01 value set; **`institutional` requires `trust_decision`** (SPARQL constraint) | step 3.2 |
+| `shapes/structural.ttl` | structural well-formedness (assertion names exactly one subject/predicate/object, IRIs where required) | step 3.2 |
+| `.github/workflows/validate.yml` | SHACL on every change (pySHACL) plus a one-assertion-per-file check; grows at G0 | step 3.2 |
+| `scripts/build-projection.sh` | stub — ref in, store build out; inference hook carries the g-dec-02 ruling (CONSTRUCT-fixpoint primary, `reasonable` fallback, `revisit_if`) instead of the pre-ruling TODO | step 3.4 |
+
+`proposals/` is documented as **branch-based, not directory-based** in the README — no directory
+exists, deliberately.
+
+## 3.2 Verified before the gate
+
+The staged CI logic was executed locally against the skeleton (pySHACL 2026-08-17):
+
+- the Turtle exemplar parses, carries exactly one assertion, and **conforms** to both shapes;
+- the negative case — an `institutional` Reading with no `trust_decision` — **fails** the SHACL
+  gate, as §4.1 requires.
+
+## 3.3 Held for the Gate 3 ruling
+
+1. **Host org and repository name** (ownership = the accountable-principal field; answers PRD open
+   item 7; the base IRI derives from it).
+2. **Per-triple file format** — Turtle (validates as staged) or YAML (the per-claim pattern's
+   literal shape; adds a YAML→RDF step to CI at G0). Both exemplars sit side by side for the
+   comparison.
+
+**GATE 3 — holding.**

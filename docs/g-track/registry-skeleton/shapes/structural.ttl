@@ -1,0 +1,30 @@
+# Structural well-formedness — staged minimal. The one-assertion-per-file rule
+# is a file-level property CI checks directly (workflow step "one assertion per
+# file"); SHACL here covers what the graph itself can state.
+
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix reg: <https://REGISTRY-HOST.example/ns#> .
+
+reg:AssertionShape
+    a sh:NodeShape ;
+    sh:targetClass reg:Assertion ;
+    sh:property [
+        sh:path reg:subject ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "An assertion names exactly one subject, as an IRI." ;
+    ] ;
+    sh:property [
+        sh:path reg:predicate ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "An assertion names exactly one predicate, as an IRI." ;
+    ] ;
+    sh:property [
+        sh:path reg:object ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "An assertion names exactly one object." ;
+    ] .
