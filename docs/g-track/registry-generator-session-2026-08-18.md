@@ -56,6 +56,26 @@ The template stays at `docs/g-track/registry-template/` — the path the PRD and
 provenance pin — and is embedded by `include_str!` with a manifest-drift test, so a template file
 added without wiring fails a test rather than vanishing from generated instances.
 
+### The public surface, as the governance gate read it
+
+The DDD contract-surface gate failed the first CI run with **151 undischarged changes** — a fair
+reading of what had been published: every internal type of the renderer, the gate and the shapes
+reader stood as public API, plus a test-support module that is scaffolding rather than surface.
+
+Two things were wrong, and both were fixed. The slice's public surface is now its **re-export list** —
+the acts (`plan_generation`, `apply_generation`, `check_instance`, `evaluate`) with the types they
+carry — and the modules beneath are crate-internal, so a caller depends on the acts and never on how
+the template is rendered or how the gate is spelled. That took the governed surface from 151 events
+to **59**, which is the surface actually intended. Those 59 are discharged by ten seam declarations
+under `.ddd/seams/`, each carrying what a caller learns at that boundary *and what the boundary
+cannot do* — the apply seam states that publishing is not among its powers, the check seam states its
+own limit as a second reader of pySHACL's rules, the params seam states that validation judges
+meaning and never character safety.
+
+One lint surfaced with the narrowing rather than being introduced by it: clippy's
+`enum_variant_names` does not fire on public enums, so the shapes reader's constraint enum was
+renamed `Kind` → `Rule` to keep its variants mirroring SHACL's own constraint-component names.
+
 ### The generate / publish split
 
 **Generation is local and offline.** It renders in memory, gates, refuses a target that is not empty,
