@@ -1,0 +1,26 @@
+format: 2
+id: seam/rust/product-core-src-ground-structural-rs
+boundary: contract surface of product-core/src/ground/structural.rs
+verdict_knowledge: 'Callers learn the two rows that are not declared. Module containment is structural — a fact about the codebase''s layout rather than about the domain — and synonyms are one lexical rule with no model in the path. The rule declines to fire where it would say nothing: a single-word identifier has no spaced form to offer, and proposing a name back as its own synonym is noise a reviewer would have to reject. The boundary infers no meaning from a name beyond its word boundaries.'
+contract_location: product-core/src/ground/structural.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: modules
+  file: product-core/src/ground/structural.rs
+  before: absent
+  after: sha256:1853ced7f97359e3bb275035deb383a2c31c9222db6efeb9ba58829adb9ceb50
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:5f85ff2d3afb3f38e99828ca88bedc455fddf7f070154369d10ac8ebcbc8b9dd
+- symbol: synonyms
+  file: product-core/src/ground/structural.rs
+  before: absent
+  after: sha256:1853ced7f97359e3bb275035deb383a2c31c9222db6efeb9ba58829adb9ceb50
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:5bbeae30c26ceef92f53b6c5e7afd6beede78e3f8e533f162feec70dbeba6408
+- symbol: word_split
+  file: product-core/src/ground/structural.rs
+  before: absent
+  after: sha256:1853ced7f97359e3bb275035deb383a2c31c9222db6efeb9ba58829adb9ceb50
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:f776832e767e6ab16748b597e65675f22032f5d2d85b3142d5e38a2d062df816

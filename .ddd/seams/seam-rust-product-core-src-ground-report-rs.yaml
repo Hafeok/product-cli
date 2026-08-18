@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/product-core-src-ground-report-rs
+boundary: contract surface of product-core/src/ground/report.rs
+verdict_knowledge: 'Callers learn a run in the form a reviewer reads it, and the point of the form is that an absence is legible. A row that found nothing, a row gated off because an operation did not answer, and a row not derivable from the declaration surface at all read as three different lines. The boundary renders; it computes no verdict of its own and can add nothing the plan did not already decide.'
+contract_location: product-core/src/ground/report.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: render
+  file: product-core/src/ground/report.rs
+  before: absent
+  after: sha256:22464f71e2c6922c0118a85dd111bcfabe674652598f7111c1bc358e6880aca1
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:e969300ae04f315e405404777ea373edbe46d7cb0647150ca819b8a2fdbf433d

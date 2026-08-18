@@ -1,0 +1,92 @@
+format: 2
+id: seam/rust/ground-cli-src-symbols-rs
+boundary: contract surface of ground-cli/src/symbols.rs
+verdict_knowledge: 'Callers learn a file''s declarations, their members, and the anchor each declaration''s own name sits at — the anchor being what the position operations need and what a citation must not carry. A member the server rendered without a type is skipped rather than guessed at, and a nested type''s module is its enclosing namespace rather than its outer type. The boundary reads one file''s symbol tree and nothing else: it resolves no name across files, follows no reference, and knows nothing about any other declaration.'
+contract_location: ground-cli/src/symbols.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: declarations_in
+  file: ground-cli/src/symbols.rs
+  before: absent
+  after: sha256:7672215fb8321436bd6e7d680d202f31891dbd7e00d8af30202a7531efd4dc40
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:b033dd5cf6cc0adbbc420ab95f89a1c57c7b994a92b28b7e25e5bf75b33b2a37
+- symbol: split_generics
+  file: ground-cli/src/symbols.rs
+  before: absent
+  after: sha256:7672215fb8321436bd6e7d680d202f31891dbd7e00d8af30202a7531efd4dc40
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:43c7eeb8b431e4d99d0732582e2f6f418169d489235a5d6bdcda46f68c2a66d0
+- symbol: typed_member
+  file: ground-cli/src/symbols.rs
+  before: absent
+  after: sha256:7672215fb8321436bd6e7d680d202f31891dbd7e00d8af30202a7531efd4dc40
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:e2654e1855ee76fcce8c91244a28a9cdd3a8139c0f7814e8eab0efbea35a94e2
+- symbol: Anchor
+  file: ground-cli/src/symbols.rs
+  before: absent
+  after: sha256:7672215fb8321436bd6e7d680d202f31891dbd7e00d8af30202a7531efd4dc40
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:27ef0ec83d670e59a64afbffcefbb7033e46a677186a086f01e09e8408e48042
+- symbol: Read
+  file: ground-cli/src/symbols.rs
+  before: absent
+  after: sha256:7672215fb8321436bd6e7d680d202f31891dbd7e00d8af30202a7531efd4dc40
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:6d3cceed71e5433d92002f69bbc3eaa1645daecd280abc19f8f463f89220fc6f
+- symbol: character
+  file: ground-cli/src/symbols.rs
+  before: absent
+  after: sha256:7672215fb8321436bd6e7d680d202f31891dbd7e00d8af30202a7531efd4dc40
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:ae913a1665b0e821602b4478ebd058e708cf5f61a7aea4d9098a020c44862b11
+- symbol: file
+  file: ground-cli/src/symbols.rs
+  before: absent
+  after: sha256:7672215fb8321436bd6e7d680d202f31891dbd7e00d8af30202a7531efd4dc40
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:97f8190e3c532f1085b3825b24162c3f80ea2efc155eca45fc1df28544957435
+- symbol: line
+  file: ground-cli/src/symbols.rs
+  before: absent
+  after: sha256:7672215fb8321436bd6e7d680d202f31891dbd7e00d8af30202a7531efd4dc40
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:ddd29e6970535f5df41f99ba0749c900cb4239cbfc8fa8fa6925c204b64eca15
+- symbol: name
+  file: ground-cli/src/symbols.rs
+  before: absent
+  after: sha256:7672215fb8321436bd6e7d680d202f31891dbd7e00d8af30202a7531efd4dc40
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:b5c0dd417cb7f43899e14e5926ffc5310cfdf22d91298c1359000e28e118ee6d
+- symbol: anchor
+  file: ground-cli/src/symbols.rs
+  before: absent
+  after: sha256:7672215fb8321436bd6e7d680d202f31891dbd7e00d8af30202a7531efd4dc40
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:e92197fd26c4a399b9eda8359ca39aaf998e3e807917b87e1c82232199c0778b
+- symbol: declaration
+  file: ground-cli/src/symbols.rs
+  before: absent
+  after: sha256:7672215fb8321436bd6e7d680d202f31891dbd7e00d8af30202a7531efd4dc40
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:c915cedb732333cb86f34d48529a1f627cbfd0bb8217e6cc9dc6a8b44fa71a1b
+- symbol: field_members
+  file: ground-cli/src/symbols.rs
+  before: absent
+  after: sha256:7672215fb8321436bd6e7d680d202f31891dbd7e00d8af30202a7531efd4dc40
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:a2022da852fbbe5fe7689679a6b375bd5bb3731dc96b6171d8034ab05d7c426d
+- symbol: generics
+  file: ground-cli/src/symbols.rs
+  before: absent
+  after: sha256:7672215fb8321436bd6e7d680d202f31891dbd7e00d8af30202a7531efd4dc40
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:9107a5ced09458d1e94f733add10e06f2ee0ef23b0185e860ef8df06175d54a6
+- symbol: nested
+  file: ground-cli/src/symbols.rs
+  before: absent
+  after: sha256:7672215fb8321436bd6e7d680d202f31891dbd7e00d8af30202a7531efd4dc40
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:cc5c6532ad5daa7569e25241e01611eec236c2f894364ae6d25d866d3648e69e

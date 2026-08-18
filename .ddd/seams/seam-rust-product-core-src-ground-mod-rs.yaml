@@ -1,0 +1,20 @@
+format: 2
+id: seam/rust/product-core-src-ground-mod-rs
+boundary: contract surface of product-core/src/ground/mod.rs
+verdict_knowledge: 'Callers learn the extraction slice as three acts — plan, apply, render — with the types they carry, and learn that the path is model-free by ruling: extraction is constructively closed, so there is no candidate-generation step for a model to do. The slice reads no language server; the reading half fills the facts and hands them over, which is what keeps the downstream-consumer contract intact. Its output is a proposal and never ground: ratification is a reviewer merging one file at a time.'
+contract_location: product-core/src/ground/mod.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: EXTRACTOR_VERSION
+  file: product-core/src/ground/mod.rs
+  before: absent
+  after: sha256:3cfe84d7b23c8b0968f6084eb626b01725592a4907b224f7d8ae576ccbce4bf0
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:b510411c7167333a9a323b32976d0a2e2f143a3c39f54fb1db41d964b38b46e2
+- symbol: facts
+  file: product-core/src/ground/mod.rs
+  before: absent
+  after: sha256:3cfe84d7b23c8b0968f6084eb626b01725592a4907b224f7d8ae576ccbce4bf0
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:f0e7ecd5fa67cf0ef94f943de21460470278ebedad4973e67f999d4e741f383a
