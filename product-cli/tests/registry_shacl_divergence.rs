@@ -62,7 +62,12 @@ fn the_native_reader_agrees_with_pyshacl() {
         return;
     }
     let inst = generate(&g0_args());
-    let shapes = format!("{}\n{}", inst.read("shapes/reading.ttl"), inst.read("shapes/structural.ttl"));
+    let shapes = format!(
+        "{}\n{}\n{}",
+        inst.read("shapes/reading.ttl"),
+        inst.read("shapes/structural.ttl"),
+        inst.read("shapes/decision.ttl")
+    );
     let scratch = tempfile::tempdir().unwrap();
 
     let cases: Vec<(&str, String)> = vec![
@@ -74,6 +79,23 @@ fn the_native_reader_agrees_with_pyshacl() {
             reading("    reg:provenance reg:institutional ;\n    reg:trust_decision reg:td-1"),
         ),
         ("provenance outside the vocabulary", reading("    reg:provenance reg:hearsay")),
+        ("shipped decision exemplar", inst.read("graphs/canonical/_exemplar-decision.ttl")),
+        (
+            "decision missing its falsifier",
+            format!(
+                "@prefix reg: <{BASE}> .\n@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n\
+                 reg:d-1 a reg:Decision ; reg:title \"t\" ; reg:resolution \"r\" ; reg:region \"g\" ;\n\
+                     reg:ratifiedBy \"who\" ; reg:status \"s\" ; reg:made \"2026-08-17\"^^xsd:date .\n"
+            ),
+        ),
+        (
+            "decision dated by a bare string",
+            format!(
+                "@prefix reg: <{BASE}> .\n\
+                 reg:d-2 a reg:Decision ; reg:title \"t\" ; reg:resolution \"r\" ; reg:region \"g\" ;\n\
+                     reg:falsifier \"f\" ; reg:ratifiedBy \"who\" ; reg:status \"s\" ; reg:made \"2026-08-17\" .\n"
+            ),
+        ),
         (
             "assertion without a predicate",
             format!(

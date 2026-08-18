@@ -1,16 +1,20 @@
 # SHACL validation on every change (PRD §3, authority row; G-1 session prompt step 3.2).
-# Shapes start minimal — the §4.1 Reading tuple constraint and structural
-# well-formedness — and grow at G0.
+# Shapes start minimal — the §4.1 Reading tuple constraint, structural
+# well-formedness, the decision shape — and grow at G0.
 #
 # Format: Turtle (G-1 Gate 3 ruling) — the authority file is the assertion,
 # SHACL reads it directly, zero conversion in CI.
 #
-# File rules:
-#   - `_`-prefixed files are exemplars: validated, excluded from projection builds.
-#   - graphs/canonical/founding-decision.ttl may parse to zero triples until the
-#     instance's ratifier files the founding decision; once non-empty it holds a
-#     decision node, not an assertion (decision shapes grow at G0).
-#   - every other graphs/**/*.ttl carries exactly one assertion.
+# File rule (one rule, no exemptions):
+#   - every graphs/**/*.ttl carries exactly one assertion OR exactly one
+#     decision. Nothing else, and never both.
+#   - `_`-prefixed files are exemplars: validated like any other file, excluded
+#     from projection builds.
+#
+# The rule used to exempt graphs/canonical/founding-decision.ttl by filename so
+# an empty slot could ship. The exemption was generalised into the rule it stood
+# in for, and the empty file went with it: the founding decision is created by
+# the ratifier who files it, so there is no empty file to tolerate.
 
 name: validate
 on:
@@ -27,25 +31,27 @@ jobs:
           python-version: "3.12"
       - name: Install validators
         run: pip install pyshacl rdflib
-      - name: One assertion per file
+      - name: One assertion or one decision per file
         run: |
           python - <<'EOF'
-          import glob, os, sys
+          import glob, sys
           from rdflib import Graph
           from rdflib.namespace import RDF, Namespace
           REG = Namespace("https://REGISTRY-HOST.example/ns#")
           bad = []
           for path in glob.glob("graphs/**/*.ttl", recursive=True):
-              base = os.path.basename(path)
               g = Graph(); g.parse(path, format="turtle")
-              if base == "founding-decision.ttl":
-                  continue  # empty slot until filled; holds a decision, not an assertion
-              n = len(list(g.subjects(RDF.type, REG.Assertion)))
-              if n != 1:
-                  bad.append(f"{path}: {n} assertions (exactly 1 required)")
+              assertions = set(g.subjects(RDF.type, REG.Assertion))
+              decisions = set(g.subjects(RDF.type, REG.Decision))
+              counts = (len(assertions), len(decisions))
+              if counts not in ((1, 0), (0, 1)):
+                  bad.append(
+                      f"{path}: {counts[0]} assertion(s), {counts[1]} decision(s) "
+                      "— exactly one assertion or exactly one decision required"
+                  )
           if bad:
               print("\n".join(bad)); sys.exit(1)
-          print("one-assertion-per-file: ok")
+          print("one-assertion-or-one-decision-per-file: ok")
           EOF
       - name: SHACL
         run: |

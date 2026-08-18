@@ -116,19 +116,53 @@ fn an_empty_file_fails_the_file_rule() {
 
 #[test]
 fn a_decision_missing_a_required_field_fails() {
-    // The decision shape lands in the template at Gate 3; the reader evaluates
-    // it here to prove the mechanism, against the same constraint vocabulary.
-    let shapes = format!(
-        "@prefix sh: <http://www.w3.org/ns/shacl#> .\n@prefix reg: <{BASE}> .\n\
-         reg:DecisionShape a sh:NodeShape ; sh:targetClass reg:Decision ;\n\
-           sh:property [ sh:path reg:title ; sh:minCount 1 ; sh:message \"A decision carries a title.\" ] ;\n\
-           sh:property [ sh:path reg:falsifier ; sh:minCount 1 ; sh:message \"A decision carries a falsifier.\" ] .\n"
+    let data = format!(
+        "@prefix reg: <{BASE}> .\n@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n\
+         reg:d-1 a reg:Decision ; reg:title \"Keep a registry\" ;\n\
+             reg:resolution \"We keep one.\" ; reg:region \"This instance.\" ;\n\
+             reg:ratifiedBy \"ratifier@example.test\" ; reg:status \"ratified\" ;\n\
+             reg:made \"2026-08-17\"^^xsd:date .\n"
     );
-    let data = format!("@prefix reg: <{BASE}> .\nreg:d-1 a reg:Decision ; reg:title \"Keep a registry\" .\n");
-    let extracted = shapes::extract(&shapes).expect("extract");
-    let findings = eval::run(&data, &extracted.constraints).expect("evaluate");
+    let findings = evaluate(&data);
     assert!(findings.iter().any(|f| f.message.contains("falsifier")), "{findings:?}");
     assert!(!findings.iter().any(|f| f.message.contains("title")), "{findings:?}");
+}
+
+#[test]
+fn a_decision_without_the_optional_fields_conforms() {
+    // basis / acceptedCost / revisitIf are deliberately not required: a decision
+    // may honestly have none, and demanding them produces filler.
+    let data = format!(
+        "@prefix reg: <{BASE}> .\n@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n\
+         reg:d-1 a reg:Decision ; reg:title \"Keep a registry\" ;\n\
+             reg:resolution \"We keep one.\" ; reg:region \"This instance.\" ;\n\
+             reg:falsifier \"Ground kept outside it.\" ;\n\
+             reg:ratifiedBy \"ratifier@example.test\" ; reg:status \"ratified\" ;\n\
+             reg:made \"2026-08-17\"^^xsd:date .\n"
+    );
+    assert!(evaluate(&data).is_empty(), "{:?}", evaluate(&data));
+}
+
+#[test]
+fn a_decision_dated_by_a_bare_string_fails() {
+    let data = format!(
+        "@prefix reg: <{BASE}> .\n\
+         reg:d-1 a reg:Decision ; reg:title \"t\" ; reg:resolution \"r\" ; reg:region \"g\" ;\n\
+             reg:falsifier \"f\" ; reg:ratifiedBy \"who\" ; reg:status \"s\" ; reg:made \"2026-08-17\" .\n"
+    );
+    assert!(evaluate(&data).iter().any(|f| f.message.contains("xsd:date")), "{:?}", evaluate(&data));
+}
+
+#[test]
+fn the_shipped_decision_exemplar_conforms() {
+    let plan = plan_generation(&params(), "test").expect("plan");
+    let exemplar = plan
+        .files
+        .iter()
+        .find(|f| f.path == "graphs/canonical/_exemplar-decision.ttl")
+        .expect("the template ships a decision exemplar");
+    assert!(evaluate(&exemplar.contents).is_empty(), "{:?}", evaluate(&exemplar.contents));
+    assert!(file_rule::check_file(&exemplar.path, &exemplar.contents, BASE).is_empty());
 }
 
 #[test]

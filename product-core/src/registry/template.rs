@@ -8,7 +8,7 @@
 
 /// The template's own version, as declared in its `TEMPLATE.md` header. A test
 /// fails if the two drift apart.
-pub const TEMPLATE_VERSION: &str = "0.1.0";
+pub const TEMPLATE_VERSION: &str = "0.2.0";
 
 /// The base-IRI placeholder. G-1 Gate 3 kept it IRI-valid so the template's own
 /// Turtle parses; it is a token like any other, not an exception.
@@ -50,7 +50,9 @@ pub const TEMPLATE: &[TemplateFile] = &[
     template_file!("GENERATION.ttl", false, true),
     template_file!(".github/workflows/validate.yml", false, true),
     template_file!("graphs/canonical/_exemplar.ttl", false, true),
+    template_file!("graphs/canonical/_exemplar-decision.ttl", false, true),
     template_file!("scripts/build-projection.sh", true, true),
+    template_file!("shapes/decision.ttl", false, true),
     template_file!("shapes/reading.ttl", false, true),
     template_file!("shapes/structural.ttl", false, true),
 ];

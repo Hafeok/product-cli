@@ -1,0 +1,62 @@
+# Decision shape — what a ratified decision must carry to be one.
+#
+# Required: title, resolution, region, falsifier, ratifier, status, date. A
+# decision without a region governs nothing in particular; one without a
+# falsifier cannot be shown wrong, and an unfalsifiable decision is a
+# preference wearing a decision's clothes.
+#
+# Deliberately NOT required: basis, acceptedCost, revisitIf. A decision may
+# honestly have none of them — no cost worth recording, no condition that
+# would reopen it — and demanding them produces filler, which is worse than
+# their absence because filler reads as considered.
+#
+# `reg:ratifiedBy` is left unconstrained as to node kind: whether a ratifier is
+# named by literal or by IRI is an instance's ruling, not the template's.
+
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix reg: <https://REGISTRY-HOST.example/ns#> .
+
+reg:DecisionShape
+    a sh:NodeShape ;
+    sh:targetClass reg:Decision ;
+    sh:property [
+        sh:path reg:title ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "A decision carries exactly one title." ;
+    ] ;
+    sh:property [
+        sh:path reg:resolution ;
+        sh:minCount 1 ;
+        sh:message "A decision carries its resolution — what was decided." ;
+    ] ;
+    sh:property [
+        sh:path reg:region ;
+        sh:minCount 1 ;
+        sh:message "A decision carries the region it governs; an unregioned decision governs nothing in particular." ;
+    ] ;
+    sh:property [
+        sh:path reg:falsifier ;
+        sh:minCount 1 ;
+        sh:message "A decision carries a falsifier — what would show it wrong." ;
+    ] ;
+    sh:property [
+        sh:path reg:ratifiedBy ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "A decision names exactly one ratifier; ratification is one person's merge." ;
+    ] ;
+    sh:property [
+        sh:path reg:status ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "A decision carries exactly one status." ;
+    ] ;
+    sh:property [
+        sh:path reg:made ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:date ;
+        sh:message "A decision carries exactly one date it was made, as xsd:date." ;
+    ] .

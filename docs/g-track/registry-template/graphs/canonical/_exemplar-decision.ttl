@@ -1,0 +1,25 @@
+# Exemplar — one decision per file, in Turtle. Underscore prefix marks it an
+# exemplar: CI validates it, the projection build excludes `_`-prefixed files.
+#
+# It exists so the decision shape has a conforming example in the template
+# itself: a ratifier learns the form from this file rather than from SHACL.
+# The optional fields — basis, acceptedCost, revisitIf — are shown here, and
+# are not required; a decision honestly having none of them still conforms.
+
+@prefix reg:  <https://REGISTRY-HOST.example/ns#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+reg:decision-0001
+    a                reg:Decision ;
+    reg:title        "Exemplar: assertions are reviewed per triple" ;
+    reg:resolution   "Proposed assertions are accepted or rejected one file at a time. A run is not a unit of acceptance; wholesale acceptance of an extraction run is manufactured ground." ;
+    reg:region       "This exemplar only. It governs nothing: it is the template's worked example of the decision form." ;
+    reg:falsifier    "A merge accepting a proposal branch without per-file review, treated afterwards as ratified ground." ;
+    reg:basis        "Per-triple review is what makes ratification an act rather than a formality." ;
+    reg:acceptedCost "Review effort proportional to the number of proposed triples." ;
+    reg:revisitIf    "Extraction volume makes per-triple review impossible in practice at some scale, and that scale is reached." ;
+    reg:ratifiedBy   "{{RATIFIER}}" ;
+    reg:status       "exemplar — not ratified, and not ground" ;
+    reg:made         "2026-08-17"^^xsd:date ;
+    prov:wasAttributedTo reg:agent-registry-template .

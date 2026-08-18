@@ -51,14 +51,21 @@ fn the_g0_handoff_parameters_mint_the_handed_over_instance() {
 #[test]
 fn g0_regression_a_sigil_in_the_ratifiers_address_survives() {
     let inst = generate(&g0_args());
-    assert!(inst.read("README.md").contains("emil@okkels-klein.dk"));
-    assert!(!inst.read("README.md").contains("{{RATIFIER}}"));
     let base = "tag:emil@okkels-klein.dk,2026-08-17:ground/";
+    let ratifier = "emil@okkels-klein.dk";
+    assert!(inst.read("README.md").contains(ratifier));
+    assert!(!inst.read("README.md").contains("{{RATIFIER}}"));
     for file in inst.files() {
-        let text = inst.read(&file);
-        if file != "TEMPLATE.md" && text.contains("tag:") {
-            assert!(text.contains(base), "{file} carries a mangled base IRI");
+        if file == "TEMPLATE.md" {
+            continue;
         }
+        // Strike out every whole value; any fragment of the address left behind
+        // is a mangled copy — the shape the G0 corruption took.
+        let residue = inst.read(&file).replace(base, "").replace(ratifier, "");
+        assert!(
+            !residue.contains("okkels-klein"),
+            "{file} carries a partial copy of a parameter — the G0 failure mode"
+        );
     }
 }
 
@@ -117,7 +124,7 @@ fn the_birth_provenance_is_complete_as_rdf() {
     assert_eq!(rows.len(), 1, "one registry node, fully described: {rows:?}");
     let row = &rows[0];
     assert_eq!(row["owner"], "\"Hafeok\"");
-    assert_eq!(row["tv"], "\"0.1.0\"");
+    assert_eq!(row["tv"], format!("\"{}\"", product_core::registry::TEMPLATE_VERSION));
     assert!(row["gv"].starts_with('"'), "the generator's own version is recorded");
     assert!(row["agent"].contains("fixture"), "generated-by is recorded: {}", row["agent"]);
 }
