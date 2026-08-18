@@ -9,6 +9,7 @@ members = [
     "ddd-cli",
     "ledger-core",
     "ledger-cli",
+    "ground-cli",
     "xtask",
 ]
 # FT-107 / TC-889: the external-consumer fixture is built on demand by the
