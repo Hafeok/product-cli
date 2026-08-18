@@ -44,7 +44,7 @@ fn item(decl: &Decl) -> Value {
 }
 
 /// `textDocument/prepareTypeHierarchy` — the declaration at the position.
-pub fn prepare(docs: &HashMap<String, String>, uri: &str, text: &str, msg: &Value) -> Value {
+pub(crate) fn prepare(docs: &HashMap<String, String>, uri: &str, text: &str, msg: &Value) -> Value {
     let line = msg.pointer("/params/position/line").and_then(Value::as_u64).unwrap_or(0) as usize;
     let mut here = declarations(uri, text);
     here.extend(others(docs, uri));
@@ -55,7 +55,7 @@ pub fn prepare(docs: &HashMap<String, String>, uri: &str, text: &str, msg: &Valu
 }
 
 /// `typeHierarchy/supertypes` — the bases the item's declaration names.
-pub fn supertypes(docs: &HashMap<String, String>, msg: &Value) -> Value {
+pub(crate) fn supertypes(docs: &HashMap<String, String>, msg: &Value) -> Value {
     directional(docs, msg)
         .map(|(all, found)| {
             let bases = &found.bases;
@@ -67,7 +67,7 @@ pub fn supertypes(docs: &HashMap<String, String>, msg: &Value) -> Value {
 }
 
 /// `typeHierarchy/subtypes` — every declaration naming the item as a base.
-pub fn subtypes(docs: &HashMap<String, String>, msg: &Value) -> Value {
+pub(crate) fn subtypes(docs: &HashMap<String, String>, msg: &Value) -> Value {
     directional(docs, msg)
         .map(|(all, found)| {
             let items: Vec<Value> =

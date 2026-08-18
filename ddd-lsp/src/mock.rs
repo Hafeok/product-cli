@@ -8,7 +8,9 @@
 //! (`dec/ddd/fixtures-not-sdk`), not a language adapter: real-host runs
 //! are the `DDD_LSP_E2E=1` gated tests.
 
-pub mod hierarchy;
+/// Fixture-grade type-hierarchy answers. Crate-internal: it is scaffolding
+/// for the mock's own responses, not surface a caller depends on.
+pub(crate) mod hierarchy;
 pub mod parse;
 
 use std::collections::HashMap;
