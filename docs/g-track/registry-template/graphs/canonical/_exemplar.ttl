@@ -20,4 +20,4 @@ reg:assertion-0001
     reg:asOf        "2026-08-17T00:00:00Z"^^xsd:dateTime ;
     reg:provenance  reg:controlled ;
     reg:assurance   "exemplar — hand-authored" ;
-    prov:wasAttributedTo <https://REGISTRY-HOST.example/agent/g1-session> .
+    prov:wasAttributedTo reg:agent-g1-session .

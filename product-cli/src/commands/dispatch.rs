@@ -5,7 +5,8 @@ use clap::Command as ClapCommand;
 use super::{
     author, blueprint, build, cell, codegen, completions, decider, deliverable, deployable_unit,
     design_system, domain,
-    guide, hooks, how, init, lsp, mcp_cmd, preview, primitive, product, projector, release, render,
+    guide, hooks, how, init, lsp, mcp_cmd, preview, primitive, product, projector, registry,
+    release, render,
     scope, seam, session, skills, feature, target, verdict, work_unit, worker, BoxResult, Commands,
 };
 
@@ -19,6 +20,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::InstallHooks => hooks::handle_install_hooks(),
         Commands::Lsp { command } => lsp::handle_lsp(command),
         Commands::Mcp { .. } => dispatch_mcp(command),
+        Commands::Registry { command } => render(registry::handle_registry(command), fmt),
         Commands::Scope { command } => render(scope::handle_scope(command), fmt),
         Commands::Session { command } => session::handle_session(command),
         Commands::Skills { command } => skills::handle_skills(command),

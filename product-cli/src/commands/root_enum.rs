@@ -198,6 +198,11 @@ pub enum Commands {
         #[command(subcommand)]
         command: ProjectorCommands,
     },
+    /// Ground registry (G-track) — generate an instance from the versioned template
+    Registry {
+        #[command(subcommand)]
+        command: RegistryCommands,
+    },
     /// Release — a coherent set of delivery features (§7.1)
     Release {
         #[command(subcommand)]
