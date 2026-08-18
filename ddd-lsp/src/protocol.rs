@@ -173,6 +173,71 @@ pub fn normalize_locations(result: &Value) -> Vec<FileRange> {
     out
 }
 
+/// One normalized `TypeHierarchyItem`.
+///
+/// Type-hierarchy items are not `Location`s: they carry the symbol's own
+/// identity — name, kind, detail — beside the range, which is the half the
+/// `rdfs:subClassOf` mapping row needs. Normalizing them through
+/// [`normalize_locations`] would keep the uri and silently drop that.
+///
+/// `raw` is the item exactly as the server sent it, and it is what
+/// [`hierarchy_params`] hands back on the supertypes/subtypes call. Roslyn
+/// answers those only when its opaque `data` blob (`ProjectGuid`,
+/// `SymbolKeyData`, `TextDocument`) returns unchanged, so the round-trip is
+/// verbatim by construction rather than by copying the fields we happen to
+/// know about today.
+#[derive(Debug, Clone, Serialize)]
+pub struct HierarchyItem {
+    pub name: String,
+    pub kind: u64,
+    pub detail: Option<String>,
+    pub file: PathBuf,
+    pub line: u64,
+    pub character: u64,
+    /// The server's opaque `data`, present only when it sent one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data: Option<Value>,
+    /// The unmodified item; carried back on the next call, never rebuilt.
+    #[serde(skip)]
+    pub raw: Value,
+}
+
+/// Normalize a `TypeHierarchyItem[]` result (prepare, supertypes, subtypes).
+///
+/// A server with nothing to say answers `null`, which is an empty result
+/// here — the caller decides whether that means "no hierarchy" or "the
+/// instrument did not answer" (see `capability`).
+pub fn normalize_hierarchy_items(result: &Value) -> Vec<HierarchyItem> {
+    let Some(items) = result.as_array() else { return Vec::new() };
+    items.iter().filter_map(hierarchy_item).collect()
+}
+
+fn hierarchy_item(v: &Value) -> Option<HierarchyItem> {
+    let name = v.get("name").and_then(Value::as_str)?.to_string();
+    let uri = v.get("uri").and_then(Value::as_str).unwrap_or_default();
+    let at = |leaf: &str| v.pointer(&format!("/selectionRange/{leaf}")).and_then(Value::as_u64);
+    Some(HierarchyItem {
+        name,
+        kind: v.get("kind").and_then(Value::as_u64).unwrap_or(0),
+        detail: v.get("detail").and_then(Value::as_str).map(str::to_string),
+        file: from_uri(uri),
+        line: at("start/line")
+            .or_else(|| v.pointer("/range/start/line").and_then(Value::as_u64))
+            .unwrap_or(0),
+        character: at("start/character")
+            .or_else(|| v.pointer("/range/start/character").and_then(Value::as_u64))
+            .unwrap_or(0),
+        data: v.get("data").cloned(),
+        raw: v.clone(),
+    })
+}
+
+/// `{item}` params for `typeHierarchy/supertypes` / `subtypes`, carrying the
+/// server's own item back untouched.
+pub fn hierarchy_params(item: &HierarchyItem) -> Value {
+    json!({"item": item.raw})
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -214,5 +279,48 @@ mod tests {
         assert_eq!(locs.len(), 2);
         assert_eq!(locs[0].file, PathBuf::from("/a.cs"));
         assert_eq!(locs[1].line, 3);
+    }
+
+    #[test]
+    fn normalizes_a_type_hierarchy_item_keeping_its_identity() {
+        let v = serde_json::json!([{
+            "name": "ICommand", "kind": 11, "detail": "Acme.Messaging",
+            "uri": "file:///src/ICommand.cs",
+            "range": {"start": {"line": 4, "character": 0}, "end": {"line": 6, "character": 1}},
+            "selectionRange": {"start": {"line": 4, "character": 17}, "end": {"line": 4, "character": 25}},
+            "data": {"ProjectGuid": "9f1c…", "SymbolKeyData": "opaque", "TextDocument": {"uri": "file:///src/ICommand.cs"}}
+        }]);
+        let items = normalize_hierarchy_items(&v);
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].name, "ICommand");
+        assert_eq!(kind_name(items[0].kind), "interface");
+        assert_eq!(items[0].file, PathBuf::from("/src/ICommand.cs"));
+        assert_eq!((items[0].line, items[0].character), (4, 17));
+        assert_eq!(items[0].detail.as_deref(), Some("Acme.Messaging"));
+    }
+
+    /// The one wiring detail the entry probe named as most likely to be got
+    /// wrong: supertypes/subtypes resolve only when the prepare item comes
+    /// back byte-identical, opaque `data` included.
+    #[test]
+    fn the_opaque_data_blob_round_trips_verbatim() {
+        let item = serde_json::json!({
+            "name": "LocationId", "kind": 23, "uri": "file:///src/LocationId.cs",
+            "range": {"start": {"line": 2, "character": 0}, "end": {"line": 2, "character": 60}},
+            "selectionRange": {"start": {"line": 2, "character": 29}, "end": {"line": 2, "character": 39}},
+            "data": {"ProjectGuid": "3f2a", "SymbolKeyData": "\\u0001Acme|Location", "TextDocument": {"uri": "file:///src/LocationId.cs"}},
+            "tags": [1],
+            "anUnknownFieldAFutureServerAdds": {"nested": [1, 2, 3]}
+        });
+        let items = normalize_hierarchy_items(&serde_json::json!([item.clone()]));
+        let params = hierarchy_params(&items[0]);
+        assert_eq!(params["item"], item, "the item must go back exactly as it arrived");
+        assert_eq!(items[0].data, item.get("data").cloned());
+    }
+
+    #[test]
+    fn a_silent_hierarchy_result_normalizes_to_nothing() {
+        assert!(normalize_hierarchy_items(&Value::Null).is_empty());
+        assert!(normalize_hierarchy_items(&serde_json::json!([])).is_empty());
     }
 }

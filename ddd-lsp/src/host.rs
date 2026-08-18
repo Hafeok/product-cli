@@ -44,6 +44,10 @@ pub struct Host {
     open_docs: HashMap<PathBuf, (i64, String)>,
     /// Restarts performed after crashes (observability for tests + status).
     pub restarts: u32,
+    /// `ServerCapabilities` from the last `initialize`, kept because a
+    /// capability flag is evidence about the server's *claims* — the
+    /// capability probe compares it to what live calls actually do.
+    capabilities: Option<Value>,
 }
 
 impl Host {
@@ -57,6 +61,7 @@ impl Host {
             ready_at: None,
             open_docs: HashMap::new(),
             restarts: 0,
+            capabilities: None,
         }
     }
 
@@ -73,11 +78,12 @@ impl Host {
             self.client = None;
             self.open_docs.clear();
             self.ready_at = None;
+            self.capabilities = None;
             self.restarts += 1;
         }
         if self.client.is_none() {
             let client = LspClient::spawn(&self.command, &self.root)?;
-            initialize(&client, &self.root, self.adapter)?;
+            self.capabilities = Some(initialize(&client, &self.root, self.adapter)?);
             if self.adapter.needs_open_handshake {
                 announce_workspace(&client, &self.root)?;
             }
@@ -222,6 +228,15 @@ impl Host {
         }
     }
 
+    /// The server's advertised capabilities, spawning lazily if needed.
+    ///
+    /// Read as a claim, never as a verdict: `capability::probe` calls the
+    /// operation before believing the flag.
+    pub fn server_capabilities(&mut self) -> Result<Value> {
+        self.client()?;
+        Ok(self.capabilities.clone().unwrap_or_else(|| json!({})))
+    }
+
     /// Latest published diagnostics for a uri, when the host pushes them.
     pub fn published_diagnostics(&mut self, path: &Path) -> Result<Option<Value>> {
         let uri = to_uri(path);
@@ -254,7 +269,7 @@ fn end_position(text: &str) -> Value {
 
 /// The `initialize`/`initialized` handshake every LSP host expects, with
 /// the adapter's extra capabilities merged over the common set.
-fn initialize(client: &LspClient, root: &Path, adapter: &Adapter) -> Result<()> {
+fn initialize(client: &LspClient, root: &Path, adapter: &Adapter) -> Result<Value> {
     let root_uri = to_uri(root);
     let mut capabilities = json!({
         "textDocument": {
@@ -262,12 +277,18 @@ fn initialize(client: &LspClient, root: &Path, adapter: &Adapter) -> Result<()> 
             "publishDiagnostics": {},
             "documentSymbol": {"hierarchicalDocumentSymbolSupport": true},
             "diagnostic": {},
+            // Declared because it is correct practice, not because it
+            // unblocks anything: Roslyn answers `typeHierarchy` without
+            // being asked (the under-advertising direction), so its
+            // absence was never what stopped the operation.
+            "definition": {},
+            "typeHierarchy": {"dynamicRegistration": false},
         },
         "workspace": {"workspaceFolders": true, "configuration": true},
         "window": {"workDoneProgress": true},
     });
     merge(&mut capabilities, (adapter.extra_capabilities)());
-    client.request(
+    let result = client.request(
         "initialize",
         json!({
             "processId": std::process::id(),
@@ -277,7 +298,8 @@ fn initialize(client: &LspClient, root: &Path, adapter: &Adapter) -> Result<()> 
         }),
         Duration::from_secs(30),
     )?;
-    client.notify("initialized", json!({}))
+    client.notify("initialized", json!({}))?;
+    Ok(result.get("capabilities").cloned().unwrap_or_else(|| json!({})))
 }
 
 /// Deep-merge `extra` into `base`: objects recurse, everything else
