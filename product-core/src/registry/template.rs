@@ -58,7 +58,8 @@ pub(crate) const TEMPLATE: &[TemplateFile] = &[
 ];
 
 /// The template's source directory, relative to the workspace root — where the
-/// drift test walks.
+/// drift test walks. Test-only: the embedded manifest is what generation reads.
+#[cfg(test)]
 pub(crate) const TEMPLATE_DIR: &str = "docs/g-track/registry-template";
 
 #[cfg(test)]

@@ -6,7 +6,7 @@
 
 use crate::error::{ProductError, Result};
 
-use super::shapes::{local, Constraint, Kind};
+use super::shapes::{local, Constraint, Rule};
 use super::{Finding, FindingKind};
 
 /// Run every constraint over the data graph, returning one finding per row.
@@ -37,17 +37,17 @@ pub(crate) fn run(data_ttl: &str, constraints: &[Constraint]) -> Result<Vec<Find
 pub(crate) fn compile(c: &Constraint) -> String {
     let class = &c.class;
     let path = c.path.clone().unwrap_or_default();
-    match &c.kind {
-        Kind::Sparql(select) => select.clone(),
-        Kind::MinCount(n) => format!(
+    match &c.rule {
+        Rule::Sparql(select) => select.clone(),
+        Rule::MinCount(n) => format!(
             "SELECT ?this WHERE {{ ?this a {class} . OPTIONAL {{ ?this {path} ?v }} }} \
              GROUP BY ?this HAVING (COUNT(?v) < {n})"
         ),
-        Kind::MaxCount(n) => format!(
+        Rule::MaxCount(n) => format!(
             "SELECT ?this WHERE {{ ?this a {class} . OPTIONAL {{ ?this {path} ?v }} }} \
              GROUP BY ?this HAVING (COUNT(?v) > {n})"
         ),
-        Kind::NodeKind(kind) => {
+        Rule::NodeKind(kind) => {
             let test = match kind.as_str() {
                 "IRI" => "!isIRI(?v)",
                 "Literal" => "!isLiteral(?v)",
@@ -55,11 +55,11 @@ pub(crate) fn compile(c: &Constraint) -> String {
             };
             format!("SELECT ?this WHERE {{ ?this a {class} ; {path} ?v . FILTER({test}) }}")
         }
-        Kind::Datatype(dt) => format!(
+        Rule::Datatype(dt) => format!(
             "SELECT ?this WHERE {{ ?this a {class} ; {path} ?v . \
              FILTER(!isLiteral(?v) || datatype(?v) != {dt}) }}"
         ),
-        Kind::In(members) => format!(
+        Rule::In(members) => format!(
             "SELECT ?this WHERE {{ ?this a {class} ; {path} ?v . FILTER(?v NOT IN ({})) }}",
             members.join(", ")
         ),
@@ -73,12 +73,12 @@ fn describe(c: &Constraint) -> String {
         return c.message.clone();
     }
     let path = c.path.as_deref().map(local).unwrap_or_default();
-    match &c.kind {
-        Kind::MinCount(n) => format!("{path}: fewer than {n} value(s)"),
-        Kind::MaxCount(n) => format!("{path}: more than {n} value(s)"),
-        Kind::NodeKind(k) => format!("{path}: a value is not a {k}"),
-        Kind::Datatype(dt) => format!("{path}: a value is not a {}", local(dt)),
-        Kind::In(_) => format!("{path}: a value is outside the permitted set"),
-        Kind::Sparql(_) => format!("{}: SPARQL constraint violated", local(&c.shape)),
+    match &c.rule {
+        Rule::MinCount(n) => format!("{path}: fewer than {n} value(s)"),
+        Rule::MaxCount(n) => format!("{path}: more than {n} value(s)"),
+        Rule::NodeKind(k) => format!("{path}: a value is not a {k}"),
+        Rule::Datatype(dt) => format!("{path}: a value is not a {}", local(dt)),
+        Rule::In(_) => format!("{path}: a value is outside the permitted set"),
+        Rule::Sparql(_) => format!("{}: SPARQL constraint violated", local(&c.shape)),
     }
 }

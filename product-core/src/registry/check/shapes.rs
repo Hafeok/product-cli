@@ -26,14 +26,14 @@ pub(crate) struct Constraint {
     /// The property path, where the constraint has one.
     pub path: Option<String>,
     /// What it asserts.
-    pub kind: Kind,
+    pub rule: Rule,
     /// The shape's own message.
     pub message: String,
 }
 
 /// The constraint kinds the reader evaluates.
 #[derive(Debug, Clone)]
-pub(crate) enum Kind {
+pub(crate) enum Rule {
     /// At least this many values.
     MinCount(u64),
     /// At most this many values.
@@ -101,7 +101,7 @@ fn property_constraints(ttl: &str, unread: &mut Vec<Finding>) -> Result<Vec<Cons
             continue;
         }
         let message = row.get("message").map(|m| lexical(m)).unwrap_or_default();
-        let base = Constraint { shape, class, path: Some(path.clone()), kind: Kind::MinCount(0), message };
+        let base = Constraint { shape, class, path: Some(path.clone()), rule: Rule::MinCount(0), message };
         push_kinds(&row, &members, &path, base, &mut out, unread);
     }
     Ok(out)
@@ -116,25 +116,25 @@ fn push_kinds(
     out: &mut Vec<Constraint>,
     unread: &mut Vec<Finding>,
 ) {
-    let mut with = |kind: Kind| out.push(Constraint { kind, ..base.clone() });
+    let mut with = |rule: Rule| out.push(Constraint { rule, ..base.clone() });
     if let Some(n) = row.get("minCount").and_then(|v| lexical(v).parse().ok()) {
-        with(Kind::MinCount(n));
+        with(Rule::MinCount(n));
     }
     if let Some(n) = row.get("maxCount").and_then(|v| lexical(v).parse().ok()) {
-        with(Kind::MaxCount(n));
+        with(Rule::MaxCount(n));
     }
     if let Some(k) = row.get("nodeKind").map(|v| local(v)) {
         if ["IRI", "Literal", "BlankNode"].contains(&k.as_str()) {
-            with(Kind::NodeKind(k));
+            with(Rule::NodeKind(k));
         } else {
             unread.push(unevaluable(&base.shape, &format!("sh:nodeKind sh:{k} is not evaluated")));
         }
     }
     if let Some(dt) = row.get("datatype").cloned() {
-        with(Kind::Datatype(dt));
+        with(Rule::Datatype(dt));
     }
     if let Some(list) = members.get(&key(&base.shape, path)) {
-        with(Kind::In(list.clone()));
+        with(Rule::In(list.clone()));
     }
 }
 
@@ -169,7 +169,7 @@ fn sparql_constraints(ttl: &str) -> Result<Vec<Constraint>> {
                 shape: row.get("shape")?.clone(),
                 class: row.get("class")?.clone(),
                 path: None,
-                kind: Kind::Sparql(lexical(row.get("select")?)),
+                rule: Rule::Sparql(lexical(row.get("select")?)),
                 message: row.get("message").map(|m| lexical(m)).unwrap_or_default(),
             })
         })
