@@ -1,0 +1,74 @@
+format: 2
+id: seam/rust/ddd-lsp-src-protocol-rs
+boundary: contract surface of ddd-lsp/src/protocol.rs
+verdict_knowledge: 'Callers learn that a type-hierarchy item carries symbol identity — name, kind, detail — beside its range, which the location normaliser would have dropped, and that `hierarchy_params` returns the server''s own item **verbatim**: `raw` is the value as it arrived, so an opaque `data` blob and any field a future server adds survive the round trip that the directional calls depend on. The boundary interprets no `data` and cannot: its contents are the server''s business, and a caller that rebuilds an item instead of carrying it gets an empty result rather than an error. A `null` result normalises to an empty vector, which is not itself evidence of anything — that judgement belongs to the capability probe.'
+contract_location: ddd-lsp/src/protocol.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: hierarchy_params
+  file: ddd-lsp/src/protocol.rs
+  before: sha256:455f81a32033703f98776ae5026702ab870e75a3101c1f8944d0cff3942226f2
+  after: sha256:4e9030c288794b0758ecc9edd4a8a15f51891cb9d3923910972e75dfdf52d64a
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:5edd22fc81dccfddd307d0701726fd819ab17b4b3f09466c9ce0e7260e676fad
+- symbol: normalize_hierarchy_items
+  file: ddd-lsp/src/protocol.rs
+  before: sha256:455f81a32033703f98776ae5026702ab870e75a3101c1f8944d0cff3942226f2
+  after: sha256:4e9030c288794b0758ecc9edd4a8a15f51891cb9d3923910972e75dfdf52d64a
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:5ee13c55570cc26a4e30581559b43458e476199d3f1c6c6a3e10a29e57c3962f
+- symbol: HierarchyItem
+  file: ddd-lsp/src/protocol.rs
+  before: sha256:455f81a32033703f98776ae5026702ab870e75a3101c1f8944d0cff3942226f2
+  after: sha256:4e9030c288794b0758ecc9edd4a8a15f51891cb9d3923910972e75dfdf52d64a
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:573ffe20df0aa8d99c171b519c49f82a14500b21a5fb8023fb1fd446feef82fa
+- symbol: character
+  file: ddd-lsp/src/protocol.rs
+  before: sha256:455f81a32033703f98776ae5026702ab870e75a3101c1f8944d0cff3942226f2
+  after: sha256:4e9030c288794b0758ecc9edd4a8a15f51891cb9d3923910972e75dfdf52d64a
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:783d8cb201b7a1cc26ff5d530be8f4ec7cde7fe471a13959073a272f42b687d2
+- symbol: data
+  file: ddd-lsp/src/protocol.rs
+  before: sha256:455f81a32033703f98776ae5026702ab870e75a3101c1f8944d0cff3942226f2
+  after: sha256:4e9030c288794b0758ecc9edd4a8a15f51891cb9d3923910972e75dfdf52d64a
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:36dfe1b38181e3f056f96668f3d313083f1801243e734f3259d6312b38bb743d
+- symbol: detail
+  file: ddd-lsp/src/protocol.rs
+  before: sha256:455f81a32033703f98776ae5026702ab870e75a3101c1f8944d0cff3942226f2
+  after: sha256:4e9030c288794b0758ecc9edd4a8a15f51891cb9d3923910972e75dfdf52d64a
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:0e9e0426fe2f6e94b82eeb5fb304ed14540407970c1caa2c8e0a4148f3b61a7a
+- symbol: file
+  file: ddd-lsp/src/protocol.rs
+  before: sha256:455f81a32033703f98776ae5026702ab870e75a3101c1f8944d0cff3942226f2
+  after: sha256:4e9030c288794b0758ecc9edd4a8a15f51891cb9d3923910972e75dfdf52d64a
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:979d9fc9b435564b7e9d24eb8c20107cf76000184e7ded3de830229cfed062c7
+- symbol: kind
+  file: ddd-lsp/src/protocol.rs
+  before: sha256:455f81a32033703f98776ae5026702ab870e75a3101c1f8944d0cff3942226f2
+  after: sha256:4e9030c288794b0758ecc9edd4a8a15f51891cb9d3923910972e75dfdf52d64a
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:5a8e4006dd28891261205a2404a856f1d96e7f92d9449b80ca14c44fb3fe8110
+- symbol: line
+  file: ddd-lsp/src/protocol.rs
+  before: sha256:455f81a32033703f98776ae5026702ab870e75a3101c1f8944d0cff3942226f2
+  after: sha256:4e9030c288794b0758ecc9edd4a8a15f51891cb9d3923910972e75dfdf52d64a
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:7db816dd06aae59343384e0bb7cae2f34677d187d832c17436d9738b84bf69ce
+- symbol: name
+  file: ddd-lsp/src/protocol.rs
+  before: sha256:455f81a32033703f98776ae5026702ab870e75a3101c1f8944d0cff3942226f2
+  after: sha256:4e9030c288794b0758ecc9edd4a8a15f51891cb9d3923910972e75dfdf52d64a
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:3fd3c5403b73b51307975a7222e67e2210676eda3fb5304fb002a3c77e6b7454
+- symbol: raw
+  file: ddd-lsp/src/protocol.rs
+  before: sha256:455f81a32033703f98776ae5026702ab870e75a3101c1f8944d0cff3942226f2
+  after: sha256:4e9030c288794b0758ecc9edd4a8a15f51891cb9d3923910972e75dfdf52d64a
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:73fd777a6713a4b64c0f026caeb2b78f6ec2e7f5b1250f19d394c3f0d05d010c

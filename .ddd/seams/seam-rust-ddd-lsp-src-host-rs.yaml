@@ -1,7 +1,7 @@
 format: 2
 id: seam/rust/ddd-lsp-src-host-rs
 boundary: contract surface of ddd-lsp/src/host.rs
-verdict_knowledge: 'Host callers learn a document can be opened with supplied text (a committed state the disk no longer carries), so the diff path can classify deletions and historical states through the same overlay mechanics.'
+verdict_knowledge: 'Host callers learn a document can be opened with supplied text (a committed state the disk no longer carries), so the diff path can classify deletions and historical states through the same overlay mechanics. They also learn what the server said it can do: `server_capabilities` returns the `InitializeResult` set the handshake used to discard. It is a claim, not a verdict — the boundary makes no promise that an advertised operation answers, and `capability::probe` is where a claim is tested against behaviour.'
 contract_location: ddd-lsp/src/host.rs
 obligations: []
 metadata: {}
@@ -12,3 +12,9 @@ bindings:
   after: sha256:190003612377c91a7547f15468d4e8d118062918cd90f647315db75b94cabf28
   base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
   hash: sha256:0e3335341246996cb61ae6b364114a725ffb672fef0ed23eb2416a91b7084b5e
+- symbol: server_capabilities
+  file: ddd-lsp/src/host.rs
+  before: sha256:190003612377c91a7547f15468d4e8d118062918cd90f647315db75b94cabf28
+  after: sha256:fce756bfcb6634dfeab8890955b44b10a8e7edc9797ddd3736b3361b954fc3f8
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:23334b050563cb5fe37066f4c66312fe764119599b73bb0240a97539fe597197
