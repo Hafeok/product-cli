@@ -1,0 +1,20 @@
+format: 2
+id: seam/rust/product-core-src-registry-verify-rs
+boundary: contract surface of product-core/src/registry/verify.rs
+verdict_knowledge: 'A caller learns how many sites each parameter reached in the generated tree, per label — the gate''s own tally. A GateReport existing at all means both checks passed: every value round-tripped byte-identically against the spans it was written into, and no placeholder survived outside a value. It is never a partial result and carries no findings — a gate failure is an error that aborts generation, not a report to inspect afterwards.'
+contract_location: product-core/src/registry/verify.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: GateReport
+  file: product-core/src/registry/verify.rs
+  before: absent
+  after: sha256:069be9556e49d2bf581d40d5b1e73812c0a96db502588b0749da48f5255c5bdf
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:741cd40cbfb4bf83ffa8a201a1a13b593d562ca76daba954408d34b0a7f4e0ef
+- symbol: sites_per_label
+  file: product-core/src/registry/verify.rs
+  before: absent
+  after: sha256:069be9556e49d2bf581d40d5b1e73812c0a96db502588b0749da48f5255c5bdf
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:cb0d8140f522a8d515a0bed3be0b1ad16463ddac41fb4c36d66ab1ed755a09e2

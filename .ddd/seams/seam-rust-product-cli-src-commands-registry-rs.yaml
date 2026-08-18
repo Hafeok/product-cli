@@ -1,0 +1,26 @@
+format: 2
+id: seam/rust/product-cli-src-commands-registry-rs
+boundary: contract surface of product-cli/src/commands/registry.rs
+verdict_knowledge: 'CLI users learn minting an instance and reading one are separate verbs. generate is local and complete: it writes a tree, records a birth commit, prints the two commands that would publish it, and pushes nothing — publishing is a separate act with a different authority. check exits non-zero on any finding and reports an unreadable shape under its own heading, distinctly from data violating a shape, so a fail-closed run is never read as a violated constraint.'
+contract_location: product-cli/src/commands/registry.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: RegistryCommands
+  file: product-cli/src/commands/registry.rs
+  before: absent
+  after: sha256:670be017fc201f79a63196716a6f1ecd48c97a89b72906fe8d75119fbab2ce0c
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:41ac06715c193bfe663c2b267f0eec3d3d4fb433c9460bc89197fa83c2efa355
+- symbol: Check
+  file: product-cli/src/commands/registry.rs
+  before: absent
+  after: sha256:670be017fc201f79a63196716a6f1ecd48c97a89b72906fe8d75119fbab2ce0c
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:849a768e6dce9250f5b223a58ecc0430a4b05f5c162025bfa35ffa9104c1a1cb
+- symbol: Generate
+  file: product-cli/src/commands/registry.rs
+  before: absent
+  after: sha256:670be017fc201f79a63196716a6f1ecd48c97a89b72906fe8d75119fbab2ce0c
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:a6243953634cd26af54fe92ea9798ea3e4e941c8e177ebf68cc2510e77c9c833

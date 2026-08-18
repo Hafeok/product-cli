@@ -1,0 +1,80 @@
+format: 2
+id: seam/rust/product-core-src-registry-plan-rs
+boundary: contract surface of product-core/src/registry/plan.rs
+verdict_knowledge: 'A caller learns a generation is planned whole in memory and handed back only if the verification gate passed: a GenerationPlan is a verified tree, carrying each file''s rendered contents, its executable bit, and the spans every parameter was written into. Planning touches no disk, so a refusal leaves no directory behind — not even a partial one. The plan cannot publish, and cannot be applied in part.'
+contract_location: product-core/src/registry/plan.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: plan_generation
+  file: product-core/src/registry/plan.rs
+  before: absent
+  after: sha256:7c659b5dd993263df73b124bb626f7ba6453399a9e9b1184e42af55b8526965b
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:4014f8f7d6015a44667e1fb9ffc673b2ed3f578a4bf33bececa7806e0257bdb7
+- symbol: GenerationPlan
+  file: product-core/src/registry/plan.rs
+  before: absent
+  after: sha256:7c659b5dd993263df73b124bb626f7ba6453399a9e9b1184e42af55b8526965b
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:f29929e9c90d358918c94c66875ea8c1ce314a259c4440d90130ace3aa87dad3
+- symbol: PlannedFile
+  file: product-core/src/registry/plan.rs
+  before: absent
+  after: sha256:7c659b5dd993263df73b124bb626f7ba6453399a9e9b1184e42af55b8526965b
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:1f5b7938375230d3e18056ed9e9e871217f139ccda40f9dd8d92443a0b0a3456
+- symbol: files
+  file: product-core/src/registry/plan.rs
+  before: absent
+  after: sha256:7c659b5dd993263df73b124bb626f7ba6453399a9e9b1184e42af55b8526965b
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:47e8c81167dee8f1e61cab50b36d66c2d9b2b4f057552ea5db453a01ce5f9750
+- symbol: gate
+  file: product-core/src/registry/plan.rs
+  before: absent
+  after: sha256:7c659b5dd993263df73b124bb626f7ba6453399a9e9b1184e42af55b8526965b
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:3de6ec5f5b9a9e8a7ee809cd3a7f13a6cba7bbb4bb9dfc4db6c72f62c288770e
+- symbol: generator_version
+  file: product-core/src/registry/plan.rs
+  before: absent
+  after: sha256:7c659b5dd993263df73b124bb626f7ba6453399a9e9b1184e42af55b8526965b
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:a537bafd1d60d74e7b2450a9681fb05e0d2d20f79197d0e8c2fdaaa61348f58d
+- symbol: params
+  file: product-core/src/registry/plan.rs
+  before: absent
+  after: sha256:7c659b5dd993263df73b124bb626f7ba6453399a9e9b1184e42af55b8526965b
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:af36b199c54b4bf08d1aa06e8741a9de070c0568e21fd6cc41b195368497b457
+- symbol: template_version
+  file: product-core/src/registry/plan.rs
+  before: absent
+  after: sha256:7c659b5dd993263df73b124bb626f7ba6453399a9e9b1184e42af55b8526965b
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:6e83e18f335309a47ae20c41df7850796f213c011101a22995f4dbe4d4c21023
+- symbol: contents
+  file: product-core/src/registry/plan.rs
+  before: absent
+  after: sha256:7c659b5dd993263df73b124bb626f7ba6453399a9e9b1184e42af55b8526965b
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:ea3813fd1b1320e8c673e9433c819e8d1335bf13b32a9818ac0499a1522a09c6
+- symbol: executable
+  file: product-core/src/registry/plan.rs
+  before: absent
+  after: sha256:7c659b5dd993263df73b124bb626f7ba6453399a9e9b1184e42af55b8526965b
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:0c714a57f4eb24d2921de4e6a6e7352902b7c3e188a0f73889dd7fc2b17c18ad
+- symbol: path
+  file: product-core/src/registry/plan.rs
+  before: absent
+  after: sha256:7c659b5dd993263df73b124bb626f7ba6453399a9e9b1184e42af55b8526965b
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:dfc66851c328650baf01c724611aa8fdbfa8d29dcc90d53793e2f167a8a7b97d
+- symbol: sites
+  file: product-core/src/registry/plan.rs
+  before: absent
+  after: sha256:7c659b5dd993263df73b124bb626f7ba6453399a9e9b1184e42af55b8526965b
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:9b0431a336e01dc630cafbde602e8586a11cf4acd65dd8fe98c47d783a5fd865

@@ -1,0 +1,50 @@
+format: 2
+id: seam/rust/product-core-src-registry-apply-rs
+boundary: contract surface of product-core/src/registry/apply.rs
+verdict_knowledge: 'A caller learns applying a plan is local and total: the tree is written into a target that must be empty, a repository is initialised, and one birth commit is recorded whose identity, dates and config come from the parameters alone — so the same plan yields the same commit id. What it will not do is publish: no remote is configured and nothing is pushed. GenerationReport.publish carries the commands a human would run, and COMMIT_EMAIL is an RFC 2606 .invalid address stating that no email identity was chosen — the agent is the generated-by parameter.'
+contract_location: product-core/src/registry/apply.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: COMMIT_EMAIL
+  file: product-core/src/registry/apply.rs
+  before: absent
+  after: sha256:48cce0a066ea66fd13f0518fd5492df3ccd71a901fe9c00363918e28e9818bc6
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:deaf58930629cbc80c9b05443b966a6a866bbe0892173289fc352ee0608282f3
+- symbol: apply_generation
+  file: product-core/src/registry/apply.rs
+  before: absent
+  after: sha256:48cce0a066ea66fd13f0518fd5492df3ccd71a901fe9c00363918e28e9818bc6
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:bf83db200425e60ce4b34dc38b0af0700c6e556e19e4e591d16c86a432711c67
+- symbol: GenerationReport
+  file: product-core/src/registry/apply.rs
+  before: absent
+  after: sha256:48cce0a066ea66fd13f0518fd5492df3ccd71a901fe9c00363918e28e9818bc6
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:c5deea6ce6f0e7aa2b9615c1cb3dee56abbc05f8e41af3f1fb3b8023a3bc0705
+- symbol: commit
+  file: product-core/src/registry/apply.rs
+  before: absent
+  after: sha256:48cce0a066ea66fd13f0518fd5492df3ccd71a901fe9c00363918e28e9818bc6
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:4621d8cdc9e25c3744721cc4f187a33541395b56a03112cb7039d06ec40f6e01
+- symbol: files
+  file: product-core/src/registry/apply.rs
+  before: absent
+  after: sha256:48cce0a066ea66fd13f0518fd5492df3ccd71a901fe9c00363918e28e9818bc6
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:45848582cecc3d3aa08cef3c2dd0e950383bae4922b2039854d507df7b7431b6
+- symbol: out
+  file: product-core/src/registry/apply.rs
+  before: absent
+  after: sha256:48cce0a066ea66fd13f0518fd5492df3ccd71a901fe9c00363918e28e9818bc6
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:82c1a3c9d754fcc0f254b2ce531883391b2115f14c7cd767f8297d24ce0c4a52
+- symbol: publish
+  file: product-core/src/registry/apply.rs
+  before: absent
+  after: sha256:48cce0a066ea66fd13f0518fd5492df3ccd71a901fe9c00363918e28e9818bc6
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:1f31aa4d9f571595c4faf9dac96372078e640782dac6297ca5c208e8134fa77e

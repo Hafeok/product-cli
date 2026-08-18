@@ -1,0 +1,32 @@
+format: 2
+id: seam/rust/product-core-src-registry-substitute-rs
+boundary: contract surface of product-core/src/registry/substitute.rs
+verdict_knowledge: 'A caller learns where each parameter value was written into a rendered file — label, byte offset, byte length — which is what lets the gate read the values back out and check them rather than trust the renderer that wrote them. A Site addresses the output, not the template: it cannot say which placeholder produced it, and it is meaningless against any text but the rendered file it came from.'
+contract_location: product-core/src/registry/substitute.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: Site
+  file: product-core/src/registry/substitute.rs
+  before: absent
+  after: sha256:c5ba522041f2b68021be18c00bbbb8fddb03a6cf7ab1800c5e2873f277325d16
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:3cfaf9096c79b48514f3ab4e4d35bbb84d04e93edd321736bef2c73d0cbfaa9a
+- symbol: label
+  file: product-core/src/registry/substitute.rs
+  before: absent
+  after: sha256:c5ba522041f2b68021be18c00bbbb8fddb03a6cf7ab1800c5e2873f277325d16
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:9009ac81121a602d3f3288c295d8b432931f6b238051e9d63101aea041408955
+- symbol: len
+  file: product-core/src/registry/substitute.rs
+  before: absent
+  after: sha256:c5ba522041f2b68021be18c00bbbb8fddb03a6cf7ab1800c5e2873f277325d16
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:525b63633c80cb6fe33cbe45349698104bb4b15e5fb839d3c1f638bc97e08347
+- symbol: offset
+  file: product-core/src/registry/substitute.rs
+  before: absent
+  after: sha256:c5ba522041f2b68021be18c00bbbb8fddb03a6cf7ab1800c5e2873f277325d16
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:6d1960a3b674935ba048278f4088bad07ebf7af3e62e0599e0661e8e49a1fd2c

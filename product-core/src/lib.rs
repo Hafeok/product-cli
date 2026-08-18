@@ -8,6 +8,7 @@ pub mod error;
 pub mod fileops;
 pub mod guide;
 pub mod pf;
+pub mod registry;
 pub mod root;
 
 // Wrapper modules for canonical module structure (ADR-029)

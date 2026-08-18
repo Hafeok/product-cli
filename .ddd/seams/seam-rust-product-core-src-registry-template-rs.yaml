@@ -1,0 +1,20 @@
+format: 2
+id: seam/rust/product-core-src-registry-template-rs
+boundary: contract surface of product-core/src/registry/template.rs
+verdict_knowledge: 'A caller learns which version of the registry template a generated instance came from — the version that instance re-pins against, held in step with TEMPLATE.md''s own header by test. It does not say which generator produced the instance: that is recorded separately in the birth provenance, because the template and the generator move independently and an instance may need to re-pin against either.'
+contract_location: product-core/src/registry/template.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: TEMPLATE_VERSION
+  file: product-core/src/registry/template.rs
+  before: absent
+  after: sha256:bba0ebcd30bfd943de3fd6ae02fca0942ec05704d5d00fdc16c4b50695576f3f
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:3c121abeb81dd76cd57e7688cdeb44be0c7364d04057b5d589ccda7ba7321d83
+- symbol: TEMPLATE_VERSION
+  file: product-core/src/registry/template.rs
+  before: absent
+  after: sha256:356ef4005495646a068ec99be7461518a50bbb8823dfb7b9c86fc58775e27a04
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:2350eb942dd708e8aafdf9fedc07447fe460de271bf65229e0e55517604f3aa5

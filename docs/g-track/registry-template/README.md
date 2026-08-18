@@ -13,7 +13,7 @@ provenance (template version, parameters, generated-by, date) is `GENERATION.ttl
 |---|---|
 | `graphs/<graph>/` | one named graph per directory; **one assertion per file, in Turtle** (the per-claim file pattern applied to triples — the pattern transfers: per-assertion files, PR review, supersession; G-1 Gate 3 ruled the format) |
 | `graphs/canonical/` | the ratified graph |
-| `graphs/canonical/founding-decision.ttl` | **the founding-decision slot**: {{OWNER_ORG}}'s decision to keep a registry, filed by {{RATIFIER}} as the first ratified content — empty until then |
+| `graphs/canonical/founding-decision.ttl` | **the founding-decision slot** — a path, not a shipped file: {{OWNER_ORG}}'s decision to keep a registry, filed by {{RATIFIER}} as the first ratified content, creates it. The form is `shapes/decision.ttl`, with a conforming example in `graphs/canonical/_exemplar-decision.ttl` |
 | `shapes/` | SHACL shapes; CI runs them on every change |
 | `scripts/build-projection.sh` | ref in, store build out (stub until G0) |
 | `GENERATION.ttl` | this instance's birth provenance |
@@ -42,13 +42,22 @@ grow at G0:
   as-of, provenance, assurance; `institutional` provenance **requires** a `trust_decision`
   reference; the provenance value set is track vocabulary per G-track decision `g-dec-01`
   (superseded the moment canon files provenance typing).
-- **Structural well-formedness**: every data file parses; assertion files carry exactly one
-  assertion (the founding-decision slot is exempt while empty, and holds a decision, not an
-  assertion, once filled).
+- **Structural well-formedness** (`shapes/structural.ttl`): every data file parses; an assertion
+  names exactly one subject, predicate, object.
+- **The decision shape** (`shapes/decision.ttl`): a decision carries title, resolution, region,
+  falsifier, ratifier, status, date. `basis`, `acceptedCost` and `revisitIf` are deliberately not
+  required — a decision may honestly have none, and demanding them produces filler.
+- **One assertion or one decision per file**, across every `graphs/**/*.ttl`. One rule, no filename
+  exemptions.
 
 ## Ownership
 
 Ownership is a **generation parameter** of this instance: {{OWNER_ORG}} owns this registry, and
 that ownership is the accountable-principal field of every trust decision that references it
-(PRD §4.4 — connecting is a trust decision, Q27). The base IRI is served from a host
-{{OWNER_ORG}} controls durably; IRIs outlive hosting choices.
+(PRD §4.4 — connecting is a trust decision, Q27).
+
+The base IRI is the one parameter with no supersession path: a changed IRI orphans identifiers
+rather than superseding them. It was settled at generation by one of the two routes the template
+documents — a host {{OWNER_ORG}} controls durably, or location-independent minting (`tag:`/`urn:`)
+with the resolvable HTTP form produced later as a projection. Which route this instance took, and
+why, is a decision filed in this registry, not a fact recoverable from the IRI alone.

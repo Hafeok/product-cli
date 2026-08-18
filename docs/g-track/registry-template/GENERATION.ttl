@@ -1,20 +1,42 @@
-# Birth provenance of this instance — FILLED BY THE INSTANCE'S FIRST COMMIT.
+# Birth provenance of this instance — written by the generation act.
 #
-# The generation act records: template version, parameters supplied,
-# generated-by, date — prov:wasAttributedTo the generation act. This is what
-# lets the instance re-pin when the template moves (TEMPLATE.md).
+# `product registry generate` fills this file through the same single-pass
+# renderer, under the same verification gate, as every other file in the tree:
+# the birth provenance is produced by the mechanism, never typed beside it.
 #
-# Shape, to be filled (base IRI substituted at generation):
+# It records the template version, the generator's own version, every parameter
+# supplied, who generated it, and the mint date — which is when the authority
+# was demonstrably controlled, not when the tree was written. Recording both
+# versions is what lets the instance re-pin when either one moves.
 #
-# @prefix reg:  <https://REGISTRY-HOST.example/ns#> .
-# @prefix prov: <http://www.w3.org/ns/prov#> .
-# @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
-#
-# reg:this-instance
-#     a reg:Registry ;
-#     reg:templateVersion "0.1.0" ;
-#     reg:owner "{{OWNER_ORG}}" ;
-#     reg:ratifier "{{RATIFIER}}" ;
-#     reg:displayName "{{DISPLAY_NAME}}" ;
-#     prov:wasAttributedTo <generation-act IRI> ;
-#     prov:generatedAtTime "…"^^xsd:dateTime .
+# The base IRI is a generation parameter; the placeholder is IRI-valid so the
+# template itself parses.
+
+@prefix reg:  <https://REGISTRY-HOST.example/ns#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+reg:this-instance
+    a                     reg:Registry ;
+    reg:displayName       "{{DISPLAY_NAME}}" ;
+    reg:owner             "{{OWNER_ORG}}" ;
+    reg:repository        "{{REPO_NAME}}" ;
+    reg:ratifier          "{{RATIFIER}}" ;
+    reg:baseIri           "https://REGISTRY-HOST.example/ns#" ;
+    reg:mintDate          "{{MINT_DATE}}"^^xsd:date ;
+    reg:templateVersion   "{{TEMPLATE_VERSION}}" ;
+    reg:generatorVersion  "{{GENERATOR_VERSION}}" ;
+    prov:wasGeneratedBy   reg:generation-act ;
+    prov:wasAttributedTo  reg:generating-agent .
+
+reg:generation-act
+    a                     prov:Activity ;
+    reg:templateVersion   "{{TEMPLATE_VERSION}}" ;
+    reg:generatorVersion  "{{GENERATOR_VERSION}}" ;
+    prov:wasAssociatedWith reg:generating-agent ;
+    prov:generatedAtTime  "{{MINT_DATE}}T00:00:00Z"^^xsd:dateTime ;
+    prov:generated        reg:this-instance .
+
+reg:generating-agent
+    a                     prov:Agent ;
+    reg:name              "{{GENERATED_BY}}" .
