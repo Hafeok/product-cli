@@ -10,7 +10,7 @@ use super::shapes::{local, Constraint, Kind};
 use super::{Finding, FindingKind};
 
 /// Run every constraint over the data graph, returning one finding per row.
-pub fn run(data_ttl: &str, constraints: &[Constraint]) -> Result<Vec<Finding>> {
+pub(crate) fn run(data_ttl: &str, constraints: &[Constraint]) -> Result<Vec<Finding>> {
     let mut out = Vec::new();
     for c in constraints {
         let query = compile(c);
@@ -34,7 +34,7 @@ pub fn run(data_ttl: &str, constraints: &[Constraint]) -> Result<Vec<Finding>> {
 }
 
 /// The SELECT one constraint becomes.
-pub fn compile(c: &Constraint) -> String {
+pub(crate) fn compile(c: &Constraint) -> String {
     let class = &c.class;
     let path = c.path.clone().unwrap_or_default();
     match &c.kind {

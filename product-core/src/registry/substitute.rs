@@ -16,7 +16,7 @@
 /// One entry of the substitution table: the literal token as it appears in the
 /// template, the value that replaces it, and the label the gate reports it by.
 #[derive(Debug, Clone, Copy)]
-pub struct Token<'a> {
+pub(crate) struct Token<'a> {
     /// The parameter's reporting name (`--base-iri`, `{{OWNER_ORG}}`, …).
     pub label: &'a str,
     /// The literal text matched in the template.
@@ -38,7 +38,7 @@ pub struct Site {
 
 /// A rendered file: its text, plus every span the renderer wrote a value into.
 #[derive(Debug, Clone)]
-pub struct Rendered {
+pub(crate) struct Rendered {
     /// The rendered text.
     pub text: String,
     /// One entry per emitted value, in output order.
@@ -46,7 +46,7 @@ pub struct Rendered {
 }
 
 /// Render `input`, substituting every token occurrence exactly once.
-pub fn render(input: &str, tokens: &[Token]) -> Rendered {
+pub(crate) fn render(input: &str, tokens: &[Token]) -> Rendered {
     let mut order: Vec<&Token> = tokens.iter().collect();
     order.sort_by_key(|t| std::cmp::Reverse(t.token.len()));
 
@@ -83,7 +83,7 @@ pub fn render(input: &str, tokens: &[Token]) -> Rendered {
 /// Fail-closed guard: no token may be a substring of another. Overlapping
 /// tokens would make the scanner's matches and a naive occurrence count
 /// disagree, which is exactly what the gate cross-checks.
-pub fn tokens_are_disjoint(tokens: &[Token]) -> Result<(), String> {
+pub(crate) fn tokens_are_disjoint(tokens: &[Token]) -> Result<(), String> {
     for a in tokens {
         for b in tokens {
             if !std::ptr::eq(a, b) && a.token.contains(b.token) {

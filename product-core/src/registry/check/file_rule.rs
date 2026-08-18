@@ -9,7 +9,7 @@ use super::{Finding, FindingKind};
 
 /// Check one data file. Returns a finding when the file does not carry exactly
 /// one assertion or exactly one decision.
-pub fn check_file(path: &str, text: &str, base: &str) -> Vec<Finding> {
+pub(crate) fn check_file(path: &str, text: &str, base: &str) -> Vec<Finding> {
     let query = format!(
         "SELECT ?s WHERE {{ ?s a ?c . VALUES ?c {{ <{base}Assertion> <{base}Decision> }} }}"
     );

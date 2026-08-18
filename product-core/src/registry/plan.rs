@@ -92,7 +92,7 @@ fn gated<'a>(files: &'a [PlannedFile]) -> Vec<Gated<'a>> {
 
 /// The closed substitution table. Every placeholder the template carries has an
 /// entry here; a placeholder without one fails the gate rather than shipping.
-pub fn token_table<'a>(params: &'a RegistryParams, generator_version: &'a str) -> Vec<Token<'a>> {
+pub(crate) fn token_table<'a>(params: &'a RegistryParams, generator_version: &'a str) -> Vec<Token<'a>> {
     vec![
         Token { label: "--owner", token: "{{OWNER_ORG}}", value: &params.owner },
         Token { label: "--repo", token: "{{REPO_NAME}}", value: &params.repo },

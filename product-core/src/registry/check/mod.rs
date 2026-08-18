@@ -14,9 +14,9 @@
 //! The divergence is a standing finding, measured by a fixture that runs both
 //! when pySHACL is present rather than assumed small.
 
-pub mod eval;
-pub mod file_rule;
-pub mod shapes;
+pub(crate) mod eval;
+pub(crate) mod file_rule;
+pub(crate) mod shapes;
 
 use std::path::Path;
 
@@ -103,7 +103,7 @@ pub fn evaluate(data_ttl: &str, shapes_ttl: &str) -> Result<(Vec<Finding>, usize
 
 /// The instance's base IRI, read from `GENERATION.ttl`'s own prefix binding by
 /// the RDF parser — the instance states its identity, the reader does not guess.
-pub fn base_iri(dir: &Path) -> Result<String> {
+pub(crate) fn base_iri(dir: &Path) -> Result<String> {
     let path = dir.join("GENERATION.ttl");
     let text = std::fs::read_to_string(&path)
         .map_err(|e| fault(&format!("cannot read {}: {e}", path.display())))?;
@@ -112,7 +112,7 @@ pub fn base_iri(dir: &Path) -> Result<String> {
 }
 
 /// The IRI a Turtle document binds a prefix to, via the parser's own prefix map.
-pub fn prefix_binding(turtle: &str, prefix: &str) -> Option<String> {
+pub(crate) fn prefix_binding(turtle: &str, prefix: &str) -> Option<String> {
     use oxigraph::io::{RdfFormat, RdfParser};
     let mut parser = RdfParser::from_format(RdfFormat::Turtle).for_reader(turtle.as_bytes());
     for quad in &mut parser {

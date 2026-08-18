@@ -18,7 +18,7 @@ use super::substitute::{tokens_are_disjoint, Site, Token};
 use super::template::HOST_SENTINEL;
 
 /// One rendered file as the gate sees it.
-pub struct Gated<'a> {
+pub(crate) struct Gated<'a> {
     /// Path relative to the instance root.
     pub path: &'a str,
     /// The template's own text for this file.
@@ -39,7 +39,7 @@ pub struct GateReport {
 }
 
 /// Run both checks over a rendered tree.
-pub fn gate(files: &[Gated], tokens: &[Token]) -> Result<GateReport> {
+pub(crate) fn gate(files: &[Gated], tokens: &[Token]) -> Result<GateReport> {
     tokens_are_disjoint(tokens).map_err(|e| fault(&e))?;
     let report = check_round_trip(files, tokens)?;
     check_no_survivors(files)?;
@@ -152,7 +152,7 @@ fn mask_values(rendered: &str, sites: &[Site]) -> String {
 }
 
 /// The first `{{IDENT}}` in `text`, if any.
-pub fn first_placeholder(text: &str) -> Option<String> {
+pub(crate) fn first_placeholder(text: &str) -> Option<String> {
     let mut rest = text;
     while let Some(start) = rest.find("{{") {
         let after = &rest[start + 2..];

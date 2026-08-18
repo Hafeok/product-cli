@@ -5,7 +5,7 @@ use crate::registry::params::RegistryParams;
 
 /// The parameters the discarded G0 instance was minted from, carried forward
 /// verbatim from the ratified handoff.
-pub fn g0_params() -> RegistryParams {
+fn g0_params() -> RegistryParams {
     RegistryParams {
         owner: "Hafeok".into(),
         repo: "ground-registry-g0".into(),

@@ -12,14 +12,14 @@ pub const TEMPLATE_VERSION: &str = "0.2.0";
 
 /// The base-IRI placeholder. G-1 Gate 3 kept it IRI-valid so the template's own
 /// Turtle parses; it is a token like any other, not an exception.
-pub const BASE_IRI_TOKEN: &str = "https://REGISTRY-HOST.example/ns#";
+pub(crate) const BASE_IRI_TOKEN: &str = "https://REGISTRY-HOST.example/ns#";
 
 /// The host substring the gate scans for. Any survivor means a base IRI reached
 /// the output unsubstituted.
-pub const HOST_SENTINEL: &str = "REGISTRY-HOST.example";
+pub(crate) const HOST_SENTINEL: &str = "REGISTRY-HOST.example";
 
 /// One file of the template.
-pub struct TemplateFile {
+pub(crate) struct TemplateFile {
     /// Path relative to the instance root.
     pub path: &'static str,
     /// The file's contents as they stand in the template.
@@ -44,7 +44,7 @@ macro_rules! template_file {
 }
 
 /// Every file a generated instance carries.
-pub const TEMPLATE: &[TemplateFile] = &[
+pub(crate) const TEMPLATE: &[TemplateFile] = &[
     template_file!("TEMPLATE.md", false, false),
     template_file!("README.md", false, true),
     template_file!("GENERATION.ttl", false, true),
@@ -59,7 +59,7 @@ pub const TEMPLATE: &[TemplateFile] = &[
 
 /// The template's source directory, relative to the workspace root — where the
 /// drift test walks.
-pub const TEMPLATE_DIR: &str = "docs/g-track/registry-template";
+pub(crate) const TEMPLATE_DIR: &str = "docs/g-track/registry-template";
 
 #[cfg(test)]
 #[path = "template_tests.rs"]

@@ -18,7 +18,7 @@ const SUPPORTED: &[&str] = &[
 
 /// One evaluable constraint.
 #[derive(Debug, Clone)]
-pub struct Constraint {
+pub(crate) struct Constraint {
     /// The shape it came from.
     pub shape: String,
     /// The class it targets.
@@ -33,7 +33,7 @@ pub struct Constraint {
 
 /// The constraint kinds the reader evaluates.
 #[derive(Debug, Clone)]
-pub enum Kind {
+pub(crate) enum Kind {
     /// At least this many values.
     MinCount(u64),
     /// At most this many values.
@@ -50,7 +50,7 @@ pub enum Kind {
 
 /// What a shapes graph yielded.
 #[derive(Debug, Default)]
-pub struct Extracted {
+pub(crate) struct Extracted {
     /// The constraints the reader will evaluate.
     pub constraints: Vec<Constraint>,
     /// Shapes it refused to evaluate.
@@ -58,7 +58,7 @@ pub struct Extracted {
 }
 
 /// Read `shapes_ttl`, returning what can be evaluated with what cannot.
-pub fn extract(shapes_ttl: &str) -> Result<Extracted> {
+pub(crate) fn extract(shapes_ttl: &str) -> Result<Extracted> {
     let mut out = Extracted { unevaluable: unsupported_predicates(shapes_ttl)?, ..Default::default() };
     out.constraints.extend(property_constraints(shapes_ttl, &mut out.unevaluable)?);
     out.constraints.extend(sparql_constraints(shapes_ttl)?);
@@ -198,18 +198,18 @@ fn select(
 }
 
 /// The IRI inside a `<…>` term, if it is one.
-pub fn iri(term: &str) -> Option<&str> {
+pub(crate) fn iri(term: &str) -> Option<&str> {
     term.strip_prefix('<')?.strip_suffix('>')
 }
 
 /// A term's local name — after the last `#` or `/`.
-pub fn local(term: &str) -> String {
+pub(crate) fn local(term: &str) -> String {
     let t = term.trim_start_matches('<').trim_end_matches('>');
     t.rsplit(['#', '/']).next().unwrap_or(t).to_string()
 }
 
 /// A literal term's lexical form, without quotes, datatype, language tag.
-pub fn lexical(term: &str) -> String {
+pub(crate) fn lexical(term: &str) -> String {
     let t = term.trim();
     if !t.starts_with('"') {
         return t.to_string();
