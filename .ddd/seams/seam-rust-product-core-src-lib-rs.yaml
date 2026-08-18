@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/product-core-src-lib-rs
+boundary: contract surface of product-core/src/lib.rs
+verdict_knowledge: 'Consumers learn product-core carries ground-registry generation alongside the framework graph, and that the surface is the acts — plan, apply, check. The modules beneath are crate-internal: how the template is rendered, and how the gate is spelled, are not part of the contract.'
+contract_location: product-core/src/lib.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: registry
+  file: product-core/src/lib.rs
+  before: sha256:72be978c89ffd58d92fc0b8728def0de717cd63e1e6d0281c706a52410dcd6ee
+  after: sha256:3d1bb8cb6b4faac3f084b8a8cf11ebed9db7b7ac768b8ca9c27029c08c73fd45
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:0117c3fcad2d4b1f681bf521bacfa16bfead015df594bde1e4bcc5af213e8bb3

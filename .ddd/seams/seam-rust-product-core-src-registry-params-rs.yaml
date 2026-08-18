@@ -1,0 +1,68 @@
+format: 2
+id: seam/rust/product-core-src-registry-params-rs
+boundary: contract surface of product-core/src/registry/params.rs
+verdict_knowledge: 'A caller learns generation parameters are typed, and validated for meaning only: a date that parses as a date, a base IRI the RDF parser accepts and that ends where identifiers are minted, a repository name that is one path segment. What validation deliberately does not do is judge a value safe — no character is rejected, because the renderer carries any bytes verbatim and a character rule would be an escaping rule, which is what corrupted the first generated instance.'
+contract_location: product-core/src/registry/params.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: impl RegistryParams
+  file: product-core/src/registry/params.rs
+  before: absent
+  after: sha256:aad55c91b8ae590a53f9f7136804e9efd337b28665c4b27e0a75ce356e260c98
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:dc2915844a4178c0f4cfaae23f5890265ce7c6ac621d0668efdf66c5a7ff6fe3
+- symbol: RegistryParams
+  file: product-core/src/registry/params.rs
+  before: absent
+  after: sha256:aad55c91b8ae590a53f9f7136804e9efd337b28665c4b27e0a75ce356e260c98
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:31e001c171ef337a06a4ef3da26aa3cbadafa15cad4d8c97279402f1c2e93145
+- symbol: base_iri
+  file: product-core/src/registry/params.rs
+  before: absent
+  after: sha256:aad55c91b8ae590a53f9f7136804e9efd337b28665c4b27e0a75ce356e260c98
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:e6feb46bb9fe490ac162b0de75340d0f110da1162e53d2b4bf2f41f595b7227f
+- symbol: display_name
+  file: product-core/src/registry/params.rs
+  before: absent
+  after: sha256:aad55c91b8ae590a53f9f7136804e9efd337b28665c4b27e0a75ce356e260c98
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:a6f6795402f099550ea2933c3fe80682288f4309e55d9bd6f3badd1c96da6e4b
+- symbol: generated_by
+  file: product-core/src/registry/params.rs
+  before: absent
+  after: sha256:aad55c91b8ae590a53f9f7136804e9efd337b28665c4b27e0a75ce356e260c98
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:fe38292d9a4a45f78159e971e0b9426687b6f5585af000381a9d01d6b49de1ee
+- symbol: mint_date
+  file: product-core/src/registry/params.rs
+  before: absent
+  after: sha256:aad55c91b8ae590a53f9f7136804e9efd337b28665c4b27e0a75ce356e260c98
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:b930a9e8aa4412fdaa9a2dcd00d17fd12875170207e39392e5c0bdfcd0884e00
+- symbol: owner
+  file: product-core/src/registry/params.rs
+  before: absent
+  after: sha256:aad55c91b8ae590a53f9f7136804e9efd337b28665c4b27e0a75ce356e260c98
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:edef3c0f965cb0e1b542a45a0bd06119b4bc5e1019f5186d033f664b7e77b27c
+- symbol: ratifier
+  file: product-core/src/registry/params.rs
+  before: absent
+  after: sha256:aad55c91b8ae590a53f9f7136804e9efd337b28665c4b27e0a75ce356e260c98
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:f068f90452343aedd5656ebf2587d32941286be719a1921144d53ee4f849040b
+- symbol: repo
+  file: product-core/src/registry/params.rs
+  before: absent
+  after: sha256:aad55c91b8ae590a53f9f7136804e9efd337b28665c4b27e0a75ce356e260c98
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:9fc65aeaf0d46a16ba3bb6c1397d9760618009b8df242bfcf45a48935e3a7047
+- symbol: validate
+  file: product-core/src/registry/params.rs
+  before: absent
+  after: sha256:aad55c91b8ae590a53f9f7136804e9efd337b28665c4b27e0a75ce356e260c98
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:91206f8a495653fd6378f36d647e7cad84cb0760c3d48ac9b3f434492bb760f5
