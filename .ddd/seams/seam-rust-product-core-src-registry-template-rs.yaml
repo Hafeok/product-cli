@@ -12,3 +12,9 @@ bindings:
   after: sha256:bba0ebcd30bfd943de3fd6ae02fca0942ec05704d5d00fdc16c4b50695576f3f
   base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
   hash: sha256:3c121abeb81dd76cd57e7688cdeb44be0c7364d04057b5d589ccda7ba7321d83
+- symbol: TEMPLATE_VERSION
+  file: product-core/src/registry/template.rs
+  before: absent
+  after: sha256:356ef4005495646a068ec99be7461518a50bbb8823dfb7b9c86fc58775e27a04
+  base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
+  hash: sha256:2350eb942dd708e8aafdf9fedc07447fe460de271bf65229e0e55517604f3aa5
