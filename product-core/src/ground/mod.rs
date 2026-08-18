@@ -16,21 +16,27 @@
 
 mod apply;
 mod declared;
-pub mod entail;
+mod entail;
 pub mod facts;
-pub(crate) mod mint;
-pub mod plan;
+mod mint;
+mod plan;
 mod propose;
 mod report;
-pub mod rows;
+mod rows;
 mod structural;
-pub mod triple;
+mod triple;
 mod vocab;
 mod write;
 
+// The slice's surface is its acts, with the types they carry. How a row is
+// spelled, how the fixpoint is driven, how a file is rendered: a caller
+// depends on none of it, so none of it is published.
 pub use apply::{apply_extraction, ExtractionReport};
+pub use entail::{FixpointReport, RuleReport};
 pub use plan::{plan_extraction, ExtractionParams, ExtractionPlan, PlannedFile, RowResult};
 pub use report::render as render_extraction;
+pub use rows::{Grade, Outcome, Provenance, Row};
+pub use triple::{ProposedAssertion, Term, Triple};
 
 /// The extractor's own version, recorded in every Reading's assurance
 /// through the instrument string the reader supplies.

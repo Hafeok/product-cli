@@ -47,11 +47,11 @@ pub struct PropertyDecl {
 impl PropertyDecl {
     /// The type with its nullability marker stripped — the name a range
     /// resolves against.
-    pub fn bare_type(&self) -> &str {
+    pub(crate) fn bare_type(&self) -> &str {
         self.type_name.trim_end_matches('?').trim()
     }
 
-    pub fn nullable(&self) -> bool {
+    pub(crate) fn nullable(&self) -> bool {
         self.type_name.trim_end().ends_with('?')
     }
 }
@@ -131,23 +131,14 @@ pub struct CorpusFacts {
 impl CorpusFacts {
     /// Did this operation answer? An operation the probe never reported is
     /// treated as not answering — an unmeasured operation is not evidence.
-    pub fn answered(&self, operation: &str) -> bool {
+    pub(crate) fn answered(&self, operation: &str) -> bool {
         self.operations.iter().any(|o| o.operation == operation && o.answered)
     }
 
     /// The declared type names, for resolving a property's range against
     /// the corpus rather than guessing.
-    pub fn declared_names(&self) -> std::collections::BTreeSet<&str> {
+    pub(crate) fn declared_names(&self) -> std::collections::BTreeSet<&str> {
         self.declarations.iter().map(|d| d.name.as_str()).collect()
-    }
-
-    /// The declaration whose line span contains a position in a file — the
-    /// containment lookup the usage row's first round needs.
-    pub fn enclosing(&self, file: &str, line: u64) -> Option<&Declaration> {
-        self.declarations
-            .iter()
-            .filter(|d| d.file == file && d.start_line <= line && line <= d.end_line)
-            .min_by_key(|d| d.end_line - d.start_line)
     }
 }
 
