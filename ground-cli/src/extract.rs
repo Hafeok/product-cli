@@ -77,6 +77,32 @@ pub fn extract(args: &ExtractArgs) -> Result<ExtractOutcome, String> {
     Ok(ExtractOutcome { plan, read: outcome, written, dry_run: args.dry_run })
 }
 
+/// The run, as text for a reader or JSON for a query.
+pub fn present(outcome: &ExtractOutcome, json: bool) -> String {
+    if !json {
+        return render(outcome);
+    }
+    let value = serde_json::json!({
+        "plan": outcome.plan,
+        "probe": outcome.read.probe,
+        "read": {
+            "declarations": outcome.read.facts.declarations.len(),
+            "hierarchy_edges": outcome.read.facts.hierarchy.len(),
+            "reference_sites": outcome.read.facts.references.len(),
+            "unread_files": outcome.read.facts.unread_files,
+            "generic_declarations": outcome.read.generic_declarations,
+            "nested_declarations": outcome.read.nested_declarations,
+            "field_members": outcome.read.field_members,
+            "partial_declarations": outcome.read.partial_declarations,
+            "name_collisions": outcome.read.name_collisions,
+            "unconsumed_operations": outcome.read.unconsumed,
+        },
+        "written": outcome.written,
+        "dry_run": outcome.dry_run,
+    });
+    format!("{}\n", serde_json::to_string_pretty(&value).unwrap_or_default())
+}
+
 /// The report a reviewer reads before the diff.
 pub fn render(outcome: &ExtractOutcome) -> String {
     let mut out = outcome.read.probe.report();

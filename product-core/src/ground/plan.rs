@@ -64,7 +64,8 @@ pub struct ExtractionPlan {
     /// Assertions the canonical graph already holds, so this run proposes
     /// nothing for them.
     pub already_ratified: usize,
-    #[serde(skip)]
+    /// What the rows noticed beside their assertions — the lists a reviewer
+    /// batches by, so a group is a query rather than a hand count.
     pub notes: DeclaredNotes,
 }
 

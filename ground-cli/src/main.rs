@@ -59,6 +59,9 @@ enum Command {
         /// Plan and report without writing anything
         #[arg(long)]
         dry_run: bool,
+        /// Emit the run as JSON instead of the text report
+        #[arg(long)]
+        json: bool,
     },
 }
 
@@ -77,6 +80,7 @@ fn main() -> ExitCode {
             as_of,
             instrument,
             dry_run,
+            json,
         } => {
             let sources = if sources.is_empty() { vec![repo.clone()] } else { sources };
             let args = extract::ExtractArgs {
@@ -94,7 +98,7 @@ fn main() -> ExitCode {
             };
             match extract::extract(&args) {
                 Ok(outcome) => {
-                    print!("{}", extract::render(&outcome));
+                    print!("{}", extract::present(&outcome, json));
                     if outcome.plan.conformant() {
                         ExitCode::SUCCESS
                     } else {

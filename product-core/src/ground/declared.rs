@@ -19,11 +19,12 @@ use super::vocab::{
 };
 
 /// What a declared row produced, beside its assertions.
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct DeclaredNotes {
     /// Supertypes named by an edge but not declared in the loaded subset —
     /// the restorable-subgraph limit, made countable.
     pub supertypes_outside_subset: BTreeSet<String>,
+
     /// Properties whose type resolved to neither a declared type nor a
     /// mapped primitive, so they carry no range.
     pub unranged_properties: Vec<String>,
