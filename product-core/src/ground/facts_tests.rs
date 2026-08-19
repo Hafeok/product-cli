@@ -4,10 +4,10 @@ use super::*;
 
 #[test]
 fn a_nullability_marker_is_read_off_the_type_not_a_separate_field() {
-    let nullable = PropertyDecl { name: "DisabledReason".into(), type_name: "int?".into() };
+    let nullable = PropertyDecl { name: "DisabledReason".into(), type_name: "int?".into(), kind: Default::default() };
     assert!(nullable.nullable());
     assert_eq!(nullable.bare_type(), "int");
-    let required = PropertyDecl { name: "Id".into(), type_name: "ChargingProfileId".into() };
+    let required = PropertyDecl { name: "Id".into(), type_name: "ChargingProfileId".into(), kind: Default::default() };
     assert!(!required.nullable());
     assert_eq!(required.bare_type(), "ChargingProfileId");
 }

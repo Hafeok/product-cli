@@ -38,6 +38,8 @@ pub struct ExtractOutcome {
     pub plan: ExtractionPlan,
     pub read: ReadOutcome,
     pub written: Vec<String>,
+    /// The run planned only, on request.
+    pub dry_run: bool,
 }
 
 /// Run one extraction.
@@ -72,7 +74,7 @@ pub fn extract(args: &ExtractArgs) -> Result<ExtractOutcome, String> {
     } else {
         apply_extraction(&plan, &args.instance).map_err(|e| e.to_string())?.written
     };
-    Ok(ExtractOutcome { plan, read: outcome, written })
+    Ok(ExtractOutcome { plan, read: outcome, written, dry_run: args.dry_run })
 }
 
 /// The report a reviewer reads before the diff.
@@ -81,12 +83,30 @@ pub fn render(outcome: &ExtractOutcome) -> String {
     out.push('\n');
     out.push_str(&render_extraction(&outcome.plan));
     out.push_str(&read_notes(outcome));
-    if outcome.written.is_empty() {
-        out.push_str("\nnothing written — planned only\n");
-    } else {
-        out.push_str(&format!("\n{} file(s) written\n", outcome.written.len()));
-    }
+    out.push_str(&outcome_line(outcome));
     out
+}
+
+/// Why nothing was written, when nothing was. Three different states, and
+/// collapsing them into one line is the mistake this whole shape avoids
+/// elsewhere: a dry run, a run with nothing new to propose, and a run that
+/// wrote files are not the same report.
+fn outcome_line(outcome: &ExtractOutcome) -> String {
+    if outcome.dry_run {
+        return "\nnothing written — planned only, on request\n".to_string();
+    }
+    if !outcome.written.is_empty() {
+        return format!("\n{} file(s) written\n", outcome.written.len());
+    }
+    if outcome.plan.files.is_empty() {
+        return format!(
+            "\nnothing written — every triple this run read is already ratified \
+             ({} assertion(s) in the graph); identity is content-derived, so a re-read \
+             at the same ref is the same assertion\n",
+            outcome.plan.already_ratified
+        );
+    }
+    "\nnothing written — every planned file was already on disk, byte-identical\n".to_string()
 }
 
 fn read_notes(outcome: &ExtractOutcome) -> String {

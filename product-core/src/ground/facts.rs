@@ -36,12 +36,40 @@ impl DeclKind {
     }
 }
 
+/// What kind of member the server reported.
+///
+/// The declaration surface carries no *visibility*, so this is as close as
+/// the extractor gets: a field is usually implementation and a property
+/// usually structure, but neither is certain and the mapping row treats them
+/// alike. Recorded so the ambiguity is reportable rather than absorbed.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum MemberKind {
+    #[default]
+    Property,
+    Field,
+    EnumMember,
+}
+
+impl MemberKind {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            MemberKind::Property => "property",
+            MemberKind::Field => "field",
+            MemberKind::EnumMember => "enum-member",
+        }
+    }
+}
+
 /// One declared member carrying a type.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PropertyDecl {
     pub name: String,
     /// The type as the server rendered it, nullability marker included.
     pub type_name: String,
+    /// Property, field, or enum member — as reported, not as judged.
+    #[serde(default)]
+    pub kind: MemberKind,
 }
 
 impl PropertyDecl {

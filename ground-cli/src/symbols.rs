@@ -6,7 +6,7 @@
 //! reader; nothing about a column belongs in a fact that will be ratified.
 
 use ddd_lsp::protocol::RawSymbol;
-use product_core::ground::facts::{DeclKind, Declaration, PropertyDecl};
+use product_core::ground::facts::{DeclKind, Declaration, MemberKind, PropertyDecl};
 
 /// LSP `SymbolKind`s that name a type declaration.
 const TYPE_KINDS: [u64; 5] = [5, 10, 11, 23, 26];
@@ -87,7 +87,7 @@ fn field_count(symbols: &[RawSymbol], owner: &str) -> usize {
         .iter()
         .filter(|s| s.kind == 8)
         .filter(|s| s.container.rsplit('/').next() == Some(owner))
-        .filter(|s| typed_member(&s.name).is_some())
+        .filter(|s| typed_member(&s.name, s.kind).is_some())
         .count()
 }
 
@@ -98,17 +98,29 @@ fn members_of(symbols: &[RawSymbol], owner: &str) -> Vec<PropertyDecl> {
         .iter()
         .filter(|s| MEMBER_KINDS.contains(&s.kind))
         .filter(|s| s.container.rsplit('/').next() == Some(owner))
-        .filter_map(|s| typed_member(&s.name))
+        .filter_map(|s| typed_member(&s.name, s.kind))
         .collect()
 }
 
 /// `Name : Type` as a typed member renders. A member the server rendered
 /// without a type is skipped rather than guessed at.
-pub fn typed_member(rendered: &str) -> Option<PropertyDecl> {
+pub fn typed_member(rendered: &str, lsp_kind: u64) -> Option<PropertyDecl> {
     let (name, type_name) = rendered.split_once(':')?;
     let (name, type_name) = (name.trim(), type_name.trim());
-    (!name.is_empty() && !type_name.is_empty())
-        .then(|| PropertyDecl { name: name.to_string(), type_name: type_name.to_string() })
+    (!name.is_empty() && !type_name.is_empty()).then(|| PropertyDecl {
+        name: name.to_string(),
+        type_name: type_name.to_string(),
+        kind: member_kind(lsp_kind),
+    })
+}
+
+/// The member kind behind an LSP `SymbolKind`.
+fn member_kind(lsp_kind: u64) -> MemberKind {
+    match lsp_kind {
+        8 => MemberKind::Field,
+        22 => MemberKind::EnumMember,
+        _ => MemberKind::Property,
+    }
 }
 
 /// The namespace a declaration sits in: the **outermost** segment of the

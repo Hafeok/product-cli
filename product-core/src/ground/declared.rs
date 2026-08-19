@@ -8,7 +8,7 @@
 
 use std::collections::BTreeSet;
 
-use super::facts::CorpusFacts;
+use super::facts::{CorpusFacts, MemberKind};
 use super::mint::{class_iri, property_iri};
 use super::propose::{cite, Proposer};
 use super::rows::{row, Outcome, Row};
@@ -31,6 +31,10 @@ pub struct DeclaredNotes {
     /// deliberately not mapped: expressing it needs OWL cardinality
     /// restrictions, which are outside this row's stated output.
     pub nullable_properties: usize,
+    /// Properties derived from a member the server reported as a *field*.
+    /// The row cannot tell implementation from structure, so it proposes
+    /// both; naming them lets a reviewer batch what the row could not split.
+    pub field_derived: Vec<String>,
 }
 
 /// Gate a row on the operations it needs, returning the missing ones.
@@ -112,6 +116,9 @@ pub fn properties(
             let evidence = vec![cite(&decl.file, decl.start_line), prop.type_name.clone()];
             if prop.nullable() {
                 notes.nullable_properties += 1;
+            }
+            if prop.kind == MemberKind::Field {
+                notes.field_derived.push(format!("{}.{}", decl.name, prop.name));
             }
             let (kind, range) = classify(base, prop.bare_type(), &declared);
             if range.is_none() {

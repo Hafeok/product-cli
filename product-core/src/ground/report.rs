@@ -95,6 +95,12 @@ fn notes(plan: &ExtractionPlan) -> String {
         "  {} propert(ies) declared a nullability marker, read and deliberately unmapped\n",
         n.nullable_properties
     ));
+    out.push_str(&format!(
+        "  {} propert(ies) derived from a member the server reported as a field — \
+         implementation the row cannot tell from domain structure{}\n",
+        n.field_derived.len(),
+        sample(&n.field_derived)
+    ));
     out
 }
 

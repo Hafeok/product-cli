@@ -45,8 +45,8 @@ fn corpus() -> CorpusFacts {
         end_line: 30,
         doc: Some("Local cache of a profile.".into()),
         properties: vec![
-            PropertyDecl { name: "Id".into(), type_name: "ProfileId".into() },
-            PropertyDecl { name: "DisabledReason".into(), type_name: "int?".into() },
+            PropertyDecl { name: "Id".into(), type_name: "ProfileId".into(), kind: Default::default() },
+            PropertyDecl { name: "DisabledReason".into(), type_name: "int?".into(), kind: Default::default() },
         ],
     };
     let profile_id = Declaration {

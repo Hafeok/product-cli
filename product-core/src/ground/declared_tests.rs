@@ -11,6 +11,14 @@ fn answered(ops: &[&str]) -> Vec<OperationStatus> {
         .collect()
 }
 
+fn field(name: &str, type_name: &str) -> PropertyDecl {
+    PropertyDecl {
+        name: name.into(),
+        type_name: type_name.into(),
+        kind: crate::ground::facts::MemberKind::Field,
+    }
+}
+
 fn decl(name: &str, kind: DeclKind, props: Vec<(&str, &str)>) -> Declaration {
     Declaration {
         name: name.into(),
@@ -22,7 +30,7 @@ fn decl(name: &str, kind: DeclKind, props: Vec<(&str, &str)>) -> Declaration {
         doc: None,
         properties: props
             .into_iter()
-            .map(|(n, t)| PropertyDecl { name: n.into(), type_name: t.into() })
+            .map(|(n, t)| PropertyDecl { name: n.into(), type_name: t.into(), kind: Default::default() })
             .collect(),
     }
 }
@@ -141,4 +149,22 @@ fn the_same_triple_read_twice_collapses_to_one_assertion() {
     let (out, outcome) = classes(BASE, &f, &p());
     assert_eq!(out.len(), 1);
     assert_eq!(outcome, Outcome::Fired { triples: 1 });
+}
+
+/// The row cannot tell implementation from domain structure, so it proposes
+/// the field's property triples *and* names the field, letting a reviewer
+/// batch what the row could not split.
+#[test]
+fn a_field_derived_property_is_proposed_and_named() {
+    let mut owner = decl("Converter", DeclKind::Class, vec![("Value", "int")]);
+    owner.properties.push(field("cache", "Dictionary"));
+    let f = facts(&["documentSymbol"], vec![owner], Vec::new());
+    let mut notes = DeclaredNotes::default();
+    let (out, outcome) = properties(BASE, &f, &p(), &mut notes);
+    assert!(matches!(outcome, Outcome::Fired { .. }));
+    assert!(
+        out.iter().any(|a| a.triple.subject.ends_with("prop-Converter-cache")),
+        "the field still reaches the row"
+    );
+    assert_eq!(notes.field_derived, ["Converter.cache"]);
 }

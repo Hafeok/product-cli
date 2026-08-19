@@ -18,19 +18,30 @@ fn sym(name: &str, kind: u64, container: &str, line: u64, ch: u64, end: u64) -> 
 
 #[test]
 fn a_typed_member_is_read_off_the_rendered_symbol_name() {
-    let m = typed_member("Id : ProfileId").expect("member");
+    let m = typed_member("Id : ProfileId", 7).expect("member");
     assert_eq!((m.name.as_str(), m.type_name.as_str()), ("Id", "ProfileId"));
-    let nullable = typed_member("DisabledReason : int?").expect("member");
+    let nullable = typed_member("DisabledReason : int?", 7).expect("member");
     assert_eq!(nullable.type_name, "int?");
+}
+
+/// The kind is recorded as the server reported it, never as judged: a field
+/// is usually implementation, a property usually structure, and the mapping
+/// row treats them alike because the surface cannot settle it.
+#[test]
+fn member_kinds_are_recorded_as_reported() {
+    use product_core::ground::facts::MemberKind;
+    assert_eq!(typed_member("Value : int", 7).expect("m").kind, MemberKind::Property);
+    assert_eq!(typed_member("cache : Dictionary", 8).expect("m").kind, MemberKind::Field);
+    assert_eq!(typed_member("Red : Colour", 22).expect("m").kind, MemberKind::EnumMember);
 }
 
 /// A member the server rendered without a type is skipped: a property with a
 /// guessed type is a claim nobody made.
 #[test]
 fn an_untyped_member_is_skipped_rather_than_guessed_at() {
-    assert!(typed_member("Ping()").is_none());
-    assert!(typed_member("Id :").is_none());
-    assert!(typed_member(": ProfileId").is_none());
+    assert!(typed_member("Ping()", 6).is_none());
+    assert!(typed_member("Id :", 7).is_none());
+    assert!(typed_member(": ProfileId", 7).is_none());
 }
 
 #[test]
