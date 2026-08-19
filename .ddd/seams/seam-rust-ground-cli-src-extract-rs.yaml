@@ -1,7 +1,7 @@
 format: 2
 id: seam/rust/ground-cli-src-extract-rs
 boundary: contract surface of ground-cli/src/extract.rs
-verdict_knowledge: 'Callers learn one act: read a codebase, plan a proposal, gate it, write it. The order is the promise — nothing reaches the instance''s working tree until the plan has passed the instance''s own shapes, so a reviewer never reads per-triple diffs of content the registry''s CI would reject. The boundary cannot ratify: it writes files on a branch and nothing else, never merges, never pushes, never touches a path outside the instance directory. It also cannot decide what an instance is: the base IRI is read from the instance''s own birth provenance and a missing or silent one is an error, never a default.'
+verdict_knowledge: 'Callers learn one act: read a codebase, plan a proposal, gate it, write it. The order is the promise — nothing reaches the instance''s working tree until the plan has passed the instance''s own shapes, so a reviewer never reads per-triple diffs of content the registry''s CI would reject. Why nothing was written is always said: a dry run, a run whose every triple is already ratified, and a run that wrote files are three different reports. The boundary cannot ratify: it writes files on a branch, never merges, never pushes, never touches a path outside the instance directory. It also cannot decide what an instance is — the base IRI is read from the instance''s own birth provenance and a missing one is an error, never a default.'
 contract_location: ground-cli/src/extract.rs
 obligations: []
 metadata: {}
@@ -126,3 +126,123 @@ bindings:
   after: sha256:8ffdabcb934fce75df74375312f2a6941ef940ab67de8bd35dedab5622bb7cd5
   base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
   hash: sha256:0fb792953cc16be94fe615ad04beae0dd3627773be2055348d9b9321ce52d24c
+- symbol: extract
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:e96016a364f6a143a10a4868b807b16057d66f88ca656a98066fa856fae9b8c4
+- symbol: ratified_ids
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:3319f8b063666b466b6d8012e6e78550cc4178d653d5067feebef48340887254
+- symbol: render
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:fd7699089066878e59f5eb79052cd1a8ed63eaad8cb4500e1eeb2fadd488e188
+- symbol: source_files
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:d39d4c9e03306b95eb639820006b1465b018a3147481e1c28410f9884533eb55
+- symbol: ExtractArgs
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:371ab2c5a83f8c3061354a4608dfba88886247f72a2f79be6de0645ee98bf062
+- symbol: ExtractOutcome
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:7184a09b4c8660ee323c66fafc73479a5e82338dfb9564825ab008fb1b77b662
+- symbol: as_of
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:f80463480065ade3b0480c4db0dedf00d642bdb60ae2a528b5a6c98ec8c2d6ca
+- symbol: corpus
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:ec488609bd882c22bed02549651b685f5741fb8c54abb765f2da7f2a4c793851
+- symbol: dry_run
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:039029da8a9bd9a714d5a5d6e2690c15088858ad148e3c14a1d9a7b089beb175
+- symbol: git_ref
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:2ba1e2663486b66ba6964e083bae05b360f8f1801d124330ff5788bd6d395b36
+- symbol: graph_dir
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:6ca504f18763deb5a9c6e1e6d4302771560ddda5d35bbc6f63f5fe9ade8ad356
+- symbol: host_command
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:4129cecb828eaad9b1c48eeb8fe93cb3025f06dd38b23d01e5ac21f19618ac49
+- symbol: instance
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:87d20ae7d789d47af615a257013b42e89a14a9bddf15a70711ce2664d77a3420
+- symbol: instrument
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:570fa428149355d11deb2eaef20366bdc7b7381a6c29170ad0968104f2b4b809
+- symbol: repo_root
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:156066dec8b4147c3f3ece3b32abb461442ae936cbd1a7a29483efc413cd845e
+- symbol: sources
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:342e280c21cb30576b451c076a320adfc35f52ae84f5a496bed2e991f6125d5b
+- symbol: workspace
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:06aa6ec0389fa980b768fbdc04c2eff092d94d058b53c06df36189e9eff25ea4
+- symbol: plan
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:054dd6efc4357faded167ceb663f17c4b2233113d718d6a03b63b775c9f306ba
+- symbol: read
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:29a4f7c419e93ea077b67b0e0ee6fed4d002b59ea5d50cb6b19ef323811b6a9e
+- symbol: written
+  file: ground-cli/src/extract.rs
+  before: absent
+  after: sha256:5ae82046373945be61f3c0881d61571860251f1ef59edff88c9f0d89748b7df6
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:d39e2506e56610465070b5d0995c22f1ffabde32e3c662dabca6c0f329fdc4a9

@@ -1,7 +1,7 @@
 format: 2
 id: seam/rust/product-core-src-ground-declared-rs
 boundary: contract surface of product-core/src/ground/declared.rs
-verdict_knowledge: 'Callers learn the three declared rows and the gate they share. A row whose operation did not answer yields nothing and says which operation by name; a row past the gate with nothing to read says it found nothing. Those are different findings and the boundary never collapses them. A property''s range resolves to a declared type or a mapped primitive, and to nothing at all otherwise — an unranged property is a legible gap where a guessed range would be a claim about the domain nobody made. The boundary judges nothing about relevance: it maps what the language declares.'
+verdict_knowledge: 'Callers learn the three declared rows and the gate they share. A row whose operation did not answer yields nothing and says which operation by name; a row past the gate with nothing to read says it found nothing. Those are different findings and the boundary never collapses them. A property''s range resolves to a declared type or a mapped primitive, and to nothing at all otherwise — an unranged property is a legible gap where a guessed range would be a claim about the domain nobody made. A property derived from a field is proposed *and* named, because the row cannot split implementation from structure and a reviewer batching them needs the list. The boundary judges nothing about relevance: it maps what the language declares.'
 contract_location: product-core/src/ground/declared.rs
 obligations: []
 metadata: {}
@@ -66,3 +66,69 @@ bindings:
   after: sha256:ff706b1cc7afd2a2d1c4d1863c5d521f2cf23951c2d4f1486b1f99c6123e0fb7
   base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
   hash: sha256:70bd49d800c6df18d53e86b096cb13dc9e75d19fec5ff333a5f1eae47f996e6c
+- symbol: classes
+  file: product-core/src/ground/declared.rs
+  before: absent
+  after: sha256:6c2a6de758fc6061be4dc40440528e30250f0a14b82df5859cb52b9430cfce12
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:e2fa92e9d9ffe3d2c75a3c351723eb71c533752fb093b3a02ffd120d095338fd
+- symbol: dedup
+  file: product-core/src/ground/declared.rs
+  before: absent
+  after: sha256:6c2a6de758fc6061be4dc40440528e30250f0a14b82df5859cb52b9430cfce12
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:5ff67ce3e2cc96a80cd1b0bc2ccc4544f42d637444f837fb6eb7341664271950
+- symbol: gate
+  file: product-core/src/ground/declared.rs
+  before: absent
+  after: sha256:6c2a6de758fc6061be4dc40440528e30250f0a14b82df5859cb52b9430cfce12
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:1478d40ffb01942096b2fd9bb0f8a4967d5a7fa1d6929ef00e42c4c0af97f26d
+- symbol: properties
+  file: product-core/src/ground/declared.rs
+  before: absent
+  after: sha256:6c2a6de758fc6061be4dc40440528e30250f0a14b82df5859cb52b9430cfce12
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:1915b52fec4a971c2a52e6d0706d97acced1e85e2ac174dbe650dc75047362a4
+- symbol: settle
+  file: product-core/src/ground/declared.rs
+  before: absent
+  after: sha256:6c2a6de758fc6061be4dc40440528e30250f0a14b82df5859cb52b9430cfce12
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:8ce18bbe771f476ee9c32a83ae559250874274a08cbe575cb57e72c330ddd7a2
+- symbol: subclass
+  file: product-core/src/ground/declared.rs
+  before: absent
+  after: sha256:6c2a6de758fc6061be4dc40440528e30250f0a14b82df5859cb52b9430cfce12
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:c9de0181292f44361f160c1bc8b0906f26e893f8037c3668aa239ac2057e9992
+- symbol: DeclaredNotes
+  file: product-core/src/ground/declared.rs
+  before: absent
+  after: sha256:6c2a6de758fc6061be4dc40440528e30250f0a14b82df5859cb52b9430cfce12
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:5e4ea6648777913ce66ee8a6ef6a810e3f65f6daa6234c1f521b902bd6cf3970
+- symbol: field_derived
+  file: product-core/src/ground/declared.rs
+  before: absent
+  after: sha256:6c2a6de758fc6061be4dc40440528e30250f0a14b82df5859cb52b9430cfce12
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:89e9dd947f40c535ea51af76310145886cb29a8f7bb1babd762d725139c7ae01
+- symbol: nullable_properties
+  file: product-core/src/ground/declared.rs
+  before: absent
+  after: sha256:6c2a6de758fc6061be4dc40440528e30250f0a14b82df5859cb52b9430cfce12
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:47c9c80b9e8a2ccec970d3fbce6a6b1b9b7bcd6b0d10157970300fb6ded9aca4
+- symbol: supertypes_outside_subset
+  file: product-core/src/ground/declared.rs
+  before: absent
+  after: sha256:6c2a6de758fc6061be4dc40440528e30250f0a14b82df5859cb52b9430cfce12
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:c051880e52ed52e3d944c2610f30270cf4b244c2ea64a7360c26e069d536103d
+- symbol: unranged_properties
+  file: product-core/src/ground/declared.rs
+  before: absent
+  after: sha256:6c2a6de758fc6061be4dc40440528e30250f0a14b82df5859cb52b9430cfce12
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:d5ec133d4fc9fadfd40df21a6a4acab6fa4a21fea725933d518c68c4cbf422d7
