@@ -322,3 +322,198 @@ run evidence is absent fails loudly on the derivation half rather than passing q
 relevance, basis, rule, operations, member kind, container kind and source path — differing in
 *everything the split added* — mint one id, because `g-dec-04` hashes the triple and nothing else.
 The instance's history is unaffected, and no ratified assertion becomes a fresh proposal.
+
+### 2.4 The full-solution re-run
+
+`corpus-backend` at `3b0a56b3`, **all 16 projects restored**, 951 source files read through
+`roslyn-language-server 5.11.0-1.26380.4` — the same server build G0 used. Written into a working
+copy of the G0 instance, so the 561 ratified assertions are present and the run had to behave as a
+re-run rather than a first run.
+
+```
+967 declarations · 174 hierarchy edges · 6 305 reference sites
+9 662 assertions read · 561 already ratified · 9 101 proposed
+18 review batches · 0 orphaned evidence entries
+shapes: conformant — 42 constraints over the join (graphs ∪ runs ∪ vocabulary)
+```
+
+#### Per-row: does the full solution confirm what the subset showed?
+
+Counts differ because the corpus is ≈16.7× larger; that is expected and is not the question. The
+question is **behaviour**.
+
+| Row | G0 (subset) | Full solution | Behaviour |
+|---|---|---|---|
+| `classes` | fired — 58 | fired — 942 | **confirmed** |
+| `subclass` | fired — 17 | fired — 172 | **confirmed** |
+| `properties` | fired — 215 | fired — 4 007 | **confirmed** |
+| `foreign-keys` | not-derivable, absence reported | not-derivable, absence reported | **confirmed** — still no navigation property, still no FK attribute, at seven times the projects |
+| `modules` | fired — 86 | fired — 1 514 | **confirmed**, with a table correction — see finding 2 |
+| `usage-relations` | fired — 130 | fired — 2 103 | **confirmed** |
+| `synonyms` | fired — 55 | fired — 924 | **confirmed** |
+
+Six of seven rows fired; no row found nothing; **no row was gated off**. The §5.2 mapping verdicts
+stand as written, and their *provisional pending a full-solution run* qualifier is discharged.
+
+Two structural readings also confirmed at scale:
+
+- **`subclass-transitive` still fires zero**, over 172 hierarchy edges rather than 17. Every declared
+  derivation in this corpus is one level, type → marker interface. §7.3's "correct and idle" is not
+  a small-sample artefact.
+- **The restorable-subgraph limit disappears.** G0 counted supertypes named by an edge but declared
+  outside the loaded subset; at full solution that count is **0**. Nothing is named that is not
+  declared — which is what loading the whole solution was supposed to buy.
+
+#### Three findings the subset could not have produced
+
+**1. `workspaceSymbol` over-advertises at full-solution scale.** The probe reports **five of six**
+operations available, not six: `workspace/symbol` is advertised `true` and then does not answer
+within the probe's window, recorded as unavailable with `divergence: over-advertised`. The same
+server answered it on the three-project subset.
+
+This is the *dangerous* direction — the presumed-discharge shape — and it is now demonstrated by a
+server we depend on, at scale, on a live run rather than in a fixture. The nuance is new and worth
+stating plainly: **capability is not a property of the server alone but of server × workspace size.**
+A probe that runs once at start-up against the workspace actually being read is what catches it; an
+advertisement, or a probe against a toy workspace, is not.
+
+**2. §5.2's `modules` row does not stand on `workspaceSymbol`, whatever the table says.** The row
+fired 1 514 assertions in the run where `workspaceSymbol` was unavailable, because the implementation
+reads module containment from `documentSymbol`. On the subset both operations answered, so the
+divergence between table and implementation was invisible. **The table's LSP-operations cell for this
+row is wrong and should read `documentSymbol`.** Corrected in this session's PRD edit.
+
+**3. §7.5's collision prediction came true.** G0 measured **0** cross-module simple-name collisions
+and noted that name-based range resolution was safe *on that corpus*, with `definition` held as the
+exact-resolution route "if collisions appear at full-solution scale". At full solution there are
+**21** — a mix of same-named DTO types across projects, per-project `Program` and `Version` types,
+same-named extension-method holders, and paired handler/interface names.
+
+So the `properties` row's range resolution **is now unsafe on this corpus**: a member typed with a
+colliding simple name resolves against whichever declaration the name matches, and there are 21
+names where that is a coin toss. `definition` remains wired and **unspent** — it is the only
+operation no row consumes. This is a real defect, it is out of this session's scope, and it should
+be filed: *range resolution matches on simple name; at full-solution scale the corpus contains 21
+names where that conflates two types; the fix is the already-wired `definition` route.*
+
+#### The fixpoint, against `g-dec-02`'s revisit condition
+
+```
+4 rounds · 3 rule parses · 12 executions · 509 ms
+seed 35 032 triples · 2 103 proposed · 3 561 entailed
+  usage-direct          2 103  over 1 productive round
+  usage-transitive      3 561  over 3 productive rounds  [entailed, not proposed]
+  subclass-transitive       0  over 0 productive rounds  [entailed, not proposed]
+```
+
+Parse-once holds (3 parses, 12 executions). **The ratio G0 said to watch has inverted**: 130 → 109
+on the subset (0.84), 2 103 → 3 561 at full solution (1.69). The transitive closure now exceeds the
+direct set, which is the quadratic behaviour `g-dec-02`'s `revisit_if` names. Wall-time is 509 ms and
+nowhere near a projection-build budget, so **the condition is not met and the decision does not
+flip** — but the direction is now measured rather than assumed, and the next scale step is where it
+would be tested.
+
+### 2.5 The two groups, recovered from the graph
+
+The forcing argument, discharged against the real ratified cohort rather than a fixture. Both
+queries run over recorded facts; neither asks the extractor to judge anything.
+
+| | Query | Full solution | **Inside the 561 ratified** | G0 reported |
+|---|---|---|---|---|
+| **Group B** | `reg:memberKind = reg:field` | 195 | **31** | 31 |
+| **Group A** | any `reg:sourcePath` under a generated-migration folder | 18 | **18** | 18 |
+
+**Both counts reproduce G0's exactly**, and both were reached by query where G0 had to take them
+from the extractor's own JSON — Group B by a hand count that was wrong twice before the notes were
+made queryable. Group A's 18 fall across four rules (`declared-type` 4, `module-containment` 6,
+`identifier-word-split` 4, `usage-construct` 4), which is the "spread across four rows" G0 described,
+now enumerable.
+
+**Every one of the 561 ratified assertions has derivation: 0 without.** Emil's ruling that the facts
+are recomputable is confirmed on the real cohort — one deterministic re-run at the pinned ref, and
+the pre-0.3.0 generation became auditable without a byte of ratified content changing.
+
+One honest note on Group A's predicate. A first pass required *every* source path to sit under a
+migrations folder and recovered 14 of the 18; the four it missed are `usage-construct` edges whose
+second endpoint is a non-migration type. Relaxing the predicate to *any* path recovers all 18. That
+is the design working as intended rather than a bug — **the extractor records the paths and the
+reviewer writes the predicate** — but it is worth recording that the predicate is a real choice with
+a real effect on what a batch contains.
+
+### 2.6 A finding about the instance, not about the extractor
+
+G0 ruled 512 accepted and 49 rejected, and recorded that the merge acts were the ratifier's and
+pending. **The instance holds all 561.** PR #2 (`Proposal: 561 assertions…`) merged 561 assertion
+files and no later commit removes any, so the ruled rejection of Group A and Group B is not
+reflected in the ratified graph.
+
+Reported as an observation, not a conclusion about intent. It does make the recoverability argument
+concrete rather than hypothetical: the 49 are ratified ground today, they were unfindable until this
+change, and after it they are two queries.
+
+### 2.7 Gates at this hold
+
+| Gate | Result |
+|---|---|
+| `cargo t` | **1 491 passed, 0 failed** (baseline 1 454 — 37 new) |
+| `cargo clippy --workspace -- -D warnings -D clippy::unwrap_used` | exit 0 |
+| `cargo xtask check` | 0 errors |
+| `ddd validate` | conformant — 277 entries, 0 warnings |
+| Contract surface (`ddd diff-contracts main`) | **85 events, 0 undischarged** — 81 bindings filed, five new seams given their own `verdict_knowledge` |
+| `product registry check` on the produced instance | conformant — 9 667 data files, 42 constraints over the join |
+| File length ≤ 400 · function length · single-responsibility | no hard-limit violation |
+
+---
+
+## 3. Gate 3 — the template, the PRD
+
+### 3.1 Template 0.3.0
+
+| Change | File |
+|---|---|
+| The registry's own vocabulary — axis individuals, source-kind individuals, the six declaration-level operations, and the equivalence axiom | **new** `vocabulary/reg.ttl` |
+| The two axes with the derivation record, constrained | **new** `shapes/derivation.ttl` |
+| SHACL runs over `graphs/` ∪ `runs/` ∪ `vocabulary/`; the file rule stays scoped to `graphs/`; a new **sidecar-entries-resolve** step reports orphans per run | `.github/workflows/validate.yml` |
+| The two axes, where derivation lives, why the split is compatible | `TEMPLATE.md` |
+| The join named as a projection-build step, with its Rust form | `scripts/build-projection.sh` |
+
+**Backward compatible with the ratified instance — no ruling needed, and none taken.** Verified, not
+argued: `product registry check` over the working copy holding all 561 pre-0.3.0 assertions plus the
+new run evidence reports conformant, 42 constraints, file rule clean. No file in the instance
+changed.
+
+The compatibility rests on one decision, and it is the one Emil caught at Gate 1. The shapes target
+the **class** `reg:GradedAssertion`, stamped by the writer and entailed by nothing — not the presence
+of `reg:derivationConfidence`, which the projection's equivalence entailment puts on every pre-0.3.0
+assertion. A predicate-keyed shape would have been conformant in the authority repo and
+non-conformant at the projection, and would have held only by accident of when validation runs.
+
+### 3.2 PRD edits
+
+- **§4.1** — the Reading tuple gains `derivation_confidence`, `domain_relevance`, `relevance_basis`.
+- **§5.2** — the two-axis table replaces the single assurance column, with G0's evidence cited and
+  the relevance column stated as **declared-empty** rather than undeclared, in those words.
+- **§5.2** — the derivation record, the evidence layer, and the three consequences (identity
+  untouched, the older cohort auditable, the join checked where it is read).
+- **§5.2** — the provisional qualifier on the mapping verdicts **discharged**, with the full-solution
+  confirmation stated.
+- **§5.2** — the `modules` row's LSP cell corrected from `workspaceSymbol` to `documentSymbol`,
+  measured.
+- **§5.2** — the `properties` row records the open **simple-name collision** defect and names
+  `definition` as the fix.
+- **§5.2** — *Capability flags are claims* gains the second over-advertising case, with the
+  server × workspace-size nuance.
+- **§5.2** — the under-advertising bullet **corrected**: it cited Roslyn, which advertises
+  `typeHierarchyProvider: true` under both handshakes and never under-advertised as a server. The
+  case is `csharp-ls`, which does not advertise the provider at all. *(The correction owed from G0
+  Gate 2.)*
+- **§5.5.1** — review batched by the pair with the derivation as sub-key; the batching belongs in the
+  output contract, not the logs.
+- **§12** — new open item 15: **widening the declaration-level subset**, with the closure trade
+  stated and the path-convention rule named as a candidate deliberately not taken here.
+
+### 3.3 What this change does not do
+
+It does not filter Group A. It does not filter Group B. It does not widen the declaration subset.
+It makes both groups visible and batchable, and it stops the table claiming a property nobody
+computed. Filing the widening is PRD §12 item 15.
