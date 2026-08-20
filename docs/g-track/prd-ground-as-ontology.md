@@ -113,7 +113,7 @@ behaviour.**
 
 | Component | Source | Note |
 |---|---|---|
-| Ontology vocabulary | product-cli's existing RDF vocabulary | **Assumption A1:** the axis registry uses this vocabulary, extended with act-relevant properties, not a separate one. Open ruling 25; the PRD takes the extend position. If ruled otherwise, §7.2 changes and nothing else does. |
+| Ontology vocabulary | product-cli's existing RDF vocabulary | **Assumption A1:** the axis registry uses this vocabulary, extended with act-relevant properties, not a separate one. Open ruling 25; the PRD takes the extend position. If ruled otherwise, §7.2 changes and nothing else does. The registry vocabulary gains tick rate as a property of entities and axes (§5.6), carried as a Reading like any other ground. It is not a caching parameter and is not editable outside the proposal path. |
 | **Registry authority** | a dedicated **registry repository** per instance, generated from the versioned **registry template** *(re-typed at G-1 Gate 3: `docs/g-track/registry-template/`; the first instance generates at G0 entry with its parameters — owner, name, base IRI, ratifier — supplied then)* | canonical store of ratified triples; per-triple files in Turtle (the per-claim file pattern — the pattern transfers, the format was never the load-bearing part; Gate 3 ruling); ratification by PR merge; supersession, never rewriting; CI runs SHACL on every change; the founding-decision slot is the instance's first ratified content. **Not** inside any codebase and **not** inside the framework canon repos — it is the owning organisation's ground, not the framework's. |
 | **Registry serving** | SPARQL endpoint rebuilt from the registry repo at each merge | read-only; **pinned to a ref** — every Reading served carries the ref, giving Q11 as-of semantics with no extra machinery. Local mode: product-cli embeds a triple store (Oxigraph — Rust, SPARQL 1.1, fits the workspace natively) over a pinned clone; works offline. Central mode: the same store or Fuseki/GraphDB in Azure Container Apps behind Entra ID — the O-track stack arriving early. Store choice is swappable because **the endpoint is a projection of the repo, not the source** (Q30's diagnostic, applied to our own database). **Inference runs at projection build**: entailments are recomputable, so they never enter the authority repo — each endpoint rebuild derives the inferred graph for that ref, every entailed triple `prov:wasDerivedFrom` the asserted triples plus the rule id, assurance = the rule. The repo stays pure assertion; inference inherits as-of discipline for free. *(Verified at G-1, 2026-08-17:)* Oxigraph holds — 0.5.9 (2026-06-18), active ~monthly cadence, SPARQL 1.1 Query/Update/Federated, full named-graph support; honest risk signal is a bus-factor of ~1. ~~**The workspace's `oxigraph = "0.4"` pin is a dead line**~~ (last 0.4.11, 2025-05-21; 0.5.0 shipped 2025-09-13 as a breaking line) — **discharged 2026-08-17, before G0 entry**: the upgrade landed as PR #46 (`product-core` now pins `oxigraph = "0.5"`, with `pf::query`, `pf::seed` and `pf::sparql_rules` migrated to the 0.5 API). The stale-ground finding in our own ground is closed; what remains is the standing obligation not to let the pin drift again. *(Ruled at G-1 Gate 2:)* inference mechanism is **CONSTRUCT-to-fixpoint on Oxigraph as primary** — it reuses the `pf::sparql_rules` shape already in the codebase and adds no dependency — with the Rust `reasonable` crate (0.4.4, BSD-3) as the named fallback; recorded as track decision `g-dec-02` with a `revisit_if`: fixpoint wall-time exceeding an acceptable projection-build budget at G0 scale flips to the fallback. The no-benchmark hedge is discharged by measuring at G0, not by choosing conservatively now. |
 | Validation | SHACL shapes, SPARQL | as-is; shapes gain the act properties in §4.2 |
@@ -544,7 +544,7 @@ extractor is built re-runnable from day one because it costs nothing then and ev
 ### 5.5.1 Review is batched by the pair, with the derivation as the sub-key
 
 *(Added 2026-08-20.)* Per-triple review does not scale: 561 files was already at the edge of it and
-the full solution is ≈16.7× that corpus. Wholesale merge is manufactured ground by §5.6, so the
+the full solution is ≈16.7× that corpus. Wholesale merge is manufactured ground by §5.7, so the
 answer is neither of those — it is **review by kind**.
 
 A **batch** is the set of assertions sharing a derivation signature:
@@ -577,8 +577,8 @@ merged reads as acceptance of a reviewed set, and what was actually ratified was
 superset.
 
 This is `term:presumed-discharge` at the ratifier's seat rather than in an instrument: a record
-state where a pass is indistinguishable from a skip. It is also the rubber-stamp failure §5.6 exists
-to forbid, arriving through the one path §5.6 did not describe — not wholesale merge *instead of*
+state where a pass is indistinguishable from a skip. It is also the rubber-stamp failure §5.7 exists
+to forbid, arriving through the one path §5.7 did not describe — not wholesale merge *instead of*
 review, but wholesale merge *after* review, which looks like the discharged form and is not.
 
 Binding from here:
@@ -598,7 +598,72 @@ rewrite, and it is a ratifier's act with a ruling behind it, never an instrument
 record landed; they are now two queries (§5.2). The argument for recording derivation was made in
 the abstract; this is the first real defect in the ratified set it has repaid.
 
-### 5.6 Guard
+### 5.6 Tick rate and the validity horizon
+
+**The claim.** An entity's expected rate of change is ground about that entity. Held in the registry
+rather than in a caching layer, it makes read-versus-cache a computed decision rather than a
+judgement — and it makes the same question answerable at design time, before any system runs.
+
+**The computation, and where each input lives.**
+
+| Input | Held by | Note |
+|---|---|---|
+| `as_of` | the Reading (§4.1) | already carried |
+| tick rate | the **entity or axis** in the registry | this addendum's addition |
+| tolerance τ | the **act** | not the entity — see below |
+| **validity horizon** | computed, per act | the age at which expected drift exceeds what this act tolerates |
+
+**Tolerance sits on the act, and that is the load-bearing part.** The same entity read for two
+different acts may have two different acceptable stalenesses: a display may tolerate an hour where a
+settlement tolerates none. So the horizon is a function of the *pair*, never of the entity alone.
+This is v5.7.0's act-indexed discharge (`DDD-frame-16`) applied to freshness — a reading is fresh
+*for an act*, not fresh in general.
+
+**The tick rate is itself a Reading, and this is what lets the system be designed before it runs.**
+The same four-tuple as any other ground:
+
+| Stage | value | provenance | assurance |
+|---|---|---|---|
+| Design time | the expected rate | `declared` | low — an assumption by whoever declared it |
+| Running system | the observed rate | `observed` | higher — measured over retained acts |
+
+So design-time assumptions are not a separate mode of the system. They are the same field at lower
+assurance, superseded when observation arrives. **The gap between declared and observed is
+measurable** — the proxy-fidelity check applied to the drift model itself: a rate was declared, a
+rate was observed, and the divergence is a finding rather than an embarrassment.
+
+**Observation is nearly free where the arrangement is event-sourced.** The event stream is the tick
+record; rate per entity is a query over retained acts. This is the same argument retention always
+makes — retained events answer questions nobody planned for, and this is one of them.
+
+**It makes co-drift computable.** Clustering by co-drift and ordering by rate has been a heuristic
+for domain modelling. With rates on entities it is a measurement, and cache boundaries — what
+invalidates together — fall out of the registry rather than out of intuition.
+
+### 5.6.1 Three constraints on the model
+
+**Rate is a distribution, not a scalar.** Many entities change in bursts, and a mean rate silently
+under-serves exactly the moments that matter. The cheap form is a scalar; the honest form carries
+burstiness. Whichever is taken, the vocabulary must record **which form a given rate is**, so a
+consumer never reads a mean as though it were a bound.
+
+**It is ground, not a tuning knob.** The value of a tick rate is that it carries provenance and
+assurance and is consumed by caching decisions. The moment it becomes a parameter someone edits for
+performance, it stops being ground and every horizon computed from it stands on a number nobody
+filed. Rate changes are proposals, reviewed like any other assertion.
+
+**Bootstrap honestly.** Declared rates are proxies over open predicates — the same structure as the
+proxy-predicate gap. That is legitimate and better than nothing, on two conditions: they are marked
+`declared`, and they are **superseded** rather than left in place once observation is available. A
+declared rate still governing after a year of observation is the proxy-predicate gap in miniature.
+
+### 5.6.2 What this replaces
+
+Data as a separate specification domain. There is no data layer holding freshness policy: there are
+entities carrying rates, acts carrying tolerances, and horizons computed from the pair. Caching
+configuration becomes a *projection* of that, regenerated when either side moves — not a source.
+
+### 5.7 Guard
 
 The reviewer's acceptance path is **per triple, never per run**. A single review of a large codebase
 that accepts wholesale is a rubber stamp, and rubber-stamped ground is manufactured ground.
@@ -998,6 +1063,15 @@ Emil's rulings needed, in order of how much they change the design:
     Propose the retry shape — how many attempts, how spaced, how the attempts are written into the
     run evidence so the verdict's assurance is visible — and rule on it before any row's gating
     depends on an operation that has ever timed out.
+18. **Tick-rate vocabulary shape** — scalar versus distribution, the unit, and how burstiness is
+    expressed where it is carried. Emil rules before implementation; the model's honesty depends on
+    a consumer never mistaking a mean for a bound.
+19. **Where tolerance is declared.** The horizon needs τ per act, and the act-site extractors do not
+    currently carry one. Whether tolerance is declared per act kind, per decision, or per act at
+    declaration time is a design ruling, and it gates any implementation of §5.6.
+20. **Observation source.** Rate observation assumes retained acts to count. For arrangements that
+    are event-sourced this is a query; for those that are not, it is unavailable and rates stay
+    `declared` indefinitely. State that limit rather than implying observation is always reachable.
 
 ---
 
