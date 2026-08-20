@@ -1,0 +1,112 @@
+# The two grading axes, and the derivation record that makes a class of
+# rejection findable. Template 0.3.0.
+#
+# Why this shape targets reg:GradedAssertion and not "carries a confidence":
+#
+#   The vocabulary declares reg:assuranceGrade owl:equivalentProperty
+#   reg:derivationConfidence, so every assertion ratified before 0.3.0 gains a
+#   reg:derivationConfidence *at the projection*. A shape keyed on that
+#   predicate's presence would therefore pass in the authority repo — where
+#   validation runs before entailment — and fail the moment anyone validated
+#   the projection. Backward compatibility would hold only by accident of when
+#   validation happens to run.
+#
+#   reg:GradedAssertion is stamped by the writer and entailed by nothing. The
+#   shape then says what it means: *assertions written at 0.3.0 or later*.
+#   Pre-0.3.0 assertions are untargeted, stay conformant, and keep their bytes.
+#
+# The derivation predicates live in runs/, so the SHACL step loads graphs/,
+# runs/ and vocabulary/ together — the join is what is validated, which is also
+# what a consumer reads.
+
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix reg: <https://REGISTRY-HOST.example/ns#> .
+
+reg:GradedAssertionShape
+    a sh:NodeShape ;
+    sh:targetClass reg:GradedAssertion ;
+
+    # Axis 1 — how reliably the instrument read the code.
+    sh:property [
+        sh:path reg:derivationConfidence ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:in ( reg:high reg:mid reg:low reg:not-derivable ) ;
+        sh:message "A graded assertion carries exactly one derivation confidence (§5.2 axis 1)." ;
+    ] ;
+
+    # Axis 2 — whether it is the kind of thing the registry is for. Never
+    # optional: an absent relevance is what let a whole rejected class read as
+    # safe, and `unknown` is the honest mark, not the missing one.
+    sh:property [
+        sh:path reg:domainRelevance ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:in ( reg:high reg:low reg:unknown ) ;
+        sh:message "A graded assertion carries exactly one domain relevance (§5.2 axis 2); unknown is a mark, not an omission." ;
+    ] ;
+    sh:property [
+        sh:path reg:relevanceBasis ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:in ( reg:computed reg:defaulted reg:not-computed reg:not-applicable ) ;
+        sh:message "A relevance mark carries its basis, so `unknown` never reads as a verdict." ;
+    ] ;
+
+    sh:property [
+        sh:path reg:templateGeneration ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "A graded assertion names the template generation whose form it was written in." ;
+    ] ;
+
+    # The derivation record. These sit in the run sidecar, so this half of the
+    # shape is what the join has to satisfy — an assertion whose evidence never
+    # arrived fails here rather than passing quietly.
+    sh:property [
+        sh:path reg:mappingRow ;
+        sh:minCount 1 ;
+        sh:message "A graded assertion names the §5.2 row that proposed it." ;
+    ] ;
+    sh:property [
+        sh:path reg:derivedByRule ;
+        sh:minCount 1 ;
+        sh:message "A graded assertion names the rule that produced it — the row alone is too coarse to batch on." ;
+    ] ;
+    sh:property [
+        sh:path reg:standsOn ;
+        sh:minCount 1 ;
+        sh:message "A graded assertion names at least one probed operation it stood on." ;
+    ] .
+
+# A capability-probe verdict, recorded in the run evidence.
+#
+# Typed reg:Reading in the vocabulary, so `reading.ttl` already demands its
+# value, as-of, provenance and assurance. What this shape adds is the two
+# things that make a verdict a verdict rather than a note: which operation it
+# is about, and what the call actually did.
+#
+# It exists because a verdict is *not* a standing fact about the server. The
+# same operation has answered on one run and timed out on another over the
+# same corpus at the same ref. Two runs that disagree must therefore differ
+# visibly — a reviewer can tell "this row found nothing" from "this row was
+# gated off that day" only if both verdicts are on the record with their
+# as-of.
+reg:ProbeVerdictShape
+    a sh:NodeShape ;
+    sh:targetClass reg:ProbeVerdict ;
+    sh:property [
+        sh:path reg:operation ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "A probe verdict names exactly one operation, as an IRI." ;
+    ] ;
+    sh:property [
+        sh:path reg:answered ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:boolean ;
+        sh:message "A probe verdict states whether a live call answered — the verdict is the call, never the advertisement." ;
+    ] .

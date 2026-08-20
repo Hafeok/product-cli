@@ -12,12 +12,14 @@ use serde::Serialize;
 use crate::error::Result;
 use crate::registry::{evaluate, Finding};
 
+use super::batch::{self, Batch};
 use super::declared::{self, DeclaredNotes};
 use super::entail::{self, FixpointReport};
 use super::facts::CorpusFacts;
 use super::mint::{corpus_iri, run_iri};
 use super::propose::{cite, Proposer};
 use super::rows::{row, Outcome, Row, FOREIGN_KEY_REASON, ROWS};
+use super::sidecar;
 use super::structural;
 use super::triple::{ProposedAssertion, Triple};
 use super::write::{assertion_file, WriteContext};
@@ -62,8 +64,18 @@ pub struct ExtractionPlan {
     pub shacl: Vec<Finding>,
     pub constraints_evaluated: usize,
     /// Assertions the canonical graph already holds, so this run proposes
-    /// nothing for them.
+    /// nothing for them. Their derivation still reaches the sidecar: evidence
+    /// is about what the instrument saw, not about what is new, which is what
+    /// lets a re-run at an old ref populate a cohort ratified before the
+    /// evidence layer existed.
     pub already_ratified: usize,
+    /// Derivation records the run writes — proposed assertions plus the
+    /// already-ratified ones it re-read.
+    pub sidecar_entries: usize,
+    /// The reviewer-facing grouping, keyed by the pair with the derivation
+    /// signature. Serialized, never skipped: this is the batching key, and
+    /// G0 §7.6 is not repeated.
+    pub batches: Vec<Batch>,
     /// What the rows noticed beside their assertions — the lists a reviewer
     /// batches by, so a group is a query rather than a hand count.
     pub notes: DeclaredNotes,
@@ -75,17 +87,20 @@ impl ExtractionPlan {
         self.shacl.is_empty()
     }
 
-    /// Proposed assertion counts per assurance grade.
-    pub fn by_grade(&self) -> Vec<(&'static str, usize)> {
-        let mut out: Vec<(&'static str, usize)> = Vec::new();
+    /// Proposed assertion counts per `(confidence, relevance)` pair.
+    ///
+    /// The pair, never one mark: a count per confidence alone is the report
+    /// that let 31 top-grade assertions read as safe.
+    pub fn by_pair(&self) -> Vec<(String, usize)> {
+        let mut out: Vec<(String, usize)> = Vec::new();
         for a in &self.assertions {
-            let key = a.grade.as_str();
+            let key = format!("{}/{}", a.confidence.as_str(), a.relevance.as_str());
             match out.iter_mut().find(|(k, _)| *k == key) {
                 Some((_, n)) => *n += 1,
                 None => out.push((key, 1)),
             }
         }
-        out.sort_by_key(|(k, _)| *k);
+        out.sort();
         out
     }
 }
@@ -134,13 +149,20 @@ pub fn plan_extraction(
     let (usage, fixpoint) = usage_row(base, facts, &proposer, &assertions, &mut rows)?;
     assertions.extend(usage);
 
-    let assertions = drop_ratified(declared::dedup(assertions), ratified);
-    let already_ratified = ratified.len();
-    let files = render(&assertions, facts, params);
+    let read = declared::dedup(assertions);
+    let assertions = drop_ratified(read.clone(), ratified);
+    let already_ratified = read.len() - assertions.len();
+    let ctx = context(facts, params);
+    let mut files = render(&assertions, params, &ctx);
+    files.push(PlannedFile {
+        path: sidecar::file_name(&facts.corpus, &facts.git_ref),
+        contents: sidecar::run_file(&read, &facts.operations, &ctx),
+    });
     let (shacl, constraints_evaluated) = check(&files, shapes_ttl)?;
     Ok(ExtractionPlan {
         corpus: facts.corpus.clone(),
         git_ref: facts.git_ref.clone(),
+        batches: batch::batches(&assertions),
         assertions,
         rows,
         fixpoint,
@@ -148,6 +170,7 @@ pub fn plan_extraction(
         shacl,
         constraints_evaluated,
         already_ratified,
+        sidecar_entries: read.len(),
         notes,
     })
 }
@@ -173,7 +196,8 @@ fn usage_row(
         .into_iter()
         .map(|t| {
             let evidence = usage_evidence(base, facts, &t);
-            proposer.propose(r, t, evidence)
+            let derivation = usage_derivation(base, facts, &t, r.operations);
+            proposer.propose(r, t, evidence, derivation)
         })
         .collect();
     let (proposals, outcome) = declared::settle(proposals);
@@ -207,6 +231,26 @@ fn usage_evidence(base: &str, facts: &CorpusFacts, triple: &Triple) -> Vec<Strin
     sites.dedup();
     sites.insert(0, DERIVED_BY_RULE.to_string());
     sites
+}
+
+/// The derivation of one inferred edge: the rule, the operations, and the
+/// source kinds of both endpoints where the corpus declares them.
+fn usage_derivation(
+    base: &str,
+    facts: &CorpusFacts,
+    triple: &Triple,
+    operations: &'static [&'static str],
+) -> super::derivation::Derivation {
+    let mut d = super::derivation::Derivation::by("usage-construct", operations);
+    if let Some(owner) = declaration_named(base, facts, &triple.subject) {
+        d = d.in_container(owner.kind, &owner.file);
+    }
+    if let crate::ground::triple::Term::Iri(iri) = &triple.object {
+        if let Some(target) = declaration_named(base, facts, iri) {
+            d = d.also_at(&target.file);
+        }
+    }
+    d
 }
 
 /// What the assurance field cannot say on its own: the rule, named.
@@ -247,25 +291,29 @@ fn drop_ratified(
     assertions.into_iter().filter(|a| !ratified.contains(&a.id)).collect()
 }
 
-/// Render one file per assertion, sorted by path so a run is reproducible.
-fn render(
-    assertions: &[ProposedAssertion],
-    facts: &CorpusFacts,
-    params: &ExtractionParams,
-) -> Vec<PlannedFile> {
-    let ctx = WriteContext {
+/// Everything a written file needs beside the assertion itself.
+fn context(facts: &CorpusFacts, params: &ExtractionParams) -> WriteContext {
+    WriteContext {
         base_iri: params.base_iri.clone(),
         as_of: params.as_of.clone(),
         corpus: facts.corpus.clone(),
         git_ref: facts.git_ref.clone(),
         corpus_iri: corpus_iri(&params.base_iri, &facts.corpus, &facts.git_ref),
         run_iri: run_iri(&params.base_iri, &facts.corpus, &facts.git_ref),
-    };
+    }
+}
+
+/// Render one file per assertion, sorted by path so a run is reproducible.
+fn render(
+    assertions: &[ProposedAssertion],
+    params: &ExtractionParams,
+    ctx: &WriteContext,
+) -> Vec<PlannedFile> {
     let mut files: Vec<PlannedFile> = assertions
         .iter()
         .map(|a| PlannedFile {
             path: format!("{}/{}", params.graph_dir, a.file_name()),
-            contents: assertion_file(a, &ctx),
+            contents: assertion_file(a, ctx),
         })
         .collect();
     files.sort_by(|a, b| a.path.cmp(&b.path));

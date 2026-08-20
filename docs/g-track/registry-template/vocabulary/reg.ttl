@@ -1,0 +1,135 @@
+# The registry's own vocabulary — the terms an instance's graphs are written in.
+#
+# Loaded by the projection build, never by the file rule: nothing here is an
+# assertion or a decision, so it does not live under graphs/.
+#
+# It carries exactly two kinds of thing:
+#   1. the individuals the two grading axes and the derivation record point at,
+#      so a mark is an IRI a query can bind rather than a string;
+#   2. the equivalence that lets one query answer over both generations of
+#      assertion — the backfill for axis 1, which costs no ratified byte.
+
+@prefix reg:  <https://REGISTRY-HOST.example/ns#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+# ---------------------------------------------------------------------------
+# Classes
+# ---------------------------------------------------------------------------
+
+reg:Assertion       a rdfs:Class ; rdfs:label "asserted triple, reified" .
+reg:Reading         a rdfs:Class ; rdfs:label "a ground reading (PRD §4.1)" .
+reg:Decision        a rdfs:Class ; rdfs:label "a filed decision" .
+reg:ExtractionRun   a rdfs:Class ; rdfs:label "one run of the code extractor" .
+
+# A capability-probe verdict — one operation, one live call, one instant.
+#
+# It is typed reg:Reading deliberately. Measured on one corpus at one ref,
+# minutes apart, an operation timed out on one run and answered on the next:
+# the verdict is what a call returned at an instant, not a standing fact about
+# the server. The capability discipline and the Reading discipline are the
+# same mechanism, so a verdict carries the same four-tuple every other reading
+# carries — value, as-of, provenance, assurance — and the Reading shape
+# enforces it.
+reg:ProbeVerdict
+    a rdfs:Class ;
+    rdfs:subClassOf reg:Reading ;
+    rdfs:label "one operation's capability-probe verdict on one run" .
+
+# The generation marker. An assertion written by a 0.3.0-or-later extractor
+# carries this type **explicitly**; nothing entails it. That is deliberate:
+# the derivation shape targets this class rather than the presence of a
+# predicate, because the projection's equivalence entailment can put a
+# predicate on an assertion the writer never touched.
+reg:GradedAssertion
+    a rdfs:Class ;
+    rdfs:subClassOf reg:Assertion ;
+    rdfs:label "an assertion carrying both grading axes" ;
+    rdfs:comment "Stamped by the writer, never inferred. An assertion without this type predates the two-axis split: its derivation confidence is its reg:assuranceGrade, and its domain relevance is unstated, which reads as reg:unknown." .
+
+# ---------------------------------------------------------------------------
+# Axis 1 — derivation confidence: how reliably the instrument read the code
+# ---------------------------------------------------------------------------
+
+reg:derivationConfidence
+    a rdf:Property ;
+    rdfs:label "derivation confidence" ;
+    rdfs:comment "How reliably the instrument read the code. Ordinal: high > mid > low > not-derivable." .
+
+# The predicate this one renames. The earlier column was already measuring
+# derivation and nothing else, so the two are the same property under two
+# names and every assertion ratified under 0.2.0 answers a confidence query
+# through this axiom — no rewrite, no supersession, no re-confirmation.
+reg:assuranceGrade
+    a rdf:Property ;
+    owl:equivalentProperty reg:derivationConfidence ;
+    rdfs:comment "Retained name, pre-0.3.0. Equivalent to reg:derivationConfidence: the split renamed the column rather than re-marking its rows." .
+
+reg:high          a reg:ConfidenceMark ; rdfs:label "declared — a probed operation returned the thing itself" .
+reg:mid           a reg:ConfidenceMark ; rdfs:label "structural or inferred — a rule took a step the language does not" .
+reg:low           a reg:ConfidenceMark ; rdfs:label "heuristic — a lexical rule, no server semantics behind it" .
+reg:not-derivable a reg:ConfidenceMark ; rdfs:label "no instrument on this surface, at any grade" .
+
+# ---------------------------------------------------------------------------
+# Axis 2 — domain relevance: whether the result is what the registry is for
+# ---------------------------------------------------------------------------
+
+reg:domainRelevance
+    a rdf:Property ;
+    rdfs:label "domain relevance" ;
+    rdfs:comment "Whether the assertion is the kind of thing the registry is for. NOT ordinal: unknown is the absence of a verdict, not a value between high and low." .
+
+reg:relevanceBasis
+    a rdf:Property ;
+    rdfs:label "relevance basis" ;
+    rdfs:comment "Where the relevance mark came from. A mark without its basis is unreadable: unknown-because-nothing-computed-it and unknown-because-the-row-proposes-nothing are different findings." .
+
+reg:unknown a reg:RelevanceMark ; rdfs:label "not computed — the extractor has no rule that decides it from what it read" .
+# reg:high and reg:low above serve both axes: the marks are shared deliberately,
+# so "high confidence, low relevance" reads as one sentence in one vocabulary.
+
+reg:computed        a reg:BasisMark ; rdfs:label "a named rule decided it from facts the extractor read" .
+reg:defaulted       a reg:BasisMark ; rdfs:label "the row's own construction fixes it, independent of any codebase" .
+reg:not-computed    a reg:BasisMark ; rdfs:label "the extractor has no rule for it on this surface" .
+reg:not-applicable  a reg:BasisMark ; rdfs:label "the row proposes nothing, so no assertion carries a mark" .
+
+# ---------------------------------------------------------------------------
+# The derivation record — evidence, carried in runs/, keyed by assertion id
+# ---------------------------------------------------------------------------
+
+reg:derivedByRule a rdf:Property ; rdfs:label "the named rule inside the row that produced the assertion" .
+reg:standsOn      a rdf:Property ; rdfs:label "a declaration-level operation the assertion's facts came from" .
+reg:memberKind    a rdf:Property ; rdfs:label "the kind of member the assertion derives from, as the server reported it" .
+reg:containerKind a rdf:Property ; rdfs:label "the kind of declaration containing what the assertion is about" .
+reg:sourcePath    a rdf:Property ; rdfs:label "repo-relative path of a declaration the assertion derives from" .
+reg:mappingRow    a rdf:Property ; rdfs:label "the §5.2 row that proposed the assertion" .
+reg:templateGeneration a rdf:Property ; rdfs:label "the template version whose form the assertion was written in" .
+
+# Source kinds, as reported by the language server — reported, never judged.
+# reg:field is the fact whose absence made a whole class of rejection
+# unfindable in the ratified graph.
+reg:property     a reg:MemberKind ; rdfs:label "property" .
+reg:field        a reg:MemberKind ; rdfs:label "field" .
+reg:enum-member  a reg:MemberKind ; rdfs:label "enum member" .
+
+reg:class     a reg:ContainerKind ; rdfs:label "class" .
+reg:interface a reg:ContainerKind ; rdfs:label "interface" .
+reg:struct    a reg:ContainerKind ; rdfs:label "struct" .
+reg:enum      a reg:ContainerKind ; rdfs:label "enum" .
+reg:record    a reg:ContainerKind ; rdfs:label "record" .
+
+# The declaration-level subset, one individual per operation. An assertion
+# standing on an operation the probe reported unavailable cannot exist, so
+# these are what reg:standsOn binds.
+reg:operation   a rdf:Property ; rdfs:label "the operation a probe verdict is about" .
+reg:answered    a rdf:Property ; rdfs:label "did a live call return a usable result — the verdict" .
+reg:advertised  a rdf:Property ; rdfs:label "the ServerCapabilities flag as read, beside the verdict" .
+reg:divergence  a rdf:Property ; rdfs:label "how the advertisement diverged from the behaviour" .
+
+reg:op-documentSymbol  a reg:Operation ; rdfs:label "textDocument/documentSymbol" .
+reg:op-workspaceSymbol a reg:Operation ; rdfs:label "workspace/symbol" .
+reg:op-typeHierarchy   a reg:Operation ; rdfs:label "textDocument/prepareTypeHierarchy" .
+reg:op-references      a reg:Operation ; rdfs:label "textDocument/references" .
+reg:op-definition      a reg:Operation ; rdfs:label "textDocument/definition" .
+reg:op-hover           a reg:Operation ; rdfs:label "textDocument/hover" .

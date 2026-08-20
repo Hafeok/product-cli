@@ -55,6 +55,13 @@ pub mod reg {
     pub fn axis_class(base: &str) -> String {
         format!("{base}Axis")
     }
+
+    /// The local name of the individual naming one LSP operation, as
+    /// `reg:standsOn` points at it. Prefixed so an operation name can never
+    /// collide with a grade or a source kind in the same namespace.
+    pub fn operation_name(operation: &str) -> String {
+        format!("op-{operation}")
+    }
 }
 
 /// The C# primitive-to-XSD map, as far as it honestly goes.

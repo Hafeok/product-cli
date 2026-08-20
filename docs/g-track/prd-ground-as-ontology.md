@@ -136,6 +136,9 @@ holding note's Q11 as amended:
 | `as_of` | timestamp | when read — clock, not context |
 | `provenance` | controlled / observed / inferred / institutional | **track vocabulary, candidate for the Q25/Q27/Q30 filing wave** (G-track decision `g-dec-01`; ruled at G-1 Gate 1) *(re-pinned at G-1)* |
 | `assurance` | instrument / method / trust-decision ref | at what assurance the reading was made |
+| `derivation_confidence` | high / mid / low / not-derivable | *(added 2026-08-20)* how reliably the instrument read — §5.2's first axis. Ordinal |
+| `domain_relevance` | high / low / unknown | *(added 2026-08-20)* whether the result is the kind of thing the registry is for — §5.2's second axis. **Not ordinal**: `unknown` is the absence of a verdict |
+| `relevance_basis` | computed / defaulted / not-computed / not-applicable | *(added 2026-08-20)* where the relevance mark came from, so an uncomputed mark never reads as a verdict |
 
 `institutional` provenance requires a `trust_decision` reference (Q27). A reading with `institutional`
 and no reference fails SHACL.
@@ -215,17 +218,53 @@ ratification is the merge — the mechanism the registry already has, not a seco
 without the reviewer. Accepted triples enter the canonical graph or a shared-domain ontology (§5.3);
 the endpoint rebuilds on merge.
 
-### 5.2 What is extracted, and at what assurance
+### 5.2 What is extracted, at what confidence, at what relevance
 
-| Code structure | Proposed ontology object | Assurance | Derivation | LSP operations |
-|---|---|---|---|---|
-| Classes, records, entities, aggregates | `owl:Class` candidates | high — declared | mapping rule | documentSymbol, workspaceSymbol |
-| Inheritance, interface implementation | `rdfs:subClassOf` | high — declared | mapping rule | typeHierarchy — *(ruled at G-1 Gate 2; re-verified live at G0-entry, 2026-08-17:)* **C# needs no synthesis** — Roslyn 5.11.0 answers `prepareTypeHierarchy` / `supertypes` / `subtypes` correctly on production declarations, so this row stays fully declared for C#. **kotlin-lsp v262.9593.0 advertises `typeHierarchyProvider: true` and then returns `null`** — the gap is a silent empty result, not a capability denial or an error (see *Capability flags are claims* below). Where a server lacks it, the hierarchy is **synthesised**; for Kotlin the route is cheaper than assumed — `hover` returns the server-rendered declaration header including the supertype clause (`data object NoIcon : BadgeIcon()`), so no raw declaration-text slicing is needed and the route works without a workspace import. Note the C# adapter carries the *technique* (LSP symbols + declaration-text slicing), **not** an existing subClassOf implementation to port; budget a new component. No G0 leg sits on JetBrains' roadmap |
-| Typed properties | datatype and object properties with ranges | high — declared | mapping rule | documentSymbol (hover refines) — *(measured on production C#, 2026-08-17:)* `documentSymbol` alone returns property **types and nullability** inline (`Id : ProfileId`, `DisabledReason : int?`), so `hover` refines rather than enables this row |
-| **Foreign keys, relational structure** | object properties between entities | **not derivable from the declaration subset** | **not extracted at G0** | **none.** *(Measured 2026-08-17:)* the probed C# codebase declares no navigation properties and no FK attributes — relational structure lives in EF Fluent-API configuration and generated migrations, outside the declaration surface the extractor reads. Entity declarations of this shape therefore yield datatype properties with value-object ranges and **no object properties**. Migrations and Fluent configuration are named here as a **separate potential source at lower assurance — structural, not declared — and are out of G0 scope**. The row is kept rather than dropped so the gap is a stated limit, not a silent one |
-| Composition and reference | relations | mid — inferred from usage | SPARQL CONSTRUCT rules to fixpoint over raw reference edges | references, definition |
-| Namespaces, modules, bounded contexts | domain axis registries (holding note §13.9's layers) — proposed axes carry the axis-registry/v1 quality mark, resolvable / nameable, with an extractor sketch per resolvable axis *(re-pinned at G-1: the format precedent is `decision-driven-design/graph/axis-registry.yaml`, seeded at v5.5.0, artefact-not-canon, 22 axes — the framework program's own instance, not this registry; its promotion path — a validator reads it, plus a ratification act — is the discipline G0's proposal graphs inherit)* | mid — structural | mapping rule + RDFS entailment | workspaceSymbol |
-| Naming, comments, string usage | synonyms, `skos:altLabel` | low — heuristic | lexical rules; model optional, default off | hover, textual |
+*(Revised by the two-axis session, 2026-08-20, implementing the G0 session report's top-ranked
+finding §7.1 — with §7.4 arriving at the same change from the review side. G0's mapping-rule
+verdicts were **re-confirmed over the full solution** in that session; the provisional qualifier
+below is discharged.)*
+
+**The assurance column was two properties wearing one name, and the corpus proved them
+independent.** 31 assertions sat at the top grade with every mechanical check passing, the
+instrument having read the code perfectly, and every one of them wrong to ratify — private
+serialisation state on infrastructure types. 18 more, generated schema-change code, failed the same
+way across four rows and all three grades. So the mark splits in two:
+
+- **Derivation confidence** — how reliably the instrument read the code. Ordinal:
+  `high` (declared — a probed operation returned the thing itself) · `mid` (structural or inferred —
+  a rule took a step the language does not) · `low` (heuristic — a lexical rule, no server semantics
+  behind it) · `not-derivable` (no instrument on this surface). **The value set is unchanged from
+  the old column, deliberately:** that column was already measuring derivation and nothing else, so
+  this is a rename rather than a re-marking, and no ratified assertion changes.
+- **Domain relevance** — whether the result is the kind of thing the registry is for:
+  `high` · `low` · `unknown`. **Not ordinal.** `unknown` is the absence of a verdict, not a value
+  between the other two, which is why it carries a **basis**: `computed` · `defaulted` ·
+  `not-computed` · `not-applicable`.
+
+**Relevance is `unknown`, basis `not-computed`, on every row at G0, and the table says so.** The
+remedies §7.2 names — generated-code attributes, a generated-file header, visibility — are all
+outside the declaration-level six, and widening that subset is a separate filed decision. This
+column is therefore **declared-empty, not undeclared**: it exists, its value set is stated, and every
+row honestly reports that nothing computed it. That is a different and better state than the single
+column it replaces, where relevance was undeclared and silently read as high — the distinction
+`DDD-ground-02` draws, arriving in our own instrument. An axis defaulting to a plausible `high`
+would read as *computed*, which is `term:presumed-discharge` a second time inside the one instrument
+built to prevent it.
+
+**What separates the two rejected groups is therefore not the pair but the derivation record**, and
+that record is the half that discharges the forcing argument — see *Derivation is recorded, in the
+evidence layer* below.
+
+| Code structure | Proposed ontology object | Derivation confidence | Domain relevance (basis) | Derivation | LSP operations |
+|---|---|---|---|---|---|
+| Classes, records, entities, aggregates | `owl:Class` candidates | high — declared | `unknown` (not-computed) — the language says it is a type; nothing in the subset says it is a *domain* type, and both rejected groups are perfectly ordinary declared types | mapping rule | documentSymbol, workspaceSymbol |
+| Inheritance, interface implementation | `rdfs:subClassOf` | high — declared | `unknown` (not-computed) — whether a taxonomy edge is a domain taxonomy or a framework one is not in `typeHierarchy`'s answer | mapping rule | typeHierarchy — *(ruled at G-1 Gate 2; re-verified live at G0-entry, 2026-08-17:)* **C# needs no synthesis** — Roslyn 5.11.0 answers `prepareTypeHierarchy` / `supertypes` / `subtypes` correctly on production declarations, so this row stays fully declared for C#. **kotlin-lsp v262.9593.0 advertises `typeHierarchyProvider: true` and then returns `null`** — the gap is a silent empty result, not a capability denial or an error (see *Capability flags are claims* below). Where a server lacks it, the hierarchy is **synthesised**; for Kotlin the route is cheaper than assumed — `hover` returns the server-rendered declaration header including the supertype clause (`data object NoIcon : BadgeIcon()`), so no raw declaration-text slicing is needed and the route works without a workspace import. Note the C# adapter carries the *technique* (LSP symbols + declaration-text slicing), **not** an existing subClassOf implementation to port; budget a new component. No G0 leg sits on JetBrains' roadmap |
+| Typed properties | datatype and object properties with ranges | high — declared | `unknown` (not-computed) — **the measured case**: 31 assertions here at top confidence, every check passing, all wrong to ratify. *(Full solution, 2026-08-20: the same class is 195 assertions, and its 31 ratified members are now recoverable by one query over `reg:memberKind`.)* **Open defect:** range resolution matches on **simple name**, which G0 measured safe at 0 cross-module collisions on the three-project subset. At full solution the corpus carries **21** colliding simple names, so the row now conflates types where they collide. `definition` is wired, answers, and is consumed by no row — it is the exact-resolution route, and spending it is the fix | mapping rule | documentSymbol (hover refines) — *(measured on production C#, 2026-08-17:)* `documentSymbol` alone returns property **types and nullability** inline (`Id : ProfileId`, `DisabledReason : int?`), so `hover` refines rather than enables this row |
+| **Foreign keys, relational structure** | object properties between entities | **not-derivable** — no instrument on this surface | `unknown` (**not-applicable**) — the row proposes nothing, so no assertion carries a mark; the pair is stated so the row reads as *no instrument* rather than *no relevance* | **not extracted at G0** | **none.** *(Measured 2026-08-17:)* the probed C# codebase declares no navigation properties and no FK attributes — relational structure lives in EF Fluent-API configuration and generated migrations, outside the declaration surface the extractor reads. Entity declarations of this shape therefore yield datatype properties with value-object ranges and **no object properties**. Migrations and Fluent configuration are named here as a **separate potential source at lower assurance — structural, not declared — and are out of G0 scope**. The row is kept rather than dropped so the gap is a stated limit, not a silent one |
+| Composition and reference | relations | mid — inferred from usage | `unknown` (not-computed) — relevance rides on the two endpoints, and both are themselves `unknown` | SPARQL CONSTRUCT rules to fixpoint over raw reference edges | references, definition |
+| Namespaces, modules, bounded contexts | domain axis registries (holding note §13.9's layers) — proposed axes carry the axis-registry/v1 quality mark, resolvable / nameable, with an extractor sketch per resolvable axis *(re-pinned at G-1: the format precedent is `decision-driven-design/graph/axis-registry.yaml`, seeded at v5.5.0, artefact-not-canon, 22 axes — the framework program's own instance, not this registry; its promotion path — a validator reads it, plus a ratification act — is the discipline G0's proposal graphs inherit)* | mid — structural | `unknown` (not-computed) — a project name is a fact about code arrangement; whether it names a bounded context is a domain reading nobody has taken | mapping rule + RDFS entailment | documentSymbol — *(corrected 2026-08-20:)* this cell read `workspaceSymbol`, and a full-solution run measured otherwise: on the run where `workspace/symbol` did not answer, the row still fired **1 514** assertions, because module containment is read off `documentSymbol`. On the three-project subset both operations answered, so the divergence between table and implementation could not surface |
+| Naming, comments, string usage | synonyms, `skos:altLabel` | low — heuristic | `unknown` (not-computed) — a spelling of an identifier; §7.8 already suspects this row's stated output is mis-specified, and a relevance verdict would be a second guess on a first | lexical rules; model optional, default off | hover, textual |
 
 **Capability flags are claims, not verdicts — probe the operation, never the advertisement
 (Emil's ruling, G0 entry).** This is an **extractor-wide discipline**, not a Kotlin footnote.
@@ -234,8 +273,25 @@ only evidence that an operation works is a live call returning a usable result. 
 directions were observed on the same day, 2026-08-17:
 
 - **Over-advertising.** kotlin-lsp declares `typeHierarchyProvider: true` and returns `null`.
-- **Under-advertising.** Roslyn answers `prepareTypeHierarchy` even though the adapter's
-  `initialize` never declares `textDocument.typeHierarchy` as a client capability.
+  *(Second case, measured 2026-08-20 on two live full-solution runs:)* **Roslyn advertises
+  `workspaceSymbolProvider: true` and answered `workspace/symbol` on one 16-project run and timed
+  out on another, minutes apart, against the same corpus at the same ref.** So the operation is not
+  missing — it is *intermittently unavailable under load*, and the nuance the Kotlin case does not
+  carry is this: **a probe verdict is itself a reading, scoped to its run.** An operation can be
+  recorded unavailable on one run and available on the next, so a row gated on it would yield
+  different results on two runs that differ in nothing a reviewer can see. The discipline is
+  unchanged — probe, never trust the advertisement — but the probe's own output must be read as
+  run-scoped rather than as a standing fact about the server, and it must be taken against the
+  workspace actually being read. Neither the three-project subset nor a toy workspace loads the
+  server enough to show this.
+- **Under-advertising.** `csharp-ls` does not advertise `typeHierarchyProvider` at all.
+  *(Corrected 2026-08-20, owed from the G0 session report §3.)* This bullet previously cited
+  **Roslyn**, which never under-advertised as a server: measured under two client handshakes — with
+  and without `textDocument.typeHierarchy` declared — it advertises `typeHierarchyProvider: true`
+  **both times**. The entry probe's observation was about the *client* capability our adapter
+  omitted, which is a different pair from the one the probe compares. The direction is real and
+  `csharp-ls` is the case that carries it; until a server demonstrates it live, the fixture is what
+  holds the row.
 
 Over-advertising is the dangerous one, and it is **exactly the shape of presumed discharge**
 (`DDD-delivery-02`, `term:presumed-discharge`) reappearing inside our own instrument: a
@@ -253,12 +309,32 @@ row's absence *reported* rather than silently empty, so a reviewer can tell "thi
 no hierarchy" apart from "the instrument did not answer". Whatever the fourth language turns
 out to be, it enters under this same discipline.
 
-**Mapping-rule verdicts above are provisional.** They were measured against a **three-project
-subset** of the C# corpus (`…Backend.Sql`, `…Options`, `…Primitives`) — the projects that
-restore without the private `AcmePackageFeeds` Azure feed. `…Domain` (165 files), `…Dto`,
-`…Providers` and the API host were not loaded. The verdicts are sound for the shapes probed and
-**re-confirm over the full solution on a machine with feed access** before G0's yield numbers
-are read as complete.
+**A probe verdict is itself a Reading, and the capability discipline and the Reading discipline
+are the same mechanism.** *(Ruled 2026-08-20, on the measurement above.)* An operation that answers
+on one run and times out on the next, over the same corpus at the same ref, is not a server whose
+capabilities changed — it is a reading taken at an instant. So a verdict carries the §4.1 tuple like
+any other: a **value** (what the call returned), an **as-of** (when), a **provenance** (`observed` —
+a live call, never a flag), and an **assurance** (the probe, named). Two consequences, binding:
+
+- **Every probe verdict is recorded in the run evidence**, beside the derivation facts, with its
+  as-of and the advertisement it agreed or disagreed with. Two runs that disagree then differ
+  *visibly* rather than mysteriously, and a reviewer can tell **"this row found nothing"** from
+  **"this row was gated off that day"** — a distinction that is otherwise unrecoverable, and the
+  same class of distinction the four-outcome row report exists to preserve.
+- **A single unavailable verdict is not final.** An operation recorded unavailable after one timeout
+  is a reading at very low assurance being treated as a verdict, and a row gated on it becomes
+  non-reproducible across runs differing in nothing a reviewer can see — which defeats the point of
+  gating. The honest instrument is **retry-then-record**: retry on a non-answer, and record the
+  attempts with the verdict so its assurance is visible. *Open: the shape of the retry — how many,
+  how spaced, and how the attempts are written — is proposed at the next gate, not built here.*
+
+**Mapping-rule verdicts above were provisional; they are no longer.** G0 measured them against a
+**three-project subset** of the C# corpus — the projects that restore without the private package
+feed — leaving four projects and the API host unloaded. The two-axis session (2026-08-20) re-ran
+the extractor at the same corpus ref against the **full solution** on a machine with feed access,
+16 of 16 projects restoring, ≈16.7× the source files. **Every row's behaviour was confirmed; no row
+behaved differently at full scale.** Counts are larger, as they must be; the mapping verdicts stand
+as written. The per-row confirm-or-correct table is in that session's report.
 
 **Extraction is model-free (Emil's ruling).** The pipeline is: deterministic LSP reads, per-language
 mapping rules, RDFS/OWL-RL entailment (subclass transitivity, domain/range propagation, inverses,
@@ -283,9 +359,66 @@ Feature 3 does not. Constructive versus verification closure is the crisp answer
 needed at all".
 
 The declared rows are why extraction closes as a predicate for the top half: the language semantics
-say what a class is and the LSP returns it. The inferred and heuristic rows are where review earns its
-keep. Every proposed triple carries its assurance row as a Reading (§4.1), so acceptance can be
-graded rather than wholesale.
+say what a class is and the LSP returns it. **What that closure does *not* buy is relevance**, and
+G0 measured the difference: the declared rows are where the largest single block of rejections sat,
+and it sat there at the top confidence. Review does not earn its keep only on the inferred rows.
+Every proposed triple carries **both** marks as a Reading (§4.1), so acceptance can be graded on the
+pair rather than wholesale — and batched by it, which is §7.4's volume answer as well as §7.1's
+correctness one.
+
+**Derivation is recorded, in the evidence layer.** *(Added 2026-08-20.)* Two marks are not enough on
+their own: they say what a class of assertion *is*, not how a reviewer *finds* it again. Group A —
+generated code — was recoverable after the fact through `reg:evidence` paths; **Group B was not
+recoverable at all**, because nothing in a ratified assertion recorded that its property came from a
+member the server reported as a *field*. So every assertion now carries a derivation record:
+
+| Fact | What it makes recoverable |
+|---|---|
+| `reg:derivedByRule` | the named rule inside the row — a row is too coarse to batch on |
+| `reg:standsOn` | the probed operations the assertion's facts came from |
+| `reg:memberKind` | **Group B, as one query** — property, field, or enum member, as reported, never as judged |
+| `reg:containerKind` | the kind of declaration the assertion is about |
+| `reg:sourcePath` | **Group A, as one query** — the typed form of what `reg:evidence` carries mixed with type names |
+
+The principle: **record the facts, and let the reviewer's query — not the extractor's rule — do the
+classification.** Nothing here filters either group, and nothing widens the LSP subset; the
+predicate over paths that names generated code is the reviewer's to write.
+
+**And the predicate is a real choice, so both readings are recorded here rather than rediscovered.**
+Measured on the ratified cohort, against the generated-migration group G0 rejected:
+
+| Predicate over `reg:sourcePath` | Recovers |
+|---|---|
+| **every** path under the generated folder | 14 of 18 — the four it misses are `usage-construct` edges whose second endpoint is an ordinary type |
+| **any** path under the generated folder | 18 of 18 — G0's group exactly |
+
+Neither is wrong. `every` asks *is this assertion wholly about generated code*; `any` asks *does this
+assertion touch generated code*. A relation between a generated type and a domain type answers no to
+the first and yes to the second, and which a reviewer wants depends on what they are about to do
+with the batch. The extractor records the paths; it does not choose.
+
+These facts live in the **per-source evidence layer** — one graph per extraction run, pinned to the
+corpus ref, under `runs/` in the instance — keyed by the assertion's own content-addressed id,
+leaving the canonical graph pure ratified assertion. Three consequences, each mechanised in template
+0.3.0:
+
+- **Identity is untouched.** `g-dec-04` hashes the triple and nothing else, so the marks and the
+  derivation cannot make a ratified assertion into a fresh proposal. Verified by fixture, not assumed.
+- **The cohort ratified before the split becomes auditable.** The extractor is deterministic and the
+  ref is pinned, so re-running at the ref an assertion was extracted from regenerates its derivation
+  exactly. Not one byte of ratified content changes. Axis 1 backfills by entailment
+  (`reg:assuranceGrade owl:equivalentProperty reg:derivationConfidence`); axis 2 is `unknown` for
+  everything at G0, so its absence on the older generation reads correctly.
+- **The join is checked, and validated where it is read.** An entry either names an assertion the
+  graph holds or it is an orphan, reported per run. The shapes run over `graphs/` ∪ `runs/` ∪
+  `vocabulary/`, because that is what a consumer reads — and because a shape keyed on a *predicate*
+  would pass pre-entailment and fail post-entailment. The 0.3.0 shapes therefore target the class
+  `reg:GradedAssertion`, which the writer stamps and nothing entails.
+
+**What this does not do.** It does not filter Group A. It does not filter Group B. It does not widen
+the declaration subset. It makes both groups **visible and batchable**, and it stops the table
+claiming a property nobody computed. Filtering needs the widened subset, which is the separate filed
+decision §7.2 calls for.
 
 **The extractor uses the declaration-level LSP subset only** — documentSymbol, workspaceSymbol,
 typeHierarchy, references, definition, hover. Not completion, not refactoring, not diagnostics. This
@@ -407,6 +540,63 @@ Design the extractor to run at each ref and diff against the ratified ontology. 
 surface; **disappearing symbols flag decisions whose entity is gone** — the holding note's Q21
 decay-of-relevance under a pin, mechanised. Drift detection is out of scope until G4, but the
 extractor is built re-runnable from day one because it costs nothing then and everything later.
+
+### 5.5.1 Review is batched by the pair, with the derivation as the sub-key
+
+*(Added 2026-08-20.)* Per-triple review does not scale: 561 files was already at the edge of it and
+the full solution is ≈16.7× that corpus. Wholesale merge is manufactured ground by §5.6, so the
+answer is neither of those — it is **review by kind**.
+
+A **batch** is the set of assertions sharing a derivation signature:
+
+```
+(derivation confidence, domain relevance, §5.2 row, rule, member kind, container kind)
+```
+
+Everything in one batch was read the same way about the same kind of thing, so a reviewer's verdict
+on a sample carries to the batch. Each batch carries the pair, the row and rule, the probed
+operations it stands on, its count, a bounded sample rendered as a reviewer reads a triple, and the
+full member id list so the batch is actionable rather than merely descriptive.
+
+Ordering is **total and deterministic** — confidence descending (the axis is ordinal), then relevance,
+row, rule, member kind, container kind — so two runs over the same facts emit the same batches in
+the same order and a batch listing diffs cleanly across refs.
+
+The batching lives in the extractor's **output contract**, not in its logs. G0 found the reviewer's
+batching keys typed as debug detail, and two hand-counts were wrong before they were made queryable.
+An instrument's account of its own limits belongs where a query can reach it.
+
+### 5.5.2 A ratification act must be checkable against the ruling it discharges
+
+*(Added 2026-08-20, from a defect in G0's own Gate 4.)*
+
+G0 ruled per-triple: 49 assertions rejected in two named groups, the remaining 512 accepted. The
+ratification act was a merge of a pull request containing **all 561 files**. The ruling was prose in
+a chat message; the act was a button; **nothing checked that the second carried the first**. What
+merged reads as acceptance of a reviewed set, and what was actually ratified was the unreviewed
+superset.
+
+This is `term:presumed-discharge` at the ratifier's seat rather than in an instrument: a record
+state where a pass is indistinguishable from a skip. It is also the rubber-stamp failure §5.6 exists
+to forbid, arriving through the one path §5.6 did not describe — not wholesale merge *instead of*
+review, but wholesale merge *after* review, which looks like the discharged form and is not.
+
+Binding from here:
+
+- **A merge is preceded by a stated accept/reject set**, by assertion id, recorded where the merge
+  can be checked against it.
+- **The merged tree is diffed against that set**, and a divergence blocks the act. Per-triple review
+  that ends in one undifferentiated merge is per-triple review in name only.
+
+**Removal is by retraction, never by deletion.** Assertions ratified in error are removed by a
+*retraction decision* filed in the instance: the members named by id, the basis naming the ruling
+they should have discharged, and the assertion files removed **in that same act** — so history
+retains them and the decision records why. That is supersession at the file level rather than a
+rewrite, and it is a ratifier's act with a ruling behind it, never an instrument's.
+
+**Recoverability, paid out.** The 49 were unfindable in the ratified graph until the derivation
+record landed; they are now two queries (§5.2). The argument for recording derivation was made in
+the abstract; this is the first real defect in the ratified set it has repaid.
 
 ### 5.6 Guard
 
@@ -784,6 +974,30 @@ Emil's rulings needed, in order of how much they change the design:
 14. **Comparison-arm scope** — whether the arm runs at G4 with the ladder or waits for a later
     campaign; and whether Shape B (SDK with its own tools, no delivery) runs alongside as the
     industry-default control. Emil rules at G4 planning.
+15. **Widening the declaration-level subset** — *(opened 2026-08-20 by the two-axis session; the
+    G0 report's §7.2, now load-bearing.)* §5.2's domain-relevance column is **declared-empty**: the
+    extractor computes it for no row, because everything that would compute it — generated-code
+    attributes, a generated-file header, visibility — sits outside the declaration-level six. Each
+    widening trades constructive closure for relevance, so it is **a filed decision with the closure
+    consequence stated**, never a quiet extension. Named candidates, cheapest first: the visibility
+    facts the C# adapter's own layer already derives from source text; generated-file markers; a
+    path-convention rule over `reg:sourcePath` (which needs no new operation at all, and was
+    deliberately *not* taken by the two-axis session because a claim that a folder name means
+    "generated" is a convention judgement that belongs here). Until this is filed, neither rejected
+    group is filtered — only made visible and batchable.
+16. **The simple-name collision defect** — *(opened 2026-08-20, measured.)* The `properties` row
+    resolves a member's range by matching the **simple name** of its declared type against the
+    corpus. G0 measured 0 cross-module collisions on the three-project subset and recorded the risk;
+    the full solution carries **21**, so the row now conflates two types wherever a name collides.
+    `definition` is wired, answers, and is consumed by no row — it is the exact-resolution route and
+    spending it is the fix. Scoped as: *route range resolution through `definition` where a simple
+    name is ambiguous, keeping the name match where it is not.* Not a widening of the subset —
+    `definition` is already inside it.
+17. **Retry-then-record for probe verdicts** — *(opened 2026-08-20.)* A verdict is a Reading
+    (§5.2), and a single non-answer currently becomes a standing "unavailable" that gates a row.
+    Propose the retry shape — how many attempts, how spaced, how the attempts are written into the
+    run evidence so the verdict's assurance is visible — and rule on it before any row's gating
+    depends on an operation that has ever timed out.
 
 ---
 

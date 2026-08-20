@@ -54,3 +54,9 @@ bindings:
   after: sha256:b755a40df9169dcacfec3d8c98184ba8d3013309b21b73bb4454e9489b25d57c
   base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
   hash: sha256:59050233063520680387cf90a24851dbc0e6a3463afa2cf845fe5e6a1189cf34
+- symbol: probe_iri
+  file: product-core/src/ground/mint.rs
+  before: sha256:b755a40df9169dcacfec3d8c98184ba8d3013309b21b73bb4454e9489b25d57c
+  after: sha256:c9675652af1b9202e04622d6140361ce01fbdaf162f0749cfa2b797b8f7ef8fc
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:b0b15e0a6ebd4f90b779be258ed7870b6f862e6065e4e2f9e4d875494d01b04e

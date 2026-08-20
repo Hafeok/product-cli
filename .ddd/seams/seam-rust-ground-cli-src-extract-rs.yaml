@@ -372,3 +372,9 @@ bindings:
   after: sha256:7d5497058bdb7bfb0cf36cafc63fb812ba42a93deda95941629009c33fc426ae
   base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
   hash: sha256:704448650b3c912fc7c309adc72d29e3fc9398ac642c813928b0eed90a88a9bd
+- symbol: orphans
+  file: ground-cli/src/extract.rs
+  before: sha256:7d5497058bdb7bfb0cf36cafc63fb812ba42a93deda95941629009c33fc426ae
+  after: sha256:4783470c453a5864609863e674414c79403cd5829ca4255dcaebdfb38dd3c91b
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:290471708f1ea4cf2efd5bb78a24daf2fa5118181f1b7bbfa8d02f31de58042c

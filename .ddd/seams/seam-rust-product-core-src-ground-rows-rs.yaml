@@ -1,7 +1,7 @@
 format: 2
 id: seam/rust/product-core-src-ground-rows-rs
 boundary: contract surface of product-core/src/ground/rows.rs
-verdict_knowledge: 'Callers learn the §5.2 extraction table as data: one row per code structure, each naming the operations it cannot fire without, the assurance its output carries, and the provenance a Reading through it gets. A row is never silently empty — the four outcomes are distinct and stay distinct. The boundary asserts nothing about a codebase; it is the table, and a change to it is a change to what extraction claims.'
+verdict_knowledge: "Callers learn the §5.2 extraction table as data: one row per code structure, each naming the operations it cannot fire without, the **two** grades its output carries — derivation confidence beside domain relevance — the basis of the second, and the provenance a Reading through it gets. A row is never silently empty: the four outcomes are distinct and stay distinct. Every row's relevance is `unknown` with basis `not-computed`, which the table states rather than hides: the column is declared-empty, not undeclared. The boundary asserts nothing about a codebase; it is the table, and a change to it is a change to what extraction claims."
 contract_location: product-core/src/ground/rows.rs
 obligations: []
 metadata: {}
@@ -192,3 +192,69 @@ bindings:
   after: sha256:643068603510108823c2011626b0e4a29270d0129c13fc8933ed6f87a2d64fc7
   base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
   hash: sha256:cc7d8147ba413ee149fe12e5fa3ab358f4f4f32ad37a11c791cdec06c5f19cbd
+- symbol: confidence
+  file: product-core/src/ground/rows.rs
+  before: sha256:643068603510108823c2011626b0e4a29270d0129c13fc8933ed6f87a2d64fc7
+  after: sha256:b8730730101ffb2845a0d4c73049754704e091c9ca9a65e996dd5c0387f5494f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:61a199806969d80f9fdf954de7acd55793c1a2d1f935cd7bfecab01cbcfc866d
+- symbol: relevance
+  file: product-core/src/ground/rows.rs
+  before: sha256:643068603510108823c2011626b0e4a29270d0129c13fc8933ed6f87a2d64fc7
+  after: sha256:b8730730101ffb2845a0d4c73049754704e091c9ca9a65e996dd5c0387f5494f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:79c5f2d947349901b2085bb568e21c757904a8e1ec2601d56206ae122764bfc5
+- symbol: relevance_basis
+  file: product-core/src/ground/rows.rs
+  before: sha256:643068603510108823c2011626b0e4a29270d0129c13fc8933ed6f87a2d64fc7
+  after: sha256:b8730730101ffb2845a0d4c73049754704e091c9ca9a65e996dd5c0387f5494f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:c957fa27d2bd4cf5e483935c5341d876a6c71c4ed1acc7e6a11e2b220aa0fc41
+- symbol: Grade
+  file: product-core/src/ground/rows.rs
+  before: sha256:643068603510108823c2011626b0e4a29270d0129c13fc8933ed6f87a2d64fc7
+  after: sha256:b8730730101ffb2845a0d4c73049754704e091c9ca9a65e996dd5c0387f5494f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:ca6937a5ca6e8075848725a6e8fde90a8c6b42acce55efab0046e546f74bec07
+- symbol: impl Grade
+  file: product-core/src/ground/rows.rs
+  before: sha256:643068603510108823c2011626b0e4a29270d0129c13fc8933ed6f87a2d64fc7
+  after: sha256:b8730730101ffb2845a0d4c73049754704e091c9ca9a65e996dd5c0387f5494f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:5b3e6eda3dca1ca3338bbf89c8730147fb11aa26227e2080a3141af686e75283
+- symbol: High
+  file: product-core/src/ground/rows.rs
+  before: sha256:643068603510108823c2011626b0e4a29270d0129c13fc8933ed6f87a2d64fc7
+  after: sha256:b8730730101ffb2845a0d4c73049754704e091c9ca9a65e996dd5c0387f5494f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:56cb8f361908d1ea99de6678b30f20dc51574f135084617ad52ec6db13f4fae9
+- symbol: Low
+  file: product-core/src/ground/rows.rs
+  before: sha256:643068603510108823c2011626b0e4a29270d0129c13fc8933ed6f87a2d64fc7
+  after: sha256:b8730730101ffb2845a0d4c73049754704e091c9ca9a65e996dd5c0387f5494f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:6b2b70bca24e32325f91ed645e466582928de2668c6cd77d3d645d560e38cb59
+- symbol: Mid
+  file: product-core/src/ground/rows.rs
+  before: sha256:643068603510108823c2011626b0e4a29270d0129c13fc8933ed6f87a2d64fc7
+  after: sha256:b8730730101ffb2845a0d4c73049754704e091c9ca9a65e996dd5c0387f5494f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:b774c9119e85413111bc902e63dc030c2ad4be7e7f0150127e13864255d55ea2
+- symbol: NotDerivable
+  file: product-core/src/ground/rows.rs
+  before: sha256:643068603510108823c2011626b0e4a29270d0129c13fc8933ed6f87a2d64fc7
+  after: sha256:b8730730101ffb2845a0d4c73049754704e091c9ca9a65e996dd5c0387f5494f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:e03ddff45b586bd7056703a8853499e0c9938d2c715095eb8d460c823e7f7015
+- symbol: grade
+  file: product-core/src/ground/rows.rs
+  before: sha256:643068603510108823c2011626b0e4a29270d0129c13fc8933ed6f87a2d64fc7
+  after: sha256:b8730730101ffb2845a0d4c73049754704e091c9ca9a65e996dd5c0387f5494f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:8e0489a4df633b3ad1cba6f0282469531ab92ba93b275f2ee70d0609a3a39b44
+- symbol: as_str
+  file: product-core/src/ground/rows.rs
+  before: sha256:643068603510108823c2011626b0e4a29270d0129c13fc8933ed6f87a2d64fc7
+  after: sha256:b8730730101ffb2845a0d4c73049754704e091c9ca9a65e996dd5c0387f5494f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:6cf39e066887a9f9109119b2c9530abf4394b574dbacc106b7187fe251fd4e3e

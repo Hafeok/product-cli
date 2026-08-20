@@ -21,6 +21,8 @@ fn an_unmeasured_operation_is_not_evidence_that_it_answers() {
         operations: vec![OperationStatus {
             operation: "documentSymbol".into(),
             answered: true,
+            advertised: Some(true),
+            divergence: None,
             detail: "15 symbols".into(),
         }],
         declarations: Vec::new(),

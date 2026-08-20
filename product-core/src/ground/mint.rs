@@ -92,6 +92,16 @@ pub fn corpus_iri(base: &str, corpus: &str, git_ref: &str) -> String {
     format!("{base}source-{}-at-{}", local_name(corpus), short_ref(git_ref))
 }
 
+/// The IRI of one operation's probe verdict on one run.
+///
+/// Qualified by the run, because the verdict is a reading taken at an
+/// instant rather than a standing fact about the server: two runs over the
+/// same corpus at the same ref may disagree, and they must be able to say so
+/// side by side.
+pub fn probe_iri(base: &str, corpus: &str, git_ref: &str, operation: &str) -> String {
+    format!("{base}probe-{}-{}-{}", local_name(corpus), short_ref(git_ref), local_name(operation))
+}
+
 /// A ref abbreviated for a local name, full-length refs kept in a literal.
 pub fn short_ref(git_ref: &str) -> String {
     let name = local_name(git_ref);
@@ -143,6 +153,47 @@ mod tests {
         let as_iri = Triple::new("tag:x/A", "tag:x/p", Term::iri("tag:x/B"));
         let as_literal = Triple::new("tag:x/A", "tag:x/p", Term::plain("tag:x/B"));
         assert_ne!(assertion_id(&as_iri), assertion_id(&as_literal));
+    }
+
+    /// **The fixture to watch.** g-dec-04 fixes identity as the triple and
+    /// nothing else. If the two grading axes or the derivation record entered
+    /// the hash, every ratified assertion would become a fresh proposal and
+    /// the instance's history would break.
+    ///
+    /// This is verified rather than assumed: two assertions differing in
+    /// confidence, relevance, basis, rule, operations, member kind, container
+    /// kind and source path — differing in *everything the split added* —
+    /// still mint one id, because they assert the same triple.
+    #[test]
+    fn the_two_axes_and_the_derivation_stay_out_of_the_identity() {
+        use crate::ground::derivation::Derivation;
+        use crate::ground::facts::{DeclKind, MemberKind};
+        use crate::ground::propose::Proposer;
+        use crate::ground::rows::row;
+
+        let triple = t("tag:x/Order", "tag:x/hasPart", "tag:x/Line");
+        let p = Proposer::new("roslyn 5.11.0");
+        let declared = p.propose(
+            row("classes").expect("row"),
+            triple.clone(),
+            vec![],
+            Derivation::by("declared-type", &["documentSymbol"])
+                .in_container(DeclKind::Class, "src/A.cs"),
+        );
+        let heuristic = p.propose(
+            row("synonyms").expect("row"),
+            triple.clone(),
+            vec![],
+            Derivation::by("identifier-word-split", &["documentSymbol", "hover"])
+                .in_container(DeclKind::Record, "src/Z.cs")
+                .of_member(MemberKind::Field),
+        );
+
+        assert_ne!(declared.confidence, heuristic.confidence);
+        assert_ne!(declared.derivation, heuristic.derivation);
+        assert_eq!(declared.id, heuristic.id, "identity is the triple, and only the triple");
+        assert_eq!(declared.id, assertion_id(&triple));
+        assert_eq!(declared.file_name(), heuristic.file_name());
     }
 
     #[test]

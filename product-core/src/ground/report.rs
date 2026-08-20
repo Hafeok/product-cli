@@ -24,6 +24,8 @@ pub fn render(plan: &ExtractionPlan) -> String {
         ));
     }
     out.push_str(&grades(plan));
+    out.push_str(&batches(plan));
+    out.push_str(&evidence(plan));
     out.push_str(&rows(plan));
     out.push_str(&fixpoint(plan));
     out.push_str(&notes(plan));
@@ -31,12 +33,45 @@ pub fn render(plan: &ExtractionPlan) -> String {
     out
 }
 
+/// Counts per `(derivation confidence, domain relevance)` pair — never per
+/// mark alone. A count per confidence is the report that let 31 top-grade
+/// assertions read as safe to ratify.
 fn grades(plan: &ExtractionPlan) -> String {
-    let mut out = String::from("\nby assurance grade:\n");
-    for (grade, count) in plan.by_grade() {
-        out.push_str(&format!("  {grade:<14} {count}\n"));
+    let mut out = String::from("\nby derivation confidence / domain relevance:\n");
+    for (pair, count) in plan.by_pair() {
+        out.push_str(&format!("  {pair:<22} {count}\n"));
     }
     out
+}
+
+/// The reviewer's actual working unit at volume: batches, keyed by the pair
+/// with the derivation signature, in the order two runs agree on.
+fn batches(plan: &ExtractionPlan) -> String {
+    let mut out = format!(
+        "\nreview batches ({} batch(es) over {} assertion(s)):\n",
+        plan.batches.len(),
+        plan.assertions.len()
+    );
+    for batch in &plan.batches {
+        out.push_str(&format!("  {:>6}  {}\n", batch.count, batch.label()));
+        for line in batch.sample.iter().take(2) {
+            out.push_str(&format!("          · {line}\n"));
+        }
+    }
+    out
+}
+
+/// What the run wrote to the evidence layer, which is not the same number as
+/// what it proposed: evidence covers every assertion the instrument read,
+/// including the ones already ratified.
+fn evidence(plan: &ExtractionPlan) -> String {
+    format!(
+        "\nrun evidence: {} derivation record(s) — {} proposed, {} already ratified \
+and re-read for their derivation\n",
+        plan.sidecar_entries,
+        plan.assertions.len(),
+        plan.already_ratified
+    )
 }
 
 fn rows(plan: &ExtractionPlan) -> String {
@@ -45,7 +80,7 @@ fn rows(plan: &ExtractionPlan) -> String {
         out.push_str(&format!(
             "  {:<16} {:<6} {}\n",
             result.row.id,
-            result.row.grade.as_str(),
+            result.row.confidence.as_str(),
             result.outcome.describe()
         ));
     }
@@ -156,6 +191,8 @@ mod tests {
             shacl: Vec::new(),
             constraints_evaluated: 12,
             already_ratified: 0,
+            sidecar_entries: 0,
+            batches: Vec::new(),
             notes: Default::default(),
         }
     }

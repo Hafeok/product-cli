@@ -8,7 +8,8 @@
 //! — the registry's file rule. The serialiser stays what it is good for:
 //! transport, inspection, a store round-trip in a test.
 
-use super::rows::{Grade, Provenance};
+use super::axes::{DerivationConfidence, DomainRelevance, RelevanceBasis};
+use super::rows::Provenance;
 use super::triple::{escape_literal, ProposedAssertion, Term};
 use super::vocab::PREFIXES;
 
@@ -35,7 +36,7 @@ pub fn assertion_file(assertion: &ProposedAssertion, ctx: &WriteContext) -> Stri
     out.push('\n');
     out.push_str(&format!("reg:assertion-{}\n", assertion.id));
     let mut fields: Vec<(String, String)> = vec![
-        ("a".into(), "reg:Assertion , reg:Reading".into()),
+        ("a".into(), "reg:Assertion , reg:Reading , reg:GradedAssertion".into()),
         ("reg:subject".into(), shorten(&assertion.triple.subject, base)),
         ("reg:predicate".into(), shorten(&assertion.triple.predicate, base)),
         ("reg:object".into(), object_term(&assertion.triple.object, base)),
@@ -43,7 +44,10 @@ pub fn assertion_file(assertion: &ProposedAssertion, ctx: &WriteContext) -> Stri
         ("reg:asOf".into(), format!("{}^^xsd:dateTime", quoted(&ctx.as_of))),
         ("reg:provenance".into(), format!("reg:{}", provenance(assertion.provenance))),
         ("reg:assurance".into(), quoted(&assertion.assurance)),
-        ("reg:assuranceGrade".into(), format!("reg:{}", grade(assertion.grade))),
+        ("reg:derivationConfidence".into(), format!("reg:{}", confidence(assertion.confidence))),
+        ("reg:domainRelevance".into(), format!("reg:{}", relevance(assertion.relevance))),
+        ("reg:relevanceBasis".into(), format!("reg:{}", basis(assertion.relevance_basis))),
+        ("reg:templateGeneration".into(), quoted(crate::registry::TEMPLATE_VERSION)),
         ("reg:mappingRow".into(), quoted(assertion.row)),
         ("reg:sourceRef".into(), quoted(&ctx.git_ref)),
     ];
@@ -63,11 +67,15 @@ pub fn assertion_file(assertion: &ProposedAssertion, ctx: &WriteContext) -> Stri
 fn header(assertion: &ProposedAssertion, ctx: &WriteContext) -> String {
     format!(
         "# {}\n#\n# Proposed — not ratified. Acceptance is this file's merge, per triple.\n\
-         # Row {} · assurance {} · provenance {}.\n\
+         # Row {} · derivation confidence {} · domain relevance {} ({}) · provenance {}.\n\
+         # How it was read is evidence, not ratified claim: the run sidecar under\n\
+         # runs/ carries the rule, the operations, the source kinds, keyed by this id.\n\
          # Read from {} at {} by the declaration-level extractor; no model in the path.\n\n",
         assertion.triple.to_value(),
         assertion.row,
-        grade(assertion.grade),
+        confidence(assertion.confidence),
+        relevance(assertion.relevance),
+        basis(assertion.relevance_basis),
         provenance(assertion.provenance),
         ctx.corpus,
         ctx.git_ref
@@ -140,8 +148,16 @@ fn provenance(p: Provenance) -> &'static str {
     p.as_str()
 }
 
-fn grade(g: Grade) -> &'static str {
-    g.as_str()
+fn confidence(c: DerivationConfidence) -> &'static str {
+    c.as_str()
+}
+
+fn relevance(r: DomainRelevance) -> &'static str {
+    r.as_str()
+}
+
+fn basis(b: RelevanceBasis) -> &'static str {
+    b.as_str()
 }
 
 #[cfg(test)]
