@@ -624,7 +624,7 @@ The same four-tuple as any other ground:
 
 | Stage | value | provenance | assurance |
 |---|---|---|---|
-| Design time | the expected rate | `declared` | low — an assumption by whoever declared it |
+| Design time | the expected rate | `declared` *(not in §4.1's value set — open item 21)* | low — an assumption by whoever declared it |
 | Running system | the observed rate | `observed` | higher — measured over retained acts |
 
 So design-time assumptions are not a separate mode of the system. They are the same field at lower
