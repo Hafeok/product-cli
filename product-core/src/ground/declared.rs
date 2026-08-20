@@ -8,6 +8,7 @@
 
 use std::collections::BTreeSet;
 
+use super::derivation::Derivation;
 use super::facts::{CorpusFacts, MemberKind};
 use super::mint::{class_iri, property_iri};
 use super::propose::{cite, Proposer};
@@ -62,6 +63,7 @@ pub fn classes(base: &str, facts: &CorpusFacts, p: &Proposer) -> (Vec<ProposedAs
             r,
             triple,
             vec![format!("{} ({})", cite(&decl.file, decl.start_line), decl.kind.as_str())],
+            Derivation::by("declared-type", r.operations).in_container(decl.kind, &decl.file),
         ));
     }
     settle(out)
@@ -89,7 +91,12 @@ pub fn subclass(
             RDFS_SUBCLASS_OF,
             Term::iri(class_iri(base, &edge.sup)),
         );
-        out.push(p.propose(r, triple, evidence_for(facts, &edge.sub)));
+        let sub = facts.declarations.iter().find(|d| d.name == edge.sub);
+        let mut derivation = Derivation::by("declared-supertype", r.operations);
+        if let Some(d) = sub {
+            derivation = derivation.in_container(d.kind, &d.file);
+        }
+        out.push(p.propose(r, triple, evidence_for(facts, &edge.sub), derivation));
     }
     settle(out)
 }
@@ -125,18 +132,31 @@ pub fn properties(
             if range.is_none() {
                 notes.unranged_properties.push(format!("{}.{}", decl.name, prop.name));
             }
+            let member = Derivation::by("declared-member", r.operations)
+                .in_container(decl.kind, &decl.file)
+                .of_member(prop.kind);
             out.push(p.propose(
                 r,
                 Triple::new(iri.clone(), RDF_TYPE, Term::iri(kind)),
                 evidence.clone(),
+                member.clone(),
             ));
             out.push(p.propose(
                 r,
                 Triple::new(iri.clone(), RDFS_DOMAIN, Term::iri(class_iri(base, &decl.name))),
                 evidence.clone(),
+                member.clone(),
             ));
             if let Some(range) = range {
-                out.push(p.propose(r, Triple::new(iri, RDFS_RANGE, Term::iri(range)), evidence));
+                let ranged = Derivation::by("member-range", r.operations)
+                    .in_container(decl.kind, &decl.file)
+                    .of_member(prop.kind);
+                out.push(p.propose(
+                    r,
+                    Triple::new(iri, RDFS_RANGE, Term::iri(range)),
+                    evidence,
+                    ranged,
+                ));
             }
         }
     }

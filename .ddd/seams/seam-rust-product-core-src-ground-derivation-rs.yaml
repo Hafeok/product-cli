@@ -1,0 +1,74 @@
+format: 2
+id: seam/rust/product-core-src-ground-derivation-rs
+boundary: contract surface of product-core/src/ground/derivation.rs
+verdict_knowledge: "Callers learn what the instrument recorded about its own reading of one assertion: the named rule inside the row, the probed operations it stood on, and the source kinds it saw — member kind and container kind as the server reported them, with the positions they were read at. The boundary makes a class of extraction error recoverable afterwards by query; it states no verdict about relevance and filters nothing, because the classification is the reviewer's and the facts are the instrument's."
+contract_location: product-core/src/ground/derivation.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: impl Derivation
+  file: product-core/src/ground/derivation.rs
+  before: absent
+  after: sha256:17abdbcba15f34bc0a6840c65fcb9eca636cce72084b63bbc1d0e0f96c473c77
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:b763f59848087aa46405a23477c01c219323653006742899ef0225bc374f4dfb
+- symbol: Derivation
+  file: product-core/src/ground/derivation.rs
+  before: absent
+  after: sha256:17abdbcba15f34bc0a6840c65fcb9eca636cce72084b63bbc1d0e0f96c473c77
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:9760b7a69af0e48b2eac2cf8055094223ea6c7cd91ec1dbce6bac2e1b4952e5b
+- symbol: container_kind
+  file: product-core/src/ground/derivation.rs
+  before: absent
+  after: sha256:17abdbcba15f34bc0a6840c65fcb9eca636cce72084b63bbc1d0e0f96c473c77
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:fd9d5599a691dc30f60d3966f7da94d0aeb696c33c515aa158b62df459086ba5
+- symbol: member_kind
+  file: product-core/src/ground/derivation.rs
+  before: absent
+  after: sha256:17abdbcba15f34bc0a6840c65fcb9eca636cce72084b63bbc1d0e0f96c473c77
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:62e379d9269589b8412721274cf5519a41f11b2d1a6f3126e869a6b63e5c00da
+- symbol: rule
+  file: product-core/src/ground/derivation.rs
+  before: absent
+  after: sha256:17abdbcba15f34bc0a6840c65fcb9eca636cce72084b63bbc1d0e0f96c473c77
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:2ff5d7b783169224319a3e7763d03add847af524aee96f1d7755772c3ed0f949
+- symbol: source_paths
+  file: product-core/src/ground/derivation.rs
+  before: absent
+  after: sha256:17abdbcba15f34bc0a6840c65fcb9eca636cce72084b63bbc1d0e0f96c473c77
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:7a5a5290151348e76d28a0e63f00781d7a457fbffb4649300474507a00073179
+- symbol: stands_on
+  file: product-core/src/ground/derivation.rs
+  before: absent
+  after: sha256:17abdbcba15f34bc0a6840c65fcb9eca636cce72084b63bbc1d0e0f96c473c77
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:4ec93e918726a3b61fb22d67f7b29aad3580004b9f6a54b1533066be1c493115
+- symbol: also_at
+  file: product-core/src/ground/derivation.rs
+  before: absent
+  after: sha256:17abdbcba15f34bc0a6840c65fcb9eca636cce72084b63bbc1d0e0f96c473c77
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:01c92187718575eb42e8c260edb5d7a3dd8ad76d6e71578c42dbd5ccf52a28a8
+- symbol: by
+  file: product-core/src/ground/derivation.rs
+  before: absent
+  after: sha256:17abdbcba15f34bc0a6840c65fcb9eca636cce72084b63bbc1d0e0f96c473c77
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:a52c5a54c439f42207143276e48b012b6504259972b62ae69cd9e6bb66e42ef4
+- symbol: in_container
+  file: product-core/src/ground/derivation.rs
+  before: absent
+  after: sha256:17abdbcba15f34bc0a6840c65fcb9eca636cce72084b63bbc1d0e0f96c473c77
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:33a5da51da6e155b01e2e21a7b8bee56d8f0121c494607a83a5d5811f13d9097
+- symbol: of_member
+  file: product-core/src/ground/derivation.rs
+  before: absent
+  after: sha256:17abdbcba15f34bc0a6840c65fcb9eca636cce72084b63bbc1d0e0f96c473c77
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:b45f2c38993eb33fca340b5f442912340de1974fbf25050acc307ce070f60a32

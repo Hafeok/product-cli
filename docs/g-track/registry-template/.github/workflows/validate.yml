@@ -10,6 +10,15 @@
 #     decision. Nothing else, and never both.
 #   - `_`-prefixed files are exemplars: validated like any other file, excluded
 #     from projection builds.
+#   - the rule is scoped to graphs/. runs/ holds per-run *evidence*, not
+#     ratified content: it carries no assertion and no decision, which is why
+#     it lives outside graphs/ rather than inside it with an exemption.
+#
+# SHACL runs over the JOIN — graphs/ + runs/ + vocabulary/ — because that is
+# what a consumer reads, and because the derivation half of an assertion's
+# shape lives in the run evidence. Validating graphs/ alone would pass shapes
+# the projection then fails, which is precisely the interaction 0.3.0's
+# class-targeted shapes exist to keep from recurring.
 #
 # The rule used to exempt graphs/canonical/founding-decision.ttl by filename so
 # an empty slot could ship. The exemption was generalised into the rule it stood
@@ -53,6 +62,33 @@ jobs:
               print("\n".join(bad)); sys.exit(1)
           print("one-assertion-or-one-decision-per-file: ok")
           EOF
+      - name: Sidecar entries resolve
+        run: |
+          python - <<'EOF'
+          import glob, re, sys
+          from rdflib import Graph
+          from rdflib.namespace import RDF, Namespace
+          REG = Namespace("https://REGISTRY-HOST.example/ns#")
+          ratified = set()
+          for path in glob.glob("graphs/**/*.ttl", recursive=True):
+              g = Graph(); g.parse(path, format="turtle")
+              ratified |= {str(s) for s in g.subjects(RDF.type, REG.Assertion)}
+          runs = sorted(glob.glob("runs/**/*.ttl", recursive=True))
+          if not runs:
+              print("sidecar entries resolve: no run evidence yet"); sys.exit(0)
+          total = 0
+          for path in runs:
+              g = Graph(); g.parse(path, format="turtle")
+              named = {str(s) for s in g.subjects(REG.derivedByRule, None)}
+              orphans = sorted(named - ratified)
+              total += len(orphans)
+              print(f"{path}: {len(named)} entr(ies), {len(orphans)} orphan(ed)")
+              for o in orphans:
+                  print(f"  orphan: {o}")
+          # Identity is content-addressed, so an orphan is a real finding: a run
+          # against the wrong instance, or evidence for a rejected proposal.
+          sys.exit(1 if total else 0)
+          EOF
       - name: SHACL
         run: |
           python - <<'EOF'
@@ -60,8 +96,9 @@ jobs:
           from pyshacl import validate
           from rdflib import Graph
           data = Graph()
-          for path in glob.glob("graphs/**/*.ttl", recursive=True):
-              data.parse(path, format="turtle")
+          for pattern in ("graphs/**/*.ttl", "runs/**/*.ttl", "vocabulary/**/*.ttl"):
+              for path in glob.glob(pattern, recursive=True):
+                  data.parse(path, format="turtle")
           shapes = Graph()
           for path in glob.glob("shapes/*.ttl"):
               shapes.parse(path, format="turtle")

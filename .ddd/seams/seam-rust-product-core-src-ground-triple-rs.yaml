@@ -168,3 +168,33 @@ bindings:
   after: sha256:f8855f29dccc7af5f36f81dee411924f68fae01ce955c3d231b73467ea619b16
   base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
   hash: sha256:a7b790df0d59e9d2b17dff05f78c6c878e6070b90c8588e0332d5294a828f736
+- symbol: confidence
+  file: product-core/src/ground/triple.rs
+  before: sha256:f8855f29dccc7af5f36f81dee411924f68fae01ce955c3d231b73467ea619b16
+  after: sha256:42c8ee0483f3934696196b6c1f8da1cb3f8e2327df7a8bf7c0a3158ac99d153b
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:c185ec2f71c93d98b608e7e98922dfae141645437094f682b59d496dcfb26b85
+- symbol: derivation
+  file: product-core/src/ground/triple.rs
+  before: sha256:f8855f29dccc7af5f36f81dee411924f68fae01ce955c3d231b73467ea619b16
+  after: sha256:42c8ee0483f3934696196b6c1f8da1cb3f8e2327df7a8bf7c0a3158ac99d153b
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:17e9af8fa71d1eb3a7cda05cefaba710fdeeff7241190223e6a09c5749554d09
+- symbol: relevance
+  file: product-core/src/ground/triple.rs
+  before: sha256:f8855f29dccc7af5f36f81dee411924f68fae01ce955c3d231b73467ea619b16
+  after: sha256:42c8ee0483f3934696196b6c1f8da1cb3f8e2327df7a8bf7c0a3158ac99d153b
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:2a04338d50b06cfb12b47cfd857a8a3a5a34c7b5b531cbf0df9159987e7451bd
+- symbol: relevance_basis
+  file: product-core/src/ground/triple.rs
+  before: sha256:f8855f29dccc7af5f36f81dee411924f68fae01ce955c3d231b73467ea619b16
+  after: sha256:42c8ee0483f3934696196b6c1f8da1cb3f8e2327df7a8bf7c0a3158ac99d153b
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:96035e29d2155eab511a3b5fc3c9bfd03a709efb9997b53f8b1a06551461e1b5
+- symbol: grade
+  file: product-core/src/ground/triple.rs
+  before: sha256:f8855f29dccc7af5f36f81dee411924f68fae01ce955c3d231b73467ea619b16
+  after: sha256:42c8ee0483f3934696196b6c1f8da1cb3f8e2327df7a8bf7c0a3158ac99d153b
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:3906230ea42b9e39e9df46f4f8260e7e1d1314cb1f6abbd1e087f61e04f6c1b9

@@ -1,7 +1,7 @@
 format: 2
 id: seam/rust/product-core-src-ground-propose-rs
 boundary: contract surface of product-core/src/ground/propose.rs
-verdict_knowledge: 'Callers learn that a proposal takes its assurance grade, its provenance and its method from the §5.2 row that produced it, never from the caller. No mapping rule can quietly claim a better assurance than its row justifies, and the instrument comes from the facts, which recorded what actually read the corpus. The boundary cannot invent evidence: what it cites is what it was handed.'
+verdict_knowledge: "Callers learn that a proposal takes both grades, the relevance basis, the provenance and the method from the §5.2 row that produced it, never from the caller. No mapping rule can quietly claim a confidence its row does not justify, and none can claim a relevance nobody computed. What the caller does supply is the derivation — the rule, the operations, the source kinds — because that varies per assertion where the row's marks do not. The boundary cannot invent evidence: what it cites is what it was handed."
 contract_location: product-core/src/ground/propose.rs
 obligations: []
 metadata: {}
@@ -36,3 +36,9 @@ bindings:
   after: sha256:cd68fbbb5a5c1b41b0b9497c94eb700280140f654d46540379761ef9adbe156c
   base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
   hash: sha256:6b63fa59df60f97ec2bcd252073b547b16dcacf13d6458cd75b0b3bdd4a93b0c
+- symbol: propose
+  file: product-core/src/ground/propose.rs
+  before: sha256:cd68fbbb5a5c1b41b0b9497c94eb700280140f654d46540379761ef9adbe156c
+  after: sha256:eca8666a7c443e394dfd39aa583d4f254a123bc15895661ab967481cfdd71289
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:d92db1d62ccdb9556f06517fe9a87fb64e54f720ee23fa5207eddd5844bc18a8

@@ -80,6 +80,8 @@ mod tests {
             shacl,
             constraints_evaluated: 0,
             already_ratified: 0,
+            sidecar_entries: 0,
+            batches: Vec::new(),
             notes: Default::default(),
         }
     }

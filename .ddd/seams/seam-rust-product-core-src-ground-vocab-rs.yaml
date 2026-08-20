@@ -102,3 +102,9 @@ bindings:
   after: sha256:70536679082084c4c9275c4a3a4ac5ed92e27c47c1355f81a48823241aa9a24b
   base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
   hash: sha256:f84d827001bfc878ecc486c6b8b8701d634fe42a1d1a2fe0ce5fb30106d88a7c
+- symbol: operation_name
+  file: product-core/src/ground/vocab.rs
+  before: sha256:70536679082084c4c9275c4a3a4ac5ed92e27c47c1355f81a48823241aa9a24b
+  after: sha256:2557aa7c2b3fac806fcdba567db4aed022d4bb493b765f60b7da3f89276a270e
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:95e4a6995a37a0f4ae39b74ba915a872c548abfa7d769ed74fee8290a9007624

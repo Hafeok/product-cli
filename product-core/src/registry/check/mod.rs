@@ -71,19 +71,29 @@ impl CheckReport {
 }
 
 /// Read an instance at `dir` against its own rules.
+///
+/// The **file rule** applies to `graphs/` alone: only a graph file must carry
+/// exactly one assertion or one decision. The **shapes** run over the join —
+/// `graphs/`, `runs/`, `vocabulary/` — because that is what a consumer reads,
+/// and because the derivation half of an assertion's shape lives in the run
+/// evidence. Validating the graph layer alone would pass shapes the projection
+/// then fails.
 pub fn check_instance(dir: &Path) -> Result<CheckReport> {
-    let data_files = ttl_files(&dir.join("graphs"))?;
+    let graph_files = ttl_files(&dir.join("graphs"))?;
+    let run_files = ttl_files(&dir.join("runs"))?;
+    let vocabulary = ttl_files(&dir.join("vocabulary"))?;
     let shape_files = ttl_files(&dir.join("shapes"))?;
     let base = base_iri(dir)?;
 
-    let mut report = CheckReport { files_checked: data_files.len(), ..Default::default() };
-    for (path, text) in &data_files {
+    let mut report = CheckReport { files_checked: graph_files.len(), ..Default::default() };
+    for (path, text) in &graph_files {
         report.findings.extend(file_rule::check_file(path, text, &base));
     }
 
     let shapes_text = join(&shape_files);
-    let data_text = join(&data_files);
-    let (findings, evaluated) = evaluate(&data_text, &shapes_text)?;
+    let joined: Vec<(String, String)> =
+        graph_files.into_iter().chain(run_files).chain(vocabulary).collect();
+    let (findings, evaluated) = evaluate(&join(&joined), &shapes_text)?;
     report.constraints_evaluated = evaluated;
     report.findings.extend(findings);
     Ok(report)
@@ -121,8 +131,13 @@ pub(crate) fn prefix_binding(turtle: &str, prefix: &str) -> Option<String> {
     parser.prefixes().find(|(p, _)| *p == prefix).map(|(_, iri)| iri.to_string())
 }
 
-/// Every `*.ttl` beneath `dir`, sorted by path.
+/// Every `*.ttl` beneath `dir`, sorted by path. A directory that does not
+/// exist yields nothing: `runs/` appears the first time an extractor writes
+/// evidence, and an instance without one is not malformed.
 fn ttl_files(dir: &Path) -> Result<Vec<(String, String)>> {
+    if !dir.exists() {
+        return Ok(Vec::new());
+    }
     let pattern = format!("{}/**/*.ttl", dir.display());
     let mut out = Vec::new();
     let paths = glob::glob(&pattern).map_err(|e| fault(&format!("bad glob: {e}")))?;

@@ -1,0 +1,98 @@
+format: 2
+id: seam/rust/product-core-src-ground-batch-rs
+boundary: contract surface of product-core/src/ground/batch.rs
+verdict_knowledge: "Callers learn how a proposal is grouped for review: a batch is the set of assertions sharing both marks, the row, the rule, and the source kinds, carrying a bounded sample beside the full member list, in a total order two runs over the same facts agree on. The boundary publishes the reviewer's unit of work at volume — not which assertions are worth ratifying, only which were read the same way about the same kind of thing."
+contract_location: product-core/src/ground/batch.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: batches
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:28dfa8dd815a894a7ef6926bdf320468166ef72c45bd23b2a563f4e9e196a869
+- symbol: impl Batch
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:91fa30016288aba5f64120f7a7398edbdc643f00f023da82e84a6ec30014e6de
+- symbol: Batch
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:67c56a25978dac597c69b51ae0bac47b3691d9a4dfbc71eac191fc7a2ffcecdd
+- symbol: confidence
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:abf311eb0859fc19a6769e304507f59d20c02f6e8b6d471ac63ec5ebb619927d
+- symbol: container_kind
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:6578152a439555e718a600ac0c8265421c8cf0aa8000036419d5f64ab197feed
+- symbol: count
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:bcb51934d4dffac98cb905ba896e47c4eb9808647f2895c263e1fe5d0c38ed75
+- symbol: ids
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:92a7e4c877125d77c9132e187696e5a7781f1bd4062f522e7db987c131e55c62
+- symbol: member_kind
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:b560a71bb3b171ef72d8ad67393905cea7b4b479409c9896e7d2b85ec6215017
+- symbol: relevance
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:d9107e6145704ee172e79f1b6b62dd9e3d9cb0d8a2cc2603620174cc54f5e6f9
+- symbol: relevance_basis
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:7da680831c9615287d764512f729820a8c8e53aa1416954d1289382d75abca0c
+- symbol: row
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:562ee95f558b4a79554ac07bcaad29d933e05ab7f4ccc258a337fa4908af60ac
+- symbol: rule
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:0443e479b3adcab971d30acd8cd55b206177ff379ea2d45590dc4db6c0ead354
+- symbol: sample
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:0f46d4ac7da91f06b7932089dc2198f0b2b8f3c6a46198ad9f59a03ab5b95d1d
+- symbol: stands_on
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:321a78e5c244c496fc96f16887a7cca30f7285ba938f731d4b69191dfabb1fd2
+- symbol: label
+  file: product-core/src/ground/batch.rs
+  before: absent
+  after: sha256:0d72747f10b58d3fd86f0dd3eabc37479c6c67c9fe09381d23321307a954ee4a
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:874e1d6aa090140f2d5f162d7a2e43c07ae68a67191d29f319a5542866df17b5

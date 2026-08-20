@@ -7,7 +7,9 @@
 
 use serde::Serialize;
 
-use super::rows::{Grade, Provenance};
+use super::axes::{DerivationConfidence, DomainRelevance, RelevanceBasis};
+use super::derivation::Derivation;
+use super::rows::Provenance;
 
 /// An RDF term in object position.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
@@ -104,12 +106,21 @@ pub struct ProposedAssertion {
     pub triple: Triple,
     /// Which §5.2 row proposed it.
     pub row: &'static str,
-    pub grade: Grade,
+    /// Axis 1 — how reliably the instrument read it.
+    pub confidence: DerivationConfidence,
+    /// Axis 2 — whether it is the kind of thing the registry is for.
+    pub relevance: DomainRelevance,
+    /// Where the axis-2 mark came from.
+    pub relevance_basis: RelevanceBasis,
     pub provenance: Provenance,
     /// Instrument or method, per §4.1.
     pub assurance: String,
     /// Where the evidence sits in the corpus, for the reviewer to check.
     pub evidence: Vec<String>,
+    /// How it was read — the rule, the operations, the source kinds. Rides on
+    /// the assertion node, lives in the run sidecar rather than in ratified
+    /// content.
+    pub derivation: Derivation,
 }
 
 impl ProposedAssertion {

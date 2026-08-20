@@ -6,6 +6,7 @@
 //! mid assurance. Synonyms are *heuristic*: a word split over an identifier,
 //! by rule, with no model in the path.
 
+use super::derivation::Derivation;
 use super::facts::CorpusFacts;
 use super::mint::{class_iri, module_iri};
 use super::propose::{cite, Proposer};
@@ -28,20 +29,25 @@ pub fn modules(base: &str, facts: &CorpusFacts, p: &Proposer) -> (Vec<ProposedAs
         }
         let axis = module_iri(base, &decl.module);
         let evidence = vec![cite(&decl.file, decl.start_line), decl.module.clone()];
+        let d = Derivation::by("module-containment", r.operations)
+            .in_container(decl.kind, &decl.file);
         out.push(p.propose(
             r,
             Triple::new(axis.clone(), RDF_TYPE, Term::iri(reg::axis_class(base))),
             evidence.clone(),
+            d.clone(),
         ));
         out.push(p.propose(
             r,
             Triple::new(axis.clone(), RDFS_LABEL, Term::plain(decl.module.clone())),
             evidence.clone(),
+            d.clone(),
         ));
         out.push(p.propose(
             r,
             Triple::new(class_iri(base, &decl.name), reg::in_module(base), Term::iri(axis)),
             evidence,
+            d,
         ));
     }
     settle(out)
@@ -68,6 +74,8 @@ pub fn synonyms(base: &str, facts: &CorpusFacts, p: &Proposer) -> (Vec<ProposedA
                 Term::plain(spaced),
             ),
             vec![cite(&decl.file, decl.start_line), format!("identifier {}", decl.name)],
+            Derivation::by("identifier-word-split", r.operations)
+                .in_container(decl.kind, &decl.file),
         ));
     }
     settle(out)

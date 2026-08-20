@@ -1,0 +1,104 @@
+format: 2
+id: seam/rust/product-core-src-ground-axes-rs
+boundary: contract surface of product-core/src/ground/axes.rs
+verdict_knowledge: "Callers learn that §5.2's assurance mark is two marks: derivation confidence — how reliably the instrument read the code, ordinal, with the value set the earlier single column already carried — and domain relevance — whether the result is the kind of thing the registry is for, with `unknown` an honest mark rather than a missing one. The boundary also publishes that the two are not the same kind of scale: confidence orders, relevance is a verdict that may be undetermined, and a basis says which. Nothing here asserts anything about a codebase; a change to the value sets is a change to what every extracted assertion claims."
+contract_location: product-core/src/ground/axes.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: DerivationConfidence
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:58f904cab882995fb0fed4d9acde3d81eaf0fc7bb21deb86faf39d43d4215651
+- symbol: DomainRelevance
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:a925b0a11a367bd2ce19afd03bf4963da19aa45ad1874c2e85cc2d79abbd7858
+- symbol: RelevanceBasis
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:886f23dd5bd280df70e76524f90049a190e93aeeb30b50eb9dbd4cf8a5d09f30
+- symbol: impl DerivationConfidence
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:e227a069cb74279b8f5d362c28a66253ee82730476fe502b42aacd334906fe4d
+- symbol: impl DomainRelevance
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:6120644c93c76cdc904cc27abe5a7d8a1874dbb88d917a08652d50e03af3b8ed
+- symbol: impl RelevanceBasis
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:33191c8bd6df79a478a9d66e5b0cee53c2d9ef5123348f42a1f7eb89679efa8a
+- symbol: High
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:8cb3050b4e9576556c8cff8f815517521a97ba66aec9f11cedcf3f59905a43e2
+- symbol: Low
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:09413851c4d0492627495302f49279322d54c28c3770ad62ea2de7d588687e09
+- symbol: Mid
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:155faf7524b93c1630cdd3f5da42724829f126e76094526dc4d7f57bc1dfe4d3
+- symbol: NotDerivable
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:2da6b3be5351c318ece5157fb6318dd7d2de03ba8a366f8bae373562069d35ba
+- symbol: Unknown
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:672e6a743ce2fbc1cf17b289be8c47c8d74547eb1905f6f9b1d974836a22468d
+- symbol: Computed
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:df1d2d3fdb66e606d0ef7cdc849fef74f406e90182c55bd0573f1afb8699cccc
+- symbol: Defaulted
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:2ea05184587838faa6709a4acd2ffdf4c1a905e1729d55caee0f1b90a68d0fdb
+- symbol: NotApplicable
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:cb753fa3fcd0ba5b04f3a6096631555568d022cc3e5eb052a7887c7778269121
+- symbol: NotComputed
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:6f725b39d57d9b51876c095b7c9809ffae597dd97ff8b9278de0990c2ef30138
+- symbol: as_str
+  file: product-core/src/ground/axes.rs
+  before: absent
+  after: sha256:b453e87db5b44689c5630802358dd0c99b2d48b47ed63f2fc514483b233a622f
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:d74f58e8f10390fb2e55d42ff8d172fa83011c5a6f0449a019eb1dc20cd0901a

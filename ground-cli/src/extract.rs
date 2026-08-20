@@ -9,7 +9,8 @@ use std::path::{Path, PathBuf};
 
 use ddd_lsp::host::Host;
 use product_core::ground::{
-    apply_extraction, plan_extraction, render_extraction, ExtractionParams, ExtractionPlan,
+    apply_extraction, orphans_in, plan_extraction, render_extraction, ExtractionParams,
+    ExtractionPlan, Orphan,
 };
 
 use crate::read::{self, ReadOutcome, ReadRequest};
@@ -38,6 +39,9 @@ pub struct ExtractOutcome {
     pub plan: ExtractionPlan,
     pub read: ReadOutcome,
     pub written: Vec<String>,
+    /// Sidecar entries naming an assertion the graph does not hold. Identity
+    /// is content-addressed, so this is a check rather than a formality.
+    pub orphans: Vec<Orphan>,
     /// The run planned only, on request.
     pub dry_run: bool,
 }
@@ -74,7 +78,8 @@ pub fn extract(args: &ExtractArgs) -> Result<ExtractOutcome, String> {
     } else {
         apply_extraction(&plan, &args.instance).map_err(|e| e.to_string())?.written
     };
-    Ok(ExtractOutcome { plan, read: outcome, written, dry_run: args.dry_run })
+    let orphans = if args.dry_run { Vec::new() } else { orphans_in(&args.instance) };
+    Ok(ExtractOutcome { plan, read: outcome, written, orphans, dry_run: args.dry_run })
 }
 
 /// The run, as text for a reader or JSON for a query.
@@ -98,6 +103,7 @@ pub fn present(outcome: &ExtractOutcome, json: bool) -> String {
             "unconsumed_operations": outcome.read.unconsumed,
         },
         "written": outcome.written,
+        "orphans": outcome.orphans,
         "dry_run": outcome.dry_run,
     });
     format!("{}\n", serde_json::to_string_pretty(&value).unwrap_or_default())
@@ -109,7 +115,31 @@ pub fn render(outcome: &ExtractOutcome) -> String {
     out.push('\n');
     out.push_str(&render_extraction(&outcome.plan));
     out.push_str(&read_notes(outcome));
+    out.push_str(&orphan_line(outcome));
     out.push_str(&outcome_line(outcome));
+    out
+}
+
+/// Whether the run's evidence resolves against the graph, per run file.
+///
+/// Reported even when it is zero: "the join was checked and holds" and "the
+/// join was never checked" are different states, and one line covering both
+/// is how a check quietly stops running.
+fn orphan_line(outcome: &ExtractOutcome) -> String {
+    if outcome.dry_run {
+        return "\nsidecar entries: not checked — nothing was written\n".to_string();
+    }
+    if outcome.orphans.is_empty() {
+        return "\nsidecar entries: every derivation record resolves to an assertion in the graph\n"
+            .to_string();
+    }
+    let mut out = format!(
+        "\nsidecar entries: {} orphan(ed) — evidence naming an assertion the graph does not hold:\n",
+        outcome.orphans.len()
+    );
+    for orphan in outcome.orphans.iter().take(10) {
+        out.push_str(&format!("  {} — {}\n", orphan.run, orphan.assertion));
+    }
     out
 }
 
@@ -124,11 +154,11 @@ fn outcome_line(outcome: &ExtractOutcome) -> String {
     if !outcome.written.is_empty() {
         return format!("\n{} file(s) written\n", outcome.written.len());
     }
-    if outcome.plan.files.is_empty() {
+    if outcome.plan.assertions.is_empty() {
         return format!(
-            "\nnothing written — every triple this run read is already ratified \
-             ({} assertion(s) in the graph); identity is content-derived, so a re-read \
-             at the same ref is the same assertion\n",
+            "\nnothing proposed — every one of the {} triple(s) this run read is already \
+             ratified; identity is content-derived, so a re-read at the same ref is the \
+             same assertion. Its derivation still reached the run evidence\n",
             outcome.plan.already_ratified
         );
     }

@@ -1,0 +1,50 @@
+format: 2
+id: seam/rust/product-core-src-ground-projection-rs
+boundary: contract surface of product-core/src/ground/projection.rs
+verdict_knowledge: "Callers learn that a consumer's view of the registry is the join of ratified assertion with per-run evidence plus the vocabulary's equivalence axioms, and that validating that join is a different act from validating the authority repo. The boundary publishes the join, the entailment it applies, and the ability to query or validate the result — so a shape that holds pre-entailment and breaks post-entailment is a caught defect rather than a latent one."
+contract_location: product-core/src/ground/projection.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: project
+  file: product-core/src/ground/projection.rs
+  before: absent
+  after: sha256:a9b404d9fe7c467c5e2f01e65a85f6339929f4140f69498f7bad49b20049a207
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:15650d38381f21783c0eddf638f19e76c97634c159606ab7f45995f7ad160a05
+- symbol: query_projection
+  file: product-core/src/ground/projection.rs
+  before: absent
+  after: sha256:a9b404d9fe7c467c5e2f01e65a85f6339929f4140f69498f7bad49b20049a207
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:7c8aae111c37d5c9b57e66fa9ce5bd2b4432e6589034f840a9bb2a24d8c3841a
+- symbol: validate_projection
+  file: product-core/src/ground/projection.rs
+  before: absent
+  after: sha256:a9b404d9fe7c467c5e2f01e65a85f6339929f4140f69498f7bad49b20049a207
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:e35978e4896c9397b7184ffbc99da326a087f96706ae0866e5c085defbd5627d
+- symbol: ProjectionSources
+  file: product-core/src/ground/projection.rs
+  before: absent
+  after: sha256:a9b404d9fe7c467c5e2f01e65a85f6339929f4140f69498f7bad49b20049a207
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:b7781d125bbbb4ab13716b333c57c2fff5e9ac54bfbc46839277e9fdf3b0876d
+- symbol: graphs
+  file: product-core/src/ground/projection.rs
+  before: absent
+  after: sha256:a9b404d9fe7c467c5e2f01e65a85f6339929f4140f69498f7bad49b20049a207
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:30f2052c8f52a9c72bf86fd7f2bc07f9cb34349695128c20a83b993d2e0169fd
+- symbol: runs
+  file: product-core/src/ground/projection.rs
+  before: absent
+  after: sha256:a9b404d9fe7c467c5e2f01e65a85f6339929f4140f69498f7bad49b20049a207
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:f32c567bf1c0982961a663d8ca30ddc1c702dcf9c01fe49b4465d1af2d5aeaa7
+- symbol: vocabulary
+  file: product-core/src/ground/projection.rs
+  before: absent
+  after: sha256:a9b404d9fe7c467c5e2f01e65a85f6339929f4140f69498f7bad49b20049a207
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:798b9225366d10e7136354814b06d0264f8eb54f453f9d0e4feb952f6f7f2c62

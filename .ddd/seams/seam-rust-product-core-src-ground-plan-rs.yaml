@@ -1,7 +1,7 @@
 format: 2
 id: seam/rust/product-core-src-ground-plan-rs
 boundary: contract surface of product-core/src/ground/plan.rs
-verdict_knowledge: 'Callers learn everything a reviewer will see, decided before anything is written: which rows fired, which found nothing, which were gated off, which are not derivable at all, one file per proposed assertion, and the notes a reviewer batches by. It is pure — no I/O, no clock of its own, so the same facts with the same as-of plan the same bytes. An already-ratified id is dropped rather than re-proposed, because re-emitting it would rewrite ratified content rather than add to it. The boundary decides nothing about acceptance: it proposes, and a merge ratifies.'
+verdict_knowledge: 'Callers learn everything a reviewer will see, decided before anything is written: which rows fired, which found nothing, which were gated off, which are not derivable at all, one file per proposed assertion beside one run-evidence file for the whole read, the batching a reviewer works from, and the notes they batch by. It is pure — no I/O, no clock of its own, so the same facts with the same as-of plan the same bytes. An already-ratified id is dropped from the proposal and kept in the evidence, because evidence is about what the instrument saw rather than about what is new.'
 contract_location: product-core/src/ground/plan.rs
 obligations: []
 metadata: {}
@@ -306,3 +306,27 @@ bindings:
   after: sha256:ae246568683825375e51d85c1f985cfed4fcc26fbfdce576a7de6d2a1fb30a7b
   base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
   hash: sha256:0a1ccc7c581dc26d623eee64a67f0d5bdf8b725f9086907d3960c1ebdcd5368b
+- symbol: batches
+  file: product-core/src/ground/plan.rs
+  before: sha256:ae246568683825375e51d85c1f985cfed4fcc26fbfdce576a7de6d2a1fb30a7b
+  after: sha256:a41a386ec67a9749a04e30ef4c8487f4c54281d71bcb842ed3d02dff25c7a548
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:8583dcf4f17e716d23600b127c764e07e91786643e7d7da0c7ae98fa044f2943
+- symbol: sidecar_entries
+  file: product-core/src/ground/plan.rs
+  before: sha256:ae246568683825375e51d85c1f985cfed4fcc26fbfdce576a7de6d2a1fb30a7b
+  after: sha256:a41a386ec67a9749a04e30ef4c8487f4c54281d71bcb842ed3d02dff25c7a548
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:fe8b3bd8eb5d9292f406350112eb82d7f74f0686e74a4f157ccb134907fb4782
+- symbol: by_pair
+  file: product-core/src/ground/plan.rs
+  before: sha256:ae246568683825375e51d85c1f985cfed4fcc26fbfdce576a7de6d2a1fb30a7b
+  after: sha256:a41a386ec67a9749a04e30ef4c8487f4c54281d71bcb842ed3d02dff25c7a548
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:77bce03bdb7d51125467e621a986ce77f014659bfe5e1ebbdee2330dfff6bc52
+- symbol: by_grade
+  file: product-core/src/ground/plan.rs
+  before: sha256:ae246568683825375e51d85c1f985cfed4fcc26fbfdce576a7de6d2a1fb30a7b
+  after: sha256:a41a386ec67a9749a04e30ef4c8487f4c54281d71bcb842ed3d02dff25c7a548
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:36c0fc984d309eb1643e1a1201b49b1932f1579466f95899d891543cedcb44f1

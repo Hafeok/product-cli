@@ -263,3 +263,62 @@ computed. Filtering needs the widened subset, which is a separate filed decision
 
 `cargo t` · `cargo clippy --workspace -- -D warnings -D clippy::unwrap_used` · `cargo xtask check` ·
 `ddd validate` · the contract-surface gate. Results recorded at the hold.
+
+---
+
+## 2. Gate 2 — implemented
+
+Emil's Gate 1 rulings, as taken: **uniform `unknown`** (relevance is declared-empty, not undeclared);
+**the run sidecar** as the per-source evidence layer, with retroactive population as a Gate 2
+deliverable; and the entailment/shape defect fixed by targeting the generation marker rather than
+predicate presence.
+
+### 2.1 What was built
+
+| Piece | Where | What it does |
+|---|---|---|
+| The two axes | `product-core/src/ground/axes.rs` | `DerivationConfidence` (the old value set, renamed) · `DomainRelevance` (`high`/`low`/`unknown`, no `Ord`, because `unknown` is not a middle) · `RelevanceBasis` |
+| The re-graded table | `ground/rows.rs` | seven rows, each carrying the pair with its basis |
+| The derivation record | `ground/derivation.rs` | rule · probed operations · member kind · container kind · source paths |
+| The evidence layer | `ground/sidecar.rs` | `runs/<corpus>-at-<ref>.ttl`, keyed by assertion id, with the orphan check |
+| Review batching | `ground/batch.rs` | batches by `(confidence, relevance, row, rule, member kind, container kind)`, totally ordered |
+| The projection join | `ground/projection.rs` | loads `graphs/` ∪ `runs/` ∪ `vocabulary/`, applies the equivalence entailment, validates or queries the result |
+| Template 0.3.0 | `docs/g-track/registry-template/` | `vocabulary/reg.ttl` · `shapes/derivation.ttl` · CI joins the layers and checks orphans |
+
+**`reg:mappingRow` is not repeated in the sidecar.** The canonical file already carries it, and
+duplicating a fact across layers is how two layers drift.
+
+### 2.2 The defect Emil found, and how it is now impossible to reintroduce
+
+`reg:assuranceGrade owl:equivalentProperty reg:derivationConfidence` means the projection
+*manufactures* `reg:derivationConfidence` on every pre-0.3.0 assertion. A shape keyed on that
+predicate's presence would have passed in the authority repo — where validation runs pre-entailment
+— and failed the moment anyone validated the projection.
+
+The shapes target **`reg:GradedAssertion`**, a class the writer stamps and nothing entails. The
+fixture `entailment_does_not_drag_the_pre_split_cohort_into_the_new_shape` asserts three things in
+order, so it cannot pass for the wrong reason:
+
+1. the equivalence *does* fire — one pre-0.3.0 assertion gains `reg:derivationConfidence`;
+2. nothing gains `reg:GradedAssertion`;
+3. `validate_projection` finds nothing, with a non-zero constraint count.
+
+A second fixture validates the **projection**, not the repo, for the 0.3.0 case: an assertion whose
+run evidence is absent fails loudly on the derivation half rather than passing quietly.
+
+### 2.3 Fixtures
+
+| Prompt's requirement | Fixture | Result |
+|---|---|---|
+| Both grades on every assertion | `propose::every_proposal_carries_both_marks`, `plan::no_assertion_carries_one_mark_without_the_other`, `rows::every_row_carries_both_axes` | pass |
+| Unknown relevance representable, distinct from high | `propose::unknown_relevance_is_distinct_from_high`, `rows::no_row_claims_a_relevance_it_did_not_compute` | pass |
+| Derivation queryable — both groups recoverable from the graph | `projection::the_field_derived_group_is_a_query_over_the_projection` (Group B) · `…the_generated_code_group_is_a_query_over_recorded_paths` (Group A) · `…the_two_groups_are_separable_from_one_another` | pass |
+| G0's two groups re-derived as distinguishable batches | `batch::field_derived_assertions_batch_apart_from_property_derived_ones` — asserts the *kinds* separate, never a count | pass |
+| Batching output stable | `batch::batching_is_deterministic_under_input_order`, `plan::the_plan_carries_a_stable_batching_of_every_assertion` | pass |
+| **Idempotence preserved** | `mint::the_two_axes_and_the_derivation_stay_out_of_the_identity`, `plan::a_re_run_proposes_nothing_that_is_already_ratified` | pass |
+| The join is checked | `sidecar::an_entry_with_no_assertion_behind_it_is_an_orphan`, `…orphans_are_counted_per_run_over_an_instance_tree` | pass |
+
+**The identity row, verified rather than assumed.** Two assertions differing in confidence,
+relevance, basis, rule, operations, member kind, container kind and source path — differing in
+*everything the split added* — mint one id, because `g-dec-04` hashes the triple and nothing else.
+The instance's history is unaffected, and no ratified assertion becomes a fresh proposal.

@@ -15,14 +15,19 @@
 //! merging one file at a time.
 
 mod apply;
+mod axes;
+mod batch;
 mod declared;
+mod derivation;
 mod entail;
 pub mod facts;
 mod mint;
 mod plan;
+mod projection;
 mod propose;
 mod report;
 mod rows;
+mod sidecar;
 mod structural;
 mod triple;
 mod vocab;
@@ -32,10 +37,15 @@ mod write;
 // spelled, how the fixpoint is driven, how a file is rendered: a caller
 // depends on none of it, so none of it is published.
 pub use apply::{apply_extraction, ExtractionReport};
+pub use axes::{DerivationConfidence, DomainRelevance, RelevanceBasis};
+pub use batch::Batch;
+pub use derivation::Derivation;
 pub use entail::{FixpointReport, RuleReport};
 pub use plan::{plan_extraction, ExtractionParams, ExtractionPlan, PlannedFile, RowResult};
+pub use projection::{project, query_projection, validate_projection, ProjectionSources};
 pub use report::render as render_extraction;
-pub use rows::{Grade, Outcome, Provenance, Row};
+pub use rows::{Outcome, Provenance, Row};
+pub use sidecar::{orphans_in, Orphan, RUNS_DIR};
 pub use triple::{ProposedAssertion, Term, Triple};
 
 /// The extractor's own version, recorded in every Reading's assurance

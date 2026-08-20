@@ -1,8 +1,14 @@
 # Registry template
 
-**Template version: 0.2.0** (G-1 session 2026-08-17, revised by the registry-generator session
-2026-08-18; versioned with product-cli — instances pin this version and re-pin when it moves, by the
-same re-derive-at-a-named-commit discipline the G-track itself runs).
+**Template version: 0.3.0** (G-1 session 2026-08-17; revised by the registry-generator session
+2026-08-18 and by the two-axis session 2026-08-20; versioned with product-cli — instances pin this
+version and re-pin when it moves, by the same re-derive-at-a-named-commit discipline the G-track
+itself runs).
+
+**0.3.0 is backward compatible with content ratified at 0.2.0.** No file changes and none becomes
+non-conformant. The two grading axes and the derivation record are constrained on the class
+`reg:GradedAssertion`, which the writer stamps explicitly and nothing entails; an assertion written
+at 0.2.0 does not carry it, is not targeted, and keeps its bytes. See *The two axes* below.
 
 This directory is a **parameterised template for any ground registry**. It is not a repository
 and names no instance: everything instance-specific is a generation parameter, supplied when an
@@ -81,7 +87,41 @@ product registry generate \
   exemptions: 0.1.0 exempted the empty founding-decision slot, and generalising the exemption into
   the rule it stood in for is what removed both the carve-out and the empty file.
 - **The shapes in `shapes/`**: the §4.1 Reading tuple (`reading.ttl`), structural well-formedness of
-  an assertion (`structural.ttl`), and what a decision must carry (`decision.ttl`).
+  an assertion (`structural.ttl`), what a decision must carry (`decision.ttl`), and the two grading
+  axes with their derivation record (`derivation.ttl`).
+- **The shapes run over the join**, not over `graphs/` alone: `graphs/`, `runs/` and `vocabulary/`
+  are loaded together, because that is what a consumer reads and because the derivation half of an
+  assertion's shape lives in the run evidence. The **file rule** stays scoped to `graphs/`.
+- **Sidecar entries resolve.** Every assertion id a `runs/` file names must exist under `graphs/`.
+  Identity is content-addressed, so an orphan is a real finding — a run against the wrong instance,
+  or evidence for a proposal that was rejected — and it is reported per run rather than assumed away.
+
+## The two axes, and where derivation lives (0.3.0)
+
+`reg:assuranceGrade` measured one property while being read as two. It is split:
+
+| | Predicate | Value set | Where it lives |
+|---|---|---|---|
+| Axis 1 — **derivation confidence** | `reg:derivationConfidence` | `high · mid · low · not-derivable` | the assertion file |
+| Axis 2 — **domain relevance** | `reg:domainRelevance` | `high · low · unknown` | the assertion file |
+| Axis 2's basis | `reg:relevanceBasis` | `computed · defaulted · not-computed · not-applicable` | the assertion file |
+| **Derivation record** | `reg:derivedByRule` · `reg:standsOn` · `reg:memberKind` · `reg:containerKind` · `reg:sourcePath` | see `vocabulary/reg.ttl` | `runs/<corpus>-at-<ref>.ttl` |
+
+Axis 1's value set is unchanged from `reg:assuranceGrade`, deliberately: that column was already
+measuring derivation and nothing else, so the split renames it rather than re-marking it.
+`vocabulary/reg.ttl` declares the two predicates `owl:equivalentProperty`, so **one query answers
+over both generations** and no ratified assertion is rewritten to gain the new name.
+
+Axis 2 is not ordinal. `unknown` is the absence of a verdict, not a value between `high` and `low`,
+which is why it carries a basis: *unknown because nothing computed it* and *unknown because the row
+proposes nothing* are different findings.
+
+**Derivation is evidence, not ratified claim.** It lives in the per-run evidence layer under
+`runs/`, keyed by the assertion's own content-addressed id, leaving `graphs/` pure ratified
+assertion. Two things follow. A cohort ratified before the split can be given its derivation by
+**re-running the deterministic extractor at the pinned ref** — no byte of ratified content changes.
+And because the id is the join key, an entry either matches an assertion or is an orphan, which is a
+check rather than an assumption.
 
 ## Instance generation is a G0-entry step
 
