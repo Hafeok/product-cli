@@ -1072,6 +1072,20 @@ Emil's rulings needed, in order of how much they change the design:
 20. **Observation source.** Rate observation assumes retained acts to count. For arrangements that
     are event-sourced this is a query; for those that are not, it is unavailable and rates stay
     `declared` indefinitely. State that limit rather than implying observation is always reachable.
+21. **Design-time provenance** — *(opened 2026-08-20 by the tick-rate addendum; a defect in the
+    addendum itself, of the same class as the G-1 mis-pin — a value used from conversation as
+    though it were filed.)* §5.6's stage table gives declared rates `provenance = declared`, which
+    is **not in §4.1's value set** (`controlled` / `observed` / `inferred` / `institutional`).
+    Three candidate resolutions: (a) **a fifth value** — a filing consequence, since the set is
+    track-owned under `g-dec-01` pending the Q25/Q27/Q30 wave, and this would be a second consumer
+    waiting on that wave alongside the existing one; (b) **`inferred`**, with the assumption
+    recorded in `assurance` rather than `provenance`; (c) **a distinct axis** for whether a value
+    was assumed or measured, on the grounds that assumed-versus-measured may be orthogonal to where
+    a value came from — "assumed at design time" and "inferred by rule" are different things, and
+    forcing them into one column is the conflation §5.2's second axis was added to correct. Emil
+    rules, with the wave's context; gates any implementation of §5.6. **Deliberately not folded
+    into item 18**: 18 is the rate's shape and stays inside the G-track, 21 is whether the
+    provenance value set gains a member and carries a canon consequence.
 
 ---
 
