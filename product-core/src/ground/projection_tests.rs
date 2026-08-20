@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::ground::derivation::Derivation;
-use crate::ground::facts::{DeclKind, MemberKind};
+use crate::ground::facts::{DeclKind, MemberKind, OperationStatus};
 use crate::ground::propose::Proposer;
 use crate::ground::rows::row;
 use crate::ground::sidecar;
@@ -64,6 +64,16 @@ fn shapes() -> String {
     raw.replace("https://REGISTRY-HOST.example/ns#", BASE)
 }
 
+fn probe() -> Vec<OperationStatus> {
+    vec![OperationStatus {
+        operation: "documentSymbol".into(),
+        answered: true,
+        advertised: Some(true),
+        divergence: None,
+        detail: "3 symbol(s)".into(),
+    }]
+}
+
 fn sources(graded: &[ProposedAssertion], legacy: &[String]) -> ProjectionSources {
     let ctx = ctx();
     ProjectionSources {
@@ -72,7 +82,7 @@ fn sources(graded: &[ProposedAssertion], legacy: &[String]) -> ProjectionSources
             .map(|a| assertion_file(a, &ctx))
             .chain(legacy.iter().cloned())
             .collect(),
-        runs: vec![sidecar::run_file(graded, &ctx)],
+        runs: vec![sidecar::run_file(graded, &probe(), &ctx)],
         vocabulary: vocabulary(),
     }
 }

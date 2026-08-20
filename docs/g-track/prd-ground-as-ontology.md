@@ -309,6 +309,25 @@ row's absence *reported* rather than silently empty, so a reviewer can tell "thi
 no hierarchy" apart from "the instrument did not answer". Whatever the fourth language turns
 out to be, it enters under this same discipline.
 
+**A probe verdict is itself a Reading, and the capability discipline and the Reading discipline
+are the same mechanism.** *(Ruled 2026-08-20, on the measurement above.)* An operation that answers
+on one run and times out on the next, over the same corpus at the same ref, is not a server whose
+capabilities changed — it is a reading taken at an instant. So a verdict carries the §4.1 tuple like
+any other: a **value** (what the call returned), an **as-of** (when), a **provenance** (`observed` —
+a live call, never a flag), and an **assurance** (the probe, named). Two consequences, binding:
+
+- **Every probe verdict is recorded in the run evidence**, beside the derivation facts, with its
+  as-of and the advertisement it agreed or disagreed with. Two runs that disagree then differ
+  *visibly* rather than mysteriously, and a reviewer can tell **"this row found nothing"** from
+  **"this row was gated off that day"** — a distinction that is otherwise unrecoverable, and the
+  same class of distinction the four-outcome row report exists to preserve.
+- **A single unavailable verdict is not final.** An operation recorded unavailable after one timeout
+  is a reading at very low assurance being treated as a verdict, and a row gated on it becomes
+  non-reproducible across runs differing in nothing a reviewer can see — which defeats the point of
+  gating. The honest instrument is **retry-then-record**: retry on a non-answer, and record the
+  attempts with the verdict so its assurance is visible. *Open: the shape of the retry — how many,
+  how spaced, and how the attempts are written — is proposed at the next gate, not built here.*
+
 **Mapping-rule verdicts above were provisional; they are no longer.** G0 measured them against a
 **three-project subset** of the C# corpus — the projects that restore without the private package
 feed — leaving four projects and the API host unloaded. The two-axis session (2026-08-20) re-ran
@@ -364,6 +383,19 @@ member the server reported as a *field*. So every assertion now carries a deriva
 The principle: **record the facts, and let the reviewer's query — not the extractor's rule — do the
 classification.** Nothing here filters either group, and nothing widens the LSP subset; the
 predicate over paths that names generated code is the reviewer's to write.
+
+**And the predicate is a real choice, so both readings are recorded here rather than rediscovered.**
+Measured on the ratified cohort, against the generated-migration group G0 rejected:
+
+| Predicate over `reg:sourcePath` | Recovers |
+|---|---|
+| **every** path under the generated folder | 14 of 18 — the four it misses are `usage-construct` edges whose second endpoint is an ordinary type |
+| **any** path under the generated folder | 18 of 18 — G0's group exactly |
+
+Neither is wrong. `every` asks *is this assertion wholly about generated code*; `any` asks *does this
+assertion touch generated code*. A relation between a generated type and a domain type answers no to
+the first and yes to the second, and which a reviewer wants depends on what they are about to do
+with the batch. The extractor records the paths; it does not choose.
 
 These facts live in the **per-source evidence layer** — one graph per extraction run, pinned to the
 corpus ref, under `runs/` in the instance — keyed by the assertion's own content-addressed id,
@@ -533,6 +565,38 @@ the same order and a batch listing diffs cleanly across refs.
 The batching lives in the extractor's **output contract**, not in its logs. G0 found the reviewer's
 batching keys typed as debug detail, and two hand-counts were wrong before they were made queryable.
 An instrument's account of its own limits belongs where a query can reach it.
+
+### 5.5.2 A ratification act must be checkable against the ruling it discharges
+
+*(Added 2026-08-20, from a defect in G0's own Gate 4.)*
+
+G0 ruled per-triple: 49 assertions rejected in two named groups, the remaining 512 accepted. The
+ratification act was a merge of a pull request containing **all 561 files**. The ruling was prose in
+a chat message; the act was a button; **nothing checked that the second carried the first**. What
+merged reads as acceptance of a reviewed set, and what was actually ratified was the unreviewed
+superset.
+
+This is `term:presumed-discharge` at the ratifier's seat rather than in an instrument: a record
+state where a pass is indistinguishable from a skip. It is also the rubber-stamp failure §5.6 exists
+to forbid, arriving through the one path §5.6 did not describe — not wholesale merge *instead of*
+review, but wholesale merge *after* review, which looks like the discharged form and is not.
+
+Binding from here:
+
+- **A merge is preceded by a stated accept/reject set**, by assertion id, recorded where the merge
+  can be checked against it.
+- **The merged tree is diffed against that set**, and a divergence blocks the act. Per-triple review
+  that ends in one undifferentiated merge is per-triple review in name only.
+
+**Removal is by retraction, never by deletion.** Assertions ratified in error are removed by a
+*retraction decision* filed in the instance: the members named by id, the basis naming the ruling
+they should have discharged, and the assertion files removed **in that same act** — so history
+retains them and the decision records why. That is supersession at the file level rather than a
+rewrite, and it is a ratifier's act with a ruling behind it, never an instrument's.
+
+**Recoverability, paid out.** The 49 were unfindable in the ratified graph until the derivation
+record landed; they are now two queries (§5.2). The argument for recording derivation was made in
+the abstract; this is the first real defect in the ratified set it has repaid.
 
 ### 5.6 Guard
 
@@ -921,6 +985,19 @@ Emil's rulings needed, in order of how much they change the design:
     deliberately *not* taken by the two-axis session because a claim that a folder name means
     "generated" is a convention judgement that belongs here). Until this is filed, neither rejected
     group is filtered — only made visible and batchable.
+16. **The simple-name collision defect** — *(opened 2026-08-20, measured.)* The `properties` row
+    resolves a member's range by matching the **simple name** of its declared type against the
+    corpus. G0 measured 0 cross-module collisions on the three-project subset and recorded the risk;
+    the full solution carries **21**, so the row now conflates two types wherever a name collides.
+    `definition` is wired, answers, and is consumed by no row — it is the exact-resolution route and
+    spending it is the fix. Scoped as: *route range resolution through `definition` where a simple
+    name is ambiguous, keeping the name match where it is not.* Not a widening of the subset —
+    `definition` is already inside it.
+17. **Retry-then-record for probe verdicts** — *(opened 2026-08-20.)* A verdict is a Reading
+    (§5.2), and a single non-answer currently becomes a standing "unavailable" that gates a row.
+    Propose the retry shape — how many attempts, how spaced, how the attempts are written into the
+    run evidence so the verdict's assurance is visible — and rule on it before any row's gating
+    depends on an operation that has ever timed out.
 
 ---
 

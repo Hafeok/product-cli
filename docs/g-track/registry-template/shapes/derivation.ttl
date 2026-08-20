@@ -20,6 +20,7 @@
 # what a consumer reads.
 
 @prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix reg: <https://REGISTRY-HOST.example/ns#> .
 
 reg:GradedAssertionShape
@@ -77,4 +78,35 @@ reg:GradedAssertionShape
         sh:path reg:standsOn ;
         sh:minCount 1 ;
         sh:message "A graded assertion names at least one probed operation it stood on." ;
+    ] .
+
+# A capability-probe verdict, recorded in the run evidence.
+#
+# Typed reg:Reading in the vocabulary, so `reading.ttl` already demands its
+# value, as-of, provenance and assurance. What this shape adds is the two
+# things that make a verdict a verdict rather than a note: which operation it
+# is about, and what the call actually did.
+#
+# It exists because a verdict is *not* a standing fact about the server. The
+# same operation has answered on one run and timed out on another over the
+# same corpus at the same ref. Two runs that disagree must therefore differ
+# visibly — a reviewer can tell "this row found nothing" from "this row was
+# gated off that day" only if both verdicts are on the record with their
+# as-of.
+reg:ProbeVerdictShape
+    a sh:NodeShape ;
+    sh:targetClass reg:ProbeVerdict ;
+    sh:property [
+        sh:path reg:operation ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "A probe verdict names exactly one operation, as an IRI." ;
+    ] ;
+    sh:property [
+        sh:path reg:answered ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:boolean ;
+        sh:message "A probe verdict states whether a live call answered — the verdict is the call, never the advertisement." ;
     ] .

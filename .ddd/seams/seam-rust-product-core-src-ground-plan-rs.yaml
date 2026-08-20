@@ -330,3 +330,27 @@ bindings:
   after: sha256:a41a386ec67a9749a04e30ef4c8487f4c54281d71bcb842ed3d02dff25c7a548
   base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
   hash: sha256:36c0fc984d309eb1643e1a1201b49b1932f1579466f95899d891543cedcb44f1
+- symbol: batches
+  file: product-core/src/ground/plan.rs
+  before: sha256:ae246568683825375e51d85c1f985cfed4fcc26fbfdce576a7de6d2a1fb30a7b
+  after: sha256:ad2d26f968d07f53f75b702427ef5c4315da0b44893f0ad830aeddef93eb4dde
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:69f4c979bbe425e74bdc85fa290d4a6867730958d4153ef79a1d18ffc7dc74cc
+- symbol: sidecar_entries
+  file: product-core/src/ground/plan.rs
+  before: sha256:ae246568683825375e51d85c1f985cfed4fcc26fbfdce576a7de6d2a1fb30a7b
+  after: sha256:ad2d26f968d07f53f75b702427ef5c4315da0b44893f0ad830aeddef93eb4dde
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:987200093aa9caf72c1a4ef42e93cd2b4e4e867f5e356589f4eb2a560face0fb
+- symbol: by_pair
+  file: product-core/src/ground/plan.rs
+  before: sha256:ae246568683825375e51d85c1f985cfed4fcc26fbfdce576a7de6d2a1fb30a7b
+  after: sha256:ad2d26f968d07f53f75b702427ef5c4315da0b44893f0ad830aeddef93eb4dde
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:0104472d993ba4afba498cef42f4f2fb5aeca372b3fd2f284e6bd663a6f5e846
+- symbol: by_grade
+  file: product-core/src/ground/plan.rs
+  before: sha256:ae246568683825375e51d85c1f985cfed4fcc26fbfdce576a7de6d2a1fb30a7b
+  after: sha256:ad2d26f968d07f53f75b702427ef5c4315da0b44893f0ad830aeddef93eb4dde
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:a6748ba44f63b7f4d566be8899c64a4ad51828a5b9f3a4262e30fb3a93d0829a

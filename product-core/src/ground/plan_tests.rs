@@ -45,7 +45,13 @@ reg:GradedAssertionShape a sh:NodeShape ; sh:targetClass reg:GradedAssertion ;
 fn all_six() -> Vec<OperationStatus> {
     ["documentSymbol", "workspaceSymbol", "definition", "references", "hover", "typeHierarchy"]
         .iter()
-        .map(|o| OperationStatus { operation: (*o).into(), answered: true, detail: "ok".into() })
+        .map(|o| OperationStatus {
+            operation: (*o).into(),
+            answered: true,
+            advertised: Some(true),
+            divergence: None,
+            detail: "ok".into(),
+        })
         .collect()
 }
 

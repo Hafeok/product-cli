@@ -2,12 +2,33 @@
 
 use super::*;
 use crate::ground::derivation::Derivation;
-use crate::ground::facts::{DeclKind, MemberKind};
+use crate::ground::facts::{DeclKind, MemberKind, OperationStatus};
 use crate::ground::propose::Proposer;
 use crate::ground::rows::row;
 use crate::ground::triple::{Term, Triple};
 
 const DOC: &[&str] = &["documentSymbol"];
+
+/// A probe where one operation answered and one timed out — the pair the
+/// full-solution runs actually produced, minutes apart.
+fn probe() -> Vec<OperationStatus> {
+    vec![
+        OperationStatus {
+            operation: "documentSymbol".into(),
+            answered: true,
+            advertised: Some(true),
+            divergence: None,
+            detail: "3 symbol(s)".into(),
+        },
+        OperationStatus {
+            operation: "workspaceSymbol".into(),
+            answered: false,
+            advertised: Some(true),
+            divergence: Some("over-advertised".into()),
+            detail: "error: language server timeout: workspace/symbol unanswered after 15s".into(),
+        },
+    ]
+}
 
 fn ctx() -> WriteContext {
     WriteContext {
@@ -36,7 +57,7 @@ fn field_assertion(subject: &str) -> ProposedAssertion {
 /// unfindable is written down, on the assertion's own node, keyed by the id.
 #[test]
 fn the_run_file_records_the_member_kind_that_was_missing() {
-    let ttl = run_file(&[field_assertion("A")], &ctx());
+    let ttl = run_file(&[field_assertion("A")], &probe(), &ctx());
     assert!(ttl.contains("reg:memberKind"), "{ttl}");
     assert!(ttl.contains("reg:field"), "{ttl}");
     assert!(ttl.contains("reg:containerKind"), "{ttl}");
@@ -49,7 +70,7 @@ fn the_run_file_records_the_member_kind_that_was_missing() {
 /// the two layers are separate files.
 #[test]
 fn the_run_file_states_that_it_is_not_ratified_content() {
-    let ttl = run_file(&[field_assertion("A")], &ctx());
+    let ttl = run_file(&[field_assertion("A")], &probe(), &ctx());
     assert!(ttl.contains("NOT ratified content"), "{ttl}");
     assert!(ttl.contains("reg:ExtractionRun"), "{ttl}");
 }
@@ -58,7 +79,7 @@ fn the_run_file_states_that_it_is_not_ratified_content() {
 /// canonical assertion, and duplicating it here is how the two drift apart.
 #[test]
 fn the_run_file_does_not_restate_what_the_assertion_carries() {
-    let ttl = run_file(&[field_assertion("A")], &ctx());
+    let ttl = run_file(&[field_assertion("A")], &probe(), &ctx());
     assert!(!ttl.contains("reg:mappingRow"), "{ttl}");
     assert!(!ttl.contains("reg:domainRelevance"), "{ttl}");
 }
@@ -70,7 +91,7 @@ fn entries_are_written_in_a_stable_order() {
     let forward = [field_assertion("A"), field_assertion("B"), field_assertion("C")];
     let mut backward = forward.to_vec();
     backward.reverse();
-    assert_eq!(run_file(&forward, &ctx()), run_file(&backward, &ctx()));
+    assert_eq!(run_file(&forward, &probe(), &ctx()), run_file(&backward, &probe(), &ctx()));
 }
 
 /// The run file names one run, at one ref, so evidence never floats free of
@@ -100,7 +121,7 @@ fn an_entry_with_no_assertion_behind_it_is_an_orphan() {
 #[test]
 fn entry_ids_round_trip_through_the_written_file() {
     let written = [field_assertion("A"), field_assertion("B")];
-    let ttl = run_file(&written, &ctx());
+    let ttl = run_file(&written, &probe(), &ctx());
     let mut expected: Vec<String> = written.iter().map(|a| a.id.clone()).collect();
     expected.sort();
     assert_eq!(entry_ids(&ttl), expected);
@@ -118,7 +139,8 @@ fn orphans_are_counted_per_run_over_an_instance_tree() {
     for a in &written {
         std::fs::write(root.join("graphs/canonical").join(a.file_name()), "# x\n").expect("write");
     }
-    std::fs::write(root.join(RUNS_DIR).join("r.ttl"), run_file(&written, &ctx())).expect("run");
+    std::fs::write(root.join(RUNS_DIR).join("r.ttl"), run_file(&written, &probe(), &ctx()))
+        .expect("run");
     assert!(orphans_in(root).is_empty());
 
     std::fs::remove_file(root.join("graphs/canonical").join(written[0].file_name()))
@@ -126,4 +148,65 @@ fn orphans_are_counted_per_run_over_an_instance_tree() {
     let found = orphans_in(root);
     assert_eq!(found.len(), 1, "{found:?}");
     assert_eq!(found[0].assertion, written[0].id);
+}
+
+/// A probe verdict is a Reading, so it carries the whole §4.1 tuple — value,
+/// as-of, provenance, assurance — and not merely a boolean.
+#[test]
+fn a_probe_verdict_is_written_as_a_reading() {
+    let ttl = run_file(&[field_assertion("A")], &probe(), &ctx());
+    assert!(ttl.contains("reg:ProbeVerdict , reg:Reading"), "{ttl}");
+    assert!(ttl.contains("reg:operation"), "{ttl}");
+    assert!(ttl.contains("reg:answered         true"), "{ttl}");
+    assert!(ttl.contains("reg:provenance       reg:observed"), "{ttl}");
+    assert!(ttl.contains("reg:asOf"), "{ttl}");
+    assert!(ttl.contains("not a standing fact about the server"), "{ttl}");
+}
+
+/// Both directions on the record: the verdict, and the advertisement it
+/// disagreed with. An operation recorded unavailable is legible as such
+/// rather than simply missing.
+#[test]
+fn an_unavailable_verdict_records_what_was_advertised_beside_it() {
+    let ttl = run_file(&[field_assertion("A")], &probe(), &ctx());
+    assert!(ttl.contains("reg:answered         false"), "{ttl}");
+    assert!(ttl.contains("reg:advertised       true"), "{ttl}");
+    assert!(ttl.contains("reg:divergence"), "{ttl}");
+    assert!(ttl.contains("over-advertised"), "{ttl}");
+    assert!(ttl.contains("unavailable — error: language server timeout"), "{ttl}");
+}
+
+/// The point of recording verdicts at all: two runs that disagree about one
+/// operation differ *visibly*, because each verdict is its own node with its
+/// own as-of. A reviewer can tell "this row found nothing" from "this row was
+/// gated off that day".
+#[test]
+fn two_runs_disagreeing_about_an_operation_differ_visibly() {
+    let answered = vec![OperationStatus {
+        operation: "workspaceSymbol".into(),
+        answered: true,
+        advertised: Some(true),
+        divergence: None,
+        detail: "7 symbol(s)".into(),
+    }];
+    let timed_out: Vec<OperationStatus> =
+        probe().into_iter().filter(|o| o.operation == "workspaceSymbol").collect();
+    let one = run_file(&[], &answered, &ctx());
+    let other = run_file(&[], &timed_out, &ctx());
+    assert_ne!(one, other);
+    assert!(one.contains("available — 7 symbol(s)"), "{one}");
+    assert!(other.contains("unavailable — error"), "{other}");
+    // The verdict node is the same IRI in both, so the two readings are
+    // comparable rather than merely different.
+    assert!(one.contains("reg:probe-corpus-backend-3b0a56b33b22-workspaceSymbol"), "{one}");
+    assert!(other.contains("reg:probe-corpus-backend-3b0a56b33b22-workspaceSymbol"), "{other}");
+}
+
+/// Verdicts sort by operation, so the file is byte-stable however the probe
+/// happened to order them.
+#[test]
+fn verdicts_are_written_in_a_stable_order() {
+    let mut reversed = probe();
+    reversed.reverse();
+    assert_eq!(run_file(&[], &probe(), &ctx()), run_file(&[], &reversed, &ctx()));
 }

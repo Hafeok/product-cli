@@ -92,6 +92,16 @@ pub fn corpus_iri(base: &str, corpus: &str, git_ref: &str) -> String {
     format!("{base}source-{}-at-{}", local_name(corpus), short_ref(git_ref))
 }
 
+/// The IRI of one operation's probe verdict on one run.
+///
+/// Qualified by the run, because the verdict is a reading taken at an
+/// instant rather than a standing fact about the server: two runs over the
+/// same corpus at the same ref may disagree, and they must be able to say so
+/// side by side.
+pub fn probe_iri(base: &str, corpus: &str, git_ref: &str, operation: &str) -> String {
+    format!("{base}probe-{}-{}-{}", local_name(corpus), short_ref(git_ref), local_name(operation))
+}
+
 /// A ref abbreviated for a local name, full-length refs kept in a literal.
 pub fn short_ref(git_ref: &str) -> String {
     let name = local_name(git_ref);

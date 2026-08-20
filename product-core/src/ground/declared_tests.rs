@@ -7,7 +7,13 @@ const BASE: &str = "tag:x,2026:ground/";
 
 fn answered(ops: &[&str]) -> Vec<OperationStatus> {
     ops.iter()
-        .map(|o| OperationStatus { operation: (*o).into(), answered: true, detail: "ok".into() })
+        .map(|o| OperationStatus {
+            operation: (*o).into(),
+            answered: true,
+            advertised: Some(true),
+            divergence: None,
+            detail: "ok".into(),
+        })
         .collect()
 }
 

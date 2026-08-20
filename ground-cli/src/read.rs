@@ -121,6 +121,13 @@ fn empty_facts(request: &ReadRequest, probe: &Probe) -> CorpusFacts {
             .map(|o| OperationStatus {
                 operation: o.operation.as_str().to_string(),
                 answered: o.answered,
+                advertised: o.advertised,
+                divergence: o.divergence.map(|d| {
+                    serde_json::to_value(d)
+                        .ok()
+                        .and_then(|v| v.as_str().map(str::to_string))
+                        .unwrap_or_else(|| format!("{d:?}"))
+                }),
                 detail: o.detail.clone(),
             })
             .collect(),

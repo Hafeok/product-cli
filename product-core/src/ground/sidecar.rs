@@ -21,6 +21,7 @@
 
 use serde::Serialize;
 
+use super::facts::OperationStatus;
 use super::triple::ProposedAssertion;
 use super::vocab::{reg, PREFIXES};
 use super::write::{shorten, WriteContext};
@@ -39,7 +40,11 @@ pub fn file_name(corpus: &str, git_ref: &str) -> String {
 /// Evidence is about what the instrument saw, not about what is new, and it is
 /// exactly that distinction that lets a re-run at an old ref populate the
 /// cohort ratified before this layer existed.
-pub fn run_file(entries: &[ProposedAssertion], ctx: &WriteContext) -> String {
+pub fn run_file(
+    entries: &[ProposedAssertion],
+    probe: &[OperationStatus],
+    ctx: &WriteContext,
+) -> String {
     let base = &ctx.base_iri;
     let mut out = header(entries.len(), ctx);
     out.push_str(&prefixes(base));
@@ -50,11 +55,70 @@ pub fn run_file(entries: &[ProposedAssertion], ctx: &WriteContext) -> String {
         quoted(&ctx.git_ref),
         quoted(&ctx.as_of),
     ));
+    for verdict in probe_verdicts(probe, ctx) {
+        out.push_str(&verdict);
+    }
     let mut sorted: Vec<&ProposedAssertion> = entries.iter().collect();
     sorted.sort_by(|a, b| a.id.cmp(&b.id));
     sorted.dedup_by(|a, b| a.id == b.id);
     for entry in sorted {
         out.push_str(&record(entry, base, &ctx.run_iri));
+    }
+    out
+}
+
+/// Every operation's probe verdict, each as a Reading in its own right.
+///
+/// The capability discipline and the Reading discipline turn out to be the
+/// same mechanism. A verdict has a value (what the call returned), an as-of
+/// (when it was taken), a provenance (observed — a live call, not a flag),
+/// and an assurance (the probe, named). Writing it as anything less is how a
+/// reading acquires the standing of a fact.
+///
+/// Sorted by operation so the file is byte-stable.
+fn probe_verdicts(probe: &[OperationStatus], ctx: &WriteContext) -> Vec<String> {
+    let mut sorted: Vec<&OperationStatus> = probe.iter().collect();
+    sorted.sort_by(|a, b| a.operation.cmp(&b.operation));
+    sorted.dedup_by(|a, b| a.operation == b.operation);
+    sorted.iter().map(|status| one_verdict(status, ctx)).collect()
+}
+
+/// One verdict, as Turtle.
+fn one_verdict(status: &OperationStatus, ctx: &WriteContext) -> String {
+    let base = &ctx.base_iri;
+    let iri = super::mint::probe_iri(base, &ctx.corpus, &ctx.git_ref, &status.operation);
+    let mut fields: Vec<(String, String)> = vec![
+        ("a".into(), "reg:ProbeVerdict , reg:Reading".into()),
+        ("reg:operation".into(), format!("reg:{}", reg::operation_name(&status.operation))),
+        ("reg:answered".into(), format!("{}", status.answered)),
+        (
+            "reg:value".into(),
+            quoted(&format!(
+                "{} — {}",
+                if status.answered { "available" } else { "unavailable" },
+                status.detail
+            )),
+        ),
+        ("reg:asOf".into(), format!("{}^^xsd:dateTime", quoted(&ctx.as_of))),
+        ("reg:provenance".into(), "reg:observed".into()),
+        (
+            "reg:assurance".into(),
+            quoted("capability probe — one live call against a real declaration; a verdict at this \
+instant, not a standing fact about the server"),
+        ),
+    ];
+    if let Some(advertised) = status.advertised {
+        fields.push(("reg:advertised".into(), format!("{advertised}")));
+    }
+    if let Some(divergence) = &status.divergence {
+        fields.push(("reg:divergence".into(), quoted(divergence)));
+    }
+    fields.push(("prov:wasGeneratedBy".into(), shorten(&ctx.run_iri, base)));
+    let width = fields.iter().map(|(k, _)| k.len()).max().unwrap_or(0);
+    let mut out = format!("\n{}\n", shorten(&iri, base));
+    for (i, (key, value)) in fields.iter().enumerate() {
+        let terminator = if i + 1 == fields.len() { "." } else { ";" };
+        out.push_str(&format!("    {key:<width$}  {value} {terminator}\n"));
     }
     out
 }
@@ -99,6 +163,11 @@ fn header(count: usize, ctx: &WriteContext) -> String {
          # {} at {}: the rule, the operations it stood on, the source kinds it\n\
          # saw. They ride on each assertion's own node, because identity is\n\
          # content-addressed and the id is the join key.\n\
+         # It also carries this run's capability-probe verdicts. A verdict is a\n\
+         # Reading, not a fact about the server: the same operation has answered\n\
+         # on one run and timed out on another over the same corpus at the same\n\
+         # ref, so two runs that disagree must differ visibly rather than\n\
+         # mysteriously.\n\
          # Recomputable by construction — re-running at this ref regenerates\n\
          # this file, which is why a cohort ratified before this layer existed\n\
          # can still be given its derivation without a rewrite.\n\n",

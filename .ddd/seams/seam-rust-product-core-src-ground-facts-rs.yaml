@@ -516,3 +516,15 @@ bindings:
   after: sha256:bc1a2b44a83e509a2dc99878b95aced36a1b2aa8388a6f751d9b30243788f610
   base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
   hash: sha256:4cdc1e544f7285a59509d232f777528ece8205eb38668168f3fc889507b5eb50
+- symbol: advertised
+  file: product-core/src/ground/facts.rs
+  before: sha256:bc1a2b44a83e509a2dc99878b95aced36a1b2aa8388a6f751d9b30243788f610
+  after: sha256:382c3c0f37b5189a5a5f1e69a5d67146485ef6321d253c3cf647eb55c82b92e2
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:0ffb51836902cc4ba7d5e6d222de16fe5097644e836efcb025658f05c1e28a08
+- symbol: divergence
+  file: product-core/src/ground/facts.rs
+  before: sha256:bc1a2b44a83e509a2dc99878b95aced36a1b2aa8388a6f751d9b30243788f610
+  after: sha256:382c3c0f37b5189a5a5f1e69a5d67146485ef6321d253c3cf647eb55c82b92e2
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:660a428efdc4494e97c6e8014282f3c1f54cc6df81e734a0aa65f33bc47fa06c

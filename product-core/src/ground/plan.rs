@@ -156,7 +156,7 @@ pub fn plan_extraction(
     let mut files = render(&assertions, params, &ctx);
     files.push(PlannedFile {
         path: sidecar::file_name(&facts.corpus, &facts.git_ref),
-        contents: sidecar::run_file(&read, &ctx),
+        contents: sidecar::run_file(&read, &facts.operations, &ctx),
     });
     let (shacl, constraints_evaluated) = check(&files, shapes_ttl)?;
     Ok(ExtractionPlan {

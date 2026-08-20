@@ -122,14 +122,31 @@ pub struct ReferenceSite {
     pub line: u64,
 }
 
-/// Whether one declaration-level operation answered on this corpus.
+/// One operation's probe verdict on this corpus.
 ///
 /// Carried into the facts so a mapping row can report *why* it found
 /// nothing. The probe decides this; the mapping half only reads it.
+///
+/// **A verdict is a Reading, not a fact about the server.** Measured on the
+/// same corpus at the same ref, minutes apart, one operation timed out on one
+/// run and answered on the next — so `answered` is what one call at one
+/// instant returned, and it belongs in the run evidence with its as-of like
+/// any other reading. Two runs that disagree then differ visibly rather than
+/// mysteriously, and a reviewer can tell *this row found nothing* from *this
+/// row was gated off that day*.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OperationStatus {
     pub operation: String,
+    /// Did a live call return a usable result? This is the verdict.
     pub answered: bool,
+    /// The `ServerCapabilities` flag as read; `None` when the server names no
+    /// such key at all. Kept beside the verdict so the two can disagree on
+    /// the record rather than in someone's memory.
+    #[serde(default)]
+    pub advertised: Option<bool>,
+    /// How the advertisement diverged from the behaviour, where it did.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub divergence: Option<String>,
     pub detail: String,
 }
 

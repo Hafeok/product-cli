@@ -23,6 +23,20 @@ reg:Reading         a rdfs:Class ; rdfs:label "a ground reading (PRD §4.1)" .
 reg:Decision        a rdfs:Class ; rdfs:label "a filed decision" .
 reg:ExtractionRun   a rdfs:Class ; rdfs:label "one run of the code extractor" .
 
+# A capability-probe verdict — one operation, one live call, one instant.
+#
+# It is typed reg:Reading deliberately. Measured on one corpus at one ref,
+# minutes apart, an operation timed out on one run and answered on the next:
+# the verdict is what a call returned at an instant, not a standing fact about
+# the server. The capability discipline and the Reading discipline are the
+# same mechanism, so a verdict carries the same four-tuple every other reading
+# carries — value, as-of, provenance, assurance — and the Reading shape
+# enforces it.
+reg:ProbeVerdict
+    a rdfs:Class ;
+    rdfs:subClassOf reg:Reading ;
+    rdfs:label "one operation's capability-probe verdict on one run" .
+
 # The generation marker. An assertion written by a 0.3.0-or-later extractor
 # carries this type **explicitly**; nothing entails it. That is deliberate:
 # the derivation shape targets this class rather than the presence of a
@@ -108,6 +122,11 @@ reg:record    a reg:ContainerKind ; rdfs:label "record" .
 # The declaration-level subset, one individual per operation. An assertion
 # standing on an operation the probe reported unavailable cannot exist, so
 # these are what reg:standsOn binds.
+reg:operation   a rdf:Property ; rdfs:label "the operation a probe verdict is about" .
+reg:answered    a rdf:Property ; rdfs:label "did a live call return a usable result — the verdict" .
+reg:advertised  a rdf:Property ; rdfs:label "the ServerCapabilities flag as read, beside the verdict" .
+reg:divergence  a rdf:Property ; rdfs:label "how the advertisement diverged from the behaviour" .
+
 reg:op-documentSymbol  a reg:Operation ; rdfs:label "textDocument/documentSymbol" .
 reg:op-workspaceSymbol a reg:Operation ; rdfs:label "workspace/symbol" .
 reg:op-typeHierarchy   a reg:Operation ; rdfs:label "textDocument/prepareTypeHierarchy" .

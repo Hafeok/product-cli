@@ -1,7 +1,7 @@
 format: 2
 id: seam/rust/product-core-src-ground-sidecar-rs
 boundary: contract surface of product-core/src/ground/sidecar.rs
-verdict_knowledge: "Callers learn where extraction evidence lives and what it may contain: one file per run, pinned to the corpus ref, carrying each assertion's derivation on the assertion's own content-addressed node, outside the ratified graph. The boundary publishes that evidence is regenerable rather than authored — so a cohort ratified before the layer existed can be given its derivation without a rewrite — and that an entry either resolves to an assertion or is reported as an orphan."
+verdict_knowledge: 'Callers learn where extraction evidence lives and what it may contain: one file per run, pinned to the corpus ref, carrying each assertion''s derivation on the assertion''s own content-addressed node, outside the ratified graph. The boundary publishes that evidence is regenerable rather than authored — so a cohort ratified before the layer existed can be given its derivation without a rewrite — and that an entry either resolves to an assertion or is reported as an orphan.'
 contract_location: product-core/src/ground/sidecar.rs
 obligations: []
 metadata: {}
@@ -60,3 +60,57 @@ bindings:
   after: sha256:8892dce1d10d88382dfb410b1700bc3503cb7e88be8229943799d3de02c86b45
   base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
   hash: sha256:bfa8251fb470a16cfb04783194c4c6209bb5f345cf15ef00cd508ce9a5ab6f71
+- symbol: RUNS_DIR
+  file: product-core/src/ground/sidecar.rs
+  before: absent
+  after: sha256:c9aec657c98467ed9e73d509515b46d2023715746f7f43345fe204f0b357000d
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:db27da368f99a0c546589ca20f7cac62e09884f46e2a20a71c1f1d74963951bd
+- symbol: entry_ids
+  file: product-core/src/ground/sidecar.rs
+  before: absent
+  after: sha256:c9aec657c98467ed9e73d509515b46d2023715746f7f43345fe204f0b357000d
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:139cbe382616c8c0afaa5b9a0b400d971f73bde824f1cc5785920617fe0d2b61
+- symbol: file_name
+  file: product-core/src/ground/sidecar.rs
+  before: absent
+  after: sha256:c9aec657c98467ed9e73d509515b46d2023715746f7f43345fe204f0b357000d
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:422b1d5f66ddfddb98f24b26cb919268d6e282ffe70ad8277a3a9b133d40d404
+- symbol: orphans
+  file: product-core/src/ground/sidecar.rs
+  before: absent
+  after: sha256:c9aec657c98467ed9e73d509515b46d2023715746f7f43345fe204f0b357000d
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:fa701a6ef6e1eb4598ad2187788f48b624073dc47384936a2650d0f317c1318a
+- symbol: orphans_in
+  file: product-core/src/ground/sidecar.rs
+  before: absent
+  after: sha256:c9aec657c98467ed9e73d509515b46d2023715746f7f43345fe204f0b357000d
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:4a51662f91bf60f64ef6d3913641de91ccfb9fb55f1a65224475dd573fa671f3
+- symbol: run_file
+  file: product-core/src/ground/sidecar.rs
+  before: absent
+  after: sha256:c9aec657c98467ed9e73d509515b46d2023715746f7f43345fe204f0b357000d
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:349ab96b6128fc7b05cc9a53ca964575d76b429b4056f166f68777c0f45a0ccf
+- symbol: Orphan
+  file: product-core/src/ground/sidecar.rs
+  before: absent
+  after: sha256:c9aec657c98467ed9e73d509515b46d2023715746f7f43345fe204f0b357000d
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:c6d4b58c991dd0f36b514535efb5f2ac73d0b13ca1b5c4c2baaad2d8c5391a36
+- symbol: assertion
+  file: product-core/src/ground/sidecar.rs
+  before: absent
+  after: sha256:c9aec657c98467ed9e73d509515b46d2023715746f7f43345fe204f0b357000d
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:da5872e7be6e68e07b6716dd97e6697595470ca94339f366e5d6e572ee384ebc
+- symbol: run
+  file: product-core/src/ground/sidecar.rs
+  before: absent
+  after: sha256:c9aec657c98467ed9e73d509515b46d2023715746f7f43345fe204f0b357000d
+  base_revision: 5fd248163e4dba5cf22ba20e1906107f583974b5
+  hash: sha256:5ef4e77f4d66ad3598e947f34b2f6a30b914bd94a5ab2e45bb7403041a809516

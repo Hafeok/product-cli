@@ -482,15 +482,70 @@ pending. **The instance holds all 561.** PR #2 (`Proposal: 561 assertions…`) m
 files and no later commit removes any, so the ruled rejection of Group A and Group B is not
 reflected in the ratified graph.
 
-Reported as an observation, not a conclusion about intent. It does make the recoverability argument
-concrete rather than hypothetical: the 49 are ratified ground today, they were unfindable until this
-change, and after it they are two queries.
+Reported as an observation, not a conclusion about intent — and Emil supplied the account at Gate 3
+ratification: the ruling was delivered as prose in a chat message, the ratification act was a merge
+button, and **nothing checked that the second carried the first**. The merge reads as acceptance of
+a reviewed set; what was ratified was the unreviewed superset. `term:presumed-discharge` at the
+ratifier's own seat, in the one path §5.6 did not describe — not wholesale merge *instead of*
+review, but wholesale merge *after* it, which looks like the discharged form and is not.
 
-### 2.8 Gates at this hold
+**Disposition, ruled: retraction, not deletion, and not this session.** The 49 are ratified ground
+today. They are removed by a **retraction decision** filed in the instance — the members named by
+id, the basis naming G0's Gate 4 ruling, the assertion files removed in that same act, so history
+retains them and the decision records why. Supersession at the file level rather than a rewrite.
+Emil drafts it: it is a ratifier's act with a ruling behind it, and this session does not file
+decisions into the registry on his behalf.
+
+**The mechanism failed, not only the person**, so the general clause goes in the PRD (§5.5.2): a
+ratification act must be checkable against the ruling it discharges — a stated accept/reject set by
+id before the merge, and the merged tree diffed against it. Per-triple review that ends in one
+undifferentiated merge is per-triple review in name only.
+
+**Recoverability, paid out.** The argument for recording derivation was made in the abstract at G0.
+The 49 were unfindable in the ratified graph until this change and are now two queries — the first
+real defect in the ratified set the argument has repaid.
+
+### 2.8 Probe verdicts, recorded — finding 1 generalised
+
+Ruled at Gate 3: a probe verdict is itself a **Reading**, not a fact about the server. The capability
+discipline and the Reading discipline turn out to be the same mechanism, and the run evidence now
+says so. Each verdict is its own node in `runs/`, typed `reg:ProbeVerdict , reg:Reading`, carrying:
+
+```
+reg:probe-corpus-backend-<ref>-workspaceSymbol
+    a               reg:ProbeVerdict , reg:Reading ;
+    reg:operation   reg:op-workspaceSymbol ;
+    reg:answered    false ;
+    reg:value       "unavailable — error: language server timeout: … after 15s" ;
+    reg:asOf        "…"^^xsd:dateTime ;
+    reg:provenance  reg:observed ;
+    reg:assurance   "capability probe — one live call …; a verdict at this instant,
+                     not a standing fact about the server" ;
+    reg:advertised  true ;
+    reg:divergence  "over-advertised" ;
+    prov:wasGeneratedBy  reg:extraction-corpus-backend-<ref> .
+```
+
+Because the node's IRI is qualified by corpus and ref but the *value* is per run, two runs that
+disagree about one operation are directly comparable rather than merely different — which is the
+whole point: a reviewer can tell **"this row found nothing"** from **"this row was gated off that
+day"**. Typing it `reg:Reading` is load-bearing rather than decorative: the instance's existing
+`reading.ttl` shape then demands the four-tuple, so a verdict written as a bare boolean fails CI.
+
+Three fixtures carry it: the verdict is written as a Reading; an unavailable verdict records the
+advertisement it disagreed with; and two runs disagreeing about one operation produce different
+files with the same verdict IRI.
+
+**Retry-then-record is proposed, not built,** per the ruling. An operation recorded unavailable
+after one timeout is a low-assurance reading treated as a verdict; the retry shape — how many, how
+spaced, how the attempts are written — is PRD §12 item 17, to be ruled before any row's gating
+depends on an operation that has ever timed out.
+
+### 2.9 Gates at this hold
 
 | Gate | Result |
 |---|---|
-| `cargo t` | **1 491 passed, 0 failed** (baseline 1 454 — 37 new) |
+| `cargo t` | **1 495 passed, 0 failed** (baseline 1 454 — 41 new) |
 | `cargo clippy --workspace -- -D warnings -D clippy::unwrap_used` | exit 0 |
 | `cargo xtask check` | 0 errors |
 | `ddd validate` | conformant — 277 entries, 0 warnings |
@@ -506,8 +561,8 @@ change, and after it they are two queries.
 
 | Change | File |
 |---|---|
-| The registry's own vocabulary — axis individuals, source-kind individuals, the six declaration-level operations, and the equivalence axiom | **new** `vocabulary/reg.ttl` |
-| The two axes with the derivation record, constrained | **new** `shapes/derivation.ttl` |
+| The registry's own vocabulary — axis individuals, source-kind individuals, the six declaration-level operations, `reg:ProbeVerdict` as a `reg:Reading`, and the equivalence axiom | **new** `vocabulary/reg.ttl` |
+| The two axes with the derivation record, constrained; the probe-verdict shape | **new** `shapes/derivation.ttl` |
 | SHACL runs over `graphs/` ∪ `runs/` ∪ `vocabulary/`; the file rule stays scoped to `graphs/`; a new **sidecar-entries-resolve** step reports orphans per run | `.github/workflows/validate.yml` |
 | The two axes, where derivation lives, why the split is compatible | `TEMPLATE.md` |
 | The join named as a projection-build step, with its Rust form | `scripts/build-projection.sh` |
@@ -544,6 +599,16 @@ non-conformant at the projection, and would have held only by accident of when v
   Gate 2.)*
 - **§5.5.1** — review batched by the pair with the derivation as sub-key; the batching belongs in the
   output contract, not the logs.
+- **§5.5.2** — **a ratification act must be checkable against the ruling it discharges**: a stated
+  accept/reject set by id before the merge, the merged tree diffed against it, and removal by
+  retraction rather than deletion.
+- **§5.2** — *Capability flags are claims* gains the ruling that **a probe verdict is itself a
+  Reading**, that every verdict is recorded in the run evidence with its as-of, and that a single
+  unavailable verdict is not final.
+- **§5.2** — both readings of the Group A path predicate (`every` recovers 14 of 18, `any` recovers
+  18 of 18) recorded so the next reviewer inherits the choice rather than rediscovering it.
+- **§12** — new open item **16**, the simple-name collision defect, scoped to the `definition`
+  route; new open item **17**, retry-then-record for probe verdicts.
 - **§12** — new open item 15: **widening the declaration-level subset**, with the closure trade
   stated and the path-convention rule named as a candidate deliberately not taken here.
 
