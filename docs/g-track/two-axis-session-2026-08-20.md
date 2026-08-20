@@ -373,6 +373,7 @@ binary against the same corpus at the same ref, minutes apart:
 |---|---|
 | Run 1 (first full-solution read) | advertised `true`, **did not answer within 15 s** — recorded unavailable, `divergence: over-advertised`; five of six operations available |
 | Run 2 (the idempotence re-run) | advertised `true`, **answered — 7 symbols**; six of six available |
+| Run 3 (verifying the probe-verdict change) | advertised `true`, **answered — 7 symbols**; six of six available |
 
 So the run-1 result is a **timeout under load, not a capability the server lacks**, and the honest
 statement is sharper than "over-advertises at scale": **the probe's own verdict is run-dependent.**
@@ -382,8 +383,9 @@ see. G0's discipline — probe the operation, never the advertisement — holds 
 it gains here is that a probe verdict is a *reading*, with the same run-scoped honesty every other
 reading in this track carries.
 
-Not overstated: this is one operation, two runs, on one corpus. It is enough to say the verdict
-varies; it is not enough to characterise the distribution. What it does settle is that *the subset
+Not overstated: this is one operation, three runs, on one corpus — one non-answer and two answers.
+It is enough to say the verdict varies; it is nowhere near enough to characterise the distribution,
+which is exactly why the remedy is to *record* verdicts rather than to reason about them. What it does settle is that *the subset
 could not have shown this at all* — 57 files never loaded the server enough to time out.
 
 **2. §5.2's `modules` row does not stand on `workspaceSymbol`, whatever the table says.** Run 1 is
@@ -532,9 +534,14 @@ whole point: a reviewer can tell **"this row found nothing"** from **"this row w
 day"**. Typing it `reg:Reading` is load-bearing rather than decorative: the instance's existing
 `reading.ttl` shape then demands the four-tuple, so a verdict written as a bare boolean fails CI.
 
-Three fixtures carry it: the verdict is written as a Reading; an unavailable verdict records the
-advertisement it disagreed with; and two runs disagreeing about one operation produce different
-files with the same verdict IRI.
+Four fixtures carry it: the verdict is written as a Reading; an unavailable verdict records the
+advertisement it disagreed with; two runs disagreeing about one operation produce different files
+with the same verdict IRI; and verdicts sort by operation so the file stays byte-stable.
+
+**Verified on the corpus, not only in fixtures.** A third full-solution run wrote all six verdicts
+into the run evidence, and `product registry check` over the instance holding them is conformant at
+**48 constraints** — six more than before, which is the probe-verdict shape being read and
+evaluated rather than skipped.
 
 **Retry-then-record is proposed, not built,** per the ruling. An operation recorded unavailable
 after one timeout is a low-assurance reading treated as a verdict; the retry shape — how many, how
