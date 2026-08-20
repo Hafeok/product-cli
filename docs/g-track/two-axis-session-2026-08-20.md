@@ -366,22 +366,36 @@ Two structural readings also confirmed at scale:
 
 #### Three findings the subset could not have produced
 
-**1. `workspaceSymbol` over-advertises at full-solution scale.** The probe reports **five of six**
-operations available, not six: `workspace/symbol` is advertised `true` and then does not answer
-within the probe's window, recorded as unavailable with `divergence: over-advertised`. The same
-server answered it on the three-project subset.
+**1. `workspace/symbol` availability is not stable across identical runs.** Two runs of the same
+binary against the same corpus at the same ref, minutes apart:
 
-This is the *dangerous* direction — the presumed-discharge shape — and it is now demonstrated by a
-server we depend on, at scale, on a live run rather than in a fixture. The nuance is new and worth
-stating plainly: **capability is not a property of the server alone but of server × workspace size.**
-A probe that runs once at start-up against the workspace actually being read is what catches it; an
-advertisement, or a probe against a toy workspace, is not.
+| | `workspace/symbol` |
+|---|---|
+| Run 1 (first full-solution read) | advertised `true`, **did not answer within 15 s** — recorded unavailable, `divergence: over-advertised`; five of six operations available |
+| Run 2 (the idempotence re-run) | advertised `true`, **answered — 7 symbols**; six of six available |
 
-**2. §5.2's `modules` row does not stand on `workspaceSymbol`, whatever the table says.** The row
-fired 1 514 assertions in the run where `workspaceSymbol` was unavailable, because the implementation
-reads module containment from `documentSymbol`. On the subset both operations answered, so the
-divergence between table and implementation was invisible. **The table's LSP-operations cell for this
-row is wrong and should read `documentSymbol`.** Corrected in this session's PRD edit.
+So the run-1 result is a **timeout under load, not a capability the server lacks**, and the honest
+statement is sharper than "over-advertises at scale": **the probe's own verdict is run-dependent.**
+An operation can be recorded unavailable on one run and available on the next, and a mapping row
+gated on it would then yield different results on two runs that differ in nothing a reviewer can
+see. G0's discipline — probe the operation, never the advertisement — holds and is vindicated; what
+it gains here is that a probe verdict is a *reading*, with the same run-scoped honesty every other
+reading in this track carries.
+
+Not overstated: this is one operation, two runs, on one corpus. It is enough to say the verdict
+varies; it is not enough to characterise the distribution. What it does settle is that *the subset
+could not have shown this at all* — 57 files never loaded the server enough to time out.
+
+**2. §5.2's `modules` row does not stand on `workspaceSymbol`, whatever the table says.** Run 1 is
+the natural experiment: `workspace/symbol` was unavailable and the row still fired **1 514**
+assertions, because the implementation reads module containment from `documentSymbol`. The
+measurement holds regardless of *why* the operation failed. On the subset both answered, so the
+divergence between table and implementation could not surface. **The table's LSP-operations cell for
+this row is wrong and should read `documentSymbol`.** Corrected in this session's PRD edit.
+
+The two findings compound: a row gated on an operation whose probe verdict varies would have
+produced 1 514 assertions on one run and a gated-off row on the next. This row was not gated on it —
+by accident of the implementation, not by the table's design.
 
 **3. §7.5's collision prediction came true.** G0 measured **0** cross-module simple-name collisions
 and noted that name-based range resolution was safe *on that corpus*, with `definition` held as the
@@ -440,7 +454,28 @@ is the design working as intended rather than a bug — **the extractor records 
 reviewer writes the predicate** — but it is worth recording that the predicate is a real choice with
 a real effect on what a batch contains.
 
-### 2.6 A finding about the instance, not about the extractor
+### 2.6 Idempotence, end to end at full-solution scale
+
+The row the prompt said to watch, run as a whole second extraction rather than only as a fixture.
+The same binary, the same corpus at the same ref, against the instance the first run had just
+populated:
+
+```
+0 assertion(s) proposed across 1 file(s)
+9 662 assertion(s) already ratified in the canonical graph — not re-proposed
+sidecar entries: every derivation record resolves to an assertion in the graph
+nothing proposed — every one of the 9 662 triple(s) this run read is already ratified
+```
+
+**No tracked file in the instance changed** (`git status --porcelain` shows 0 modified). The single
+planned file was the run sidecar, byte-identical to the one already on disk, so nothing was written.
+
+So the new fields did **not** enter the assertion hash: g-dec-04's identity is unchanged, the
+instance's history is intact, and the change is idempotent at 9 662 assertions rather than at the
+handful a unit fixture exercises. The fixpoint's wall-time moved (509 ms → 307 ms) while its triple
+counts did not, which is the right shape — time varies, the graph does not.
+
+### 2.7 A finding about the instance, not about the extractor
 
 G0 ruled 512 accepted and 49 rejected, and recorded that the merge acts were the ratifier's and
 pending. **The instance holds all 561.** PR #2 (`Proposal: 561 assertions…`) merged 561 assertion
@@ -451,7 +486,7 @@ Reported as an observation, not a conclusion about intent. It does make the reco
 concrete rather than hypothetical: the 49 are ratified ground today, they were unfindable until this
 change, and after it they are two queries.
 
-### 2.7 Gates at this hold
+### 2.8 Gates at this hold
 
 | Gate | Result |
 |---|---|
