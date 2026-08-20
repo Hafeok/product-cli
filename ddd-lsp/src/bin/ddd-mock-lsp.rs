@@ -1,8 +1,9 @@
 //! Mock LSP host binary — fixture-grade stdio server for hermetic tests.
 //!
 //! Flags: `--handshake roslyn` demands `solution/open`/`project/open`
-//! before readiness; `DDD_MOCK_READY_DELAY_MS` delays the readiness
-//! signal to make the loading window observable.
+//! before readiness; `--over-advertise type-hierarchy` advertises the
+//! provider then answers `null`; `DDD_MOCK_READY_DELAY_MS` delays the
+//! readiness signal to make the loading window observable.
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -13,8 +14,12 @@ fn main() {
         .ok()
         .and_then(|v| v.parse::<u64>().ok())
         .unwrap_or(0);
+    let over_advertise_type_hierarchy = args
+        .windows(2)
+        .any(|w| w[0] == "--over-advertise" && w[1] == "type-hierarchy");
     ddd_lsp::mock::serve_stdio(ddd_lsp::mock::MockConfig {
         roslyn_handshake,
         ready_delay: std::time::Duration::from_millis(delay_ms),
+        over_advertise_type_hierarchy,
     });
 }

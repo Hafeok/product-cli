@@ -1,7 +1,7 @@
 format: 2
 id: seam/rust/ddd-lsp-src-lib-rs
 boundary: contract surface of ddd-lsp/src/lib.rs
-verdict_knowledge: 'Crate consumers learn revdiff is part of the public LSP-stack surface, beside the adapters and classifier it reuses.'
+verdict_knowledge: Crate consumers learn revdiff is part of the public LSP-stack surface, beside the adapters and classifier it reuses.
 contract_location: ddd-lsp/src/lib.rs
 obligations: []
 metadata: {}
@@ -12,3 +12,15 @@ bindings:
   after: sha256:d2a6c4c628840448f221f086255837ee2d5810287f909c73712aca28bff77b45
   base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
   hash: sha256:f549ff9468046e5dd3f5e7b0fdc4f7b8d86b782d1c9c188f0374bd2f35edb7bd
+- symbol: capability
+  file: ddd-lsp/src/lib.rs
+  before: sha256:d2a6c4c628840448f221f086255837ee2d5810287f909c73712aca28bff77b45
+  after: sha256:5583a3b09b7a5f599c141918ac619ce9f092665155f51860727a6357f1ac78d1
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:739141a1e74bfb7676cee8cac5c73fa181d33dbd7e6b656b9f33b74524b096fe
+- symbol: declaration
+  file: ddd-lsp/src/lib.rs
+  before: sha256:d2a6c4c628840448f221f086255837ee2d5810287f909c73712aca28bff77b45
+  after: sha256:5583a3b09b7a5f599c141918ac619ce9f092665155f51860727a6357f1ac78d1
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:581aab5b823d4e575776baa4cad28794da63ef23040446a2f22cea19c972a6fc

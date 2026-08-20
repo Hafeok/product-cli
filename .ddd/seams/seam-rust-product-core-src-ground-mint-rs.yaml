@@ -1,0 +1,56 @@
+format: 2
+id: seam/rust/product-core-src-ground-mint-rs
+boundary: contract surface of product-core/src/ground/mint.rs
+verdict_knowledge: 'Callers learn that an assertion''s identity is derived from the triple it asserts and from nothing else — not the run, not the as-of, not the assurance. That is what makes a re-run at the same ref propose nothing, a re-run at a later ref propose only what changed, and a disappeared symbol leave a ratified file with no counterpart. The boundary cannot mint an identity that survives a change to the triple, and it should not: a changed triple is a different assertion. Local names are folded to one safe alphabet rather than trusted, because namespaces and generics reach it.'
+contract_location: product-core/src/ground/mint.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: assertion_id
+  file: product-core/src/ground/mint.rs
+  before: absent
+  after: sha256:b755a40df9169dcacfec3d8c98184ba8d3013309b21b73bb4454e9489b25d57c
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:6860196ef1bae98ae760ca109518644896fdb7afb900d21481909456dc3288ca
+- symbol: class_iri
+  file: product-core/src/ground/mint.rs
+  before: absent
+  after: sha256:b755a40df9169dcacfec3d8c98184ba8d3013309b21b73bb4454e9489b25d57c
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:632ff244d0f57a493c53920a7482dd3947de774f20f37801cae0cd41457a184e
+- symbol: corpus_iri
+  file: product-core/src/ground/mint.rs
+  before: absent
+  after: sha256:b755a40df9169dcacfec3d8c98184ba8d3013309b21b73bb4454e9489b25d57c
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:4fd1a58484c235f1a98aea14c9c6ff9c958774ac2d98761f5b9328723a40b69c
+- symbol: local_name
+  file: product-core/src/ground/mint.rs
+  before: absent
+  after: sha256:b755a40df9169dcacfec3d8c98184ba8d3013309b21b73bb4454e9489b25d57c
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:f65a56016f45018303066de0884aa40f992bb60766b310b235553e6f3b4db673
+- symbol: module_iri
+  file: product-core/src/ground/mint.rs
+  before: absent
+  after: sha256:b755a40df9169dcacfec3d8c98184ba8d3013309b21b73bb4454e9489b25d57c
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:afcd4e7eb1eb5d1e3a2cb77911e0603c9d884c2c54cbabb7ae26b98bce4618d7
+- symbol: property_iri
+  file: product-core/src/ground/mint.rs
+  before: absent
+  after: sha256:b755a40df9169dcacfec3d8c98184ba8d3013309b21b73bb4454e9489b25d57c
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:b44423080022f5c7b87c93a13d547f9728e358da296b9aa937f8013f22f2d4fe
+- symbol: run_iri
+  file: product-core/src/ground/mint.rs
+  before: absent
+  after: sha256:b755a40df9169dcacfec3d8c98184ba8d3013309b21b73bb4454e9489b25d57c
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:0a07476267e5632384bf32734ce443d505e9b2ffa624711ccbb2486688081f65
+- symbol: short_ref
+  file: product-core/src/ground/mint.rs
+  before: absent
+  after: sha256:b755a40df9169dcacfec3d8c98184ba8d3013309b21b73bb4454e9489b25d57c
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:59050233063520680387cf90a24851dbc0e6a3463afa2cf845fe5e6a1189cf34

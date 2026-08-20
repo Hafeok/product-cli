@@ -1,0 +1,62 @@
+format: 2
+id: seam/rust/product-core-src-ground-write-rs
+boundary: contract surface of product-core/src/ground/write.rs
+verdict_knowledge: 'Callers learn that a registry authority file comes from this writer and never from a general RDF serialiser, which is not order-stable and re-mints blank-node labels. Fixed field order, sorted evidence, no blank nodes, one assertion per file: the same assertion is the same bytes every time, whatever order its evidence arrived in. An IRI whose local part a prefixed name cannot carry falls back to the full form rather than being rewritten into something that parses differently. The boundary writes no file itself — it renders text.'
+contract_location: product-core/src/ground/write.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: assertion_file
+  file: product-core/src/ground/write.rs
+  before: absent
+  after: sha256:867e0fe55289ac2cd0e8ca8fa0fd157cc74079a720b1a6373174a1ce2df3f53d
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:38032181224109299634e6df21dbc71653a8e709ab5e7e96e8449537394adc0b
+- symbol: shorten
+  file: product-core/src/ground/write.rs
+  before: absent
+  after: sha256:867e0fe55289ac2cd0e8ca8fa0fd157cc74079a720b1a6373174a1ce2df3f53d
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:69a9c3f2957596a49b49ad49282a7f530c0ad3cd1f978441734d8a2394eca50c
+- symbol: WriteContext
+  file: product-core/src/ground/write.rs
+  before: absent
+  after: sha256:867e0fe55289ac2cd0e8ca8fa0fd157cc74079a720b1a6373174a1ce2df3f53d
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:cb4e7cd9a446b36efd1b312cd2f9a957a15b07768a8924eaa2b54295da34ff17
+- symbol: as_of
+  file: product-core/src/ground/write.rs
+  before: absent
+  after: sha256:867e0fe55289ac2cd0e8ca8fa0fd157cc74079a720b1a6373174a1ce2df3f53d
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:bea698a8e034eb3e51883e477ea7f3c3fc26b331db5473bba64c7e97200d02c0
+- symbol: base_iri
+  file: product-core/src/ground/write.rs
+  before: absent
+  after: sha256:867e0fe55289ac2cd0e8ca8fa0fd157cc74079a720b1a6373174a1ce2df3f53d
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:187178c016333f9df80b44265480828d86cf1b2ee7e8aae16302f0362f7757c8
+- symbol: corpus
+  file: product-core/src/ground/write.rs
+  before: absent
+  after: sha256:867e0fe55289ac2cd0e8ca8fa0fd157cc74079a720b1a6373174a1ce2df3f53d
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:2441c863183f530a1e37afcb274cccf9e09c1cffdde973ad1834c6f89fba3821
+- symbol: corpus_iri
+  file: product-core/src/ground/write.rs
+  before: absent
+  after: sha256:867e0fe55289ac2cd0e8ca8fa0fd157cc74079a720b1a6373174a1ce2df3f53d
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:3381dca3803916de9a04c6b267bbeb26059f2d1ecaa05dc699481062a0bf5ebb
+- symbol: git_ref
+  file: product-core/src/ground/write.rs
+  before: absent
+  after: sha256:867e0fe55289ac2cd0e8ca8fa0fd157cc74079a720b1a6373174a1ce2df3f53d
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:655b13b7d024405e34a113165b00075f1317656cdb429aa3be794733a1f8faac
+- symbol: run_iri
+  file: product-core/src/ground/write.rs
+  before: absent
+  after: sha256:867e0fe55289ac2cd0e8ca8fa0fd157cc74079a720b1a6373174a1ce2df3f53d
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:e45b3f8155aa75dad38fc33bca44a272be19a078d22ae215d4fbc4a92258a21b

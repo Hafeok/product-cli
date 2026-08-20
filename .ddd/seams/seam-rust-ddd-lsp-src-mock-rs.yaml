@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/ddd-lsp-src-mock-rs
+boundary: contract surface of ddd-lsp/src/mock.rs
+verdict_knowledge: 'Test callers learn the mock can be told to advertise `typeHierarchyProvider` and then answer `null` — the over-advertising shape observed live on a real server — so the dangerous divergence direction is a fixture rather than a paragraph. The flag changes only that one operation''s answer; everything else keeps answering, because an over-advertised operation costs its own row and never the run. The mock is not a language adapter and its answers are fixture-grade: it proves the wiring, never the semantics of any real host.'
+contract_location: ddd-lsp/src/mock.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: over_advertise_type_hierarchy
+  file: ddd-lsp/src/mock.rs
+  before: sha256:24fc41be0621dbaf181936b51ca74abdd73c32e5cb64a2427fa2e6a2006ce817
+  after: sha256:d4e631e23d136a68c5913efc71bf6edb132b063acbeb7e47f4b48187624acff5
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:d4d9ffb3adbf6fe0b1f4383a99355088668671fee78b599ae83f84d5d5e23c45

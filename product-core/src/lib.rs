@@ -6,6 +6,7 @@ pub mod config_sections;
 pub mod demo;
 pub mod error;
 pub mod fileops;
+pub mod ground;
 pub mod guide;
 pub mod pf;
 pub mod registry;

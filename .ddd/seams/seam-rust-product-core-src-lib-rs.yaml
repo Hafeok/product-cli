@@ -1,7 +1,7 @@
 format: 2
 id: seam/rust/product-core-src-lib-rs
 boundary: contract surface of product-core/src/lib.rs
-verdict_knowledge: 'Consumers learn product-core carries ground-registry generation alongside the framework graph, and that the surface is the acts — plan, apply, check. The modules beneath are crate-internal: how the template is rendered, and how the gate is spelled, are not part of the contract.'
+verdict_knowledge: 'Consumers learn product-core carries ground-registry generation alongside the framework graph, and now the code-extraction slice beside it. Both publish their acts and nothing else — plan, apply, check, render — so how a template is rendered, how a gate is spelled, how a mapping row is written and how the fixpoint is driven stay crate-internal. Neither reaches a language server: extraction takes its facts as plain data, which is what keeps this crate free of the governance stack for a downstream consumer.'
 contract_location: product-core/src/lib.rs
 obligations: []
 metadata: {}
@@ -12,3 +12,9 @@ bindings:
   after: sha256:3d1bb8cb6b4faac3f084b8a8cf11ebed9db7b7ac768b8ca9c27029c08c73fd45
   base_revision: 61222d2d386993ad671643dc46692202a2a4f1e7
   hash: sha256:0117c3fcad2d4b1f681bf521bacfa16bfead015df594bde1e4bcc5af213e8bb3
+- symbol: ground
+  file: product-core/src/lib.rs
+  before: sha256:3d1bb8cb6b4faac3f084b8a8cf11ebed9db7b7ac768b8ca9c27029c08c73fd45
+  after: sha256:2e0c5acace88b9e71428866235946fd9e0494dd2d7942d5823ffd09b37ba8fd1
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:3cb75648b8362cbc2bce51e52cc439926fa9b2c6eeb5f19c25ed398e840f384b

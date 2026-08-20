@@ -1,0 +1,31 @@
+[package]
+name = "ground-cli"
+version = "0.6.0"
+edition = "2021"
+authors = ["PiCloud Contributors"]
+license = "Apache-2.0"
+description = "Ground-registry code extraction: read a codebase through LSP, propose triples for per-triple ratification."
+repository = "https://github.com/Hafeok/product-cli"
+homepage = "https://github.com/Hafeok/product-cli"
+readme = "../README.md"
+
+[[bin]]
+name = "ground"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+# Out of the cargo-dist release set: the G-track extractor is not a published
+# artifact yet, and adding the binary must not silently change that list.
+[package.metadata.dist]
+dist = false
+
+[dependencies]
+ddd-lsp      = { path = "../ddd-lsp", version = "0.6.0" }
+product-core = { path = "../product-core", version = "0.6.0" }
+clap         = { version = "4", features = ["derive"] }
+serde_json   = "1"
+
+[dev-dependencies]
+tempfile = "3"

@@ -1,0 +1,38 @@
+format: 2
+id: seam/rust/product-core-src-ground-propose-rs
+boundary: contract surface of product-core/src/ground/propose.rs
+verdict_knowledge: 'Callers learn that a proposal takes its assurance grade, its provenance and its method from the §5.2 row that produced it, never from the caller. No mapping rule can quietly claim a better assurance than its row justifies, and the instrument comes from the facts, which recorded what actually read the corpus. The boundary cannot invent evidence: what it cites is what it was handed.'
+contract_location: product-core/src/ground/propose.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: cite
+  file: product-core/src/ground/propose.rs
+  before: absent
+  after: sha256:cd68fbbb5a5c1b41b0b9497c94eb700280140f654d46540379761ef9adbe156c
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:f84daa1fa5b010571a4d4a628dfac25658e02f5f9504b236fbed1aeb8371242c
+- symbol: impl Proposer
+  file: product-core/src/ground/propose.rs
+  before: absent
+  after: sha256:cd68fbbb5a5c1b41b0b9497c94eb700280140f654d46540379761ef9adbe156c
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:8992dd69d21eb6a4372e4347e25568a1209824ddf6f5805dcedf1e703377f444
+- symbol: Proposer
+  file: product-core/src/ground/propose.rs
+  before: absent
+  after: sha256:cd68fbbb5a5c1b41b0b9497c94eb700280140f654d46540379761ef9adbe156c
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:df7d02e654bbfb7d24fc2b24898a2f645f4e79605669b12204746b7c286911f8
+- symbol: new
+  file: product-core/src/ground/propose.rs
+  before: absent
+  after: sha256:cd68fbbb5a5c1b41b0b9497c94eb700280140f654d46540379761ef9adbe156c
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:f3e1119b23fd0860297ef852dba136ebd20af0370d5f4e9297569b46ee7fd0ac
+- symbol: propose
+  file: product-core/src/ground/propose.rs
+  before: absent
+  after: sha256:cd68fbbb5a5c1b41b0b9497c94eb700280140f654d46540379761ef9adbe156c
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:6b63fa59df60f97ec2bcd252073b547b16dcacf13d6458cd75b0b3bdd4a93b0c

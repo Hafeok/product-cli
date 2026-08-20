@@ -1,0 +1,38 @@
+format: 2
+id: seam/rust/product-core-src-ground-apply-rs
+boundary: contract surface of product-core/src/ground/apply.rs
+verdict_knowledge: 'Callers learn that a non-conformant plan writes nothing at all — not one file, not the directory — because a proposal that violates the instance''s own shapes must not reach a branch. They also learn a re-run over unchanged facts is a no-op: identity is content-derived, so a file already on disk byte-for-byte is the same file and is reported unchanged rather than rewritten. The boundary cannot merge, branch or publish; committing a proposal is a separate act with a different authority.'
+contract_location: product-core/src/ground/apply.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: apply_extraction
+  file: product-core/src/ground/apply.rs
+  before: absent
+  after: sha256:2d0e787bd6f71b4241190d937ce385085cfd79c9faf7916d26b7cb58504378c4
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:90560516ca1a297f27205cb1c163b4208b5fef480750dde357314ffb87144a2f
+- symbol: ExtractionReport
+  file: product-core/src/ground/apply.rs
+  before: absent
+  after: sha256:2d0e787bd6f71b4241190d937ce385085cfd79c9faf7916d26b7cb58504378c4
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:cc78c3e8e4046175aaa3a220863c8e2cc1ddb2188199022a4ecb1c017fab0ef7
+- symbol: instance
+  file: product-core/src/ground/apply.rs
+  before: absent
+  after: sha256:2d0e787bd6f71b4241190d937ce385085cfd79c9faf7916d26b7cb58504378c4
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:683bda917969f2cb45bd643825ea3711fd3ff90c54b3a1bc4610b11a904580b0
+- symbol: unchanged
+  file: product-core/src/ground/apply.rs
+  before: absent
+  after: sha256:2d0e787bd6f71b4241190d937ce385085cfd79c9faf7916d26b7cb58504378c4
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:5429534957967bad3d5c8df7a617d6cfb2a38683db8e8c459f7bceb767396bfb
+- symbol: written
+  file: product-core/src/ground/apply.rs
+  before: absent
+  after: sha256:2d0e787bd6f71b4241190d937ce385085cfd79c9faf7916d26b7cb58504378c4
+  base_revision: 6fc95de6cc4bc937a616847c5c6424fab09a5f49
+  hash: sha256:b4afd74620fbcc2526cc19725983e0b0e19016401f27706f878db1e1664eec7e

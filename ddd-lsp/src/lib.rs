@@ -10,8 +10,10 @@
 //! (the workspace CI has no .NET SDK — `dec/ddd/fixtures-not-sdk`).
 
 pub mod adapter;
+pub mod capability;
 pub mod classify;
 pub mod client;
+pub mod declaration;
 pub mod error;
 pub mod host;
 pub mod jsonrpc;

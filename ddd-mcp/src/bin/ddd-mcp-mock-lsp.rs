@@ -11,8 +11,12 @@ fn main() {
         .ok()
         .and_then(|v| v.parse::<u64>().ok())
         .unwrap_or(0);
+    let over_advertise_type_hierarchy = args
+        .windows(2)
+        .any(|w| w[0] == "--over-advertise" && w[1] == "type-hierarchy");
     ddd_lsp::mock::serve_stdio(ddd_lsp::mock::MockConfig {
         roslyn_handshake,
         ready_delay: std::time::Duration::from_millis(delay_ms),
+        over_advertise_type_hierarchy,
     });
 }
