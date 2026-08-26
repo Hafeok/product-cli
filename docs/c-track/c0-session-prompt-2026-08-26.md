@@ -150,3 +150,23 @@ access. The mutation harness (C5) — it is the point of the track, and it is no
 session material is `docs/<track>/` (see `docs/g-track/`). Filed to `docs/c-track/` on the
 principal's direction, 2026-08-26. Whether `DDD-dec-20` is repo-general — in which case
 `docs/g-track/` is already a standing deviation — is an upstream item, not resolved here.
+
+**Correction appended 2026-08-26, same session.** The note above left the scope question open as an
+upstream item. It is now settled, and against the note: `DDD-dec-20` is **not repo-general**. Read at
+`Hafeok/decision-driven-design`, `core/decisions/DDD-dec-20.yaml`, its scope clause is explicit —
+*"this repository's sessions, and sessions that work across this repository and the principle
+repository from a downstream branch."* This session touches neither repository, so it falls outside
+that scope entirely.
+
+`docs/g-track/` is therefore **not** a standing deviation; there is nothing here to deviate from,
+because the convention never reached this repository. No upstream item arises. The note is left
+standing rather than edited, per standing rule 4.
+
+Two substantive points survive the scope answer and are carried to the session report:
+
+- The convention is **two files, not one** — `prompt.md` verbatim *and* `bootstrap.md` (branch, base
+  commits per repository, gate count, principal, and the prompt's own line count and sha256). This
+  filing has the first and not the second, which is the half that makes the charter auditable
+  against what the session produced.
+- `DDD-dec-20` is **deliberately not automated**: *"No validator checks that a session committed its
+  prompt, and none is proposed."* Nothing is proposed here either.
