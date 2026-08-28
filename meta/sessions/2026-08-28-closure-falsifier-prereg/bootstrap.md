@@ -54,3 +54,12 @@ foundation would have been load-bearing.
 This session runs on a `product-cli` branch, so the directory is created here to hold this
 session's arrival record under the same convention. That is an application of the convention to a
 sibling repository, not an extension of it; no filing is made upstream.
+
+## Corrections
+
+Recorded by appending, not by rewriting the line above. The erroneous figure stays visible.
+
+1. **2026-08-28, before Gate 0 output.** The arrived-inputs table states `prompt.md` at **145 lines**.
+   It is **134 lines**. The sha256 in that row (`4b529663…`) is correct and is the identity that
+   binds; the line count was a secondary descriptor, stated without being measured. The error is
+   mine and is reported here rather than edited away.
