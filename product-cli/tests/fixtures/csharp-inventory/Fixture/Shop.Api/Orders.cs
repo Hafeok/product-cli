@@ -87,13 +87,28 @@ public sealed class BogusHandler
 
 public sealed class OrdersEndpoints
 {
-    private readonly Container _container;
+    private readonly IHandler<PlaceOrderCommand> _placeOrder;
+    private readonly IValidator<PlaceOrderCommand> _validator;
+    private readonly IClock _clock;
+    private readonly IIdGenerator _ids;
+    private readonly IAudit? _audit;
 
-    public OrdersEndpoints(Container container) { _container = container; }
+    public OrdersEndpoints(IHandler<PlaceOrderCommand> placeOrder, IValidator<PlaceOrderCommand> validator, IClock clock, IIdGenerator ids, IAudit? audit)
+    {
+        _placeOrder = placeOrder;
+        _validator = validator;
+        _clock = clock;
+        _ids = ids;
+        _audit = audit;
+    }
 
-    public bool Serve(string[] args) => args.Length >= 0;
+    public bool Serve(string[] args) => args.Length >= 0 && _clock.Now() > DateTimeOffset.MinValue;
 
     [Endpoint("POST /orders")]
-    public void PostOrder(PlaceOrderCommand command) =>
-        _container.Resolve<IHandler<PlaceOrderCommand>>().Handle(command);
+    public void PostOrder(PlaceOrderCommand command)
+    {
+        if (!_validator.Valid(command)) return;
+        _audit?.Record(_ids.Next().ToString());
+        _placeOrder.Handle(command);
+    }
 }

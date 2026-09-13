@@ -1,4 +1,4 @@
-// csharp-inventory <solution.sln | project.csproj> [--out <file>]
+// csharp-inventory <solution.sln | solution.slnx | project.csproj> [--out <file>]
 //
 // Loads the solution through MSBuildWorkspace and writes the inventory
 // artefact. Exit 0 on a written inventory (workspace diagnostics are carried
@@ -26,7 +26,7 @@ public static class Program
             if (input is not null) return Usage("one solution or project path expected");
             input = args[i];
         }
-        if (input is null) return Usage("a solution (.sln) or project (.csproj) path is required");
+        if (input is null) return Usage("a solution (.sln/.slnx) or project (.csproj) path is required");
         var inputPath = Path.GetFullPath(input);
         if (!File.Exists(inputPath)) return Usage($"not found: {inputPath}");
 
@@ -50,7 +50,7 @@ public static class Program
     private static int Usage(string why)
     {
         Console.Error.WriteLine($"csharp-inventory: {why}");
-        Console.Error.WriteLine("usage: csharp-inventory <solution.sln | project.csproj> [--out <file>]");
+        Console.Error.WriteLine("usage: csharp-inventory <solution.sln | solution.slnx | project.csproj> [--out <file>]");
         return 2;
     }
 
@@ -60,14 +60,15 @@ public static class Program
     {
         var diagnostics = new List<Diagnostic>();
         using var workspace = MSBuildWorkspace.Create();
-        workspace.WorkspaceFailed += (_, e) => diagnostics.Add(new Diagnostic
+        workspace.RegisterWorkspaceFailedHandler(e => diagnostics.Add(new Diagnostic
         {
             Severity = e.Diagnostic.Kind == WorkspaceDiagnosticKind.Failure ? "error" : "warning",
             Message = e.Diagnostic.Message,
-        });
+        }));
 
         var solutionDir = Path.GetDirectoryName(inputPath) ?? ".";
-        var projects = inputPath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase)
+        var isSolution = inputPath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase) || inputPath.EndsWith(".slnx", StringComparison.OrdinalIgnoreCase);
+        var projects = isSolution
             ? (await workspace.OpenSolutionAsync(inputPath)).Projects.ToList()
             : new List<Project> { await workspace.OpenProjectAsync(inputPath) };
 

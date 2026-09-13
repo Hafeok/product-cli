@@ -6,7 +6,7 @@ over the fixture solution beside it. An excerpt, one type and one member:
 
 ```json
 {
-  "inventory_version": "1",
+  "inventory_version": "2",
   "types": [
     {
       "id": "T:Shop.Api.Orders.PlaceOrderHandler",
@@ -41,10 +41,20 @@ over the fixture solution beside it. An excerpt, one type and one member:
   "references": [
     { "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
       "to": "T:Shop.Domain.OrderPlaced", "kind": "construct" }
+  ],
+  "registrations": [
+    { "site": "M:Shop.Api.Program.Main(System.String[])",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped``2(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
+      "method_name": "AddScoped",
+      "type_arguments": ["T:Shop.Api.Persistence.IOrderRepository", "T:Shop.Api.Persistence.OrderRepository"],
+      "typeof_arguments": [], "constructs": [], "has_lambda": false, "conditional": false,
+      "file": "Shop.Api/Program.cs", "line": 13 }
   ]
 }
 ```
 
 Facts only. The attribute is recorded because it is declared, with its arguments as the compiler
 resolved them; whether `"PlaceOrder"` names an act, or `"handler"` a role, is decided Rust-side
-against the event model and the profile store — never here.
+against the event model and the profile store — never here. The registration is recorded because
+the call was written; that it registers `OrderRepository` for `IOrderRepository`, and that the
+container would supply it where the walk reaches the interface, is the Rust resolver's reading.

@@ -49,3 +49,18 @@ here would be the thing `CG-rule-02`'s extraction discipline exists to prevent.
 | The canon-governance ref (`<REF>` unsubstituted) | Emil | nothing — head taken, reported at Gate 0 for confirmation |
 | The name of the brownfield solution | Emil | Gate 1 — a candidate is proposed at Gate 0 |
 | Emil's §12 predictions (three, before Gate 1's measurement) | Emil | Gate 1's run — the tool may be built, not run, until they are committed |
+
+---
+
+## Appended note — 2026-09-13, the Gate 1a run invocation
+
+**No table above is amended and no hash has changed.** Three further inputs, filed verbatim:
+
+| File | sha256 | Lines | Status |
+|---|---|---|---|
+| `rulings-gate1a.md` (`rulings-cg-r-57-59.md`) | `48a82e28fd6d6fb9bfeed947a554e9c2e75be66e129aeadb48babbbdd14351c7` | 67 | **rulings in force** — CG-R-57, CG-R-59; CG-R-58 superseded by CG-R-60 |
+| `rulings-gate1a-di.md` (`rulings-cg-r-60-62.md`) | `6b84a5a526c3854aeb1a10d3af6fa58319a2d9816456c4a6e9ea822a2a2ad1ef` | 80 | **rulings in force** — CG-R-60 … 62; carries the replacement prediction |
+| `invocation-gate1a-run.md` | — (chat message, reproduced) | | the run instruction; **§2 unfilled as received** |
+
+**Did not arrive:** Emil's own §12 prediction (the message's §2, required by CG-R-59 as the
+second, separately attributed prediction). The measurement holds on it; see `gate1a-run.md`.

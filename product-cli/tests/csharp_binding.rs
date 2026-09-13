@@ -23,7 +23,7 @@ fn inventory_check_reports_counts() {
         .arg(fixture("inventory.json"))
         .assert()
         .success()
-        .stdout(predicate::str::contains("inventory version 1"))
+        .stdout(predicate::str::contains("inventory version 2"))
         .stdout(predicate::str::contains("3 project(s)"));
 }
 
@@ -47,18 +47,20 @@ fn reach_prints_its_convention_first() {
         .arg(fixture("inventory.json"))
         .assert()
         .success()
-        .stdout(predicate::str::starts_with("roots: entry-point, public\nthrough implementations (DI): false\n"))
+        .stdout(predicate::str::starts_with("roots: entry-point, public\n"))
+        .stdout(predicate::str::contains("resolution coverage:"))
         .stdout(predicate::str::contains("by namespace:"));
 }
 
 #[test]
-fn reach_json_carries_the_flag() {
+fn reach_json_carries_resolution_and_tracked_sets() {
     product()
-        .args(["--format", "json", "csharp", "reach", "--through-implementations"])
+        .args(["--format", "json", "csharp", "reach", "--track", "implements:T:Shop.Api.Infrastructure.IHandler`1"])
         .arg(fixture("inventory.json"))
         .assert()
         .success()
-        .stdout(predicate::str::contains("\"through_implementations\":true"));
+        .stdout(predicate::str::contains("\"coverage_percent\""))
+        .stdout(predicate::str::contains("\"tracked\":[{\"label\":\"implements:T:Shop.Api.Infrastructure.IHandler`1\""));
 }
 
 #[test]

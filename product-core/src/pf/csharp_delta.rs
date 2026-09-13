@@ -20,7 +20,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::Serialize;
 
 use super::csharp_inventory::{Index, Inventory};
-use super::csharp_reach::{closure, root_symbols, Root};
+use super::csharp_di::Resolver;
+use super::csharp_reach::{closure, root_symbols, unresolved_types, Root};
 use super::eventmodel::EventModel;
 
 /// CG-R-52: the separator is a proxy and is reported as one, every time.
@@ -29,6 +30,28 @@ pub const PROXY: ProxyDeclaration = ProxyDeclaration {
     original_predicate: "the type contains decision logic belonging to more than one act",
     known_divergence: "a shared value object, DTO or mapping type referenced across many acts reads as unstructured while being neither; shared types are shared, not unstructured",
 };
+
+/// CG-R-57: the attribution rule is outside CG-R-52 and graded on its own.
+/// It is **authored**: the criterion says which facts a type references and of
+/// how many acts, and nothing about which of those acts a spanning type is
+/// attributed to; read/write position is not in the criterion, so a rule that
+/// uses it is this author's judgement. Carried on every report that uses it.
+pub const ATTRIBUTION: AttributionRule = AttributionRule {
+    rule: "a spanning type is attributed to the acts that write a fact it constructs (a construct edge to the realising type); when it constructs none, to the acts that read a fact it reaches",
+    grade: "authored",
+    defence: "CG-R-52's criterion fixes the separator (facts of one act, or of two or more) and is silent on attribution; the derived attribution — every act touching any referenced fact — follows from the criterion but reads every consumer of a shared fact as spanned. Using position (construct = write) is not in the criterion, so this rule is the author's.",
+    tuned_against: "fixture CheckoutService (constructs OrderPlaced and OrderConfirmed, reads Cart and ActorIdentity) against read-model:OrderSummary, which reads OrderPlaced",
+    made_to_produce: "read-model:OrderSummary reports unrealised rather than unstructured; under the derived attribution it reports unstructured",
+};
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AttributionRule {
+    pub rule: &'static str,
+    pub grade: &'static str,
+    pub defence: &'static str,
+    pub tuned_against: &'static str,
+    pub made_to_produce: &'static str,
+}
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ProxyDeclaration {
@@ -43,7 +66,6 @@ pub struct DeltaOptions {
     pub slice_attribute: String,
     /// Type id of the fact attribute (default `T:Product.Binding.RealisesFactAttribute`).
     pub realises_fact_attribute: String,
-    pub through_implementations: bool,
 }
 
 impl Default for DeltaOptions {
@@ -51,7 +73,6 @@ impl Default for DeltaOptions {
         DeltaOptions {
             slice_attribute: "T:Product.Binding.SliceAttribute".into(),
             realises_fact_attribute: "T:Product.Binding.RealisesFactAttribute".into(),
-            through_implementations: false,
         }
     }
 }
@@ -81,18 +102,23 @@ pub struct SpanningType {
     pub acts_touched: Vec<String>,
 }
 
+/// The ratios, three-way (CG-R-62): unresolved is never folded into isolated.
 #[derive(Debug, Clone, Serialize)]
 pub struct Ratios {
-    pub through_implementations: bool,
     pub undeclared_types: usize,
     pub reachable_undeclared: usize,
+    pub unresolved_undeclared: usize,
     pub isolated_undeclared: usize,
-    pub by_namespace: Vec<(String, usize, usize)>,
+    pub resolution_coverage_percent: f64,
+    pub unresolved_edges: usize,
+    /// (namespace, reachable, unresolved, isolated)
+    pub by_namespace: Vec<(String, usize, usize, usize)>,
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct DeltaReport {
     pub proxy: ProxyDeclaration,
+    pub attribution: AttributionRule,
     pub context: String,
     pub acts: Vec<ActRow>,
     pub spanning_types: Vec<SpanningType>,
@@ -171,6 +197,7 @@ pub fn delta(inv: &Inventory, model: &EventModel, opts: &DeltaOptions) -> DeltaR
         .collect();
     DeltaReport {
         proxy: PROXY,
+        attribution: ATTRIBUTION,
         context: model.context.clone(),
         acts,
         spanning_types: classified.spanning_types,
@@ -264,35 +291,39 @@ fn act_row(address: &str, declared: &BTreeMap<String, Vec<String>>, declarable: 
     ActRow { address: address.to_string(), region, symbols }
 }
 
-/// The two ratios: undeclared types reachable from declared slices vs not.
+/// The ratios: undeclared types reachable from declared slices, unresolved, or isolated.
 fn ratios(inv: &Inventory, ix: &Index<'_>, opts: &DeltaOptions) -> Ratios {
-    let declared_root = Root::Declared(opts.slice_attribute.clone());
-    let start = root_symbols(inv, ix, &declared_root);
-    let reached = closure(ix, &start, opts.through_implementations);
+    let resolver = Resolver::build(inv);
+    let start = root_symbols(inv, ix, &Root::Declared(opts.slice_attribute.clone()));
+    let c = closure(ix, &resolver, &start);
+    let unresolved = unresolved_types(ix, &c);
     let is_declared = |id: &str| -> bool {
         ix.types.get(id).is_some_and(|t| t.attributes.iter().any(|a| a.attribute_type == opts.slice_attribute || a.attribute_type == opts.realises_fact_attribute))
     };
-    let mut by_ns: BTreeMap<&str, (usize, usize)> = BTreeMap::new();
-    let (mut total, mut reachable) = (0, 0);
-    for t in &inv.types {
-        if is_declared(&t.id) {
-            continue;
-        }
+    let mut by_ns: BTreeMap<&str, (usize, usize, usize)> = BTreeMap::new();
+    let (mut total, mut reachable, mut unres) = (0, 0, 0);
+    for t in inv.types.iter().filter(|t| !is_declared(&t.id)) {
         total += 1;
-        let e = by_ns.entry(t.namespace.as_str()).or_insert((0, 0));
-        if reached.contains(t.id.as_str()) {
+        let e = by_ns.entry(t.namespace.as_str()).or_insert((0, 0, 0));
+        if c.types.contains(t.id.as_str()) {
             reachable += 1;
             e.0 += 1;
-        } else {
+        } else if unresolved.contains(t.id.as_str()) {
+            unres += 1;
             e.1 += 1;
+        } else {
+            e.2 += 1;
         }
     }
+    let edges = c.resolved_edges + c.unresolved.len();
     Ratios {
-        through_implementations: opts.through_implementations,
         undeclared_types: total,
         reachable_undeclared: reachable,
-        isolated_undeclared: total - reachable,
-        by_namespace: by_ns.into_iter().map(|(ns, (r, i))| (ns.to_string(), r, i)).collect(),
+        unresolved_undeclared: unres,
+        isolated_undeclared: total - reachable - unres,
+        resolution_coverage_percent: if edges == 0 { 100.0 } else { 100.0 * c.resolved_edges as f64 / edges as f64 },
+        unresolved_edges: c.unresolved.len(),
+        by_namespace: by_ns.into_iter().map(|(ns, (r, u, i))| (ns.to_string(), r, u, i)).collect(),
     }
 }
 
@@ -302,6 +333,10 @@ pub fn render_delta(report: &DeltaReport) -> String {
     s.push_str(&format!(
         "separator (a declared proxy, CG-R-52):\n  proxy:              {}\n  original predicate: {}\n  known divergence:   {}\n\n",
         report.proxy.proxy, report.proxy.original_predicate, report.proxy.known_divergence
+    ));
+    s.push_str(&format!(
+        "attribution of spanning types (graded {}, CG-R-57):\n  rule:           {}\n  tuned against:  {}\n  made to produce: {}\n\n",
+        report.attribution.grade, report.attribution.rule, report.attribution.tuned_against, report.attribution.made_to_produce
     ));
     for region in [Region::Declared, Region::Declarable, Region::Unstructured, Region::Unrealised] {
         let rows: Vec<&ActRow> = report.acts.iter().filter(|a| a.region == region).collect();
@@ -324,11 +359,11 @@ pub fn render_delta(report: &DeltaReport) -> String {
     }
     let r = &report.ratios;
     s.push_str(&format!(
-        "\n\nratios (through implementations: {}):\n  reachable-undeclared: {} of {} undeclared types\n  isolated-undeclared:  {} of {}\n",
-        r.through_implementations, r.reachable_undeclared, r.undeclared_types, r.isolated_undeclared, r.undeclared_types
+        "\n\nratios (resolution coverage {:.1}%, {} unresolved edge(s)):\n  reachable-undeclared:  {} of {} undeclared types\n  unresolved-undeclared: {} of {}\n  isolated-undeclared:   {} of {}\n",
+        r.resolution_coverage_percent, r.unresolved_edges, r.reachable_undeclared, r.undeclared_types, r.unresolved_undeclared, r.undeclared_types, r.isolated_undeclared, r.undeclared_types
     ));
-    for (ns, reach, iso) in &r.by_namespace {
-        s.push_str(&format!("  {:<50} reachable={reach} isolated={iso}\n", if ns.is_empty() { "(global)" } else { ns }));
+    for (ns, reach, unres, iso) in &r.by_namespace {
+        s.push_str(&format!("  {:<50} reachable={reach} unresolved={unres} isolated={iso}\n", if ns.is_empty() { "(global)" } else { ns }));
     }
     s
 }

@@ -2,12 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Hafeok/product-cli/schema/json/csharp-inventory/inventory.schema.json",
   "title": "C# inventory — the artefact between the .NET reader and product-cli",
-  "$comment": "Version 1. FACTS ONLY: projects, types, members, declared attributes with their arguments, and the reference graph. No field carries a judgement — no slice, no role, no region, no verdict. The Rust side refuses any inventory_version it does not know before reading another field. The inventory is measurement: re-derivable, never a determination, never committed except as a test fixture.",
+  "$comment": "Version 2 (2026-09-13; version 1 added the registrations array under CG-R-60 and was retired unreleased). FACTS ONLY: projects, types, members, declared attributes with their arguments, and the reference graph. No field carries a judgement — no slice, no role, no region, no verdict. The Rust side refuses any inventory_version it does not know before reading another field. The inventory is measurement: re-derivable, never a determination, never committed except as a test fixture.",
   "type": "object",
-  "required": ["inventory_version", "produced_by", "produced_at", "solution", "projects", "types", "members", "references", "diagnostics"],
+  "required": ["inventory_version", "produced_by", "produced_at", "solution", "projects", "types", "members", "references", "registrations", "diagnostics"],
   "additionalProperties": false,
   "properties": {
-    "inventory_version": { "type": "string", "const": "1" },
+    "inventory_version": { "type": "string", "const": "2" },
     "produced_by": {
       "type": "object",
       "required": ["tool", "tool_version", "roslyn_version"],
@@ -32,6 +32,7 @@
     "types": { "type": "array", "items": { "$ref": "#/$defs/type" } },
     "members": { "type": "array", "items": { "$ref": "#/$defs/member" } },
     "references": { "type": "array", "items": { "$ref": "#/$defs/reference" } },
+    "registrations": { "type": "array", "items": { "$ref": "#/$defs/registration" } },
     "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/diagnostic" } }
   },
   "$defs": {
@@ -127,6 +128,24 @@
           "enum": ["call", "construct", "access", "type-reference", "inherit", "implement", "attribute"],
           "$comment": "call/construct/access/type-reference edges are emitted only to symbols declared in the solution; inherit/implement/attribute edges keep external targets, since a framework base type or attribute is what a root convention may name."
         }
+      }
+    },
+    "registration": {
+      "type": "object",
+      "required": ["site", "method", "method_name", "type_arguments", "typeof_arguments", "constructs", "has_lambda", "conditional", "file", "line"],
+      "additionalProperties": false,
+      "$comment": "One call on an IServiceCollection (or a type implementing it), as written — AddControllers as much as AddScoped. Which calls register what, and what each resolves to, is decided Rust-side (CG-R-60/61/62).",
+      "properties": {
+        "site": { "$ref": "#/$defs/symbol_id", "$comment": "The member the call sits in." },
+        "method": { "$ref": "#/$defs/symbol_id", "$comment": "The invoked method's original definition." },
+        "method_name": { "type": "string", "minLength": 1 },
+        "type_arguments": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" } },
+        "typeof_arguments": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" }, "$comment": "Every typeof(X) anywhere in the call's arguments, lambdas included." },
+        "constructs": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" }, "$comment": "Every object creation anywhere in the call's arguments — an instance registration, or what a factory lambda builds." },
+        "has_lambda": { "type": "boolean" },
+        "conditional": { "type": "boolean", "$comment": "The call sits inside an if, switch or conditional expression within its member." },
+        "file": { "type": "string" },
+        "line": { "type": "integer", "minimum": 0 }
       }
     },
     "diagnostic": {

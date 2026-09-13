@@ -1,0 +1,32 @@
+format: 2
+id: seam/rust/product-cli-src-commands-csharp-rs
+boundary: contract surface of product-cli/src/commands/csharp.rs
+verdict_knowledge: 'The C# stack binding''s consumer surface (Gate 1a): callers learn that an inventory is refused by version before it is read; that reachability is walked through the container''s registration facts as one graph, with every interface-mediated edge the resolver cannot follow recorded by reason and never folded into unreached; that the delta is indexed by act and prints its proxy (CG-R-52) and its authored attribution rule (CG-R-57) on every report; and that no output lists symbols as candidate slices. What it cannot tell them: whether the act vocabulary is right, whether the resolver''s idioms cover the container in use, or whether a declared symbol does what its determination says.'
+contract_location: product-cli/src/commands/csharp.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: CsharpCommands
+  file: product-cli/src/commands/csharp.rs
+  before: absent
+  after: sha256:0c1ee09f373a031294a56677bd3866f7954f1521d2d055a3a67c182a5479fae8
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:bad3977f43a0be1bcae9f7e75c35bde4da8c8bc26ff5737e5579b03426c63f14
+- symbol: Delta
+  file: product-cli/src/commands/csharp.rs
+  before: absent
+  after: sha256:0c1ee09f373a031294a56677bd3866f7954f1521d2d055a3a67c182a5479fae8
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:0591e80ba434ed5ee717858c25fb35ce9cc0a691ba783c2700359dfc8029ca97
+- symbol: Inventory
+  file: product-cli/src/commands/csharp.rs
+  before: absent
+  after: sha256:0c1ee09f373a031294a56677bd3866f7954f1521d2d055a3a67c182a5479fae8
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:ddcae626272be2f7ba0435bb46613aa9aa59ad1d758ab705de0db3b720985c83
+- symbol: Reach
+  file: product-cli/src/commands/csharp.rs
+  before: absent
+  after: sha256:0c1ee09f373a031294a56677bd3866f7954f1521d2d055a3a67c182a5479fae8
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:ec339f56eea77f1f4bff05833f1d0627919e5ecce665f04e777fbc2ed35defb4

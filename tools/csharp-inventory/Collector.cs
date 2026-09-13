@@ -20,6 +20,7 @@ public sealed class Collector
     private readonly Dictionary<string, MemberInfo> _members = new(StringComparer.Ordinal);
     private readonly HashSet<(string, string, string)> _refs = new();
     private readonly HashSet<string> _inSolution = new(StringComparer.Ordinal);
+    private readonly List<Registration> _registrations = new();
     private string _roslyn = "";
 
     public Collector(string solutionDir, List<Diagnostic> diagnostics)
@@ -46,9 +47,22 @@ public sealed class Collector
             TargetFrameworks = TargetFrameworks(project),
             Assembly = project.AssemblyName,
         });
+        // Compile errors are facts about load quality: a project that did not
+        // resolve its references yields a semantic model full of error types,
+        // and the consumer must be able to see that rather than infer it.
+        var errors = compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToList();
+        if (errors.Count > 0)
+        {
+            _diagnostics.Add(new Diagnostic
+            {
+                Severity = "warning",
+                Project = pid,
+                Message = $"{errors.Count} compile error(s); first: {errors[0].Id} {errors[0].GetMessage()}",
+            });
+        }
         var entryPoint = compilation.GetEntryPoint(CancellationToken.None);
         var entryId = entryPoint is null ? null : Ids.Of(entryPoint);
-        var references = new References(compilation, _inSolution, AddRef);
+        var references = new References(compilation, AddRef, r => _registrations.Add(r), _solutionDir);
 
         foreach (var type in Ids.SourceTypes(compilation.Assembly.GlobalNamespace))
         {
@@ -122,6 +136,7 @@ public sealed class Collector
                 .Where(r => r.Item3 is "inherit" or "implement" or "attribute" || _inSolution.Contains(r.Item2))
                 .OrderBy(r => r.Item1, StringComparer.Ordinal).ThenBy(r => r.Item2, StringComparer.Ordinal).ThenBy(r => r.Item3, StringComparer.Ordinal)
                 .Select(r => new Reference { From = r.Item1, To = r.Item2, Kind = r.Item3 }).ToList(),
+            Registrations = _registrations.OrderBy(r => r.Site, StringComparer.Ordinal).ThenBy(r => r.Line).ThenBy(r => r.Method, StringComparer.Ordinal).ToList(),
             Diagnostics = _diagnostics.OrderBy(d => d.Message, StringComparer.Ordinal).ToList(),
         };
     }

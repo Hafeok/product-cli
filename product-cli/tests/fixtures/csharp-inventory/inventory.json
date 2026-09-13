@@ -1,14 +1,14 @@
 {
-  "inventory_version": "1",
+  "inventory_version": "2",
   "produced_by": {
     "tool": "csharp-inventory",
     "tool_version": "0.1.0",
-    "roslyn_version": "4.11.0.0"
+    "roslyn_version": "5.0.0.0"
   },
-  "produced_at": "2026-09-13T17:03:48.6290170Z",
+  "produced_at": "2026-09-13T19:43:03.6209689Z",
   "solution": {
     "path": "Fixture.sln",
-    "git_head": "74e08db0ff09864f794c91e97c3a47bcb0531100"
+    "git_head": "d45c0771cc90e99974d4e2700351dcd9f5a67afc"
   },
   "projects": [
     {
@@ -87,19 +87,39 @@
       ]
     },
     {
-      "id": "T:Shop.Api.Infrastructure.Container",
+      "id": "T:Shop.Api.Infrastructure.AlwaysValid\u00601",
       "project": "P:Shop.Api",
       "namespace": "Shop.Api.Infrastructure",
-      "name": "Container",
+      "name": "AlwaysValid",
       "kind": "class",
       "accessibility": "public",
       "is_static": false,
       "is_abstract": false,
       "is_partial": false,
       "base_type": "T:System.Object",
-      "interfaces": [],
+      "interfaces": [
+        "T:Shop.Api.Infrastructure.IValidator\u00601"
+      ],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 19,
+      "line": 25,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Infrastructure.ConsoleAudit",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "ConsoleAudit",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:Shop.Api.Infrastructure.IAudit"
+      ],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 53,
       "attributes": []
     },
     {
@@ -115,7 +135,7 @@
       "base_type": "T:System.Attribute",
       "interfaces": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 8,
+      "line": 7,
       "attributes": [
         {
           "type": "T:System.AttributeUsageAttribute",
@@ -125,6 +145,56 @@
           "named": {}
         }
       ]
+    },
+    {
+      "id": "T:Shop.Api.Infrastructure.GuidGenerator",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "GuidGenerator",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:Shop.Api.Infrastructure.IIdGenerator"
+      ],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 42,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Infrastructure.IAudit",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "IAudit",
+      "kind": "interface",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": null,
+      "interfaces": [],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 48,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Infrastructure.IClock",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "IClock",
+      "kind": "interface",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": null,
+      "interfaces": [],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 31,
+      "attributes": []
     },
     {
       "id": "T:Shop.Api.Infrastructure.IHandler\u00601",
@@ -139,7 +209,39 @@
       "base_type": null,
       "interfaces": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 14,
+      "line": 13,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Infrastructure.IIdGenerator",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "IIdGenerator",
+      "kind": "interface",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": null,
+      "interfaces": [],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 37,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Infrastructure.IValidator\u00601",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "IValidator",
+      "kind": "interface",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": null,
+      "interfaces": [],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 20,
       "attributes": []
     },
     {
@@ -361,7 +463,7 @@
       "base_type": "T:System.Object",
       "interfaces": [],
       "file": "Shop.Api/Program.cs",
-      "line": 7,
+      "line": 8,
       "attributes": []
     },
     {
@@ -611,20 +713,6 @@
   ],
   "members": [
     {
-      "id": "F:Shop.Api.Infrastructure.Container._factories",
-      "declaring_type": "T:Shop.Api.Infrastructure.Container",
-      "name": "_factories",
-      "kind": "field",
-      "accessibility": "private",
-      "is_static": false,
-      "is_entry_point": false,
-      "parameters": [],
-      "return_type": "T:System.Collections.Generic.Dictionary\u00602",
-      "file": "Shop.Api/Infrastructure.cs",
-      "line": 21,
-      "attributes": []
-    },
-    {
       "id": "F:Shop.Api.Orders.CartService._carts",
       "declaring_type": "T:Shop.Api.Orders.CartService",
       "name": "_carts",
@@ -667,17 +755,73 @@
       "attributes": []
     },
     {
-      "id": "F:Shop.Api.Orders.OrdersEndpoints._container",
+      "id": "F:Shop.Api.Orders.OrdersEndpoints._audit",
       "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
-      "name": "_container",
+      "name": "_audit",
       "kind": "field",
       "accessibility": "private",
       "is_static": false,
       "is_entry_point": false,
       "parameters": [],
-      "return_type": "T:Shop.Api.Infrastructure.Container",
+      "return_type": "T:Shop.Api.Infrastructure.IAudit",
+      "file": "Shop.Api/Orders.cs",
+      "line": 94,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Orders.OrdersEndpoints._clock",
+      "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
+      "name": "_clock",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Infrastructure.IClock",
+      "file": "Shop.Api/Orders.cs",
+      "line": 92,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Orders.OrdersEndpoints._ids",
+      "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
+      "name": "_ids",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Infrastructure.IIdGenerator",
+      "file": "Shop.Api/Orders.cs",
+      "line": 93,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Orders.OrdersEndpoints._placeOrder",
+      "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
+      "name": "_placeOrder",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Infrastructure.IHandler\u00601",
       "file": "Shop.Api/Orders.cs",
       "line": 90,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Orders.OrdersEndpoints._validator",
+      "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
+      "name": "_validator",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Infrastructure.IValidator\u00601",
+      "file": "Shop.Api/Orders.cs",
+      "line": 91,
       "attributes": []
     },
     {
@@ -765,36 +909,41 @@
       "attributes": []
     },
     {
-      "id": "M:Shop.Api.Infrastructure.Container.Register\u0060\u00602(System.Func{Shop.Api.Infrastructure.Container,\u0060\u00601})",
-      "declaring_type": "T:Shop.Api.Infrastructure.Container",
-      "name": "Register",
+      "id": "M:Shop.Api.Infrastructure.AlwaysValid\u00601.Valid(\u00600)",
+      "declaring_type": "T:Shop.Api.Infrastructure.AlwaysValid\u00601",
+      "name": "Valid",
       "kind": "method",
       "accessibility": "public",
       "is_static": false,
       "is_entry_point": false,
       "parameters": [
         {
-          "name": "factory",
-          "type": "T:System.Func\u00602"
+          "name": "value",
+          "type": "!:T"
         }
       ],
-      "return_type": "T:Shop.Api.Infrastructure.Container",
+      "return_type": "T:System.Boolean",
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 23,
+      "line": 27,
       "attributes": []
     },
     {
-      "id": "M:Shop.Api.Infrastructure.Container.Resolve\u0060\u00601",
-      "declaring_type": "T:Shop.Api.Infrastructure.Container",
-      "name": "Resolve",
+      "id": "M:Shop.Api.Infrastructure.ConsoleAudit.Record(System.String)",
+      "declaring_type": "T:Shop.Api.Infrastructure.ConsoleAudit",
+      "name": "Record",
       "kind": "method",
       "accessibility": "public",
       "is_static": false,
       "is_entry_point": false,
-      "parameters": [],
-      "return_type": "!:T",
+      "parameters": [
+        {
+          "name": "what",
+          "type": "T:System.String"
+        }
+      ],
+      "return_type": null,
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 29,
+      "line": 55,
       "attributes": []
     },
     {
@@ -813,7 +962,54 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 10,
+      "line": 9,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.GuidGenerator.Next",
+      "declaring_type": "T:Shop.Api.Infrastructure.GuidGenerator",
+      "name": "Next",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Guid",
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 44,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.IAudit.Record(System.String)",
+      "declaring_type": "T:Shop.Api.Infrastructure.IAudit",
+      "name": "Record",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "what",
+          "type": "T:System.String"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 50,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.IClock.Now",
+      "declaring_type": "T:Shop.Api.Infrastructure.IClock",
+      "name": "Now",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.DateTimeOffset",
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 33,
       "attributes": []
     },
     {
@@ -832,7 +1028,40 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 16,
+      "line": 15,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.IIdGenerator.Next",
+      "declaring_type": "T:Shop.Api.Infrastructure.IIdGenerator",
+      "name": "Next",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Guid",
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 39,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.IValidator\u00601.Valid(\u00600)",
+      "declaring_type": "T:Shop.Api.Infrastructure.IValidator\u00601",
+      "name": "Valid",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "value",
+          "type": "!:T"
+        }
+      ],
+      "return_type": "T:System.Boolean",
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 22,
       "attributes": []
     },
     {
@@ -977,7 +1206,7 @@
       "attributes": []
     },
     {
-      "id": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.Container)",
+      "id": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClock,Shop.Api.Infrastructure.IIdGenerator,Shop.Api.Infrastructure.IAudit)",
       "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
       "name": ".ctor",
       "kind": "constructor",
@@ -986,13 +1215,29 @@
       "is_entry_point": false,
       "parameters": [
         {
-          "name": "container",
-          "type": "T:Shop.Api.Infrastructure.Container"
+          "name": "placeOrder",
+          "type": "T:Shop.Api.Infrastructure.IHandler\u00601"
+        },
+        {
+          "name": "validator",
+          "type": "T:Shop.Api.Infrastructure.IValidator\u00601"
+        },
+        {
+          "name": "clock",
+          "type": "T:Shop.Api.Infrastructure.IClock"
+        },
+        {
+          "name": "ids",
+          "type": "T:Shop.Api.Infrastructure.IIdGenerator"
+        },
+        {
+          "name": "audit",
+          "type": "T:Shop.Api.Infrastructure.IAudit"
         }
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 92,
+      "line": 96,
       "attributes": []
     },
     {
@@ -1011,7 +1256,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 97,
+      "line": 108,
       "attributes": [
         {
           "type": "T:Shop.Api.Infrastructure.EndpointAttribute",
@@ -1038,7 +1283,7 @@
       ],
       "return_type": "T:System.Boolean",
       "file": "Shop.Api/Orders.cs",
-      "line": 94,
+      "line": 105,
       "attributes": []
     },
     {
@@ -1205,7 +1450,7 @@
       ],
       "return_type": "T:System.Int32",
       "file": "Shop.Api/Program.cs",
-      "line": 9,
+      "line": 10,
       "attributes": []
     },
     {
@@ -1551,7 +1796,7 @@
       "parameters": [],
       "return_type": "T:System.String",
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 11,
+      "line": 10,
       "attributes": []
     },
     {
@@ -1921,11 +2166,6 @@
   ],
   "references": [
     {
-      "from": "F:Shop.Api.Infrastructure.Container._factories",
-      "to": "T:Shop.Api.Infrastructure.Container",
-      "kind": "type-reference"
-    },
-    {
       "from": "F:Shop.Api.Orders.CartService._carts",
       "to": "T:Shop.Domain.CartState",
       "kind": "type-reference"
@@ -1941,8 +2181,38 @@
       "kind": "type-reference"
     },
     {
-      "from": "F:Shop.Api.Orders.OrdersEndpoints._container",
-      "to": "T:Shop.Api.Infrastructure.Container",
+      "from": "F:Shop.Api.Orders.OrdersEndpoints._audit",
+      "to": "T:Shop.Api.Infrastructure.IAudit",
+      "kind": "type-reference"
+    },
+    {
+      "from": "F:Shop.Api.Orders.OrdersEndpoints._clock",
+      "to": "T:Shop.Api.Infrastructure.IClock",
+      "kind": "type-reference"
+    },
+    {
+      "from": "F:Shop.Api.Orders.OrdersEndpoints._ids",
+      "to": "T:Shop.Api.Infrastructure.IIdGenerator",
+      "kind": "type-reference"
+    },
+    {
+      "from": "F:Shop.Api.Orders.OrdersEndpoints._placeOrder",
+      "to": "T:Shop.Api.Infrastructure.IHandler\u00601",
+      "kind": "type-reference"
+    },
+    {
+      "from": "F:Shop.Api.Orders.OrdersEndpoints._placeOrder",
+      "to": "T:Shop.Api.Orders.PlaceOrderCommand",
+      "kind": "type-reference"
+    },
+    {
+      "from": "F:Shop.Api.Orders.OrdersEndpoints._validator",
+      "to": "T:Shop.Api.Infrastructure.IValidator\u00601",
+      "kind": "type-reference"
+    },
+    {
+      "from": "F:Shop.Api.Orders.OrdersEndpoints._validator",
+      "to": "T:Shop.Api.Orders.PlaceOrderCommand",
       "kind": "type-reference"
     },
     {
@@ -1978,21 +2248,6 @@
     {
       "from": "M:Product.Binding.SliceAttribute.#ctor(System.String,System.String)",
       "to": "P:Product.Binding.SliceAttribute.Role",
-      "kind": "access"
-    },
-    {
-      "from": "M:Shop.Api.Infrastructure.Container.Register\u0060\u00602(System.Func{Shop.Api.Infrastructure.Container,\u0060\u00601})",
-      "to": "F:Shop.Api.Infrastructure.Container._factories",
-      "kind": "access"
-    },
-    {
-      "from": "M:Shop.Api.Infrastructure.Container.Register\u0060\u00602(System.Func{Shop.Api.Infrastructure.Container,\u0060\u00601})",
-      "to": "T:Shop.Api.Infrastructure.Container",
-      "kind": "type-reference"
-    },
-    {
-      "from": "M:Shop.Api.Infrastructure.Container.Resolve\u0060\u00601",
-      "to": "F:Shop.Api.Infrastructure.Container._factories",
       "kind": "access"
     },
     {
@@ -2236,23 +2491,83 @@
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.Container)",
-      "to": "F:Shop.Api.Orders.OrdersEndpoints._container",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClock,Shop.Api.Infrastructure.IIdGenerator,Shop.Api.Infrastructure.IAudit)",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._audit",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.Container)",
-      "to": "T:Shop.Api.Infrastructure.Container",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClock,Shop.Api.Infrastructure.IIdGenerator,Shop.Api.Infrastructure.IAudit)",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._clock",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClock,Shop.Api.Infrastructure.IIdGenerator,Shop.Api.Infrastructure.IAudit)",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._ids",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClock,Shop.Api.Infrastructure.IIdGenerator,Shop.Api.Infrastructure.IAudit)",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._placeOrder",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClock,Shop.Api.Infrastructure.IIdGenerator,Shop.Api.Infrastructure.IAudit)",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._validator",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClock,Shop.Api.Infrastructure.IIdGenerator,Shop.Api.Infrastructure.IAudit)",
+      "to": "T:Shop.Api.Infrastructure.IAudit",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClock,Shop.Api.Infrastructure.IIdGenerator,Shop.Api.Infrastructure.IAudit)",
+      "to": "T:Shop.Api.Infrastructure.IClock",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClock,Shop.Api.Infrastructure.IIdGenerator,Shop.Api.Infrastructure.IAudit)",
+      "to": "T:Shop.Api.Infrastructure.IHandler\u00601",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClock,Shop.Api.Infrastructure.IIdGenerator,Shop.Api.Infrastructure.IAudit)",
+      "to": "T:Shop.Api.Infrastructure.IIdGenerator",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClock,Shop.Api.Infrastructure.IIdGenerator,Shop.Api.Infrastructure.IAudit)",
+      "to": "T:Shop.Api.Infrastructure.IValidator\u00601",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClock,Shop.Api.Infrastructure.IIdGenerator,Shop.Api.Infrastructure.IAudit)",
+      "to": "T:Shop.Api.Orders.PlaceOrderCommand",
       "kind": "type-reference"
     },
     {
       "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
-      "to": "F:Shop.Api.Orders.OrdersEndpoints._container",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._audit",
       "kind": "access"
     },
     {
       "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
-      "to": "M:Shop.Api.Infrastructure.Container.Resolve\u0060\u00601",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._ids",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._placeOrder",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._validator",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "M:Shop.Api.Infrastructure.IAudit.Record(System.String)",
       "kind": "call"
     },
     {
@@ -2262,18 +2577,33 @@
     },
     {
       "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "M:Shop.Api.Infrastructure.IIdGenerator.Next",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "M:Shop.Api.Infrastructure.IValidator\u00601.Valid(\u00600)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
       "to": "T:Shop.Api.Infrastructure.EndpointAttribute",
       "kind": "attribute"
     },
     {
       "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
-      "to": "T:Shop.Api.Infrastructure.IHandler\u00601",
+      "to": "T:Shop.Api.Orders.PlaceOrderCommand",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
-      "to": "T:Shop.Api.Orders.PlaceOrderCommand",
-      "kind": "type-reference"
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._clock",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
+      "to": "M:Shop.Api.Infrastructure.IClock.Now",
+      "kind": "call"
     },
     {
       "from": "M:Shop.Api.Orders.PlaceOrderCommand.#ctor(System.Guid,System.String,Shop.Domain.Money)",
@@ -2412,37 +2742,32 @@
     },
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
-      "to": "M:Shop.Api.Infrastructure.Container.Register\u0060\u00602(System.Func{Shop.Api.Infrastructure.Container,\u0060\u00601})",
-      "kind": "call"
-    },
-    {
-      "from": "M:Shop.Api.Program.Main(System.String[])",
-      "to": "M:Shop.Api.Infrastructure.Container.Resolve\u0060\u00601",
-      "kind": "call"
-    },
-    {
-      "from": "M:Shop.Api.Program.Main(System.String[])",
-      "to": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.Container)",
-      "kind": "call"
-    },
-    {
-      "from": "M:Shop.Api.Program.Main(System.String[])",
       "to": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
       "kind": "call"
     },
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
-      "to": "M:Shop.Api.Orders.PlaceOrderHandler.#ctor(Shop.Api.Persistence.IOrderRepository,Shop.Api.Orders.ICartReader)",
-      "kind": "call"
+      "to": "T:Shop.Api.Infrastructure.AlwaysValid\u00601",
+      "kind": "type-reference"
     },
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
-      "to": "T:Shop.Api.Infrastructure.Container",
+      "to": "T:Shop.Api.Infrastructure.ConsoleAudit",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.GuidGenerator",
       "kind": "construct"
     },
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
-      "to": "T:Shop.Api.Infrastructure.Container",
+      "to": "T:Shop.Api.Infrastructure.GuidGenerator",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.IAudit",
       "kind": "type-reference"
     },
     {
@@ -2452,8 +2777,13 @@
     },
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
-      "to": "T:Shop.Api.Orders.CartService",
-      "kind": "construct"
+      "to": "T:Shop.Api.Infrastructure.IIdGenerator",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.IValidator\u00601",
+      "kind": "type-reference"
     },
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
@@ -2468,11 +2798,6 @@
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
       "to": "T:Shop.Api.Orders.OrdersEndpoints",
-      "kind": "construct"
-    },
-    {
-      "from": "M:Shop.Api.Program.Main(System.String[])",
-      "to": "T:Shop.Api.Orders.OrdersEndpoints",
       "kind": "type-reference"
     },
     {
@@ -2483,22 +2808,12 @@
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
       "to": "T:Shop.Api.Orders.PlaceOrderHandler",
-      "kind": "construct"
-    },
-    {
-      "from": "M:Shop.Api.Program.Main(System.String[])",
-      "to": "T:Shop.Api.Orders.PlaceOrderHandler",
       "kind": "type-reference"
     },
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
       "to": "T:Shop.Api.Persistence.IOrderRepository",
       "kind": "type-reference"
-    },
-    {
-      "from": "M:Shop.Api.Program.Main(System.String[])",
-      "to": "T:Shop.Api.Persistence.OrderRepository",
-      "kind": "construct"
     },
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
@@ -2656,7 +2971,22 @@
       "kind": "attribute"
     },
     {
-      "from": "T:Shop.Api.Infrastructure.Container",
+      "from": "T:Shop.Api.Infrastructure.AlwaysValid\u00601",
+      "to": "T:Shop.Api.Infrastructure.IValidator\u00601",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Api.Infrastructure.AlwaysValid\u00601",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Api.Infrastructure.ConsoleAudit",
+      "to": "T:Shop.Api.Infrastructure.IAudit",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Api.Infrastructure.ConsoleAudit",
       "to": "T:System.Object",
       "kind": "inherit"
     },
@@ -2669,6 +2999,16 @@
       "from": "T:Shop.Api.Infrastructure.EndpointAttribute",
       "to": "T:System.AttributeUsageAttribute",
       "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Api.Infrastructure.GuidGenerator",
+      "to": "T:Shop.Api.Infrastructure.IIdGenerator",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Api.Infrastructure.GuidGenerator",
+      "to": "T:System.Object",
+      "kind": "inherit"
     },
     {
       "from": "T:Shop.Api.Orders.BogusHandler",
@@ -2889,6 +3229,125 @@
       "from": "T:Shop.Domain.OrderSummaryView",
       "to": "T:System.Object",
       "kind": "inherit"
+    }
+  ],
+  "registrations": [
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602",
+      "method_name": "AddScoped",
+      "type_arguments": [
+        "T:Shop.Api.Persistence.IOrderRepository",
+        "T:Shop.Api.Persistence.OrderRepository"
+      ],
+      "typeof_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 13
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602",
+      "method_name": "AddScoped",
+      "type_arguments": [
+        "T:Shop.Api.Orders.ICartReader",
+        "T:Shop.Api.Orders.CartService"
+      ],
+      "typeof_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 14
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602",
+      "method_name": "AddScoped",
+      "type_arguments": [
+        "T:Shop.Api.Infrastructure.IHandler\u00601",
+        "T:Shop.Api.Orders.PlaceOrderHandler"
+      ],
+      "typeof_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 15
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped(System.Type,System.Type)",
+      "method_name": "AddScoped",
+      "type_arguments": [],
+      "typeof_arguments": [
+        "T:Shop.Api.Infrastructure.IValidator\u00601",
+        "T:Shop.Api.Infrastructure.AlwaysValid\u00601"
+      ],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 16
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00601(System.Func{System.IServiceProvider,\u0060\u00600})",
+      "method_name": "AddSingleton",
+      "type_arguments": [
+        "T:Shop.Api.Infrastructure.IIdGenerator"
+      ],
+      "typeof_arguments": [],
+      "constructs": [
+        "T:Shop.Api.Infrastructure.GuidGenerator"
+      ],
+      "has_lambda": true,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 17
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00602",
+      "method_name": "AddSingleton",
+      "type_arguments": [
+        "T:Shop.Api.Infrastructure.IAudit",
+        "T:Shop.Api.Infrastructure.ConsoleAudit"
+      ],
+      "typeof_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": true,
+      "file": "Shop.Api/Program.cs",
+      "line": 20
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00601",
+      "method_name": "AddScoped",
+      "type_arguments": [
+        "T:Shop.Api.Orders.OrdersEndpoints"
+      ],
+      "typeof_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 22
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions.BuildServiceProvider",
+      "method_name": "BuildServiceProvider",
+      "type_arguments": [],
+      "typeof_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 23
     }
   ],
   "diagnostics": []

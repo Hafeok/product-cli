@@ -99,12 +99,24 @@ public static class Ids
 
     // A typed constant rendered as a JSON scalar. `typeof(X)` becomes the
     // string "T:X" — the one lossy case, stated in the Gate 0 schema proposal.
-    public static object? Constant(TypedConstant c) => c.Kind switch
+    // An erroneous constant (an attribute argument the compilation could not
+    // bind) has no value; it is recorded as null rather than aborting the run.
+    public static object? Constant(TypedConstant c)
     {
-        TypedConstantKind.Primitive => c.Value,
-        TypedConstantKind.Enum => c.Value,
-        TypedConstantKind.Type => c.Value is ITypeSymbol t ? Of(t) : null,
-        TypedConstantKind.Array => c.Values.Select(Constant).ToList(),
-        _ => null,
-    };
+        try
+        {
+            return c.Kind switch
+            {
+                TypedConstantKind.Primitive => c.Value,
+                TypedConstantKind.Enum => c.Value,
+                TypedConstantKind.Type => c.Value is ITypeSymbol t ? Of(t) : null,
+                TypedConstantKind.Array when !c.Values.IsDefault => c.Values.Select(Constant).ToList(),
+                _ => null,
+            };
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
 }

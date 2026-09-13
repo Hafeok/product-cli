@@ -19,16 +19,20 @@ namespace CSharpInventory;
 
 public sealed class References
 {
+    private const string ServiceCollection = "T:Microsoft.Extensions.DependencyInjection.IServiceCollection";
+
     private readonly Compilation _compilation;
-    private readonly HashSet<string> _inSolution;
     private readonly Action<string, string, string> _add;
+    private readonly Action<Registration> _register;
+    private readonly string _solutionDir;
     private readonly List<ISymbol> _pending = new();
 
-    public References(Compilation compilation, HashSet<string> inSolution, Action<string, string, string> add)
+    public References(Compilation compilation, Action<string, string, string> add, Action<Registration> register, string solutionDir)
     {
         _compilation = compilation;
-        _inSolution = inSolution;
         _add = add;
+        _register = register;
+        _solutionDir = solutionDir;
     }
 
     public void Queue(ISymbol member) => _pending.Add(member);
@@ -59,7 +63,11 @@ public sealed class References
                 switch (n)
                 {
                     case InvocationExpressionSyntax inv:
-                        if (Resolve(model, inv) is IMethodSymbol callee) Edge(from, callee.OriginalDefinition, "call");
+                        if (Resolve(model, inv) is IMethodSymbol callee)
+                        {
+                            Edge(from, callee.OriginalDefinition, "call");
+                            if (OnServiceCollection(model, inv, callee)) _register(RegistrationOf(model, from, inv, callee));
+                        }
                         break;
                     case BaseObjectCreationExpressionSyntax creation:
                         if (model.GetTypeInfo(creation).Type is INamedTypeSymbol created) Edge(from, created.OriginalDefinition, "construct");
@@ -75,6 +83,46 @@ public sealed class References
                 }
             }
         }
+    }
+
+    // A call whose receiver is an IServiceCollection (or a type implementing
+    // it), whether as an extension method or an instance method. Identity of
+    // the framework interface, not a name test.
+    private static bool OnServiceCollection(SemanticModel model, InvocationExpressionSyntax inv, IMethodSymbol callee)
+    {
+        ITypeSymbol? receiver = callee.ReducedFrom is not null ? callee.ReceiverType
+            : callee.IsExtensionMethod ? callee.Parameters.FirstOrDefault()?.Type
+            : inv.Expression is MemberAccessExpressionSyntax ma ? model.GetTypeInfo(ma.Expression).Type
+            : callee.ContainingType;
+        if (receiver is null) return false;
+        return Ids.Of(receiver.OriginalDefinition) == ServiceCollection
+            || receiver.AllInterfaces.Any(i => Ids.Of(i.OriginalDefinition) == ServiceCollection);
+    }
+
+    private Registration RegistrationOf(SemanticModel model, string site, InvocationExpressionSyntax inv, IMethodSymbol callee)
+    {
+        var args = inv.ArgumentList.DescendantNodes().ToList();
+        var typeofs = args.OfType<TypeOfExpressionSyntax>()
+            .Select(t => model.GetTypeInfo(t.Type).Type).OfType<ITypeSymbol>()
+            .Select(t => Ids.Of(t.OriginalDefinition)).Distinct().ToList();
+        var constructs = args.OfType<BaseObjectCreationExpressionSyntax>()
+            .Select(c => model.GetTypeInfo(c).Type).OfType<INamedTypeSymbol>()
+            .Select(t => Ids.Of(t.OriginalDefinition)).Distinct().ToList();
+        var span = inv.GetLocation().GetLineSpan();
+        return new Registration
+        {
+            Site = site,
+            Method = Ids.Of(callee.OriginalDefinition),
+            MethodName = callee.Name,
+            TypeArguments = callee.TypeArguments.Select(t => Ids.Of(t.OriginalDefinition)).ToList(),
+            TypeofArguments = typeofs,
+            Constructs = constructs,
+            HasLambda = args.Any(n => n is AnonymousFunctionExpressionSyntax),
+            Conditional = inv.Ancestors().TakeWhile(a => a is not MemberDeclarationSyntax)
+                .Any(a => a is IfStatementSyntax or ConditionalExpressionSyntax or SwitchStatementSyntax or SwitchExpressionSyntax),
+            File = Collector.Relative(_solutionDir, span.Path),
+            Line = span.StartLinePosition.Line + 1,
+        };
     }
 
     private static ISymbol? Resolve(SemanticModel model, SyntaxNode node)

@@ -8,7 +8,8 @@ const FIXTURE: &str =
 #[test]
 fn fixture_loads_and_conforms_to_the_vendored_schema() {
     let inv = load_inventory(FIXTURE).expect("loads");
-    assert_eq!(inv.inventory_version, "1");
+    assert_eq!(inv.inventory_version, "2");
+    assert_eq!(inv.registrations.len(), 8);
     assert_eq!(inv.projects.len(), 3);
     assert!(inv.types.len() >= 20 && inv.members.len() >= 50);
     let value: serde_json::Value = serde_json::from_str(FIXTURE).expect("json");
@@ -18,9 +19,9 @@ fn fixture_loads_and_conforms_to_the_vendored_schema() {
 
 #[test]
 fn unknown_version_is_refused_before_parsing() {
-    let text = r#"{"inventory_version":"2","this_is_not":"parsed"}"#;
+    let text = r#"{"inventory_version":"1","this_is_not":"parsed"}"#;
     let err = load_inventory(text).expect_err("refused");
-    assert!(err.to_string().contains("'2' is not known"), "{err}");
+    assert!(err.to_string().contains("'1' is not known"), "{err}");
     let err = load_inventory(r#"{"types":[]}"#).expect_err("refused");
     assert!(err.to_string().contains("no `inventory_version`"), "{err}");
 }

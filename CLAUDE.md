@@ -240,33 +240,39 @@ The reference What lives in `.product/products/product-cli/`. `product mcp
 
 ## C# stack binding (`product csharp`, `tools/csharp-inventory/`)
 
-**As at 2026-09-13, Gate 1 of the binding session.** Built: the reader, the consumer, reachability
-and the act-indexed delta. Not built (Gate 2, dated here so nobody reads it as present): the
-`Slice`/`RealisesFact` checks, profiles, the determination loader.
+**As at 2026-09-13, Gate 1a of the binding session.** Built: the reader, the consumer, the DI
+resolver, reachability with unresolved as its own category, and the act-indexed delta. Not built
+(Gate 2, dated here so nobody reads it as present): the `Slice`/`RealisesFact` checks, profiles,
+the determination loader, declaration-supplied edges (CG-R-61).
 
 The binding connects the domain state change binding's act vocabulary (`eventmodel.yaml`: `facts`
 + `slices` with `reads`/`writes`) to a C# solution. Two halves, joined by an artefact:
 
-- **`tools/csharp-inventory/`** — a .NET console project (not a Cargo member) that loads a solution
-  through `MSBuildWorkspace` and emits `inventory.json` per
-  `schema/json/csharp-inventory/inventory.schema.json` (version `1`). **Facts only** — types,
-  members, declared attributes with arguments, the reference graph. It is the bounded exception to
-  `dec/ddd/lsp-as-seam` (`dec/ddd/batch-inventory-reader`): batch inventory here, interactive
-  queries stay on `ddd-lsp`.
+- **`tools/csharp-inventory/`** — a .NET 10 console project (not a Cargo member) that loads a
+  solution through `MSBuildWorkspace` and emits `inventory.json` per
+  `schema/json/csharp-inventory/inventory.schema.json` (version `2`). **Facts only** — types,
+  members, declared attributes with arguments, the reference graph, and every `IServiceCollection`
+  call as written. It is the bounded exception to `dec/ddd/lsp-as-seam`
+  (`dec/ddd/batch-inventory-reader`): batch inventory here, interactive queries stay on `ddd-lsp`.
 - **`pf/csharp_inventory.rs`** loads it and refuses unknown versions before parsing;
-  `pf/csharp_reach.rs` is the §12.1 reachability measure from a *stated* root convention
-  (`entry-point`, `public`, `attribute:<T:…>`, `implements:<T:…>`), with DI traversal
-  (`--through-implementations`) opt-in and printed beside every ratio; `pf/csharp_delta.rs` is the
-  delta, **indexed by act, never by symbol** (R-A/R-D): per act *declared*, *declarable*,
-  *unstructured* or *unrealised*, plus the reachable-/isolated-undeclared ratios. The
-  declarable/unstructured separator is a declared proxy (CG-R-52) and every delta output prints its
-  three fields. `pf/eventmodel.rs` loads the binding's event model unchanged.
+  **`pf/csharp_di.rs`** resolves interface-mediated edges through the registration facts (the one
+  graph, CG-R-60 — there is no "DI off" number) and names why an edge could not be followed
+  (assembly scanning, keyed, decorator, conditional, module configuration, factory, no
+  registration); `pf/csharp_reach.rs` walks from a *stated* root convention (`entry-point`,
+  `public`, `attribute:<T:…>`, `implements:<T:…>`) and reports reached / **unresolved** / unreached
+  — unresolved is never folded into unreached (CG-R-62), no figure prints without its unresolved
+  count, and resolution coverage prints first; `--track` reports a symbol set's own disposition.
+  `pf/csharp_delta.rs` is the delta, **indexed by act, never by symbol** (R-A/R-D): per act
+  *declared*, *declarable*, *unstructured* or *unrealised*, plus the three-way undeclared ratios.
+  The declarable/unstructured separator is a declared proxy (CG-R-52) and the spanning-type
+  attribution rule is graded **authored** (CG-R-57); every delta output prints both.
+  `pf/eventmodel.rs` loads the binding's event model unchanged.
 
 Rules the code encodes: the reader never pattern-matches names, namespaces or base types —
-attributes are matched by their resolved type id; no output lists symbols as candidate slices;
-the inventory is measurement (never stored under `.product/`, committed only as the test fixture
-under `product-cli/tests/fixtures/csharp-inventory/`, regenerated per its README). Workspace CI
-has no .NET SDK; Rust tests run on the committed fixture.
+attributes and framework APIs are matched by resolved symbol id; no output lists symbols as
+candidate slices; the inventory is measurement (never stored under `.product/`, committed only as
+the test fixture under `product-cli/tests/fixtures/csharp-inventory/`, regenerated per its README).
+Workspace CI has no .NET SDK; Rust tests run on the committed fixture.
 
 ## DDD governance (`.ddd/`, the `ddd` binary)
 

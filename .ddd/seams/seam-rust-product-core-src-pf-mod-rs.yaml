@@ -30,3 +30,33 @@ bindings:
   after: sha256:5636e57593295ab651c1d7b34c2d231a36edf356a50f4b2e7e864a165c71c7ca
   base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
   hash: sha256:73e7b58dc9a9bc224ebb5c75b7fda681b992564d9ec5f4f5d6ec002b76cf38f4
+- symbol: csharp_delta
+  file: product-core/src/pf/mod.rs
+  before: sha256:8928a1649eb08420984b79c302d6080c7a59fd8db94608aab24891e57a225c86
+  after: sha256:b430b89bd60b3bcc0833b0b11cab081bc82ec24902bed30b6c4760e29ffbaa70
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:cd1766aeea99213769ab23066302aee6c6e086e9708b33d899dc703897fab8a7
+- symbol: csharp_di
+  file: product-core/src/pf/mod.rs
+  before: sha256:8928a1649eb08420984b79c302d6080c7a59fd8db94608aab24891e57a225c86
+  after: sha256:b430b89bd60b3bcc0833b0b11cab081bc82ec24902bed30b6c4760e29ffbaa70
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:a8ce5140f7170826717b463be139cffd0c03d2a2391b8e4fca90a451c54a7bfc
+- symbol: csharp_inventory
+  file: product-core/src/pf/mod.rs
+  before: sha256:8928a1649eb08420984b79c302d6080c7a59fd8db94608aab24891e57a225c86
+  after: sha256:b430b89bd60b3bcc0833b0b11cab081bc82ec24902bed30b6c4760e29ffbaa70
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:961ab82d671f6bcf3f0653bd9a184c49f24e6db72b5ce6f9efa469767523e21f
+- symbol: csharp_reach
+  file: product-core/src/pf/mod.rs
+  before: sha256:8928a1649eb08420984b79c302d6080c7a59fd8db94608aab24891e57a225c86
+  after: sha256:b430b89bd60b3bcc0833b0b11cab081bc82ec24902bed30b6c4760e29ffbaa70
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:3582d77ca99db0905b459ddebf77b46621795c2c1f44af8390f304785404e7ea
+- symbol: eventmodel
+  file: product-core/src/pf/mod.rs
+  before: sha256:8928a1649eb08420984b79c302d6080c7a59fd8db94608aab24891e57a225c86
+  after: sha256:b430b89bd60b3bcc0833b0b11cab081bc82ec24902bed30b6c4760e29ffbaa70
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:d59daa2ff18a2b09afc37ba58ee2757e50723ec261eaa981f67fff76027d8511

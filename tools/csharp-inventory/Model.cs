@@ -8,7 +8,7 @@ namespace CSharpInventory;
 
 public sealed class Inventory
 {
-    public string InventoryVersion { get; init; } = "1";
+    public string InventoryVersion { get; init; } = "2";
     public ProducedBy ProducedBy { get; init; } = new();
     public string ProducedAt { get; init; } = "";
     public SolutionInfo Solution { get; init; } = new();
@@ -16,7 +16,29 @@ public sealed class Inventory
     public List<TypeInfo> Types { get; init; } = new();
     public List<MemberInfo> Members { get; init; } = new();
     public List<Reference> References { get; init; } = new();
+    public List<Registration> Registrations { get; init; } = new();
     public List<Diagnostic> Diagnostics { get; init; } = new();
+}
+
+/// <summary>
+/// One call on an IServiceCollection, as written: the member it sits in, the
+/// invoked method's identity, its generic and typeof arguments, what the
+/// arguments construct, whether a lambda is among them, and whether the call
+/// is inside a conditional. Every such call is recorded — AddControllers as
+/// much as AddScoped — and which of them register what is decided Rust-side.
+/// </summary>
+public sealed class Registration
+{
+    public string Site { get; init; } = "";
+    public string Method { get; init; } = "";
+    public string MethodName { get; init; } = "";
+    public List<string> TypeArguments { get; init; } = new();
+    public List<string> TypeofArguments { get; init; } = new();
+    public List<string> Constructs { get; init; } = new();
+    public bool HasLambda { get; init; }
+    public bool Conditional { get; init; }
+    public string File { get; init; } = "";
+    public int Line { get; init; }
 }
 
 public sealed class ProducedBy

@@ -1,6 +1,6 @@
 //! The C# inventory artefact — the versioned fact file the .NET reader emits.
 //!
-//! Mirrors `schema/json/csharp-inventory/inventory.schema.json` (version 1).
+//! Mirrors `schema/json/csharp-inventory/inventory.schema.json` (version 2).
 //! Loading refuses any `inventory_version` not in [`KNOWN_INVENTORY_VERSIONS`]
 //! before another field is read. Facts only: nothing here classifies.
 
@@ -12,7 +12,7 @@ use serde_json::Value;
 use crate::error::{ProductError, Result};
 
 /// The inventory versions this consumer understands.
-pub const KNOWN_INVENTORY_VERSIONS: &[&str] = &["1"];
+pub const KNOWN_INVENTORY_VERSIONS: &[&str] = &["2"];
 
 /// The vendored schema, applied unchanged.
 pub const INVENTORY_SCHEMA: &str =
@@ -131,6 +131,29 @@ pub struct Reference {
     pub kind: String,
 }
 
+/// One call on an `IServiceCollection`, as written. Which calls register
+/// what is decided in `csharp_di`, not here.
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct Registration {
+    pub site: String,
+    pub method: String,
+    pub method_name: String,
+    #[serde(default)]
+    pub type_arguments: Vec<String>,
+    #[serde(default)]
+    pub typeof_arguments: Vec<String>,
+    #[serde(default)]
+    pub constructs: Vec<String>,
+    #[serde(default)]
+    pub has_lambda: bool,
+    #[serde(default)]
+    pub conditional: bool,
+    #[serde(default)]
+    pub file: String,
+    #[serde(default)]
+    pub line: u64,
+}
+
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct Diagnostic {
     pub severity: String,
@@ -154,6 +177,8 @@ pub struct Inventory {
     pub members: Vec<MemberFact>,
     #[serde(default)]
     pub references: Vec<Reference>,
+    #[serde(default)]
+    pub registrations: Vec<Registration>,
     #[serde(default)]
     pub diagnostics: Vec<Diagnostic>,
 }
@@ -205,6 +230,8 @@ pub struct Index<'a> {
     pub implementors: BTreeMap<&'a str, Vec<&'a str>>,
     /// Type → its members.
     pub members_of: BTreeMap<&'a str, Vec<&'a str>>,
+    /// Types a caller cannot instantiate: interfaces and abstract classes.
+    pub abstract_types: BTreeSet<&'a str>,
 }
 
 impl Inventory {
@@ -227,6 +254,12 @@ impl Inventory {
             out,
             implementors,
             members_of,
+            abstract_types: self
+                .types
+                .iter()
+                .filter(|t| t.kind == "interface" || t.is_abstract)
+                .map(|t| t.id.as_str())
+                .collect(),
         }
     }
 

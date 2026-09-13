@@ -50,12 +50,16 @@ fn unresolved_and_orphan_declarations_are_named() {
 }
 
 #[test]
-fn ratios_count_only_undeclared_types() {
+fn ratios_are_three_way_over_undeclared_types() {
     let r = run();
-    let declared_kinds = 1 + 8; // one [Slice] resolved + eight [RealisesFact] (incl. the orphan) … plus Bogus
-    assert!(r.ratios.undeclared_types < 27 - declared_kinds + 1);
-    assert_eq!(r.ratios.reachable_undeclared + r.ratios.isolated_undeclared, r.ratios.undeclared_types);
-    assert!(r.ratios.reachable_undeclared >= 2, "the handler reaches ICartReader and IOrderRepository");
+    // 33 types; 2 [Slice] + 8 [RealisesFact] carry declarations.
+    assert_eq!(r.ratios.undeclared_types, 33 - 10);
+    assert_eq!(r.ratios.reachable_undeclared + r.ratios.unresolved_undeclared + r.ratios.isolated_undeclared, r.ratios.undeclared_types);
+    assert!(r.ratios.reachable_undeclared >= 4, "the handler reaches ICartReader/CartService and IOrderRepository/OrderRepository: {:?}", r.ratios);
+    assert_eq!(r.attribution.grade, "authored");
+    let text = render_delta(&r);
+    assert!(text.contains("graded authored, CG-R-57"));
+    assert!(text.contains("unresolved-undeclared:"));
 }
 
 #[test]

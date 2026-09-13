@@ -6,6 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../Product.Binding/Product.Binding.csproj" />
     <ProjectReference Include="../Shop.Domain/Shop.Domain.csproj" />
   </ItemGroup>

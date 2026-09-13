@@ -1,10 +1,11 @@
-//! `product csharp …` — the C# stack binding's consumer side (Gate 1, 2026-09-13).
+//! `product csharp …` — the C# stack binding's consumer side (Gate 1a, 2026-09-13).
 //!
 //! Reads the inventory artefact the .NET reader (`tools/csharp-inventory`)
 //! emits and measures it. `inventory` checks the artefact's version and
-//! schema; `reach` is the §12.1 reachability measure from a stated root
-//! convention; `delta` is the act-indexed three-region report plus the two
-//! ratios, which needs the binding's event model. Nothing here writes to
+//! schema; `reach` is the reachability measure from a stated root convention,
+//! resolved through the container's registrations with unresolved edges
+//! reported as their own category (CG-R-60 … 62); `delta` is the act-indexed
+//! three-region report plus the ratios, which needs the binding's event model. Nothing here writes to
 //! `.product/`, and no output lists symbols as candidate slices (R-D).
 
 use std::path::{Path, PathBuf};
@@ -35,9 +36,6 @@ pub enum CsharpCommands {
         /// Type id of the fact attribute
         #[arg(long = "realises-fact-attribute", default_value = "T:Product.Binding.RealisesFactAttribute")]
         realises_fact_attribute: String,
-        /// Follow implement/inherit edges when computing the ratios
-        #[arg(long = "through-implementations")]
-        through_implementations: bool,
     },
     /// Check an inventory artefact: known version, conforms to the vendored
     /// schema, and a summary of what it carries
@@ -52,24 +50,22 @@ pub enum CsharpCommands {
         /// Path to the inventory JSON
         file: PathBuf,
         /// Root conventions, comma-separated: entry-point, public,
-        /// attribute:<T:…>, implements:<T:…>, declared:<T:…>
+        /// attribute:<T:…>, implements:<T:…>, declared:<T:…>, member:<M:…>
         #[arg(long, default_value = "entry-point")]
         roots: String,
-        /// Follow implement/inherit edges from a reached type to its
-        /// implementors (a DI container's resolution, approximated)
-        #[arg(long = "through-implementations")]
-        through_implementations: bool,
+        /// Report a symbol set's disposition on its own, e.g.
+        /// implements:T:MediatR.IRequestHandler`2 (repeatable)
+        #[arg(long = "track")]
+        track: Vec<String>,
     },
 }
 
 pub(crate) fn handle_csharp(cmd: CsharpCommands) -> CmdResult {
     match cmd {
         CsharpCommands::Inventory { file } => inventory_cmd(&file),
-        CsharpCommands::Reach { file, roots, through_implementations } => {
-            reach_cmd(&file, &roots, through_implementations)
-        }
-        CsharpCommands::Delta { file, event_model, slice_attribute, realises_fact_attribute, through_implementations } => {
-            delta_cmd(&file, &event_model, DeltaOptions { slice_attribute, realises_fact_attribute, through_implementations })
+        CsharpCommands::Reach { file, roots, track } => reach_cmd(&file, &roots, &track),
+        CsharpCommands::Delta { file, event_model, slice_attribute, realises_fact_attribute } => {
+            delta_cmd(&file, &event_model, DeltaOptions { slice_attribute, realises_fact_attribute })
         }
     }
 }
@@ -121,19 +117,26 @@ fn inventory_cmd(file: &Path) -> CmdResult {
     Ok(Output::both(text, json))
 }
 
-fn reach_cmd(file: &Path, roots: &str, through_implementations: bool) -> CmdResult {
+fn parse_roots(specs: &[&str]) -> Result<Vec<Root>, ProductError> {
+    specs
+        .iter()
+        .map(|spec| {
+            Root::parse(spec).ok_or_else(|| {
+                ProductError::ConfigError(format!(
+                    "unknown root convention '{spec}' — expected entry-point, public, attribute:<T:…>, implements:<T:…>, declared:<T:…> or member:<M:…>"
+                ))
+            })
+        })
+        .collect()
+}
+
+fn reach_cmd(file: &Path, roots: &str, track: &[String]) -> CmdResult {
     let inv = load(file)?;
-    let mut parsed = Vec::new();
-    for spec in roots.split(',').map(str::trim).filter(|s| !s.is_empty()) {
-        parsed.push(Root::parse(spec).ok_or_else(|| {
-            ProductError::ConfigError(format!(
-                "unknown root convention '{spec}' — expected entry-point, public, attribute:<T:…>, implements:<T:…> or declared:<T:…>"
-            ))
-        })?);
-    }
-    let opts = ReachOptions { roots: parsed, through_implementations };
+    let root_specs: Vec<&str> = roots.split(',').map(str::trim).filter(|s| !s.is_empty()).collect();
+    let track_specs: Vec<&str> = track.iter().map(String::as_str).collect();
+    let opts = ReachOptions { roots: parse_roots(&root_specs)?, track: parse_roots(&track_specs)? };
     let report = reach(&inv, &opts);
-    let text = render_reach(&report, &opts);
+    let text = render_reach(&report);
     let json = serde_json::to_value(&report).map_err(|e| ProductError::Internal(e.to_string()))?;
     Ok(Output::both(text, json))
 }

@@ -19,6 +19,7 @@ pub mod capability;
 pub mod cell;
 pub mod cell_validate;
 pub mod csharp_delta;
+pub mod csharp_di;
 pub mod csharp_inventory;
 pub mod csharp_reach;
 pub mod decider;
