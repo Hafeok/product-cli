@@ -1,0 +1,165 @@
+# Conformance evidence — domain state change binding
+#
+# Published under self-certification. Every claim below cites a construct in
+# schema/determination.schema.json, and the two proof scripts re-run the
+# evidence. Nothing here is accepted on assertion.
+#
+#   python3 tools/validate.py examples/place-order.determinations.yaml
+#   python3 tools/prove_prohibitions.py
+
+candidate: "Domain state change — event modelling + domain model + determination layer"
+notation: "YAML records against determination.schema.json, over an event model's slice vocabulary"
+assessed_at: "2026-09-02"
+base: >-
+  Event modelling supplies the act vocabulary (slice types and instances) and,
+  with the domain model, the fact vocabulary. The determination layer adds
+  what neither supplies: extent, allocation, coverage, boundary declarations,
+  and an act-time write form.
+
+prohibitions:
+  PR-1:
+    declared: true
+    enforced_by: required-field
+    construct: "determination.schema.json — `address` in the root `required` array; $defs/address requires act_type and act_instance"
+    note: >-
+      A determination with no address has no valid representation. Cross-cutting
+      concerns, which event modelling alone has nowhere to put, must be
+      addressed to an act type with a travel declaration instead.
+
+  PR-2:
+    declared: true
+    enforced_by: schema
+    construct: "$defs/allocation — closed `oneOf` over pinned/checked/residual; the residual branch requires carried_by AND principal; principal.kind omits machine by construction"
+    note: >-
+      Two things are enforced, not one. Every determination is allocated, and a
+      residual names both the carrying actor kind and an accountable principal
+      that cannot be a machine identity.
+
+  PR-3:
+    declared: true
+    enforced_by: required-field
+    construct: "$defs/acceptance — `does_not_cover` in `required`, typed as a non-empty array OR the literal 'asserted-none'"
+    note: >-
+      Omission is not permitted. The empty case is asserted with a sentinel,
+      because an omitted uncovered set is indistinguishable from an
+      unconsidered one — which is the failure the prohibition exists to stop.
+
+sameness:
+  SR-1:
+    build_time:
+      id: "DSC-0001"
+      address: { act_type: command, act_instance: PlaceOrder }
+      statement: "An order may not be placed against an empty cart."
+      extent: { axes: { slice-type: { state: bound-here } } }
+      allocation: { class: pinned, settled_by: "invariant:CartNotEmpty" }
+      provenance: { made_at: build-time, made_by: "domain-workshop-2026-08", recorded: "2026-08-14T10:00:00Z" }
+    act_time:
+      id: "DSC-0005"
+      address: { act_type: command, act_instance: PlaceOrder }
+      statement: "A currency mismatch is rejected rather than converted."
+      extent: { axes: { slice-type: { state: bound-here } } }
+      allocation: { class: pinned, settled_by: "session-ruling:2026-09-02" }
+      provenance: { made_at: act-time, made_by: "session:2026-09-02", recorded: "2026-09-02T14:31:00Z" }
+    note: >-
+      One schema. `provenance.made_at` is an enum on one definition, not a
+      discriminator between two shapes — so a determination produced while
+      acting returns to the address it was read from, which is the property
+      no prior specification language has.
+
+pairs:
+  DP-1:
+    a: { axes: { sector: { state: silent } } }
+    b: { axes: { sector: { state: does-not-travel, region: healthcare, reason: "no sector-specific rule applies" } } }
+    note: >-
+      Distinguished by construction, in both directions. `silent` is a distinct
+      enum member, and the schema FORBIDS a region on a silent axis — so
+      silence cannot be quietly upgraded to a stated boundary. Proof case DP-1
+      in tools/prove_prohibitions.py.
+
+  DP-2:
+    a: { predicate: "the system handles error cases correctly", closure: { kind: logical-only } }
+    b: { predicate: "every payload field satisfies its declared domain type", closure: { kind: operational, runnable_by: "roslyn-analyzer:PayloadTypeConformance", terminates: true, tolerance: exact } }
+    note: >-
+      `closure.kind` is a required enum, and the operational branch additionally
+      requires runnable_by and terminates. A predicate nobody can execute is
+      representable but cannot claim operational closure.
+
+  DP-3:
+    a: { covers: [payload-typing], does_not_cover: [cross-field-consistency] }
+    b: { covers: [staleness-window], does_not_cover: [behaviour-under-partition, lag-during-rebuild] }
+    note: >-
+      Covered and uncovered are separate required arrays on the same object, so
+      the residual is stated at the point the coverage is claimed rather than
+      inferred from what is absent.
+
+  DP-4:
+    a: { class: pinned, settled_by: "invariant:CartNotEmpty" }
+    b: { class: residual, carried_by: human, principal: { kind: team, identifier: platform-security } }
+    note: >-
+      A closed union, so the branches cannot be conflated and neither can be
+      expressed without its own required fields.
+
+  DP-5:
+    a:
+      predicate: "the projection's lag does not exceed the stated window"
+      proxy:
+        stands_in_for: "the reader never sees a summary stale enough to mislead them"
+        known_divergence: "measured lag says nothing about read-after-own-write"
+    b:
+      predicate: "every payload field satisfies its declared domain type"
+    note: >-
+      The proxy object requires known_divergence whenever it is present, so a
+      proxy recorded without its divergence has no representation. Proof case
+      DP-5.
+
+  DP-6:
+    a: { fact_type: Cart, role: read, boundary: { kind: internal } }
+    b: { fact_type: OrderPlaced, role: write, boundary: { kind: internal } }
+    note: >-
+      Position is a required enum on one fact_type, not two vocabularies. This
+      is the one pair the base method already satisfied — event modelling's
+      information-completeness rule marks read and write position structurally
+      — and the binding preserves rather than replaces it.
+
+  DP-7:
+    a:
+      fact_type: ActorIdentity
+      role: read
+      boundary: { kind: external, source: "identity provider outside scope", read_provenance: "OIDC claim validated at gateway", tick_rate: fast }
+    b:
+      fact_type: OrderPlaced
+      role: read
+      boundary: { kind: internal }
+    note: >-
+      External requires source, read_provenance and tick_rate; terminal requires
+      consumer and consumption_observable. Neither can be declared as a bare
+      label, which is what stops the boundary becoming the cheap way to pass
+      the resolution condition.
+
+# ---------------------------------------------------------------------------
+
+limits:
+  - >-
+    The checker verifies that encodings differ and that prohibitions cite an
+    enforcing construct. It does not verify they differ for the stated reason.
+    Read the schema.
+  - >-
+    Address validity and the resolution condition are checked by
+    tools/check_resolution.py against the event model, not by the schema. A
+    determination is schema-valid whether or not the slice it addresses exists.
+  - >-
+    Composition across scopes IS checked, by tools/check_composition.py: CS-1
+    to CS-4 over two internally-resolved specifications. What it cannot check
+    is that a fact means the same thing on both sides — agreement on name, kind
+    and boundary is not agreement on meaning, and that residual is permanent.
+  - >-
+    No falsifier. The notation's claim is about inference load, not escaped
+    decisions: holding determinations constant, a conforming notation should
+    leave less for an actor to supply than prose carrying the same content.
+    Measured per decision point in a fixed frame as determined / inferred /
+    asked, with correctness irrelevant — an actor can infer correctly, and a
+    right answer arrived at by invention is still an inference. Floor: the
+    inference rate cannot fall below the declared residual. Untested.
+  - >-
+    Seven pairs are not proven sufficient. Passing all seven establishes that a
+    notation failing any is not conforming; it does not establish adequacy.

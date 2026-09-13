@@ -1,0 +1,246 @@
+# Worked example — determinations over an event model
+#
+# One command slice (PlaceOrder) and one read-model slice. Five determinations,
+# four made at build time and one made while acting — the last one being the
+# case every prior specification language has no form for.
+#
+# Every record here validates against schema/determination.schema.json.
+
+- id: DSC-0001
+  address:
+    act_type: command
+    act_instance: PlaceOrder
+    scale: act
+  statement: >-
+    An order may not be placed against an empty cart.
+  extent:
+    axes:
+      slice-type:
+        state: bound-here
+      context:
+        state: does-not-travel
+        region: fulfilment
+        reason: >-
+          Fulfilment creates orders from replenishment, with no cart involved.
+      sector:
+        state: silent
+  allocation:
+    class: pinned
+    settled_by: "invariant:CartNotEmpty"
+  positions:
+    - fact_type: Cart
+      role: read
+      boundary:
+        kind: internal
+    - fact_type: OrderPlaced
+      role: write
+      boundary:
+        kind: internal
+  provenance:
+    made_at: build-time
+    made_by: "domain-workshop-2026-08"
+    recorded: "2026-08-14T10:00:00Z"
+
+- id: DSC-0002
+  address:
+    act_type: command
+    act_instance: PlaceOrder
+  statement: >-
+    Every command slice validates its payload against the domain model's
+    declared types before deciding.
+  extent:
+    axes:
+      slice-type:
+        state: travels-to
+        region: all-command-slices
+        reason: >-
+          A pattern-level determination. This is where amortisation lives: it
+          is collected by every command slice ever written.
+      context:
+        state: travels-to
+        region: all-contexts
+      sector:
+        state: silent
+  allocation:
+    class: checked
+    acceptance:
+      predicate: >-
+        For every field of the command payload, a domain type is declared and
+        the supplied value satisfies its constraints.
+      closure:
+        kind: operational
+        runnable_by: "roslyn-analyzer:PayloadTypeConformance"
+        terminates: true
+        tolerance: "exact"
+      ranges_over:
+        - OrderPlaced
+      covers:
+        - payload-typing
+        - payload-constraint-satisfaction
+      does_not_cover:
+        - cross-field-consistency
+        - semantic-validity-of-the-request
+  provenance:
+    made_at: build-time
+    made_by: "arch-decision-11"
+    recorded: "2026-08-14T10:05:00Z"
+
+- id: DSC-0003
+  address:
+    act_type: command
+    act_instance: PlaceOrder
+  statement: >-
+    Who may place an order is not settled at this address.
+  extent:
+    axes:
+      slice-type:
+        state: bound-here
+      context:
+        state: silent
+      sector:
+        state: silent
+  allocation:
+    class: residual
+    carried_by: human
+    principal:
+      kind: team
+      identifier: "platform-security"
+  positions:
+    - fact_type: ActorIdentity
+      role: read
+      boundary:
+        kind: external
+        source: "identity provider, outside the modelled scope"
+        read_provenance: "OIDC token claim, validated at the gateway"
+        tick_rate: fast
+  provenance:
+    made_at: build-time
+    made_by: "domain-workshop-2026-08"
+    recorded: "2026-08-14T10:07:00Z"
+
+- id: DSC-0004
+  address:
+    act_type: read-model
+    act_instance: OrderSummary
+  statement: >-
+    The summary may lag the event stream by up to five seconds.
+  extent:
+    axes:
+      slice-type:
+        state: bound-here
+      context:
+        state: silent
+      sector:
+        state: silent
+  allocation:
+    class: checked
+    acceptance:
+      predicate: >-
+        The projection's lag behind the head of the stream does not exceed the
+        stated window under normal operation.
+      closure:
+        kind: operational
+        runnable_by: "integration-test:ProjectionLag"
+        terminates: true
+        tolerance: "5s"
+      ranges_over:
+        - OrderSummary
+      covers:
+        - staleness-window
+      does_not_cover:
+        - behaviour-under-partition
+        - lag-during-rebuild
+      proxy:
+        stands_in_for: >-
+          The reader never sees a summary stale enough to mislead them.
+        known_divergence: >-
+          A five-second window is acceptable for browsing and is not acceptable
+          immediately after the reader's own write, where they expect to see
+          their change. The measured lag says nothing about that case.
+  positions:
+    - fact_type: OrderPlaced
+      role: read
+      boundary:
+        kind: internal
+    - fact_type: OrderSummary
+      role: write
+      boundary:
+        kind: terminal
+        consumer: "the order history screen"
+        consumption_observable: false
+  provenance:
+    made_at: build-time
+    made_by: "domain-workshop-2026-08"
+    recorded: "2026-08-14T10:12:00Z"
+
+# --- The act-time record. Identical schema; only provenance.made_at differs. ---
+
+- id: DSC-0005
+  address:
+    act_type: command
+    act_instance: PlaceOrder
+  statement: >-
+    An order placed against a cart whose currency differs from the customer's
+    account currency is rejected rather than converted.
+  extent:
+    axes:
+      slice-type:
+        state: bound-here
+      context:
+        state: silent
+      sector:
+        state: silent
+  allocation:
+    class: residual
+    carried_by: human
+    principal:
+      kind: human
+      identifier: "emil"
+  positions:
+    - fact_type: Cart
+      role: read
+      boundary:
+        kind: internal
+  provenance:
+    made_at: act-time
+    made_by: "session:2026-09-02-implement-placeorder"
+    recorded: "2026-09-02T14:31:00Z"
+
+- id: DSC-0006
+  address:
+    act_type: command
+    act_instance: ConfirmOrder
+  statement: >-
+    A confirmed order leaves this context and is consumed by fulfilment.
+  extent:
+    axes:
+      slice-type:
+        state: bound-here
+      context:
+        state: does-not-travel
+        region: fulfilment
+        reason: >-
+          What fulfilment does with a confirmed order is settled in fulfilment.
+      sector:
+        state: silent
+  allocation:
+    class: residual
+    carried_by: team
+    principal:
+      kind: team
+      identifier: "ordering-team"
+  positions:
+    - fact_type: OrderPlaced
+      role: read
+      boundary:
+        kind: internal
+    - fact_type: OrderConfirmed
+      role: write
+      boundary:
+        kind: terminal
+        consumer: "fulfilment"
+        consumption_observable: true
+  provenance:
+    made_at: build-time
+    made_by: "domain-workshop-2026-08"
+    recorded: "2026-08-14T10:20:00Z"

@@ -1,0 +1,30 @@
+# Event model — fulfilment context
+#
+# The peer scope. OrderConfirmed is produced in ordering and read here, which
+# is the seam: ordering declares it terminal, fulfilment declares it external,
+# and until check_composition.py existed nothing verified those two agreed.
+
+context: fulfilment
+
+facts:
+  - id: OrderConfirmed
+    kind: read-model
+    note: "kind disagrees with ordering, which calls it an event"
+  - id: CustomerAddress
+    kind: entity
+    note: "expected from ordering, which never produces it"
+  - id: ShipmentScheduled
+    kind: event
+  - id: ShipmentBoard
+    kind: read-model
+
+slices:
+  - type: command
+    name: ScheduleShipment
+    reads: [OrderConfirmed, CustomerAddress]
+    writes: [ShipmentScheduled]
+
+  - type: read-model
+    name: ShipmentBoard
+    reads: [ShipmentScheduled]
+    writes: [ShipmentBoard]

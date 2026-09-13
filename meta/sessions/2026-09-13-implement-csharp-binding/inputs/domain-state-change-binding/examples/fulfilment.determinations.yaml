@@ -1,0 +1,69 @@
+- id: DSC-0101
+  address:
+    act_type: command
+    act_instance: ScheduleShipment
+  statement: >-
+    A shipment is scheduled from a confirmed order, never from a placed one.
+  extent:
+    axes:
+      slice-type:
+        state: bound-here
+      context:
+        state: bound-here
+      sector:
+        state: silent
+  allocation:
+    class: pinned
+    settled_by: "invariant:ConfirmedBeforeShipment"
+  positions:
+    - fact_type: OrderConfirmed
+      role: read
+      boundary:
+        kind: external
+        source: "ordering"
+        read_provenance: "subscribed event stream, ordering context"
+        tick_rate: fast
+    - fact_type: ShipmentScheduled
+      role: write
+      boundary:
+        kind: internal
+  provenance:
+    made_at: build-time
+    made_by: "domain-workshop-2026-08"
+    recorded: "2026-08-15T09:00:00Z"
+
+- id: DSC-0102
+  address:
+    act_type: read-model
+    act_instance: ShipmentBoard
+  statement: >-
+    The board is read by warehouse staff and by nothing in this scope.
+  extent:
+    axes:
+      slice-type:
+        state: bound-here
+      context:
+        state: bound-here
+      sector:
+        state: silent
+  allocation:
+    class: residual
+    carried_by: human
+    principal:
+      kind: team
+      identifier: "fulfilment-team"
+  positions:
+    - fact_type: ShipmentScheduled
+      role: read
+      boundary:
+        kind: internal
+    - fact_type: ShipmentBoard
+      role: write
+      boundary:
+        kind: terminal
+        consumer: "warehouse staff, outside any modelled scope"
+        consumption_observable: false
+  provenance:
+    made_at: build-time
+    made_by: "domain-workshop-2026-08"
+    recorded: "2026-08-15T09:05:00Z"

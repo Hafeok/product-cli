@@ -1,0 +1,50 @@
+# Event model — ordering context
+#
+# This is the base the binding sits on. It supplies two of the three things a
+# specification needs: the ACT VOCABULARY (slices, by type and name) and the
+# FACT VOCABULARY (the type space of things acts read and write).
+#
+# It supplies no determinations. That is the determination layer's job, and
+# every determination addresses a slice named here.
+
+context: ordering
+
+# --- Fact vocabulary -------------------------------------------------------
+# The type space. Position (read or write) is NOT a property of a fact — it is
+# relative to the act, and is declared per slice below. Ground and verdict are
+# roles the same object occupies at different addresses.
+
+facts:
+  - id: Cart
+    kind: entity
+    note: "the customer's assembled selection"
+  - id: CartEmptied
+    kind: event
+  - id: OrderPlaced
+    kind: event
+  - id: OrderSummary
+    kind: read-model
+  - id: ActorIdentity
+    kind: entity
+    note: >-
+      Present in the vocabulary but produced by no slice here. A determination
+      must declare it external, or the resolution condition fails.
+
+# --- Act vocabulary --------------------------------------------------------
+# Slices. Type plus name is the address every determination binds to.
+
+slices:
+  - type: command
+    name: PlaceOrder
+    reads: [Cart, ActorIdentity]
+    writes: [OrderPlaced]
+
+  - type: command
+    name: EmptyCart
+    reads: [Cart]
+    writes: [CartEmptied]
+
+  - type: read-model
+    name: OrderSummary
+    reads: [OrderPlaced]
+    writes: [OrderSummary]
