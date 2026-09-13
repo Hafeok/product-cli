@@ -3,7 +3,7 @@
 use clap::Command as ClapCommand;
 
 use super::{
-    author, blueprint, build, cell, codegen, completions, decider, deliverable, deployable_unit,
+    author, blueprint, build, cell, codegen, completions, csharp, decider, deliverable, deployable_unit,
     design_system, domain,
     guide, hooks, how, init, lsp, mcp_cmd, preview, primitive, product, projector, registry,
     release, render,
@@ -15,6 +15,7 @@ pub(crate) fn dispatch(command: Commands, fmt: &str, cli_command: &mut ClapComma
         Commands::Author { command } => author::handle_author(command),
         Commands::Build { .. } => dispatch_build(command),
         Commands::Completions { shell } => completions::handle_completions(&shell, cli_command),
+        Commands::Csharp { command } => render(csharp::handle_csharp(command), fmt),
         Commands::Guide => render(guide::handle_guide(), fmt),
         Commands::Init { .. } => dispatch_init(command),
         Commands::InstallHooks => hooks::handle_install_hooks(),

@@ -1,0 +1,39 @@
+format: 5
+id: dec/ddd/batch-inventory-reader
+title: A Roslyn workspace reader is admitted for batch inventory, as a bounded exception to the LSP seam
+rationale: >
+  LSP is an interactive-query seam, designed for editor request-response
+  against an open document. Whole-solution symbol inventory with a call
+  graph is a batch read, and the seam was never shaped for it: attribute
+  arguments as typed constants and a references graph over every symbol
+  are one `references` request per symbol over LSP, and the attribute text
+  slice carries no argument typing. A separate .NET tool
+  (tools/csharp-inventory) loads the solution through
+  MSBuildWorkspace and emits facts as a versioned JSON artefact; the Rust
+  side consumes the artefact. Roslyn stays out of the Rust core.
+
+
+  This SUPERSEDES dec/ddd/lsp-as-seam for batch inventory only. It does not
+  supersede it for interactive queries, which continue through ddd-lsp.
+  Two constraints bound the exception, or it becomes a general licence:
+  (1) the workspace tool emits facts only — every rule, classification and
+  check stays Rust-side against the store; if it starts deciding what
+  counts as a slice, the exception has widened into a second decision
+  engine; (2) where both readers can answer the same question, ddd-lsp is
+  used — the exception covers what LSP cannot do, not what it does less
+  conveniently.
+principal: Emil (Context&)
+based_on:
+  - type: mandate
+    statement: >-
+      Ruling CG-R-55 (2026-09-13, canon-governance register): a superseding
+      record, not a beside-filing — two decisions in tension would leave the
+      next session to pick. Filed verbatim at
+      meta/sessions/2026-09-13-implement-csharp-binding/rulings-gate0.md.
+date: 2026-09-13
+notes: >
+  Filed by the 2026-09-13 C# stack binding session at Gate 0 close, at the
+  principal's direction. The superseded record stays in place unaltered
+  with an appended note naming this one (CG-rule-02). The Gate 0 finding
+  that motivated the ruling — a second C# reader in one workspace — is
+  D-1 in that session's gate0-report.md.

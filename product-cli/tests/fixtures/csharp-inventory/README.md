@@ -1,0 +1,26 @@
+# csharp-inventory fixture
+
+`Fixture/` is a three-project solution built to exercise the C# stack binding's consumer without
+a .NET SDK in CI:
+
+| Project | Holds |
+|---|---|
+| `Product.Binding` | the `[Slice(act, role, Profile = …)]` and `[RealisesFact(fact)]` attributes — strings, never an enum (CG-R-54) |
+| `Shop.Domain` | the fact vocabulary of `ordering.eventmodel.yaml` realised, names deliberately differing from fact ids where the PRD allows (`CartState` realises `Cart`); a shared value object (`Money`) with no fact; an orphan (`Ghost`) naming a fact the vocabulary lacks |
+| `Shop.Api` | an entry point, a hand-rolled DI container, a declared handler (`PlaceOrderHandler`), a declarable type (`CartService`), a type the act boundary runs through (`CheckoutService`), a `[Slice]` naming an act the vocabulary lacks (`BogusHandler`), an unreached type (`Dead`), and a local `[Endpoint]` attribute for the attribute-root convention |
+
+`inventory.json` is the reader's output for it. `ordering.eventmodel.yaml` is the domain state
+change binding's shipped example, byte-identical to the arrived input filed at
+`meta/sessions/2026-09-13-implement-csharp-binding/inputs/…/examples/ordering.eventmodel.yaml`
+(sha256 `06d32bfa…`).
+
+## Regenerate
+
+```bash
+dotnet build -c Release tools/csharp-inventory
+cd product-cli/tests/fixtures/csharp-inventory
+dotnet build Fixture/Fixture.sln
+dotnet ../../../../tools/csharp-inventory/bin/Release/net8.0/csharp-inventory.dll Fixture/Fixture.sln --out inventory.json
+```
+
+`produced_at` and `git_head` change on every regeneration; nothing reads them.

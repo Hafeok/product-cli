@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Hafeok/product-cli/schema/json/csharp-inventory/inventory.schema.json",
+  "title": "C# inventory — the artefact between the .NET reader and product-cli",
+  "$comment": "Version 1. FACTS ONLY: projects, types, members, declared attributes with their arguments, and the reference graph. No field carries a judgement — no slice, no role, no region, no verdict. The Rust side refuses any inventory_version it does not know before reading another field. The inventory is measurement: re-derivable, never a determination, never committed except as a test fixture.",
+  "type": "object",
+  "required": ["inventory_version", "produced_by", "produced_at", "solution", "projects", "types", "members", "references", "diagnostics"],
+  "additionalProperties": false,
+  "properties": {
+    "inventory_version": { "type": "string", "const": "1" },
+    "produced_by": {
+      "type": "object",
+      "required": ["tool", "tool_version", "roslyn_version"],
+      "additionalProperties": false,
+      "properties": {
+        "tool": { "type": "string", "minLength": 1 },
+        "tool_version": { "type": "string", "minLength": 1 },
+        "roslyn_version": { "type": "string" }
+      }
+    },
+    "produced_at": { "type": "string", "format": "date-time" },
+    "solution": {
+      "type": "object",
+      "required": ["path"],
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "$comment": "Relative to the solution directory, forward slashes." },
+        "git_head": { "type": ["string", "null"], "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "projects": { "type": "array", "items": { "$ref": "#/$defs/project" } },
+    "types": { "type": "array", "items": { "$ref": "#/$defs/type" } },
+    "members": { "type": "array", "items": { "$ref": "#/$defs/member" } },
+    "references": { "type": "array", "items": { "$ref": "#/$defs/reference" } },
+    "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/diagnostic" } }
+  },
+  "$defs": {
+    "symbol_id": {
+      "type": "string",
+      "minLength": 3,
+      "pattern": "^([TMPFEN]|!):[^\\s]+$",
+      "$comment": "Roslyn's documentation-comment id: T:Ns.Type`1, M:Ns.Type.Method(System.String), P:, F:, E:. Exact over overloads and generic arity, so a rename is a new id — which is what makes deletion detectable and an orphaned attribute findable. An array or pointer type is its element id with [] or * appended; a generic type parameter is !:Name — it names no type."
+    },
+    "attribute_use": {
+      "type": "object",
+      "required": ["type", "positional", "named"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "$ref": "#/$defs/symbol_id" },
+        "positional": {
+          "type": "array",
+          "items": {},
+          "$comment": "Constructor arguments in order, as JSON scalars or arrays. typeof(X) is rendered as the string \"T:X\" — the one lossy case."
+        },
+        "named": { "type": "object", "additionalProperties": {} }
+      }
+    },
+    "project": {
+      "type": "object",
+      "required": ["id", "name", "path", "target_frameworks", "assembly"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^P:" },
+        "name": { "type": "string", "minLength": 1 },
+        "path": { "type": "string" },
+        "target_frameworks": { "type": "array", "items": { "type": "string" } },
+        "assembly": { "type": "string" }
+      }
+    },
+    "type": {
+      "type": "object",
+      "required": ["id", "project", "namespace", "name", "kind", "accessibility", "is_static", "is_abstract", "is_partial", "base_type", "interfaces", "file", "line", "attributes"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/symbol_id" },
+        "project": { "type": "string", "pattern": "^P:" },
+        "namespace": { "type": "string" },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "enum": ["class", "record", "struct", "record-struct", "interface", "enum", "delegate"] },
+        "accessibility": { "$ref": "#/$defs/accessibility" },
+        "is_static": { "type": "boolean" },
+        "is_abstract": { "type": "boolean" },
+        "is_partial": { "type": "boolean" },
+        "base_type": { "oneOf": [ { "$ref": "#/$defs/symbol_id" }, { "type": "null" } ] },
+        "interfaces": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" } },
+        "file": { "type": "string" },
+        "line": { "type": "integer", "minimum": 0 },
+        "attributes": { "type": "array", "items": { "$ref": "#/$defs/attribute_use" } }
+      }
+    },
+    "member": {
+      "type": "object",
+      "required": ["id", "declaring_type", "name", "kind", "accessibility", "is_static", "is_entry_point", "parameters", "return_type", "file", "line", "attributes"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/symbol_id" },
+        "declaring_type": { "$ref": "#/$defs/symbol_id" },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "enum": ["method", "constructor", "property", "field", "event", "other"] },
+        "accessibility": { "$ref": "#/$defs/accessibility" },
+        "is_static": { "type": "boolean" },
+        "is_entry_point": { "type": "boolean", "$comment": "Roslyn's Compilation.GetEntryPoint — a fact, not a root convention. Which roots a measurement uses is chosen Rust-side and printed beside the result." },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "type"],
+            "additionalProperties": false,
+            "properties": { "name": { "type": "string" }, "type": { "$ref": "#/$defs/symbol_id" } }
+          }
+        },
+        "return_type": { "oneOf": [ { "$ref": "#/$defs/symbol_id" }, { "type": "null" } ] },
+        "file": { "type": "string" },
+        "line": { "type": "integer", "minimum": 0 },
+        "attributes": { "type": "array", "items": { "$ref": "#/$defs/attribute_use" } }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "required": ["from", "to", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "from": { "$ref": "#/$defs/symbol_id" },
+        "to": { "$ref": "#/$defs/symbol_id" },
+        "kind": {
+          "type": "string",
+          "enum": ["call", "construct", "access", "type-reference", "inherit", "implement", "attribute"],
+          "$comment": "call/construct/access/type-reference edges are emitted only to symbols declared in the solution; inherit/implement/attribute edges keep external targets, since a framework base type or attribute is what a root convention may name."
+        }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": ["severity", "project", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "project": { "type": ["string", "null"] },
+        "message": { "type": "string" }
+      }
+    },
+    "accessibility": {
+      "type": "string",
+      "enum": ["public", "internal", "protected", "private", "protected-internal", "private-protected", "not-applicable"]
+    }
+  }
+}

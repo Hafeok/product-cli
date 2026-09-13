@@ -1,0 +1,263 @@
+//! The C# inventory artefact — the versioned fact file the .NET reader emits.
+//!
+//! Mirrors `schema/json/csharp-inventory/inventory.schema.json` (version 1).
+//! Loading refuses any `inventory_version` not in [`KNOWN_INVENTORY_VERSIONS`]
+//! before another field is read. Facts only: nothing here classifies.
+
+use std::collections::{BTreeMap, BTreeSet};
+
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+use crate::error::{ProductError, Result};
+
+/// The inventory versions this consumer understands.
+pub const KNOWN_INVENTORY_VERSIONS: &[&str] = &["1"];
+
+/// The vendored schema, applied unchanged.
+pub const INVENTORY_SCHEMA: &str =
+    include_str!("../../../schema/json/csharp-inventory/inventory.schema.json");
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct ProducedBy {
+    pub tool: String,
+    pub tool_version: String,
+    #[serde(default)]
+    pub roslyn_version: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct Solution {
+    pub path: String,
+    #[serde(default)]
+    pub git_head: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct Project {
+    pub id: String,
+    pub name: String,
+    pub path: String,
+    #[serde(default)]
+    pub target_frameworks: Vec<String>,
+    #[serde(default)]
+    pub assembly: String,
+}
+
+/// One declared attribute with its arguments, as the compiler resolved them.
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct AttributeUse {
+    #[serde(rename = "type")]
+    pub attribute_type: String,
+    #[serde(default)]
+    pub positional: Vec<Value>,
+    #[serde(default)]
+    pub named: BTreeMap<String, Value>,
+}
+
+impl AttributeUse {
+    /// Positional argument `i` as a string, if it is one.
+    pub fn arg(&self, i: usize) -> Option<&str> {
+        self.positional.get(i).and_then(Value::as_str)
+    }
+
+    /// Named argument as a string, if present and a string.
+    pub fn named_str(&self, key: &str) -> Option<&str> {
+        self.named.get(key).and_then(Value::as_str)
+    }
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct TypeFact {
+    pub id: String,
+    pub project: String,
+    #[serde(default)]
+    pub namespace: String,
+    pub name: String,
+    pub kind: String,
+    pub accessibility: String,
+    #[serde(default)]
+    pub is_static: bool,
+    #[serde(default)]
+    pub is_abstract: bool,
+    #[serde(default)]
+    pub is_partial: bool,
+    #[serde(default)]
+    pub base_type: Option<String>,
+    #[serde(default)]
+    pub interfaces: Vec<String>,
+    #[serde(default)]
+    pub file: String,
+    #[serde(default)]
+    pub line: u64,
+    #[serde(default)]
+    pub attributes: Vec<AttributeUse>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct Parameter {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub parameter_type: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct MemberFact {
+    pub id: String,
+    pub declaring_type: String,
+    pub name: String,
+    pub kind: String,
+    pub accessibility: String,
+    #[serde(default)]
+    pub is_static: bool,
+    #[serde(default)]
+    pub is_entry_point: bool,
+    #[serde(default)]
+    pub parameters: Vec<Parameter>,
+    #[serde(default)]
+    pub return_type: Option<String>,
+    #[serde(default)]
+    pub file: String,
+    #[serde(default)]
+    pub line: u64,
+    #[serde(default)]
+    pub attributes: Vec<AttributeUse>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct Reference {
+    pub from: String,
+    pub to: String,
+    pub kind: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct Diagnostic {
+    pub severity: String,
+    #[serde(default)]
+    pub project: Option<String>,
+    pub message: String,
+}
+
+/// The whole artefact.
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct Inventory {
+    pub inventory_version: String,
+    pub produced_by: ProducedBy,
+    pub produced_at: String,
+    pub solution: Solution,
+    #[serde(default)]
+    pub projects: Vec<Project>,
+    #[serde(default)]
+    pub types: Vec<TypeFact>,
+    #[serde(default)]
+    pub members: Vec<MemberFact>,
+    #[serde(default)]
+    pub references: Vec<Reference>,
+    #[serde(default)]
+    pub diagnostics: Vec<Diagnostic>,
+}
+
+/// Parse an inventory. The version is checked first; an unknown version is
+/// refused with the offending value named, before any other field is read.
+pub fn load_inventory(text: &str) -> Result<Inventory> {
+    let value: Value = serde_json::from_str(text)
+        .map_err(|e| ProductError::ConfigError(format!("inventory is not valid JSON: {e}")))?;
+    check_version(&value)?;
+    serde_json::from_value(value)
+        .map_err(|e| ProductError::ConfigError(format!("inventory: {e}")))
+}
+
+fn check_version(value: &Value) -> Result<()> {
+    let version = value
+        .get("inventory_version")
+        .and_then(Value::as_str)
+        .ok_or_else(|| ProductError::ConfigError(
+            "inventory has no `inventory_version` — refused rather than parsed optimistically".into(),
+        ))?;
+    if !KNOWN_INVENTORY_VERSIONS.contains(&version) {
+        return Err(ProductError::ConfigError(format!(
+            "inventory_version '{version}' is not known to this consumer (known: {})",
+            KNOWN_INVENTORY_VERSIONS.join(", ")
+        )));
+    }
+    Ok(())
+}
+
+/// Validate a parsed inventory against the vendored schema. Empty = conformant.
+pub fn schema_findings(value: &Value) -> Result<Vec<String>> {
+    let schema: Value = serde_json::from_str(INVENTORY_SCHEMA)
+        .map_err(|e| ProductError::ConfigError(format!("inventory schema: {e}")))?;
+    let validator = jsonschema::validator_for(&schema)
+        .map_err(|e| ProductError::ConfigError(format!("inventory schema: {e}")))?;
+    Ok(validator
+        .iter_errors(value)
+        .map(|e| format!("{}: {e}", e.instance_path()))
+        .collect())
+}
+
+/// Lookups over one inventory: types, members, and out-edges by source.
+pub struct Index<'a> {
+    pub types: BTreeMap<&'a str, &'a TypeFact>,
+    pub members: BTreeMap<&'a str, &'a MemberFact>,
+    pub out: BTreeMap<&'a str, Vec<&'a Reference>>,
+    /// Interface/base → the types implementing/inheriting it.
+    pub implementors: BTreeMap<&'a str, Vec<&'a str>>,
+    /// Type → its members.
+    pub members_of: BTreeMap<&'a str, Vec<&'a str>>,
+}
+
+impl Inventory {
+    pub fn index(&self) -> Index<'_> {
+        let mut out: BTreeMap<&str, Vec<&Reference>> = BTreeMap::new();
+        let mut implementors: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+        for r in &self.references {
+            out.entry(r.from.as_str()).or_default().push(r);
+            if r.kind == "implement" || r.kind == "inherit" {
+                implementors.entry(r.to.as_str()).or_default().push(r.from.as_str());
+            }
+        }
+        let mut members_of: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+        for m in &self.members {
+            members_of.entry(m.declaring_type.as_str()).or_default().push(m.id.as_str());
+        }
+        Index {
+            types: self.types.iter().map(|t| (t.id.as_str(), t)).collect(),
+            members: self.members.iter().map(|m| (m.id.as_str(), m)).collect(),
+            out,
+            implementors,
+            members_of,
+        }
+    }
+
+    /// Types carrying an attribute of the given type id, with each use.
+    pub fn types_with_attribute<'a>(&'a self, attribute_type: &str) -> Vec<(&'a TypeFact, &'a AttributeUse)> {
+        self.types
+            .iter()
+            .flat_map(|t| t.attributes.iter().filter(|a| a.attribute_type == attribute_type).map(move |a| (t, a)))
+            .collect()
+    }
+
+    /// Members carrying an attribute of the given type id.
+    pub fn members_with_attribute<'a>(&'a self, attribute_type: &str) -> Vec<&'a MemberFact> {
+        self.members.iter().filter(|m| m.attributes.iter().any(|a| a.attribute_type == attribute_type)).collect()
+    }
+
+    /// The namespaces present, each with its type count.
+    pub fn namespaces(&self) -> BTreeMap<&str, usize> {
+        let mut out = BTreeMap::new();
+        for t in &self.types {
+            *out.entry(t.namespace.as_str()).or_insert(0) += 1;
+        }
+        out
+    }
+
+    /// Every type id, as a set.
+    pub fn type_ids(&self) -> BTreeSet<&str> {
+        self.types.iter().map(|t| t.id.as_str()).collect()
+    }
+}
+
+#[cfg(test)]
+#[path = "csharp_inventory_tests.rs"]
+mod tests;

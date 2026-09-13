@@ -378,3 +378,43 @@ adoption, which is the load-bearing assumption the session cannot test (carried 
 stated here so that a Gate 1 report that looks clean is read with them in view.
 
 **Hold.** Nothing proceeds to Gate 1 without an explicit ratification message.
+
+---
+
+## Appended note — 2026-09-13, after the Gate 0 rulings
+
+**Nothing above is amended.** Rulings CG-R-51 … CG-R-56 are filed verbatim in `rulings-gate0.md`.
+What they change about the report's standing:
+
+- **O-1 closed.** `c5383be0…` is the intended ref.
+- **P-1 → CG-R-51.** Gate 1 splits: **1a** (inventory, consumer, reachability from Roslyn-found
+  conventional entry points; §12.1 fires or clears here) needs no vocabulary; **1b** (three regions,
+  two delta ratios, §12.2) needs one. The commercial claim "day-one qualification instrument" is
+  corrected by ruling: day one offers an inventory and structural measures; the delta is downstream
+  of an authored act vocabulary.
+- **P-2 → CG-R-52.** The separator is accepted **as a declared proxy** with three fields (proxy,
+  original predicate, known divergence: shared value objects, DTOs and mapping types read as
+  unstructured while being shared). The delta output carries those three fields wherever the region
+  counts are printed. Divergence dominating the real measurement is a §12.2 firing, not grounds for
+  an exception.
+- **P-4, P-5 → CG-R-53.** The travel form and the content-hash profile binding are the designed
+  pattern, ratified. The **anchor-instance defect** it exposes (a pattern-level determination is
+  addressed to an arbitrary, privileged instance; deleting that slice orphans it) is filed as a
+  candidate schema change against the binding — `proposal-binding-anchor-instance.md` — not fixed
+  here.
+- **P-6 → CG-R-54.** `Role.Handler` struck; roles are strings resolved at check time; an
+  unresolvable role is a check failure.
+- **D-1 / O-3 → CG-R-55.** The .NET reader is admitted as a bounded exception **superseding**
+  `dec/ddd/lsp-as-seam` for batch inventory only, under two constraints (facts only; `ddd-lsp`
+  wherever both can answer). Filed as `.ddd/decisions/batch-inventory-reader.yaml`, with an
+  appended note on `lsp-as-seam.yaml` naming it. Beside-filing was ruled insufficient.
+- **P-3, P-8, P-7 → CG-R-56.** §9 corrected and the cutover check added to §6 **in the PRD's
+  source by Emil**; the filed copy under `inputs/` stays as it arrived, at its recorded hash. The
+  slice-to-aggregate edge is an open item against the binding; the Decider rules are reused where
+  the edge exists and the gap is stated where it does not — no aggregate is invented.
+- **O-2, O-6 remain open**, both Emil's: the attached solution, and the three §12 predictions
+  committed before any measurement. Gate 1a's tooling may be built and tested on a fixture in the
+  meantime; no measurement of a real solution runs before the predictions land.
+- **O-4, O-5, O-7** are not ruled on explicitly. O-7's proposals (store layout, `product csharp`
+  family, `schema/json/csharp-inventory/`) proceed as proposed under Gate 0's ratification and
+  remain renameable at Gate 1.

@@ -1,0 +1,2895 @@
+{
+  "inventory_version": "1",
+  "produced_by": {
+    "tool": "csharp-inventory",
+    "tool_version": "0.1.0",
+    "roslyn_version": "4.11.0.0"
+  },
+  "produced_at": "2026-09-13T17:03:48.6290170Z",
+  "solution": {
+    "path": "Fixture.sln",
+    "git_head": "74e08db0ff09864f794c91e97c3a47bcb0531100"
+  },
+  "projects": [
+    {
+      "id": "P:Product.Binding",
+      "name": "Product.Binding",
+      "path": "Product.Binding/Product.Binding.csproj",
+      "target_frameworks": [],
+      "assembly": "Product.Binding"
+    },
+    {
+      "id": "P:Shop.Api",
+      "name": "Shop.Api",
+      "path": "Shop.Api/Shop.Api.csproj",
+      "target_frameworks": [],
+      "assembly": "Shop.Api"
+    },
+    {
+      "id": "P:Shop.Domain",
+      "name": "Shop.Domain",
+      "path": "Shop.Domain/Shop.Domain.csproj",
+      "target_frameworks": [],
+      "assembly": "Shop.Domain"
+    }
+  ],
+  "types": [
+    {
+      "id": "T:Product.Binding.RealisesFactAttribute",
+      "project": "P:Product.Binding",
+      "namespace": "Product.Binding",
+      "name": "RealisesFactAttribute",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Attribute",
+      "interfaces": [],
+      "file": "Product.Binding/RealisesFactAttribute.cs",
+      "line": 9,
+      "attributes": [
+        {
+          "type": "T:System.AttributeUsageAttribute",
+          "positional": [
+            1052
+          ],
+          "named": {
+            "AllowMultiple": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "T:Product.Binding.SliceAttribute",
+      "project": "P:Product.Binding",
+      "namespace": "Product.Binding",
+      "name": "SliceAttribute",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Attribute",
+      "interfaces": [],
+      "file": "Product.Binding/SliceAttribute.cs",
+      "line": 10,
+      "attributes": [
+        {
+          "type": "T:System.AttributeUsageAttribute",
+          "positional": [
+            1100
+          ],
+          "named": {
+            "AllowMultiple": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "T:Shop.Api.Infrastructure.Container",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "Container",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 19,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Infrastructure.EndpointAttribute",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "EndpointAttribute",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Attribute",
+      "interfaces": [],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 8,
+      "attributes": [
+        {
+          "type": "T:System.AttributeUsageAttribute",
+          "positional": [
+            64
+          ],
+          "named": {}
+        }
+      ]
+    },
+    {
+      "id": "T:Shop.Api.Infrastructure.IHandler\u00601",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "IHandler",
+      "kind": "interface",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": null,
+      "interfaces": [],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 14,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Orders.BogusHandler",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Orders",
+      "name": "BogusHandler",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [],
+      "file": "Shop.Api/Orders.cs",
+      "line": 83,
+      "attributes": [
+        {
+          "type": "T:Product.Binding.SliceAttribute",
+          "positional": [
+            "Nonexistent",
+            "handler"
+          ],
+          "named": {
+            "Profile": "rest-api-v1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "T:Shop.Api.Orders.CartService",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Orders",
+      "name": "CartService",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:Shop.Api.Orders.ICartReader"
+      ],
+      "file": "Shop.Api/Orders.cs",
+      "line": 41,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Orders.CheckoutService",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Orders",
+      "name": "CheckoutService",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [],
+      "file": "Shop.Api/Orders.cs",
+      "line": 61,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Orders.ICartReader",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Orders",
+      "name": "ICartReader",
+      "kind": "interface",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": null,
+      "interfaces": [],
+      "file": "Shop.Api/Orders.cs",
+      "line": 36,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Orders.OrdersEndpoints",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Orders",
+      "name": "OrdersEndpoints",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [],
+      "file": "Shop.Api/Orders.cs",
+      "line": 88,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Orders.PlaceOrderCommand",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Orders",
+      "name": "PlaceOrderCommand",
+      "kind": "record",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:System.IEquatable\u00601"
+      ],
+      "file": "Shop.Api/Orders.cs",
+      "line": 8,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Orders.PlaceOrderHandler",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Orders",
+      "name": "PlaceOrderHandler",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:Shop.Api.Infrastructure.IHandler\u00601"
+      ],
+      "file": "Shop.Api/Orders.cs",
+      "line": 13,
+      "attributes": [
+        {
+          "type": "T:Product.Binding.SliceAttribute",
+          "positional": [
+            "PlaceOrder",
+            "handler"
+          ],
+          "named": {
+            "Profile": "rest-api-v1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "T:Shop.Api.Persistence.Dead",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Persistence",
+      "name": "Dead",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [],
+      "file": "Shop.Api/Persistence.cs",
+      "line": 20,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Persistence.Helpers",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Persistence",
+      "name": "Helpers",
+      "kind": "class",
+      "accessibility": "internal",
+      "is_static": true,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [],
+      "file": "Shop.Api/Persistence.cs",
+      "line": 25,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Persistence.IOrderRepository",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Persistence",
+      "name": "IOrderRepository",
+      "kind": "interface",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": null,
+      "interfaces": [],
+      "file": "Shop.Api/Persistence.cs",
+      "line": 5,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Persistence.OrderRepository",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Persistence",
+      "name": "OrderRepository",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:Shop.Api.Persistence.IOrderRepository"
+      ],
+      "file": "Shop.Api/Persistence.cs",
+      "line": 10,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Program",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api",
+      "name": "Program",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": true,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [],
+      "file": "Shop.Api/Program.cs",
+      "line": 7,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Domain.ActorIdentity",
+      "project": "P:Shop.Domain",
+      "namespace": "Shop.Domain",
+      "name": "ActorIdentity",
+      "kind": "record",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:System.IEquatable\u00601"
+      ],
+      "file": "Shop.Domain/Facts.cs",
+      "line": 29,
+      "attributes": [
+        {
+          "type": "T:Product.Binding.RealisesFactAttribute",
+          "positional": [
+            "ActorIdentity"
+          ],
+          "named": {}
+        }
+      ]
+    },
+    {
+      "id": "T:Shop.Domain.CartEmptied",
+      "project": "P:Shop.Domain",
+      "namespace": "Shop.Domain",
+      "name": "CartEmptied",
+      "kind": "record",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:System.IEquatable\u00601"
+      ],
+      "file": "Shop.Domain/Facts.cs",
+      "line": 17,
+      "attributes": [
+        {
+          "type": "T:Product.Binding.RealisesFactAttribute",
+          "positional": [
+            "CartEmptied"
+          ],
+          "named": {}
+        }
+      ]
+    },
+    {
+      "id": "T:Shop.Domain.CartLine",
+      "project": "P:Shop.Domain",
+      "namespace": "Shop.Domain",
+      "name": "CartLine",
+      "kind": "record",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:System.IEquatable\u00601"
+      ],
+      "file": "Shop.Domain/Facts.cs",
+      "line": 11,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Domain.CartState",
+      "project": "P:Shop.Domain",
+      "namespace": "Shop.Domain",
+      "name": "CartState",
+      "kind": "record",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:System.IEquatable\u00601"
+      ],
+      "file": "Shop.Domain/Facts.cs",
+      "line": 9,
+      "attributes": [
+        {
+          "type": "T:Product.Binding.RealisesFactAttribute",
+          "positional": [
+            "Cart"
+          ],
+          "named": {}
+        }
+      ]
+    },
+    {
+      "id": "T:Shop.Domain.Ghost",
+      "project": "P:Shop.Domain",
+      "namespace": "Shop.Domain",
+      "name": "Ghost",
+      "kind": "record",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:System.IEquatable\u00601"
+      ],
+      "file": "Shop.Domain/Facts.cs",
+      "line": 33,
+      "attributes": [
+        {
+          "type": "T:Product.Binding.RealisesFactAttribute",
+          "positional": [
+            "Ghost"
+          ],
+          "named": {}
+        }
+      ]
+    },
+    {
+      "id": "T:Shop.Domain.ItemAddedToCart",
+      "project": "P:Shop.Domain",
+      "namespace": "Shop.Domain",
+      "name": "ItemAddedToCart",
+      "kind": "record",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:System.IEquatable\u00601"
+      ],
+      "file": "Shop.Domain/Facts.cs",
+      "line": 14,
+      "attributes": [
+        {
+          "type": "T:Product.Binding.RealisesFactAttribute",
+          "positional": [
+            "ItemAddedToCart"
+          ],
+          "named": {}
+        }
+      ]
+    },
+    {
+      "id": "T:Shop.Domain.Money",
+      "project": "P:Shop.Domain",
+      "namespace": "Shop.Domain",
+      "name": "Money",
+      "kind": "record-struct",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.ValueType",
+      "interfaces": [
+        "T:System.IEquatable\u00601"
+      ],
+      "file": "Shop.Domain/Facts.cs",
+      "line": 37,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Domain.OrderConfirmed",
+      "project": "P:Shop.Domain",
+      "namespace": "Shop.Domain",
+      "name": "OrderConfirmed",
+      "kind": "record",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:System.IEquatable\u00601"
+      ],
+      "file": "Shop.Domain/Facts.cs",
+      "line": 23,
+      "attributes": [
+        {
+          "type": "T:Product.Binding.RealisesFactAttribute",
+          "positional": [
+            "OrderConfirmed"
+          ],
+          "named": {}
+        }
+      ]
+    },
+    {
+      "id": "T:Shop.Domain.OrderPlaced",
+      "project": "P:Shop.Domain",
+      "namespace": "Shop.Domain",
+      "name": "OrderPlaced",
+      "kind": "record",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:System.IEquatable\u00601"
+      ],
+      "file": "Shop.Domain/Facts.cs",
+      "line": 20,
+      "attributes": [
+        {
+          "type": "T:Product.Binding.RealisesFactAttribute",
+          "positional": [
+            "OrderPlaced"
+          ],
+          "named": {}
+        }
+      ]
+    },
+    {
+      "id": "T:Shop.Domain.OrderSummaryView",
+      "project": "P:Shop.Domain",
+      "namespace": "Shop.Domain",
+      "name": "OrderSummaryView",
+      "kind": "record",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:System.IEquatable\u00601"
+      ],
+      "file": "Shop.Domain/Facts.cs",
+      "line": 26,
+      "attributes": [
+        {
+          "type": "T:Product.Binding.RealisesFactAttribute",
+          "positional": [
+            "OrderSummary"
+          ],
+          "named": {}
+        }
+      ]
+    }
+  ],
+  "members": [
+    {
+      "id": "F:Shop.Api.Infrastructure.Container._factories",
+      "declaring_type": "T:Shop.Api.Infrastructure.Container",
+      "name": "_factories",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Collections.Generic.Dictionary\u00602",
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 21,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Orders.CartService._carts",
+      "declaring_type": "T:Shop.Api.Orders.CartService",
+      "name": "_carts",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Collections.Generic.Dictionary\u00602",
+      "file": "Shop.Api/Orders.cs",
+      "line": 43,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Orders.CheckoutService._carts",
+      "declaring_type": "T:Shop.Api.Orders.CheckoutService",
+      "name": "_carts",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Orders.ICartReader",
+      "file": "Shop.Api/Orders.cs",
+      "line": 63,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Orders.CheckoutService._orders",
+      "declaring_type": "T:Shop.Api.Orders.CheckoutService",
+      "name": "_orders",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Persistence.IOrderRepository",
+      "file": "Shop.Api/Orders.cs",
+      "line": 64,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Orders.OrdersEndpoints._container",
+      "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
+      "name": "_container",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Infrastructure.Container",
+      "file": "Shop.Api/Orders.cs",
+      "line": 90,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Orders.PlaceOrderHandler._carts",
+      "declaring_type": "T:Shop.Api.Orders.PlaceOrderHandler",
+      "name": "_carts",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Orders.ICartReader",
+      "file": "Shop.Api/Orders.cs",
+      "line": 16,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Orders.PlaceOrderHandler._orders",
+      "declaring_type": "T:Shop.Api.Orders.PlaceOrderHandler",
+      "name": "_orders",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Persistence.IOrderRepository",
+      "file": "Shop.Api/Orders.cs",
+      "line": 15,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Persistence.OrderRepository._rows",
+      "declaring_type": "T:Shop.Api.Persistence.OrderRepository",
+      "name": "_rows",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Collections.Generic.List\u00601",
+      "file": "Shop.Api/Persistence.cs",
+      "line": 12,
+      "attributes": []
+    },
+    {
+      "id": "M:Product.Binding.RealisesFactAttribute.#ctor(System.String)",
+      "declaring_type": "T:Product.Binding.RealisesFactAttribute",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "fact",
+          "type": "T:System.String"
+        }
+      ],
+      "return_type": null,
+      "file": "Product.Binding/RealisesFactAttribute.cs",
+      "line": 11,
+      "attributes": []
+    },
+    {
+      "id": "M:Product.Binding.SliceAttribute.#ctor(System.String,System.String)",
+      "declaring_type": "T:Product.Binding.SliceAttribute",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "act",
+          "type": "T:System.String"
+        },
+        {
+          "name": "role",
+          "type": "T:System.String"
+        }
+      ],
+      "return_type": null,
+      "file": "Product.Binding/SliceAttribute.cs",
+      "line": 12,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.Container.Register\u0060\u00602(System.Func{Shop.Api.Infrastructure.Container,\u0060\u00601})",
+      "declaring_type": "T:Shop.Api.Infrastructure.Container",
+      "name": "Register",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "factory",
+          "type": "T:System.Func\u00602"
+        }
+      ],
+      "return_type": "T:Shop.Api.Infrastructure.Container",
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 23,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.Container.Resolve\u0060\u00601",
+      "declaring_type": "T:Shop.Api.Infrastructure.Container",
+      "name": "Resolve",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "!:T",
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 29,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.EndpointAttribute.#ctor(System.String)",
+      "declaring_type": "T:Shop.Api.Infrastructure.EndpointAttribute",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "route",
+          "type": "T:System.String"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 10,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.IHandler\u00601.Handle(\u00600)",
+      "declaring_type": "T:Shop.Api.Infrastructure.IHandler\u00601",
+      "name": "Handle",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "command",
+          "type": "!:TCommand"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 16,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Orders.BogusHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "declaring_type": "T:Shop.Api.Orders.BogusHandler",
+      "name": "Handle",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "command",
+          "type": "T:Shop.Api.Orders.PlaceOrderCommand"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Orders.cs",
+      "line": 85,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.CartEmptied)",
+      "declaring_type": "T:Shop.Api.Orders.CartService",
+      "name": "Apply",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "emptied",
+          "type": "T:Shop.Domain.CartEmptied"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Orders.cs",
+      "line": 55,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "declaring_type": "T:Shop.Api.Orders.CartService",
+      "name": "Apply",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "added",
+          "type": "T:Shop.Domain.ItemAddedToCart"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Orders.cs",
+      "line": 48,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Orders.CartService.Read(System.Guid)",
+      "declaring_type": "T:Shop.Api.Orders.CartService",
+      "name": "Read",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "cartId",
+          "type": "T:System.Guid"
+        }
+      ],
+      "return_type": "T:Shop.Domain.CartState",
+      "file": "Shop.Api/Orders.cs",
+      "line": 45,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Orders.CheckoutService.#ctor(Shop.Api.Orders.ICartReader,Shop.Api.Persistence.IOrderRepository)",
+      "declaring_type": "T:Shop.Api.Orders.CheckoutService",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "carts",
+          "type": "T:Shop.Api.Orders.ICartReader"
+        },
+        {
+          "name": "orders",
+          "type": "T:Shop.Api.Persistence.IOrderRepository"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Orders.cs",
+      "line": 66,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "declaring_type": "T:Shop.Api.Orders.CheckoutService",
+      "name": "PlaceAndConfirm",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "cartId",
+          "type": "T:System.Guid"
+        },
+        {
+          "name": "subject",
+          "type": "T:System.String"
+        }
+      ],
+      "return_type": "T:Shop.Domain.OrderConfirmed",
+      "file": "Shop.Api/Orders.cs",
+      "line": 72,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Orders.ICartReader.Read(System.Guid)",
+      "declaring_type": "T:Shop.Api.Orders.ICartReader",
+      "name": "Read",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "cartId",
+          "type": "T:System.Guid"
+        }
+      ],
+      "return_type": "T:Shop.Domain.CartState",
+      "file": "Shop.Api/Orders.cs",
+      "line": 38,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.Container)",
+      "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "container",
+          "type": "T:Shop.Api.Infrastructure.Container"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Orders.cs",
+      "line": 92,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
+      "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
+      "name": "PostOrder",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "command",
+          "type": "T:Shop.Api.Orders.PlaceOrderCommand"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Orders.cs",
+      "line": 97,
+      "attributes": [
+        {
+          "type": "T:Shop.Api.Infrastructure.EndpointAttribute",
+          "positional": [
+            "POST /orders"
+          ],
+          "named": {}
+        }
+      ]
+    },
+    {
+      "id": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
+      "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
+      "name": "Serve",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "args",
+          "type": "T:System.String[]"
+        }
+      ],
+      "return_type": "T:System.Boolean",
+      "file": "Shop.Api/Orders.cs",
+      "line": 94,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Orders.PlaceOrderCommand.#ctor(System.Guid,System.String,Shop.Domain.Money)",
+      "declaring_type": "T:Shop.Api.Orders.PlaceOrderCommand",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "CartId",
+          "type": "T:System.Guid"
+        },
+        {
+          "name": "Subject",
+          "type": "T:System.String"
+        },
+        {
+          "name": "Budget",
+          "type": "T:Shop.Domain.Money"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Orders.cs",
+      "line": 8,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Orders.PlaceOrderHandler.#ctor(Shop.Api.Persistence.IOrderRepository,Shop.Api.Orders.ICartReader)",
+      "declaring_type": "T:Shop.Api.Orders.PlaceOrderHandler",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "orders",
+          "type": "T:Shop.Api.Persistence.IOrderRepository"
+        },
+        {
+          "name": "carts",
+          "type": "T:Shop.Api.Orders.ICartReader"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Orders.cs",
+      "line": 18,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "declaring_type": "T:Shop.Api.Orders.PlaceOrderHandler",
+      "name": "Handle",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "command",
+          "type": "T:Shop.Api.Orders.PlaceOrderCommand"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Orders.cs",
+      "line": 24,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Persistence.Dead.Nothing",
+      "declaring_type": "T:Shop.Api.Persistence.Dead",
+      "name": "Nothing",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.String",
+      "file": "Shop.Api/Persistence.cs",
+      "line": 22,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Persistence.Helpers.Trim(System.String)",
+      "declaring_type": "T:Shop.Api.Persistence.Helpers",
+      "name": "Trim",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": true,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "s",
+          "type": "T:System.String"
+        }
+      ],
+      "return_type": "T:System.String",
+      "file": "Shop.Api/Persistence.cs",
+      "line": 27,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Persistence.IOrderRepository.Save(Shop.Domain.OrderPlaced,Shop.Domain.ActorIdentity)",
+      "declaring_type": "T:Shop.Api.Persistence.IOrderRepository",
+      "name": "Save",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "placed",
+          "type": "T:Shop.Domain.OrderPlaced"
+        },
+        {
+          "name": "by",
+          "type": "T:Shop.Domain.ActorIdentity"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Persistence.cs",
+      "line": 7,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Persistence.OrderRepository.Save(Shop.Domain.OrderPlaced,Shop.Domain.ActorIdentity)",
+      "declaring_type": "T:Shop.Api.Persistence.OrderRepository",
+      "name": "Save",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "placed",
+          "type": "T:Shop.Domain.OrderPlaced"
+        },
+        {
+          "name": "by",
+          "type": "T:Shop.Domain.ActorIdentity"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Persistence.cs",
+      "line": 14,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Program.Main(System.String[])",
+      "declaring_type": "T:Shop.Api.Program",
+      "name": "Main",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": true,
+      "is_entry_point": true,
+      "parameters": [
+        {
+          "name": "args",
+          "type": "T:System.String[]"
+        }
+      ],
+      "return_type": "T:System.Int32",
+      "file": "Shop.Api/Program.cs",
+      "line": 9,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Domain.ActorIdentity.#ctor(System.String)",
+      "declaring_type": "T:Shop.Domain.ActorIdentity",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "Subject",
+          "type": "T:System.String"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Domain/Facts.cs",
+      "line": 29,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Domain.CartEmptied.#ctor(System.Guid)",
+      "declaring_type": "T:Shop.Domain.CartEmptied",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "CartId",
+          "type": "T:System.Guid"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Domain/Facts.cs",
+      "line": 17,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Domain.CartLine.#ctor(System.String,System.Int32,Shop.Domain.Money)",
+      "declaring_type": "T:Shop.Domain.CartLine",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "Sku",
+          "type": "T:System.String"
+        },
+        {
+          "name": "Quantity",
+          "type": "T:System.Int32"
+        },
+        {
+          "name": "Price",
+          "type": "T:Shop.Domain.Money"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Domain/Facts.cs",
+      "line": 11,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Domain.CartState.#ctor(System.Guid,System.Collections.Generic.IReadOnlyList{Shop.Domain.CartLine},Shop.Domain.Money)",
+      "declaring_type": "T:Shop.Domain.CartState",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "CartId",
+          "type": "T:System.Guid"
+        },
+        {
+          "name": "Lines",
+          "type": "T:System.Collections.Generic.IReadOnlyList\u00601"
+        },
+        {
+          "name": "Total",
+          "type": "T:Shop.Domain.Money"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Domain/Facts.cs",
+      "line": 9,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Domain.Ghost.#ctor(System.String)",
+      "declaring_type": "T:Shop.Domain.Ghost",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "Why",
+          "type": "T:System.String"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Domain/Facts.cs",
+      "line": 33,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Domain.ItemAddedToCart.#ctor(System.Guid,System.String,System.Int32,Shop.Domain.Money)",
+      "declaring_type": "T:Shop.Domain.ItemAddedToCart",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "CartId",
+          "type": "T:System.Guid"
+        },
+        {
+          "name": "Sku",
+          "type": "T:System.String"
+        },
+        {
+          "name": "Quantity",
+          "type": "T:System.Int32"
+        },
+        {
+          "name": "Price",
+          "type": "T:Shop.Domain.Money"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Domain/Facts.cs",
+      "line": 14,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Domain.Money.#ctor(System.Decimal,System.String)",
+      "declaring_type": "T:Shop.Domain.Money",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "Amount",
+          "type": "T:System.Decimal"
+        },
+        {
+          "name": "Currency",
+          "type": "T:System.String"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Domain/Facts.cs",
+      "line": 37,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Domain.Money.Add(Shop.Domain.Money)",
+      "declaring_type": "T:Shop.Domain.Money",
+      "name": "Add",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "other",
+          "type": "T:Shop.Domain.Money"
+        }
+      ],
+      "return_type": "T:Shop.Domain.Money",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 40,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Domain.Money.Zero(System.String)",
+      "declaring_type": "T:Shop.Domain.Money",
+      "name": "Zero",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": true,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "currency",
+          "type": "T:System.String"
+        }
+      ],
+      "return_type": "T:Shop.Domain.Money",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 39,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Domain.OrderConfirmed.#ctor(System.Guid)",
+      "declaring_type": "T:Shop.Domain.OrderConfirmed",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "OrderId",
+          "type": "T:System.Guid"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Domain/Facts.cs",
+      "line": 23,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Domain.OrderPlaced.#ctor(System.Guid,System.Guid,Shop.Domain.Money)",
+      "declaring_type": "T:Shop.Domain.OrderPlaced",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "OrderId",
+          "type": "T:System.Guid"
+        },
+        {
+          "name": "CartId",
+          "type": "T:System.Guid"
+        },
+        {
+          "name": "Total",
+          "type": "T:Shop.Domain.Money"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Domain/Facts.cs",
+      "line": 20,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Domain.OrderSummaryView.#ctor(System.Guid,Shop.Domain.Money,System.String)",
+      "declaring_type": "T:Shop.Domain.OrderSummaryView",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "OrderId",
+          "type": "T:System.Guid"
+        },
+        {
+          "name": "Total",
+          "type": "T:Shop.Domain.Money"
+        },
+        {
+          "name": "Status",
+          "type": "T:System.String"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Domain/Facts.cs",
+      "line": 26,
+      "attributes": []
+    },
+    {
+      "id": "P:Product.Binding.RealisesFactAttribute.Fact",
+      "declaring_type": "T:Product.Binding.RealisesFactAttribute",
+      "name": "Fact",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.String",
+      "file": "Product.Binding/RealisesFactAttribute.cs",
+      "line": 16,
+      "attributes": []
+    },
+    {
+      "id": "P:Product.Binding.SliceAttribute.Act",
+      "declaring_type": "T:Product.Binding.SliceAttribute",
+      "name": "Act",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.String",
+      "file": "Product.Binding/SliceAttribute.cs",
+      "line": 18,
+      "attributes": []
+    },
+    {
+      "id": "P:Product.Binding.SliceAttribute.Profile",
+      "declaring_type": "T:Product.Binding.SliceAttribute",
+      "name": "Profile",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.String",
+      "file": "Product.Binding/SliceAttribute.cs",
+      "line": 20,
+      "attributes": []
+    },
+    {
+      "id": "P:Product.Binding.SliceAttribute.Role",
+      "declaring_type": "T:Product.Binding.SliceAttribute",
+      "name": "Role",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.String",
+      "file": "Product.Binding/SliceAttribute.cs",
+      "line": 19,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Api.Infrastructure.EndpointAttribute.Route",
+      "declaring_type": "T:Shop.Api.Infrastructure.EndpointAttribute",
+      "name": "Route",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.String",
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 11,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Api.Orders.PlaceOrderCommand.Budget",
+      "declaring_type": "T:Shop.Api.Orders.PlaceOrderCommand",
+      "name": "Budget",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Domain.Money",
+      "file": "Shop.Api/Orders.cs",
+      "line": 8,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Api.Orders.PlaceOrderCommand.CartId",
+      "declaring_type": "T:Shop.Api.Orders.PlaceOrderCommand",
+      "name": "CartId",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Guid",
+      "file": "Shop.Api/Orders.cs",
+      "line": 8,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Api.Orders.PlaceOrderCommand.Subject",
+      "declaring_type": "T:Shop.Api.Orders.PlaceOrderCommand",
+      "name": "Subject",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.String",
+      "file": "Shop.Api/Orders.cs",
+      "line": 8,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Api.Persistence.OrderRepository.Count",
+      "declaring_type": "T:Shop.Api.Persistence.OrderRepository",
+      "name": "Count",
+      "kind": "property",
+      "accessibility": "internal",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Int32",
+      "file": "Shop.Api/Persistence.cs",
+      "line": 16,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.ActorIdentity.Subject",
+      "declaring_type": "T:Shop.Domain.ActorIdentity",
+      "name": "Subject",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.String",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 29,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.CartEmptied.CartId",
+      "declaring_type": "T:Shop.Domain.CartEmptied",
+      "name": "CartId",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Guid",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 17,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.CartLine.Price",
+      "declaring_type": "T:Shop.Domain.CartLine",
+      "name": "Price",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Domain.Money",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 11,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.CartLine.Quantity",
+      "declaring_type": "T:Shop.Domain.CartLine",
+      "name": "Quantity",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Int32",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 11,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.CartLine.Sku",
+      "declaring_type": "T:Shop.Domain.CartLine",
+      "name": "Sku",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.String",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 11,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.CartState.CartId",
+      "declaring_type": "T:Shop.Domain.CartState",
+      "name": "CartId",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Guid",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 9,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.CartState.Lines",
+      "declaring_type": "T:Shop.Domain.CartState",
+      "name": "Lines",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Collections.Generic.IReadOnlyList\u00601",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 9,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.CartState.Total",
+      "declaring_type": "T:Shop.Domain.CartState",
+      "name": "Total",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Domain.Money",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 9,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.Ghost.Why",
+      "declaring_type": "T:Shop.Domain.Ghost",
+      "name": "Why",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.String",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 33,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.ItemAddedToCart.CartId",
+      "declaring_type": "T:Shop.Domain.ItemAddedToCart",
+      "name": "CartId",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Guid",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 14,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.ItemAddedToCart.Price",
+      "declaring_type": "T:Shop.Domain.ItemAddedToCart",
+      "name": "Price",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Domain.Money",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 14,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.ItemAddedToCart.Quantity",
+      "declaring_type": "T:Shop.Domain.ItemAddedToCart",
+      "name": "Quantity",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Int32",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 14,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.ItemAddedToCart.Sku",
+      "declaring_type": "T:Shop.Domain.ItemAddedToCart",
+      "name": "Sku",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.String",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 14,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.Money.Amount",
+      "declaring_type": "T:Shop.Domain.Money",
+      "name": "Amount",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Decimal",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 37,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.Money.Currency",
+      "declaring_type": "T:Shop.Domain.Money",
+      "name": "Currency",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.String",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 37,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.OrderConfirmed.OrderId",
+      "declaring_type": "T:Shop.Domain.OrderConfirmed",
+      "name": "OrderId",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Guid",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 23,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.OrderPlaced.CartId",
+      "declaring_type": "T:Shop.Domain.OrderPlaced",
+      "name": "CartId",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Guid",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 20,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.OrderPlaced.OrderId",
+      "declaring_type": "T:Shop.Domain.OrderPlaced",
+      "name": "OrderId",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Guid",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 20,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.OrderPlaced.Total",
+      "declaring_type": "T:Shop.Domain.OrderPlaced",
+      "name": "Total",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Domain.Money",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 20,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.OrderSummaryView.OrderId",
+      "declaring_type": "T:Shop.Domain.OrderSummaryView",
+      "name": "OrderId",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Guid",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 26,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.OrderSummaryView.Status",
+      "declaring_type": "T:Shop.Domain.OrderSummaryView",
+      "name": "Status",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.String",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 26,
+      "attributes": []
+    },
+    {
+      "id": "P:Shop.Domain.OrderSummaryView.Total",
+      "declaring_type": "T:Shop.Domain.OrderSummaryView",
+      "name": "Total",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Domain.Money",
+      "file": "Shop.Domain/Facts.cs",
+      "line": 26,
+      "attributes": []
+    }
+  ],
+  "references": [
+    {
+      "from": "F:Shop.Api.Infrastructure.Container._factories",
+      "to": "T:Shop.Api.Infrastructure.Container",
+      "kind": "type-reference"
+    },
+    {
+      "from": "F:Shop.Api.Orders.CartService._carts",
+      "to": "T:Shop.Domain.CartState",
+      "kind": "type-reference"
+    },
+    {
+      "from": "F:Shop.Api.Orders.CheckoutService._carts",
+      "to": "T:Shop.Api.Orders.ICartReader",
+      "kind": "type-reference"
+    },
+    {
+      "from": "F:Shop.Api.Orders.CheckoutService._orders",
+      "to": "T:Shop.Api.Persistence.IOrderRepository",
+      "kind": "type-reference"
+    },
+    {
+      "from": "F:Shop.Api.Orders.OrdersEndpoints._container",
+      "to": "T:Shop.Api.Infrastructure.Container",
+      "kind": "type-reference"
+    },
+    {
+      "from": "F:Shop.Api.Orders.PlaceOrderHandler._carts",
+      "to": "T:Shop.Api.Orders.ICartReader",
+      "kind": "type-reference"
+    },
+    {
+      "from": "F:Shop.Api.Orders.PlaceOrderHandler._orders",
+      "to": "T:Shop.Api.Persistence.IOrderRepository",
+      "kind": "type-reference"
+    },
+    {
+      "from": "F:Shop.Api.Persistence.OrderRepository._rows",
+      "to": "T:Shop.Domain.ActorIdentity",
+      "kind": "type-reference"
+    },
+    {
+      "from": "F:Shop.Api.Persistence.OrderRepository._rows",
+      "to": "T:Shop.Domain.OrderPlaced",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Product.Binding.RealisesFactAttribute.#ctor(System.String)",
+      "to": "P:Product.Binding.RealisesFactAttribute.Fact",
+      "kind": "access"
+    },
+    {
+      "from": "M:Product.Binding.SliceAttribute.#ctor(System.String,System.String)",
+      "to": "P:Product.Binding.SliceAttribute.Act",
+      "kind": "access"
+    },
+    {
+      "from": "M:Product.Binding.SliceAttribute.#ctor(System.String,System.String)",
+      "to": "P:Product.Binding.SliceAttribute.Role",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.Container.Register\u0060\u00602(System.Func{Shop.Api.Infrastructure.Container,\u0060\u00601})",
+      "to": "F:Shop.Api.Infrastructure.Container._factories",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.Container.Register\u0060\u00602(System.Func{Shop.Api.Infrastructure.Container,\u0060\u00601})",
+      "to": "T:Shop.Api.Infrastructure.Container",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.Container.Resolve\u0060\u00601",
+      "to": "F:Shop.Api.Infrastructure.Container._factories",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.EndpointAttribute.#ctor(System.String)",
+      "to": "P:Shop.Api.Infrastructure.EndpointAttribute.Route",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.BogusHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "T:Shop.Api.Orders.PlaceOrderCommand",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.CartEmptied)",
+      "to": "F:Shop.Api.Orders.CartService._carts",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.CartEmptied)",
+      "to": "P:Shop.Domain.CartEmptied.CartId",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.CartEmptied)",
+      "to": "T:Shop.Domain.CartEmptied",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "to": "F:Shop.Api.Orders.CartService._carts",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "to": "M:Shop.Api.Orders.CartService.Read(System.Guid)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "to": "M:Shop.Domain.CartLine.#ctor(System.String,System.Int32,Shop.Domain.Money)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "to": "M:Shop.Domain.Money.Add(Shop.Domain.Money)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "to": "P:Shop.Domain.CartState.Lines",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "to": "P:Shop.Domain.CartState.Total",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "to": "P:Shop.Domain.ItemAddedToCart.CartId",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "to": "P:Shop.Domain.ItemAddedToCart.Price",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "to": "P:Shop.Domain.ItemAddedToCart.Quantity",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "to": "P:Shop.Domain.ItemAddedToCart.Sku",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "to": "T:Shop.Domain.CartLine",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "to": "T:Shop.Domain.CartLine",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "to": "T:Shop.Domain.CartState",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Apply(Shop.Domain.ItemAddedToCart)",
+      "to": "T:Shop.Domain.ItemAddedToCart",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Read(System.Guid)",
+      "to": "F:Shop.Api.Orders.CartService._carts",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Read(System.Guid)",
+      "to": "M:Shop.Domain.CartState.#ctor(System.Guid,System.Collections.Generic.IReadOnlyList{Shop.Domain.CartLine},Shop.Domain.Money)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Read(System.Guid)",
+      "to": "M:Shop.Domain.Money.Zero(System.String)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Read(System.Guid)",
+      "to": "T:Shop.Domain.CartLine",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Read(System.Guid)",
+      "to": "T:Shop.Domain.CartState",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Read(System.Guid)",
+      "to": "T:Shop.Domain.CartState",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CartService.Read(System.Guid)",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.#ctor(Shop.Api.Orders.ICartReader,Shop.Api.Persistence.IOrderRepository)",
+      "to": "F:Shop.Api.Orders.CheckoutService._carts",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.#ctor(Shop.Api.Orders.ICartReader,Shop.Api.Persistence.IOrderRepository)",
+      "to": "F:Shop.Api.Orders.CheckoutService._orders",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.#ctor(Shop.Api.Orders.ICartReader,Shop.Api.Persistence.IOrderRepository)",
+      "to": "T:Shop.Api.Orders.ICartReader",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.#ctor(Shop.Api.Orders.ICartReader,Shop.Api.Persistence.IOrderRepository)",
+      "to": "T:Shop.Api.Persistence.IOrderRepository",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "F:Shop.Api.Orders.CheckoutService._carts",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "F:Shop.Api.Orders.CheckoutService._orders",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "M:Shop.Api.Orders.ICartReader.Read(System.Guid)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "M:Shop.Api.Persistence.IOrderRepository.Save(Shop.Domain.OrderPlaced,Shop.Domain.ActorIdentity)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "M:Shop.Domain.ActorIdentity.#ctor(System.String)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "M:Shop.Domain.OrderConfirmed.#ctor(System.Guid)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "M:Shop.Domain.OrderPlaced.#ctor(System.Guid,System.Guid,Shop.Domain.Money)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "P:Shop.Domain.CartState.CartId",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "P:Shop.Domain.CartState.Total",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "P:Shop.Domain.OrderPlaced.OrderId",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "T:Shop.Domain.ActorIdentity",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "T:Shop.Domain.ActorIdentity",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "T:Shop.Domain.CartState",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "T:Shop.Domain.OrderConfirmed",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "T:Shop.Domain.OrderConfirmed",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "T:Shop.Domain.OrderPlaced",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Api.Orders.CheckoutService.PlaceAndConfirm(System.Guid,System.String)",
+      "to": "T:Shop.Domain.OrderPlaced",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.ICartReader.Read(System.Guid)",
+      "to": "T:Shop.Domain.CartState",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.Container)",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._container",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.Container)",
+      "to": "T:Shop.Api.Infrastructure.Container",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._container",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "M:Shop.Api.Infrastructure.Container.Resolve\u0060\u00601",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "M:Shop.Api.Infrastructure.IHandler\u00601.Handle(\u00600)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "T:Shop.Api.Infrastructure.EndpointAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "T:Shop.Api.Infrastructure.IHandler\u00601",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.PostOrder(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "T:Shop.Api.Orders.PlaceOrderCommand",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderCommand.#ctor(System.Guid,System.String,Shop.Domain.Money)",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.#ctor(Shop.Api.Persistence.IOrderRepository,Shop.Api.Orders.ICartReader)",
+      "to": "F:Shop.Api.Orders.PlaceOrderHandler._carts",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.#ctor(Shop.Api.Persistence.IOrderRepository,Shop.Api.Orders.ICartReader)",
+      "to": "F:Shop.Api.Orders.PlaceOrderHandler._orders",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.#ctor(Shop.Api.Persistence.IOrderRepository,Shop.Api.Orders.ICartReader)",
+      "to": "T:Shop.Api.Orders.ICartReader",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.#ctor(Shop.Api.Persistence.IOrderRepository,Shop.Api.Orders.ICartReader)",
+      "to": "T:Shop.Api.Persistence.IOrderRepository",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "F:Shop.Api.Orders.PlaceOrderHandler._carts",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "F:Shop.Api.Orders.PlaceOrderHandler._orders",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "M:Shop.Api.Orders.ICartReader.Read(System.Guid)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "M:Shop.Api.Persistence.IOrderRepository.Save(Shop.Domain.OrderPlaced,Shop.Domain.ActorIdentity)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "M:Shop.Domain.ActorIdentity.#ctor(System.String)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "M:Shop.Domain.OrderPlaced.#ctor(System.Guid,System.Guid,Shop.Domain.Money)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "P:Shop.Api.Orders.PlaceOrderCommand.CartId",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "P:Shop.Api.Orders.PlaceOrderCommand.Subject",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "P:Shop.Domain.CartState.CartId",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "P:Shop.Domain.CartState.Lines",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "P:Shop.Domain.CartState.Total",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "T:Shop.Api.Orders.PlaceOrderCommand",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "T:Shop.Domain.ActorIdentity",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "T:Shop.Domain.ActorIdentity",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "T:Shop.Domain.CartState",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "T:Shop.Domain.OrderPlaced",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
+      "to": "T:Shop.Domain.OrderPlaced",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Persistence.IOrderRepository.Save(Shop.Domain.OrderPlaced,Shop.Domain.ActorIdentity)",
+      "to": "T:Shop.Domain.ActorIdentity",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Persistence.IOrderRepository.Save(Shop.Domain.OrderPlaced,Shop.Domain.ActorIdentity)",
+      "to": "T:Shop.Domain.OrderPlaced",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Persistence.OrderRepository.Save(Shop.Domain.OrderPlaced,Shop.Domain.ActorIdentity)",
+      "to": "F:Shop.Api.Persistence.OrderRepository._rows",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Persistence.OrderRepository.Save(Shop.Domain.OrderPlaced,Shop.Domain.ActorIdentity)",
+      "to": "T:Shop.Domain.ActorIdentity",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Persistence.OrderRepository.Save(Shop.Domain.OrderPlaced,Shop.Domain.ActorIdentity)",
+      "to": "T:Shop.Domain.OrderPlaced",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "M:Shop.Api.Infrastructure.Container.Register\u0060\u00602(System.Func{Shop.Api.Infrastructure.Container,\u0060\u00601})",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "M:Shop.Api.Infrastructure.Container.Resolve\u0060\u00601",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.Container)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "M:Shop.Api.Orders.PlaceOrderHandler.#ctor(Shop.Api.Persistence.IOrderRepository,Shop.Api.Orders.ICartReader)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.Container",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.Container",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.IHandler\u00601",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Orders.CartService",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Orders.CartService",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Orders.ICartReader",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Orders.OrdersEndpoints",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Orders.OrdersEndpoints",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Orders.PlaceOrderCommand",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Orders.PlaceOrderHandler",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Orders.PlaceOrderHandler",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Persistence.IOrderRepository",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Persistence.OrderRepository",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Persistence.OrderRepository",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Domain.CartLine.#ctor(System.String,System.Int32,Shop.Domain.Money)",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Domain.CartState.#ctor(System.Guid,System.Collections.Generic.IReadOnlyList{Shop.Domain.CartLine},Shop.Domain.Money)",
+      "to": "T:Shop.Domain.CartLine",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Domain.CartState.#ctor(System.Guid,System.Collections.Generic.IReadOnlyList{Shop.Domain.CartLine},Shop.Domain.Money)",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Domain.ItemAddedToCart.#ctor(System.Guid,System.String,System.Int32,Shop.Domain.Money)",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Domain.Money.#ctor(System.Decimal,System.String)",
+      "to": "P:Shop.Domain.Money.Amount",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Domain.Money.#ctor(System.Decimal,System.String)",
+      "to": "P:Shop.Domain.Money.Currency",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Domain.Money.#ctor(System.Decimal,System.String)",
+      "to": "T:Shop.Domain.Money",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Domain.Money.#ctor(System.Decimal,System.String)",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Domain.Money.Add(Shop.Domain.Money)",
+      "to": "M:Shop.Domain.Money.#ctor(System.Decimal,System.String)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Domain.Money.Add(Shop.Domain.Money)",
+      "to": "P:Shop.Domain.Money.Amount",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Domain.Money.Add(Shop.Domain.Money)",
+      "to": "P:Shop.Domain.Money.Currency",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Domain.Money.Add(Shop.Domain.Money)",
+      "to": "T:Shop.Domain.Money",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Domain.Money.Add(Shop.Domain.Money)",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Domain.Money.Zero(System.String)",
+      "to": "M:Shop.Domain.Money.#ctor(System.Decimal,System.String)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Domain.Money.Zero(System.String)",
+      "to": "T:Shop.Domain.Money",
+      "kind": "construct"
+    },
+    {
+      "from": "M:Shop.Domain.Money.Zero(System.String)",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Domain.OrderPlaced.#ctor(System.Guid,System.Guid,Shop.Domain.Money)",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Domain.OrderSummaryView.#ctor(System.Guid,Shop.Domain.Money,System.String)",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "P:Shop.Api.Orders.PlaceOrderCommand.Budget",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "P:Shop.Api.Persistence.OrderRepository.Count",
+      "to": "F:Shop.Api.Persistence.OrderRepository._rows",
+      "kind": "access"
+    },
+    {
+      "from": "P:Shop.Domain.CartLine.Price",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "P:Shop.Domain.CartState.Lines",
+      "to": "T:Shop.Domain.CartLine",
+      "kind": "type-reference"
+    },
+    {
+      "from": "P:Shop.Domain.CartState.Total",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "P:Shop.Domain.ItemAddedToCart.Price",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "P:Shop.Domain.OrderPlaced.Total",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "P:Shop.Domain.OrderSummaryView.Total",
+      "to": "T:Shop.Domain.Money",
+      "kind": "type-reference"
+    },
+    {
+      "from": "T:Product.Binding.RealisesFactAttribute",
+      "to": "T:System.Attribute",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Product.Binding.RealisesFactAttribute",
+      "to": "T:System.AttributeUsageAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:Product.Binding.SliceAttribute",
+      "to": "T:System.Attribute",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Product.Binding.SliceAttribute",
+      "to": "T:System.AttributeUsageAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Api.Infrastructure.Container",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Api.Infrastructure.EndpointAttribute",
+      "to": "T:System.Attribute",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Api.Infrastructure.EndpointAttribute",
+      "to": "T:System.AttributeUsageAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Api.Orders.BogusHandler",
+      "to": "T:Product.Binding.SliceAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Api.Orders.BogusHandler",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Api.Orders.CartService",
+      "to": "T:Shop.Api.Orders.ICartReader",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Api.Orders.CartService",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Api.Orders.CheckoutService",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Api.Orders.OrdersEndpoints",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Api.Orders.PlaceOrderCommand",
+      "to": "T:System.IEquatable\u00601",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Api.Orders.PlaceOrderCommand",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Api.Orders.PlaceOrderHandler",
+      "to": "T:Product.Binding.SliceAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Api.Orders.PlaceOrderHandler",
+      "to": "T:Shop.Api.Infrastructure.IHandler\u00601",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Api.Orders.PlaceOrderHandler",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Api.Persistence.Dead",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Api.Persistence.Helpers",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Api.Persistence.OrderRepository",
+      "to": "T:Shop.Api.Persistence.IOrderRepository",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Api.Persistence.OrderRepository",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Api.Program",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Domain.ActorIdentity",
+      "to": "T:Product.Binding.RealisesFactAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Domain.ActorIdentity",
+      "to": "T:System.IEquatable\u00601",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Domain.ActorIdentity",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Domain.CartEmptied",
+      "to": "T:Product.Binding.RealisesFactAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Domain.CartEmptied",
+      "to": "T:System.IEquatable\u00601",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Domain.CartEmptied",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Domain.CartLine",
+      "to": "T:System.IEquatable\u00601",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Domain.CartLine",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Domain.CartState",
+      "to": "T:Product.Binding.RealisesFactAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Domain.CartState",
+      "to": "T:System.IEquatable\u00601",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Domain.CartState",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Domain.Ghost",
+      "to": "T:Product.Binding.RealisesFactAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Domain.Ghost",
+      "to": "T:System.IEquatable\u00601",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Domain.Ghost",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Domain.ItemAddedToCart",
+      "to": "T:Product.Binding.RealisesFactAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Domain.ItemAddedToCart",
+      "to": "T:System.IEquatable\u00601",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Domain.ItemAddedToCart",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Domain.Money",
+      "to": "T:System.IEquatable\u00601",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Domain.Money",
+      "to": "T:System.ValueType",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Domain.OrderConfirmed",
+      "to": "T:Product.Binding.RealisesFactAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Domain.OrderConfirmed",
+      "to": "T:System.IEquatable\u00601",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Domain.OrderConfirmed",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Domain.OrderPlaced",
+      "to": "T:Product.Binding.RealisesFactAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Domain.OrderPlaced",
+      "to": "T:System.IEquatable\u00601",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Domain.OrderPlaced",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Domain.OrderSummaryView",
+      "to": "T:Product.Binding.RealisesFactAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Domain.OrderSummaryView",
+      "to": "T:System.IEquatable\u00601",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Domain.OrderSummaryView",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    }
+  ],
+  "diagnostics": []
+}

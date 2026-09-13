@@ -75,6 +75,11 @@ pub enum Commands {
         /// Shell: bash, zsh, fish
         shell: String,
     },
+    /// C# stack binding — measure a Roslyn inventory: version/schema check, reachability, the act-indexed delta
+    Csharp {
+        #[command(subcommand)]
+        command: CsharpCommands,
+    },
     /// Decider (§3.3) — derive an aggregate's executable signature, validate it
     Decider {
         #[command(subcommand)]

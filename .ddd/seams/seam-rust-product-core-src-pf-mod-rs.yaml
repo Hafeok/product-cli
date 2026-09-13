@@ -1,0 +1,32 @@
+format: 2
+id: seam/rust/product-core-src-pf-mod-rs
+boundary: contract surface of product-core/src/pf/mod.rs
+verdict_knowledge: 'The C# stack binding''s consumer surface: callers learn that the inventory is refused by version before it is read, that reachability is always reported with the root convention and DI flag that produced it, and that the delta is indexed by act — no output lists symbols as candidate slices (R-D). What it cannot tell them: whether the act vocabulary is right, or whether a declared symbol does what its determination says.'
+contract_location: product-core/src/pf/mod.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: csharp_delta
+  file: product-core/src/pf/mod.rs
+  before: sha256:8928a1649eb08420984b79c302d6080c7a59fd8db94608aab24891e57a225c86
+  after: sha256:5636e57593295ab651c1d7b34c2d231a36edf356a50f4b2e7e864a165c71c7ca
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:475951ff8c971be90feec7956a06a8a3d75d215c13e970ab2d35a14a328a9810
+- symbol: csharp_inventory
+  file: product-core/src/pf/mod.rs
+  before: sha256:8928a1649eb08420984b79c302d6080c7a59fd8db94608aab24891e57a225c86
+  after: sha256:5636e57593295ab651c1d7b34c2d231a36edf356a50f4b2e7e864a165c71c7ca
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:7a1f399f163dd4071928bbde5b99a7ff8932afd6f3e2028fbee41f6b460bfdda
+- symbol: csharp_reach
+  file: product-core/src/pf/mod.rs
+  before: sha256:8928a1649eb08420984b79c302d6080c7a59fd8db94608aab24891e57a225c86
+  after: sha256:5636e57593295ab651c1d7b34c2d231a36edf356a50f4b2e7e864a165c71c7ca
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:d78f836098ae36b7d5b7c4c492cd0b1350cae45ce474905f3ab6c490ea562e9c
+- symbol: eventmodel
+  file: product-core/src/pf/mod.rs
+  before: sha256:8928a1649eb08420984b79c302d6080c7a59fd8db94608aab24891e57a225c86
+  after: sha256:5636e57593295ab651c1d7b34c2d231a36edf356a50f4b2e7e864a165c71c7ca
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:73e7b58dc9a9bc224ebb5c75b7fda681b992564d9ec5f4f5d6ec002b76cf38f4

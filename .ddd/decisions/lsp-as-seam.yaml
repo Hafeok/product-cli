@@ -17,3 +17,10 @@ notes: >
   in 136aa55 (2026-08-02) and DDD-arch-02 has not been touched since, so
   the status and changed values above are the claim's state at decision time,
   recovered rather than assumed. Not a re-decision.
+
+
+  Superseded in part 2026-09-13, by ruling CG-R-55, for batch inventory
+  only: dec/ddd/batch-inventory-reader admits a Roslyn workspace tool that
+  emits facts as an artefact the Rust side consumes. Interactive queries
+  continue through ddd-lsp under this decision. This record is not
+  amended; the superseding record is named here, per CG-rule-02.
