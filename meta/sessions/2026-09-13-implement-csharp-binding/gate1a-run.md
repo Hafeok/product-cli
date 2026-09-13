@@ -85,6 +85,11 @@ the container resolves the service, not when the site runs.
   `IAudit` reported four unresolved edges. Now counted once per (referencing type, interface);
   resolution coverage is over that set.
 - `Workspace.WorkspaceFailed` is obsolete on Roslyn 5.0; `RegisterWorkspaceFailedHandler` is used.
+- **A stray Orchard Core clone was committed to the repository root** (commit `0490998`, as an
+  embedded repository plus its clone log) and removed in the following commit. A background
+  clone ran in the repository directory instead of the session scratch directory. Caught by
+  reading the commit's file list after pushing, not before — the wrong order. No repository
+  content referenced it; the remote branch carries both commits, as it should.
 
 ## 3. The solutions, as found — and where they differ from the message
 
