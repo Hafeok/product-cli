@@ -40,7 +40,7 @@ public sealed class Collector
         {
             var compilation = await project.GetCompilationAsync();
             if (compilation is null) continue;
-            foreach (var type in Ids.SourceTypes(compilation.Assembly.GlobalNamespace))
+            foreach (var type in Ids.SourceTypes(compilation.Assembly.GlobalNamespace).Concat(EntryType(compilation)))
             {
                 if (type.ContainingType is not null) continue;
                 var id = Ids.Bare(type);
@@ -87,7 +87,7 @@ public sealed class Collector
         var entryId = entryPoint is null ? null : Ids.Of(entryPoint);
         var references = new References(compilation, AddRef, r => _registrations.Add(r), _solutionDir);
 
-        foreach (var type in Ids.SourceTypes(compilation.Assembly.GlobalNamespace))
+        foreach (var type in Ids.SourceTypes(compilation.Assembly.GlobalNamespace).Concat(EntryType(compilation)))
         {
             var tid = Ids.Of(type);
             _inSolution.Add(tid);
@@ -163,6 +163,15 @@ public sealed class Collector
             Registrations = _registrations.OrderBy(r => r.Site, StringComparer.Ordinal).ThenBy(r => r.Line).ThenBy(r => r.Method, StringComparer.Ordinal).ToList(),
             Diagnostics = _diagnostics.OrderBy(d => d.Message, StringComparer.Ordinal).ToList(),
         };
+    }
+
+    // The type holding the entry point is in the inventory by that fact,
+    // whether or not Roslyn gives the generated top-level `Program` a source
+    // location.
+    private static IEnumerable<INamedTypeSymbol> EntryType(Compilation compilation)
+    {
+        var entry = compilation.GetEntryPoint(CancellationToken.None);
+        if (entry?.ContainingType is { } t && !t.Locations.Any(l => l.IsInSource)) yield return t;
     }
 
     private void AddRef(string from, string to, string kind) => _refs.Add((from, to, kind));

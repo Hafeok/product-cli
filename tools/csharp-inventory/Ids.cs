@@ -7,16 +7,41 @@ namespace CSharpInventory;
 
 public static class Ids
 {
+    /// <summary>
+    /// Documentation-comment ids of top-level types declared by more than
+    /// one project in the solution (the top-level-statements `Program` of
+    /// every web project, for one). Their ids, and their members', carry an
+    /// `@assembly` suffix so two declarations never collapse into one.
+    /// Filled once by <see cref="Collector.FindAmbiguous"/> before collection.
+    /// </summary>
+    public static HashSet<string> Ambiguous { get; } = new(StringComparer.Ordinal);
+
     // Documentation-comment ids cover every named symbol. Arrays and pointers
     // have none of their own and are rendered from their element type; a
     // generic type parameter keeps Roslyn's "!:" prefix — it names no type.
-    public static string Of(ISymbol symbol) => symbol switch
+    public static string Of(ISymbol symbol)
+    {
+        var id = Bare(symbol);
+        var outer = Outermost(symbol);
+        if (outer is null || !Ambiguous.Contains(Bare(outer))) return id;
+        return id + "@" + (outer.ContainingAssembly?.Name ?? "?");
+    }
+
+    /// <summary>The id without any disambiguating suffix.</summary>
+    public static string Bare(ISymbol symbol) => symbol switch
     {
         IArrayTypeSymbol array => Of(array.ElementType) + "[]",
         IPointerTypeSymbol pointer => Of(pointer.PointedAtType) + "*",
         ITypeParameterSymbol tp => "!:" + tp.Name,
         _ => symbol.GetDocumentationCommentId() ?? "!:" + symbol.ToDisplayString(),
     };
+
+    private static INamedTypeSymbol? Outermost(ISymbol symbol)
+    {
+        var type = symbol as INamedTypeSymbol ?? symbol.ContainingType;
+        while (type?.ContainingType is not null) type = type.ContainingType;
+        return type;
+    }
 
     // The `Program` type that top-level statements generate is implicitly
     // declared yet carries the entry point, so it is kept; compiler closures
