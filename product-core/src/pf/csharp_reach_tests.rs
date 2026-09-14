@@ -164,6 +164,9 @@ fn coverage_prints_its_population() {
     assert!(text.contains(&format!("with registration-not-read inside the denominator (CG-R-83) {}/{} (", r.resolved, r.scored + r.registration_not_read)), "{text}");
     assert!(text.contains("registration reader (CG-R-79/CG-R-94), over 17 reached external registration calls: parsed 14 (the resolver read a registration) — known 3 (the table knows what the call registers) — opaque 0 (lifetime-named, arguments the reader cannot type) — unknown 0"), "{text}");
     assert!(text.contains("instrument properties, never the headline (CG-R-93): resolution coverage") && text.contains("stated limits, each with its measured incidence"), "{text}");
+    assert_eq!(r.not_read_to_resolved + r.not_read_to_boundary, r.registration_not_read, "CG-R-96 partitions the not-read edges");
+    assert_eq!(r.not_read_to_boundary, r.registration_not_read, "in the fixture every table-known type is external and unimplemented");
+    assert!(text.contains("under the CG-R-96 rule (from run 9; unscored before)"), "{text}");
     assert!(text.starts_with("roots: entry-point\nreached:") && text.contains("\nscored fraction: "), "the scored fraction is the headline (CG-R-86): {text}");
     assert_eq!(r.classified, r.scored + r.registration_not_read, "the second reading (CG-R-90)");
     assert_eq!(r.unscored, r.partial + r.boundary + r.excluded, "the error bound is the unscored fraction under the second reading (CG-R-89)");

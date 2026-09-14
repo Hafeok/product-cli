@@ -208,3 +208,16 @@ walk decision: they relabel *boundary* edges as *registration-not-read*. The sco
 (first reading) therefore cannot move in A; in B only the typed-client registrations
 (`AddHttpClient<T>` ×2 reached) can add container-constructed types and their edges. The
 classified fraction and the not-read-inside coverage move by exactly the relabelled edges.
+
+## 9. CG-R-96 — stated before run 8, in force from run 9
+
+From run 9 an edge supplied by a call the table knows leaves `registration-not-read` and takes
+the verdict the entry implies: **resolved** where a production type implements the named type,
+**boundary** where the named type is external and unimplemented in-solution.
+`registration-not-read` is then reserved for calls the reader cannot parse *and* the table does
+not know. Run 8 keeps the §8 rule for every scored figure and prints the CG-R-96 figure beside
+them as *unscored*: the not-read edges partitioned into the two verdicts, and the coverage that
+follows. The session notes, before the run, what the construction implies: every type the table
+names today is a framework type, so under CG-R-96 nearly every not-read edge goes to *boundary*
+and leaves the denominator — the CG-R-96 coverage should sit near the run-6 form, not between it
+and the not-read-inside figure.

@@ -61,6 +61,13 @@ pub struct Resolution {
     /// isolated: the error bound on that split (CG-R-89).
     pub unscored: usize,
     pub error_bound_percent: f64,
+    /// CG-R-96 (in force from run 9): a table-known edge takes the verdict the
+    /// entry implies — resolved where a production type implements the named
+    /// type, boundary where it is external and unimplemented. These count how
+    /// the registration-not-read edges would fall, and the coverage that follows.
+    pub not_read_to_resolved: usize,
+    pub not_read_to_boundary: usize,
+    pub coverage_cg96_percent: f64,
     /// resolved / (resolved + unresolved + registration-not-read): the rule
     /// in force from run 7 (CG-R-83) — an unread registration is the
     /// instrument's ignorance, not a boundary, and counts against coverage.
@@ -93,6 +100,12 @@ pub fn resolution_of(ix: &Index<'_>, c: &Closure<'_>) -> Resolution {
     let boundary = c.count(|s| *s == EdgeState::Boundary);
     let registration_not_read = c.count(|s| matches!(s, EdgeState::RegistrationNotRead(_)));
     let (by_reason, excluded, by_provider) = tallies(c);
+    let not_read_to_resolved = c
+        .edges
+        .iter()
+        .filter(|e| matches!(e.state, EdgeState::RegistrationNotRead(_)) && ix.production_implementors(&e.target).next().is_some())
+        .count();
+    let not_read_to_boundary = registration_not_read - not_read_to_resolved;
     Resolution {
         composition_edges: c.edges.len(),
         scored: resolved + unresolved,
@@ -108,6 +121,9 @@ pub fn resolution_of(ix: &Index<'_>, c: &Closure<'_>) -> Resolution {
         classified: resolved + unresolved + registration_not_read,
         classified_percent: pct(resolved + unresolved + registration_not_read, c.edges.len()),
         unscored: c.edges.len() - (resolved + unresolved + registration_not_read),
+        not_read_to_resolved,
+        not_read_to_boundary,
+        coverage_cg96_percent: pct(resolved + not_read_to_resolved, resolved + unresolved + not_read_to_resolved),
         error_bound_percent: if c.edges.is_empty() { 0.0 } else { 100.0 * (c.edges.len() - (resolved + unresolved + registration_not_read)) as f64 / c.edges.len() as f64 },
         coverage_with_not_read_percent: pct(resolved, resolved + unresolved + registration_not_read),
         by_role: by_role(c),
