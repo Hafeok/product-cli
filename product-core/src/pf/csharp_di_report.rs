@@ -12,10 +12,20 @@ use super::csharp_di_knowledge::REGISTRATION_KNOWLEDGE;
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct TableCoverage {
     pub reached: usize,
+    /// The reader extracted the call's structure and the resolver read a registration from it.
     pub parsed: usize,
+    /// The table knows what the call registers (CG-R-94: a different property from parsed).
     pub known: usize,
+    /// A lifetime-named call whose arguments are variables the reader cannot type
+    /// (`AddTransient(descriptor)`): parsed in shape, opaque in content — reported apart.
+    pub opaque: usize,
     pub unknown: usize,
 }
+
+const LIFETIME_NAMES: &[&str] = &[
+    "AddScoped", "AddTransient", "AddSingleton", "TryAddScoped", "TryAddTransient", "TryAddSingleton",
+    "Add", "TryAdd", "TryAddEnumerable", "Replace",
+];
 
 /// One registration call as written, whatever the resolver made of it.
 #[derive(Debug, Clone, Serialize)]
@@ -41,6 +51,8 @@ impl Resolver {
                 c.parsed += 1;
             } else if REGISTRATION_KNOWLEDGE.iter().any(|(m, _, _)| *m == call.method) {
                 c.known += 1;
+            } else if LIFETIME_NAMES.contains(&call.name.as_str()) {
+                c.opaque += 1;
             } else {
                 c.unknown += 1;
             }
@@ -53,7 +65,7 @@ impl Resolver {
     pub fn unlearned(&self, site_reached: &dyn Fn(&str) -> bool) -> BTreeMap<String, usize> {
         let mut out = BTreeMap::new();
         for c in self.calls.iter().filter(|c| c.external && !c.read && site_reached(&c.site)) {
-            if !REGISTRATION_KNOWLEDGE.iter().any(|(m, _, _)| *m == c.method) {
+            if !REGISTRATION_KNOWLEDGE.iter().any(|(m, _, _)| *m == c.method) && !LIFETIME_NAMES.contains(&c.name.as_str()) {
                 *out.entry(c.method.clone()).or_insert(0) += 1;
             }
         }

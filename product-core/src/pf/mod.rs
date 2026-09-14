@@ -24,6 +24,7 @@ pub mod csharp_di_knowledge;
 pub mod csharp_di_report;
 pub mod csharp_ground_truth;
 pub mod csharp_inventory;
+pub mod csharp_limits;
 pub mod csharp_reach;
 pub mod csharp_reach_render;
 pub mod csharp_resolution;

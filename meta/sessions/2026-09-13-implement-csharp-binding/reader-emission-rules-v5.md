@@ -170,3 +170,41 @@ Two readings, both reported on every run from run 7:
   fire/clear form is retired**: no disposition is taken until the split exists (the delta needs
   Gate 1b's act vocabulary), and the bound is reported with the split when there is one. The
   proposal of §6 (three bands on the scored fraction) is withdrawn as refused.
+
+## 8. Amendments for run 8 (CG-R-92 … CG-R-95)
+
+- **Headline (CG-R-93).** The scored fraction and the CG-R-89 error bound; coverage is printed
+  under *instrument properties, never the headline*, with the CG-R-92 statement beside it:
+  coverage is not monotone in resolver quality (a resolution opens the constructed type's own
+  dependencies), so a change between runs is evidence of neither regression nor improvement. The
+  classified fraction is what moves monotonically with resolver quality.
+- **Registration reader figures (CG-R-94)**: four, never one — *parsed* (the resolver read a
+  registration), *known* (the table knows what the call registers), *opaque* (a lifetime-named
+  call whose arguments are variables the reader cannot type), *unknown*.
+- **The table, grown by measured frequency (CG-R-95). N = the whole run-7 unknown set**: every
+  call run 7 reached in A (14 distinct) or B (43 distinct) that neither the resolver parsed nor
+  the table knew, ranked by frequency in the run-7 reports. Each is now an entry listing what the
+  call is documented to register that a constructor can ask for (`AddDefaultUI` →
+  `Identity.UI.Services.IEmailSender`, `AddBlazoredLocalStorage` → `ILocalStorageService`,
+  `AddWebEncoders` → the three encoders, `AddGraphQL` → the GraphQL contracts, `AddAWSService<T>`
+  → `IAmazonS3`, `AddServerSideBlazor` → `IJSRuntime`/`NavigationManager`/
+  `AuthenticationStateProvider`, `AddProblemDetails`, `AddMetrics`, `AddServiceDiscovery`,
+  OpenIddict's `AddCore`, `OptionsBuilder.Configure`), or an empty list when it registers options,
+  handlers or nothing injectable (the OpenTelemetry builder calls, the data-protection builder
+  calls, `AddOAuth`, `AddCookie`, `AddHsts`, …); collection and LINQ operations on the
+  `IServiceCollection` are entries that register nothing. `AddMvc`'s row gains the three encoders
+  (`AddMvcCore` calls `AddWebEncoders`); the host builder gains `IServer`. **Run 8 reports, per
+  new entry, the edges it moved** (the *registered by* list) — an entry that moves none is still
+  knowledge, and is reported as such.
+- **Typed HTTP clients**: `AddHttpClient<TClient>()` / `<TClient, TImpl>()` is read as the
+  registration it states (the lifetime path), so the client type is container-constructed.
+- **The instrument record** captures the working-tree state before the record file exists.
+- **Limits with incidence** (CG-R-94): a stated-limits list, each with its measured incidence,
+  prints on every report (Razor views; builder chains through a variable — B 66 `IHtmlLocalizer<T>`
+  edges; parameter attributes; `GetServices<T>`; middleware roots; opaque registration arguments).
+
+**What run 8 can and cannot move, by construction.** The table and the host list change no
+walk decision: they relabel *boundary* edges as *registration-not-read*. The scored fraction
+(first reading) therefore cannot move in A; in B only the typed-client registrations
+(`AddHttpClient<T>` ×2 reached) can add container-constructed types and their edges. The
+classified fraction and the not-read-inside coverage move by exactly the relabelled edges.

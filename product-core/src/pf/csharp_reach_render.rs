@@ -64,11 +64,12 @@ pub fn render_reach(report: &ReachReport) -> String {
 fn render_resolution(report: &ReachReport, s: &mut String) {
     let r = &report.resolution;
     s.push_str(&format!(
-        "scored fraction: {}/{} of composition edges ({:.1}%) — resolved + unresolved, the first reading (CG-R-86/CG-R-90); classified, any verdict incl. registration-not-read: {}/{} ({:.1}%), the second reading\n  error bound on the reachable/isolated split (CG-R-89): {} unscored of {} composition edges ({:.1}%) — no §12.1 disposition until the split exists (Gate 1b)\n  resolution coverage: {}/{} of the denominator ({:.1}%) — with registration-not-read inside the denominator (the rule from run 7, CG-R-83): {}/{} ({:.1}%)\n  unresolved: {} — partial: {} (held: composition chooses the provider, the provider chooses later; never divided) — boundary: {} (the library supplies it) — registration-not-read: {} (a framework call the resolver does not parse supplies it) — excluded by role: {} — of which collection injection (every registration of the type argument, P-6): {}\n  registrations read: {} — calls ignored: {} — registration sites in test projects skipped: {}\n  registration-knowledge table (CG-R-79): of {} reached external registration calls the resolver parses {}, the table knows {}, {} are unknown\n",
-        r.scored, r.composition_edges, r.population_percent, r.classified, r.composition_edges, r.classified_percent, r.unscored, r.composition_edges, r.error_bound_percent, r.resolved, r.scored, r.coverage_percent, r.resolved, r.scored + r.registration_not_read, r.coverage_with_not_read_percent,
-        r.unresolved, r.partial, r.boundary, r.registration_not_read, r.excluded, r.collection_edges,
+        "scored fraction: {}/{} of composition edges ({:.1}%) — resolved + unresolved, the first reading (CG-R-86/CG-R-90); classified, any verdict incl. registration-not-read: {}/{} ({:.1}%), the second reading\n  error bound on the reachable/isolated split (CG-R-89): {} unscored of {} composition edges ({:.1}%) — no §12.1 disposition until the split exists (Gate 1b)\n  resolved: {} — unresolved: {} — partial: {} (held: composition chooses the provider, the provider chooses later; never divided) — boundary: {} (the library supplies it) — registration-not-read: {} (a framework call the resolver does not parse supplies it) — excluded by role: {} — of which collection injection (every registration of the type argument, P-6): {}\n  registrations read: {} — calls ignored: {} — registration sites in test projects skipped: {}\n  registration reader (CG-R-79/CG-R-94), over {} reached external registration calls: parsed {} (the resolver read a registration) — known {} (the table knows what the call registers) — opaque {} (lifetime-named, arguments the reader cannot type) — unknown {}\n  instrument properties, never the headline (CG-R-93): resolution coverage {}/{} of the denominator ({:.1}%); with registration-not-read inside the denominator (CG-R-83) {}/{} ({:.1}%) — not monotone in resolver quality: a resolution opens the constructed type's own dependencies, so a change between runs is evidence of neither regression nor improvement (CG-R-92)\n",
+        r.scored, r.composition_edges, r.population_percent, r.classified, r.composition_edges, r.classified_percent, r.unscored, r.composition_edges, r.error_bound_percent,
+        r.resolved, r.unresolved, r.partial, r.boundary, r.registration_not_read, r.excluded, r.collection_edges,
         report.registrations_read, report.calls_ignored, report.test_sites_skipped,
-        report.table_coverage.reached, report.table_coverage.parsed, report.table_coverage.known, report.table_coverage.unknown
+        report.table_coverage.reached, report.table_coverage.parsed, report.table_coverage.known, report.table_coverage.opaque, report.table_coverage.unknown,
+        r.resolved, r.scored, r.coverage_percent, r.resolved, r.scored + r.registration_not_read, r.coverage_with_not_read_percent
     ));
     for (role, n) in &r.by_role {
         s.push_str(&format!("  edges by role:        {role:<26} {n}\n"));
@@ -98,6 +99,10 @@ fn render_resolution(report: &ReachReport, s: &mut String) {
     s.push_str("retired readings (CG-R-77 — the divergence was the field):\n");
     for p in r.retired_proxies {
         s.push_str(&format!("  {}\n    was: {}\n    incidence: {}\n", p.original_predicate, p.proxy, p.incidence));
+    }
+    s.push_str("stated limits, each with its measured incidence (CG-R-94):\n");
+    for l in r.limits {
+        s.push_str(&format!("  {} [{}]\n    incidence: {}\n", l.what, l.rule, l.incidence));
     }
 }
 

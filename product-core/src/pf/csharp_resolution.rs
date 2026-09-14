@@ -16,6 +16,7 @@ use std::collections::BTreeMap;
 use serde::Serialize;
 
 use super::csharp_inventory::Index;
+use super::csharp_limits::{Limit, LIMITS};
 use super::csharp_roles::{RoleProxy, PROXIES, RETIRED_PROXIES};
 use super::csharp_walk::{by_role, Closure, CompositionEdge, EdgeState, Injection};
 
@@ -78,6 +79,7 @@ pub struct Resolution {
     pub registration_not_read_surface: Vec<BoundaryRow>,
     pub proxies: &'static [RoleProxy],
     pub retired_proxies: &'static [RoleProxy],
+    pub limits: &'static [Limit],
 }
 
 fn pct(num: usize, den: usize) -> f64 {
@@ -118,6 +120,7 @@ pub fn resolution_of(ix: &Index<'_>, c: &Closure<'_>) -> Resolution {
         registration_not_read_surface: surface(ix, c, |s| matches!(s, EdgeState::RegistrationNotRead(_))),
         proxies: PROXIES,
         retired_proxies: RETIRED_PROXIES,
+        limits: LIMITS,
     }
 }
 

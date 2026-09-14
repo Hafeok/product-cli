@@ -19,6 +19,7 @@ pub const HOST_PROVIDED: &[&str] = &[
     "T:Microsoft.Extensions.Options.IOptions`1", "T:Microsoft.Extensions.Options.IOptionsSnapshot`1",
     "T:Microsoft.Extensions.Options.IOptionsMonitor`1", "T:Microsoft.Extensions.Options.IOptionsFactory`1",
     "T:Microsoft.Extensions.DependencyInjection.IServiceProviderIsService",
+    "T:Microsoft.AspNetCore.Hosting.Server.IServer",
 ];
 
 /// (method id up to its parameter list, the call's name, the types it registers).
@@ -55,6 +56,69 @@ pub const REGISTRATION_KNOWLEDGE: &[(&str, &str, &[&str])] = &[
     ("M:NimblePros.Metronome.ServiceRegistrationExtensions.AddMetronome", "AddMetronome", &["T:DbCallCountingInterceptor"]),
     // Known to register nothing: a build, not a registration.
     ("M:Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions.BuildServiceProvider", "BuildServiceProvider", &[]),
+    // --- Grown by measured frequency (CG-R-95): every call run 7 reached in A (14) or B (43)
+    // that neither the resolver parsed nor the table knew, ranked in the run-7 reports. Each
+    // entry lists what the call is documented to register that a constructor can ask for, or is
+    // empty when it registers options, handlers or nothing injectable. Collection and LINQ
+    // operations on the IServiceCollection are not registrations.
+    ("M:Microsoft.Extensions.DependencyInjection.OpenTelemetryServicesExtensions.AddOpenTelemetry", "AddOpenTelemetry", &["T:OpenTelemetry.Trace.TracerProvider", "T:OpenTelemetry.Metrics.MeterProvider"]),
+    ("M:OpenTelemetry.OpenTelemetryBuilder.WithMetrics", "WithMetrics", &[]),
+    ("M:OpenTelemetry.OpenTelemetryBuilder.WithTracing", "WithTracing", &[]),
+    ("M:OpenTelemetry.OpenTelemetryBuilderOtlpExporterExtensions.UseOtlpExporter", "UseOtlpExporter", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.ServiceDiscoveryServiceCollectionExtensions.AddServiceDiscovery", "AddServiceDiscovery", &["T:Microsoft.Extensions.ServiceDiscovery.ServiceEndpointResolver"]),
+    ("M:Microsoft.Extensions.DependencyInjection.OAuthExtensions.AddOAuth", "AddOAuth", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.CookieExtensions.AddCookie", "AddCookie", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.IdentityServiceCollectionExtensions.ConfigureApplicationCookie", "ConfigureApplicationCookie", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.HealthChecksBuilderDelegateExtensions.AddCheck", "AddCheck", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.DatabaseDeveloperPageExceptionFilterServiceExtensions.AddDatabaseDeveloperPageExceptionFilter", "AddDatabaseDeveloperPageExceptionFilter", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.ComponentServiceCollectionExtensions.AddServerSideBlazor", "AddServerSideBlazor", &["T:Microsoft.JSInterop.IJSRuntime", "T:Microsoft.AspNetCore.Components.NavigationManager", "T:Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider"]),
+    ("M:Microsoft.AspNetCore.Identity.IdentityBuilderUIExtensions.AddDefaultUI", "AddDefaultUI", &["T:Microsoft.AspNetCore.Identity.UI.Services.IEmailSender"]),
+    ("M:Microsoft.AspNetCore.Identity.IdentityBuilderExtensions.AddDefaultTokenProviders", "AddDefaultTokenProviders", &[]),
+    ("M:Microsoft.AspNetCore.Identity.IdentityBuilder.AddTokenProvider``1", "AddTokenProvider", &[]),
+    ("M:Blazored.LocalStorage.ServiceCollectionExtensions.AddBlazoredLocalStorage", "AddBlazoredLocalStorage", &["T:Blazored.LocalStorage.ILocalStorageService", "T:Blazored.LocalStorage.ISyncLocalStorageService"]),
+    ("M:Microsoft.Extensions.Options.OptionsBuilder`1.Configure``1", "OptionsBuilder.Configure", OPTIONS),
+    ("M:Microsoft.Extensions.DependencyInjection.ResilienceHttpClientBuilderExtensions.AddResilienceHandler", "AddResilienceHandler", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.ResilienceHttpClientBuilderExtensions.AddStandardResilienceHandler", "AddStandardResilienceHandler", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.OpenIddictExtensions.AddOpenIddict", "AddOpenIddict", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.OpenIddictCoreExtensions.AddCore", "OpenIddict.AddCore", OPENIDDICT),
+    ("M:Microsoft.Extensions.DependencyInjection.OpenIddictServerExtensions.AddServer", "OpenIddict.AddServer", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.OpenIddictValidationExtensions.AddValidation", "OpenIddict.AddValidation", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.ProblemDetailsServiceCollectionExtensions.AddProblemDetails", "AddProblemDetails", &["T:Microsoft.AspNetCore.Http.IProblemDetailsService"]),
+    ("M:Microsoft.Extensions.DependencyInjection.MetricsServiceExtensions.AddMetrics", "AddMetrics", &["T:System.Diagnostics.Metrics.IMeterFactory"]),
+    ("M:Microsoft.Extensions.DependencyInjection.SwaggerGenServiceCollectionExtensions.AddSwaggerGen", "AddSwaggerGen", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.StackExchangeRedisDependencyInjectionExtensions.AddStackExchangeRedis", "AddStackExchangeRedis", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.OpenApiServiceCollectionExtensions.AddOpenApi", "AddOpenApi", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.MvcExtensions.AddMiniProfiler", "AddMiniProfiler", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.JsonProtocolDependencyInjectionExtensions.AddJsonProtocol``1", "AddJsonProtocol", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.HttpClientBuilderExtensions.AddHttpMessageHandler``1", "AddHttpMessageHandler", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.EndpointMetadataApiExplorerServiceCollectionExtensions.AddEndpointsApiExplorer", "AddEndpointsApiExplorer", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.EncoderServiceCollectionExtensions.AddWebEncoders", "AddWebEncoders", ENCODERS),
+    ("M:Microsoft.Extensions.DependencyInjection.AzureSignalRDependencyInjectionExtensions.AddAzureSignalR", "AddAzureSignalR", &[]),
+    ("M:Microsoft.Extensions.Azure.AzureClientServiceCollectionExtensions.AddAzureClientsCore", "AddAzureClientsCore", &[]),
+    ("M:Microsoft.AspNetCore.DataProtection.DataProtectionBuilderExtensions.SetApplicationName", "SetApplicationName", &[]),
+    ("M:Microsoft.AspNetCore.DataProtection.DataProtectionBuilderExtensions.PersistKeysToFileSystem", "PersistKeysToFileSystem", &[]),
+    ("M:Microsoft.AspNetCore.DataProtection.DataProtectionBuilderExtensions.AddKeyManagementOptions", "AddKeyManagementOptions", &[]),
+    ("M:Microsoft.AspNetCore.DataProtection.AzureStorageBlobDataProtectionBuilderExtensions.PersistKeysToAzureBlobStorage", "PersistKeysToAzureBlobStorage", &[]),
+    ("M:Microsoft.AspNetCore.Builder.ResponseCompressionServicesExtensions.AddResponseCompression", "AddResponseCompression", &["T:Microsoft.AspNetCore.ResponseCompression.IResponseCompressionProvider"]),
+    ("M:Microsoft.AspNetCore.Builder.RateLimiterServiceCollectionExtensions.AddRateLimiter", "AddRateLimiter", &[]),
+    ("M:Microsoft.AspNetCore.Builder.HstsServicesExtensions.AddHsts", "AddHsts", &[]),
+    ("M:GraphQL.MicrosoftDIGraphQLBuilderExtensions.AddGraphQL", "AddGraphQL", &["T:GraphQL.IGraphQLSerializer", "T:GraphQL.IGraphQLTextSerializer", "T:GraphQL.IDocumentExecuter", "T:GraphQL.Types.ISchema"]),
+    ("M:Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.AddAWSService``1", "AddAWSService", &["T:Amazon.S3.IAmazonS3"]),
+    // Collection and LINQ operations on the IServiceCollection: not registrations.
+    ("M:System.Collections.Generic.ICollection`1.Add", "ICollection.Add", &[]),
+    ("M:System.Collections.Generic.ICollection`1.Remove", "ICollection.Remove", &[]),
+    ("M:System.Collections.Generic.IList`1.RemoveAt", "IList.RemoveAt", &[]),
+    ("M:System.Linq.Enumerable.Where``1", "Enumerable.Where", &[]),
+    ("M:System.Linq.Enumerable.Select``2", "Enumerable.Select", &[]),
+    ("M:System.Linq.Enumerable.ToArray``1", "Enumerable.ToArray", &[]),
+    ("M:System.Linq.Enumerable.Except``1", "Enumerable.Except", &[]),
+    ("M:Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.RemoveAll``1", "RemoveAll", &[]),
+];
+
+const ENCODERS: &[&str] = &["T:System.Text.Encodings.Web.HtmlEncoder", "T:System.Text.Encodings.Web.JavaScriptEncoder", "T:System.Text.Encodings.Web.UrlEncoder"];
+const OPENIDDICT: &[&str] = &[
+    "T:OpenIddict.Abstractions.IOpenIddictApplicationManager", "T:OpenIddict.Abstractions.IOpenIddictAuthorizationManager",
+    "T:OpenIddict.Abstractions.IOpenIddictScopeManager", "T:OpenIddict.Abstractions.IOpenIddictTokenManager",
 ];
 
 const IDENTITY: &[&str] = &[
@@ -80,4 +144,6 @@ const MVC: &[&str] = &[
     "T:Microsoft.AspNetCore.Mvc.ViewFeatures.ModelExpressionProvider", "T:Microsoft.AspNetCore.Mvc.Routing.IUrlHelperFactory",
     "T:Microsoft.AspNetCore.Mvc.IViewComponentHelper", "T:Microsoft.AspNetCore.Mvc.Razor.IRazorViewEngine",
     "T:Microsoft.AspNetCore.Mvc.ModelBinding.IModelMetadataProvider", "T:Microsoft.AspNetCore.Antiforgery.IAntiforgery",
+    // AddMvcCore calls AddWebEncoders.
+    "T:System.Text.Encodings.Web.HtmlEncoder", "T:System.Text.Encodings.Web.JavaScriptEncoder", "T:System.Text.Encodings.Web.UrlEncoder",
 ];

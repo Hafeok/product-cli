@@ -158,11 +158,12 @@ fn coverage_prints_its_population() {
     let report = run(&["entry-point"]);
     let text = render_reach(&report);
     let r = &report.resolution;
-    assert!(text.contains(&format!("resolution coverage: {}/{} of the denominator", r.resolved, r.scored)));
+    assert!(text.contains(&format!("resolution coverage {}/{} of the denominator", r.resolved, r.scored)));
     assert!(text.contains(&format!("{}/{} of composition edges", r.scored, r.composition_edges)));
     assert!(text.contains("partial: 2 (held:"), "{text}");
-    assert!(text.contains(&format!("with registration-not-read inside the denominator (the rule from run 7, CG-R-83): {}/{} (", r.resolved, r.scored + r.registration_not_read)), "{text}");
-    assert!(text.contains("registration-knowledge table (CG-R-79): of 17 reached external registration calls the resolver parses 14, the table knows 3, 0 are unknown"), "{text}");
+    assert!(text.contains(&format!("with registration-not-read inside the denominator (CG-R-83) {}/{} (", r.resolved, r.scored + r.registration_not_read)), "{text}");
+    assert!(text.contains("registration reader (CG-R-79/CG-R-94), over 17 reached external registration calls: parsed 14 (the resolver read a registration) — known 3 (the table knows what the call registers) — opaque 0 (lifetime-named, arguments the reader cannot type) — unknown 0"), "{text}");
+    assert!(text.contains("instrument properties, never the headline (CG-R-93): resolution coverage") && text.contains("stated limits, each with its measured incidence"), "{text}");
     assert!(text.starts_with("roots: entry-point\nreached:") && text.contains("\nscored fraction: "), "the scored fraction is the headline (CG-R-86): {text}");
     assert_eq!(r.classified, r.scored + r.registration_not_read, "the second reading (CG-R-90)");
     assert_eq!(r.unscored, r.partial + r.boundary + r.excluded, "the error bound is the unscored fraction under the second reading (CG-R-89)");
@@ -189,7 +190,7 @@ fn tracked_sets_get_their_own_disposition() {
     assert_eq!(report.tracked[1].unresolved, 1, "the conditionally registered audit (the test project's FakeAudit is not selected)");
     let text = render_reach(&report);
     assert!(text.starts_with("roots: entry-point\n"));
-    assert!(text.contains("resolution coverage:") && text.contains("role proxies"));
+    assert!(text.contains("resolution coverage ") && text.contains("role proxies"));
 }
 
 #[test]

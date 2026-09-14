@@ -123,7 +123,7 @@ pub struct Resolver {
 const LIFETIME: &[&str] = &[
     "AddScoped", "AddTransient", "AddSingleton", "TryAddScoped", "TryAddTransient", "TryAddSingleton",
     "Add", "TryAdd", "TryAddEnumerable", "Replace", "AddHostedService", "AddDbContext", "AddDbContextPool",
-    "AddCheck",
+    "AddCheck", "AddHttpClient",
 ];
 const SCANNING: &[&str] = &[
     "Scan", "AddMediatR", "RegisterServicesFromAssembly", "RegisterServicesFromAssemblies",
