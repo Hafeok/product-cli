@@ -24,6 +24,8 @@ edges:
   - { from: "T:Shop.Api.Admin.OrdersPanel", target: "T:Shop.Api.Orders.ICartReader" }                # [Inject]
   - { from: "T:Shop.Api.Admin.OrdersPanel", target: "T:Microsoft.Extensions.Logging.ILogger`1" }       # [Inject]
   - { from: "T:Shop.Api.Infrastructure.PingCheck", target: "T:Shop.Api.Infrastructure.IClockFactory" }
+  - { from: "T:Shop.Api.Infrastructure.PingCheck", target: "T:System.Net.Http.IHttpClientFactory" }
+  - { from: "T:Shop.Api.Infrastructure.AuditSink", target: "T:Shop.Api.Infrastructure.INotifier" }
   - { from: "T:Shop.Api.Infrastructure.AuditSink", target: "T:Shop.Api.Infrastructure.IAudit" }
   - { from: "T:Shop.Api.Infrastructure.AuditSink", target: "T:Shop.Api.Infrastructure.IAuditStore" }
   - { from: "T:Shop.Api.Infrastructure.AuditSink", target: "T:Shop.Api.Infrastructure.IIdGenerator" }   # IEnumerable<IIdGenerator>: collection injection, the edge is to the type argument

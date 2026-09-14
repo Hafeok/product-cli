@@ -1,4 +1,4 @@
-// The inventory artefact, schema version 5. Mirrors
+// The inventory artefact, schema version 6. Mirrors
 // schema/json/csharp-inventory/inventory.schema.json field for field; the
 // schema is authoritative and the Rust side validates against it.
 //
@@ -8,7 +8,7 @@ namespace CSharpInventory;
 
 public sealed class Inventory
 {
-    public string InventoryVersion { get; init; } = "5";
+    public string InventoryVersion { get; init; } = "6";
     public ProducedBy ProducedBy { get; init; } = new();
     public string ProducedAt { get; init; } = "";
     public SolutionInfo Solution { get; init; } = new();
@@ -63,6 +63,8 @@ public sealed class Registration
     public string MethodName { get; init; } = "";
     public List<string> TypeArguments { get; init; } = new();
     public List<string> TypeofArguments { get; init; } = new();
+    /// <summary>Type arguments of ServiceDescriptor factory calls nested in the argument list — ServiceDescriptor.Scoped&lt;I, C&gt;() inside TryAddEnumerable(…) (v6, O-18). Matched by the descriptor type's symbol id.</summary>
+    public List<string> DescriptorTypeArguments { get; init; } = new();
     public List<string> Constructs { get; init; } = new();
     public bool HasLambda { get; init; }
     public bool Conditional { get; init; }

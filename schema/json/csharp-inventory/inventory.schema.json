@@ -7,7 +7,7 @@
   "required": ["inventory_version", "produced_by", "produced_at", "solution", "projects", "types", "members", "references", "external_types", "registrations", "diagnostics"],
   "additionalProperties": false,
   "properties": {
-    "inventory_version": { "type": "string", "const": "5" },
+    "inventory_version": { "type": "string", "const": "6" },
     "produced_by": {
       "type": "object",
       "required": ["tool", "tool_version", "roslyn_version"],
@@ -158,7 +158,7 @@
     },
     "registration": {
       "type": "object",
-      "required": ["site", "receiver", "method", "method_name", "type_arguments", "typeof_arguments", "constructs", "has_lambda", "conditional", "file", "line"],
+      "required": ["site", "receiver", "method", "method_name", "type_arguments", "typeof_arguments", "descriptor_type_arguments", "constructs", "has_lambda", "conditional", "file", "line"],
       "additionalProperties": false,
       "$comment": "One call on an IServiceCollection (or a type implementing it), as written — AddControllers as much as AddScoped. Which calls register what, and what each resolves to, is decided Rust-side (CG-R-60/61/62).",
       "properties": {
@@ -168,6 +168,7 @@
         "method_name": { "type": "string", "minLength": 1 },
         "type_arguments": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" } },
         "typeof_arguments": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" }, "$comment": "Every typeof(X) anywhere in the call's arguments, lambdas included." },
+        "descriptor_type_arguments": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" }, "$comment": "Type arguments of ServiceDescriptor factory calls nested in the argument list (ServiceDescriptor.Scoped<I, C>() inside TryAddEnumerable), matched by the descriptor type's symbol id (v6, O-18)." },
         "constructs": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" }, "$comment": "Every object creation anywhere in the call's arguments — an instance registration, or what a factory lambda builds." },
         "has_lambda": { "type": "boolean" },
         "conditional": { "type": "boolean", "$comment": "The call sits inside an if, switch or conditional expression within its member." },

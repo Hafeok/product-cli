@@ -86,15 +86,18 @@ public sealed class MemoryAuditStore : IAuditStore
 
 // Registered by a call chained off AddHealthChecks() — a builder registration
 // (R-2): the health check service constructs it from the container.
+// IHttpClientFactory: an external abstraction no call in this solution registers and the
+// host builder does not supply — a genuine boundary edge (CG-R-68, CG-R-87).
 public sealed class PingCheck : Microsoft.Extensions.Diagnostics.HealthChecks.IHealthCheck
 {
     private readonly IClockFactory _clocks;
+    private readonly System.Net.Http.IHttpClientFactory _http;
 
-    public PingCheck(IClockFactory clocks) { _clocks = clocks; }
+    public PingCheck(IClockFactory clocks, System.Net.Http.IHttpClientFactory http) { _clocks = clocks; _http = http; }
 
     public Task<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult> CheckHealthAsync(
         Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext context, CancellationToken cancellationToken = default)
-        => Task.FromResult(_clocks.Create().Now() > DateTimeOffset.MinValue
+        => Task.FromResult(_http is not null && _clocks.Create().Now() > DateTimeOffset.MinValue
             ? Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy()
             : Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Unhealthy());
 }
@@ -109,13 +112,26 @@ public sealed class AuditSink
     private readonly IAuditStore _store;
     private readonly IEnumerable<IIdGenerator> _generators;
     private readonly Func<IAudit> _lateAudit;
+    private readonly INotifier _notifier;
 
-    public AuditSink(IAudit audit, IAuditStore store, IEnumerable<IIdGenerator> generators, Func<IAudit> lateAudit)
+    public AuditSink(IAudit audit, IAuditStore store, IEnumerable<IIdGenerator> generators, Func<IAudit> lateAudit, INotifier notifier)
     {
-        _audit = audit; _store = store; _generators = generators; _lateAudit = lateAudit;
+        _audit = audit; _store = store; _generators = generators; _lateAudit = lateAudit; _notifier = notifier;
     }
 
-    public void Flush(Guid id) => _lateAudit().Record(_store.Load(id) + _generators.Count() + _audit.GetHashCode());
+    public void Flush(Guid id) { _notifier.Notify(id.ToString()); _lateAudit().Record(_store.Load(id) + _generators.Count() + _audit.GetHashCode()); }
+}
+
+// Registered through ServiceDescriptor.Singleton<I, C>() inside TryAddEnumerable — the
+// static-factory form (O-18).
+public interface INotifier
+{
+    void Notify(string message);
+}
+
+public sealed class ConsoleNotifier : INotifier
+{
+    public void Notify(string message) => Console.WriteLine(message);
 }
 
 // Registered only inside a conditional.

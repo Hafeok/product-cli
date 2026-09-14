@@ -17,7 +17,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::Serialize;
 
 use super::csharp_inventory::{Inventory, Registration};
-pub use super::csharp_di_knowledge::REGISTRATION_KNOWLEDGE;
+pub use super::csharp_di_knowledge::{HOST_PROVIDED, REGISTRATION_KNOWLEDGE};
+pub use super::csharp_di_report::{Call, TableCoverage};
 
 /// How a resolution was read off a registration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -77,28 +78,6 @@ struct Entry {
     site: String,
 }
 
-/// CG-R-79: of the external registration calls the walk reached, how many
-/// the resolver parses, how many the knowledge table knows, how many neither.
-#[derive(Debug, Clone, Default, Serialize)]
-pub struct TableCoverage {
-    pub reached: usize,
-    pub parsed: usize,
-    pub known: usize,
-    pub unknown: usize,
-}
-
-/// One registration call as written, whatever the resolver made of it.
-#[derive(Debug, Clone, Serialize)]
-pub struct Call {
-    pub site: String,
-    /// The resolved method id, up to its parameter list.
-    pub method: String,
-    pub name: String,
-    /// Declared outside the solution (its body cannot be walked).
-    pub external: bool,
-    pub read: bool,
-}
-
 /// The registration facts, indexed by service type id.
 #[derive(Debug, Default)]
 pub struct Resolver {
@@ -130,6 +109,9 @@ pub struct Resolver {
     /// Every call, read or not, for the registration-knowledge lookup
     /// (CG-R-75) and the map of unlearned calls.
     pub calls: Vec<Call>,
+    /// Production entry points: when one is reached, the host builder's
+    /// implicit registrations are in force (CG-R-87).
+    entry_points: BTreeSet<String>,
     /// Registration calls at sites in test projects, left unread (CG-R-75).
     pub test_sites_skipped: usize,
 }
@@ -159,6 +141,7 @@ impl Resolver {
         let mut r = Resolver {
             project_of: inv.types.iter().map(|t| (t.id.clone(), t.project.clone())).collect(),
             implementors,
+            entry_points: inv.members.iter().filter(|m| m.is_entry_point).map(|m| m.id.clone()).collect(),
             ..Default::default()
         };
         let test_projects: BTreeSet<&str> = inv.projects.iter().filter(|p| p.is_test()).map(|p| p.id.as_str()).collect();
@@ -195,49 +178,15 @@ impl Resolver {
     /// A reached registration call the resolver does not parse but the
     /// knowledge table says registers `type_id`: the call's name (CG-R-75).
     pub fn provider_of(&self, type_id: &str, site_reached: &dyn Fn(&str) -> bool) -> Option<&'static str> {
-        self.calls.iter().filter(|c| site_reached(&c.site)).find_map(|c| {
+        let by_call = self.calls.iter().filter(|c| site_reached(&c.site)).find_map(|c| {
             REGISTRATION_KNOWLEDGE.iter().find(|(m, _, types)| *m == c.method && types.contains(&type_id)).map(|(_, name, _)| *name)
+        });
+        // CG-R-87: the host builder registers logging, configuration, options
+        // and the environment whether or not a call appears in source; in
+        // force once a production entry point is reached.
+        by_call.or_else(|| {
+            (HOST_PROVIDED.contains(&type_id) && self.entry_points.iter().any(|e| site_reached(e))).then_some("host builder")
         })
-    }
-
-    /// The registration-knowledge table's coverage over *reached* external
-    /// calls (CG-R-79): the resolver parses some, the table knows some, the
-    /// rest are unknown — the table's size is not the measure.
-    pub fn table_coverage(&self, site_reached: &dyn Fn(&str) -> bool) -> TableCoverage {
-        let mut c = TableCoverage::default();
-        for call in self.calls.iter().filter(|c| c.external && site_reached(&c.site)) {
-            c.reached += 1;
-            if call.read {
-                c.parsed += 1;
-            } else if REGISTRATION_KNOWLEDGE.iter().any(|(m, _, _)| *m == call.method) {
-                c.known += 1;
-            } else {
-                c.unknown += 1;
-            }
-        }
-        c
-    }
-
-    /// Reached external calls the resolver neither parsed nor knows — the
-    /// map of what the registration reader still has to learn.
-    pub fn unlearned(&self, site_reached: &dyn Fn(&str) -> bool) -> BTreeMap<String, usize> {
-        let mut out = BTreeMap::new();
-        for c in self.calls.iter().filter(|c| c.external && !c.read && site_reached(&c.site)) {
-            if !REGISTRATION_KNOWLEDGE.iter().any(|(m, _, _)| *m == c.method) {
-                *out.entry(c.method.clone()).or_insert(0) += 1;
-            }
-        }
-        out
-    }
-
-    /// Ignored calls split by where the method lives: in the solution (its
-    /// body is walked, nothing is lost) or outside it (a gap).
-    pub fn ignored_split(&self) -> (BTreeMap<String, usize>, BTreeMap<String, usize>) {
-        let (mut inside, mut outside) = (BTreeMap::new(), BTreeMap::new());
-        for c in self.calls.iter().filter(|c| !c.read) {
-            *if c.external { &mut outside } else { &mut inside }.entry(c.name.clone()).or_insert(0) += 1;
-        }
-        (inside, outside)
     }
 
     /// Does an implementor of `service` live in a project some scanning
@@ -311,6 +260,16 @@ impl Resolver {
             .iter()
             .filter(|c| !c.ends_with(".ServiceDescriptor"))
             .collect();
+        // ServiceDescriptor.Scoped<I, C>() inside the call (O-18): the pair is on
+        // the nested factory's type arguments.
+        let da = &reg.descriptor_type_arguments;
+        if ta.is_empty() && to.is_empty() && !da.is_empty() {
+            return match da.len() {
+                1 if reg.has_lambda => Some((da[0].clone(), None)),
+                1 => Some((da[0].clone(), mk(&da[0], &da[0], Via::SelfRegistration))),
+                _ => Some((da[0].clone(), mk(&da[0], &da[1], Via::Generic))),
+            };
+        }
         match (ta.len(), to.len()) {
             (2, _) => Some((ta[0].clone(), mk(&ta[0], &ta[1], Via::Generic))),
             (1, _) if !constructs.is_empty() => {

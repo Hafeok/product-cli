@@ -39,7 +39,10 @@ fn unresolved_reasons_are_named() {
     assert_eq!(r.resolve("T:Shop.Api.Infrastructure.IClock", &all), Err(Reason::NoRegistration));
     // The registration site was never reached: module configuration.
     assert_eq!(r.resolve("T:Shop.Api.Persistence.IOrderRepository", &|_| false), Err(Reason::ModuleConfiguration));
-    assert_eq!(r.registrations_read, 13, "incl. AddCheck<PingCheck> on the chained IHealthChecksBuilder (R-2)");
+    assert_eq!(r.registrations_read, 14, "incl. AddCheck<PingCheck> on the chained IHealthChecksBuilder (R-2) and TryAddEnumerable(ServiceDescriptor.Singleton<,>()) (O-18)");
+    assert_eq!(r.resolve("T:Shop.Api.Infrastructure.INotifier", &all).map(|v| v[0].implementation.as_str()), Ok("T:Shop.Api.Infrastructure.ConsoleNotifier"));
+    assert_eq!(r.provider_of("T:Microsoft.Extensions.Logging.ILogger`1", &all), Some("host builder"), "CG-R-87: implicit host-builder registrations once the entry point is reached");
+    assert_eq!(r.provider_of("T:Microsoft.Extensions.Logging.ILogger`1", &|_| false), None);
     assert_eq!(r.calls_ignored, 3, "BuildServiceProvider, AddMemoryCache, AddHealthChecks are calls the resolver does not parse");
     assert_eq!(r.ignored_by_method.get("BuildServiceProvider"), Some(&1));
     assert_eq!(r.test_sites_skipped, 3, "the test project's registrations are not production composition (CG-R-75)");

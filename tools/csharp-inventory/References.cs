@@ -32,6 +32,8 @@ public sealed class References
 
     private const string ServiceProvider = "T:System.IServiceProvider";
 
+    private const string ServiceDescriptor = "T:Microsoft.Extensions.DependencyInjection.ServiceDescriptor";
+
     private readonly Compilation _compilation;
     private readonly Action<string, string, string> _add;
     private readonly Action<Registration> _register;
@@ -153,6 +155,13 @@ public sealed class References
         var typeofs = args.OfType<TypeOfExpressionSyntax>()
             .Select(t => model.GetTypeInfo(t.Type).Type).OfType<ITypeSymbol>()
             .Select(t => Ids.Of(t.OriginalDefinition)).Distinct().ToList();
+        // ServiceDescriptor.Scoped<I, C>() and kin inside the argument list: the pair
+        // sits on the nested call's type arguments (O-18).
+        var descriptorArgs = args.OfType<InvocationExpressionSyntax>()
+            .Select(i => Resolve(model, i) as IMethodSymbol)
+            .Where(m => m is not null && m.ContainingType is not null && Ids.Of(m.ContainingType.OriginalDefinition) == ServiceDescriptor)
+            .SelectMany(m => m!.TypeArguments.Select(t => Ids.Of(t.OriginalDefinition)))
+            .ToList();
         var constructs = args.OfType<BaseObjectCreationExpressionSyntax>()
             .Select(c => model.GetTypeInfo(c).Type).OfType<INamedTypeSymbol>()
             .Select(t => Ids.Of(t.OriginalDefinition)).Distinct().ToList();
@@ -165,6 +174,7 @@ public sealed class References
             MethodName = callee.Name,
             TypeArguments = callee.TypeArguments.Select(t => Ids.Of(t.OriginalDefinition)).ToList(),
             TypeofArguments = typeofs,
+            DescriptorTypeArguments = descriptorArgs,
             Constructs = constructs,
             HasLambda = args.Any(n => n is AnonymousFunctionExpressionSyntax),
             Conditional = inv.Ancestors().TakeWhile(a => a is not MemberDeclarationSyntax)

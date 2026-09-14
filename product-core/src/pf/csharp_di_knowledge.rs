@@ -9,6 +9,18 @@
 //! absent from this table leaves its types in `boundary` — which is why every
 //! report prints the reached external calls the table does not know.
 
+/// What the host builder (`WebApplication.CreateBuilder`, `Host.CreateDefaultBuilder`)
+/// registers with no call in the solution's source (CG-R-87): in force once a
+/// production entry point is reached, reported as *registration-not-read (host builder)*.
+pub const HOST_PROVIDED: &[&str] = &[
+    "T:Microsoft.Extensions.Logging.ILogger`1", "T:Microsoft.Extensions.Logging.ILoggerFactory",
+    "T:Microsoft.Extensions.Configuration.IConfiguration", "T:Microsoft.Extensions.Hosting.IHostEnvironment",
+    "T:Microsoft.AspNetCore.Hosting.IWebHostEnvironment", "T:Microsoft.Extensions.Hosting.IHostApplicationLifetime",
+    "T:Microsoft.Extensions.Options.IOptions`1", "T:Microsoft.Extensions.Options.IOptionsSnapshot`1",
+    "T:Microsoft.Extensions.Options.IOptionsMonitor`1", "T:Microsoft.Extensions.Options.IOptionsFactory`1",
+    "T:Microsoft.Extensions.DependencyInjection.IServiceProviderIsService",
+];
+
 /// (method id up to its parameter list, the call's name, the types it registers).
 pub const REGISTRATION_KNOWLEDGE: &[(&str, &str, &[&str])] = &[
     ("M:Microsoft.Extensions.DependencyInjection.IdentityServiceCollectionExtensions.AddIdentity``2", "AddIdentity", IDENTITY),

@@ -52,9 +52,9 @@ fn unresolved_and_orphan_declarations_are_named() {
 #[test]
 fn ratios_are_three_way_over_undeclared_types() {
     let r = run();
-    // 49 types, 4 of them in the test project (outside the primary convention,
+    // 51 types, 4 of them in the test project (outside the primary convention,
     // CG-R-75); 2 [Slice] + 8 [RealisesFact] carry declarations.
-    assert_eq!(r.ratios.undeclared_types, 45 - 10);
+    assert_eq!(r.ratios.undeclared_types, 47 - 10);
     // The delta walks from the declared slices, which never reach Main or the
     // OrdersEndpoints constructor: no boundary edge from here, and it says so.
     assert_eq!(r.ratios.boundary_edges, 0);

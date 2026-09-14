@@ -8,8 +8,8 @@ const FIXTURE: &str =
 #[test]
 fn fixture_loads_and_conforms_to_the_vendored_schema() {
     let inv = load_inventory(FIXTURE).expect("loads");
-    assert_eq!(inv.inventory_version, "5");
-    assert_eq!(inv.registrations.len(), 19);
+    assert_eq!(inv.inventory_version, "6");
+    assert_eq!(inv.registrations.len(), 20);
     assert!(inv.external_types.iter().any(|e| e.id == "T:System.IServiceProvider"));
     assert_eq!(inv.projects.len(), 4);
     let tests = inv.projects.iter().find(|p| p.id == "P:Shop.Tests").expect("test project");

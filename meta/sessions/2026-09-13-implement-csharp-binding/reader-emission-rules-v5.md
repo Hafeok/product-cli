@@ -124,3 +124,33 @@ None of these was stated before this document; each was decided in code.
 - Run 6 prints both figures, labelled: *coverage (rule in force, not-read outside)* and *coverage
   with not-read inside (the run-7 rule)*.
 - **Roots for A** gain `implements:T:Microsoft.AspNetCore.Mvc.ViewComponent` (CG-R-84).
+
+## 6. Amendments for run 7 (CG-R-85 … CG-R-88, schema v6) — the artefact run 7's predictions are made against
+
+- **Reader v6 (O-18, ratified CG-R-87).** A registration fact also carries the type arguments of
+  `ServiceDescriptor.<Lifetime><I, C>()` calls nested in its argument list (matched by the
+  descriptor type's symbol id). The resolver reads `TryAddEnumerable(ServiceDescriptor.
+  Scoped<I, C>())`, `Replace(…)` and kin as the pair they state. B reached 57 such calls in run 6;
+  their services were *boundary* or *no-registration* there.
+- **Host-builder provider (CG-R-87).** Once a production entry point is reached, `ILogger<T>`,
+  `ILoggerFactory`, `IConfiguration`, `IHostEnvironment`, `IWebHostEnvironment`,
+  `IHostApplicationLifetime`, the `IOptions*` family and `IServiceProviderIsService` are
+  *registration-not-read (host builder)* whether or not a call appears in source. `ILogger<T>`
+  now classifies the same in A and B.
+- **Denominator (CG-R-83, in force from run 7).** `registration-not-read` is **inside**:
+  coverage = resolved / (resolved + unresolved + registration-not-read). The run-6 form
+  (not-read outside) is printed beside it, labelled, for continuity. Boundary, partial and
+  excluded stay outside.
+- **Headline (CG-R-86).** The **scored fraction** — scored / composition edges, where scored =
+  resolved + unresolved (the run-6 definition of scored is kept so the two runs' fractions are
+  comparable; under CG-R-83 the *denominator* of coverage is wider than *scored*) — is the first
+  figure printed; coverage follows. §12.1 is read against the scored fraction.
+  **Proposed form for that reading, not ruled:** the same three bands as before — fires below
+  75%, provisional 75–<85%, clears at 85% — applied to the scored fraction. Held for ruling; run 7
+  prints the fraction either way.
+- **The run (CG-R-88).** `run7.sh` builds the binary it measures with, exits on any failing step
+  (`set -euo pipefail`), and writes `run7-instrument.txt` (commit, working-tree state, binary
+  and inventory hashes) before the first measurement.
+
+Restated table coverage, fixture: of 17 reached external calls the resolver parses 14, the table
+knows 3, 0 unknown. Ground truth on the fixture: 24 edges, 24/24/24.

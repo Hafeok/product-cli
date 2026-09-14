@@ -23,7 +23,7 @@ fn inventory_check_reports_counts() {
         .arg(fixture("inventory.json"))
         .assert()
         .success()
-        .stdout(predicate::str::contains("inventory version 5"))
+        .stdout(predicate::str::contains("inventory version 6"))
         .stdout(predicate::str::contains("4 project(s)"));
 }
 
@@ -48,6 +48,7 @@ fn reach_prints_its_convention_first() {
         .assert()
         .success()
         .stdout(predicate::str::starts_with("roots: entry-point, public\n"))
+        .stdout(predicate::str::contains("scored fraction: "))
         .stdout(predicate::str::contains("of the denominator"))
         .stdout(predicate::str::contains("of composition edges"))
         .stdout(predicate::str::contains("by namespace:"));
@@ -61,8 +62,8 @@ fn reach_measures_a_ground_truth_when_given_one() {
         .arg(fixture("inventory.json"))
         .assert()
         .success()
-        .stdout(predicate::str::contains("ground truth (Shop.Api, 22 edges"))
-        .stdout(predicate::str::contains("reader recall 22/22 (100.0%) over C# source, Razor views not covered (CG-R-78)"));
+        .stdout(predicate::str::contains("ground truth (Shop.Api, 24 edges"))
+        .stdout(predicate::str::contains("reader recall 24/24 (100.0%) over C# source, Razor views not covered (CG-R-78)"));
 }
 
 #[test]

@@ -240,7 +240,7 @@ The reference What lives in `.product/products/product-cli/`. `product mcp
 
 ## C# stack binding (`product csharp`, `tools/csharp-inventory/`)
 
-**As at 2026-09-14, Gate 1a of the binding session.** Built: the reader (schema v5), the consumer,
+**As at 2026-09-14, Gate 1a of the binding session.** Built: the reader (schema v6), the consumer,
 the DI resolver, the per-edge denominator criterion with declared proxies (ratified CG-R-68),
 reachability with unresolved, partial, **boundary** and **registration-not-read** as their own
 categories, collection injection as its own classification (P-6), test projects outside the
@@ -255,7 +255,7 @@ The binding connects the domain state change binding's act vocabulary (`eventmod
 
 - **`tools/csharp-inventory/`** — a .NET 10 console project (not a Cargo member) that loads a
   solution through `MSBuildWorkspace` and emits `inventory.json` per
-  `schema/json/csharp-inventory/inventory.schema.json` (version `5`). **Facts only** — types,
+  `schema/json/csharp-inventory/inventory.schema.json` (version `6`). **Facts only** — types,
   members, declared attributes with arguments, the reference graph with *how* each target is used
   (`parameter`, `resolve`, `type-test`, …), external types with their member shape and base
   interfaces, each project's referenced assemblies, and every `IServiceCollection` call as written
@@ -277,15 +277,18 @@ The binding connects the domain state change binding's act vocabulary (`eventmod
   assembly, outside the resolved/unresolved denominator — unless a reached framework call the
   resolver does not parse registers it (`AddIdentity` → `UserManager<T>`): then it is
   **registration-not-read** with the call, from the declared table in `pf/csharp_di_knowledge.rs`
-  (CG-R-75); a `[Inject]`/`[FromServices]` property (matched by symbol id) on a
+  (CG-R-75) — or *(host builder)* for what `WebApplication.CreateBuilder` registers implicitly
+  once a production entry point is reached (CG-R-87); a `[Inject]`/`[FromServices]` property (matched by symbol id) on a
   container-constructed type is a composition edge, method injection is not (the reader emits no
   parameter attributes — a stated gap); container-constructed is the root set plus every
   implementation a reached registration names (O-17); **`pf/csharp_walk.rs`** is the walk; `pf/csharp_reach.rs` runs it from a
   *stated* root convention (`entry-point`, `public`, `attribute:<T:…>`, `implements:<T:…>`,
   `member:<M:…>`; `implements:` walks the inherit chain) and reports reached / **unresolved** /
   **partial** / unreached — never folded together (CG-R-62), no figure without the others beside
-  it, resolution coverage first and always as *x/y of the denominator, y/z of composition edges*
-  (CG-R-73, `pf/csharp_resolution.rs`); projects referencing a test framework are outside the
+  it, the **scored fraction** (scored / composition edges) as the headline — coverage is an
+  instrument property, about 88% of whatever it can see on both A and B (CG-R-86) — and coverage
+  beneath it as *x/y of the denominator* in both forms (registration-not-read outside, and inside
+  from run 7, CG-R-83/CG-R-73, `pf/csharp_resolution.rs`); projects referencing a test framework are outside the
   primary convention and reported on their own row; `--track` reports a symbol set's own
   disposition; `--ground-truth <yaml>` measures reader recall and walk recall/precision against a
   hand enumeration (CG-R-71, `pf/csharp_ground_truth.rs`).

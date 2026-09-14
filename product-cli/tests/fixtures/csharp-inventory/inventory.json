@@ -1,14 +1,14 @@
 {
-  "inventory_version": "5",
+  "inventory_version": "6",
   "produced_by": {
     "tool": "csharp-inventory",
     "tool_version": "0.1.0",
     "roslyn_version": "5.0.0.0"
   },
-  "produced_at": "2026-09-14T11:48:10.2481229Z",
+  "produced_at": "2026-09-14T12:31:35.1619374Z",
   "solution": {
     "path": "Fixture.sln",
-    "git_head": "b6173921b01404b9e67c134e66a17ff350d46671"
+    "git_head": "33b9680fbc8427aecd031594cb1194dc65eef6cd"
   },
   "projects": [
     {
@@ -198,16 +198,22 @@
         "Microsoft.CSharp",
         "Microsoft.Extensions.Caching.Abstractions",
         "Microsoft.Extensions.Caching.Memory",
+        "Microsoft.Extensions.Configuration",
         "Microsoft.Extensions.Configuration.Abstractions",
+        "Microsoft.Extensions.Configuration.Binder",
         "Microsoft.Extensions.DependencyInjection",
         "Microsoft.Extensions.DependencyInjection.Abstractions",
+        "Microsoft.Extensions.Diagnostics",
         "Microsoft.Extensions.Diagnostics.Abstractions",
         "Microsoft.Extensions.Diagnostics.HealthChecks",
         "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions",
         "Microsoft.Extensions.FileProviders.Abstractions",
         "Microsoft.Extensions.Hosting.Abstractions",
+        "Microsoft.Extensions.Http",
+        "Microsoft.Extensions.Logging",
         "Microsoft.Extensions.Logging.Abstractions",
         "Microsoft.Extensions.Options",
+        "Microsoft.Extensions.Options.ConfigurationExtensions",
         "Microsoft.Extensions.Primitives",
         "Microsoft.VisualBasic",
         "Microsoft.VisualBasic.Core",
@@ -567,16 +573,22 @@
         "Microsoft.CSharp",
         "Microsoft.Extensions.Caching.Abstractions",
         "Microsoft.Extensions.Caching.Memory",
+        "Microsoft.Extensions.Configuration",
         "Microsoft.Extensions.Configuration.Abstractions",
+        "Microsoft.Extensions.Configuration.Binder",
         "Microsoft.Extensions.DependencyInjection",
         "Microsoft.Extensions.DependencyInjection.Abstractions",
+        "Microsoft.Extensions.Diagnostics",
         "Microsoft.Extensions.Diagnostics.Abstractions",
         "Microsoft.Extensions.Diagnostics.HealthChecks",
         "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions",
         "Microsoft.Extensions.FileProviders.Abstractions",
         "Microsoft.Extensions.Hosting.Abstractions",
+        "Microsoft.Extensions.Http",
+        "Microsoft.Extensions.Logging",
         "Microsoft.Extensions.Logging.Abstractions",
         "Microsoft.Extensions.Options",
+        "Microsoft.Extensions.Options.ConfigurationExtensions",
         "Microsoft.Extensions.Primitives",
         "Microsoft.TestPlatform.CommunicationUtilities",
         "Microsoft.TestPlatform.CoreUtilities",
@@ -880,7 +892,7 @@
       "base_type": "T:System.Object",
       "interfaces": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 106,
+      "line": 109,
       "attributes": []
     },
     {
@@ -898,7 +910,25 @@
         "T:Shop.Api.Infrastructure.IAudit"
       ],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 127,
+      "line": 143,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Infrastructure.ConsoleNotifier",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "ConsoleNotifier",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:Shop.Api.Infrastructure.INotifier"
+      ],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 132,
       "attributes": []
     },
     {
@@ -956,7 +986,7 @@
       "base_type": null,
       "interfaces": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 122,
+      "line": 138,
       "attributes": []
     },
     {
@@ -1042,6 +1072,22 @@
       "attributes": []
     },
     {
+      "id": "T:Shop.Api.Infrastructure.INotifier",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "INotifier",
+      "kind": "interface",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": null,
+      "interfaces": [],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 127,
+      "attributes": []
+    },
+    {
       "id": "T:Shop.Api.Infrastructure.IReadStore\u00601",
       "project": "P:Shop.Api",
       "namespace": "Shop.Api.Infrastructure",
@@ -1124,7 +1170,7 @@
         "T:Microsoft.Extensions.Diagnostics.HealthChecks.IHealthCheck"
       ],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 89,
+      "line": 91,
       "attributes": []
     },
     {
@@ -1382,7 +1428,7 @@
       "base_type": "T:System.Object",
       "interfaces": [],
       "file": "Shop.Api/Program.cs",
-      "line": 9,
+      "line": 10,
       "attributes": []
     },
     {
@@ -1738,7 +1784,7 @@
       "return_type": "T:Shop.Api.Infrastructure.IAudit",
       "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 108,
+      "line": 111,
       "attributes": []
     },
     {
@@ -1755,7 +1801,7 @@
         "T:Shop.Api.Infrastructure.IIdGenerator"
       ],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 110,
+      "line": 113,
       "attributes": []
     },
     {
@@ -1772,7 +1818,22 @@
         "T:Shop.Api.Infrastructure.IAudit"
       ],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 111,
+      "line": 114,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Infrastructure.AuditSink._notifier",
+      "declaring_type": "T:Shop.Api.Infrastructure.AuditSink",
+      "name": "_notifier",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Infrastructure.INotifier",
+      "return_type_arguments": [],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 115,
       "attributes": []
     },
     {
@@ -1787,7 +1848,7 @@
       "return_type": "T:Shop.Api.Infrastructure.IAuditStore",
       "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 109,
+      "line": 112,
       "attributes": []
     },
     {
@@ -1802,7 +1863,22 @@
       "return_type": "T:Shop.Api.Infrastructure.IClockFactory",
       "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 91,
+      "line": 93,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Infrastructure.PingCheck._http",
+      "declaring_type": "T:Shop.Api.Infrastructure.PingCheck",
+      "name": "_http",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Net.Http.IHttpClientFactory",
+      "return_type_arguments": [],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 94,
       "attributes": []
     },
     {
@@ -2171,7 +2247,7 @@
       "attributes": []
     },
     {
-      "id": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "id": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "declaring_type": "T:Shop.Api.Infrastructure.AuditSink",
       "name": ".ctor",
       "kind": "constructor",
@@ -2202,12 +2278,17 @@
           "type_arguments": [
             "T:Shop.Api.Infrastructure.IAudit"
           ]
+        },
+        {
+          "name": "notifier",
+          "type": "T:Shop.Api.Infrastructure.INotifier",
+          "type_arguments": []
         }
       ],
       "return_type": null,
       "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 113,
+      "line": 117,
       "attributes": []
     },
     {
@@ -2228,7 +2309,7 @@
       "return_type": null,
       "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 118,
+      "line": 122,
       "attributes": []
     },
     {
@@ -2249,7 +2330,28 @@
       "return_type": null,
       "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 129,
+      "line": 145,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.ConsoleNotifier.Notify(System.String)",
+      "declaring_type": "T:Shop.Api.Infrastructure.ConsoleNotifier",
+      "name": "Notify",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "message",
+          "type": "T:System.String",
+          "type_arguments": []
+        }
+      ],
+      "return_type": null,
+      "return_type_arguments": [],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 134,
       "attributes": []
     },
     {
@@ -2306,7 +2408,7 @@
       "return_type": null,
       "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 124,
+      "line": 140,
       "attributes": []
     },
     {
@@ -2373,6 +2475,27 @@
       "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 39,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.INotifier.Notify(System.String)",
+      "declaring_type": "T:Shop.Api.Infrastructure.INotifier",
+      "name": "Notify",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "message",
+          "type": "T:System.String",
+          "type_arguments": []
+        }
+      ],
+      "return_type": null,
+      "return_type_arguments": [],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 129,
       "attributes": []
     },
     {
@@ -2465,7 +2588,7 @@
       "attributes": []
     },
     {
-      "id": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory)",
+      "id": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory,System.Net.Http.IHttpClientFactory)",
       "declaring_type": "T:Shop.Api.Infrastructure.PingCheck",
       "name": ".ctor",
       "kind": "constructor",
@@ -2477,12 +2600,17 @@
           "name": "clocks",
           "type": "T:Shop.Api.Infrastructure.IClockFactory",
           "type_arguments": []
+        },
+        {
+          "name": "http",
+          "type": "T:System.Net.Http.IHttpClientFactory",
+          "type_arguments": []
         }
       ],
       "return_type": null,
       "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 93,
+      "line": 96,
       "attributes": []
     },
     {
@@ -2510,7 +2638,7 @@
         "T:Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult"
       ],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 95,
+      "line": 98,
       "attributes": []
     },
     {
@@ -3057,7 +3185,7 @@
       "return_type": "T:System.Int32",
       "return_type_arguments": [],
       "file": "Shop.Api/Program.cs",
-      "line": 11,
+      "line": 12,
       "attributes": []
     },
     {
@@ -3983,6 +4111,11 @@
       "kind": "generic-argument"
     },
     {
+      "from": "F:Shop.Api.Infrastructure.AuditSink._notifier",
+      "to": "T:Shop.Api.Infrastructure.INotifier",
+      "kind": "signature"
+    },
+    {
       "from": "F:Shop.Api.Infrastructure.AuditSink._store",
       "to": "T:Shop.Api.Infrastructure.IAuditStore",
       "kind": "signature"
@@ -3990,6 +4123,11 @@
     {
       "from": "F:Shop.Api.Infrastructure.PingCheck._clocks",
       "to": "T:Shop.Api.Infrastructure.IClockFactory",
+      "kind": "signature"
+    },
+    {
+      "from": "F:Shop.Api.Infrastructure.PingCheck._http",
+      "to": "T:System.Net.Http.IHttpClientFactory",
       "kind": "signature"
     },
     {
@@ -4153,72 +4291,87 @@
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "to": "F:Shop.Api.Infrastructure.AuditSink._audit",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "to": "F:Shop.Api.Infrastructure.AuditSink._generators",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "to": "F:Shop.Api.Infrastructure.AuditSink._lateAudit",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
+      "to": "F:Shop.Api.Infrastructure.AuditSink._notifier",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "to": "F:Shop.Api.Infrastructure.AuditSink._store",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "to": "T:Shop.Api.Infrastructure.IAudit",
       "kind": "generic-argument"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "to": "T:Shop.Api.Infrastructure.IAudit",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "to": "T:Shop.Api.Infrastructure.IAudit",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "to": "T:Shop.Api.Infrastructure.IAuditStore",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "to": "T:Shop.Api.Infrastructure.IAuditStore",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "to": "T:Shop.Api.Infrastructure.IIdGenerator",
       "kind": "generic-argument"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "to": "T:Shop.Api.Infrastructure.IIdGenerator",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
+      "to": "T:Shop.Api.Infrastructure.INotifier",
+      "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
+      "to": "T:Shop.Api.Infrastructure.INotifier",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "to": "T:System.Collections.Generic.IEnumerable\u00601",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "to": "T:System.Collections.Generic.IEnumerable\u00601",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit},Shop.Api.Infrastructure.INotifier)",
       "to": "T:System.Func\u00601",
       "kind": "parameter"
     },
@@ -4239,12 +4392,22 @@
     },
     {
       "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
+      "to": "F:Shop.Api.Infrastructure.AuditSink._notifier",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
       "to": "F:Shop.Api.Infrastructure.AuditSink._store",
       "kind": "access"
     },
     {
       "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
       "to": "M:Shop.Api.Infrastructure.IAudit.Record(System.String)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
+      "to": "M:Shop.Api.Infrastructure.INotifier.Notify(System.String)",
       "kind": "call"
     },
     {
@@ -4264,6 +4427,11 @@
     },
     {
       "from": "M:Shop.Api.Infrastructure.ConsoleAudit.Record(System.String)",
+      "to": "T:System.String",
+      "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.ConsoleNotifier.Notify(System.String)",
       "to": "T:System.String",
       "kind": "parameter"
     },
@@ -4293,6 +4461,11 @@
       "kind": "type-reference"
     },
     {
+      "from": "M:Shop.Api.Infrastructure.INotifier.Notify(System.String)",
+      "to": "T:System.String",
+      "kind": "parameter"
+    },
+    {
       "from": "M:Shop.Api.Infrastructure.IReadStore\u00601.Load(System.Guid)",
       "to": "T:System.Guid",
       "kind": "parameter"
@@ -4318,23 +4491,43 @@
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory)",
+      "from": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory,System.Net.Http.IHttpClientFactory)",
       "to": "F:Shop.Api.Infrastructure.PingCheck._clocks",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory)",
+      "from": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory,System.Net.Http.IHttpClientFactory)",
+      "to": "F:Shop.Api.Infrastructure.PingCheck._http",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory,System.Net.Http.IHttpClientFactory)",
       "to": "T:Shop.Api.Infrastructure.IClockFactory",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory)",
+      "from": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory,System.Net.Http.IHttpClientFactory)",
       "to": "T:Shop.Api.Infrastructure.IClockFactory",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory,System.Net.Http.IHttpClientFactory)",
+      "to": "T:System.Net.Http.IHttpClientFactory",
+      "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory,System.Net.Http.IHttpClientFactory)",
+      "to": "T:System.Net.Http.IHttpClientFactory",
       "kind": "type-reference"
     },
     {
       "from": "M:Shop.Api.Infrastructure.PingCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)",
       "to": "F:Shop.Api.Infrastructure.PingCheck._clocks",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.PingCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)",
+      "to": "F:Shop.Api.Infrastructure.PingCheck._http",
       "kind": "access"
     },
     {
@@ -4351,6 +4544,11 @@
       "from": "M:Shop.Api.Infrastructure.PingCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)",
       "to": "T:Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext",
       "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.PingCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)",
+      "to": "T:System.Net.Http.IHttpClientFactory",
+      "kind": "type-test"
     },
     {
       "from": "M:Shop.Api.Infrastructure.PingCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)",
@@ -5319,6 +5517,16 @@
     },
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.ConsoleNotifier",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.ConsoleNotifier",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
       "to": "T:Shop.Api.Infrastructure.GuidGenerator",
       "kind": "construct"
     },
@@ -5375,6 +5583,16 @@
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
       "to": "T:Shop.Api.Infrastructure.IIdGenerator",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.INotifier",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.INotifier",
       "kind": "type-reference"
     },
     {
@@ -6029,6 +6247,16 @@
     },
     {
       "from": "T:Shop.Api.Infrastructure.ConsoleAudit",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Api.Infrastructure.ConsoleNotifier",
+      "to": "T:Shop.Api.Infrastructure.INotifier",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Api.Infrastructure.ConsoleNotifier",
       "to": "T:System.Object",
       "kind": "inherit"
     },
@@ -7100,6 +7328,21 @@
       "interfaces": []
     },
     {
+      "id": "T:System.Net.Http.IHttpClientFactory",
+      "assembly": "Microsoft.Extensions.Http",
+      "namespace": "System.Net.Http",
+      "name": "IHttpClientFactory",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
       "id": "T:System.Numerics.IAdditionOperators\u00603",
       "assembly": "System.Runtime",
       "namespace": "System.Numerics",
@@ -7728,22 +7971,7 @@
         "T:Shop.Api.Persistence.OrderRepository"
       ],
       "typeof_arguments": [],
-      "constructs": [],
-      "has_lambda": false,
-      "conditional": false,
-      "file": "Shop.Api/Program.cs",
-      "line": 14
-    },
-    {
-      "site": "M:Shop.Api.Program.Main(System.String[])",
-      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
-      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
-      "method_name": "AddScoped",
-      "type_arguments": [
-        "T:Shop.Api.Orders.ICartReader",
-        "T:Shop.Api.Orders.CartService"
-      ],
-      "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,
@@ -7756,15 +7984,33 @@
       "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "AddScoped",
       "type_arguments": [
-        "T:Shop.Api.Infrastructure.IHandler\u00601",
-        "T:Shop.Api.Orders.PlaceOrderHandler"
+        "T:Shop.Api.Orders.ICartReader",
+        "T:Shop.Api.Orders.CartService"
       ],
       "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,
       "file": "Shop.Api/Program.cs",
       "line": 16
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
+      "method_name": "AddScoped",
+      "type_arguments": [
+        "T:Shop.Api.Infrastructure.IHandler\u00601",
+        "T:Shop.Api.Orders.PlaceOrderHandler"
+      ],
+      "typeof_arguments": [],
+      "descriptor_type_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 17
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
@@ -7776,11 +8022,12 @@
         "T:Shop.Api.Infrastructure.IValidator\u00601",
         "T:Shop.Api.Infrastructure.AlwaysValid\u00601"
       ],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,
       "file": "Shop.Api/Program.cs",
-      "line": 17
+      "line": 18
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
@@ -7791,13 +8038,14 @@
         "T:Shop.Api.Infrastructure.IIdGenerator"
       ],
       "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [
         "T:Shop.Api.Infrastructure.GuidGenerator"
       ],
       "has_lambda": true,
       "conditional": false,
       "file": "Shop.Api/Program.cs",
-      "line": 18
+      "line": 19
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
@@ -7809,22 +8057,7 @@
         "T:Shop.Api.Infrastructure.SystemClockFactory"
       ],
       "typeof_arguments": [],
-      "constructs": [],
-      "has_lambda": false,
-      "conditional": false,
-      "file": "Shop.Api/Program.cs",
-      "line": 19
-    },
-    {
-      "site": "M:Shop.Api.Program.Main(System.String[])",
-      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
-      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
-      "method_name": "AddSingleton",
-      "type_arguments": [
-        "T:System.Collections.Generic.IComparer\u00601",
-        "T:Shop.Api.Infrastructure.MoneyComparer"
-      ],
-      "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,
@@ -7837,15 +8070,33 @@
       "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "AddSingleton",
       "type_arguments": [
+        "T:System.Collections.Generic.IComparer\u00601",
+        "T:Shop.Api.Infrastructure.MoneyComparer"
+      ],
+      "typeof_arguments": [],
+      "descriptor_type_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 21
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
+      "method_name": "AddSingleton",
+      "type_arguments": [
         "T:Shop.Api.Infrastructure.IAudit",
         "T:Shop.Api.Infrastructure.ConsoleAudit"
       ],
       "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": true,
       "file": "Shop.Api/Program.cs",
-      "line": 23
+      "line": 24
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
@@ -7856,11 +8107,12 @@
         "T:System.Collections.Generic.IReadOnlyList\u00601"
       ],
       "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,
       "file": "Shop.Api/Program.cs",
-      "line": 25
+      "line": 26
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
@@ -7871,11 +8123,12 @@
         "T:Shop.Api.Orders.OrdersEndpoints"
       ],
       "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,
       "file": "Shop.Api/Program.cs",
-      "line": 26
+      "line": 27
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
@@ -7884,11 +8137,12 @@
       "method_name": "AddMemoryCache",
       "type_arguments": [],
       "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,
       "file": "Shop.Api/Program.cs",
-      "line": 27
+      "line": 28
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
@@ -7900,11 +8154,12 @@
         "T:Shop.Api.Infrastructure.MemoryAuditStore"
       ],
       "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,
       "file": "Shop.Api/Program.cs",
-      "line": 28
+      "line": 29
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
@@ -7915,11 +8170,12 @@
         "T:Shop.Api.Infrastructure.AuditSink"
       ],
       "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,
       "file": "Shop.Api/Program.cs",
-      "line": 29
+      "line": 30
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
@@ -7928,11 +8184,12 @@
       "method_name": "AddHealthChecks",
       "type_arguments": [],
       "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,
       "file": "Shop.Api/Program.cs",
-      "line": 30
+      "line": 31
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
@@ -7943,11 +8200,29 @@
         "T:Shop.Api.Infrastructure.PingCheck"
       ],
       "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,
       "file": "Shop.Api/Program.cs",
-      "line": 30
+      "line": 31
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
+      "method": "M:Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddEnumerable(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.DependencyInjection.ServiceDescriptor)",
+      "method_name": "TryAddEnumerable",
+      "type_arguments": [],
+      "typeof_arguments": [],
+      "descriptor_type_arguments": [
+        "T:Shop.Api.Infrastructure.INotifier",
+        "T:Shop.Api.Infrastructure.ConsoleNotifier"
+      ],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 32
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
@@ -7956,11 +8231,12 @@
       "method_name": "BuildServiceProvider",
       "type_arguments": [],
       "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,
       "file": "Shop.Api/Program.cs",
-      "line": 31
+      "line": 33
     },
     {
       "site": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
@@ -7972,6 +8248,7 @@
         "T:Shop.Tests.FakeClock"
       ],
       "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,
@@ -7988,6 +8265,7 @@
         "T:Shop.Tests.FakeAudit"
       ],
       "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,
@@ -8001,6 +8279,7 @@
       "method_name": "BuildServiceProvider",
       "type_arguments": [],
       "typeof_arguments": [],
+      "descriptor_type_arguments": [],
       "constructs": [],
       "has_lambda": false,
       "conditional": false,

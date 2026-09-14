@@ -12,3 +12,15 @@ bindings:
   after: sha256:c5b4797269effbef8dbc19d8965998013ff635bee01d7b261008998615030f46
   base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
   hash: sha256:e86d382f48296d4ef17dfc070bef6e6b6fc90ece9a439496aeaabedca30c2f47
+- symbol: HOST_PROVIDED
+  file: product-core/src/pf/csharp_di_knowledge.rs
+  before: absent
+  after: sha256:870ef60b48696d70da72036e4e24807a359c624f43ee1303cd3eb6b09a6aa9ab
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:5d8dc31917cb5d6c034ecd45e49fb4adf0a99a54017ebb8877314df48443311c
+- symbol: REGISTRATION_KNOWLEDGE
+  file: product-core/src/pf/csharp_di_knowledge.rs
+  before: absent
+  after: sha256:870ef60b48696d70da72036e4e24807a359c624f43ee1303cd3eb6b09a6aa9ab
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:d5f683d674f46bfe2e8d168c26968c00e91c1257e0a9e90668fe37760d4a95bb

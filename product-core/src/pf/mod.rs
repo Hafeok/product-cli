@@ -21,6 +21,7 @@ pub mod cell_validate;
 pub mod csharp_delta;
 pub mod csharp_di;
 pub mod csharp_di_knowledge;
+pub mod csharp_di_report;
 pub mod csharp_ground_truth;
 pub mod csharp_inventory;
 pub mod csharp_reach;

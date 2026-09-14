@@ -83,15 +83,19 @@ fn boundary_and_registration_not_read_are_their_own_states() {
     use super::super::csharp_walk::EdgeState;
     let report = run(&["entry-point", COMPONENT]);
     let r = &report.resolution;
-    let logger = r.boundary_surface.iter().find(|b| b.target == "T:Microsoft.Extensions.Logging.ILogger`1").expect("ILogger<T> is boundary");
-    assert_eq!(logger.assembly, "Microsoft.Extensions.Logging.Abstractions");
-    assert_eq!(logger.edges, 2, "the constructor and the [Inject] property");
+    // ILogger<T> is supplied by the host builder once the entry point is reached
+    // (CG-R-87): registration-not-read (host builder), never boundary.
+    assert_eq!(edge(&report, "OrdersEndpoints", "ILogger`1").state, EdgeState::RegistrationNotRead("host builder"));
+    let logger = r.registration_not_read_surface.iter().find(|b| b.target == "T:Microsoft.Extensions.Logging.ILogger`1").expect("ILogger<T> row");
+    assert_eq!((logger.edges, logger.call.as_deref()), (2, Some("host builder")), "the constructor and the [Inject] property");
+    // IHttpClientFactory: no call registers it and the host does not — the one genuine boundary.
+    assert_eq!(r.boundary_surface.iter().map(|b| b.target.as_str()).collect::<Vec<_>>(), vec!["T:System.Net.Http.IHttpClientFactory"]);
     assert_eq!(edge(&report, "OrdersEndpoints", "IServiceProvider").state, EdgeState::Partial, "a provider id is partial wherever it is declared");
-    assert_eq!(r.boundary, 2);
+    assert_eq!(r.boundary, 1);
     // IMemoryCache is registered by AddMemoryCache(), a call the resolver does not
     // parse: registration-not-read with the call, never boundary (CG-R-75).
     assert_eq!(edge(&report, "OrdersEndpoints", "IMemoryCache").state, EdgeState::RegistrationNotRead("AddMemoryCache"));
-    assert_eq!(r.registration_not_read_surface[0].call.as_deref(), Some("AddMemoryCache"));
+    assert_eq!(r.registration_not_read_surface.iter().find(|b| b.target.ends_with("IMemoryCache")).and_then(|b| b.call.as_deref()), Some("AddMemoryCache"));
     assert!(!r.boundary_surface.iter().any(|b| b.target.ends_with("IMemoryCache")));
     // An external abstraction with an in-solution registration is resolved, not boundary.
     assert!(!r.boundary_surface.iter().any(|b| b.target == "T:System.Collections.Generic.IComparer`1"));
@@ -106,6 +110,8 @@ fn the_registration_list_decides_container_construction() {
     let report = run(&["entry-point"]);
     assert_eq!(edge(&report, "AuditSink", "IAuditStore").state, super::super::csharp_walk::EdgeState::Resolved);
     assert_eq!(edge(&report, "PingCheck", "IClockFactory").state, super::super::csharp_walk::EdgeState::Resolved, "a solution's own factory interface is a service under P-5");
+    // INotifier is registered through TryAddEnumerable(ServiceDescriptor.Singleton<INotifier, ConsoleNotifier>()) — the static-factory form (O-18).
+    assert_eq!(edge(&report, "AuditSink", "INotifier").state, super::super::csharp_walk::EdgeState::Resolved);
     assert!(!report.unreached.iter().any(|u| u.ends_with("PingCheck")));
 }
 
@@ -114,10 +120,10 @@ fn property_injection_is_a_composition_edge() {
     let entry = run(&["entry-point"]);
     let with_component = run(&["entry-point", COMPONENT]);
     // OrdersPanel's two [Inject] properties add one resolved edge (ICartReader,
-    // through the registration Main reaches) and one boundary edge (ILogger<T>).
+    // through the registration Main reaches) and one host-provided edge (ILogger<T>).
     assert_eq!(with_component.resolution.resolved, entry.resolution.resolved + 1);
-    assert_eq!(with_component.resolution.boundary, entry.resolution.boundary + 1);
-    assert_eq!(entry.resolution.boundary, 1, "ILogger<T> at the constructor");
+    assert_eq!(with_component.resolution.registration_not_read, entry.resolution.registration_not_read + 1);
+    assert_eq!(entry.resolution.boundary, 1, "IHttpClientFactory at PingCheck");
 }
 
 #[test]
@@ -134,7 +140,7 @@ fn test_projects_are_outside_the_primary_convention() {
     assert_eq!(report.test_sites_skipped, 3, "the test's AddSingleton×2 and BuildServiceProvider");
     assert_eq!(report.by_root[1].root_symbols, 1, "SystemClock, not the test project's FakeClock");
     assert_eq!(report.test_project_types.types, 4);
-    assert_eq!(report.total.types, 45, "production types only");
+    assert_eq!(report.total.types, 47, "production types only");
     assert!(!report.unreached.iter().any(|u| u.starts_with("T:Shop.Tests.")));
 }
 
@@ -156,7 +162,8 @@ fn coverage_prints_its_population() {
     assert!(text.contains(&format!("{}/{} of composition edges", r.scored, r.composition_edges)));
     assert!(text.contains("partial: 2 (held:"), "{text}");
     assert!(text.contains(&format!("with registration-not-read inside the denominator (the rule from run 7, CG-R-83): {}/{} (", r.resolved, r.scored + r.registration_not_read)), "{text}");
-    assert!(text.contains("registration-knowledge table (CG-R-79): of 16 reached external registration calls the resolver parses 13, the table knows 3, 0 are unknown"), "{text}");
+    assert!(text.contains("registration-knowledge table (CG-R-79): of 17 reached external registration calls the resolver parses 14, the table knows 3, 0 are unknown"), "{text}");
+    assert!(text.starts_with("roots: entry-point\nreached:") && text.contains("\nscored fraction: "), "the scored fraction is the headline (CG-R-86): {text}");
     assert!(text.contains("blind spot (CG-R-78)") && text.contains("incidence:"), "{text}");
 }
 
@@ -167,8 +174,8 @@ fn ground_truth_gives_reader_recall_and_walk_precision() {
     o.ground_truth = Some(serde_yaml::from_str::<GroundTruth>(GROUND_TRUTH).expect("ground truth parses"));
     let report = reach(&inv, &o);
     let g = report.ground_truth.as_ref().expect("measured");
-    assert_eq!((g.edges, g.reader_present, g.walk_hits, g.walk_edges), (22, 22, 22, 22), "reader missing {:?} / walk missing {:?} / extra {:?}", g.reader_missing, g.walk_missing, g.walk_extra);
-    assert!(render_reach(&report).contains("ground truth (Shop.Api, 22 edges") && render_reach(&report).contains("over C# source, Razor views not covered (CG-R-78)"));
+    assert_eq!((g.edges, g.reader_present, g.walk_hits, g.walk_edges), (24, 24, 24, 24), "reader missing {:?} / walk missing {:?} / extra {:?}", g.reader_missing, g.walk_missing, g.walk_extra);
+    assert!(render_reach(&report).contains("ground truth (Shop.Api, 24 edges") && render_reach(&report).contains("over C# source, Razor views not covered (CG-R-78)"));
 }
 
 #[test]

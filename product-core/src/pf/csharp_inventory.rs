@@ -1,6 +1,6 @@
 //! The C# inventory artefact — the versioned fact file the .NET reader emits.
 //!
-//! Mirrors `schema/json/csharp-inventory/inventory.schema.json` (version 5).
+//! Mirrors `schema/json/csharp-inventory/inventory.schema.json` (version 6).
 //! Loading refuses any `inventory_version` not in [`KNOWN_INVENTORY_VERSIONS`]
 //! before another field is read. Facts only: nothing here classifies.
 
@@ -12,7 +12,7 @@ use serde_json::Value;
 use crate::error::{ProductError, Result};
 
 /// The inventory versions this consumer understands.
-pub const KNOWN_INVENTORY_VERSIONS: &[&str] = &["5"];
+pub const KNOWN_INVENTORY_VERSIONS: &[&str] = &["6"];
 
 /// Test-framework assemblies, by name: a project referencing one is a test
 /// project (CG-R-75 — classified by project, mechanically, never by reach).
@@ -207,6 +207,10 @@ pub struct Registration {
     pub type_arguments: Vec<String>,
     #[serde(default)]
     pub typeof_arguments: Vec<String>,
+    /// Type arguments of `ServiceDescriptor.<Lifetime><I, C>()` calls nested
+    /// in the argument list (v6, O-18).
+    #[serde(default)]
+    pub descriptor_type_arguments: Vec<String>,
     #[serde(default)]
     pub constructs: Vec<String>,
     #[serde(default)]

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Shop.Api.Infrastructure;
 using Shop.Api.Orders;
 using Shop.Api.Persistence;
@@ -28,6 +29,7 @@ public static class Program
         services.AddScoped<IAuditStore, MemoryAuditStore>();
         services.AddScoped<AuditSink>();
         services.AddHealthChecks().AddCheck<PingCheck>("ping");
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<INotifier, ConsoleNotifier>());
         using var provider = services.BuildServiceProvider();
         var endpoints = provider.GetRequiredService<OrdersEndpoints>();
         return endpoints.Serve(args) ? 0 : 1;
