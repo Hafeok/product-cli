@@ -91,6 +91,19 @@ the container resolves the service, not when the site runs.
   reading the commit's file list after pushing, not before — the wrong order. No repository
   content referenced it; the remote branch carries both commits, as it should.
 
+- **Colliding type ids across projects** (found on the first measurement run, 2026-09-14, after
+  Emil's prediction was committed). Documentation-comment ids are per compilation; every
+  top-level-statements project declares `T:Program`, and the reader kept the first. On
+  eShopOnWeb the surviving `Program` was `BlazorAdmin`'s; on Orchard Core it was a tool's. The
+  `member:` root therefore named the wrong `Main` and run 1 is void — retained under
+  `gate1a-measurement/run1-superseded/` with its README. Fixed by a first pass over every project
+  that finds ids declared more than once and suffixes them `@<assembly>`.
+- **`entry-point` on a web application reaches startup code and nothing else** — also found on
+  run 1 and not a defect: MVC controllers, Razor pages, FastEndpoints and Blazor components are
+  discovered by the framework, never called from `Main`. This is precisely why CG-R-51 names
+  "framework-registered handlers" as a root convention. The conventions used in run 2 are stated
+  in §4 and the bases they name were read off the inventories' `inherit` facts, not guessed.
+
 ## 3. The solutions, as found — and where they differ from the message
 
 **A — `NimblePros/eShopOnWeb`**, `main` at `03d8cffb305976e55a0b2079f5582eb6b3924302`, cloned
@@ -173,12 +186,24 @@ program — it is still reported, labelled, because it is cheap and its number i
 For each solution, once, with the roots above:
 
 ```
-product csharp inventory <inv>
-product csharp reach <inv> --roots entry-point --track implements:T:Mediator.IRequestHandler`2 --track implements:T:Mediator.INotificationHandler`1   # A
-product csharp reach <inv> --roots "member:M:Program.{Main}$(System.String[])" --track …           # A, the Web Main alone
-product csharp reach <inv> --roots entry-point,implements:T:Microsoft.AspNetCore.Mvc.Controller,implements:T:OrchardCore.Modules.StartupBase   # B
-product csharp reach <inv> --roots public                                                          # both, labelled
+# A — eShopOnWeb. Primary: the Web application's Main plus its framework-registered handlers.
+product csharp reach A --roots "member:M:Program.{Main}$(System.String[])@Web"                    # startup alone, labelled
+product csharp reach A --roots "member:M:Program.{Main}$(System.String[])@Web,implements:T:FastEndpoints.Endpoint`2,implements:T:FastEndpoints.EndpointWithoutRequest`1,implements:T:Microsoft.AspNetCore.Mvc.RazorPages.PageModel,implements:T:Microsoft.AspNetCore.Mvc.Controller,implements:T:Microsoft.AspNetCore.Mvc.ControllerBase,implements:T:Microsoft.AspNetCore.Components.ComponentBase" \
+    --track implements:T:Mediator.IRequestHandler`2 --track implements:T:Mediator.INotificationHandler`1     # PRIMARY
+product csharp reach A --roots entry-point   # every Main the compiler found, tests included, labelled
+product csharp reach A --roots public        # labelled
+# B — Orchard Core. Primary: the Cms.Web Main plus the MVC controllers.
+product csharp reach B --roots "member:M:Program.{Main}$(System.String[])@OrchardCore.Cms.Web"     # startup alone, labelled
+product csharp reach B --roots "member:M:Program.{Main}$(System.String[])@OrchardCore.Cms.Web,implements:T:Microsoft.AspNetCore.Mvc.Controller"   # PRIMARY
+product csharp reach B --roots "…,implements:T:OrchardCore.Modules.StartupBase"   # plus the module Startups as registration roots, labelled
+product csharp reach B --roots entry-point   # labelled
+product csharp reach B --roots public        # labelled
 ```
+
+The primary convention per solution is the one §12.1's form (`prediction-emil-gate1a.md`) is read
+against. It was fixed here before run 2 and after run 1 showed `Main` alone reaches only startup
+code; that the framework's handler bases are roots was decided from the inventories' `inherit`
+facts (which bases exist), not from any figure.
 
 Reported per solution: resolution coverage with the unresolved distribution by reason; the
 three-way disposition; the tracked handler set for A; the entry-point definition for B; both
