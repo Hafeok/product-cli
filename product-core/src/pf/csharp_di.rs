@@ -163,6 +163,9 @@ impl Resolver {
         };
         let test_projects: BTreeSet<&str> = inv.projects.iter().filter(|p| p.is_test()).map(|p| p.id.as_str()).collect();
         let declaring: BTreeMap<&str, &str> = inv.members.iter().map(|m| (m.id.as_str(), m.declaring_type.as_str())).collect();
+        // A type declared by more than one project carries an `@assembly` suffix
+        // in its id; a method id names the type without it (O-19).
+        let in_solution_types: BTreeSet<&str> = inv.types.iter().map(|t| t.id.split('@').next().unwrap_or(&t.id)).collect();
         for reg in &inv.registrations {
             let in_test = declaring.get(reg.site.as_str()).and_then(|t| r.project_of.get(*t)).is_some_and(|p| test_projects.contains(p.as_str()));
             if in_test {
@@ -172,7 +175,7 @@ impl Resolver {
             let read = r.read(reg);
             let method = reg.method.split('(').next().unwrap_or(&reg.method).to_string();
             let declaring_type = method.rsplit_once('.').map(|(t, _)| t.replacen("M:", "T:", 1)).unwrap_or_default();
-            r.calls.push(Call { site: reg.site.clone(), method, name: reg.method_name.clone(), external: !r.project_of.contains_key(&declaring_type), read });
+            r.calls.push(Call { site: reg.site.clone(), method, name: reg.method_name.clone(), external: !in_solution_types.contains(declaring_type.as_str()), read });
         }
         r
     }

@@ -1,6 +1,8 @@
-# CG-R-71 ground truth for A's Web project, at the reader's granularity — the ids of ground-truth-A-web.md.
+# CG-R-71 ground truth for A's Web project, at the reader's granularity — the ids of ground-truth-A-web.md, plus the generated Mediator code.
 project: Web
-source: ground-truth-A-web.md, 59 rows read from src/Web by hand, 56 at the reader's granularity (type arguments dropped); the last row is the Razor view, absent from the inventory (CG-R-78)
+source: ground-truth-A-web.md, 59 rows read from src/Web by hand, 56 at the reader's granularity (type arguments dropped); the last row is the Razor view, absent from the inventory (CG-R-78); plus 11 edges
+  in the source-generated Mediator code of the Web project, read from the files a build with EmitCompilerGeneratedFiles wrote (Mediator.g.cs lines 70-74, 141-142, 592, 656-668), added after run 6's first
+  pass listed them as walk extras
 edges:
 - from: T:Microsoft.eShopWeb.Web.Configuration.RevokeAuthenticationEvents
   target: T:Microsoft.Extensions.Caching.Memory.IMemoryCache
@@ -114,3 +116,25 @@ edges:
   target: T:Microsoft.eShopWeb.Infrastructure.Identity.AppIdentityDbContext
 - from: T:AspNetCoreGeneratedDocument.Views_Manage__ManageNav
   target: T:Microsoft.AspNetCore.Identity.SignInManager`1
+- from: T:Mediator.Internals.ContainerMetadata
+  target: T:System.IServiceProvider
+- from: T:Mediator.Internals.ContainerMetadata
+  target: T:Mediator.Internals.IContainerProbe
+- from: T:Mediator.Internals.ContainerMetadata
+  target: T:Mediator.Internals.RequestHandlerWrapper`2
+- from: T:Mediator.Internals.ContainerMetadata
+  target: T:Mediator.Internals.NotificationHandlerWrapper`1
+- from: T:Mediator.Internals.RequestHandlerWrapper`2
+  target: T:Mediator.IRequestHandler`2
+- from: T:Mediator.Internals.RequestHandlerWrapper`2
+  target: T:Mediator.IPipelineBehavior`2
+- from: T:Mediator.Internals.NotificationHandlerWrapper`1
+  target: T:Mediator.INotificationHandler`1
+- from: T:Mediator.Mediator
+  target: T:System.IServiceProvider
+- from: T:Mediator.Mediator
+  target: T:Mediator.Internals.ContainerMetadata
+- from: T:Mediator.Mediator
+  target: T:Mediator.ForeachAwaitPublisher
+- from: T:Microsoft.Extensions.DependencyInjection.MediatorDependencyInjectionExtensions
+  target: T:Mediator.ForeachAwaitPublisher

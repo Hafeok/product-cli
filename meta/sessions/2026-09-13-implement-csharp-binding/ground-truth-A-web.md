@@ -112,3 +112,18 @@ Types outside `Web` that Web's registrations construct (`EfRepository<>`, `Baske
 constructor edges belong to their own projects. The generated Razor view classes and the
 generated Mediator code exist only in `obj/` and were not read; edge 59 is read from the
 `@inject` directive.
+
+---
+
+## Addendum, after run 6's first pass (2026-09-14)
+
+Run 6 listed eleven walk edges from `Web` outside this enumeration, all in the source-generated
+Mediator code the enumeration had declared out of its reach. They were verified by reading the
+files a build with `EmitCompilerGeneratedFiles` writes (`Mediator.g.cs`: `ContainerMetadata(IServiceProvider)`
+at line 656; `sp.GetRequiredService<RequestHandlerWrapper<…>>` at 667–668; the wrappers'
+`GetRequiredService<IRequestHandler<…>>` / `GetServices<IPipelineBehavior<…>>` at 141–142;
+`GetServices<INotificationHandler<…>>` at 592; `GetServices<IContainerProbe>` at 660;
+`sp => sp.GetRequiredService<ForeachAwaitPublisher>()` at 74) and added to
+`ground-truth-A-web.yaml` as a second section: **67 edges** at the reader's granularity. The
+markdown table above is unchanged — it is the hand enumeration of the committed source, and the
+generated section is labelled as such in the YAML.
