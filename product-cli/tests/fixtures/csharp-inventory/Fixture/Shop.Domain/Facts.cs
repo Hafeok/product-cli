@@ -5,19 +5,28 @@ using Product.Binding;
 
 namespace Shop.Domain;
 
+// A marker interface (no members) and a data contract (properties only):
+// the two shapes the denominator criterion's proxies must exclude.
+public interface IDomainEvent { }
+
+public interface IHasTotal
+{
+    Money Total { get; }
+}
+
 [RealisesFact("Cart")]
-public sealed record CartState(Guid CartId, IReadOnlyList<CartLine> Lines, Money Total);
+public sealed record CartState(Guid CartId, IReadOnlyList<CartLine> Lines, Money Total) : IHasTotal;
 
 public sealed record CartLine(string Sku, int Quantity, Money Price);
 
 [RealisesFact("ItemAddedToCart")]
-public sealed record ItemAddedToCart(Guid CartId, string Sku, int Quantity, Money Price);
+public sealed record ItemAddedToCart(Guid CartId, string Sku, int Quantity, Money Price) : IDomainEvent;
 
 [RealisesFact("CartEmptied")]
-public sealed record CartEmptied(Guid CartId);
+public sealed record CartEmptied(Guid CartId) : IDomainEvent;
 
 [RealisesFact("OrderPlaced")]
-public sealed record OrderPlaced(Guid OrderId, Guid CartId, Money Total);
+public sealed record OrderPlaced(Guid OrderId, Guid CartId, Money Total) : IHasTotal, IDomainEvent;
 
 [RealisesFact("OrderConfirmed")]
 public sealed record OrderConfirmed(Guid OrderId);

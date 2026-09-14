@@ -21,7 +21,8 @@ use serde::Serialize;
 
 use super::csharp_inventory::{Index, Inventory};
 use super::csharp_di::Resolver;
-use super::csharp_reach::{closure, root_symbols, unresolved_types, Root};
+use super::csharp_reach::{root_symbols, sets, Root};
+use super::csharp_walk::{closure, EdgeState};
 use super::eventmodel::EventModel;
 
 /// CG-R-52: the separator is a proxy and is reported as one, every time.
@@ -296,7 +297,7 @@ fn ratios(inv: &Inventory, ix: &Index<'_>, opts: &DeltaOptions) -> Ratios {
     let resolver = Resolver::build(inv);
     let start = root_symbols(inv, ix, &Root::Declared(opts.slice_attribute.clone()));
     let c = closure(ix, &resolver, &start);
-    let unresolved = unresolved_types(ix, &c);
+    let s = sets(ix, &c);
     let is_declared = |id: &str| -> bool {
         ix.types.get(id).is_some_and(|t| t.attributes.iter().any(|a| a.attribute_type == opts.slice_attribute || a.attribute_type == opts.realises_fact_attribute))
     };
@@ -308,21 +309,22 @@ fn ratios(inv: &Inventory, ix: &Index<'_>, opts: &DeltaOptions) -> Ratios {
         if c.types.contains(t.id.as_str()) {
             reachable += 1;
             e.0 += 1;
-        } else if unresolved.contains(t.id.as_str()) {
+        } else if s.unresolved.contains(t.id.as_str()) || s.partial.contains(t.id.as_str()) {
             unres += 1;
             e.1 += 1;
         } else {
             e.2 += 1;
         }
     }
-    let edges = c.resolved_edges + c.unresolved.len();
+    let resolved = c.count(|st| *st == EdgeState::Resolved);
+    let unresolved = c.count(|st| matches!(st, EdgeState::Unresolved(_)));
     Ratios {
         undeclared_types: total,
         reachable_undeclared: reachable,
         unresolved_undeclared: unres,
         isolated_undeclared: total - reachable - unres,
-        resolution_coverage_percent: if edges == 0 { 100.0 } else { 100.0 * c.resolved_edges as f64 / edges as f64 },
-        unresolved_edges: c.unresolved.len(),
+        resolution_coverage_percent: if resolved + unresolved == 0 { 100.0 } else { 100.0 * resolved as f64 / (resolved + unresolved) as f64 },
+        unresolved_edges: unresolved,
         by_namespace: by_ns.into_iter().map(|(ns, (r, u, i))| (ns.to_string(), r, u, i)).collect(),
     }
 }

@@ -4,20 +4,24 @@ The C# stack binding's reader. Loads a solution through Roslyn's `MSBuildWorkspa
 one JSON artefact — the **inventory** — that `product csharp …` consumes.
 
 **It emits facts only.** Projects, types, members, every declared attribute with its arguments as
-the compiler resolved them, the reference graph (`call`, `construct`, `access`, `type-reference`,
-`inherit`, `implement`, `attribute`), and every call on an `IServiceCollection` as written —
-`AddControllers` as much as `AddScoped<IFoo, Foo>()` — with its generic and `typeof` arguments,
-what its arguments construct, whether a lambda is among them, and whether it sits inside a
-conditional (the `registrations` array, schema version 2). No field carries a judgement: there is no
+the compiler resolved them, the reference graph with *how* each target is used (`call`,
+`construct`, `access`, `parameter`, `signature`, `generic-argument`, `type-test`, `resolve` — a
+service-locator call's type argument — `type-reference`, `inherit`, `implement`, `attribute`),
+every abstraction declared outside the solution that an edge lands on with its member shape
+(`external_types`), and every call on an `IServiceCollection` as written — `AddControllers` as
+much as `AddScoped<IFoo, Foo>()` — with its generic and `typeof` arguments, what its arguments
+construct, whether a lambda is among them, and whether it sits inside a conditional (the
+`registrations` array). Schema version 3 (2026-09-14). No field carries a judgement: there is no
 slice, no role, no region, no verdict in the output. Every rule and classification lives in Rust,
 against the store (`dec/ddd/batch-inventory-reader`, constraint 1). If this tool ever starts
 deciding what counts as a slice, the exception that admits it has widened into a second decision
 engine.
 
-The artefact's shape is `schema/json/csharp-inventory/inventory.schema.json`, version `2`. The
+The artefact's shape is `schema/json/csharp-inventory/inventory.schema.json`, version `3`. The
 Rust side refuses any `inventory_version` it does not know before reading another field. Which
-calls register what, and what each resolves to, is decided Rust-side (`pf::csharp_di`); the reader
-records the call.
+calls register what, what each resolves to, and which edges are composition edges under the
+denominator criterion, is decided Rust-side (`pf::csharp_di`, `pf::csharp_roles`,
+`pf::csharp_walk`); the reader records the call and the use.
 
 ## Run
 
@@ -38,10 +42,11 @@ Workspace load failures and per-project compile-error counts land in the artefac
 
 ## What is not recorded
 
-- Reference edges of kind `call`, `construct`, `access` and `type-reference` are emitted only when
-  the target is declared in the solution; `System.*` targets would otherwise dominate.
-  `inherit`, `implement` and `attribute` edges keep external targets, since a framework base type
-  or attribute is exactly what a root convention may name.
+- Edges to targets outside the solution are kept when the target is an abstraction (an interface
+  or abstract class — what a container satisfies), for `parameter` and `resolve` edges whatever
+  the type (composition facts), and for `inherit`/`implement`/`attribute`; other external targets
+  are dropped, or `System.*` would dominate. Every kept external target has an `external_types`
+  entry with its shape.
 - Implicitly declared members (record `Equals`, property accessors, compiler-generated closures).
 - A `typeof(X)` attribute argument is rendered as the string `"T:X"` — the one lossy case.
 - Target frameworks are read from the workspace's multi-target project name suffix only; a

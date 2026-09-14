@@ -1,6 +1,6 @@
 //! The C# inventory artefact — the versioned fact file the .NET reader emits.
 //!
-//! Mirrors `schema/json/csharp-inventory/inventory.schema.json` (version 2).
+//! Mirrors `schema/json/csharp-inventory/inventory.schema.json` (version 3).
 //! Loading refuses any `inventory_version` not in [`KNOWN_INVENTORY_VERSIONS`]
 //! before another field is read. Facts only: nothing here classifies.
 
@@ -12,7 +12,7 @@ use serde_json::Value;
 use crate::error::{ProductError, Result};
 
 /// The inventory versions this consumer understands.
-pub const KNOWN_INVENTORY_VERSIONS: &[&str] = &["2"];
+pub const KNOWN_INVENTORY_VERSIONS: &[&str] = &["3"];
 
 /// The vendored schema, applied unchanged.
 pub const INVENTORY_SCHEMA: &str =
@@ -131,6 +131,31 @@ pub struct Reference {
     pub kind: String,
 }
 
+/// A type declared outside the solution that an edge lands on, with the
+/// member shape the role proxies read.
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct ExternalType {
+    pub id: String,
+    #[serde(default)]
+    pub assembly: String,
+    #[serde(default)]
+    pub namespace: String,
+    pub name: String,
+    pub kind: String,
+    #[serde(default)]
+    pub is_abstract: bool,
+    #[serde(default)]
+    pub arity: u32,
+    #[serde(default)]
+    pub methods: u32,
+    #[serde(default)]
+    pub properties: u32,
+    #[serde(default)]
+    pub events: u32,
+    #[serde(default)]
+    pub abstract_returns: Vec<String>,
+}
+
 /// One call on an `IServiceCollection`, as written. Which calls register
 /// what is decided in `csharp_di`, not here.
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -177,6 +202,8 @@ pub struct Inventory {
     pub members: Vec<MemberFact>,
     #[serde(default)]
     pub references: Vec<Reference>,
+    #[serde(default)]
+    pub external_types: Vec<ExternalType>,
     #[serde(default)]
     pub registrations: Vec<Registration>,
     #[serde(default)]
@@ -230,8 +257,11 @@ pub struct Index<'a> {
     pub implementors: BTreeMap<&'a str, Vec<&'a str>>,
     /// Type → its members.
     pub members_of: BTreeMap<&'a str, Vec<&'a str>>,
-    /// Types a caller cannot instantiate: interfaces and abstract classes.
+    /// Types a caller cannot instantiate: interfaces and abstract classes,
+    /// in the solution or outside it.
     pub abstract_types: BTreeSet<&'a str>,
+    /// Abstractions declared outside the solution, by id.
+    pub external: BTreeMap<&'a str, &'a ExternalType>,
 }
 
 impl Inventory {
@@ -259,7 +289,9 @@ impl Inventory {
                 .iter()
                 .filter(|t| t.kind == "interface" || t.is_abstract)
                 .map(|t| t.id.as_str())
+                .chain(self.external_types.iter().filter(|e| e.kind == "interface" || e.is_abstract).map(|e| e.id.as_str()))
                 .collect(),
+            external: self.external_types.iter().map(|e| (e.id.as_str(), e)).collect(),
         }
     }
 

@@ -13,7 +13,7 @@ use std::time::Duration;
 
 use ddd_core::config::DddConfig;
 use ddd_core::contracts::{
-    content_hash, finding_id, ContractDiffReport, ContractEvent, FileContracts, SkippedFile,
+    content_hash, finding_id, ContractDiffReport, ContractEvent, FileContracts, IgnoredFile, SkippedFile,
     ABSENT,
 };
 use ddd_core::{detect, gitrev};
@@ -47,7 +47,8 @@ pub fn diff_contracts(
         let rel = changed.path;
         let path = root.join(&rel);
         let Some(adapter) = adapter::for_path(&path) else { continue };
-        if config.ignore.iter().any(|g| detect::glob_match(g, &rel)) {
+        if let Some(glob) = config.ignore.iter().find(|g| detect::glob_match(g, &rel)) {
+            report.ignored.push(IgnoredFile { file: rel, language: adapter.language.to_string(), glob: glob.clone() });
             continue;
         }
         let before = gitrev::bytes_at(&root, &base_sha, &rel)?;

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Product.Binding;
 using Shop.Api.Infrastructure;
 using Shop.Api.Persistence;
@@ -53,6 +54,12 @@ public sealed class CartService : ICartReader
     }
 
     public void Apply(CartEmptied emptied) => _carts.Remove(emptied.CartId);
+
+    // A type test on the marker: chooses nothing, resolves nothing.
+    public bool IsEmptying(IDomainEvent e) => e is CartEmptied;
+
+    // A data contract as a method parameter: a shape, not a dependency.
+    public static Money TotalOf(IHasTotal carrier) => carrier.Total;
 }
 
 // Undeclared, and no single act covers Cart + OrderPlaced + OrderConfirmed:
@@ -89,26 +96,36 @@ public sealed class OrdersEndpoints
 {
     private readonly IHandler<PlaceOrderCommand> _placeOrder;
     private readonly IValidator<PlaceOrderCommand> _validator;
-    private readonly IClock _clock;
-    private readonly IIdGenerator _ids;
+    private readonly IClockFactory _clocks;
+    private readonly IServiceProvider _provider;
+    private readonly IComparer<Money> _byAmount;
     private readonly IAudit? _audit;
+    private readonly IReadOnlyList<string> _routes;
 
-    public OrdersEndpoints(IHandler<PlaceOrderCommand> placeOrder, IValidator<PlaceOrderCommand> validator, IClock clock, IIdGenerator ids, IAudit? audit)
+    // IReadOnlyList<string> is a data contract (properties only) and IDomainEvent a
+    // marker: both arrive as constructor parameters here so the criterion's
+    // excluded roles are exercised at a composition edge.
+    public OrdersEndpoints(IHandler<PlaceOrderCommand> placeOrder, IValidator<PlaceOrderCommand> validator, IClockFactory clocks, IServiceProvider provider, IComparer<Money> byAmount, IAudit? audit, IReadOnlyList<string> routes, IDomainEvent? last)
     {
+        _routes = routes;
+        _ = last;
         _placeOrder = placeOrder;
         _validator = validator;
-        _clock = clock;
-        _ids = ids;
+        _clocks = clocks;
+        _provider = provider;
+        _byAmount = byAmount;
         _audit = audit;
     }
 
-    public bool Serve(string[] args) => args.Length >= 0 && _clock.Now() > DateTimeOffset.MinValue;
+    public bool Serve(string[] args) => args.Length >= 0 && _routes.Count >= 0 && _clocks.Create().Now() > DateTimeOffset.MinValue
+        && _byAmount.Compare(Money.Zero("DKK"), Money.Zero("DKK")) == 0;
 
     [Endpoint("POST /orders")]
     public void PostOrder(PlaceOrderCommand command)
     {
         if (!_validator.Valid(command)) return;
-        _audit?.Record(_ids.Next().ToString());
+        var ids = _provider.GetRequiredService<IIdGenerator>();
+        _audit?.Record(ids.Next().ToString());
         _placeOrder.Handle(command);
     }
 }

@@ -162,3 +162,33 @@ bindings:
   after: sha256:844ac4fa0952a8e53d96a6d828dd0a13d520ad2da81b086de5053e21d2ac1d14
   base_revision: 6d3dff57e80514b7b4665ef38b364730c53201a3
   hash: sha256:e290bd065c40dadd1af0fab2dcc711a2c01d47757adafd544c59f404ba88ad35
+- symbol: IgnoredFile
+  file: ddd-core/src/contracts.rs
+  before: sha256:844ac4fa0952a8e53d96a6d828dd0a13d520ad2da81b086de5053e21d2ac1d14
+  after: sha256:be3a189fc563d5778643fa79cd28de1f80776e1b6d87eef2e9d4c9d59c99d387
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:c7faf5e71d1383fa1cdfc1819ec3f7dc18882c60092db1819696b18d176b1a7a
+- symbol: ignored
+  file: ddd-core/src/contracts.rs
+  before: sha256:844ac4fa0952a8e53d96a6d828dd0a13d520ad2da81b086de5053e21d2ac1d14
+  after: sha256:be3a189fc563d5778643fa79cd28de1f80776e1b6d87eef2e9d4c9d59c99d387
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:ba6e5db1e0f050d3853e3c465989a32424ef5b16c989abdef6012b45159debef
+- symbol: file
+  file: ddd-core/src/contracts.rs
+  before: sha256:844ac4fa0952a8e53d96a6d828dd0a13d520ad2da81b086de5053e21d2ac1d14
+  after: sha256:be3a189fc563d5778643fa79cd28de1f80776e1b6d87eef2e9d4c9d59c99d387
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:abc52b82147e8412c16e72a3f1864b98d0c584d4d57637c359800badf7da50ac
+- symbol: glob
+  file: ddd-core/src/contracts.rs
+  before: sha256:844ac4fa0952a8e53d96a6d828dd0a13d520ad2da81b086de5053e21d2ac1d14
+  after: sha256:be3a189fc563d5778643fa79cd28de1f80776e1b6d87eef2e9d4c9d59c99d387
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:5e7a1d235be79a3c0c0e2083b3467753660b6aff244273a239ce637946ca762e
+- symbol: language
+  file: ddd-core/src/contracts.rs
+  before: sha256:844ac4fa0952a8e53d96a6d828dd0a13d520ad2da81b086de5053e21d2ac1d14
+  after: sha256:be3a189fc563d5778643fa79cd28de1f80776e1b6d87eef2e9d4c9d59c99d387
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:28e5df25862ef149be78532748688ec8b2b9df55384fcd26379f5f270e20b876

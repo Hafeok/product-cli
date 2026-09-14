@@ -8,7 +8,7 @@ namespace CSharpInventory;
 
 public sealed class Inventory
 {
-    public string InventoryVersion { get; init; } = "2";
+    public string InventoryVersion { get; init; } = "3";
     public ProducedBy ProducedBy { get; init; } = new();
     public string ProducedAt { get; init; } = "";
     public SolutionInfo Solution { get; init; } = new();
@@ -16,8 +16,29 @@ public sealed class Inventory
     public List<TypeInfo> Types { get; init; } = new();
     public List<MemberInfo> Members { get; init; } = new();
     public List<Reference> References { get; init; } = new();
+    public List<ExternalType> ExternalTypes { get; init; } = new();
     public List<Registration> Registrations { get; init; } = new();
     public List<Diagnostic> Diagnostics { get; init; } = new();
+}
+
+/// <summary>
+/// A type declared outside the solution that an emitted edge lands on: its
+/// kind and member shape, which the consumer's role proxies read. Facts only.
+/// </summary>
+public sealed class ExternalType
+{
+    public string Id { get; init; } = "";
+    public string Assembly { get; init; } = "";
+    public string Namespace { get; init; } = "";
+    public string Name { get; init; } = "";
+    public string Kind { get; init; } = "";
+    public bool IsAbstract { get; init; }
+    public int Arity { get; init; }
+    public int Methods { get; init; }
+    public int Properties { get; init; }
+    public int Events { get; init; }
+    /// <summary>Return types of the type's methods and properties that are themselves abstractions.</summary>
+    public List<string> AbstractReturns { get; init; } = new();
 }
 
 /// <summary>

@@ -52,8 +52,8 @@ fn unresolved_and_orphan_declarations_are_named() {
 #[test]
 fn ratios_are_three_way_over_undeclared_types() {
     let r = run();
-    // 33 types; 2 [Slice] + 8 [RealisesFact] carry declarations.
-    assert_eq!(r.ratios.undeclared_types, 33 - 10);
+    // 39 types; 2 [Slice] + 8 [RealisesFact] carry declarations.
+    assert_eq!(r.ratios.undeclared_types, 39 - 10);
     assert_eq!(r.ratios.reachable_undeclared + r.ratios.unresolved_undeclared + r.ratios.isolated_undeclared, r.ratios.undeclared_types);
     assert!(r.ratios.reachable_undeclared >= 4, "the handler reaches ICartReader/CartService and IOrderRepository/OrderRepository: {:?}", r.ratios);
     assert_eq!(r.attribution.grade, "authored");

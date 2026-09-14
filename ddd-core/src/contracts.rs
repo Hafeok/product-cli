@@ -35,6 +35,12 @@ pub struct ContractDiffReport {
     /// that is not UTF-8. Reported explicitly, never as "no findings"
     /// (spec invariant 9).
     pub skipped: Vec<SkippedFile>,
+    /// Files an adapter would have classified but `config.ignore` excluded.
+    /// Reported explicitly: a check a glob kept from running is a check
+    /// that did not run, and a run containing one is not fully green
+    /// (CG-R-67).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ignored: Vec<IgnoredFile>,
 }
 
 impl ContractDiffReport {
@@ -82,6 +88,15 @@ pub struct ContractEvent {
 pub struct SkippedFile {
     pub file: String,
     pub reason: String,
+}
+
+/// A file the diff touched that an adapter covers but configuration ignores.
+#[derive(Debug, Serialize)]
+pub struct IgnoredFile {
+    pub file: String,
+    pub language: String,
+    /// The `config.ignore` glob that matched.
+    pub glob: String,
 }
 
 /// A contract-surface change no signed declaration discharges — the CI

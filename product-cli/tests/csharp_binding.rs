@@ -23,7 +23,7 @@ fn inventory_check_reports_counts() {
         .arg(fixture("inventory.json"))
         .assert()
         .success()
-        .stdout(predicate::str::contains("inventory version 2"))
+        .stdout(predicate::str::contains("inventory version 3"))
         .stdout(predicate::str::contains("3 project(s)"));
 }
 

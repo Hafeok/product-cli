@@ -82,15 +82,24 @@ fn render(
     for s in &report.skipped {
         println!("skipped: {} — {}", s.file, s.reason);
     }
+    for i in &report.ignored {
+        println!("not classified: {} ({}) — ignored by .ddd/config.yaml glob `{}`", i.file, i.language, i.glob);
+    }
     for u in undischarged {
         println!("undischarged: {} — {}", u.id, u.reason);
     }
-    if surface == 0 && report.skipped.is_empty() {
+    if surface == 0 && report.skipped.is_empty() && report.ignored.is_empty() {
         println!("no contract-surface changes");
     } else {
         println!(
             "{surface} contract-surface event(s), {} undischarged",
             undischarged.len()
+        );
+    }
+    if !report.ignored.is_empty() {
+        println!(
+            "not fully green: {} file(s) an adapter covers were not classified (ignored by config) — a check that did not run is not a check that passed",
+            report.ignored.len()
         );
     }
 }

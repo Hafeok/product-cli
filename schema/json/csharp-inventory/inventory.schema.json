@@ -2,12 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Hafeok/product-cli/schema/json/csharp-inventory/inventory.schema.json",
   "title": "C# inventory — the artefact between the .NET reader and product-cli",
-  "$comment": "Version 2 (2026-09-13; version 1 added the registrations array under CG-R-60 and was retired unreleased). FACTS ONLY: projects, types, members, declared attributes with their arguments, and the reference graph. No field carries a judgement — no slice, no role, no region, no verdict. The Rust side refuses any inventory_version it does not know before reading another field. The inventory is measurement: re-derivable, never a determination, never committed except as a test fixture.",
+  "$comment": "Version 3 (2026-09-14): per-edge use kinds, service-locator edges, and external abstractions with their member shape, so the consumer can apply the per-edge denominator criterion (CG-R-63) and follow dependencies on package-declared abstractions (CG-R-66). Version 2 added the registrations array (CG-R-60); version 1 was retired unreleased. FACTS ONLY: projects, types, members, declared attributes with their arguments, and the reference graph. No field carries a judgement — no slice, no role, no region, no verdict. The Rust side refuses any inventory_version it does not know before reading another field. The inventory is measurement: re-derivable, never a determination, never committed except as a test fixture.",
   "type": "object",
-  "required": ["inventory_version", "produced_by", "produced_at", "solution", "projects", "types", "members", "references", "registrations", "diagnostics"],
+  "required": ["inventory_version", "produced_by", "produced_at", "solution", "projects", "types", "members", "references", "external_types", "registrations", "diagnostics"],
   "additionalProperties": false,
   "properties": {
-    "inventory_version": { "type": "string", "const": "2" },
+    "inventory_version": { "type": "string", "const": "3" },
     "produced_by": {
       "type": "object",
       "required": ["tool", "tool_version", "roslyn_version"],
@@ -32,6 +32,7 @@
     "types": { "type": "array", "items": { "$ref": "#/$defs/type" } },
     "members": { "type": "array", "items": { "$ref": "#/$defs/member" } },
     "references": { "type": "array", "items": { "$ref": "#/$defs/reference" } },
+    "external_types": { "type": "array", "items": { "$ref": "#/$defs/external_type" } },
     "registrations": { "type": "array", "items": { "$ref": "#/$defs/registration" } },
     "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/diagnostic" } }
   },
@@ -125,9 +126,28 @@
         "to": { "$ref": "#/$defs/symbol_id" },
         "kind": {
           "type": "string",
-          "enum": ["call", "construct", "access", "type-reference", "inherit", "implement", "attribute"],
-          "$comment": "call/construct/access/type-reference edges are emitted only to symbols declared in the solution; inherit/implement/attribute edges keep external targets, since a framework base type or attribute is what a root convention may name."
+          "enum": ["call", "construct", "access", "parameter", "signature", "generic-argument", "type-test", "resolve", "type-reference", "inherit", "implement", "attribute"],
+          "$comment": "How the target is used: call (invocation), construct (object creation), access (field/property/event), parameter (a parameter's declared type — the member's kind says whether it is a constructor), signature (return, field or property type), generic-argument (a type argument inside any of the above), type-test (is/as/pattern/cast), resolve (the type argument of a service-locator call on IServiceProvider), type-reference (any other mention). External targets are kept for inherit/implement/attribute, for parameter and resolve edges whatever the type, and for any kind when the target is an abstraction (interface or abstract class); every kept external target has an external_types entry."
         }
+      }
+    },
+    "external_type": {
+      "type": "object",
+      "required": ["id", "assembly", "namespace", "name", "kind", "is_abstract", "arity", "methods", "properties", "events", "abstract_returns"],
+      "additionalProperties": false,
+      "$comment": "A type declared outside the solution that an emitted edge lands on, with the member shape the consumer's role proxies read. Counts are of the type's own declared members (implicit ones excluded).",
+      "properties": {
+        "id": { "$ref": "#/$defs/symbol_id" },
+        "assembly": { "type": "string" },
+        "namespace": { "type": "string" },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "enum": ["class", "record", "struct", "record-struct", "interface", "enum", "delegate"] },
+        "is_abstract": { "type": "boolean" },
+        "arity": { "type": "integer", "minimum": 0 },
+        "methods": { "type": "integer", "minimum": 0 },
+        "properties": { "type": "integer", "minimum": 0 },
+        "events": { "type": "integer", "minimum": 0 },
+        "abstract_returns": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" }, "$comment": "Return types of the type's methods and properties that are themselves interfaces or abstract classes — the factory/provider proxy reads this." }
       }
     },
     "registration": {

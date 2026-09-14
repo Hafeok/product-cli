@@ -6,7 +6,7 @@ over the fixture solution beside it. An excerpt, one type and one member:
 
 ```json
 {
-  "inventory_version": "2",
+  "inventory_version": "3",
   "types": [
     {
       "id": "T:Shop.Api.Orders.PlaceOrderHandler",
@@ -40,7 +40,14 @@ over the fixture solution beside it. An excerpt, one type and one member:
   ],
   "references": [
     { "from": "M:Shop.Api.Orders.PlaceOrderHandler.Handle(Shop.Api.Orders.PlaceOrderCommand)",
-      "to": "T:Shop.Domain.OrderPlaced", "kind": "construct" }
+      "to": "T:Shop.Domain.OrderPlaced", "kind": "construct" },
+    { "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(…)",
+      "to": "T:System.Collections.Generic.IComparer`1", "kind": "parameter" }
+  ],
+  "external_types": [
+    { "id": "T:System.Collections.Generic.IComparer`1", "assembly": "System.Runtime",
+      "namespace": "System.Collections.Generic", "name": "IComparer", "kind": "interface",
+      "is_abstract": false, "arity": 1, "methods": 1, "properties": 0, "events": 0, "abstract_returns": [] }
   ],
   "registrations": [
     { "site": "M:Shop.Api.Program.Main(System.String[])",
@@ -58,3 +65,6 @@ resolved them; whether `"PlaceOrder"` names an act, or `"handler"` a role, is de
 against the event model and the profile store — never here. The registration is recorded because
 the call was written; that it registers `OrderRepository` for `IOrderRepository`, and that the
 container would supply it where the walk reaches the interface, is the Rust resolver's reading.
+The `parameter` edge is recorded because the constructor declares it; that it is a composition
+edge (the type is container-constructed) and that `IComparer<T>` is a service rather than a
+data contract is the consumer's, through the declared proxies in `pf::csharp_roles`.

@@ -39,7 +39,7 @@ fn unresolved_reasons_are_named() {
     assert_eq!(r.resolve("T:Shop.Api.Infrastructure.IClock", &all), Err(Reason::NoRegistration));
     // The registration site was never reached: module configuration.
     assert_eq!(r.resolve("T:Shop.Api.Persistence.IOrderRepository", &|_| false), Err(Reason::ModuleConfiguration));
-    assert_eq!(r.registrations_read, 7);
+    assert_eq!(r.registrations_read, 10);
     assert_eq!(r.calls_ignored, 1, "BuildServiceProvider is a call, not a registration");
     assert_eq!(r.ignored_by_method.get("BuildServiceProvider"), Some(&1));
 }

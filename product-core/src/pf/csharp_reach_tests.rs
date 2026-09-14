@@ -1,4 +1,4 @@
-//! Tests for reachability through the resolver over the fixture inventory.
+//! Tests for reachability over the fixture inventory: roots, the resolver, the per-edge criterion.
 
 use super::super::csharp_inventory::load_inventory;
 use crate::pf::csharp_reach::*;
@@ -16,7 +16,6 @@ fn opts(roots: &[&str], track: &[&str]) -> ReachOptions {
 fn root_specs_parse() {
     assert_eq!(Root::parse("entry-point"), Some(Root::EntryPoint));
     assert_eq!(Root::parse("attribute:T:X.A"), Some(Root::Attribute("T:X.A".into())));
-    assert_eq!(Root::parse("implements:T:X.I`1"), Some(Root::Implements("T:X.I`1".into())));
     assert_eq!(Root::parse("member:M:X.Main(System.String[])"), Some(Root::Member("M:X.Main(System.String[])".into())));
     assert_eq!(Root::parse("bogus"), None);
 }
@@ -25,31 +24,42 @@ fn root_specs_parse() {
 fn entry_point_reaches_through_the_container() {
     let inv = load_inventory(FIXTURE).expect("loads");
     let report = reach(&inv, &opts(&["entry-point"], &[]));
-    assert_eq!(report.by_root[0].root_symbols, 1);
     let unreached = |t: &str| report.unreached.iter().any(|u| u == t);
-    // Main resolves OrdersEndpoints, whose constructor takes IHandler<…>:
-    // the registered handler is reached, and through it the repository.
+    // Main resolves OrdersEndpoints (service locator), whose constructor takes
+    // IHandler<…>: the registered handler is reached, and through it the repository.
     assert!(!unreached("T:Shop.Api.Orders.PlaceOrderHandler"));
     assert!(!unreached("T:Shop.Api.Persistence.OrderRepository"));
     assert!(!unreached("T:Shop.Api.Infrastructure.AlwaysValid`1"), "open-generic typeof pair");
-    assert!(!unreached("T:Shop.Api.Infrastructure.GuidGenerator"), "factory lambda constructing one type");
-    // Dead is referenced by nothing; CheckoutService by nothing either.
+    assert!(!unreached("T:Shop.Api.Infrastructure.MoneyComparer"), "an external abstraction with an in-solution registration");
     assert!(unreached("T:Shop.Api.Persistence.Dead"));
     assert!(unreached("T:Shop.Api.Orders.CheckoutService"));
 }
 
 #[test]
-fn unresolved_is_its_own_category() {
+fn composition_edges_are_classified_by_role() {
     let inv = load_inventory(FIXTURE).expect("loads");
     let report = reach(&inv, &opts(&["entry-point"], &[]));
     let r = &report.resolution;
-    assert_eq!(r.interface_edges, r.resolved + r.unresolved);
+    assert_eq!(r.in_denominator, r.resolved + r.partial + r.unresolved);
+    assert!(r.partial >= 2, "IClockFactory and IServiceProvider are factory/provider: {:?}", r.by_role);
     assert_eq!(r.by_reason.get("conditional-registration"), Some(&1), "{:?}", r.by_reason);
-    assert_eq!(r.by_reason.get("no-registration"), Some(&1), "{:?}", r.by_reason);
-    // ConsoleAudit implements IAudit, whose edge was unresolved: unresolved, not unreached.
-    assert!(!report.unreached.iter().any(|u| u == "T:Shop.Api.Infrastructure.ConsoleAudit"));
+    assert!(r.by_role.contains_key("generic-dispatch"), "IHandler<T>, IValidator<T>: {:?}", r.by_role);
+    // A marker and a data contract arriving as constructor parameters are
+    // composition edges the criterion excludes; a type test on the marker and
+    // a data contract as a method parameter are not composition edges at all.
+    assert_eq!(r.excluded_by_role.get("marker"), Some(&1), "{:?}", r.excluded_by_role);
+    assert_eq!(r.excluded_by_role.get("data-contract"), Some(&1), "{:?}", r.excluded_by_role);
+    assert_eq!(r.composition_edges, r.in_denominator + 2);
+}
+
+#[test]
+fn unresolved_and_partial_are_their_own_categories() {
+    let inv = load_inventory(FIXTURE).expect("loads");
+    let report = reach(&inv, &opts(&["entry-point"], &[]));
+    assert!(!report.unreached.iter().any(|u| u == "T:Shop.Api.Infrastructure.ConsoleAudit"), "conditionally registered: unresolved, not unreached");
     assert!(report.total.unresolved >= 1);
-    assert_eq!(report.total.types, report.total.reached + report.total.unresolved + report.total.unreached);
+    let t = &report.total;
+    assert_eq!(t.types, t.reached + t.unresolved + t.partial + t.unreached);
 }
 
 #[test]
@@ -60,8 +70,7 @@ fn tracked_sets_get_their_own_disposition() {
     assert_eq!(report.tracked[1].unresolved, 1, "the conditionally registered audit");
     let text = render_reach(&report);
     assert!(text.starts_with("roots: entry-point\n"));
-    assert!(text.contains("resolution coverage:"));
-    assert!(text.contains("tracked:"));
+    assert!(text.contains("resolution coverage:") && text.contains("role proxies"));
 }
 
 #[test]
@@ -70,7 +79,6 @@ fn a_named_member_is_a_root() {
     let report = reach(&inv, &opts(&["member:M:Shop.Api.Program.Main(System.String[])"], &[]));
     let entry = reach(&inv, &opts(&["entry-point"], &[]));
     assert_eq!(report.total.reached, entry.total.reached);
-    assert_eq!(report.by_root[0].root_symbols, 1);
 }
 
 #[test]

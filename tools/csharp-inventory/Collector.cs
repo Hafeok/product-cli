@@ -21,6 +21,7 @@ public sealed class Collector
     private readonly HashSet<(string, string, string)> _refs = new();
     private readonly HashSet<string> _inSolution = new(StringComparer.Ordinal);
     private readonly List<Registration> _registrations = new();
+    private readonly Dictionary<string, ExternalType> _external = new(StringComparer.Ordinal);
     private string _roslyn = "";
 
     public Collector(string solutionDir, List<Diagnostic> diagnostics)
@@ -85,7 +86,7 @@ public sealed class Collector
         }
         var entryPoint = compilation.GetEntryPoint(CancellationToken.None);
         var entryId = entryPoint is null ? null : Ids.Of(entryPoint);
-        var references = new References(compilation, AddRef, r => _registrations.Add(r), _solutionDir);
+        var references = new References(compilation, AddRef, r => _registrations.Add(r), NoteExternal, _solutionDir);
 
         foreach (var type in Ids.SourceTypes(compilation.Assembly.GlobalNamespace).Concat(EntryType(compilation)))
         {
@@ -156,10 +157,16 @@ public sealed class Collector
             Projects = _projects.OrderBy(p => p.Id, StringComparer.Ordinal).ToList(),
             Types = _types.Values.OrderBy(t => t.Id, StringComparer.Ordinal).ToList(),
             Members = _members.Values.OrderBy(m => m.Id, StringComparer.Ordinal).ToList(),
+            // An edge References marked "+external" landed outside the solution on
+            // an abstraction, a constructor parameter or a service-locator
+            // argument, and is kept with the marker stripped.
             References = _refs
-                .Where(r => r.Item3 is "inherit" or "implement" or "attribute" || _inSolution.Contains(r.Item2))
-                .OrderBy(r => r.Item1, StringComparer.Ordinal).ThenBy(r => r.Item2, StringComparer.Ordinal).ThenBy(r => r.Item3, StringComparer.Ordinal)
-                .Select(r => new Reference { From = r.Item1, To = r.Item2, Kind = r.Item3 }).ToList(),
+                .Where(r => r.Item3 is "inherit" or "implement" or "attribute" || r.Item3.EndsWith("+external", StringComparison.Ordinal) || _inSolution.Contains(r.Item2))
+                .Select(r => (r.Item1, r.Item2, Kind: r.Item3.EndsWith("+external", StringComparison.Ordinal) ? r.Item3[..^"+external".Length] : r.Item3))
+                .Distinct()
+                .OrderBy(r => r.Item1, StringComparer.Ordinal).ThenBy(r => r.Item2, StringComparer.Ordinal).ThenBy(r => r.Kind, StringComparer.Ordinal)
+                .Select(r => new Reference { From = r.Item1, To = r.Item2, Kind = r.Kind }).ToList(),
+            ExternalTypes = _external.Values.Where(e => !_inSolution.Contains(e.Id)).OrderBy(e => e.Id, StringComparer.Ordinal).ToList(),
             Registrations = _registrations.OrderBy(r => r.Site, StringComparer.Ordinal).ThenBy(r => r.Line).ThenBy(r => r.Method, StringComparer.Ordinal).ToList(),
             Diagnostics = _diagnostics.OrderBy(d => d.Message, StringComparer.Ordinal).ToList(),
         };
@@ -175,6 +182,41 @@ public sealed class Collector
     }
 
     private void AddRef(string from, string to, string kind) => _refs.Add((from, to, kind));
+
+    // An edge landed on a type outside the solution: record its shape once.
+    private void NoteExternal(INamedTypeSymbol type)
+    {
+        var def = type.OriginalDefinition;
+        var id = Ids.Of(def);
+        if (_external.ContainsKey(id)) return;
+        var members = def.GetMembers().Where(m => !m.IsImplicitlyDeclared).ToList();
+        var abstractReturns = members
+            .Select(m => m switch
+            {
+                IMethodSymbol { MethodKind: MethodKind.Ordinary } mm when !mm.ReturnsVoid => mm.ReturnType as INamedTypeSymbol,
+                IPropertySymbol pp => pp.Type as INamedTypeSymbol,
+                _ => null,
+            })
+            .Where(t => t is not null && (t.TypeKind == TypeKind.Interface || t.IsAbstract))
+            .Select(t => Ids.Of(t!.OriginalDefinition))
+            .Distinct()
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToList();
+        _external[id] = new ExternalType
+        {
+            Id = id,
+            Assembly = def.ContainingAssembly?.Name ?? "",
+            Namespace = def.ContainingNamespace?.IsGlobalNamespace == false ? def.ContainingNamespace.ToDisplayString() : "",
+            Name = def.Name,
+            Kind = Ids.TypeKind(def),
+            IsAbstract = def.IsAbstract && def.TypeKind != TypeKind.Interface,
+            Arity = def.Arity,
+            Methods = members.Count(m => m is IMethodSymbol { MethodKind: MethodKind.Ordinary }),
+            Properties = members.Count(m => m is IPropertySymbol),
+            Events = members.Count(m => m is IEventSymbol),
+            AbstractReturns = abstractReturns,
+        };
+    }
 
     private static List<string> TargetFrameworks(Project project)
     {

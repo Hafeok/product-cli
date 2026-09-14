@@ -240,28 +240,35 @@ The reference What lives in `.product/products/product-cli/`. `product mcp
 
 ## C# stack binding (`product csharp`, `tools/csharp-inventory/`)
 
-**As at 2026-09-13, Gate 1a of the binding session.** Built: the reader, the consumer, the DI
-resolver, reachability with unresolved as its own category, and the act-indexed delta. Not built
-(Gate 2, dated here so nobody reads it as present): the `Slice`/`RealisesFact` checks, profiles,
-the determination loader, declaration-supplied edges (CG-R-61).
+**As at 2026-09-14, Gate 1a of the binding session.** Built: the reader (schema v3), the consumer,
+the DI resolver, the per-edge denominator criterion with declared proxies, reachability with
+unresolved and partial as their own categories, and the act-indexed delta. Not built (Gate 2,
+dated here so nobody reads it as present): the `Slice`/`RealisesFact` checks, profiles, the
+determination loader, declaration-supplied edges (CG-R-61).
 
 The binding connects the domain state change binding's act vocabulary (`eventmodel.yaml`: `facts`
 + `slices` with `reads`/`writes`) to a C# solution. Two halves, joined by an artefact:
 
 - **`tools/csharp-inventory/`** — a .NET 10 console project (not a Cargo member) that loads a
   solution through `MSBuildWorkspace` and emits `inventory.json` per
-  `schema/json/csharp-inventory/inventory.schema.json` (version `2`). **Facts only** — types,
-  members, declared attributes with arguments, the reference graph, and every `IServiceCollection`
-  call as written. It is the bounded exception to `dec/ddd/lsp-as-seam`
+  `schema/json/csharp-inventory/inventory.schema.json` (version `3`). **Facts only** — types,
+  members, declared attributes with arguments, the reference graph with *how* each target is used
+  (`parameter`, `resolve`, `type-test`, …), external abstractions with their member shape, and
+  every `IServiceCollection` call as written. It is the bounded exception to `dec/ddd/lsp-as-seam`
   (`dec/ddd/batch-inventory-reader`): batch inventory here, interactive queries stay on `ddd-lsp`.
 - **`pf/csharp_inventory.rs`** loads it and refuses unknown versions before parsing;
   **`pf/csharp_di.rs`** resolves interface-mediated edges through the registration facts (the one
   graph, CG-R-60 — there is no "DI off" number) and names why an edge could not be followed
   (assembly scanning, keyed, decorator, conditional, module configuration, factory, no
-  registration); `pf/csharp_reach.rs` walks from a *stated* root convention (`entry-point`,
-  `public`, `attribute:<T:…>`, `implements:<T:…>`) and reports reached / **unresolved** / unreached
-  — unresolved is never folded into unreached (CG-R-62), no figure prints without its unresolved
-  count, and resolution coverage prints first; `--track` reports a symbol set's own disposition.
+  registration); **`pf/csharp_roles.rs`** is the denominator criterion (CG-R-63): at a
+  *composition edge* — a constructor parameter of a container-constructed type, or a
+  service-locator argument — the target's role (service, generic-dispatch, factory-provider →
+  *partial*, marker, data-contract, abstract-data, value) is read through proxies that print with
+  their divergences; **`pf/csharp_walk.rs`** is the walk; `pf/csharp_reach.rs` runs it from a
+  *stated* root convention (`entry-point`, `public`, `attribute:<T:…>`, `implements:<T:…>`,
+  `member:<M:…>`) and reports reached / **unresolved** / **partial** / unreached — never folded
+  together (CG-R-62), no figure without the others beside it, resolution coverage first;
+  `--track` reports a symbol set's own disposition.
   `pf/csharp_delta.rs` is the delta, **indexed by act, never by symbol** (R-A/R-D): per act
   *declared*, *declarable*, *unstructured* or *unrealised*, plus the three-way undeclared ratios.
   The declarable/unstructured separator is a declared proxy (CG-R-52) and the spanning-type
