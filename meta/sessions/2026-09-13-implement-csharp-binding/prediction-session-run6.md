@@ -42,3 +42,9 @@ DependencyInjection` namespace that are Orchard's own (in-solution, bodies walke
 **Where this is most likely wrong.** B's factory count: if Orchard registers `ISession` through a
 form the resolver reads (a `typeof` pair or a constructing lambda), coverage lands above the
 band; if collection injection finds many unregistered type arguments, below it.
+
+---
+
+**Correction, recorded against the session (2026-09-14).** The commit message of `59b6945`
+transcribes A's band as "84–96". The band is **84–94, centre 89**, as written above; this file
+is the record, the commit message is not rewritten.
