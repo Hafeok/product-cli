@@ -33,4 +33,4 @@ $P csharp reach $B --roots "$BMAIN,$BCTRL,$BSTART" > $M/run8-B-reach-main-contro
 $P --format json csharp reach $B --roots "$BMAIN,$BCTRL,$BSTART" > /tmp/claude-0/-home-user-product-cli/5816e30b-ba90-5d06-945b-75e8aa4a18b8/scratchpad/run8-B-primary.json
 $P csharp reach $B --roots entry-point > $M/run8-B-reach-every-entry-point.txt
 $P csharp reach $B --roots public > $M/run8-B-reach-public.txt
-echo "run 7 complete"
+echo "run 8 complete"

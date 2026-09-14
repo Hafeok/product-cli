@@ -1,0 +1,4 @@
+run 8 instrument record — 2026-09-14T18:12:00Z
+commit: 40237412230559f5f4b93f232e494f0d3527ece2 (working tree: 0 uncommitted paths, captured before this record was created)
+binary: target/release/product sha256 1743509523787fff
+inventories: A 6 sha256 3197d7e07c5a0b46; B 6 sha256 98ce4d0a199e9d10

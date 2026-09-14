@@ -1,0 +1,38 @@
+format: 2
+id: seam/rust/product-core-src-pf-csharp-limits-rs
+boundary: contract surface of product-core/src/pf/csharp_limits.rs
+verdict_knowledge: authored
+contract_location: product-core/src/pf/csharp_limits.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: LIMITS
+  file: product-core/src/pf/csharp_limits.rs
+  before: absent
+  after: sha256:c3a987c3e09756fa4f76ec9455246ec51ad215c8a8a809f82b64c4c5459798fd
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:07127a0c0241594cb4f16c8310e88231a63addf63190bb97f0734e1575abfbc2
+- symbol: Limit
+  file: product-core/src/pf/csharp_limits.rs
+  before: absent
+  after: sha256:c3a987c3e09756fa4f76ec9455246ec51ad215c8a8a809f82b64c4c5459798fd
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:02dad986b5ec688c7d36b14205fde07348802b317da6ac68ccd41ed66cb46d67
+- symbol: incidence
+  file: product-core/src/pf/csharp_limits.rs
+  before: absent
+  after: sha256:c3a987c3e09756fa4f76ec9455246ec51ad215c8a8a809f82b64c4c5459798fd
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:1d593b61924a2665b98c3182aaded7d73d513b7c0b22e7e784b728e64e4ef096
+- symbol: rule
+  file: product-core/src/pf/csharp_limits.rs
+  before: absent
+  after: sha256:c3a987c3e09756fa4f76ec9455246ec51ad215c8a8a809f82b64c4c5459798fd
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:fdfdf57bf89334034dd8485aa56236b46e92295b25dbb5b2e026ee448c3ef091
+- symbol: what
+  file: product-core/src/pf/csharp_limits.rs
+  before: absent
+  after: sha256:c3a987c3e09756fa4f76ec9455246ec51ad215c8a8a809f82b64c4c5459798fd
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:f9c0839f7fbfd7118d65a4e4300fb55065f145aa70ff83ed3b78237cb8148441

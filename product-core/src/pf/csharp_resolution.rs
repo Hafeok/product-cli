@@ -100,12 +100,7 @@ pub fn resolution_of(ix: &Index<'_>, c: &Closure<'_>) -> Resolution {
     let boundary = c.count(|s| *s == EdgeState::Boundary);
     let registration_not_read = c.count(|s| matches!(s, EdgeState::RegistrationNotRead(_)));
     let (by_reason, excluded, by_provider) = tallies(c);
-    let not_read_to_resolved = c
-        .edges
-        .iter()
-        .filter(|e| matches!(e.state, EdgeState::RegistrationNotRead(_)) && ix.production_implementors(&e.target).next().is_some())
-        .count();
-    let not_read_to_boundary = registration_not_read - not_read_to_resolved;
+    let (not_read_to_resolved, not_read_to_boundary) = not_read_partition(ix, c);
     Resolution {
         composition_edges: c.edges.len(),
         scored: resolved + unresolved,
@@ -138,6 +133,14 @@ pub fn resolution_of(ix: &Index<'_>, c: &Closure<'_>) -> Resolution {
         retired_proxies: RETIRED_PROXIES,
         limits: LIMITS,
     }
+}
+
+/// CG-R-96: how the registration-not-read edges would fall once a table entry
+/// gives them a verdict — (to resolved, to boundary).
+fn not_read_partition(ix: &Index<'_>, c: &Closure<'_>) -> (usize, usize) {
+    let not_read: Vec<_> = c.edges.iter().filter(|e| matches!(e.state, EdgeState::RegistrationNotRead(_))).collect();
+    let to_resolved = not_read.iter().filter(|e| ix.production_implementors(&e.target).next().is_some()).count();
+    (to_resolved, not_read.len() - to_resolved)
 }
 
 type Tally = BTreeMap<String, usize>;
