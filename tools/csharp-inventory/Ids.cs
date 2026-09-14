@@ -18,11 +18,14 @@ public static class Ids
         _ => symbol.GetDocumentationCommentId() ?? "!:" + symbol.ToDisplayString(),
     };
 
+    // The `Program` type that top-level statements generate is implicitly
+    // declared yet carries the entry point, so it is kept; compiler closures
+    // and display classes (names beginning with '<') are not.
     public static IEnumerable<INamedTypeSymbol> SourceTypes(INamespaceSymbol ns)
     {
         foreach (var type in ns.GetTypeMembers())
             foreach (var t in WithNested(type))
-                if (!t.IsImplicitlyDeclared && t.Locations.Any(l => l.IsInSource))
+                if (!t.Name.StartsWith('<') && t.Locations.Any(l => l.IsInSource))
                     yield return t;
         foreach (var child in ns.GetNamespaceMembers())
             foreach (var t in SourceTypes(child))

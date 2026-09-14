@@ -73,6 +73,7 @@ public static class Program
             : new List<Project> { await workspace.OpenProjectAsync(inputPath) };
 
         var collector = new Collector(solutionDir, diagnostics);
+        await Collector.FindAmbiguous(projects);
         foreach (var project in projects.OrderBy(p => p.Name, StringComparer.Ordinal))
             await collector.AddProject(project);
 

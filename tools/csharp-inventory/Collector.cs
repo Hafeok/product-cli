@@ -29,6 +29,29 @@ public sealed class Collector
         _diagnostics = diagnostics;
     }
 
+    /// <summary>
+    /// First pass: which top-level type ids are declared by more than one
+    /// project. Must run over every project before any is collected.
+    /// </summary>
+    public static async Task FindAmbiguous(IEnumerable<Project> projects)
+    {
+        var owners = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+        foreach (var project in projects)
+        {
+            var compilation = await project.GetCompilationAsync();
+            if (compilation is null) continue;
+            foreach (var type in Ids.SourceTypes(compilation.Assembly.GlobalNamespace))
+            {
+                if (type.ContainingType is not null) continue;
+                var id = Ids.Bare(type);
+                if (!owners.TryGetValue(id, out var set)) owners[id] = set = new HashSet<string>(StringComparer.Ordinal);
+                set.Add(compilation.Assembly.Name);
+            }
+        }
+        foreach (var (id, set) in owners)
+            if (set.Count > 1) Ids.Ambiguous.Add(id);
+    }
+
     public async Task AddProject(Project project)
     {
         var compilation = await project.GetCompilationAsync();
@@ -93,7 +116,8 @@ public sealed class Collector
 
             foreach (var member in type.GetMembers())
             {
-                if (!Ids.IsRecordedMember(member)) continue;
+                var isEntry = entryPoint is not null && SymbolEqualityComparer.Default.Equals(member, entryPoint);
+                if (!Ids.IsRecordedMember(member) && !isEntry) continue;
                 var mid = Ids.Of(member);
                 _inSolution.Add(mid);
                 if (_members.ContainsKey(mid)) continue;
