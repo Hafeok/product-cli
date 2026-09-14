@@ -49,8 +49,17 @@ pub struct Resolution {
     pub collection_edges: usize,
     /// resolved / scored.
     pub coverage_percent: f64,
-    /// scored / composition_edges — how much of the population the fraction is over.
+    /// scored / composition_edges — the first reading of the scored fraction (CG-R-90).
     pub population_percent: f64,
+    /// resolved + unresolved + registration-not-read: every edge with a verdict.
+    pub classified: usize,
+    /// classified / composition_edges — the second reading (CG-R-90).
+    pub classified_percent: f64,
+    /// composition_edges − classified: partial + boundary + excluded — the
+    /// edges that could silently reclassify a type between reachable and
+    /// isolated: the error bound on that split (CG-R-89).
+    pub unscored: usize,
+    pub error_bound_percent: f64,
     /// resolved / (resolved + unresolved + registration-not-read): the rule
     /// in force from run 7 (CG-R-83) — an unread registration is the
     /// instrument's ignorance, not a boundary, and counts against coverage.
@@ -104,6 +113,10 @@ pub fn resolution_of(ix: &Index<'_>, c: &Closure<'_>) -> Resolution {
         collection_edges: c.edges.iter().filter(|e| e.injection == Injection::Collection).count(),
         coverage_percent: pct(resolved, resolved + unresolved),
         population_percent: pct(resolved + unresolved, c.edges.len()),
+        classified: resolved + unresolved + registration_not_read,
+        classified_percent: pct(resolved + unresolved + registration_not_read, c.edges.len()),
+        unscored: c.edges.len() - (resolved + unresolved + registration_not_read),
+        error_bound_percent: if c.edges.is_empty() { 0.0 } else { 100.0 * (c.edges.len() - (resolved + unresolved + registration_not_read)) as f64 / c.edges.len() as f64 },
         coverage_with_not_read_percent: pct(resolved, resolved + unresolved + registration_not_read),
         by_role: by_role(c),
         excluded_by_role: excluded,

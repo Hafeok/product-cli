@@ -154,3 +154,19 @@ None of these was stated before this document; each was decided in code.
 
 Restated table coverage, fixture: of 17 reached external calls the resolver parses 14, the table
 knows 3, 0 unknown. Ground truth on the fixture: 24 edges, 24/24/24.
+
+## 7. Scored fraction, defined (CG-R-90); the error bound (CG-R-89) — added before run 7
+
+Two readings, both reported on every run from run 7:
+
+- **Scored fraction, first reading** = (resolved + unresolved) / composition edges — *what
+  received a resolution verdict the resolver could act on*. **The session's run-7 prediction was
+  made against this reading**, and CG-R-91's likewise; both are scored against it.
+- **Classified fraction, second reading** = (resolved + unresolved + registration-not-read) /
+  composition edges — *what received any verdict at all*. Reported, scored against nothing.
+- **Error bound on the reachable/isolated split (CG-R-89)** = the unscored fraction under the
+  second reading = (partial + boundary + excluded) / composition edges. A registration-not-read
+  edge is classified and cannot silently reclassify a type; the unscored ones can. **§12.1's
+  fire/clear form is retired**: no disposition is taken until the split exists (the delta needs
+  Gate 1b's act vocabulary), and the bound is reported with the split when there is one. The
+  proposal of §6 (three bands on the scored fraction) is withdrawn as refused.

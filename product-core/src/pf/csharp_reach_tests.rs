@@ -164,6 +164,9 @@ fn coverage_prints_its_population() {
     assert!(text.contains(&format!("with registration-not-read inside the denominator (the rule from run 7, CG-R-83): {}/{} (", r.resolved, r.scored + r.registration_not_read)), "{text}");
     assert!(text.contains("registration-knowledge table (CG-R-79): of 17 reached external registration calls the resolver parses 14, the table knows 3, 0 are unknown"), "{text}");
     assert!(text.starts_with("roots: entry-point\nreached:") && text.contains("\nscored fraction: "), "the scored fraction is the headline (CG-R-86): {text}");
+    assert_eq!(r.classified, r.scored + r.registration_not_read, "the second reading (CG-R-90)");
+    assert_eq!(r.unscored, r.partial + r.boundary + r.excluded, "the error bound is the unscored fraction under the second reading (CG-R-89)");
+    assert!(text.contains(&format!("error bound on the reachable/isolated split (CG-R-89): {} unscored of {} composition edges", r.unscored, r.composition_edges)), "{text}");
     assert!(text.contains("blind spot (CG-R-78)") && text.contains("incidence:"), "{text}");
 }
 
