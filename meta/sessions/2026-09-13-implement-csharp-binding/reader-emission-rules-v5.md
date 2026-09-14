@@ -111,3 +111,16 @@ None of these was stated before this document; each was decided in code.
   and starts from declared roots only; it never stated either.
 - **F-6 Conditional registrations do not make their implementation container-constructed**
   (O-17 reads unconditional sites only); the type is reached only if something resolves it.
+
+## 5. Denominator membership, stated explicitly (CG-R-83, added before run 6)
+
+- **In**: resolved, unresolved.
+- **Out**: partial, boundary, excluded, and — **for run 6 only** — `registration-not-read`,
+  because that is the rule the three predictions were made against and a denominator is not
+  moved after predictions are committed.
+- **From run 7**: `registration-not-read` is **inside** the denominator and counts against
+  coverage, reported as its own subset (CG-R-83: it is the instrument's ignorance of a registration
+  that exists; excluding it would let coverage rise as the table learns less).
+- Run 6 prints both figures, labelled: *coverage (rule in force, not-read outside)* and *coverage
+  with not-read inside (the run-7 rule)*.
+- **Roots for A** gain `implements:T:Microsoft.AspNetCore.Mvc.ViewComponent` (CG-R-84).

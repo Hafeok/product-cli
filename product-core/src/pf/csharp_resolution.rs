@@ -51,6 +51,10 @@ pub struct Resolution {
     pub coverage_percent: f64,
     /// scored / composition_edges — how much of the population the fraction is over.
     pub population_percent: f64,
+    /// resolved / (resolved + unresolved + registration-not-read): the rule
+    /// in force from run 7 (CG-R-83) — an unread registration is the
+    /// instrument's ignorance, not a boundary, and counts against coverage.
+    pub coverage_with_not_read_percent: f64,
     pub by_role: BTreeMap<String, usize>,
     pub excluded_by_role: BTreeMap<String, usize>,
     pub by_reason: BTreeMap<String, usize>,
@@ -100,6 +104,7 @@ pub fn resolution_of(ix: &Index<'_>, c: &Closure<'_>) -> Resolution {
         collection_edges: c.edges.iter().filter(|e| e.injection == Injection::Collection).count(),
         coverage_percent: pct(resolved, resolved + unresolved),
         population_percent: pct(resolved + unresolved, c.edges.len()),
+        coverage_with_not_read_percent: pct(resolved, resolved + unresolved + registration_not_read),
         by_role: by_role(c),
         excluded_by_role: excluded,
         by_reason,

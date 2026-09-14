@@ -155,6 +155,7 @@ fn coverage_prints_its_population() {
     assert!(text.contains(&format!("resolution coverage: {}/{} of the denominator", r.resolved, r.scored)));
     assert!(text.contains(&format!("{}/{} of composition edges", r.scored, r.composition_edges)));
     assert!(text.contains("partial: 2 (held:"), "{text}");
+    assert!(text.contains(&format!("with registration-not-read inside the denominator (the rule from run 7, CG-R-83): {}/{} (", r.resolved, r.scored + r.registration_not_read)), "{text}");
     assert!(text.contains("registration-knowledge table (CG-R-79): of 16 reached external registration calls the resolver parses 13, the table knows 3, 0 are unknown"), "{text}");
     assert!(text.contains("blind spot (CG-R-78)") && text.contains("incidence:"), "{text}");
 }
