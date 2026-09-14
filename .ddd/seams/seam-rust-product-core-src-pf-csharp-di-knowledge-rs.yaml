@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/product-core-src-pf-csharp-di-knowledge-rs
+boundary: contract surface of product-core/src/pf/csharp_di_knowledge.rs
+verdict_knowledge: authored
+contract_location: product-core/src/pf/csharp_di_knowledge.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: REGISTRATION_KNOWLEDGE
+  file: product-core/src/pf/csharp_di_knowledge.rs
+  before: absent
+  after: sha256:c5b4797269effbef8dbc19d8965998013ff635bee01d7b261008998615030f46
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:e86d382f48296d4ef17dfc070bef6e6b6fc90ece9a439496aeaabedca30c2f47

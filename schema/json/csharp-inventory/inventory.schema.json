@@ -7,7 +7,7 @@
   "required": ["inventory_version", "produced_by", "produced_at", "solution", "projects", "types", "members", "references", "external_types", "registrations", "diagnostics"],
   "additionalProperties": false,
   "properties": {
-    "inventory_version": { "type": "string", "const": "4" },
+    "inventory_version": { "type": "string", "const": "5" },
     "produced_by": {
       "type": "object",
       "required": ["tool", "tool_version", "roslyn_version"],
@@ -59,7 +59,7 @@
     },
     "project": {
       "type": "object",
-      "required": ["id", "name", "path", "target_frameworks", "assembly", "referenced_assemblies"],
+      "required": ["id", "name", "path", "target_frameworks", "assembly", "referenced_assemblies", "razor_files", "razor_inject_directives"],
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string", "pattern": "^P:" },
@@ -67,7 +67,9 @@
         "path": { "type": "string" },
         "target_frameworks": { "type": "array", "items": { "type": "string" } },
         "assembly": { "type": "string" },
-        "referenced_assemblies": { "type": "array", "items": { "type": "string" }, "$comment": "Every assembly the compilation references, by name. The consumer reads test-framework membership from it (P-3); the reader classifies nothing." }
+        "referenced_assemblies": { "type": "array", "items": { "type": "string" }, "$comment": "Every assembly the compilation references, by name. The consumer reads test-framework membership from it (P-3); the reader classifies nothing." },
+        "razor_files": { "type": "integer", "minimum": 0, "$comment": "Razor files the workspace lists as additional documents; their generated classes are not in the compilation — the blind spot's extent (CG-R-78, v5)." },
+        "razor_inject_directives": { "type": "integer", "minimum": 0, "$comment": "Lines beginning with @inject in those files: composition edges the instrument cannot see. Counted, never emitted as edges." }
       }
     },
     "type": {
@@ -93,7 +95,7 @@
     },
     "member": {
       "type": "object",
-      "required": ["id", "declaring_type", "name", "kind", "accessibility", "is_static", "is_entry_point", "parameters", "return_type", "file", "line", "attributes"],
+      "required": ["id", "declaring_type", "name", "kind", "accessibility", "is_static", "is_entry_point", "parameters", "return_type", "return_type_arguments", "file", "line", "attributes"],
       "additionalProperties": false,
       "properties": {
         "id": { "$ref": "#/$defs/symbol_id" },
@@ -107,12 +109,13 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["name", "type"],
+            "required": ["name", "type", "type_arguments"],
             "additionalProperties": false,
-            "properties": { "name": { "type": "string" }, "type": { "$ref": "#/$defs/symbol_id" } }
+            "properties": { "name": { "type": "string" }, "type": { "$ref": "#/$defs/symbol_id" }, "type_arguments": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" }, "$comment": "The parameter type's type arguments as original definitions (v5, P-6): IEnumerable<IFoo> carries IFoo — collection injection is read from this." } }
           }
         },
         "return_type": { "oneOf": [ { "$ref": "#/$defs/symbol_id" }, { "type": "null" } ] },
+        "return_type_arguments": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" }, "$comment": "The return/property/field type's type arguments as original definitions (v5, P-6)." },
         "file": { "type": "string" },
         "line": { "type": "integer", "minimum": 0 },
         "attributes": { "type": "array", "items": { "$ref": "#/$defs/attribute_use" } }

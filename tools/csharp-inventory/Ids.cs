@@ -116,6 +116,18 @@ public static class Ids
         _ => Array.Empty<IParameterSymbol>(),
     };
 
+    public static ITypeSymbol? ReturnTypeSymbol(ISymbol member) => member switch
+    {
+        IMethodSymbol m when !m.ReturnsVoid => m.ReturnType,
+        IPropertySymbol p => p.Type,
+        IFieldSymbol f => f.Type,
+        IEventSymbol e => e.Type,
+        _ => null,
+    };
+
+    public static List<string> TypeArgumentsOf(ITypeSymbol? type) =>
+        type is INamedTypeSymbol n ? n.TypeArguments.Select(a => Of(a.OriginalDefinition)).ToList() : new List<string>();
+
     public static string? ReturnType(ISymbol member) => member switch
     {
         IMethodSymbol m => m.ReturnsVoid ? null : Of(m.ReturnType.OriginalDefinition),

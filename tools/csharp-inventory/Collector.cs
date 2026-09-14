@@ -63,6 +63,7 @@ public sealed class Collector
         }
         _roslyn = typeof(Compilation).Assembly.GetName().Version?.ToString() ?? "";
         var pid = "P:" + project.Name;
+        var (razorFiles, razorInjects) = await RazorBlindSpot(project);
         _projects.Add(new ProjectInfo
         {
             Id = pid,
@@ -71,6 +72,8 @@ public sealed class Collector
             TargetFrameworks = TargetFrameworks(project),
             Assembly = project.AssemblyName,
             ReferencedAssemblies = compilation.ReferencedAssemblyNames.Select(a => a.Name).Distinct().OrderBy(n => n, StringComparer.Ordinal).ToList(),
+            RazorFiles = razorFiles,
+            RazorInjectDirectives = razorInjects,
         });
         // Compile errors are facts about load quality: a project that did not
         // resolve its references yields a semantic model full of error types,
@@ -135,8 +138,9 @@ public sealed class Collector
                     Accessibility = Ids.Accessibility(member.DeclaredAccessibility),
                     IsStatic = member.IsStatic,
                     IsEntryPoint = mid == entryId,
-                    Parameters = Ids.Parameters(member).Select(p => new ParameterInfo { Name = p.Name, Type = Ids.Of(p.Type.OriginalDefinition) }).ToList(),
+                    Parameters = Ids.Parameters(member).Select(p => new ParameterInfo { Name = p.Name, Type = Ids.Of(p.Type.OriginalDefinition), TypeArguments = Ids.TypeArgumentsOf(p.Type) }).ToList(),
                     ReturnType = Ids.ReturnType(member),
+                    ReturnTypeArguments = Ids.TypeArgumentsOf(Ids.ReturnTypeSymbol(member)),
                     File = mfile,
                     Line = mline,
                     Attributes = Attributes(member),
@@ -230,6 +234,25 @@ public sealed class Collector
         };
         if (def.BaseType is not null) NoteIfExternal(def.BaseType);
         foreach (var i in def.Interfaces) NoteIfExternal(i);
+    }
+
+    // The extent of the Razor blind spot (CG-R-78): the workspace lists .cshtml/.razor
+    // files as additional documents while their generated classes are absent from the
+    // compilation. Counted as facts; no edge is ever made from a directive.
+    private static async Task<(int files, int injects)> RazorBlindSpot(Project project)
+    {
+        var files = 0;
+        var injects = 0;
+        foreach (var doc in project.AdditionalDocuments)
+        {
+            var path = doc.FilePath ?? doc.Name;
+            if (!(path.EndsWith(".cshtml", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".razor", StringComparison.OrdinalIgnoreCase))) continue;
+            files++;
+            var text = await doc.GetTextAsync();
+            foreach (var line in text.Lines)
+                if (line.ToString().TrimStart().StartsWith("@inject ", StringComparison.Ordinal)) injects++;
+        }
+        return (files, injects);
     }
 
     private static List<string> TargetFrameworks(Project project)

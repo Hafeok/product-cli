@@ -23,7 +23,7 @@ fn inventory_check_reports_counts() {
         .arg(fixture("inventory.json"))
         .assert()
         .success()
-        .stdout(predicate::str::contains("inventory version 4"))
+        .stdout(predicate::str::contains("inventory version 5"))
         .stdout(predicate::str::contains("4 project(s)"));
 }
 
@@ -61,8 +61,8 @@ fn reach_measures_a_ground_truth_when_given_one() {
         .arg(fixture("inventory.json"))
         .assert()
         .success()
-        .stdout(predicate::str::contains("ground truth (Shop.Api, 20 edges"))
-        .stdout(predicate::str::contains("reader recall 20/20 (100.0%)"));
+        .stdout(predicate::str::contains("ground truth (Shop.Api, 22 edges"))
+        .stdout(predicate::str::contains("reader recall 22/22 (100.0%) over C# source, Razor views not covered (CG-R-78)"));
 }
 
 #[test]

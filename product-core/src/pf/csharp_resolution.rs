@@ -16,8 +16,8 @@ use std::collections::BTreeMap;
 use serde::Serialize;
 
 use super::csharp_inventory::Index;
-use super::csharp_roles::{RoleProxy, PROXIES};
-use super::csharp_walk::{by_role, Closure, CompositionEdge, EdgeState};
+use super::csharp_roles::{RoleProxy, PROXIES, RETIRED_PROXIES};
+use super::csharp_walk::{by_role, Closure, CompositionEdge, EdgeState, Injection};
 
 /// One external type on the boundary, or supplied by an unparsed call.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -44,6 +44,9 @@ pub struct Resolution {
     pub boundary: usize,
     pub registration_not_read: usize,
     pub excluded: usize,
+    /// Edges that ask for every registration of a type argument (P-6) — a
+    /// distinct classification, counted inside the states above.
+    pub collection_edges: usize,
     /// resolved / scored.
     pub coverage_percent: f64,
     /// scored / composition_edges — how much of the population the fraction is over.
@@ -61,6 +64,7 @@ pub struct Resolution {
     /// Types a reached, unparsed framework call registers, with the call.
     pub registration_not_read_surface: Vec<BoundaryRow>,
     pub proxies: &'static [RoleProxy],
+    pub retired_proxies: &'static [RoleProxy],
 }
 
 fn pct(num: usize, den: usize) -> f64 {
@@ -93,6 +97,7 @@ pub fn resolution_of(ix: &Index<'_>, c: &Closure<'_>) -> Resolution {
         boundary,
         registration_not_read,
         excluded: excluded.values().sum(),
+        collection_edges: c.edges.iter().filter(|e| e.injection == Injection::Collection).count(),
         coverage_percent: pct(resolved, resolved + unresolved),
         population_percent: pct(resolved + unresolved, c.edges.len()),
         by_role: by_role(c),
@@ -104,6 +109,7 @@ pub fn resolution_of(ix: &Index<'_>, c: &Closure<'_>) -> Resolution {
         boundary_surface: surface(ix, c, |s| *s == EdgeState::Boundary),
         registration_not_read_surface: surface(ix, c, |s| matches!(s, EdgeState::RegistrationNotRead(_))),
         proxies: PROXIES,
+        retired_proxies: RETIRED_PROXIES,
     }
 }
 

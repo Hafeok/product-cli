@@ -52,16 +52,21 @@ fn composition_edges_are_classified_by_role() {
     let r = &report.resolution;
     assert_eq!(r.scored, r.resolved + r.unresolved, "the denominator is resolved + unresolved (CG-R-73)");
     assert_eq!(r.composition_edges, r.scored + r.partial + r.boundary + r.registration_not_read + r.excluded, "every edge in exactly one state");
-    assert!(r.partial >= 1, "IClockFactory is a factory: {:?}", r.by_role);
+    assert_eq!(r.partial, 2, "Func<IAudit> at AuditSink and IServiceProvider at OrdersEndpoints are the provider ids; IClockFactory is a service under P-5: {:?}", r.by_role);
     assert_eq!(r.by_reason.get("conditional-registration"), Some(&2), "IAudit at OrdersEndpoints and AuditSink: {:?}", r.by_reason);
     assert!(r.by_role.contains_key("generic-dispatch"), "IHandler<T>, IValidator<T>: {:?}", r.by_role);
     // A marker arriving as a constructor parameter is a composition edge the
     // criterion excludes; a type test on it is not a composition edge at all.
     assert_eq!(r.excluded_by_role.get("marker"), Some(&1), "{:?}", r.excluded_by_role);
-    // IReadOnlyList<T> declares a property and inherits GetEnumerator (returning
-    // IEnumerator<T>): counted over the chain it reads as a factory/provider — the
-    // declared divergence of the data-contract proxy.
-    assert_eq!(edge(&report, "OrdersEndpoints", "IReadOnlyList`1").role.label(), "factory-provider");
+    // IReadOnlyList<string> is registered (an instance), so it is a single
+    // dependency, not collection injection; with arity it reads as generic-dispatch
+    // (informational, same resolution path) — no longer a data contract (P-7).
+    let routes = edge(&report, "OrdersEndpoints", "IReadOnlyList`1");
+    assert_eq!((routes.role.label(), routes.injection), ("generic-dispatch", super::super::csharp_walk::Injection::Single));
+    // IEnumerable<IIdGenerator> is collection injection: the edge is to IIdGenerator (P-6).
+    let generators = edge(&report, "AuditSink", "IIdGenerator");
+    assert_eq!((generators.injection, generators.state), (super::super::csharp_walk::Injection::Collection, super::super::csharp_walk::EdgeState::Resolved));
+    assert_eq!(r.collection_edges, 1);
 }
 
 #[test]
@@ -81,8 +86,8 @@ fn boundary_and_registration_not_read_are_their_own_states() {
     let logger = r.boundary_surface.iter().find(|b| b.target == "T:Microsoft.Extensions.Logging.ILogger`1").expect("ILogger<T> is boundary");
     assert_eq!(logger.assembly, "Microsoft.Extensions.Logging.Abstractions");
     assert_eq!(logger.edges, 2, "the constructor and the [Inject] property");
-    assert!(r.boundary_surface.iter().any(|b| b.target == "T:System.IServiceProvider"));
-    assert_eq!(r.boundary, 3);
+    assert_eq!(edge(&report, "OrdersEndpoints", "IServiceProvider").state, EdgeState::Partial, "a provider id is partial wherever it is declared");
+    assert_eq!(r.boundary, 2);
     // IMemoryCache is registered by AddMemoryCache(), a call the resolver does not
     // parse: registration-not-read with the call, never boundary (CG-R-75).
     assert_eq!(edge(&report, "OrdersEndpoints", "IMemoryCache").state, EdgeState::RegistrationNotRead("AddMemoryCache"));
@@ -100,7 +105,7 @@ fn the_registration_list_decides_container_construction() {
     // call chained off AddHealthChecks(). Both are container-constructed (O-17, R-2).
     let report = run(&["entry-point"]);
     assert_eq!(edge(&report, "AuditSink", "IAuditStore").state, super::super::csharp_walk::EdgeState::Resolved);
-    assert_eq!(edge(&report, "PingCheck", "IClockFactory").role.label(), "factory-provider");
+    assert_eq!(edge(&report, "PingCheck", "IClockFactory").state, super::super::csharp_walk::EdgeState::Resolved, "a solution's own factory interface is a service under P-5");
     assert!(!report.unreached.iter().any(|u| u.ends_with("PingCheck")));
 }
 
@@ -112,7 +117,7 @@ fn property_injection_is_a_composition_edge() {
     // through the registration Main reaches) and one boundary edge (ILogger<T>).
     assert_eq!(with_component.resolution.resolved, entry.resolution.resolved + 1);
     assert_eq!(with_component.resolution.boundary, entry.resolution.boundary + 1);
-    assert_eq!(entry.resolution.boundary, 2, "ILogger<T> and IServiceProvider at the constructor");
+    assert_eq!(entry.resolution.boundary, 1, "ILogger<T> at the constructor");
 }
 
 #[test]
@@ -149,7 +154,9 @@ fn coverage_prints_its_population() {
     let r = &report.resolution;
     assert!(text.contains(&format!("resolution coverage: {}/{} of the denominator", r.resolved, r.scored)));
     assert!(text.contains(&format!("{}/{} of composition edges", r.scored, r.composition_edges)));
-    assert!(text.contains("partial: 3 (held:"), "{text}");
+    assert!(text.contains("partial: 2 (held:"), "{text}");
+    assert!(text.contains("registration-knowledge table (CG-R-79): of 16 reached external registration calls the resolver parses 13, the table knows 3, 0 are unknown"), "{text}");
+    assert!(text.contains("blind spot (CG-R-78)") && text.contains("incidence:"), "{text}");
 }
 
 #[test]
@@ -159,8 +166,8 @@ fn ground_truth_gives_reader_recall_and_walk_precision() {
     o.ground_truth = Some(serde_yaml::from_str::<GroundTruth>(GROUND_TRUTH).expect("ground truth parses"));
     let report = reach(&inv, &o);
     let g = report.ground_truth.as_ref().expect("measured");
-    assert_eq!((g.edges, g.reader_present, g.walk_hits, g.walk_edges), (20, 20, 20, 20), "missing {:?} / extra {:?}", g.walk_missing, g.walk_extra);
-    assert!(render_reach(&report).contains("ground truth (Shop.Api, 20 edges"));
+    assert_eq!((g.edges, g.reader_present, g.walk_hits, g.walk_edges), (22, 22, 22, 22), "reader missing {:?} / walk missing {:?} / extra {:?}", g.reader_missing, g.walk_missing, g.walk_extra);
+    assert!(render_reach(&report).contains("ground truth (Shop.Api, 22 edges") && render_reach(&report).contains("over C# source, Razor views not covered (CG-R-78)"));
 }
 
 #[test]

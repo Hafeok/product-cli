@@ -26,3 +26,5 @@ edges:
   - { from: "T:Shop.Api.Infrastructure.PingCheck", target: "T:Shop.Api.Infrastructure.IClockFactory" }
   - { from: "T:Shop.Api.Infrastructure.AuditSink", target: "T:Shop.Api.Infrastructure.IAudit" }
   - { from: "T:Shop.Api.Infrastructure.AuditSink", target: "T:Shop.Api.Infrastructure.IAuditStore" }
+  - { from: "T:Shop.Api.Infrastructure.AuditSink", target: "T:Shop.Api.Infrastructure.IIdGenerator" }   # IEnumerable<IIdGenerator>: collection injection, the edge is to the type argument
+  - { from: "T:Shop.Api.Infrastructure.AuditSink", target: "T:System.Func`1" }                         # Func<IAudit>: a provider

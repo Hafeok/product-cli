@@ -17,7 +17,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Serialize;
 
-use super::csharp_di::Resolver;
+use super::csharp_di::{Resolver, TableCoverage};
 use super::csharp_ground_truth::{measure, GroundTruth, GroundTruthReport};
 use super::csharp_inventory::{Index, Inventory};
 use super::csharp_resolution::{resolution_of, Resolution};
@@ -99,9 +99,19 @@ pub struct RootRow {
     pub unresolved_edges: usize,
 }
 
+/// The extent of what the instrument cannot see (CG-R-78): Razor views are
+/// not in the inventory, and every `@inject` in them is a composition edge.
+#[derive(Debug, Clone, Default, Serialize)]
+pub struct BlindSpot {
+    pub razor_files: u64,
+    pub razor_inject_directives: u64,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct ReachReport {
     pub roots: Vec<String>,
+    pub blind_spot: BlindSpot,
+    pub table_coverage: TableCoverage,
     /// Over production types: test projects are excluded and reported below.
     pub total: Disposition,
     pub percent_reached: f64,
@@ -205,8 +215,11 @@ pub fn reach(inv: &Inventory, opts: &ReachOptions) -> ReachReport {
     let total = disposition("total (production)", &production, &c, &s);
     let reached_sites = |x: &str| c.members.contains(x);
     let (ignored_in_solution, ignored_external) = resolver.ignored_split();
+    let production_projects = inv.projects.iter().filter(|p| !p.is_test());
     ReachReport {
         roots: opts.roots.iter().map(Root::label).collect(),
+        blind_spot: production_projects.fold(BlindSpot::default(), |b, p| BlindSpot { razor_files: b.razor_files + p.razor_files, razor_inject_directives: b.razor_inject_directives + p.razor_inject_directives }),
+        table_coverage: resolver.table_coverage(&reached_sites),
         percent_reached: if production.is_empty() { 0.0 } else { 100.0 * total.reached as f64 / production.len() as f64 },
         total,
         test_projects: ix.test_projects.iter().map(|p| p.to_string()).collect(),

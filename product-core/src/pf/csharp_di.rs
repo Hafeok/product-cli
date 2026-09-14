@@ -77,6 +77,16 @@ struct Entry {
     site: String,
 }
 
+/// CG-R-79: of the external registration calls the walk reached, how many
+/// the resolver parses, how many the knowledge table knows, how many neither.
+#[derive(Debug, Clone, Default, Serialize)]
+pub struct TableCoverage {
+    pub reached: usize,
+    pub parsed: usize,
+    pub known: usize,
+    pub unknown: usize,
+}
+
 /// One registration call as written, whatever the resolver made of it.
 #[derive(Debug, Clone, Serialize)]
 pub struct Call {
@@ -185,6 +195,24 @@ impl Resolver {
         self.calls.iter().filter(|c| site_reached(&c.site)).find_map(|c| {
             REGISTRATION_KNOWLEDGE.iter().find(|(m, _, types)| *m == c.method && types.contains(&type_id)).map(|(_, name, _)| *name)
         })
+    }
+
+    /// The registration-knowledge table's coverage over *reached* external
+    /// calls (CG-R-79): the resolver parses some, the table knows some, the
+    /// rest are unknown — the table's size is not the measure.
+    pub fn table_coverage(&self, site_reached: &dyn Fn(&str) -> bool) -> TableCoverage {
+        let mut c = TableCoverage::default();
+        for call in self.calls.iter().filter(|c| c.external && site_reached(&c.site)) {
+            c.reached += 1;
+            if call.read {
+                c.parsed += 1;
+            } else if REGISTRATION_KNOWLEDGE.iter().any(|(m, _, _)| *m == call.method) {
+                c.known += 1;
+            } else {
+                c.unknown += 1;
+            }
+        }
+        c
     }
 
     /// Reached external calls the resolver neither parsed nor knows — the

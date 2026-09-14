@@ -1,6 +1,6 @@
 //! The C# inventory artefact — the versioned fact file the .NET reader emits.
 //!
-//! Mirrors `schema/json/csharp-inventory/inventory.schema.json` (version 4).
+//! Mirrors `schema/json/csharp-inventory/inventory.schema.json` (version 5).
 //! Loading refuses any `inventory_version` not in [`KNOWN_INVENTORY_VERSIONS`]
 //! before another field is read. Facts only: nothing here classifies.
 
@@ -12,7 +12,7 @@ use serde_json::Value;
 use crate::error::{ProductError, Result};
 
 /// The inventory versions this consumer understands.
-pub const KNOWN_INVENTORY_VERSIONS: &[&str] = &["4"];
+pub const KNOWN_INVENTORY_VERSIONS: &[&str] = &["5"];
 
 /// Test-framework assemblies, by name: a project referencing one is a test
 /// project (CG-R-75 — classified by project, mechanically, never by reach).
@@ -52,6 +52,13 @@ pub struct Project {
     /// Every assembly the compilation references, by name (v4).
     #[serde(default)]
     pub referenced_assemblies: Vec<String>,
+    /// Razor files the workspace lists; their generated classes are not in
+    /// the compilation — the blind spot's extent (CG-R-78, v5).
+    #[serde(default)]
+    pub razor_files: u64,
+    /// `@inject` lines in those files: composition edges the instrument cannot see.
+    #[serde(default)]
+    pub razor_inject_directives: u64,
 }
 
 impl Project {
@@ -115,6 +122,9 @@ pub struct Parameter {
     pub name: String,
     #[serde(rename = "type")]
     pub parameter_type: String,
+    /// The parameter type's type arguments (v5, P-6): `IEnumerable<IFoo>` carries `IFoo`.
+    #[serde(default)]
+    pub type_arguments: Vec<String>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -132,6 +142,9 @@ pub struct MemberFact {
     pub parameters: Vec<Parameter>,
     #[serde(default)]
     pub return_type: Option<String>,
+    /// The return/property/field type's type arguments (v5, P-6).
+    #[serde(default)]
+    pub return_type_arguments: Vec<String>,
     #[serde(default)]
     pub file: String,
     #[serde(default)]

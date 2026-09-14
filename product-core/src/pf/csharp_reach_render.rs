@@ -17,10 +17,15 @@ pub fn render_reach(report: &ReachReport) -> String {
         "reached: {} of {} production types ({:.1}%) — unresolved: {} — partial: {} — unreached: {}\n",
         t.reached, t.types, report.percent_reached, t.unresolved, t.partial, t.unreached
     ));
+    let b = &report.blind_spot;
+    s.push_str(&format!(
+        "blind spot (CG-R-78): Razor views are not in the inventory — {} @inject directive(s) in {} Razor file(s) the workspace lists are composition edges the instrument cannot see\n",
+        b.razor_inject_directives, b.razor_files
+    ));
     render_resolution(report, &mut s);
     if let Some(g) = &report.ground_truth {
         s.push_str(&format!(
-            "ground truth ({}, {} edges{}): reader recall {}/{} ({:.1}%) — walk recall {}/{} ({:.1}%) — walk precision {}/{} ({:.1}%)\n",
+            "ground truth ({}, {} edges{}): reader recall {}/{} ({:.1}%) over C# source, Razor views not covered (CG-R-78) — walk recall {}/{} ({:.1}%) — walk precision {}/{} ({:.1}%)\n",
             g.project, g.edges, if g.source.is_empty() { String::new() } else { format!(", {}", g.source) },
             g.reader_present, g.edges, g.reader_recall_percent, g.walk_hits, g.edges, g.walk_recall_percent, g.walk_hits, g.walk_edges, g.walk_precision_percent
         ));
@@ -59,10 +64,11 @@ pub fn render_reach(report: &ReachReport) -> String {
 fn render_resolution(report: &ReachReport, s: &mut String) {
     let r = &report.resolution;
     s.push_str(&format!(
-        "resolution coverage: {}/{} of the denominator ({:.1}%), {}/{} of composition edges ({:.1}%)\n  unresolved: {} — partial: {} (held: composition chooses the factory, the factory chooses later; never divided) — boundary: {} (the library supplies it) — registration-not-read: {} (a framework call the resolver does not parse supplies it) — excluded by role: {}\n  registrations read: {} — calls ignored: {} — registration sites in test projects skipped: {}\n",
+        "resolution coverage: {}/{} of the denominator ({:.1}%), {}/{} of composition edges ({:.1}%)\n  unresolved: {} — partial: {} (held: composition chooses the provider, the provider chooses later; never divided) — boundary: {} (the library supplies it) — registration-not-read: {} (a framework call the resolver does not parse supplies it) — excluded by role: {} — of which collection injection (every registration of the type argument, P-6): {}\n  registrations read: {} — calls ignored: {} — registration sites in test projects skipped: {}\n  registration-knowledge table (CG-R-79): of {} reached external registration calls the resolver parses {}, the table knows {}, {} are unknown\n",
         r.resolved, r.scored, r.coverage_percent, r.scored, r.composition_edges, r.population_percent,
-        r.unresolved, r.partial, r.boundary, r.registration_not_read, r.excluded,
-        report.registrations_read, report.calls_ignored, report.test_sites_skipped
+        r.unresolved, r.partial, r.boundary, r.registration_not_read, r.excluded, r.collection_edges,
+        report.registrations_read, report.calls_ignored, report.test_sites_skipped,
+        report.table_coverage.reached, report.table_coverage.parsed, report.table_coverage.known, report.table_coverage.unknown
     ));
     for (role, n) in &r.by_role {
         s.push_str(&format!("  edges by role:        {role:<26} {n}\n"));
@@ -85,9 +91,13 @@ fn render_resolution(report: &ReachReport, s: &mut String) {
             s.push_str(&format!("    {m} ×{n}\n"));
         }
     }
-    s.push_str("\nrole proxies (each a proxy for the criterion, with its divergence):\n");
+    s.push_str("\nrole proxies (each a proxy for the criterion, with its divergence and the divergence's measured incidence, CG-R-77):\n");
     for p in r.proxies {
-        s.push_str(&format!("  {:<18} proxy: {}\n  {:<18} divergence: {}\n", p.role.label(), p.proxy, "", p.known_divergence));
+        s.push_str(&format!("  {:<18} proxy: {}\n  {:<18} divergence: {}\n  {:<18} incidence: {}\n", p.role.label(), p.proxy, "", p.known_divergence, "", p.incidence));
+    }
+    s.push_str("retired readings (CG-R-77 — the divergence was the field):\n");
+    for p in r.retired_proxies {
+        s.push_str(&format!("  {}\n    was: {}\n    incidence: {}\n", p.original_predicate, p.proxy, p.incidence));
     }
 }
 
@@ -108,7 +118,7 @@ fn render_edges(r: &Resolution, s: &mut String) {
     if !r.unresolved_edges.is_empty() {
         s.push_str(&format!("\nunresolved edges (first {} of {}):\n", r.unresolved_edges.len().min(25), r.unresolved_edges.len()));
         for u in r.unresolved_edges.iter().take(25) {
-            s.push_str(&format!("  {:<18} {:?} {} -> {}\n", u.role.label(), u.state, u.from, u.target));
+            s.push_str(&format!("  {:<18} {:?} {} -> {}{}\n", u.role.label(), u.state, u.from, u.target, if u.injection == super::csharp_walk::Injection::Collection { " (collection)" } else { "" }));
         }
     }
 }

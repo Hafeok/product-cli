@@ -24,7 +24,7 @@ use serde::Serialize;
 
 use super::csharp_di::{Reason, Resolver};
 use super::csharp_inventory::Index;
-use super::csharp_roles::{role_of, Role};
+use super::csharp_roles::{role_of, Role, COLLECTION_IDS};
 
 /// What happened at one composition edge.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
@@ -51,6 +51,16 @@ pub const PROPERTY_INJECTION_ATTRIBUTES: &[&str] = &[
     "T:Microsoft.AspNetCore.Mvc.FromServicesAttribute",
 ];
 
+/// How the dependency arrives: one implementation, or every registration of
+/// the type argument of a collection parameter (P-6 — its own classification,
+/// CG-R-77).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum Injection {
+    Single,
+    Collection,
+}
+
 /// One composition edge, from the referencing type to the abstraction.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub struct CompositionEdge {
@@ -58,6 +68,7 @@ pub struct CompositionEdge {
     pub target: String,
     pub role: Role,
     pub state: EdgeState,
+    pub injection: Injection,
 }
 
 /// What one walk reached, and what it decided at every composition edge.
@@ -139,17 +150,34 @@ impl<'a> Walk<'_, 'a> {
         let from_type = m.declaring_type.as_str();
         self.c.types.insert(from_type);
         let composed = self.c.container_types.contains(from_type);
-        let is_ctor = m.kind == "constructor" && composed;
+        if m.kind == "constructor" && composed {
+            for p in &m.parameters {
+                self.dependency(from_type, &p.parameter_type, &p.type_arguments);
+            }
+        }
         let is_injected = m.kind == "property" && composed && m.attributes.iter().any(|a| PROPERTY_INJECTION_ATTRIBUTES.contains(&a.attribute_type.as_str()));
+        if is_injected {
+            if let Some(t) = m.return_type.as_deref() {
+                self.dependency(from_type, t, &m.return_type_arguments);
+            }
+        }
         for r in self.ix.out.get(id).into_iter().flatten() {
             let to = r.to.as_str();
             match r.kind.as_str() {
-                "resolve" => self.composition(from_type, to),
-                "parameter" if is_ctor => self.composition(from_type, to),
-                "signature" if is_injected => self.composition(from_type, to),
+                "resolve" => self.composition(from_type, to, Injection::Single),
                 "call" | "construct" | "access" | "type-reference" => self.direct(id, to, &r.kind),
                 _ => {}
             }
+        }
+    }
+
+    /// A declared dependency: a collection parameter asks for every
+    /// registration of its type argument (P-6); anything else for one.
+    fn dependency(&mut self, from_type: &'a str, declared: &'a str, type_arguments: &'a [String]) {
+        let collection = COLLECTION_IDS.contains(&declared) && !self.resolver.is_registered(declared);
+        match (collection, type_arguments.first()) {
+            (true, Some(t)) => self.composition(from_type, t.as_str(), Injection::Collection),
+            _ => self.composition(from_type, declared, Injection::Single),
         }
     }
 
@@ -177,14 +205,21 @@ impl<'a> Walk<'_, 'a> {
     }
 
     /// A composition edge: classify, then resolve where the role says to.
-    fn composition(&mut self, from_type: &'a str, target: &'a str) {
-        if self.c.edges.iter().any(|e| e.from == from_type && e.target == target) {
+    fn composition(&mut self, from_type: &'a str, target: &'a str, injection: Injection) {
+        if self.c.edges.iter().any(|e| e.from == from_type && e.target == target && e.injection == injection) {
             return;
         }
         let registered = self.resolver.is_registered(target);
         let role = role_of(self.ix, target, registered);
         let sites = self.sites;
-        let state = if self.is_library_provided(target, registered) {
+        // Order: a provider id is the criterion's partial row wherever it is
+        // declared; a value is never supplied by a library; then the library
+        // (or an unparsed call) may supply it; then the role; then resolution.
+        let state = if role == Role::FactoryProvider && !registered {
+            EdgeState::Partial
+        } else if role == Role::Value {
+            EdgeState::Excluded(role)
+        } else if self.is_library_provided(target, registered) {
             match self.resolver.provider_of(target, &|s: &str| sites.contains(s)) {
                 Some(call) => EdgeState::RegistrationNotRead(call),
                 None => EdgeState::Boundary,
@@ -211,7 +246,7 @@ impl<'a> Walk<'_, 'a> {
         if self.ix.types.contains_key(target) {
             self.c.types.insert(target);
         }
-        self.c.edges.insert(CompositionEdge { from: from_type.to_string(), target: target.to_string(), role, state });
+        self.c.edges.insert(CompositionEdge { from: from_type.to_string(), target: target.to_string(), role, state, injection });
     }
 
     /// Declared outside the solution, subclassed or implemented by no

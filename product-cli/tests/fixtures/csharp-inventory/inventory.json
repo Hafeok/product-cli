@@ -1,14 +1,14 @@
 {
-  "inventory_version": "4",
+  "inventory_version": "5",
   "produced_by": {
     "tool": "csharp-inventory",
     "tool_version": "0.1.0",
     "roslyn_version": "5.0.0.0"
   },
-  "produced_at": "2026-09-14T11:06:05.4280215Z",
+  "produced_at": "2026-09-14T11:48:10.2481229Z",
   "solution": {
     "path": "Fixture.sln",
-    "git_head": "6e38aeac7dec5e66b3fb8932fef22ee3519dc54a"
+    "git_head": "b6173921b01404b9e67c134e66a17ff350d46671"
   },
   "projects": [
     {
@@ -181,7 +181,9 @@
         "WindowsBase",
         "mscorlib",
         "netstandard"
-      ]
+      ],
+      "razor_files": 0,
+      "razor_inject_directives": 0
     },
     {
       "id": "P:Shop.Api",
@@ -371,7 +373,9 @@
         "WindowsBase",
         "mscorlib",
         "netstandard"
-      ]
+      ],
+      "razor_files": 0,
+      "razor_inject_directives": 0
     },
     {
       "id": "P:Shop.Domain",
@@ -544,7 +548,9 @@
         "WindowsBase",
         "mscorlib",
         "netstandard"
-      ]
+      ],
+      "razor_files": 0,
+      "razor_inject_directives": 0
     },
     {
       "id": "P:Shop.Tests",
@@ -747,7 +753,9 @@
         "mscorlib",
         "netstandard",
         "testhost"
-      ]
+      ],
+      "razor_files": 0,
+      "razor_inject_directives": 0
     }
   ],
   "types": [
@@ -872,7 +880,7 @@
       "base_type": "T:System.Object",
       "interfaces": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 104,
+      "line": 106,
       "attributes": []
     },
     {
@@ -890,7 +898,7 @@
         "T:Shop.Api.Infrastructure.IAudit"
       ],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 120,
+      "line": 127,
       "attributes": []
     },
     {
@@ -948,7 +956,7 @@
       "base_type": null,
       "interfaces": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 115,
+      "line": 122,
       "attributes": []
     },
     {
@@ -1728,8 +1736,43 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IAudit",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 106,
+      "line": 108,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Infrastructure.AuditSink._generators",
+      "declaring_type": "T:Shop.Api.Infrastructure.AuditSink",
+      "name": "_generators",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Collections.Generic.IEnumerable\u00601",
+      "return_type_arguments": [
+        "T:Shop.Api.Infrastructure.IIdGenerator"
+      ],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 110,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Infrastructure.AuditSink._lateAudit",
+      "declaring_type": "T:Shop.Api.Infrastructure.AuditSink",
+      "name": "_lateAudit",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.Func\u00601",
+      "return_type_arguments": [
+        "T:Shop.Api.Infrastructure.IAudit"
+      ],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 111,
       "attributes": []
     },
     {
@@ -1742,8 +1785,9 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IAuditStore",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 107,
+      "line": 109,
       "attributes": []
     },
     {
@@ -1756,6 +1800,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IClockFactory",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 91,
       "attributes": []
@@ -1770,6 +1815,10 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Collections.Generic.Dictionary\u00602",
+      "return_type_arguments": [
+        "T:System.Guid",
+        "T:Shop.Domain.CartState"
+      ],
       "file": "Shop.Api/Orders.cs",
       "line": 46,
       "attributes": []
@@ -1784,6 +1833,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Orders.ICartReader",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 72,
       "attributes": []
@@ -1798,6 +1848,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Persistence.IOrderRepository",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 73,
       "attributes": []
@@ -1812,6 +1863,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IAudit",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 104,
       "attributes": []
@@ -1826,6 +1878,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IAuditStore",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 108,
       "attributes": []
@@ -1840,6 +1893,9 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Collections.Generic.IComparer\u00601",
+      "return_type_arguments": [
+        "T:Shop.Domain.Money"
+      ],
       "file": "Shop.Api/Orders.cs",
       "line": 103,
       "attributes": []
@@ -1854,6 +1910,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Microsoft.Extensions.Caching.Memory.IMemoryCache",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 107,
       "attributes": []
@@ -1868,6 +1925,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IClockFactory",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 101,
       "attributes": []
@@ -1882,6 +1940,9 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Microsoft.Extensions.Logging.ILogger\u00601",
+      "return_type_arguments": [
+        "T:Shop.Api.Orders.OrdersEndpoints"
+      ],
       "file": "Shop.Api/Orders.cs",
       "line": 106,
       "attributes": []
@@ -1896,6 +1957,9 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IHandler\u00601",
+      "return_type_arguments": [
+        "T:Shop.Api.Orders.PlaceOrderCommand"
+      ],
       "file": "Shop.Api/Orders.cs",
       "line": 99,
       "attributes": []
@@ -1910,6 +1974,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.IServiceProvider",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 102,
       "attributes": []
@@ -1924,6 +1989,9 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Collections.Generic.IReadOnlyList\u00601",
+      "return_type_arguments": [
+        "T:System.String"
+      ],
       "file": "Shop.Api/Orders.cs",
       "line": 105,
       "attributes": []
@@ -1938,6 +2006,9 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IValidator\u00601",
+      "return_type_arguments": [
+        "T:Shop.Api.Orders.PlaceOrderCommand"
+      ],
       "file": "Shop.Api/Orders.cs",
       "line": 100,
       "attributes": []
@@ -1952,6 +2023,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Orders.ICartReader",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 19,
       "attributes": []
@@ -1966,6 +2038,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Persistence.IOrderRepository",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 18,
       "attributes": []
@@ -1980,6 +2053,9 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Collections.Generic.List\u00601",
+      "return_type_arguments": [
+        "T:System.ValueTuple\u00602"
+      ],
       "file": "Shop.Api/Persistence.cs",
       "line": 12,
       "attributes": []
@@ -1995,10 +2071,12 @@
       "parameters": [
         {
           "name": "args",
-          "type": "T:System.String[]"
+          "type": "T:System.String[]",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "../../../../../../../../root/.nuget/packages/microsoft.net.test.sdk/18.7.0/build/net8.0/Microsoft.NET.Test.Sdk.Program.cs",
       "line": 4,
       "attributes": []
@@ -2014,10 +2092,12 @@
       "parameters": [
         {
           "name": "fact",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Product.Binding/RealisesFactAttribute.cs",
       "line": 11,
       "attributes": []
@@ -2033,14 +2113,17 @@
       "parameters": [
         {
           "name": "act",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         },
         {
           "name": "role",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Product.Binding/SliceAttribute.cs",
       "line": 12,
       "attributes": []
@@ -2056,10 +2139,12 @@
       "parameters": [
         {
           "name": "cartId",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         }
       ],
       "return_type": "T:System.Int32",
+      "return_type_arguments": [],
       "file": "Shop.Api/Admin.cs",
       "line": 16,
       "attributes": []
@@ -2075,16 +2160,18 @@
       "parameters": [
         {
           "name": "value",
-          "type": "!:T"
+          "type": "!:T",
+          "type_arguments": []
         }
       ],
       "return_type": "T:System.Boolean",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 27,
       "attributes": []
     },
     {
-      "id": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore)",
+      "id": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
       "declaring_type": "T:Shop.Api.Infrastructure.AuditSink",
       "name": ".ctor",
       "kind": "constructor",
@@ -2094,16 +2181,33 @@
       "parameters": [
         {
           "name": "audit",
-          "type": "T:Shop.Api.Infrastructure.IAudit"
+          "type": "T:Shop.Api.Infrastructure.IAudit",
+          "type_arguments": []
         },
         {
           "name": "store",
-          "type": "T:Shop.Api.Infrastructure.IAuditStore"
+          "type": "T:Shop.Api.Infrastructure.IAuditStore",
+          "type_arguments": []
+        },
+        {
+          "name": "generators",
+          "type": "T:System.Collections.Generic.IEnumerable\u00601",
+          "type_arguments": [
+            "T:Shop.Api.Infrastructure.IIdGenerator"
+          ]
+        },
+        {
+          "name": "lateAudit",
+          "type": "T:System.Func\u00601",
+          "type_arguments": [
+            "T:Shop.Api.Infrastructure.IAudit"
+          ]
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 109,
+      "line": 113,
       "attributes": []
     },
     {
@@ -2117,12 +2221,14 @@
       "parameters": [
         {
           "name": "id",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 111,
+      "line": 118,
       "attributes": []
     },
     {
@@ -2136,12 +2242,14 @@
       "parameters": [
         {
           "name": "what",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 122,
+      "line": 129,
       "attributes": []
     },
     {
@@ -2155,10 +2263,12 @@
       "parameters": [
         {
           "name": "route",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 9,
       "attributes": []
@@ -2173,6 +2283,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Guid",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 44,
       "attributes": []
@@ -2188,12 +2299,14 @@
       "parameters": [
         {
           "name": "what",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 117,
+      "line": 124,
       "attributes": []
     },
     {
@@ -2206,6 +2319,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.DateTimeOffset",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 33,
       "attributes": []
@@ -2220,6 +2334,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IClock",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 51,
       "attributes": []
@@ -2235,10 +2350,12 @@
       "parameters": [
         {
           "name": "command",
-          "type": "!:TCommand"
+          "type": "!:TCommand",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 15,
       "attributes": []
@@ -2253,6 +2370,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Guid",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 39,
       "attributes": []
@@ -2268,10 +2386,12 @@
       "parameters": [
         {
           "name": "id",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         }
       ],
       "return_type": "!:T",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 75,
       "attributes": []
@@ -2287,10 +2407,12 @@
       "parameters": [
         {
           "name": "value",
-          "type": "!:T"
+          "type": "!:T",
+          "type_arguments": []
         }
       ],
       "return_type": "T:System.Boolean",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 22,
       "attributes": []
@@ -2306,10 +2428,12 @@
       "parameters": [
         {
           "name": "id",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         }
       ],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 84,
       "attributes": []
@@ -2325,14 +2449,17 @@
       "parameters": [
         {
           "name": "x",
-          "type": "T:Shop.Domain.Money"
+          "type": "T:Shop.Domain.Money",
+          "type_arguments": []
         },
         {
           "name": "y",
-          "type": "T:Shop.Domain.Money"
+          "type": "T:Shop.Domain.Money",
+          "type_arguments": []
         }
       ],
       "return_type": "T:System.Int32",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 68,
       "attributes": []
@@ -2348,10 +2475,12 @@
       "parameters": [
         {
           "name": "clocks",
-          "type": "T:Shop.Api.Infrastructure.IClockFactory"
+          "type": "T:Shop.Api.Infrastructure.IClockFactory",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 93,
       "attributes": []
@@ -2367,14 +2496,19 @@
       "parameters": [
         {
           "name": "context",
-          "type": "T:Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext"
+          "type": "T:Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext",
+          "type_arguments": []
         },
         {
           "name": "cancellationToken",
-          "type": "T:System.Threading.CancellationToken"
+          "type": "T:System.Threading.CancellationToken",
+          "type_arguments": []
         }
       ],
       "return_type": "T:System.Threading.Tasks.Task\u00601",
+      "return_type_arguments": [
+        "T:Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult"
+      ],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 95,
       "attributes": []
@@ -2389,6 +2523,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.DateTimeOffset",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 56,
       "attributes": []
@@ -2403,6 +2538,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IClock",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 61,
       "attributes": []
@@ -2418,10 +2554,12 @@
       "parameters": [
         {
           "name": "command",
-          "type": "T:Shop.Api.Orders.PlaceOrderCommand"
+          "type": "T:Shop.Api.Orders.PlaceOrderCommand",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 94,
       "attributes": []
@@ -2437,10 +2575,12 @@
       "parameters": [
         {
           "name": "emptied",
-          "type": "T:Shop.Domain.CartEmptied"
+          "type": "T:Shop.Domain.CartEmptied",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 58,
       "attributes": []
@@ -2456,10 +2596,12 @@
       "parameters": [
         {
           "name": "added",
-          "type": "T:Shop.Domain.ItemAddedToCart"
+          "type": "T:Shop.Domain.ItemAddedToCart",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 51,
       "attributes": []
@@ -2475,10 +2617,12 @@
       "parameters": [
         {
           "name": "e",
-          "type": "T:Shop.Domain.IDomainEvent"
+          "type": "T:Shop.Domain.IDomainEvent",
+          "type_arguments": []
         }
       ],
       "return_type": "T:System.Boolean",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 61,
       "attributes": []
@@ -2494,10 +2638,12 @@
       "parameters": [
         {
           "name": "cartId",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         }
       ],
       "return_type": "T:Shop.Domain.CartState",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 48,
       "attributes": []
@@ -2513,10 +2659,12 @@
       "parameters": [
         {
           "name": "carrier",
-          "type": "T:Shop.Domain.IHasTotal"
+          "type": "T:Shop.Domain.IHasTotal",
+          "type_arguments": []
         }
       ],
       "return_type": "T:Shop.Domain.Money",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 64,
       "attributes": []
@@ -2532,14 +2680,17 @@
       "parameters": [
         {
           "name": "carts",
-          "type": "T:Shop.Api.Orders.ICartReader"
+          "type": "T:Shop.Api.Orders.ICartReader",
+          "type_arguments": []
         },
         {
           "name": "orders",
-          "type": "T:Shop.Api.Persistence.IOrderRepository"
+          "type": "T:Shop.Api.Persistence.IOrderRepository",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 75,
       "attributes": []
@@ -2555,14 +2706,17 @@
       "parameters": [
         {
           "name": "cartId",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         },
         {
           "name": "subject",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         }
       ],
       "return_type": "T:Shop.Domain.OrderConfirmed",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 81,
       "attributes": []
@@ -2578,10 +2732,12 @@
       "parameters": [
         {
           "name": "cartId",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         }
       ],
       "return_type": "T:Shop.Domain.CartState",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 41,
       "attributes": []
@@ -2597,50 +2753,72 @@
       "parameters": [
         {
           "name": "placeOrder",
-          "type": "T:Shop.Api.Infrastructure.IHandler\u00601"
+          "type": "T:Shop.Api.Infrastructure.IHandler\u00601",
+          "type_arguments": [
+            "T:Shop.Api.Orders.PlaceOrderCommand"
+          ]
         },
         {
           "name": "validator",
-          "type": "T:Shop.Api.Infrastructure.IValidator\u00601"
+          "type": "T:Shop.Api.Infrastructure.IValidator\u00601",
+          "type_arguments": [
+            "T:Shop.Api.Orders.PlaceOrderCommand"
+          ]
         },
         {
           "name": "clocks",
-          "type": "T:Shop.Api.Infrastructure.IClockFactory"
+          "type": "T:Shop.Api.Infrastructure.IClockFactory",
+          "type_arguments": []
         },
         {
           "name": "provider",
-          "type": "T:System.IServiceProvider"
+          "type": "T:System.IServiceProvider",
+          "type_arguments": []
         },
         {
           "name": "byAmount",
-          "type": "T:System.Collections.Generic.IComparer\u00601"
+          "type": "T:System.Collections.Generic.IComparer\u00601",
+          "type_arguments": [
+            "T:Shop.Domain.Money"
+          ]
         },
         {
           "name": "audit",
-          "type": "T:Shop.Api.Infrastructure.IAudit"
+          "type": "T:Shop.Api.Infrastructure.IAudit",
+          "type_arguments": []
         },
         {
           "name": "routes",
-          "type": "T:System.Collections.Generic.IReadOnlyList\u00601"
+          "type": "T:System.Collections.Generic.IReadOnlyList\u00601",
+          "type_arguments": [
+            "T:System.String"
+          ]
         },
         {
           "name": "last",
-          "type": "T:Shop.Domain.IDomainEvent"
+          "type": "T:Shop.Domain.IDomainEvent",
+          "type_arguments": []
         },
         {
           "name": "log",
-          "type": "T:Microsoft.Extensions.Logging.ILogger\u00601"
+          "type": "T:Microsoft.Extensions.Logging.ILogger\u00601",
+          "type_arguments": [
+            "T:Shop.Api.Orders.OrdersEndpoints"
+          ]
         },
         {
           "name": "cache",
-          "type": "T:Microsoft.Extensions.Caching.Memory.IMemoryCache"
+          "type": "T:Microsoft.Extensions.Caching.Memory.IMemoryCache",
+          "type_arguments": []
         },
         {
           "name": "auditStore",
-          "type": "T:Shop.Api.Infrastructure.IAuditStore"
+          "type": "T:Shop.Api.Infrastructure.IAuditStore",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 116,
       "attributes": []
@@ -2656,10 +2834,12 @@
       "parameters": [
         {
           "name": "command",
-          "type": "T:Shop.Api.Orders.PlaceOrderCommand"
+          "type": "T:Shop.Api.Orders.PlaceOrderCommand",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 135,
       "attributes": [
@@ -2683,10 +2863,12 @@
       "parameters": [
         {
           "name": "args",
-          "type": "T:System.String[]"
+          "type": "T:System.String[]",
+          "type_arguments": []
         }
       ],
       "return_type": "T:System.Boolean",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 131,
       "attributes": []
@@ -2702,18 +2884,22 @@
       "parameters": [
         {
           "name": "CartId",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         },
         {
           "name": "Subject",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         },
         {
           "name": "Budget",
-          "type": "T:Shop.Domain.Money"
+          "type": "T:Shop.Domain.Money",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 11,
       "attributes": []
@@ -2729,14 +2915,17 @@
       "parameters": [
         {
           "name": "orders",
-          "type": "T:Shop.Api.Persistence.IOrderRepository"
+          "type": "T:Shop.Api.Persistence.IOrderRepository",
+          "type_arguments": []
         },
         {
           "name": "carts",
-          "type": "T:Shop.Api.Orders.ICartReader"
+          "type": "T:Shop.Api.Orders.ICartReader",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 21,
       "attributes": []
@@ -2752,10 +2941,12 @@
       "parameters": [
         {
           "name": "command",
-          "type": "T:Shop.Api.Orders.PlaceOrderCommand"
+          "type": "T:Shop.Api.Orders.PlaceOrderCommand",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 27,
       "attributes": []
@@ -2770,6 +2961,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Shop.Api/Persistence.cs",
       "line": 22,
       "attributes": []
@@ -2785,10 +2977,12 @@
       "parameters": [
         {
           "name": "s",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         }
       ],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Shop.Api/Persistence.cs",
       "line": 27,
       "attributes": []
@@ -2804,14 +2998,17 @@
       "parameters": [
         {
           "name": "placed",
-          "type": "T:Shop.Domain.OrderPlaced"
+          "type": "T:Shop.Domain.OrderPlaced",
+          "type_arguments": []
         },
         {
           "name": "by",
-          "type": "T:Shop.Domain.ActorIdentity"
+          "type": "T:Shop.Domain.ActorIdentity",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Persistence.cs",
       "line": 7,
       "attributes": []
@@ -2827,14 +3024,17 @@
       "parameters": [
         {
           "name": "placed",
-          "type": "T:Shop.Domain.OrderPlaced"
+          "type": "T:Shop.Domain.OrderPlaced",
+          "type_arguments": []
         },
         {
           "name": "by",
-          "type": "T:Shop.Domain.ActorIdentity"
+          "type": "T:Shop.Domain.ActorIdentity",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Api/Persistence.cs",
       "line": 14,
       "attributes": []
@@ -2850,10 +3050,12 @@
       "parameters": [
         {
           "name": "args",
-          "type": "T:System.String[]"
+          "type": "T:System.String[]",
+          "type_arguments": []
         }
       ],
       "return_type": "T:System.Int32",
+      "return_type_arguments": [],
       "file": "Shop.Api/Program.cs",
       "line": 11,
       "attributes": []
@@ -2869,10 +3071,12 @@
       "parameters": [
         {
           "name": "Subject",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 38,
       "attributes": []
@@ -2888,10 +3092,12 @@
       "parameters": [
         {
           "name": "CartId",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 26,
       "attributes": []
@@ -2907,18 +3113,22 @@
       "parameters": [
         {
           "name": "Sku",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         },
         {
           "name": "Quantity",
-          "type": "T:System.Int32"
+          "type": "T:System.Int32",
+          "type_arguments": []
         },
         {
           "name": "Price",
-          "type": "T:Shop.Domain.Money"
+          "type": "T:Shop.Domain.Money",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 20,
       "attributes": []
@@ -2934,18 +3144,24 @@
       "parameters": [
         {
           "name": "CartId",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         },
         {
           "name": "Lines",
-          "type": "T:System.Collections.Generic.IReadOnlyList\u00601"
+          "type": "T:System.Collections.Generic.IReadOnlyList\u00601",
+          "type_arguments": [
+            "T:Shop.Domain.CartLine"
+          ]
         },
         {
           "name": "Total",
-          "type": "T:Shop.Domain.Money"
+          "type": "T:Shop.Domain.Money",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 18,
       "attributes": []
@@ -2961,10 +3177,12 @@
       "parameters": [
         {
           "name": "Why",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 42,
       "attributes": []
@@ -2980,22 +3198,27 @@
       "parameters": [
         {
           "name": "CartId",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         },
         {
           "name": "Sku",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         },
         {
           "name": "Quantity",
-          "type": "T:System.Int32"
+          "type": "T:System.Int32",
+          "type_arguments": []
         },
         {
           "name": "Price",
-          "type": "T:Shop.Domain.Money"
+          "type": "T:Shop.Domain.Money",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 23,
       "attributes": []
@@ -3011,14 +3234,17 @@
       "parameters": [
         {
           "name": "Amount",
-          "type": "T:System.Decimal"
+          "type": "T:System.Decimal",
+          "type_arguments": []
         },
         {
           "name": "Currency",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 46,
       "attributes": []
@@ -3034,10 +3260,12 @@
       "parameters": [
         {
           "name": "other",
-          "type": "T:Shop.Domain.Money"
+          "type": "T:Shop.Domain.Money",
+          "type_arguments": []
         }
       ],
       "return_type": "T:Shop.Domain.Money",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 49,
       "attributes": []
@@ -3053,10 +3281,12 @@
       "parameters": [
         {
           "name": "currency",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         }
       ],
       "return_type": "T:Shop.Domain.Money",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 48,
       "attributes": []
@@ -3072,10 +3302,12 @@
       "parameters": [
         {
           "name": "OrderId",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 32,
       "attributes": []
@@ -3091,18 +3323,22 @@
       "parameters": [
         {
           "name": "OrderId",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         },
         {
           "name": "CartId",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         },
         {
           "name": "Total",
-          "type": "T:Shop.Domain.Money"
+          "type": "T:Shop.Domain.Money",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 29,
       "attributes": []
@@ -3118,18 +3354,22 @@
       "parameters": [
         {
           "name": "OrderId",
-          "type": "T:System.Guid"
+          "type": "T:System.Guid",
+          "type_arguments": []
         },
         {
           "name": "Total",
-          "type": "T:Shop.Domain.Money"
+          "type": "T:Shop.Domain.Money",
+          "type_arguments": []
         },
         {
           "name": "Status",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 35,
       "attributes": []
@@ -3145,10 +3385,12 @@
       "parameters": [
         {
           "name": "what",
-          "type": "T:System.String"
+          "type": "T:System.String",
+          "type_arguments": []
         }
       ],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Tests/OrdersTests.cs",
       "line": 31,
       "attributes": []
@@ -3163,6 +3405,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.DateTimeOffset",
+      "return_type_arguments": [],
       "file": "Shop.Tests/OrdersTests.cs",
       "line": 26,
       "attributes": []
@@ -3177,6 +3420,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": null,
+      "return_type_arguments": [],
       "file": "Shop.Tests/OrdersTests.cs",
       "line": 14,
       "attributes": [
@@ -3200,6 +3444,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Product.Binding/RealisesFactAttribute.cs",
       "line": 16,
       "attributes": []
@@ -3214,6 +3459,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Product.Binding/SliceAttribute.cs",
       "line": 18,
       "attributes": []
@@ -3228,6 +3474,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Product.Binding/SliceAttribute.cs",
       "line": 20,
       "attributes": []
@@ -3242,6 +3489,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Product.Binding/SliceAttribute.cs",
       "line": 19,
       "attributes": []
@@ -3256,6 +3504,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Api.Orders.ICartReader",
+      "return_type_arguments": [],
       "file": "Shop.Api/Admin.cs",
       "line": 12,
       "attributes": [
@@ -3276,6 +3525,9 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Microsoft.Extensions.Logging.ILogger\u00601",
+      "return_type_arguments": [
+        "T:Shop.Api.Admin.OrdersPanel"
+      ],
       "file": "Shop.Api/Admin.cs",
       "line": 14,
       "attributes": [
@@ -3296,6 +3548,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 10,
       "attributes": []
@@ -3310,6 +3563,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Domain.Money",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 11,
       "attributes": []
@@ -3324,6 +3578,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Guid",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 11,
       "attributes": []
@@ -3338,6 +3593,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Shop.Api/Orders.cs",
       "line": 11,
       "attributes": []
@@ -3352,6 +3608,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Int32",
+      "return_type_arguments": [],
       "file": "Shop.Api/Persistence.cs",
       "line": 16,
       "attributes": []
@@ -3366,6 +3623,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 38,
       "attributes": []
@@ -3380,6 +3638,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Guid",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 26,
       "attributes": []
@@ -3394,6 +3653,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Domain.Money",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 20,
       "attributes": []
@@ -3408,6 +3668,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Int32",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 20,
       "attributes": []
@@ -3422,6 +3683,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 20,
       "attributes": []
@@ -3436,6 +3698,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Guid",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 18,
       "attributes": []
@@ -3450,6 +3713,9 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Collections.Generic.IReadOnlyList\u00601",
+      "return_type_arguments": [
+        "T:Shop.Domain.CartLine"
+      ],
       "file": "Shop.Domain/Facts.cs",
       "line": 18,
       "attributes": []
@@ -3464,6 +3730,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Domain.Money",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 18,
       "attributes": []
@@ -3478,6 +3745,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 42,
       "attributes": []
@@ -3492,6 +3760,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Domain.Money",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 14,
       "attributes": []
@@ -3506,6 +3775,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Guid",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 23,
       "attributes": []
@@ -3520,6 +3790,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Domain.Money",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 23,
       "attributes": []
@@ -3534,6 +3805,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Int32",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 23,
       "attributes": []
@@ -3548,6 +3820,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 23,
       "attributes": []
@@ -3562,6 +3835,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Decimal",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 46,
       "attributes": []
@@ -3576,6 +3850,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 46,
       "attributes": []
@@ -3590,6 +3865,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Guid",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 32,
       "attributes": []
@@ -3604,6 +3880,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Guid",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 29,
       "attributes": []
@@ -3618,6 +3895,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Guid",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 29,
       "attributes": []
@@ -3632,6 +3910,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Domain.Money",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 29,
       "attributes": []
@@ -3646,6 +3925,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.Guid",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 35,
       "attributes": []
@@ -3660,6 +3940,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:System.String",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 35,
       "attributes": []
@@ -3674,6 +3955,7 @@
       "is_entry_point": false,
       "parameters": [],
       "return_type": "T:Shop.Domain.Money",
+      "return_type_arguments": [],
       "file": "Shop.Domain/Facts.cs",
       "line": 35,
       "attributes": []
@@ -3684,6 +3966,21 @@
       "from": "F:Shop.Api.Infrastructure.AuditSink._audit",
       "to": "T:Shop.Api.Infrastructure.IAudit",
       "kind": "signature"
+    },
+    {
+      "from": "F:Shop.Api.Infrastructure.AuditSink._generators",
+      "to": "T:Shop.Api.Infrastructure.IIdGenerator",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "F:Shop.Api.Infrastructure.AuditSink._generators",
+      "to": "T:System.Collections.Generic.IEnumerable\u00601",
+      "kind": "signature"
+    },
+    {
+      "from": "F:Shop.Api.Infrastructure.AuditSink._lateAudit",
+      "to": "T:Shop.Api.Infrastructure.IAudit",
+      "kind": "generic-argument"
     },
     {
       "from": "F:Shop.Api.Infrastructure.AuditSink._store",
@@ -3856,38 +4153,88 @@
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore)",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
       "to": "F:Shop.Api.Infrastructure.AuditSink._audit",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore)",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "to": "F:Shop.Api.Infrastructure.AuditSink._generators",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "to": "F:Shop.Api.Infrastructure.AuditSink._lateAudit",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
       "to": "F:Shop.Api.Infrastructure.AuditSink._store",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore)",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "to": "T:Shop.Api.Infrastructure.IAudit",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
       "to": "T:Shop.Api.Infrastructure.IAudit",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore)",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
       "to": "T:Shop.Api.Infrastructure.IAudit",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore)",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
       "to": "T:Shop.Api.Infrastructure.IAuditStore",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore)",
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
       "to": "T:Shop.Api.Infrastructure.IAuditStore",
       "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "to": "T:Shop.Api.Infrastructure.IIdGenerator",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "to": "T:Shop.Api.Infrastructure.IIdGenerator",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "to": "T:System.Collections.Generic.IEnumerable\u00601",
+      "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "to": "T:System.Collections.Generic.IEnumerable\u00601",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore,System.Collections.Generic.IEnumerable{Shop.Api.Infrastructure.IIdGenerator},System.Func{Shop.Api.Infrastructure.IAudit})",
+      "to": "T:System.Func\u00601",
+      "kind": "parameter"
     },
     {
       "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
       "to": "F:Shop.Api.Infrastructure.AuditSink._audit",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
+      "to": "F:Shop.Api.Infrastructure.AuditSink._generators",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
+      "to": "F:Shop.Api.Infrastructure.AuditSink._lateAudit",
       "kind": "access"
     },
     {
@@ -3904,6 +4251,11 @@
       "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
       "to": "M:Shop.Api.Infrastructure.IReadStore\u00601.Load(System.Guid)",
       "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
+      "to": "T:Shop.Api.Infrastructure.IIdGenerator",
+      "kind": "generic-argument"
     },
     {
       "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
@@ -6422,6 +6774,44 @@
       ]
     },
     {
+      "id": "T:System.Delegate",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "Delegate",
+      "kind": "class",
+      "is_abstract": true,
+      "arity": 0,
+      "methods": 24,
+      "properties": 2,
+      "events": 0,
+      "abstract_returns": [
+        "T:System.Delegate",
+        "T:System.Reflection.MethodInfo"
+      ],
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:System.ICloneable",
+        "T:System.Runtime.Serialization.ISerializable"
+      ]
+    },
+    {
+      "id": "T:System.Func\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "Func",
+      "kind": "delegate",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 2,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [
+        "T:System.IAsyncResult"
+      ],
+      "base_type": "T:System.MulticastDelegate",
+      "interfaces": []
+    },
+    {
       "id": "T:System.Guid",
       "assembly": "System.Runtime",
       "namespace": "System",
@@ -6690,6 +7080,24 @@
         "T:System.Numerics.IUnaryNegationOperators\u00602",
         "T:System.Numerics.IUnaryPlusOperators\u00602"
       ]
+    },
+    {
+      "id": "T:System.MulticastDelegate",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "MulticastDelegate",
+      "kind": "class",
+      "is_abstract": true,
+      "arity": 0,
+      "methods": 7,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [
+        "T:System.Delegate",
+        "T:System.Reflection.MethodInfo"
+      ],
+      "base_type": "T:System.Delegate",
+      "interfaces": []
     },
     {
       "id": "T:System.Numerics.IAdditionOperators\u00603",

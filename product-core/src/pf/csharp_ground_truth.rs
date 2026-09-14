@@ -3,8 +3,9 @@
 //! A ground-truth file lists the composition edges of one project, read from
 //! the source by a person: `(from type, target type)` at the reader's
 //! granularity (targets are original definitions). Two figures follow:
-//! **reader recall** — the fraction present as `parameter`, `resolve` or
-//! `signature` facts from a member of the type; **walk recall** and **walk
+//! **reader recall** — the fraction present as `parameter`, `resolve`,
+//! `signature` or (for collection injection) `generic-argument` facts from a
+//! member of the type; **walk recall** and **walk
 //! precision** — the fraction the walk produced as composition edges, and the
 //! fraction of the walk's edges from that project the enumeration contains.
 //! Until reader recall is known, coverage is uninterpretable (CG-R-71), so
@@ -57,7 +58,7 @@ fn pct(num: usize, den: usize) -> f64 {
 fn reader_has(inv: &Inventory, ix: &Index<'_>, e: &GtEdge) -> bool {
     let members = ix.members_of.get(e.from.as_str()).into_iter().flatten().copied().collect::<BTreeSet<&str>>();
     inv.references.iter().any(|r| {
-        members.contains(r.from.as_str()) && r.to == e.target && matches!(r.kind.as_str(), "parameter" | "resolve" | "signature")
+        members.contains(r.from.as_str()) && r.to == e.target && matches!(r.kind.as_str(), "parameter" | "resolve" | "signature" | "generic-argument")
     })
 }
 

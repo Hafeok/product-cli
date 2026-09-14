@@ -1,4 +1,4 @@
-// The inventory artefact, schema version 4. Mirrors
+// The inventory artefact, schema version 5. Mirrors
 // schema/json/csharp-inventory/inventory.schema.json field for field; the
 // schema is authoritative and the Rust side validates against it.
 //
@@ -8,7 +8,7 @@ namespace CSharpInventory;
 
 public sealed class Inventory
 {
-    public string InventoryVersion { get; init; } = "4";
+    public string InventoryVersion { get; init; } = "5";
     public ProducedBy ProducedBy { get; init; } = new();
     public string ProducedAt { get; init; } = "";
     public SolutionInfo Solution { get; init; } = new();
@@ -92,6 +92,10 @@ public sealed class ProjectInfo
     public string Assembly { get; init; } = "";
     /// <summary>Every assembly the compilation references, by name — a fact the consumer reads test-framework membership from (schema v4, P-3).</summary>
     public List<string> ReferencedAssemblies { get; init; } = new();
+    /// <summary>Razor files (.cshtml/.razor) the workspace lists as additional documents of the project — a blind spot's extent (v5, CG-R-78): their generated classes are not in the compilation.</summary>
+    public int RazorFiles { get; init; }
+    /// <summary>Lines in those files beginning with `@inject` — composition edges the instrument cannot see, counted, never emitted as edges.</summary>
+    public int RazorInjectDirectives { get; init; }
 }
 
 public sealed class AttributeUse
@@ -123,6 +127,8 @@ public sealed class ParameterInfo
 {
     public string Name { get; init; } = "";
     public string Type { get; init; } = "";
+    /// <summary>The parameter type's type arguments, as original definitions (v5, P-6): IEnumerable&lt;IFoo&gt; carries IFoo here.</summary>
+    public List<string> TypeArguments { get; init; } = new();
 }
 
 public sealed class MemberInfo
@@ -136,6 +142,8 @@ public sealed class MemberInfo
     public bool IsEntryPoint { get; init; }
     public List<ParameterInfo> Parameters { get; init; } = new();
     public string? ReturnType { get; init; }
+    /// <summary>The return/property/field type's type arguments, as original definitions (v5, P-6).</summary>
+    public List<string> ReturnTypeArguments { get; init; } = new();
     public string File { get; init; } = "";
     public int Line { get; init; }
     public List<AttributeUse> Attributes { get; init; } = new();

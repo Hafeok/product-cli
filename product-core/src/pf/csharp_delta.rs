@@ -30,6 +30,7 @@ pub const PROXY: ProxyDeclaration = ProxyDeclaration {
     proxy: "a type references realised facts of two or more acts (no single act's positions cover them)",
     original_predicate: "the type contains decision logic belonging to more than one act",
     known_divergence: "a shared value object, DTO or mapping type referenced across many acts reads as unstructured while being neither; shared types are shared, not unstructured",
+    incidence: "unmeasured (2026-09-14): no hand-verified ground truth over acts exists; the fixture's Money is the only case the separator was tested on (CG-R-77)",
 };
 
 /// CG-R-57: the attribution rule is outside CG-R-52 and graded on its own.
@@ -43,10 +44,13 @@ pub const ATTRIBUTION: AttributionRule = AttributionRule {
     defence: "CG-R-52's criterion fixes the separator (facts of one act, or of two or more) and is silent on attribution; the derived attribution — every act touching any referenced fact — follows from the criterion but reads every consumer of a shared fact as spanned. Using position (construct = write) is not in the criterion, so this rule is the author's.",
     tuned_against: "fixture CheckoutService (constructs OrderPlaced and OrderConfirmed, reads Cart and ActorIdentity) against read-model:OrderSummary, which reads OrderPlaced",
     made_to_produce: "read-model:OrderSummary reports unrealised rather than unstructured; under the derived attribution it reports unstructured",
+    incidence: "unmeasured (2026-09-14): tuned against one fixture type, never against a field (CG-R-77)",
 };
 
 #[derive(Debug, Clone, Serialize)]
 pub struct AttributionRule {
+    /// CG-R-77: the rule's measured incidence of misattribution, or *unmeasured*.
+    pub incidence: &'static str,
     pub rule: &'static str,
     pub grade: &'static str,
     pub defence: &'static str,
@@ -56,6 +60,8 @@ pub struct AttributionRule {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ProxyDeclaration {
+    /// CG-R-77: the divergence's measured incidence, or *unmeasured*.
+    pub incidence: &'static str,
     pub proxy: &'static str,
     pub original_predicate: &'static str,
     pub known_divergence: &'static str,
@@ -341,12 +347,12 @@ fn ratios(inv: &Inventory, ix: &Index<'_>, opts: &DeltaOptions) -> Ratios {
 pub fn render_delta(report: &DeltaReport) -> String {
     let mut s = format!("context: {}\n", report.context);
     s.push_str(&format!(
-        "separator (a declared proxy, CG-R-52):\n  proxy:              {}\n  original predicate: {}\n  known divergence:   {}\n\n",
-        report.proxy.proxy, report.proxy.original_predicate, report.proxy.known_divergence
+        "separator (a declared proxy, CG-R-52):\n  proxy:              {}\n  original predicate: {}\n  known divergence:   {}\n  incidence:          {}\n\n",
+        report.proxy.proxy, report.proxy.original_predicate, report.proxy.known_divergence, report.proxy.incidence
     ));
     s.push_str(&format!(
-        "attribution of spanning types (graded {}, CG-R-57):\n  rule:           {}\n  tuned against:  {}\n  made to produce: {}\n\n",
-        report.attribution.grade, report.attribution.rule, report.attribution.tuned_against, report.attribution.made_to_produce
+        "attribution of spanning types (graded {}, CG-R-57):\n  rule:           {}\n  tuned against:  {}\n  made to produce: {}\n  incidence:      {}\n\n",
+        report.attribution.grade, report.attribution.rule, report.attribution.tuned_against, report.attribution.made_to_produce, report.attribution.incidence
     ));
     for region in [Region::Declared, Region::Declarable, Region::Unstructured, Region::Unrealised] {
         let rows: Vec<&ActRow> = report.acts.iter().filter(|a| a.region == region).collect();

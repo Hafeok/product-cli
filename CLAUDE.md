@@ -240,11 +240,13 @@ The reference What lives in `.product/products/product-cli/`. `product mcp
 
 ## C# stack binding (`product csharp`, `tools/csharp-inventory/`)
 
-**As at 2026-09-14, Gate 1a of the binding session.** Built: the reader (schema v4), the consumer,
+**As at 2026-09-14, Gate 1a of the binding session.** Built: the reader (schema v5), the consumer,
 the DI resolver, the per-edge denominator criterion with declared proxies (ratified CG-R-68),
 reachability with unresolved, partial, **boundary** and **registration-not-read** as their own
-categories, test projects outside the primary convention (CG-R-75), the CG-R-71 ground-truth
-measure (reader recall, walk recall/precision), and the act-indexed delta. Not built (Gate 2,
+categories, collection injection as its own classification (P-6), test projects outside the
+primary convention (CG-R-75), the CG-R-71 ground-truth measure (reader recall, walk
+recall/precision), the CG-R-79 table-coverage figure, the CG-R-78 Razor blind spot beside every
+headline, and the act-indexed delta. Not built (Gate 2,
 dated here so nobody reads it as present): the `Slice`/`RealisesFact` checks, profiles, the
 determination loader, declaration-supplied edges (CG-R-61).
 
@@ -253,12 +255,13 @@ The binding connects the domain state change binding's act vocabulary (`eventmod
 
 - **`tools/csharp-inventory/`** — a .NET 10 console project (not a Cargo member) that loads a
   solution through `MSBuildWorkspace` and emits `inventory.json` per
-  `schema/json/csharp-inventory/inventory.schema.json` (version `4`). **Facts only** — types,
+  `schema/json/csharp-inventory/inventory.schema.json` (version `5`). **Facts only** — types,
   members, declared attributes with arguments, the reference graph with *how* each target is used
   (`parameter`, `resolve`, `type-test`, …), external types with their member shape and base
   interfaces, each project's referenced assemblies, and every `IServiceCollection` call as written
   (plus calls chained off one — `AddHealthChecks().AddCheck<T>()`). The emission rules are stated
-  in full in `meta/sessions/2026-09-13-implement-csharp-binding/reader-emission-rules-v4.md`. It is the bounded exception to `dec/ddd/lsp-as-seam`
+  in full in `meta/sessions/2026-09-13-implement-csharp-binding/reader-emission-rules-v5.md`
+  (with the proxy set and the consumer's rules). It is the bounded exception to `dec/ddd/lsp-as-seam`
   (`dec/ddd/batch-inventory-reader`): batch inventory here, interactive queries stay on `ddd-lsp`.
 - **`pf/csharp_inventory.rs`** loads it and refuses unknown versions before parsing;
   **`pf/csharp_di.rs`** resolves interface-mediated edges through the registration facts (the one
@@ -267,8 +270,9 @@ The binding connects the domain state change binding's act vocabulary (`eventmod
   registration); **`pf/csharp_roles.rs`** is the denominator criterion (CG-R-63): at a
   *composition edge* — a constructor parameter of a container-constructed type, or a
   service-locator argument — the target's role (service, generic-dispatch, factory-provider →
-  *partial*, marker, data-contract, abstract-data, value) is read through proxies that print with
-  their divergences; an external abstraction no in-solution type implements and no registration
+  *partial*, marker, abstract-data, value) is read through proxies that print with their
+  divergences **and each divergence's measured incidence** (CG-R-77; the data-contract role and
+  the return-type reading of factory-provider were retired at 181/181 and 231/346); an external abstraction no in-solution type implements and no registration
   names is a **boundary** edge (CG-R-68) — the used library surface, reported with type and
   assembly, outside the resolved/unresolved denominator — unless a reached framework call the
   resolver does not parse registers it (`AddIdentity` → `UserManager<T>`): then it is

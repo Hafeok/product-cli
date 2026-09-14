@@ -18,3 +18,9 @@ bindings:
   after: sha256:cb80b2beab194b052f2fa33a5d0266673c0cdf313b09be3190be2b208e59335b
   base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
   hash: sha256:b51b27d99831d9cf4351e9f2a4ce3a4eb1ef3a99131eec847e67824f21fdf01f
+- symbol: render_reach
+  file: product-core/src/pf/csharp_reach_render.rs
+  before: absent
+  after: sha256:915972c28be3979cbfaa63540657055c942f3003326aefdb0f1f4115dbe30213
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:a7b7a7bd46c6f0719b69b2c7cce01e0bc498f37d5a46dd4eaa630fa16455f742

@@ -101,14 +101,21 @@ public sealed class PingCheck : Microsoft.Extensions.Diagnostics.HealthChecks.IH
 
 // Registered, and resolved by no edge: container-constructed all the same
 // (O-17 — the registration list decides, not whether something asks for it).
+// Also: a collection parameter (every registration of IIdGenerator, P-6) and a
+// Func<> provider (the criterion's partial row, P-5 — provider ids only).
 public sealed class AuditSink
 {
     private readonly IAudit _audit;
     private readonly IAuditStore _store;
+    private readonly IEnumerable<IIdGenerator> _generators;
+    private readonly Func<IAudit> _lateAudit;
 
-    public AuditSink(IAudit audit, IAuditStore store) { _audit = audit; _store = store; }
+    public AuditSink(IAudit audit, IAuditStore store, IEnumerable<IIdGenerator> generators, Func<IAudit> lateAudit)
+    {
+        _audit = audit; _store = store; _generators = generators; _lateAudit = lateAudit;
+    }
 
-    public void Flush(Guid id) => _audit.Record(_store.Load(id));
+    public void Flush(Guid id) => _lateAudit().Record(_store.Load(id) + _generators.Count() + _audit.GetHashCode());
 }
 
 // Registered only inside a conditional.
