@@ -111,6 +111,9 @@ pub struct Ratios {
     pub unresolved_undeclared: usize,
     pub isolated_undeclared: usize,
     pub resolution_coverage_percent: f64,
+    /// resolved + unresolved — the denominator (CG-R-73).
+    pub scored_edges: usize,
+    pub composition_edges: usize,
     pub unresolved_edges: usize,
     /// Edges the library satisfies (CG-R-68), outside the denominator.
     pub boundary_edges: usize,
@@ -305,7 +308,7 @@ fn ratios(inv: &Inventory, ix: &Index<'_>, opts: &DeltaOptions) -> Ratios {
     };
     let mut by_ns: BTreeMap<&str, (usize, usize, usize)> = BTreeMap::new();
     let (mut total, mut reachable, mut unres) = (0, 0, 0);
-    for t in inv.types.iter().filter(|t| !is_declared(&t.id)) {
+    for t in inv.types.iter().filter(|t| !is_declared(&t.id) && !ix.is_test(&t.id)) {
         total += 1;
         let e = by_ns.entry(t.namespace.as_str()).or_insert((0, 0, 0));
         if c.types.contains(t.id.as_str()) {
@@ -326,6 +329,8 @@ fn ratios(inv: &Inventory, ix: &Index<'_>, opts: &DeltaOptions) -> Ratios {
         unresolved_undeclared: unres,
         isolated_undeclared: total - reachable - unres,
         resolution_coverage_percent: if resolved + unresolved == 0 { 100.0 } else { 100.0 * resolved as f64 / (resolved + unresolved) as f64 },
+        scored_edges: resolved + unresolved,
+        composition_edges: c.edges.len(),
         unresolved_edges: unresolved,
         boundary_edges: c.count(|st| *st == EdgeState::Boundary),
         by_namespace: by_ns.into_iter().map(|(ns, (r, u, i))| (ns.to_string(), r, u, i)).collect(),
@@ -364,8 +369,8 @@ pub fn render_delta(report: &DeltaReport) -> String {
     }
     let r = &report.ratios;
     s.push_str(&format!(
-        "\n\nratios (resolution coverage {:.1}%, {} unresolved edge(s), {} boundary edge(s) outside the denominator):\n  reachable-undeclared:  {} of {} undeclared types\n  unresolved-undeclared: {} of {}\n  isolated-undeclared:   {} of {}\n",
-        r.resolution_coverage_percent, r.unresolved_edges, r.boundary_edges, r.reachable_undeclared, r.undeclared_types, r.unresolved_undeclared, r.undeclared_types, r.isolated_undeclared, r.undeclared_types
+        "\n\nratios (resolution coverage {:.1}% = {} resolved of {} scored, {} scored of {} composition edges; {} unresolved, {} boundary outside the denominator):\n  reachable-undeclared:  {} of {} undeclared types\n  unresolved-undeclared: {} of {}\n  isolated-undeclared:   {} of {}\n",
+        r.resolution_coverage_percent, r.scored_edges - r.unresolved_edges, r.scored_edges, r.scored_edges, r.composition_edges, r.unresolved_edges, r.boundary_edges, r.reachable_undeclared, r.undeclared_types, r.unresolved_undeclared, r.undeclared_types, r.isolated_undeclared, r.undeclared_types
     ));
     for (ns, reach, unres, iso) in &r.by_namespace {
         s.push_str(&format!("  {:<50} reachable={reach} unresolved={unres} isolated={iso}\n", if ns.is_empty() { "(global)" } else { ns }));

@@ -68,6 +68,49 @@ public sealed class MoneyComparer : IComparer<Shop.Domain.Money>
     public int Compare(Shop.Domain.Money x, Shop.Domain.Money y) => x.Amount.CompareTo(y.Amount);
 }
 
+// An interface that declares nothing and inherits its members: read as a marker
+// before v4 (O-13); a service once members are counted over the chain (P-1).
+public interface IReadStore<T>
+{
+    T Load(Guid id);
+}
+
+public interface IAuditStore : IReadStore<string>
+{
+}
+
+public sealed class MemoryAuditStore : IAuditStore
+{
+    public string Load(Guid id) => id.ToString();
+}
+
+// Registered by a call chained off AddHealthChecks() — a builder registration
+// (R-2): the health check service constructs it from the container.
+public sealed class PingCheck : Microsoft.Extensions.Diagnostics.HealthChecks.IHealthCheck
+{
+    private readonly IClockFactory _clocks;
+
+    public PingCheck(IClockFactory clocks) { _clocks = clocks; }
+
+    public Task<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult> CheckHealthAsync(
+        Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext context, CancellationToken cancellationToken = default)
+        => Task.FromResult(_clocks.Create().Now() > DateTimeOffset.MinValue
+            ? Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy()
+            : Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Unhealthy());
+}
+
+// Registered, and resolved by no edge: container-constructed all the same
+// (O-17 — the registration list decides, not whether something asks for it).
+public sealed class AuditSink
+{
+    private readonly IAudit _audit;
+    private readonly IAuditStore _store;
+
+    public AuditSink(IAudit audit, IAuditStore store) { _audit = audit; _store = store; }
+
+    public void Flush(Guid id) => _audit.Record(_store.Load(id));
+}
+
 // Registered only inside a conditional.
 public interface IAudit
 {

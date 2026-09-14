@@ -9,6 +9,8 @@
 //! proxies — each with the original predicate and its known divergence —
 //! so that an undefined denominator is not replaced by a confidently wrong one.
 
+use std::collections::BTreeSet;
+
 use serde::Serialize;
 
 use super::csharp_inventory::Index;
@@ -64,8 +66,8 @@ pub struct RoleProxy {
 
 /// The proxies, printed on every report that uses them.
 pub const PROXIES: &[RoleProxy] = &[
-    RoleProxy { role: Role::Marker, original_predicate: "no member to satisfy", proxy: "an interface declaring no methods, properties or events", known_divergence: "an empty interface used as a DI key or a type-test target is excluded although the container may register it" },
-    RoleProxy { role: Role::DataContract, original_predicate: "a shape, not a dependency", proxy: "an interface declaring properties only", known_divergence: "a service whose API is property-shaped (an options accessor, IOptions<T>.Value) is excluded although composition chooses it" },
+    RoleProxy { role: Role::Marker, original_predicate: "no member to satisfy", proxy: "an interface with no method, property or event anywhere in its interface chain (members are summed over the chain since v4 — before that an inheriting-only interface read as a marker at 293 of 293 marker edges in A and B, O-13)", known_divergence: "an empty interface used as a DI key or a type-test target is excluded although the container may register it — not observed in A or B" },
+    RoleProxy { role: Role::DataContract, original_predicate: "a shape, not a dependency", proxy: "an interface whose chain declares properties only", known_divergence: "a service whose API is property-shaped (IOptions<T>.Value, IHubContext<T>.Clients) is excluded although composition chooses it; a collection contract (IReadOnlyList<T>) reads as a service through IEnumerable<T>.GetEnumerator" },
     RoleProxy { role: Role::FactoryProvider, original_predicate: "composition chooses the factory; the factory chooses later", proxy: "Func<>, Lazy<>, IServiceProvider, IServiceScopeFactory, or an interface with a method or property returning an abstraction", known_divergence: "a service that merely returns another service's result (a repository returning an IReadOnlyList) reads as a factory" },
     RoleProxy { role: Role::GenericDispatch, original_predicate: "the type parameter is the act", proxy: "an interface with generic arity above zero that is not a factory", known_divergence: "a generic service abstraction that is not dispatch (IRepository<T>) reads as dispatch; resolved by registration until a declaration supplies the edge (CG-R-61)" },
     RoleProxy { role: Role::AbstractData, original_predicate: "nothing to choose between", proxy: "an abstract class no registration names as a service", known_divergence: "an abstract class registered only through a wrapper the resolver does not read is excluded although it is a service" },
@@ -89,15 +91,40 @@ struct Shape {
     abstract_returns: bool,
 }
 
-fn shape_of(ix: &Index<'_>, id: &str) -> Option<Shape> {
+/// The shape of one type alone, in the solution or outside it, with its base interfaces.
+fn own_shape<'a>(ix: &Index<'a>, id: &str) -> Option<(Shape, Vec<&'a str>)> {
     if let Some(e) = ix.external.get(id) {
-        return Some(Shape { kind: e.kind.clone(), is_abstract: e.is_abstract, arity: e.arity > 0, methods: e.methods, properties: e.properties, events: e.events, abstract_returns: !e.abstract_returns.is_empty() });
+        let shape = Shape { kind: e.kind.clone(), is_abstract: e.is_abstract, arity: e.arity > 0, methods: e.methods, properties: e.properties, events: e.events, abstract_returns: !e.abstract_returns.is_empty() };
+        return Some((shape, e.interfaces.iter().map(String::as_str).collect()));
     }
     let t = ix.types.get(id)?;
     let members: Vec<_> = ix.members_of.get(id).into_iter().flatten().filter_map(|m| ix.members.get(m)).collect();
     let count = |k: &str| members.iter().filter(|m| m.kind == k).count() as u32;
     let abstract_returns = members.iter().any(|m| m.return_type.as_deref().is_some_and(|r| ix.abstract_types.contains(r)));
-    Some(Shape { kind: t.kind.clone(), is_abstract: t.is_abstract, arity: id.contains('`'), methods: count("method"), properties: count("property"), events: count("event"), abstract_returns })
+    let shape = Shape { kind: t.kind.clone(), is_abstract: t.is_abstract, arity: id.contains('`'), methods: count("method"), properties: count("property"), events: count("event"), abstract_returns };
+    Some((shape, t.interfaces.iter().map(String::as_str).collect()))
+}
+
+/// The shape the proxies read: the type's own kind, with members summed over
+/// its whole interface chain (P-1) — an interface that inherits its members
+/// has members to satisfy.
+fn shape_of(ix: &Index<'_>, id: &str) -> Option<Shape> {
+    let (mut shape, bases) = own_shape(ix, id)?;
+    let mut seen: BTreeSet<&str> = BTreeSet::new();
+    let mut stack = bases;
+    while let Some(base) = stack.pop() {
+        if !seen.insert(base) {
+            continue;
+        }
+        if let Some((b, more)) = own_shape(ix, base) {
+            shape.methods += b.methods;
+            shape.properties += b.properties;
+            shape.events += b.events;
+            shape.abstract_returns |= b.abstract_returns;
+            stack.extend(more);
+        }
+    }
+    Some(shape)
 }
 
 /// The role of `target` at a composition edge. `registered` says whether any

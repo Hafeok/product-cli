@@ -1,15 +1,27 @@
-//! Tests for reachability over the fixture inventory: roots, the resolver, the per-edge criterion.
+//! Tests for reachability over the fixture inventory: roots, the resolver, the per-edge criterion, the report form.
 
+use super::super::csharp_ground_truth::GroundTruth;
 use super::super::csharp_inventory::load_inventory;
 use crate::pf::csharp_reach::*;
 
 const FIXTURE: &str = include_str!("../../../product-cli/tests/fixtures/csharp-inventory/inventory.json");
+const GROUND_TRUTH: &str = include_str!("../../../product-cli/tests/fixtures/csharp-inventory/ground-truth.yaml");
+const COMPONENT: &str = "implements:T:Microsoft.AspNetCore.Components.ComponentBase";
 
 fn opts(roots: &[&str], track: &[&str]) -> ReachOptions {
     ReachOptions {
         roots: roots.iter().map(|r| Root::parse(r).expect("root spec")).collect(),
         track: track.iter().map(|r| Root::parse(r).expect("track spec")).collect(),
+        ground_truth: None,
     }
+}
+
+fn run(roots: &[&str]) -> ReachReport {
+    reach(&load_inventory(FIXTURE).expect("loads"), &opts(roots, &[]))
+}
+
+fn edge<'a>(report: &'a ReachReport, from: &str, target: &str) -> &'a super::super::csharp_walk::CompositionEdge {
+    report.resolution.edges.iter().find(|e| e.from.ends_with(from) && e.target.ends_with(target)).unwrap_or_else(|| panic!("edge {from} -> {target}"))
 }
 
 #[test]
@@ -22,8 +34,7 @@ fn root_specs_parse() {
 
 #[test]
 fn entry_point_reaches_through_the_container() {
-    let inv = load_inventory(FIXTURE).expect("loads");
-    let report = reach(&inv, &opts(&["entry-point"], &[]));
+    let report = run(&["entry-point"]);
     let unreached = |t: &str| report.unreached.iter().any(|u| u == t);
     // Main resolves OrdersEndpoints (service locator), whose constructor takes
     // IHandler<…>: the registered handler is reached, and through it the repository.
@@ -32,51 +43,71 @@ fn entry_point_reaches_through_the_container() {
     assert!(!unreached("T:Shop.Api.Infrastructure.AlwaysValid`1"), "open-generic typeof pair");
     assert!(!unreached("T:Shop.Api.Infrastructure.MoneyComparer"), "an external abstraction with an in-solution registration");
     assert!(unreached("T:Shop.Api.Persistence.Dead"));
-    assert!(unreached("T:Shop.Api.Orders.CheckoutService"));
+    assert!(unreached("T:Shop.Api.Orders.CheckoutService"), "registered by nothing: not container-constructed");
 }
 
 #[test]
 fn composition_edges_are_classified_by_role() {
-    let inv = load_inventory(FIXTURE).expect("loads");
-    let report = reach(&inv, &opts(&["entry-point"], &[]));
+    let report = run(&["entry-point"]);
     let r = &report.resolution;
-    assert_eq!(r.in_denominator, r.resolved + r.partial + r.unresolved);
+    assert_eq!(r.scored, r.resolved + r.unresolved, "the denominator is resolved + unresolved (CG-R-73)");
+    assert_eq!(r.composition_edges, r.scored + r.partial + r.boundary + r.registration_not_read + r.excluded, "every edge in exactly one state");
     assert!(r.partial >= 1, "IClockFactory is a factory: {:?}", r.by_role);
-    assert_eq!(r.by_reason.get("conditional-registration"), Some(&1), "{:?}", r.by_reason);
+    assert_eq!(r.by_reason.get("conditional-registration"), Some(&2), "IAudit at OrdersEndpoints and AuditSink: {:?}", r.by_reason);
     assert!(r.by_role.contains_key("generic-dispatch"), "IHandler<T>, IValidator<T>: {:?}", r.by_role);
-    // A marker and a data contract arriving as constructor parameters are
-    // composition edges the criterion excludes; a type test on the marker and
-    // a data contract as a method parameter are not composition edges at all.
+    // A marker arriving as a constructor parameter is a composition edge the
+    // criterion excludes; a type test on it is not a composition edge at all.
     assert_eq!(r.excluded_by_role.get("marker"), Some(&1), "{:?}", r.excluded_by_role);
-    assert_eq!(r.excluded_by_role.get("data-contract"), Some(&1), "{:?}", r.excluded_by_role);
-    assert_eq!(r.composition_edges, r.in_denominator + r.boundary + 2);
+    // IReadOnlyList<T> declares a property and inherits GetEnumerator (returning
+    // IEnumerator<T>): counted over the chain it reads as a factory/provider — the
+    // declared divergence of the data-contract proxy.
+    assert_eq!(edge(&report, "OrdersEndpoints", "IReadOnlyList`1").role.label(), "factory-provider");
 }
 
 #[test]
-fn boundary_edges_are_their_own_state() {
-    let inv = load_inventory(FIXTURE).expect("loads");
-    let report = reach(&inv, &opts(&["entry-point", "implements:T:Microsoft.AspNetCore.Components.ComponentBase"], &[]));
+fn inherited_members_are_counted_over_the_chain() {
+    // IAuditStore declares nothing and inherits Load from IReadStore<T>: a service, not a marker (P-1, O-13).
+    let report = run(&["entry-point"]);
+    let e = edge(&report, "OrdersEndpoints", "IAuditStore");
+    assert_eq!(e.role.label(), "service");
+    assert_eq!(e.state, super::super::csharp_walk::EdgeState::Resolved);
+}
+
+#[test]
+fn boundary_and_registration_not_read_are_their_own_states() {
+    use super::super::csharp_walk::EdgeState;
+    let report = run(&["entry-point", COMPONENT]);
     let r = &report.resolution;
-    // ILogger<T> at the OrdersEndpoints constructor and at OrdersPanel's [Inject]
-    // property, IServiceProvider at the constructor: external, unimplemented,
-    // unregistered — the library satisfies them (CG-R-68).
     let logger = r.boundary_surface.iter().find(|b| b.target == "T:Microsoft.Extensions.Logging.ILogger`1").expect("ILogger<T> is boundary");
     assert_eq!(logger.assembly, "Microsoft.Extensions.Logging.Abstractions");
-    assert_eq!(logger.edges, 2);
+    assert_eq!(logger.edges, 2, "the constructor and the [Inject] property");
     assert!(r.boundary_surface.iter().any(|b| b.target == "T:System.IServiceProvider"));
     assert_eq!(r.boundary, 3);
-    assert_eq!(r.in_denominator, r.resolved + r.partial + r.unresolved, "boundary is outside the denominator");
+    // IMemoryCache is registered by AddMemoryCache(), a call the resolver does not
+    // parse: registration-not-read with the call, never boundary (CG-R-75).
+    assert_eq!(edge(&report, "OrdersEndpoints", "IMemoryCache").state, EdgeState::RegistrationNotRead("AddMemoryCache"));
+    assert_eq!(r.registration_not_read_surface[0].call.as_deref(), Some("AddMemoryCache"));
+    assert!(!r.boundary_surface.iter().any(|b| b.target.ends_with("IMemoryCache")));
     // An external abstraction with an in-solution registration is resolved, not boundary.
     assert!(!r.boundary_surface.iter().any(|b| b.target == "T:System.Collections.Generic.IComparer`1"));
     let text = render_reach(&report);
-    assert!(text.contains("boundary — the used library surface"));
+    assert!(text.contains("boundary — the used library surface") && text.contains("via AddMemoryCache"));
+}
+
+#[test]
+fn the_registration_list_decides_container_construction() {
+    // AuditSink is registered and resolved by no edge; PingCheck is registered by a
+    // call chained off AddHealthChecks(). Both are container-constructed (O-17, R-2).
+    let report = run(&["entry-point"]);
+    assert_eq!(edge(&report, "AuditSink", "IAuditStore").state, super::super::csharp_walk::EdgeState::Resolved);
+    assert_eq!(edge(&report, "PingCheck", "IClockFactory").role.label(), "factory-provider");
+    assert!(!report.unreached.iter().any(|u| u.ends_with("PingCheck")));
 }
 
 #[test]
 fn property_injection_is_a_composition_edge() {
-    let inv = load_inventory(FIXTURE).expect("loads");
-    let entry = reach(&inv, &opts(&["entry-point"], &[]));
-    let with_component = reach(&inv, &opts(&["entry-point", "implements:T:Microsoft.AspNetCore.Components.ComponentBase"], &[]));
+    let entry = run(&["entry-point"]);
+    let with_component = run(&["entry-point", COMPONENT]);
     // OrdersPanel's two [Inject] properties add one resolved edge (ICartReader,
     // through the registration Main reaches) and one boundary edge (ILogger<T>).
     assert_eq!(with_component.resolution.resolved, entry.resolution.resolved + 1);
@@ -85,9 +116,26 @@ fn property_injection_is_a_composition_edge() {
 }
 
 #[test]
+fn implements_root_walks_the_inherit_chain() {
+    // MemoryAuditStore implements IAuditStore, which extends IReadStore<T> (P-4).
+    let report = run(&["implements:T:Shop.Api.Infrastructure.IReadStore`1"]);
+    assert_eq!(report.by_root[0].root_symbols, 2, "IAuditStore and MemoryAuditStore");
+}
+
+#[test]
+fn test_projects_are_outside_the_primary_convention() {
+    let report = run(&["entry-point", "implements:T:Shop.Api.Infrastructure.IClock"]);
+    assert_eq!(report.test_projects, vec!["P:Shop.Tests".to_string()]);
+    assert_eq!(report.test_sites_skipped, 3, "the test's AddSingleton×2 and BuildServiceProvider");
+    assert_eq!(report.by_root[1].root_symbols, 1, "SystemClock, not the test project's FakeClock");
+    assert_eq!(report.test_project_types.types, 4);
+    assert_eq!(report.total.types, 45, "production types only");
+    assert!(!report.unreached.iter().any(|u| u.starts_with("T:Shop.Tests.")));
+}
+
+#[test]
 fn unresolved_and_partial_are_their_own_categories() {
-    let inv = load_inventory(FIXTURE).expect("loads");
-    let report = reach(&inv, &opts(&["entry-point"], &[]));
+    let report = run(&["entry-point"]);
     assert!(!report.unreached.iter().any(|u| u == "T:Shop.Api.Infrastructure.ConsoleAudit"), "conditionally registered: unresolved, not unreached");
     assert!(report.total.unresolved >= 1);
     let t = &report.total;
@@ -95,11 +143,32 @@ fn unresolved_and_partial_are_their_own_categories() {
 }
 
 #[test]
+fn coverage_prints_its_population() {
+    let report = run(&["entry-point"]);
+    let text = render_reach(&report);
+    let r = &report.resolution;
+    assert!(text.contains(&format!("resolution coverage: {}/{} of the denominator", r.resolved, r.scored)));
+    assert!(text.contains(&format!("{}/{} of composition edges", r.scored, r.composition_edges)));
+    assert!(text.contains("partial: 3 (held:"), "{text}");
+}
+
+#[test]
+fn ground_truth_gives_reader_recall_and_walk_precision() {
+    let inv = load_inventory(FIXTURE).expect("loads");
+    let mut o = opts(&["entry-point", COMPONENT], &[]);
+    o.ground_truth = Some(serde_yaml::from_str::<GroundTruth>(GROUND_TRUTH).expect("ground truth parses"));
+    let report = reach(&inv, &o);
+    let g = report.ground_truth.as_ref().expect("measured");
+    assert_eq!((g.edges, g.reader_present, g.walk_hits, g.walk_edges), (20, 20, 20, 20), "missing {:?} / extra {:?}", g.walk_missing, g.walk_extra);
+    assert!(render_reach(&report).contains("ground truth (Shop.Api, 20 edges"));
+}
+
+#[test]
 fn tracked_sets_get_their_own_disposition() {
     let inv = load_inventory(FIXTURE).expect("loads");
     let report = reach(&inv, &opts(&["entry-point"], &["implements:T:Shop.Api.Infrastructure.IHandler`1", "implements:T:Shop.Api.Infrastructure.IAudit"]));
     assert_eq!(report.tracked[0].reached, 1, "the handler");
-    assert_eq!(report.tracked[1].unresolved, 1, "the conditionally registered audit");
+    assert_eq!(report.tracked[1].unresolved, 1, "the conditionally registered audit (the test project's FakeAudit is not selected)");
     let text = render_reach(&report);
     assert!(text.starts_with("roots: entry-point\n"));
     assert!(text.contains("resolution coverage:") && text.contains("role proxies"));
@@ -107,16 +176,14 @@ fn tracked_sets_get_their_own_disposition() {
 
 #[test]
 fn a_named_member_is_a_root() {
-    let inv = load_inventory(FIXTURE).expect("loads");
-    let report = reach(&inv, &opts(&["member:M:Shop.Api.Program.Main(System.String[])"], &[]));
-    let entry = reach(&inv, &opts(&["entry-point"], &[]));
+    let report = run(&["member:M:Shop.Api.Program.Main(System.String[])"]);
+    let entry = run(&["entry-point"]);
     assert_eq!(report.total.reached, entry.total.reached);
 }
 
 #[test]
 fn attribute_and_implements_roots_select_declared_symbols() {
-    let inv = load_inventory(FIXTURE).expect("loads");
-    let report = reach(&inv, &opts(&["attribute:T:Shop.Api.Infrastructure.EndpointAttribute", "implements:T:Shop.Api.Infrastructure.IHandler`1"], &[]));
+    let report = run(&["attribute:T:Shop.Api.Infrastructure.EndpointAttribute", "implements:T:Shop.Api.Infrastructure.IHandler`1"]);
     assert_eq!(report.by_root[0].root_symbols, 1, "one [Endpoint] method");
     assert_eq!(report.by_root[1].root_symbols, 1, "one IHandler implementor");
     assert!(!report.unreached.iter().any(|u| u == "T:Shop.Domain.OrderPlaced"));

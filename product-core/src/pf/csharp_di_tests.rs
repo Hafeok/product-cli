@@ -39,7 +39,10 @@ fn unresolved_reasons_are_named() {
     assert_eq!(r.resolve("T:Shop.Api.Infrastructure.IClock", &all), Err(Reason::NoRegistration));
     // The registration site was never reached: module configuration.
     assert_eq!(r.resolve("T:Shop.Api.Persistence.IOrderRepository", &|_| false), Err(Reason::ModuleConfiguration));
-    assert_eq!(r.registrations_read, 10);
-    assert_eq!(r.calls_ignored, 1, "BuildServiceProvider is a call, not a registration");
+    assert_eq!(r.registrations_read, 13, "incl. AddCheck<PingCheck> on the chained IHealthChecksBuilder (R-2)");
+    assert_eq!(r.calls_ignored, 3, "BuildServiceProvider, AddMemoryCache, AddHealthChecks are calls the resolver does not parse");
     assert_eq!(r.ignored_by_method.get("BuildServiceProvider"), Some(&1));
+    assert_eq!(r.test_sites_skipped, 3, "the test project's registrations are not production composition (CG-R-75)");
+    assert_eq!(r.provider_of("T:Microsoft.Extensions.Caching.Memory.IMemoryCache", &all), Some("AddMemoryCache"));
+    assert!(r.unlearned(&all).is_empty(), "every reached external call is parsed or known: {:?}", r.unlearned(&all));
 }

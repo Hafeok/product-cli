@@ -1,0 +1,28 @@
+# Composition edges of Shop.Api, enumerated by reading Fixture/Shop.Api/*.cs (CG-R-71).
+# Container-constructed: named by a registration in Program.Main (OrdersEndpoints,
+# PlaceOrderHandler, AuditSink, PingCheck via AddHealthChecks().AddCheck<PingCheck>)
+# or a framework convention (OrdersPanel : ComponentBase). CheckoutService and
+# BogusHandler are registered by nothing: their constructors are not composition edges.
+project: Shop.Api
+source: read from Fixture/Shop.Api by hand, 2026-09-14
+edges:
+  - { from: "T:Shop.Api.Orders.OrdersEndpoints", target: "T:Shop.Api.Infrastructure.IHandler`1" }
+  - { from: "T:Shop.Api.Orders.OrdersEndpoints", target: "T:Shop.Api.Infrastructure.IValidator`1" }
+  - { from: "T:Shop.Api.Orders.OrdersEndpoints", target: "T:Shop.Api.Infrastructure.IClockFactory" }
+  - { from: "T:Shop.Api.Orders.OrdersEndpoints", target: "T:System.IServiceProvider" }
+  - { from: "T:Shop.Api.Orders.OrdersEndpoints", target: "T:System.Collections.Generic.IComparer`1" }
+  - { from: "T:Shop.Api.Orders.OrdersEndpoints", target: "T:Shop.Api.Infrastructure.IAudit" }
+  - { from: "T:Shop.Api.Orders.OrdersEndpoints", target: "T:System.Collections.Generic.IReadOnlyList`1" }
+  - { from: "T:Shop.Api.Orders.OrdersEndpoints", target: "T:Shop.Domain.IDomainEvent" }
+  - { from: "T:Shop.Api.Orders.OrdersEndpoints", target: "T:Microsoft.Extensions.Logging.ILogger`1" }
+  - { from: "T:Shop.Api.Orders.OrdersEndpoints", target: "T:Microsoft.Extensions.Caching.Memory.IMemoryCache" }
+  - { from: "T:Shop.Api.Orders.OrdersEndpoints", target: "T:Shop.Api.Infrastructure.IAuditStore" }
+  - { from: "T:Shop.Api.Orders.OrdersEndpoints", target: "T:Shop.Api.Infrastructure.IIdGenerator" }   # service locator in PostOrder
+  - { from: "T:Shop.Api.Program", target: "T:Shop.Api.Orders.OrdersEndpoints" }                        # service locator in Main
+  - { from: "T:Shop.Api.Orders.PlaceOrderHandler", target: "T:Shop.Api.Persistence.IOrderRepository" }
+  - { from: "T:Shop.Api.Orders.PlaceOrderHandler", target: "T:Shop.Api.Orders.ICartReader" }
+  - { from: "T:Shop.Api.Admin.OrdersPanel", target: "T:Shop.Api.Orders.ICartReader" }                # [Inject]
+  - { from: "T:Shop.Api.Admin.OrdersPanel", target: "T:Microsoft.Extensions.Logging.ILogger`1" }       # [Inject]
+  - { from: "T:Shop.Api.Infrastructure.PingCheck", target: "T:Shop.Api.Infrastructure.IClockFactory" }
+  - { from: "T:Shop.Api.Infrastructure.AuditSink", target: "T:Shop.Api.Infrastructure.IAudit" }
+  - { from: "T:Shop.Api.Infrastructure.AuditSink", target: "T:Shop.Api.Infrastructure.IAuditStore" }

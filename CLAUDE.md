@@ -240,10 +240,11 @@ The reference What lives in `.product/products/product-cli/`. `product mcp
 
 ## C# stack binding (`product csharp`, `tools/csharp-inventory/`)
 
-**As at 2026-09-14, Gate 1a of the binding session.** Built: the reader (schema v3), the consumer,
+**As at 2026-09-14, Gate 1a of the binding session.** Built: the reader (schema v4), the consumer,
 the DI resolver, the per-edge denominator criterion with declared proxies (ratified CG-R-68),
-reachability with unresolved, partial and **boundary** as their own categories, and the
-act-indexed delta. Not built (Gate 2,
+reachability with unresolved, partial, **boundary** and **registration-not-read** as their own
+categories, test projects outside the primary convention (CG-R-75), the CG-R-71 ground-truth
+measure (reader recall, walk recall/precision), and the act-indexed delta. Not built (Gate 2,
 dated here so nobody reads it as present): the `Slice`/`RealisesFact` checks, profiles, the
 determination loader, declaration-supplied edges (CG-R-61).
 
@@ -252,10 +253,12 @@ The binding connects the domain state change binding's act vocabulary (`eventmod
 
 - **`tools/csharp-inventory/`** — a .NET 10 console project (not a Cargo member) that loads a
   solution through `MSBuildWorkspace` and emits `inventory.json` per
-  `schema/json/csharp-inventory/inventory.schema.json` (version `3`). **Facts only** — types,
+  `schema/json/csharp-inventory/inventory.schema.json` (version `4`). **Facts only** — types,
   members, declared attributes with arguments, the reference graph with *how* each target is used
-  (`parameter`, `resolve`, `type-test`, …), external abstractions with their member shape, and
-  every `IServiceCollection` call as written. It is the bounded exception to `dec/ddd/lsp-as-seam`
+  (`parameter`, `resolve`, `type-test`, …), external types with their member shape and base
+  interfaces, each project's referenced assemblies, and every `IServiceCollection` call as written
+  (plus calls chained off one — `AddHealthChecks().AddCheck<T>()`). The emission rules are stated
+  in full in `meta/sessions/2026-09-13-implement-csharp-binding/reader-emission-rules-v4.md`. It is the bounded exception to `dec/ddd/lsp-as-seam`
   (`dec/ddd/batch-inventory-reader`): batch inventory here, interactive queries stay on `ddd-lsp`.
 - **`pf/csharp_inventory.rs`** loads it and refuses unknown versions before parsing;
   **`pf/csharp_di.rs`** resolves interface-mediated edges through the registration facts (the one
@@ -267,13 +270,21 @@ The binding connects the domain state change binding's act vocabulary (`eventmod
   *partial*, marker, data-contract, abstract-data, value) is read through proxies that print with
   their divergences; an external abstraction no in-solution type implements and no registration
   names is a **boundary** edge (CG-R-68) — the used library surface, reported with type and
-  assembly, outside the resolved/unresolved denominator; a `[Inject]`/`[FromServices]` property
-  (matched by symbol id) on a container-constructed type is a composition edge, method injection
-  is not (the reader emits no parameter attributes — a stated gap); **`pf/csharp_walk.rs`** is the walk; `pf/csharp_reach.rs` runs it from a
+  assembly, outside the resolved/unresolved denominator — unless a reached framework call the
+  resolver does not parse registers it (`AddIdentity` → `UserManager<T>`): then it is
+  **registration-not-read** with the call, from the declared table in `pf/csharp_di_knowledge.rs`
+  (CG-R-75); a `[Inject]`/`[FromServices]` property (matched by symbol id) on a
+  container-constructed type is a composition edge, method injection is not (the reader emits no
+  parameter attributes — a stated gap); container-constructed is the root set plus every
+  implementation a reached registration names (O-17); **`pf/csharp_walk.rs`** is the walk; `pf/csharp_reach.rs` runs it from a
   *stated* root convention (`entry-point`, `public`, `attribute:<T:…>`, `implements:<T:…>`,
-  `member:<M:…>`) and reports reached / **unresolved** / **partial** / unreached — never folded
-  together (CG-R-62), no figure without the others beside it, resolution coverage first;
-  `--track` reports a symbol set's own disposition.
+  `member:<M:…>`; `implements:` walks the inherit chain) and reports reached / **unresolved** /
+  **partial** / unreached — never folded together (CG-R-62), no figure without the others beside
+  it, resolution coverage first and always as *x/y of the denominator, y/z of composition edges*
+  (CG-R-73, `pf/csharp_resolution.rs`); projects referencing a test framework are outside the
+  primary convention and reported on their own row; `--track` reports a symbol set's own
+  disposition; `--ground-truth <yaml>` measures reader recall and walk recall/precision against a
+  hand enumeration (CG-R-71, `pf/csharp_ground_truth.rs`).
   `pf/csharp_delta.rs` is the delta, **indexed by act, never by symbol** (R-A/R-D): per act
   *declared*, *declarable*, *unstructured* or *unrealised*, plus the three-way undeclared ratios.
   The declarable/unstructured separator is a declared proxy (CG-R-52) and the spanning-type

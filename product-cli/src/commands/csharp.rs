@@ -57,13 +57,17 @@ pub enum CsharpCommands {
         /// implements:T:MediatR.IRequestHandler`2 (repeatable)
         #[arg(long = "track")]
         track: Vec<String>,
+        /// A hand-enumerated ground truth (YAML: project, edges[{from,target}])
+        /// for reader recall and walk recall/precision (CG-R-71)
+        #[arg(long = "ground-truth")]
+        ground_truth: Option<PathBuf>,
     },
 }
 
 pub(crate) fn handle_csharp(cmd: CsharpCommands) -> CmdResult {
     match cmd {
         CsharpCommands::Inventory { file } => inventory_cmd(&file),
-        CsharpCommands::Reach { file, roots, track } => reach_cmd(&file, &roots, &track),
+        CsharpCommands::Reach { file, roots, track, ground_truth } => reach_cmd(&file, &roots, &track, ground_truth.as_deref()),
         CsharpCommands::Delta { file, event_model, slice_attribute, realises_fact_attribute } => {
             delta_cmd(&file, &event_model, DeltaOptions { slice_attribute, realises_fact_attribute })
         }
@@ -130,11 +134,15 @@ fn parse_roots(specs: &[&str]) -> Result<Vec<Root>, ProductError> {
         .collect()
 }
 
-fn reach_cmd(file: &Path, roots: &str, track: &[String]) -> CmdResult {
+fn reach_cmd(file: &Path, roots: &str, track: &[String], ground_truth: Option<&Path>) -> CmdResult {
     let inv = load(file)?;
     let root_specs: Vec<&str> = roots.split(',').map(str::trim).filter(|s| !s.is_empty()).collect();
     let track_specs: Vec<&str> = track.iter().map(String::as_str).collect();
-    let opts = ReachOptions { roots: parse_roots(&root_specs)?, track: parse_roots(&track_specs)? };
+    let ground_truth = match ground_truth {
+        Some(p) => Some(serde_yaml::from_str(&read(p)?).map_err(|e| ProductError::ConfigError(format!("ground truth {}: {e}", p.display())))?),
+        None => None,
+    };
+    let opts = ReachOptions { roots: parse_roots(&root_specs)?, track: parse_roots(&track_specs)?, ground_truth };
     let report = reach(&inv, &opts);
     let text = render_reach(&report);
     let json = serde_json::to_value(&report).map_err(|e| ProductError::Internal(e.to_string()))?;

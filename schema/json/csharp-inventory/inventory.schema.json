@@ -7,7 +7,7 @@
   "required": ["inventory_version", "produced_by", "produced_at", "solution", "projects", "types", "members", "references", "external_types", "registrations", "diagnostics"],
   "additionalProperties": false,
   "properties": {
-    "inventory_version": { "type": "string", "const": "3" },
+    "inventory_version": { "type": "string", "const": "4" },
     "produced_by": {
       "type": "object",
       "required": ["tool", "tool_version", "roslyn_version"],
@@ -59,14 +59,15 @@
     },
     "project": {
       "type": "object",
-      "required": ["id", "name", "path", "target_frameworks", "assembly"],
+      "required": ["id", "name", "path", "target_frameworks", "assembly", "referenced_assemblies"],
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string", "pattern": "^P:" },
         "name": { "type": "string", "minLength": 1 },
         "path": { "type": "string" },
         "target_frameworks": { "type": "array", "items": { "type": "string" } },
-        "assembly": { "type": "string" }
+        "assembly": { "type": "string" },
+        "referenced_assemblies": { "type": "array", "items": { "type": "string" }, "$comment": "Every assembly the compilation references, by name. The consumer reads test-framework membership from it (P-3); the reader classifies nothing." }
       }
     },
     "type": {
@@ -133,7 +134,7 @@
     },
     "external_type": {
       "type": "object",
-      "required": ["id", "assembly", "namespace", "name", "kind", "is_abstract", "arity", "methods", "properties", "events", "abstract_returns"],
+      "required": ["id", "assembly", "namespace", "name", "kind", "is_abstract", "arity", "methods", "properties", "events", "abstract_returns", "base_type", "interfaces"],
       "additionalProperties": false,
       "$comment": "A type declared outside the solution that an emitted edge lands on, with the member shape the consumer's role proxies read. Counts are of the type's own declared members (implicit ones excluded).",
       "properties": {
@@ -147,16 +148,19 @@
         "methods": { "type": "integer", "minimum": 0 },
         "properties": { "type": "integer", "minimum": 0 },
         "events": { "type": "integer", "minimum": 0 },
-        "abstract_returns": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" }, "$comment": "Return types of the type's methods and properties that are themselves interfaces or abstract classes — the factory/provider proxy reads this." }
+        "abstract_returns": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" }, "$comment": "Return types of the type's methods and properties that are themselves interfaces or abstract classes — the factory/provider proxy reads this." },
+        "base_type": { "type": ["string", "null"], "$comment": "The base class, as an original definition, itself listed as an external type." },
+        "interfaces": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" }, "$comment": "Directly declared base interfaces, each itself listed as an external type, so member counts can be summed over the chain (P-1, v4)." }
       }
     },
     "registration": {
       "type": "object",
-      "required": ["site", "method", "method_name", "type_arguments", "typeof_arguments", "constructs", "has_lambda", "conditional", "file", "line"],
+      "required": ["site", "receiver", "method", "method_name", "type_arguments", "typeof_arguments", "constructs", "has_lambda", "conditional", "file", "line"],
       "additionalProperties": false,
       "$comment": "One call on an IServiceCollection (or a type implementing it), as written — AddControllers as much as AddScoped. Which calls register what, and what each resolves to, is decided Rust-side (CG-R-60/61/62).",
       "properties": {
         "site": { "$ref": "#/$defs/symbol_id", "$comment": "The member the call sits in." },
+        "receiver": { "$ref": "#/$defs/symbol_id", "$comment": "The receiver's type: IServiceCollection, or the builder a registration call returned earlier in the same statement (v4, R-2)." },
         "method": { "$ref": "#/$defs/symbol_id", "$comment": "The invoked method's original definition." },
         "method_name": { "type": "string", "minLength": 1 },
         "type_arguments": { "type": "array", "items": { "$ref": "#/$defs/symbol_id" } },

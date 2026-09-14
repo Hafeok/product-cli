@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Product.Binding;
@@ -103,15 +104,21 @@ public sealed class OrdersEndpoints
     private readonly IAudit? _audit;
     private readonly IReadOnlyList<string> _routes;
     private readonly ILogger<OrdersEndpoints> _log;
+    private readonly IMemoryCache _cache;
+    private readonly IAuditStore _auditStore;
 
     // IReadOnlyList<string> is a data contract (properties only) and IDomainEvent a
     // marker: both arrive as constructor parameters here so the criterion's
     // excluded roles are exercised at a composition edge. ILogger<T> is an external
     // abstraction nothing in the solution implements or registers: a boundary edge (CG-R-68).
-    public OrdersEndpoints(IHandler<PlaceOrderCommand> placeOrder, IValidator<PlaceOrderCommand> validator, IClockFactory clocks, IServiceProvider provider, IComparer<Money> byAmount, IAudit? audit, IReadOnlyList<string> routes, IDomainEvent? last, ILogger<OrdersEndpoints> log)
+    // IMemoryCache is registered by AddMemoryCache(), a call the resolver does not read:
+    // registration-not-read (CG-R-75). IAuditStore inherits its only member (P-1).
+    public OrdersEndpoints(IHandler<PlaceOrderCommand> placeOrder, IValidator<PlaceOrderCommand> validator, IClockFactory clocks, IServiceProvider provider, IComparer<Money> byAmount, IAudit? audit, IReadOnlyList<string> routes, IDomainEvent? last, ILogger<OrdersEndpoints> log, IMemoryCache cache, IAuditStore auditStore)
     {
         _routes = routes;
         _log = log;
+        _cache = cache;
+        _auditStore = auditStore;
         _ = last;
         _placeOrder = placeOrder;
         _validator = validator;
@@ -121,7 +128,7 @@ public sealed class OrdersEndpoints
         _audit = audit;
     }
 
-    public bool Serve(string[] args) => _log is not null && args.Length >= 0 && _routes.Count >= 0 && _clocks.Create().Now() > DateTimeOffset.MinValue
+    public bool Serve(string[] args) => _log is not null && _cache is not null && _auditStore is not null && args.Length >= 0 && _routes.Count >= 0 && _clocks.Create().Now() > DateTimeOffset.MinValue
         && _byAmount.Compare(Money.Zero("DKK"), Money.Zero("DKK")) == 0;
 
     [Endpoint("POST /orders")]

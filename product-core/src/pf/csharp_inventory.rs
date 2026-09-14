@@ -1,6 +1,6 @@
 //! The C# inventory artefact — the versioned fact file the .NET reader emits.
 //!
-//! Mirrors `schema/json/csharp-inventory/inventory.schema.json` (version 3).
+//! Mirrors `schema/json/csharp-inventory/inventory.schema.json` (version 4).
 //! Loading refuses any `inventory_version` not in [`KNOWN_INVENTORY_VERSIONS`]
 //! before another field is read. Facts only: nothing here classifies.
 
@@ -12,7 +12,14 @@ use serde_json::Value;
 use crate::error::{ProductError, Result};
 
 /// The inventory versions this consumer understands.
-pub const KNOWN_INVENTORY_VERSIONS: &[&str] = &["3"];
+pub const KNOWN_INVENTORY_VERSIONS: &[&str] = &["4"];
+
+/// Test-framework assemblies, by name: a project referencing one is a test
+/// project (CG-R-75 — classified by project, mechanically, never by reach).
+pub const TEST_FRAMEWORK_ASSEMBLIES: &[&str] = &[
+    "xunit.core", "xunit.v3.core", "nunit.framework", "MSTest.TestFramework",
+    "Microsoft.VisualStudio.TestPlatform.TestFramework", "TUnit.Core",
+];
 
 /// The vendored schema, applied unchanged.
 pub const INVENTORY_SCHEMA: &str =
@@ -42,6 +49,15 @@ pub struct Project {
     pub target_frameworks: Vec<String>,
     #[serde(default)]
     pub assembly: String,
+    /// Every assembly the compilation references, by name (v4).
+    #[serde(default)]
+    pub referenced_assemblies: Vec<String>,
+}
+
+impl Project {
+    pub fn is_test(&self) -> bool {
+        self.referenced_assemblies.iter().any(|a| TEST_FRAMEWORK_ASSEMBLIES.contains(&a.as_str()))
+    }
 }
 
 /// One declared attribute with its arguments, as the compiler resolved them.
@@ -154,13 +170,24 @@ pub struct ExternalType {
     pub events: u32,
     #[serde(default)]
     pub abstract_returns: Vec<String>,
+    /// The base class, itself an external type (v4).
+    #[serde(default)]
+    pub base_type: Option<String>,
+    /// Directly declared base interfaces, each itself an external type, so
+    /// member counts can be summed over the chain (v4, P-1).
+    #[serde(default)]
+    pub interfaces: Vec<String>,
 }
 
-/// One call on an `IServiceCollection`, as written. Which calls register
-/// what is decided in `csharp_di`, not here.
+/// One call on an `IServiceCollection` — or on a builder such a call
+/// returned in the same statement (v4, R-2) — as written. Which calls
+/// register what is decided in `csharp_di`, not here.
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct Registration {
     pub site: String,
+    /// The receiver's type: `IServiceCollection` or the builder reached.
+    #[serde(default)]
+    pub receiver: String,
     pub method: String,
     pub method_name: String,
     #[serde(default)]
@@ -262,6 +289,21 @@ pub struct Index<'a> {
     pub abstract_types: BTreeSet<&'a str>,
     /// Abstractions declared outside the solution, by id.
     pub external: BTreeMap<&'a str, &'a ExternalType>,
+    /// Projects referencing a test framework (CG-R-75): outside the primary
+    /// convention, reported separately.
+    pub test_projects: BTreeSet<&'a str>,
+}
+
+impl Index<'_> {
+    /// Does the type live in a test project?
+    pub fn is_test(&self, type_id: &str) -> bool {
+        self.types.get(type_id).is_some_and(|t| self.test_projects.contains(t.project.as_str()))
+    }
+
+    /// In-solution types implementing or inheriting `id`, outside test projects.
+    pub fn production_implementors(&self, id: &str) -> impl Iterator<Item = &str> + '_ {
+        self.implementors.get(id).into_iter().flatten().copied().filter(move |t| !self.is_test(t))
+    }
 }
 
 impl Inventory {
@@ -292,6 +334,7 @@ impl Inventory {
                 .chain(self.external_types.iter().filter(|e| e.kind == "interface" || e.is_abstract).map(|e| e.id.as_str()))
                 .collect(),
             external: self.external_types.iter().map(|e| (e.id.as_str(), e)).collect(),
+            test_projects: self.projects.iter().filter(|p| p.is_test()).map(|p| p.id.as_str()).collect(),
         }
     }
 

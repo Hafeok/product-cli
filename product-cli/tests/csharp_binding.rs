@@ -23,8 +23,8 @@ fn inventory_check_reports_counts() {
         .arg(fixture("inventory.json"))
         .assert()
         .success()
-        .stdout(predicate::str::contains("inventory version 3"))
-        .stdout(predicate::str::contains("3 project(s)"));
+        .stdout(predicate::str::contains("inventory version 4"))
+        .stdout(predicate::str::contains("4 project(s)"));
 }
 
 #[test]
@@ -48,9 +48,21 @@ fn reach_prints_its_convention_first() {
         .assert()
         .success()
         .stdout(predicate::str::starts_with("roots: entry-point, public\n"))
-        .stdout(predicate::str::contains("resolution coverage:"))
-        .stdout(predicate::str::contains("boundary (external abstractions the library satisfies, outside the denominator)"))
+        .stdout(predicate::str::contains("of the denominator"))
+        .stdout(predicate::str::contains("of composition edges"))
         .stdout(predicate::str::contains("by namespace:"));
+}
+
+#[test]
+fn reach_measures_a_ground_truth_when_given_one() {
+    product()
+        .args(["csharp", "reach", "--roots", "entry-point,implements:T:Microsoft.AspNetCore.Components.ComponentBase", "--ground-truth"])
+        .arg(fixture("ground-truth.yaml"))
+        .arg(fixture("inventory.json"))
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("ground truth (Shop.Api, 20 edges"))
+        .stdout(predicate::str::contains("reader recall 20/20 (100.0%)"));
 }
 
 #[test]

@@ -24,6 +24,10 @@ public static class Program
         }
         services.AddSingleton<IReadOnlyList<string>>(new[] { "POST /orders" });
         services.AddScoped<OrdersEndpoints>();
+        services.AddMemoryCache();
+        services.AddScoped<IAuditStore, MemoryAuditStore>();
+        services.AddScoped<AuditSink>();
+        services.AddHealthChecks().AddCheck<PingCheck>("ping");
         using var provider = services.BuildServiceProvider();
         var endpoints = provider.GetRequiredService<OrdersEndpoints>();
         return endpoints.Serve(args) ? 0 : 1;

@@ -87,7 +87,7 @@ public sealed class References
                     foreach (var ta in callee.TypeArguments) TypeRef(from, ta, "generic-argument");
                     if (OnServiceProvider(model, inv, callee))
                         foreach (var ta in callee.TypeArguments) TypeRef(from, ta, "resolve");
-                    if (OnServiceCollection(model, inv, callee)) _register(RegistrationOf(model, from, inv, callee, declared));
+                    if (RegistrationReceiver(model, inv, callee) is { } receiver) _register(RegistrationOf(model, from, inv, callee, declared, receiver));
                 }
                 break;
             case BaseObjectCreationExpressionSyntax creation:
@@ -124,21 +124,30 @@ public sealed class References
             || receiver.AllInterfaces.Any(i => Ids.Of(i.OriginalDefinition) == ServiceProvider);
     }
 
-    // A call whose receiver is an IServiceCollection (or a type implementing
-    // it), whether as an extension method or an instance method. Identity of
-    // the framework interface, not a name test.
-    private static bool OnServiceCollection(SemanticModel model, InvocationExpressionSyntax inv, IMethodSymbol callee)
+    // The receiver of a registration call: an IServiceCollection (or a type
+    // implementing it), whether as an extension method or an instance method
+    // — identity of the framework interface, not a name test — or a builder
+    // returned by a registration call earlier in the same statement
+    // (services.AddHealthChecks().AddCheck<T>(), R-2). Null when the call is
+    // neither. A builder held in a variable is not followed: stated limit.
+    private ITypeSymbol? RegistrationReceiver(SemanticModel model, InvocationExpressionSyntax inv, IMethodSymbol callee)
     {
         ITypeSymbol? receiver = callee.ReducedFrom is not null ? callee.ReceiverType
             : callee.IsExtensionMethod ? callee.Parameters.FirstOrDefault()?.Type
             : inv.Expression is MemberAccessExpressionSyntax ma ? model.GetTypeInfo(ma.Expression).Type
             : callee.ContainingType;
-        if (receiver is null) return false;
-        return Ids.Of(receiver.OriginalDefinition) == ServiceCollection
-            || receiver.AllInterfaces.Any(i => Ids.Of(i.OriginalDefinition) == ServiceCollection);
+        if (receiver is null) return null;
+        if (Ids.Of(receiver.OriginalDefinition) == ServiceCollection
+            || receiver.AllInterfaces.Any(i => Ids.Of(i.OriginalDefinition) == ServiceCollection))
+            return receiver;
+        if (inv.Expression is MemberAccessExpressionSyntax { Expression: InvocationExpressionSyntax inner }
+            && Resolve(model, inner) is IMethodSymbol innerCallee
+            && RegistrationReceiver(model, inner, innerCallee) is not null)
+            return receiver;
+        return null;
     }
 
-    private Registration RegistrationOf(SemanticModel model, string site, InvocationExpressionSyntax inv, IMethodSymbol callee, IMethodSymbol declared)
+    private Registration RegistrationOf(SemanticModel model, string site, InvocationExpressionSyntax inv, IMethodSymbol callee, IMethodSymbol declared, ITypeSymbol receiver)
     {
         var args = inv.ArgumentList.DescendantNodes().ToList();
         var typeofs = args.OfType<TypeOfExpressionSyntax>()
@@ -151,6 +160,7 @@ public sealed class References
         return new Registration
         {
             Site = site,
+            Receiver = Ids.Of(receiver.OriginalDefinition),
             Method = Ids.Of(declared.OriginalDefinition),
             MethodName = callee.Name,
             TypeArguments = callee.TypeArguments.Select(t => Ids.Of(t.OriginalDefinition)).ToList(),

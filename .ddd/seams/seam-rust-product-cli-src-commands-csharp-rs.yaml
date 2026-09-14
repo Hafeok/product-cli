@@ -30,3 +30,27 @@ bindings:
   after: sha256:0c1ee09f373a031294a56677bd3866f7954f1521d2d055a3a67c182a5479fae8
   base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
   hash: sha256:ec339f56eea77f1f4bff05833f1d0627919e5ecce665f04e777fbc2ed35defb4
+- symbol: CsharpCommands
+  file: product-cli/src/commands/csharp.rs
+  before: absent
+  after: sha256:50c687c0613c3e00791b6354403328a9cece57cc110896a11f88c708a5ce72f2
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:27b44c802de77267f2f5f58af81bec1eaf54e3727d9214c34c7702515c5dc223
+- symbol: Delta
+  file: product-cli/src/commands/csharp.rs
+  before: absent
+  after: sha256:50c687c0613c3e00791b6354403328a9cece57cc110896a11f88c708a5ce72f2
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:227f4cd0bda59c9078adedd6bf8c9d4a7941dbf8eeea5147177cfa573eda845c
+- symbol: Inventory
+  file: product-cli/src/commands/csharp.rs
+  before: absent
+  after: sha256:50c687c0613c3e00791b6354403328a9cece57cc110896a11f88c708a5ce72f2
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:daa004768626641c677a1fbf6000ad354dc5d59376a9d7d2a021f4ba9678b75f
+- symbol: Reach
+  file: product-cli/src/commands/csharp.rs
+  before: absent
+  after: sha256:50c687c0613c3e00791b6354403328a9cece57cc110896a11f88c708a5ce72f2
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:71792e443c57bdb9ab4d010db062616c1635993e4a33053fafc982423eda6adf

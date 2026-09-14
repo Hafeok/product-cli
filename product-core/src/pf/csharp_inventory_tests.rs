@@ -8,10 +8,14 @@ const FIXTURE: &str =
 #[test]
 fn fixture_loads_and_conforms_to_the_vendored_schema() {
     let inv = load_inventory(FIXTURE).expect("loads");
-    assert_eq!(inv.inventory_version, "3");
-    assert_eq!(inv.registrations.len(), 11);
+    assert_eq!(inv.inventory_version, "4");
+    assert_eq!(inv.registrations.len(), 19);
     assert!(inv.external_types.iter().any(|e| e.id == "T:System.IServiceProvider"));
-    assert_eq!(inv.projects.len(), 3);
+    assert_eq!(inv.projects.len(), 4);
+    let tests = inv.projects.iter().find(|p| p.id == "P:Shop.Tests").expect("test project");
+    assert!(tests.is_test() && !inv.projects.iter().find(|p| p.id == "P:Shop.Api").expect("api").is_test());
+    let logger = inv.external_types.iter().find(|e| e.id == "T:Microsoft.Extensions.Logging.ILogger`1").expect("external");
+    assert_eq!(logger.interfaces, vec!["T:Microsoft.Extensions.Logging.ILogger".to_string()], "base interfaces travel with the external type (v4)");
     assert!(inv.types.len() >= 20 && inv.members.len() >= 50);
     let value: serde_json::Value = serde_json::from_str(FIXTURE).expect("json");
     let findings = schema_findings(&value).expect("schema applies");
@@ -43,9 +47,10 @@ fn attributes_arrive_with_typed_arguments() {
     assert_eq!(handler.1.arg(0), Some("PlaceOrder"));
     assert_eq!(handler.1.arg(1), Some("handler"));
     assert_eq!(handler.1.named_str("Profile"), Some("rest-api-v1"));
+    // Two entry points: Shop.Api's Main and the test SDK's generated one in Shop.Tests.
     let entry: Vec<_> = inv.members.iter().filter(|m| m.is_entry_point).collect();
-    assert_eq!(entry.len(), 1);
-    assert_eq!(entry[0].name, "Main");
+    assert_eq!(entry.len(), 2);
+    assert!(entry.iter().any(|m| m.id == "M:Shop.Api.Program.Main(System.String[])"));
 }
 
 #[test]

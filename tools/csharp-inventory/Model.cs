@@ -1,4 +1,4 @@
-// The inventory artefact, schema version 1. Mirrors
+// The inventory artefact, schema version 4. Mirrors
 // schema/json/csharp-inventory/inventory.schema.json field for field; the
 // schema is authoritative and the Rust side validates against it.
 //
@@ -8,7 +8,7 @@ namespace CSharpInventory;
 
 public sealed class Inventory
 {
-    public string InventoryVersion { get; init; } = "3";
+    public string InventoryVersion { get; init; } = "4";
     public ProducedBy ProducedBy { get; init; } = new();
     public string ProducedAt { get; init; } = "";
     public SolutionInfo Solution { get; init; } = new();
@@ -39,18 +39,26 @@ public sealed class ExternalType
     public int Events { get; init; }
     /// <summary>Return types of the type's methods and properties that are themselves abstractions.</summary>
     public List<string> AbstractReturns { get; init; } = new();
+    /// <summary>The base class, as an original definition; itself noted as an external type.</summary>
+    public string? BaseType { get; init; }
+    /// <summary>Directly declared base interfaces, as original definitions; each noted as an external type, so the consumer can count members over the chain (schema v4, P-1).</summary>
+    public List<string> Interfaces { get; init; } = new();
 }
 
 /// <summary>
-/// One call on an IServiceCollection, as written: the member it sits in, the
-/// invoked method's identity, its generic and typeof arguments, what the
-/// arguments construct, whether a lambda is among them, and whether the call
-/// is inside a conditional. Every such call is recorded — AddControllers as
-/// much as AddScoped — and which of them register what is decided Rust-side.
+/// One call on an IServiceCollection, as written — or on a builder a call
+/// returned in the same statement (services.AddHealthChecks().AddCheck&lt;T&gt;(),
+/// schema v4, R-2): the member it sits in, the receiver's type, the invoked
+/// method's identity, its generic and typeof arguments, what the arguments
+/// construct, whether a lambda is among them, and whether the call is inside
+/// a conditional. Every such call is recorded — AddControllers as much as
+/// AddScoped — and which of them register what is decided Rust-side.
 /// </summary>
 public sealed class Registration
 {
     public string Site { get; init; } = "";
+    /// <summary>The receiver's type (IServiceCollection, or the builder the chain reached).</summary>
+    public string Receiver { get; init; } = "";
     public string Method { get; init; } = "";
     public string MethodName { get; init; } = "";
     public List<string> TypeArguments { get; init; } = new();
@@ -82,6 +90,8 @@ public sealed class ProjectInfo
     public string Path { get; init; } = "";
     public List<string> TargetFrameworks { get; init; } = new();
     public string Assembly { get; init; } = "";
+    /// <summary>Every assembly the compilation references, by name — a fact the consumer reads test-framework membership from (schema v4, P-3).</summary>
+    public List<string> ReferencedAssemblies { get; init; } = new();
 }
 
 public sealed class AttributeUse

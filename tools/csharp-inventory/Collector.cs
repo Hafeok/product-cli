@@ -70,6 +70,7 @@ public sealed class Collector
             Path = Relative(_solutionDir, project.FilePath ?? ""),
             TargetFrameworks = TargetFrameworks(project),
             Assembly = project.AssemblyName,
+            ReferencedAssemblies = compilation.ReferencedAssemblyNames.Select(a => a.Name).Distinct().OrderBy(n => n, StringComparer.Ordinal).ToList(),
         });
         // Compile errors are facts about load quality: a project that did not
         // resolve its references yields a semantic model full of error types,
@@ -111,8 +112,10 @@ public sealed class Collector
                 Line = line,
                 Attributes = Attributes(type),
             };
-            if (type.BaseType is not null) AddRef(tid, Ids.Of(type.BaseType.OriginalDefinition), "inherit");
-            foreach (var i in type.Interfaces) AddRef(tid, Ids.Of(i.OriginalDefinition), "implement");
+            // A base type or interface declared outside the solution is noted as an
+            // external type, so the interface chain can be walked (P-1).
+            if (type.BaseType is not null) { AddRef(tid, Ids.Of(type.BaseType.OriginalDefinition), "inherit"); NoteIfExternal(type.BaseType); }
+            foreach (var i in type.Interfaces) { AddRef(tid, Ids.Of(i.OriginalDefinition), "implement"); NoteIfExternal(i); }
             foreach (var a in type.GetAttributes()) if (a.AttributeClass is not null) AddRef(tid, Ids.Of(a.AttributeClass), "attribute");
 
             foreach (var member in type.GetMembers())
@@ -183,7 +186,14 @@ public sealed class Collector
 
     private void AddRef(string from, string to, string kind) => _refs.Add((from, to, kind));
 
-    // An edge landed on a type outside the solution: record its shape once.
+    private void NoteIfExternal(INamedTypeSymbol type)
+    {
+        if (!type.Locations.Any(l => l.IsInSource)) NoteExternal(type);
+    }
+
+    // An edge landed on a type outside the solution: record its shape once,
+    // then its base type and base interfaces (each an external type too), so
+    // member counts can be summed over the chain.
     private void NoteExternal(INamedTypeSymbol type)
     {
         var def = type.OriginalDefinition;
@@ -215,7 +225,11 @@ public sealed class Collector
             Properties = members.Count(m => m is IPropertySymbol),
             Events = members.Count(m => m is IEventSymbol),
             AbstractReturns = abstractReturns,
+            BaseType = def.BaseType is null ? null : Ids.Of(def.BaseType.OriginalDefinition),
+            Interfaces = def.Interfaces.Select(i => Ids.Of(i.OriginalDefinition)).Distinct().OrderBy(s => s, StringComparer.Ordinal).ToList(),
         };
+        if (def.BaseType is not null) NoteIfExternal(def.BaseType);
+        foreach (var i in def.Interfaces) NoteIfExternal(i);
     }
 
     private static List<string> TargetFrameworks(Project project)

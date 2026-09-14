@@ -1,14 +1,14 @@
 {
-  "inventory_version": "3",
+  "inventory_version": "4",
   "produced_by": {
     "tool": "csharp-inventory",
     "tool_version": "0.1.0",
     "roslyn_version": "5.0.0.0"
   },
-  "produced_at": "2026-09-14T08:53:34.1420139Z",
+  "produced_at": "2026-09-14T11:06:05.4280215Z",
   "solution": {
     "path": "Fixture.sln",
-    "git_head": "4c2171bf35308772e355ba6cb8009ba96d8fa531"
+    "git_head": "6e38aeac7dec5e66b3fb8932fef22ee3519dc54a"
   },
   "projects": [
     {
@@ -16,24 +16,763 @@
       "name": "Product.Binding",
       "path": "Product.Binding/Product.Binding.csproj",
       "target_frameworks": [],
-      "assembly": "Product.Binding"
+      "assembly": "Product.Binding",
+      "referenced_assemblies": [
+        "Microsoft.CSharp",
+        "Microsoft.VisualBasic",
+        "Microsoft.VisualBasic.Core",
+        "Microsoft.Win32.Primitives",
+        "Microsoft.Win32.Registry",
+        "System",
+        "System.AppContext",
+        "System.Buffers",
+        "System.Collections",
+        "System.Collections.Concurrent",
+        "System.Collections.Immutable",
+        "System.Collections.NonGeneric",
+        "System.Collections.Specialized",
+        "System.ComponentModel",
+        "System.ComponentModel.Annotations",
+        "System.ComponentModel.DataAnnotations",
+        "System.ComponentModel.EventBasedAsync",
+        "System.ComponentModel.Primitives",
+        "System.ComponentModel.TypeConverter",
+        "System.Configuration",
+        "System.Console",
+        "System.Core",
+        "System.Data",
+        "System.Data.Common",
+        "System.Data.DataSetExtensions",
+        "System.Diagnostics.Contracts",
+        "System.Diagnostics.Debug",
+        "System.Diagnostics.DiagnosticSource",
+        "System.Diagnostics.FileVersionInfo",
+        "System.Diagnostics.Process",
+        "System.Diagnostics.StackTrace",
+        "System.Diagnostics.TextWriterTraceListener",
+        "System.Diagnostics.Tools",
+        "System.Diagnostics.TraceSource",
+        "System.Diagnostics.Tracing",
+        "System.Drawing",
+        "System.Drawing.Primitives",
+        "System.Dynamic.Runtime",
+        "System.Formats.Asn1",
+        "System.Formats.Tar",
+        "System.Globalization",
+        "System.Globalization.Calendars",
+        "System.Globalization.Extensions",
+        "System.IO",
+        "System.IO.Compression",
+        "System.IO.Compression.Brotli",
+        "System.IO.Compression.FileSystem",
+        "System.IO.Compression.ZipFile",
+        "System.IO.FileSystem",
+        "System.IO.FileSystem.AccessControl",
+        "System.IO.FileSystem.DriveInfo",
+        "System.IO.FileSystem.Primitives",
+        "System.IO.FileSystem.Watcher",
+        "System.IO.IsolatedStorage",
+        "System.IO.MemoryMappedFiles",
+        "System.IO.Pipes",
+        "System.IO.Pipes.AccessControl",
+        "System.IO.UnmanagedMemoryStream",
+        "System.Linq",
+        "System.Linq.Expressions",
+        "System.Linq.Parallel",
+        "System.Linq.Queryable",
+        "System.Memory",
+        "System.Net",
+        "System.Net.Http",
+        "System.Net.Http.Json",
+        "System.Net.HttpListener",
+        "System.Net.Mail",
+        "System.Net.NameResolution",
+        "System.Net.NetworkInformation",
+        "System.Net.Ping",
+        "System.Net.Primitives",
+        "System.Net.Quic",
+        "System.Net.Requests",
+        "System.Net.Security",
+        "System.Net.ServicePoint",
+        "System.Net.Sockets",
+        "System.Net.WebClient",
+        "System.Net.WebHeaderCollection",
+        "System.Net.WebProxy",
+        "System.Net.WebSockets",
+        "System.Net.WebSockets.Client",
+        "System.Numerics",
+        "System.Numerics.Vectors",
+        "System.ObjectModel",
+        "System.Reflection",
+        "System.Reflection.DispatchProxy",
+        "System.Reflection.Emit",
+        "System.Reflection.Emit.ILGeneration",
+        "System.Reflection.Emit.Lightweight",
+        "System.Reflection.Extensions",
+        "System.Reflection.Metadata",
+        "System.Reflection.Primitives",
+        "System.Reflection.TypeExtensions",
+        "System.Resources.Reader",
+        "System.Resources.ResourceManager",
+        "System.Resources.Writer",
+        "System.Runtime",
+        "System.Runtime.CompilerServices.Unsafe",
+        "System.Runtime.CompilerServices.VisualC",
+        "System.Runtime.Extensions",
+        "System.Runtime.Handles",
+        "System.Runtime.InteropServices",
+        "System.Runtime.InteropServices.JavaScript",
+        "System.Runtime.InteropServices.RuntimeInformation",
+        "System.Runtime.Intrinsics",
+        "System.Runtime.Loader",
+        "System.Runtime.Numerics",
+        "System.Runtime.Serialization",
+        "System.Runtime.Serialization.Formatters",
+        "System.Runtime.Serialization.Json",
+        "System.Runtime.Serialization.Primitives",
+        "System.Runtime.Serialization.Xml",
+        "System.Security",
+        "System.Security.AccessControl",
+        "System.Security.Claims",
+        "System.Security.Cryptography",
+        "System.Security.Cryptography.Algorithms",
+        "System.Security.Cryptography.Cng",
+        "System.Security.Cryptography.Csp",
+        "System.Security.Cryptography.Encoding",
+        "System.Security.Cryptography.OpenSsl",
+        "System.Security.Cryptography.Primitives",
+        "System.Security.Cryptography.X509Certificates",
+        "System.Security.Principal",
+        "System.Security.Principal.Windows",
+        "System.Security.SecureString",
+        "System.ServiceModel.Web",
+        "System.ServiceProcess",
+        "System.Text.Encoding",
+        "System.Text.Encoding.CodePages",
+        "System.Text.Encoding.Extensions",
+        "System.Text.Encodings.Web",
+        "System.Text.Json",
+        "System.Text.RegularExpressions",
+        "System.Threading",
+        "System.Threading.Channels",
+        "System.Threading.Overlapped",
+        "System.Threading.Tasks",
+        "System.Threading.Tasks.Dataflow",
+        "System.Threading.Tasks.Extensions",
+        "System.Threading.Tasks.Parallel",
+        "System.Threading.Thread",
+        "System.Threading.ThreadPool",
+        "System.Threading.Timer",
+        "System.Transactions",
+        "System.Transactions.Local",
+        "System.ValueTuple",
+        "System.Web",
+        "System.Web.HttpUtility",
+        "System.Windows",
+        "System.Xml",
+        "System.Xml.Linq",
+        "System.Xml.ReaderWriter",
+        "System.Xml.Serialization",
+        "System.Xml.XDocument",
+        "System.Xml.XPath",
+        "System.Xml.XPath.XDocument",
+        "System.Xml.XmlDocument",
+        "System.Xml.XmlSerializer",
+        "WindowsBase",
+        "mscorlib",
+        "netstandard"
+      ]
     },
     {
       "id": "P:Shop.Api",
       "name": "Shop.Api",
       "path": "Shop.Api/Shop.Api.csproj",
       "target_frameworks": [],
-      "assembly": "Shop.Api"
+      "assembly": "Shop.Api",
+      "referenced_assemblies": [
+        "Microsoft.AspNetCore.Authorization",
+        "Microsoft.AspNetCore.Components",
+        "Microsoft.AspNetCore.Metadata",
+        "Microsoft.CSharp",
+        "Microsoft.Extensions.Caching.Abstractions",
+        "Microsoft.Extensions.Caching.Memory",
+        "Microsoft.Extensions.Configuration.Abstractions",
+        "Microsoft.Extensions.DependencyInjection",
+        "Microsoft.Extensions.DependencyInjection.Abstractions",
+        "Microsoft.Extensions.Diagnostics.Abstractions",
+        "Microsoft.Extensions.Diagnostics.HealthChecks",
+        "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions",
+        "Microsoft.Extensions.FileProviders.Abstractions",
+        "Microsoft.Extensions.Hosting.Abstractions",
+        "Microsoft.Extensions.Logging.Abstractions",
+        "Microsoft.Extensions.Options",
+        "Microsoft.Extensions.Primitives",
+        "Microsoft.VisualBasic",
+        "Microsoft.VisualBasic.Core",
+        "Microsoft.Win32.Primitives",
+        "Microsoft.Win32.Registry",
+        "Product.Binding",
+        "Shop.Domain",
+        "System",
+        "System.AppContext",
+        "System.Buffers",
+        "System.Collections",
+        "System.Collections.Concurrent",
+        "System.Collections.Immutable",
+        "System.Collections.NonGeneric",
+        "System.Collections.Specialized",
+        "System.ComponentModel",
+        "System.ComponentModel.Annotations",
+        "System.ComponentModel.DataAnnotations",
+        "System.ComponentModel.EventBasedAsync",
+        "System.ComponentModel.Primitives",
+        "System.ComponentModel.TypeConverter",
+        "System.Configuration",
+        "System.Console",
+        "System.Core",
+        "System.Data",
+        "System.Data.Common",
+        "System.Data.DataSetExtensions",
+        "System.Diagnostics.Contracts",
+        "System.Diagnostics.Debug",
+        "System.Diagnostics.DiagnosticSource",
+        "System.Diagnostics.FileVersionInfo",
+        "System.Diagnostics.Process",
+        "System.Diagnostics.StackTrace",
+        "System.Diagnostics.TextWriterTraceListener",
+        "System.Diagnostics.Tools",
+        "System.Diagnostics.TraceSource",
+        "System.Diagnostics.Tracing",
+        "System.Drawing",
+        "System.Drawing.Primitives",
+        "System.Dynamic.Runtime",
+        "System.Formats.Asn1",
+        "System.Formats.Tar",
+        "System.Globalization",
+        "System.Globalization.Calendars",
+        "System.Globalization.Extensions",
+        "System.IO",
+        "System.IO.Compression",
+        "System.IO.Compression.Brotli",
+        "System.IO.Compression.FileSystem",
+        "System.IO.Compression.ZipFile",
+        "System.IO.FileSystem",
+        "System.IO.FileSystem.AccessControl",
+        "System.IO.FileSystem.DriveInfo",
+        "System.IO.FileSystem.Primitives",
+        "System.IO.FileSystem.Watcher",
+        "System.IO.IsolatedStorage",
+        "System.IO.MemoryMappedFiles",
+        "System.IO.Pipes",
+        "System.IO.Pipes.AccessControl",
+        "System.IO.UnmanagedMemoryStream",
+        "System.Linq",
+        "System.Linq.Expressions",
+        "System.Linq.Parallel",
+        "System.Linq.Queryable",
+        "System.Memory",
+        "System.Net",
+        "System.Net.Http",
+        "System.Net.Http.Json",
+        "System.Net.HttpListener",
+        "System.Net.Mail",
+        "System.Net.NameResolution",
+        "System.Net.NetworkInformation",
+        "System.Net.Ping",
+        "System.Net.Primitives",
+        "System.Net.Quic",
+        "System.Net.Requests",
+        "System.Net.Security",
+        "System.Net.ServicePoint",
+        "System.Net.Sockets",
+        "System.Net.WebClient",
+        "System.Net.WebHeaderCollection",
+        "System.Net.WebProxy",
+        "System.Net.WebSockets",
+        "System.Net.WebSockets.Client",
+        "System.Numerics",
+        "System.Numerics.Vectors",
+        "System.ObjectModel",
+        "System.Reflection",
+        "System.Reflection.DispatchProxy",
+        "System.Reflection.Emit",
+        "System.Reflection.Emit.ILGeneration",
+        "System.Reflection.Emit.Lightweight",
+        "System.Reflection.Extensions",
+        "System.Reflection.Metadata",
+        "System.Reflection.Primitives",
+        "System.Reflection.TypeExtensions",
+        "System.Resources.Reader",
+        "System.Resources.ResourceManager",
+        "System.Resources.Writer",
+        "System.Runtime",
+        "System.Runtime.CompilerServices.Unsafe",
+        "System.Runtime.CompilerServices.VisualC",
+        "System.Runtime.Extensions",
+        "System.Runtime.Handles",
+        "System.Runtime.InteropServices",
+        "System.Runtime.InteropServices.JavaScript",
+        "System.Runtime.InteropServices.RuntimeInformation",
+        "System.Runtime.Intrinsics",
+        "System.Runtime.Loader",
+        "System.Runtime.Numerics",
+        "System.Runtime.Serialization",
+        "System.Runtime.Serialization.Formatters",
+        "System.Runtime.Serialization.Json",
+        "System.Runtime.Serialization.Primitives",
+        "System.Runtime.Serialization.Xml",
+        "System.Security",
+        "System.Security.AccessControl",
+        "System.Security.Claims",
+        "System.Security.Cryptography",
+        "System.Security.Cryptography.Algorithms",
+        "System.Security.Cryptography.Cng",
+        "System.Security.Cryptography.Csp",
+        "System.Security.Cryptography.Encoding",
+        "System.Security.Cryptography.OpenSsl",
+        "System.Security.Cryptography.Primitives",
+        "System.Security.Cryptography.X509Certificates",
+        "System.Security.Principal",
+        "System.Security.Principal.Windows",
+        "System.Security.SecureString",
+        "System.ServiceModel.Web",
+        "System.ServiceProcess",
+        "System.Text.Encoding",
+        "System.Text.Encoding.CodePages",
+        "System.Text.Encoding.Extensions",
+        "System.Text.Encodings.Web",
+        "System.Text.Json",
+        "System.Text.RegularExpressions",
+        "System.Threading",
+        "System.Threading.Channels",
+        "System.Threading.Overlapped",
+        "System.Threading.Tasks",
+        "System.Threading.Tasks.Dataflow",
+        "System.Threading.Tasks.Extensions",
+        "System.Threading.Tasks.Parallel",
+        "System.Threading.Thread",
+        "System.Threading.ThreadPool",
+        "System.Threading.Timer",
+        "System.Transactions",
+        "System.Transactions.Local",
+        "System.ValueTuple",
+        "System.Web",
+        "System.Web.HttpUtility",
+        "System.Windows",
+        "System.Xml",
+        "System.Xml.Linq",
+        "System.Xml.ReaderWriter",
+        "System.Xml.Serialization",
+        "System.Xml.XDocument",
+        "System.Xml.XPath",
+        "System.Xml.XPath.XDocument",
+        "System.Xml.XmlDocument",
+        "System.Xml.XmlSerializer",
+        "WindowsBase",
+        "mscorlib",
+        "netstandard"
+      ]
     },
     {
       "id": "P:Shop.Domain",
       "name": "Shop.Domain",
       "path": "Shop.Domain/Shop.Domain.csproj",
       "target_frameworks": [],
-      "assembly": "Shop.Domain"
+      "assembly": "Shop.Domain",
+      "referenced_assemblies": [
+        "Microsoft.CSharp",
+        "Microsoft.VisualBasic",
+        "Microsoft.VisualBasic.Core",
+        "Microsoft.Win32.Primitives",
+        "Microsoft.Win32.Registry",
+        "Product.Binding",
+        "System",
+        "System.AppContext",
+        "System.Buffers",
+        "System.Collections",
+        "System.Collections.Concurrent",
+        "System.Collections.Immutable",
+        "System.Collections.NonGeneric",
+        "System.Collections.Specialized",
+        "System.ComponentModel",
+        "System.ComponentModel.Annotations",
+        "System.ComponentModel.DataAnnotations",
+        "System.ComponentModel.EventBasedAsync",
+        "System.ComponentModel.Primitives",
+        "System.ComponentModel.TypeConverter",
+        "System.Configuration",
+        "System.Console",
+        "System.Core",
+        "System.Data",
+        "System.Data.Common",
+        "System.Data.DataSetExtensions",
+        "System.Diagnostics.Contracts",
+        "System.Diagnostics.Debug",
+        "System.Diagnostics.DiagnosticSource",
+        "System.Diagnostics.FileVersionInfo",
+        "System.Diagnostics.Process",
+        "System.Diagnostics.StackTrace",
+        "System.Diagnostics.TextWriterTraceListener",
+        "System.Diagnostics.Tools",
+        "System.Diagnostics.TraceSource",
+        "System.Diagnostics.Tracing",
+        "System.Drawing",
+        "System.Drawing.Primitives",
+        "System.Dynamic.Runtime",
+        "System.Formats.Asn1",
+        "System.Formats.Tar",
+        "System.Globalization",
+        "System.Globalization.Calendars",
+        "System.Globalization.Extensions",
+        "System.IO",
+        "System.IO.Compression",
+        "System.IO.Compression.Brotli",
+        "System.IO.Compression.FileSystem",
+        "System.IO.Compression.ZipFile",
+        "System.IO.FileSystem",
+        "System.IO.FileSystem.AccessControl",
+        "System.IO.FileSystem.DriveInfo",
+        "System.IO.FileSystem.Primitives",
+        "System.IO.FileSystem.Watcher",
+        "System.IO.IsolatedStorage",
+        "System.IO.MemoryMappedFiles",
+        "System.IO.Pipes",
+        "System.IO.Pipes.AccessControl",
+        "System.IO.UnmanagedMemoryStream",
+        "System.Linq",
+        "System.Linq.Expressions",
+        "System.Linq.Parallel",
+        "System.Linq.Queryable",
+        "System.Memory",
+        "System.Net",
+        "System.Net.Http",
+        "System.Net.Http.Json",
+        "System.Net.HttpListener",
+        "System.Net.Mail",
+        "System.Net.NameResolution",
+        "System.Net.NetworkInformation",
+        "System.Net.Ping",
+        "System.Net.Primitives",
+        "System.Net.Quic",
+        "System.Net.Requests",
+        "System.Net.Security",
+        "System.Net.ServicePoint",
+        "System.Net.Sockets",
+        "System.Net.WebClient",
+        "System.Net.WebHeaderCollection",
+        "System.Net.WebProxy",
+        "System.Net.WebSockets",
+        "System.Net.WebSockets.Client",
+        "System.Numerics",
+        "System.Numerics.Vectors",
+        "System.ObjectModel",
+        "System.Reflection",
+        "System.Reflection.DispatchProxy",
+        "System.Reflection.Emit",
+        "System.Reflection.Emit.ILGeneration",
+        "System.Reflection.Emit.Lightweight",
+        "System.Reflection.Extensions",
+        "System.Reflection.Metadata",
+        "System.Reflection.Primitives",
+        "System.Reflection.TypeExtensions",
+        "System.Resources.Reader",
+        "System.Resources.ResourceManager",
+        "System.Resources.Writer",
+        "System.Runtime",
+        "System.Runtime.CompilerServices.Unsafe",
+        "System.Runtime.CompilerServices.VisualC",
+        "System.Runtime.Extensions",
+        "System.Runtime.Handles",
+        "System.Runtime.InteropServices",
+        "System.Runtime.InteropServices.JavaScript",
+        "System.Runtime.InteropServices.RuntimeInformation",
+        "System.Runtime.Intrinsics",
+        "System.Runtime.Loader",
+        "System.Runtime.Numerics",
+        "System.Runtime.Serialization",
+        "System.Runtime.Serialization.Formatters",
+        "System.Runtime.Serialization.Json",
+        "System.Runtime.Serialization.Primitives",
+        "System.Runtime.Serialization.Xml",
+        "System.Security",
+        "System.Security.AccessControl",
+        "System.Security.Claims",
+        "System.Security.Cryptography",
+        "System.Security.Cryptography.Algorithms",
+        "System.Security.Cryptography.Cng",
+        "System.Security.Cryptography.Csp",
+        "System.Security.Cryptography.Encoding",
+        "System.Security.Cryptography.OpenSsl",
+        "System.Security.Cryptography.Primitives",
+        "System.Security.Cryptography.X509Certificates",
+        "System.Security.Principal",
+        "System.Security.Principal.Windows",
+        "System.Security.SecureString",
+        "System.ServiceModel.Web",
+        "System.ServiceProcess",
+        "System.Text.Encoding",
+        "System.Text.Encoding.CodePages",
+        "System.Text.Encoding.Extensions",
+        "System.Text.Encodings.Web",
+        "System.Text.Json",
+        "System.Text.RegularExpressions",
+        "System.Threading",
+        "System.Threading.Channels",
+        "System.Threading.Overlapped",
+        "System.Threading.Tasks",
+        "System.Threading.Tasks.Dataflow",
+        "System.Threading.Tasks.Extensions",
+        "System.Threading.Tasks.Parallel",
+        "System.Threading.Thread",
+        "System.Threading.ThreadPool",
+        "System.Threading.Timer",
+        "System.Transactions",
+        "System.Transactions.Local",
+        "System.ValueTuple",
+        "System.Web",
+        "System.Web.HttpUtility",
+        "System.Windows",
+        "System.Xml",
+        "System.Xml.Linq",
+        "System.Xml.ReaderWriter",
+        "System.Xml.Serialization",
+        "System.Xml.XDocument",
+        "System.Xml.XPath",
+        "System.Xml.XPath.XDocument",
+        "System.Xml.XmlDocument",
+        "System.Xml.XmlSerializer",
+        "WindowsBase",
+        "mscorlib",
+        "netstandard"
+      ]
+    },
+    {
+      "id": "P:Shop.Tests",
+      "name": "Shop.Tests",
+      "path": "Shop.Tests/Shop.Tests.csproj",
+      "target_frameworks": [],
+      "assembly": "Shop.Tests",
+      "referenced_assemblies": [
+        "MSTest.TestFramework",
+        "MSTest.TestFramework.Extensions",
+        "Microsoft.AspNetCore.Authorization",
+        "Microsoft.AspNetCore.Components",
+        "Microsoft.AspNetCore.Metadata",
+        "Microsoft.CSharp",
+        "Microsoft.Extensions.Caching.Abstractions",
+        "Microsoft.Extensions.Caching.Memory",
+        "Microsoft.Extensions.Configuration.Abstractions",
+        "Microsoft.Extensions.DependencyInjection",
+        "Microsoft.Extensions.DependencyInjection.Abstractions",
+        "Microsoft.Extensions.Diagnostics.Abstractions",
+        "Microsoft.Extensions.Diagnostics.HealthChecks",
+        "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions",
+        "Microsoft.Extensions.FileProviders.Abstractions",
+        "Microsoft.Extensions.Hosting.Abstractions",
+        "Microsoft.Extensions.Logging.Abstractions",
+        "Microsoft.Extensions.Options",
+        "Microsoft.Extensions.Primitives",
+        "Microsoft.TestPlatform.CommunicationUtilities",
+        "Microsoft.TestPlatform.CoreUtilities",
+        "Microsoft.TestPlatform.CrossPlatEngine",
+        "Microsoft.TestPlatform.PlatformAbstractions",
+        "Microsoft.TestPlatform.Utilities",
+        "Microsoft.VisualBasic",
+        "Microsoft.VisualBasic.Core",
+        "Microsoft.VisualStudio.CodeCoverage.Shim",
+        "Microsoft.VisualStudio.TestPlatform.Common",
+        "Microsoft.VisualStudio.TestPlatform.ObjectModel",
+        "Microsoft.Win32.Primitives",
+        "Microsoft.Win32.Registry",
+        "Newtonsoft.Json",
+        "Product.Binding",
+        "Shop.Api",
+        "Shop.Domain",
+        "System",
+        "System.AppContext",
+        "System.Buffers",
+        "System.Collections",
+        "System.Collections.Concurrent",
+        "System.Collections.Immutable",
+        "System.Collections.NonGeneric",
+        "System.Collections.Specialized",
+        "System.ComponentModel",
+        "System.ComponentModel.Annotations",
+        "System.ComponentModel.DataAnnotations",
+        "System.ComponentModel.EventBasedAsync",
+        "System.ComponentModel.Primitives",
+        "System.ComponentModel.TypeConverter",
+        "System.Configuration",
+        "System.Console",
+        "System.Core",
+        "System.Data",
+        "System.Data.Common",
+        "System.Data.DataSetExtensions",
+        "System.Diagnostics.Contracts",
+        "System.Diagnostics.Debug",
+        "System.Diagnostics.DiagnosticSource",
+        "System.Diagnostics.FileVersionInfo",
+        "System.Diagnostics.Process",
+        "System.Diagnostics.StackTrace",
+        "System.Diagnostics.TextWriterTraceListener",
+        "System.Diagnostics.Tools",
+        "System.Diagnostics.TraceSource",
+        "System.Diagnostics.Tracing",
+        "System.Drawing",
+        "System.Drawing.Primitives",
+        "System.Dynamic.Runtime",
+        "System.Formats.Asn1",
+        "System.Formats.Tar",
+        "System.Globalization",
+        "System.Globalization.Calendars",
+        "System.Globalization.Extensions",
+        "System.IO",
+        "System.IO.Compression",
+        "System.IO.Compression.Brotli",
+        "System.IO.Compression.FileSystem",
+        "System.IO.Compression.ZipFile",
+        "System.IO.FileSystem",
+        "System.IO.FileSystem.AccessControl",
+        "System.IO.FileSystem.DriveInfo",
+        "System.IO.FileSystem.Primitives",
+        "System.IO.FileSystem.Watcher",
+        "System.IO.IsolatedStorage",
+        "System.IO.MemoryMappedFiles",
+        "System.IO.Pipes",
+        "System.IO.Pipes.AccessControl",
+        "System.IO.UnmanagedMemoryStream",
+        "System.Linq",
+        "System.Linq.Expressions",
+        "System.Linq.Parallel",
+        "System.Linq.Queryable",
+        "System.Memory",
+        "System.Net",
+        "System.Net.Http",
+        "System.Net.Http.Json",
+        "System.Net.HttpListener",
+        "System.Net.Mail",
+        "System.Net.NameResolution",
+        "System.Net.NetworkInformation",
+        "System.Net.Ping",
+        "System.Net.Primitives",
+        "System.Net.Quic",
+        "System.Net.Requests",
+        "System.Net.Security",
+        "System.Net.ServicePoint",
+        "System.Net.Sockets",
+        "System.Net.WebClient",
+        "System.Net.WebHeaderCollection",
+        "System.Net.WebProxy",
+        "System.Net.WebSockets",
+        "System.Net.WebSockets.Client",
+        "System.Numerics",
+        "System.Numerics.Vectors",
+        "System.ObjectModel",
+        "System.Reflection",
+        "System.Reflection.DispatchProxy",
+        "System.Reflection.Emit",
+        "System.Reflection.Emit.ILGeneration",
+        "System.Reflection.Emit.Lightweight",
+        "System.Reflection.Extensions",
+        "System.Reflection.Metadata",
+        "System.Reflection.Primitives",
+        "System.Reflection.TypeExtensions",
+        "System.Resources.Reader",
+        "System.Resources.ResourceManager",
+        "System.Resources.Writer",
+        "System.Runtime",
+        "System.Runtime.CompilerServices.Unsafe",
+        "System.Runtime.CompilerServices.VisualC",
+        "System.Runtime.Extensions",
+        "System.Runtime.Handles",
+        "System.Runtime.InteropServices",
+        "System.Runtime.InteropServices.JavaScript",
+        "System.Runtime.InteropServices.RuntimeInformation",
+        "System.Runtime.Intrinsics",
+        "System.Runtime.Loader",
+        "System.Runtime.Numerics",
+        "System.Runtime.Serialization",
+        "System.Runtime.Serialization.Formatters",
+        "System.Runtime.Serialization.Json",
+        "System.Runtime.Serialization.Primitives",
+        "System.Runtime.Serialization.Xml",
+        "System.Security",
+        "System.Security.AccessControl",
+        "System.Security.Claims",
+        "System.Security.Cryptography",
+        "System.Security.Cryptography.Algorithms",
+        "System.Security.Cryptography.Cng",
+        "System.Security.Cryptography.Csp",
+        "System.Security.Cryptography.Encoding",
+        "System.Security.Cryptography.OpenSsl",
+        "System.Security.Cryptography.Primitives",
+        "System.Security.Cryptography.X509Certificates",
+        "System.Security.Principal",
+        "System.Security.Principal.Windows",
+        "System.Security.SecureString",
+        "System.ServiceModel.Web",
+        "System.ServiceProcess",
+        "System.Text.Encoding",
+        "System.Text.Encoding.CodePages",
+        "System.Text.Encoding.Extensions",
+        "System.Text.Encodings.Web",
+        "System.Text.Json",
+        "System.Text.RegularExpressions",
+        "System.Threading",
+        "System.Threading.Channels",
+        "System.Threading.Overlapped",
+        "System.Threading.Tasks",
+        "System.Threading.Tasks.Dataflow",
+        "System.Threading.Tasks.Extensions",
+        "System.Threading.Tasks.Parallel",
+        "System.Threading.Thread",
+        "System.Threading.ThreadPool",
+        "System.Threading.Timer",
+        "System.Transactions",
+        "System.Transactions.Local",
+        "System.ValueTuple",
+        "System.Web",
+        "System.Web.HttpUtility",
+        "System.Windows",
+        "System.Xml",
+        "System.Xml.Linq",
+        "System.Xml.ReaderWriter",
+        "System.Xml.Serialization",
+        "System.Xml.XDocument",
+        "System.Xml.XPath",
+        "System.Xml.XPath.XDocument",
+        "System.Xml.XmlDocument",
+        "System.Xml.XmlSerializer",
+        "WindowsBase",
+        "mscorlib",
+        "netstandard",
+        "testhost"
+      ]
     }
   ],
   "types": [
+    {
+      "id": "T:AutoGeneratedProgram",
+      "project": "P:Shop.Tests",
+      "namespace": "",
+      "name": "AutoGeneratedProgram",
+      "kind": "class",
+      "accessibility": "internal",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [],
+      "file": "../../../../../../../../root/.nuget/packages/microsoft.net.test.sdk/18.7.0/build/net8.0/Microsoft.NET.Test.Sdk.Program.cs",
+      "line": 4,
+      "attributes": [
+        {
+          "type": "T:Microsoft.VisualStudio.TestPlatform.TestSDKAutoGeneratedCode",
+          "positional": [],
+          "named": {}
+        }
+      ]
+    },
     {
       "id": "T:Product.Binding.RealisesFactAttribute",
       "project": "P:Product.Binding",
@@ -121,6 +860,22 @@
       "attributes": []
     },
     {
+      "id": "T:Shop.Api.Infrastructure.AuditSink",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "AuditSink",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 104,
+      "attributes": []
+    },
+    {
       "id": "T:Shop.Api.Infrastructure.ConsoleAudit",
       "project": "P:Shop.Api",
       "namespace": "Shop.Api.Infrastructure",
@@ -135,7 +890,7 @@
         "T:Shop.Api.Infrastructure.IAudit"
       ],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 77,
+      "line": 120,
       "attributes": []
     },
     {
@@ -193,7 +948,25 @@
       "base_type": null,
       "interfaces": [],
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 72,
+      "line": 115,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Infrastructure.IAuditStore",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "IAuditStore",
+      "kind": "interface",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": null,
+      "interfaces": [
+        "T:Shop.Api.Infrastructure.IReadStore\u00601"
+      ],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 78,
       "attributes": []
     },
     {
@@ -261,6 +1034,22 @@
       "attributes": []
     },
     {
+      "id": "T:Shop.Api.Infrastructure.IReadStore\u00601",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "IReadStore",
+      "kind": "interface",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": null,
+      "interfaces": [],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 73,
+      "attributes": []
+    },
+    {
       "id": "T:Shop.Api.Infrastructure.IValidator\u00601",
       "project": "P:Shop.Api",
       "namespace": "Shop.Api.Infrastructure",
@@ -274,6 +1063,24 @@
       "interfaces": [],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 20,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Infrastructure.MemoryAuditStore",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "MemoryAuditStore",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:Shop.Api.Infrastructure.IAuditStore"
+      ],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 82,
       "attributes": []
     },
     {
@@ -292,6 +1099,24 @@
       ],
       "file": "Shop.Api/Infrastructure.cs",
       "line": 66,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Api.Infrastructure.PingCheck",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Infrastructure",
+      "name": "PingCheck",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:Microsoft.Extensions.Diagnostics.HealthChecks.IHealthCheck"
+      ],
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 89,
       "attributes": []
     },
     {
@@ -343,7 +1168,7 @@
       "base_type": "T:System.Object",
       "interfaces": [],
       "file": "Shop.Api/Orders.cs",
-      "line": 91,
+      "line": 92,
       "attributes": [
         {
           "type": "T:Product.Binding.SliceAttribute",
@@ -372,7 +1197,7 @@
         "T:Shop.Api.Orders.ICartReader"
       ],
       "file": "Shop.Api/Orders.cs",
-      "line": 43,
+      "line": 44,
       "attributes": []
     },
     {
@@ -388,7 +1213,7 @@
       "base_type": "T:System.Object",
       "interfaces": [],
       "file": "Shop.Api/Orders.cs",
-      "line": 69,
+      "line": 70,
       "attributes": []
     },
     {
@@ -404,7 +1229,7 @@
       "base_type": null,
       "interfaces": [],
       "file": "Shop.Api/Orders.cs",
-      "line": 38,
+      "line": 39,
       "attributes": []
     },
     {
@@ -420,7 +1245,7 @@
       "base_type": "T:System.Object",
       "interfaces": [],
       "file": "Shop.Api/Orders.cs",
-      "line": 96,
+      "line": 97,
       "attributes": []
     },
     {
@@ -438,7 +1263,7 @@
         "T:System.IEquatable\u00601"
       ],
       "file": "Shop.Api/Orders.cs",
-      "line": 10,
+      "line": 11,
       "attributes": []
     },
     {
@@ -456,7 +1281,7 @@
         "T:Shop.Api.Infrastructure.IHandler\u00601"
       ],
       "file": "Shop.Api/Orders.cs",
-      "line": 15,
+      "line": 16,
       "attributes": [
         {
           "type": "T:Product.Binding.SliceAttribute",
@@ -832,9 +1657,109 @@
           "named": {}
         }
       ]
+    },
+    {
+      "id": "T:Shop.Tests.FakeAudit",
+      "project": "P:Shop.Tests",
+      "namespace": "Shop.Tests",
+      "name": "FakeAudit",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:Shop.Api.Infrastructure.IAudit"
+      ],
+      "file": "Shop.Tests/OrdersTests.cs",
+      "line": 29,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Tests.FakeClock",
+      "project": "P:Shop.Tests",
+      "namespace": "Shop.Tests",
+      "name": "FakeClock",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:Shop.Api.Infrastructure.IClock"
+      ],
+      "file": "Shop.Tests/OrdersTests.cs",
+      "line": 24,
+      "attributes": []
+    },
+    {
+      "id": "T:Shop.Tests.OrdersTests",
+      "project": "P:Shop.Tests",
+      "namespace": "Shop.Tests",
+      "name": "OrdersTests",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:System.Object",
+      "interfaces": [],
+      "file": "Shop.Tests/OrdersTests.cs",
+      "line": 11,
+      "attributes": [
+        {
+          "type": "T:Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute",
+          "positional": [],
+          "named": {}
+        }
+      ]
     }
   ],
   "members": [
+    {
+      "id": "F:Shop.Api.Infrastructure.AuditSink._audit",
+      "declaring_type": "T:Shop.Api.Infrastructure.AuditSink",
+      "name": "_audit",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Infrastructure.IAudit",
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 106,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Infrastructure.AuditSink._store",
+      "declaring_type": "T:Shop.Api.Infrastructure.AuditSink",
+      "name": "_store",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Infrastructure.IAuditStore",
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 107,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Infrastructure.PingCheck._clocks",
+      "declaring_type": "T:Shop.Api.Infrastructure.PingCheck",
+      "name": "_clocks",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Infrastructure.IClockFactory",
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 91,
+      "attributes": []
+    },
     {
       "id": "F:Shop.Api.Orders.CartService._carts",
       "declaring_type": "T:Shop.Api.Orders.CartService",
@@ -846,7 +1771,7 @@
       "parameters": [],
       "return_type": "T:System.Collections.Generic.Dictionary\u00602",
       "file": "Shop.Api/Orders.cs",
-      "line": 45,
+      "line": 46,
       "attributes": []
     },
     {
@@ -860,7 +1785,7 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Orders.ICartReader",
       "file": "Shop.Api/Orders.cs",
-      "line": 71,
+      "line": 72,
       "attributes": []
     },
     {
@@ -874,7 +1799,7 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Persistence.IOrderRepository",
       "file": "Shop.Api/Orders.cs",
-      "line": 72,
+      "line": 73,
       "attributes": []
     },
     {
@@ -888,7 +1813,21 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IAudit",
       "file": "Shop.Api/Orders.cs",
-      "line": 103,
+      "line": 104,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Orders.OrdersEndpoints._auditStore",
+      "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
+      "name": "_auditStore",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Infrastructure.IAuditStore",
+      "file": "Shop.Api/Orders.cs",
+      "line": 108,
       "attributes": []
     },
     {
@@ -902,7 +1841,21 @@
       "parameters": [],
       "return_type": "T:System.Collections.Generic.IComparer\u00601",
       "file": "Shop.Api/Orders.cs",
-      "line": 102,
+      "line": 103,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Orders.OrdersEndpoints._cache",
+      "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
+      "name": "_cache",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Microsoft.Extensions.Caching.Memory.IMemoryCache",
+      "file": "Shop.Api/Orders.cs",
+      "line": 107,
       "attributes": []
     },
     {
@@ -916,7 +1869,7 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IClockFactory",
       "file": "Shop.Api/Orders.cs",
-      "line": 100,
+      "line": 101,
       "attributes": []
     },
     {
@@ -930,7 +1883,7 @@
       "parameters": [],
       "return_type": "T:Microsoft.Extensions.Logging.ILogger\u00601",
       "file": "Shop.Api/Orders.cs",
-      "line": 105,
+      "line": 106,
       "attributes": []
     },
     {
@@ -944,7 +1897,7 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IHandler\u00601",
       "file": "Shop.Api/Orders.cs",
-      "line": 98,
+      "line": 99,
       "attributes": []
     },
     {
@@ -958,7 +1911,7 @@
       "parameters": [],
       "return_type": "T:System.IServiceProvider",
       "file": "Shop.Api/Orders.cs",
-      "line": 101,
+      "line": 102,
       "attributes": []
     },
     {
@@ -972,7 +1925,7 @@
       "parameters": [],
       "return_type": "T:System.Collections.Generic.IReadOnlyList\u00601",
       "file": "Shop.Api/Orders.cs",
-      "line": 104,
+      "line": 105,
       "attributes": []
     },
     {
@@ -986,7 +1939,7 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IValidator\u00601",
       "file": "Shop.Api/Orders.cs",
-      "line": 99,
+      "line": 100,
       "attributes": []
     },
     {
@@ -1000,7 +1953,7 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Orders.ICartReader",
       "file": "Shop.Api/Orders.cs",
-      "line": 18,
+      "line": 19,
       "attributes": []
     },
     {
@@ -1014,7 +1967,7 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Persistence.IOrderRepository",
       "file": "Shop.Api/Orders.cs",
-      "line": 17,
+      "line": 18,
       "attributes": []
     },
     {
@@ -1029,6 +1982,25 @@
       "return_type": "T:System.Collections.Generic.List\u00601",
       "file": "Shop.Api/Persistence.cs",
       "line": 12,
+      "attributes": []
+    },
+    {
+      "id": "M:AutoGeneratedProgram.Main(System.String[])",
+      "declaring_type": "T:AutoGeneratedProgram",
+      "name": "Main",
+      "kind": "method",
+      "accessibility": "private",
+      "is_static": true,
+      "is_entry_point": true,
+      "parameters": [
+        {
+          "name": "args",
+          "type": "T:System.String[]"
+        }
+      ],
+      "return_type": null,
+      "file": "../../../../../../../../root/.nuget/packages/microsoft.net.test.sdk/18.7.0/build/net8.0/Microsoft.NET.Test.Sdk.Program.cs",
+      "line": 4,
       "attributes": []
     },
     {
@@ -1112,6 +2084,48 @@
       "attributes": []
     },
     {
+      "id": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore)",
+      "declaring_type": "T:Shop.Api.Infrastructure.AuditSink",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "audit",
+          "type": "T:Shop.Api.Infrastructure.IAudit"
+        },
+        {
+          "name": "store",
+          "type": "T:Shop.Api.Infrastructure.IAuditStore"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 109,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
+      "declaring_type": "T:Shop.Api.Infrastructure.AuditSink",
+      "name": "Flush",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "id",
+          "type": "T:System.Guid"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 111,
+      "attributes": []
+    },
+    {
       "id": "M:Shop.Api.Infrastructure.ConsoleAudit.Record(System.String)",
       "declaring_type": "T:Shop.Api.Infrastructure.ConsoleAudit",
       "name": "Record",
@@ -1127,7 +2141,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 79,
+      "line": 122,
       "attributes": []
     },
     {
@@ -1179,7 +2193,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Infrastructure.cs",
-      "line": 74,
+      "line": 117,
       "attributes": []
     },
     {
@@ -1244,6 +2258,25 @@
       "attributes": []
     },
     {
+      "id": "M:Shop.Api.Infrastructure.IReadStore\u00601.Load(System.Guid)",
+      "declaring_type": "T:Shop.Api.Infrastructure.IReadStore\u00601",
+      "name": "Load",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "id",
+          "type": "T:System.Guid"
+        }
+      ],
+      "return_type": "!:T",
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 75,
+      "attributes": []
+    },
+    {
       "id": "M:Shop.Api.Infrastructure.IValidator\u00601.Valid(\u00600)",
       "declaring_type": "T:Shop.Api.Infrastructure.IValidator\u00601",
       "name": "Valid",
@@ -1260,6 +2293,25 @@
       "return_type": "T:System.Boolean",
       "file": "Shop.Api/Infrastructure.cs",
       "line": 22,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.MemoryAuditStore.Load(System.Guid)",
+      "declaring_type": "T:Shop.Api.Infrastructure.MemoryAuditStore",
+      "name": "Load",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "id",
+          "type": "T:System.Guid"
+        }
+      ],
+      "return_type": "T:System.String",
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 84,
       "attributes": []
     },
     {
@@ -1283,6 +2335,48 @@
       "return_type": "T:System.Int32",
       "file": "Shop.Api/Infrastructure.cs",
       "line": 68,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory)",
+      "declaring_type": "T:Shop.Api.Infrastructure.PingCheck",
+      "name": ".ctor",
+      "kind": "constructor",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "clocks",
+          "type": "T:Shop.Api.Infrastructure.IClockFactory"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 93,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Infrastructure.PingCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)",
+      "declaring_type": "T:Shop.Api.Infrastructure.PingCheck",
+      "name": "CheckHealthAsync",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "context",
+          "type": "T:Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext"
+        },
+        {
+          "name": "cancellationToken",
+          "type": "T:System.Threading.CancellationToken"
+        }
+      ],
+      "return_type": "T:System.Threading.Tasks.Task\u00601",
+      "file": "Shop.Api/Infrastructure.cs",
+      "line": 95,
       "attributes": []
     },
     {
@@ -1329,7 +2423,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 93,
+      "line": 94,
       "attributes": []
     },
     {
@@ -1348,7 +2442,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 57,
+      "line": 58,
       "attributes": []
     },
     {
@@ -1367,7 +2461,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 50,
+      "line": 51,
       "attributes": []
     },
     {
@@ -1386,7 +2480,7 @@
       ],
       "return_type": "T:System.Boolean",
       "file": "Shop.Api/Orders.cs",
-      "line": 60,
+      "line": 61,
       "attributes": []
     },
     {
@@ -1405,7 +2499,7 @@
       ],
       "return_type": "T:Shop.Domain.CartState",
       "file": "Shop.Api/Orders.cs",
-      "line": 47,
+      "line": 48,
       "attributes": []
     },
     {
@@ -1424,7 +2518,7 @@
       ],
       "return_type": "T:Shop.Domain.Money",
       "file": "Shop.Api/Orders.cs",
-      "line": 63,
+      "line": 64,
       "attributes": []
     },
     {
@@ -1447,7 +2541,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 74,
+      "line": 75,
       "attributes": []
     },
     {
@@ -1470,7 +2564,7 @@
       ],
       "return_type": "T:Shop.Domain.OrderConfirmed",
       "file": "Shop.Api/Orders.cs",
-      "line": 80,
+      "line": 81,
       "attributes": []
     },
     {
@@ -1489,11 +2583,11 @@
       ],
       "return_type": "T:Shop.Domain.CartState",
       "file": "Shop.Api/Orders.cs",
-      "line": 40,
+      "line": 41,
       "attributes": []
     },
     {
-      "id": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "id": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
       "name": ".ctor",
       "kind": "constructor",
@@ -1536,11 +2630,19 @@
         {
           "name": "log",
           "type": "T:Microsoft.Extensions.Logging.ILogger\u00601"
+        },
+        {
+          "name": "cache",
+          "type": "T:Microsoft.Extensions.Caching.Memory.IMemoryCache"
+        },
+        {
+          "name": "auditStore",
+          "type": "T:Shop.Api.Infrastructure.IAuditStore"
         }
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 111,
+      "line": 116,
       "attributes": []
     },
     {
@@ -1559,7 +2661,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 128,
+      "line": 135,
       "attributes": [
         {
           "type": "T:Shop.Api.Infrastructure.EndpointAttribute",
@@ -1586,7 +2688,7 @@
       ],
       "return_type": "T:System.Boolean",
       "file": "Shop.Api/Orders.cs",
-      "line": 124,
+      "line": 131,
       "attributes": []
     },
     {
@@ -1613,7 +2715,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 10,
+      "line": 11,
       "attributes": []
     },
     {
@@ -1636,7 +2738,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 20,
+      "line": 21,
       "attributes": []
     },
     {
@@ -1655,7 +2757,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 26,
+      "line": 27,
       "attributes": []
     },
     {
@@ -2033,6 +3135,62 @@
       "attributes": []
     },
     {
+      "id": "M:Shop.Tests.FakeAudit.Record(System.String)",
+      "declaring_type": "T:Shop.Tests.FakeAudit",
+      "name": "Record",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "what",
+          "type": "T:System.String"
+        }
+      ],
+      "return_type": null,
+      "file": "Shop.Tests/OrdersTests.cs",
+      "line": 31,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Tests.FakeClock.Now",
+      "declaring_type": "T:Shop.Tests.FakeClock",
+      "name": "Now",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:System.DateTimeOffset",
+      "file": "Shop.Tests/OrdersTests.cs",
+      "line": 26,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
+      "declaring_type": "T:Shop.Tests.OrdersTests",
+      "name": "Clock_is_wired_for_tests",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": null,
+      "file": "Shop.Tests/OrdersTests.cs",
+      "line": 14,
+      "attributes": [
+        {
+          "type": "T:Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute",
+          "positional": [
+            "/home/user/product-cli/product-cli/tests/fixtures/csharp-inventory/Fixture/Shop.Tests/OrdersTests.cs",
+            13
+          ],
+          "named": {}
+        }
+      ]
+    },
+    {
       "id": "P:Product.Binding.RealisesFactAttribute.Fact",
       "declaring_type": "T:Product.Binding.RealisesFactAttribute",
       "name": "Fact",
@@ -2153,7 +3311,7 @@
       "parameters": [],
       "return_type": "T:Shop.Domain.Money",
       "file": "Shop.Api/Orders.cs",
-      "line": 10,
+      "line": 11,
       "attributes": []
     },
     {
@@ -2167,7 +3325,7 @@
       "parameters": [],
       "return_type": "T:System.Guid",
       "file": "Shop.Api/Orders.cs",
-      "line": 10,
+      "line": 11,
       "attributes": []
     },
     {
@@ -2181,7 +3339,7 @@
       "parameters": [],
       "return_type": "T:System.String",
       "file": "Shop.Api/Orders.cs",
-      "line": 10,
+      "line": 11,
       "attributes": []
     },
     {
@@ -2523,6 +3681,21 @@
   ],
   "references": [
     {
+      "from": "F:Shop.Api.Infrastructure.AuditSink._audit",
+      "to": "T:Shop.Api.Infrastructure.IAudit",
+      "kind": "signature"
+    },
+    {
+      "from": "F:Shop.Api.Infrastructure.AuditSink._store",
+      "to": "T:Shop.Api.Infrastructure.IAuditStore",
+      "kind": "signature"
+    },
+    {
+      "from": "F:Shop.Api.Infrastructure.PingCheck._clocks",
+      "to": "T:Shop.Api.Infrastructure.IClockFactory",
+      "kind": "signature"
+    },
+    {
       "from": "F:Shop.Api.Orders.CartService._carts",
       "to": "T:Shop.Domain.CartState",
       "kind": "generic-argument"
@@ -2543,6 +3716,11 @@
       "kind": "signature"
     },
     {
+      "from": "F:Shop.Api.Orders.OrdersEndpoints._auditStore",
+      "to": "T:Shop.Api.Infrastructure.IAuditStore",
+      "kind": "signature"
+    },
+    {
       "from": "F:Shop.Api.Orders.OrdersEndpoints._byAmount",
       "to": "T:Shop.Domain.Money",
       "kind": "generic-argument"
@@ -2550,6 +3728,11 @@
     {
       "from": "F:Shop.Api.Orders.OrdersEndpoints._byAmount",
       "to": "T:System.Collections.Generic.IComparer\u00601",
+      "kind": "signature"
+    },
+    {
+      "from": "F:Shop.Api.Orders.OrdersEndpoints._cache",
+      "to": "T:Microsoft.Extensions.Caching.Memory.IMemoryCache",
       "kind": "signature"
     },
     {
@@ -2618,6 +3801,11 @@
       "kind": "generic-argument"
     },
     {
+      "from": "M:AutoGeneratedProgram.Main(System.String[])",
+      "to": "T:System.String",
+      "kind": "parameter"
+    },
+    {
       "from": "M:Product.Binding.RealisesFactAttribute.#ctor(System.String)",
       "to": "P:Product.Binding.RealisesFactAttribute.Fact",
       "kind": "access"
@@ -2668,6 +3856,61 @@
       "kind": "parameter"
     },
     {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore)",
+      "to": "F:Shop.Api.Infrastructure.AuditSink._audit",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore)",
+      "to": "F:Shop.Api.Infrastructure.AuditSink._store",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore)",
+      "to": "T:Shop.Api.Infrastructure.IAudit",
+      "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore)",
+      "to": "T:Shop.Api.Infrastructure.IAudit",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore)",
+      "to": "T:Shop.Api.Infrastructure.IAuditStore",
+      "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.#ctor(Shop.Api.Infrastructure.IAudit,Shop.Api.Infrastructure.IAuditStore)",
+      "to": "T:Shop.Api.Infrastructure.IAuditStore",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
+      "to": "F:Shop.Api.Infrastructure.AuditSink._audit",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
+      "to": "F:Shop.Api.Infrastructure.AuditSink._store",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
+      "to": "M:Shop.Api.Infrastructure.IAudit.Record(System.String)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
+      "to": "M:Shop.Api.Infrastructure.IReadStore\u00601.Load(System.Guid)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.AuditSink.Flush(System.Guid)",
+      "to": "T:System.Guid",
+      "kind": "parameter"
+    },
+    {
       "from": "M:Shop.Api.Infrastructure.ConsoleAudit.Record(System.String)",
       "to": "T:System.String",
       "kind": "parameter"
@@ -2698,6 +3941,16 @@
       "kind": "type-reference"
     },
     {
+      "from": "M:Shop.Api.Infrastructure.IReadStore\u00601.Load(System.Guid)",
+      "to": "T:System.Guid",
+      "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.MemoryAuditStore.Load(System.Guid)",
+      "to": "T:System.Guid",
+      "kind": "parameter"
+    },
+    {
       "from": "M:Shop.Api.Infrastructure.MoneyComparer.Compare(Shop.Domain.Money,Shop.Domain.Money)",
       "to": "P:Shop.Domain.Money.Amount",
       "kind": "access"
@@ -2711,6 +3964,46 @@
       "from": "M:Shop.Api.Infrastructure.MoneyComparer.Compare(Shop.Domain.Money,Shop.Domain.Money)",
       "to": "T:Shop.Domain.Money",
       "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory)",
+      "to": "F:Shop.Api.Infrastructure.PingCheck._clocks",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory)",
+      "to": "T:Shop.Api.Infrastructure.IClockFactory",
+      "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.PingCheck.#ctor(Shop.Api.Infrastructure.IClockFactory)",
+      "to": "T:Shop.Api.Infrastructure.IClockFactory",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.PingCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)",
+      "to": "F:Shop.Api.Infrastructure.PingCheck._clocks",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.PingCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)",
+      "to": "M:Shop.Api.Infrastructure.IClock.Now",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.PingCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)",
+      "to": "M:Shop.Api.Infrastructure.IClockFactory.Create",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.PingCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)",
+      "to": "T:Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext",
+      "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Api.Infrastructure.PingCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)",
+      "to": "T:System.Threading.CancellationToken",
+      "kind": "parameter"
     },
     {
       "from": "M:Shop.Api.Infrastructure.SystemClockFactory.Create",
@@ -3093,162 +4386,192 @@
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._audit",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._auditStore",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._byAmount",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._cache",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._clocks",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._log",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._placeOrder",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._provider",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._routes",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._validator",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
+      "to": "T:Microsoft.Extensions.Caching.Memory.IMemoryCache",
+      "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
+      "to": "T:Microsoft.Extensions.Caching.Memory.IMemoryCache",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Microsoft.Extensions.Logging.ILogger\u00601",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Microsoft.Extensions.Logging.ILogger\u00601",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Api.Infrastructure.IAudit",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Api.Infrastructure.IAudit",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
+      "to": "T:Shop.Api.Infrastructure.IAuditStore",
+      "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
+      "to": "T:Shop.Api.Infrastructure.IAuditStore",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Api.Infrastructure.IClockFactory",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Api.Infrastructure.IClockFactory",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Api.Infrastructure.IHandler\u00601",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Api.Infrastructure.IHandler\u00601",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Api.Infrastructure.IValidator\u00601",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Api.Infrastructure.IValidator\u00601",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Api.Orders.OrdersEndpoints",
       "kind": "generic-argument"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Api.Orders.OrdersEndpoints",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Api.Orders.PlaceOrderCommand",
       "kind": "generic-argument"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Api.Orders.PlaceOrderCommand",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Domain.IDomainEvent",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Domain.IDomainEvent",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Domain.Money",
       "kind": "generic-argument"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:Shop.Domain.Money",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:System.Collections.Generic.IComparer\u00601",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:System.Collections.Generic.IComparer\u00601",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:System.Collections.Generic.IReadOnlyList\u00601",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:System.Collections.Generic.IReadOnlyList\u00601",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:System.IServiceProvider",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints},Microsoft.Extensions.Caching.Memory.IMemoryCache,Shop.Api.Infrastructure.IAuditStore)",
       "to": "T:System.IServiceProvider",
       "kind": "type-reference"
     },
@@ -3324,7 +4647,17 @@
     },
     {
       "from": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._auditStore",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._byAmount",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._cache",
       "kind": "access"
     },
     {
@@ -3374,7 +4707,17 @@
     },
     {
       "from": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
+      "to": "T:Microsoft.Extensions.Caching.Memory.IMemoryCache",
+      "kind": "type-test"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
       "to": "T:Microsoft.Extensions.Logging.ILogger\u00601",
+      "kind": "type-test"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.IAuditStore",
       "kind": "type-test"
     },
     {
@@ -3604,6 +4947,16 @@
     },
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.AuditSink",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.AuditSink",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
       "to": "T:Shop.Api.Infrastructure.ConsoleAudit",
       "kind": "generic-argument"
     },
@@ -3630,6 +4983,16 @@
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
       "to": "T:Shop.Api.Infrastructure.IAudit",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.IAuditStore",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.IAuditStore",
       "kind": "type-reference"
     },
     {
@@ -3669,12 +5032,32 @@
     },
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.MemoryAuditStore",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.MemoryAuditStore",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
       "to": "T:Shop.Api.Infrastructure.MoneyComparer",
       "kind": "generic-argument"
     },
     {
       "from": "M:Shop.Api.Program.Main(System.String[])",
       "to": "T:Shop.Api.Infrastructure.MoneyComparer",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.PingCheck",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "M:Shop.Api.Program.Main(System.String[])",
+      "to": "T:Shop.Api.Infrastructure.PingCheck",
       "kind": "type-reference"
     },
     {
@@ -4048,6 +5431,61 @@
       "kind": "parameter"
     },
     {
+      "from": "M:Shop.Tests.FakeAudit.Record(System.String)",
+      "to": "T:System.String",
+      "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
+      "to": "T:Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
+      "to": "T:Shop.Api.Infrastructure.IAudit",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
+      "to": "T:Shop.Api.Infrastructure.IAudit",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
+      "to": "T:Shop.Api.Infrastructure.IClock",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
+      "to": "T:Shop.Api.Infrastructure.IClock",
+      "kind": "resolve"
+    },
+    {
+      "from": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
+      "to": "T:Shop.Api.Infrastructure.IClock",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
+      "to": "T:Shop.Tests.FakeAudit",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
+      "to": "T:Shop.Tests.FakeAudit",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
+      "to": "T:Shop.Tests.FakeClock",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
+      "to": "T:Shop.Tests.FakeClock",
+      "kind": "type-reference"
+    },
+    {
       "from": "P:Shop.Api.Admin.OrdersPanel.Cart",
       "to": "T:Microsoft.AspNetCore.Components.InjectAttribute",
       "kind": "attribute"
@@ -4183,6 +5621,16 @@
       "kind": "type-reference"
     },
     {
+      "from": "T:AutoGeneratedProgram",
+      "to": "T:Microsoft.VisualStudio.TestPlatform.TestSDKAutoGeneratedCode",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:AutoGeneratedProgram",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
       "from": "T:Product.Binding.RealisesFactAttribute",
       "to": "T:System.Attribute",
       "kind": "inherit"
@@ -4218,6 +5666,11 @@
       "kind": "inherit"
     },
     {
+      "from": "T:Shop.Api.Infrastructure.AuditSink",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
       "from": "T:Shop.Api.Infrastructure.ConsoleAudit",
       "to": "T:Shop.Api.Infrastructure.IAudit",
       "kind": "implement"
@@ -4248,12 +5701,37 @@
       "kind": "inherit"
     },
     {
+      "from": "T:Shop.Api.Infrastructure.IAuditStore",
+      "to": "T:Shop.Api.Infrastructure.IReadStore\u00601",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Api.Infrastructure.MemoryAuditStore",
+      "to": "T:Shop.Api.Infrastructure.IAuditStore",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Api.Infrastructure.MemoryAuditStore",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
       "from": "T:Shop.Api.Infrastructure.MoneyComparer",
       "to": "T:System.Collections.Generic.IComparer\u00601",
       "kind": "implement"
     },
     {
       "from": "T:Shop.Api.Infrastructure.MoneyComparer",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Api.Infrastructure.PingCheck",
+      "to": "T:Microsoft.Extensions.Diagnostics.HealthChecks.IHealthCheck",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Api.Infrastructure.PingCheck",
       "to": "T:System.Object",
       "kind": "inherit"
     },
@@ -4521,9 +5999,169 @@
       "from": "T:Shop.Domain.OrderSummaryView",
       "to": "T:System.Object",
       "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Tests.FakeAudit",
+      "to": "T:Shop.Api.Infrastructure.IAudit",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Tests.FakeAudit",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Tests.FakeClock",
+      "to": "T:Shop.Api.Infrastructure.IClock",
+      "kind": "implement"
+    },
+    {
+      "from": "T:Shop.Tests.FakeClock",
+      "to": "T:System.Object",
+      "kind": "inherit"
+    },
+    {
+      "from": "T:Shop.Tests.OrdersTests",
+      "to": "T:Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Tests.OrdersTests",
+      "to": "T:System.Object",
+      "kind": "inherit"
     }
   ],
   "external_types": [
+    {
+      "id": "T:Microsoft.AspNetCore.Components.ComponentBase",
+      "assembly": "Microsoft.AspNetCore.Components",
+      "namespace": "Microsoft.AspNetCore.Components",
+      "name": "ComponentBase",
+      "kind": "class",
+      "is_abstract": true,
+      "arity": 0,
+      "methods": 13,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:Microsoft.AspNetCore.Components.IComponent",
+        "T:Microsoft.AspNetCore.Components.IHandleAfterRender",
+        "T:Microsoft.AspNetCore.Components.IHandleEvent"
+      ]
+    },
+    {
+      "id": "T:Microsoft.AspNetCore.Components.IComponent",
+      "assembly": "Microsoft.AspNetCore.Components",
+      "namespace": "Microsoft.AspNetCore.Components",
+      "name": "IComponent",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 2,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:Microsoft.AspNetCore.Components.IHandleAfterRender",
+      "assembly": "Microsoft.AspNetCore.Components",
+      "namespace": "Microsoft.AspNetCore.Components",
+      "name": "IHandleAfterRender",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:Microsoft.AspNetCore.Components.IHandleEvent",
+      "assembly": "Microsoft.AspNetCore.Components",
+      "namespace": "Microsoft.AspNetCore.Components",
+      "name": "IHandleEvent",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:Microsoft.Extensions.Caching.Memory.IMemoryCache",
+      "assembly": "Microsoft.Extensions.Caching.Abstractions",
+      "namespace": "Microsoft.Extensions.Caching.Memory",
+      "name": "IMemoryCache",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 4,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [
+        "T:Microsoft.Extensions.Caching.Memory.ICacheEntry"
+      ],
+      "base_type": null,
+      "interfaces": [
+        "T:System.IDisposable"
+      ]
+    },
+    {
+      "id": "T:Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext",
+      "assembly": "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions",
+      "namespace": "Microsoft.Extensions.Diagnostics.HealthChecks",
+      "name": "HealthCheckContext",
+      "kind": "class",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 0,
+      "properties": 1,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": "T:System.Object",
+      "interfaces": []
+    },
+    {
+      "id": "T:Microsoft.Extensions.Diagnostics.HealthChecks.IHealthCheck",
+      "assembly": "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions",
+      "namespace": "Microsoft.Extensions.Diagnostics.HealthChecks",
+      "name": "IHealthCheck",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:Microsoft.Extensions.Logging.ILogger",
+      "assembly": "Microsoft.Extensions.Logging.Abstractions",
+      "namespace": "Microsoft.Extensions.Logging",
+      "name": "ILogger",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 3,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [
+        "T:System.IDisposable"
+      ],
+      "base_type": null,
+      "interfaces": []
+    },
     {
       "id": "T:Microsoft.Extensions.Logging.ILogger\u00601",
       "assembly": "Microsoft.Extensions.Logging.Abstractions",
@@ -4535,7 +6173,11 @@
       "methods": 0,
       "properties": 0,
       "events": 0,
-      "abstract_returns": []
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:Microsoft.Extensions.Logging.ILogger"
+      ]
     },
     {
       "id": "T:System.Array",
@@ -4551,7 +6193,33 @@
       "abstract_returns": [
         "T:System.Array",
         "T:System.Collections.IEnumerator"
+      ],
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:System.Collections.ICollection",
+        "T:System.Collections.IEnumerable",
+        "T:System.Collections.IList",
+        "T:System.Collections.IStructuralComparable",
+        "T:System.Collections.IStructuralEquatable",
+        "T:System.ICloneable"
       ]
+    },
+    {
+      "id": "T:System.Attribute",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "Attribute",
+      "kind": "class",
+      "is_abstract": true,
+      "arity": 0,
+      "methods": 36,
+      "properties": 1,
+      "events": 0,
+      "abstract_returns": [
+        "T:System.Attribute"
+      ],
+      "base_type": "T:System.Object",
+      "interfaces": []
     },
     {
       "id": "T:System.Collections.Generic.IComparer\u00601",
@@ -4564,7 +6232,28 @@
       "methods": 1,
       "properties": 0,
       "events": 0,
-      "abstract_returns": []
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Collections.Generic.IEnumerable\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System.Collections.Generic",
+      "name": "IEnumerable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [
+        "T:System.Collections.Generic.IEnumerator\u00601"
+      ],
+      "base_type": null,
+      "interfaces": [
+        "T:System.Collections.IEnumerable"
+      ]
     },
     {
       "id": "T:System.Collections.Generic.IReadOnlyCollection\u00601",
@@ -4577,7 +6266,12 @@
       "methods": 0,
       "properties": 1,
       "events": 0,
-      "abstract_returns": []
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:System.Collections.Generic.IEnumerable\u00601",
+        "T:System.Collections.IEnumerable"
+      ]
     },
     {
       "id": "T:System.Collections.Generic.IReadOnlyList\u00601",
@@ -4590,7 +6284,95 @@
       "methods": 0,
       "properties": 1,
       "events": 0,
-      "abstract_returns": []
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:System.Collections.Generic.IEnumerable\u00601",
+        "T:System.Collections.Generic.IReadOnlyCollection\u00601",
+        "T:System.Collections.IEnumerable"
+      ]
+    },
+    {
+      "id": "T:System.Collections.ICollection",
+      "assembly": "System.Runtime",
+      "namespace": "System.Collections",
+      "name": "ICollection",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 3,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:System.Collections.IEnumerable"
+      ]
+    },
+    {
+      "id": "T:System.Collections.IEnumerable",
+      "assembly": "System.Runtime",
+      "namespace": "System.Collections",
+      "name": "IEnumerable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [
+        "T:System.Collections.IEnumerator"
+      ],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Collections.IList",
+      "assembly": "System.Runtime",
+      "namespace": "System.Collections",
+      "name": "IList",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 7,
+      "properties": 3,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:System.Collections.ICollection",
+        "T:System.Collections.IEnumerable"
+      ]
+    },
+    {
+      "id": "T:System.Collections.IStructuralComparable",
+      "assembly": "System.Runtime",
+      "namespace": "System.Collections",
+      "name": "IStructuralComparable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Collections.IStructuralEquatable",
+      "assembly": "System.Runtime",
+      "namespace": "System.Collections",
+      "name": "IStructuralEquatable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 2,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
     },
     {
       "id": "T:System.Decimal",
@@ -4603,7 +6385,41 @@
       "methods": 76,
       "properties": 12,
       "events": 0,
-      "abstract_returns": []
+      "abstract_returns": [],
+      "base_type": "T:System.ValueType",
+      "interfaces": [
+        "T:System.IComparable",
+        "T:System.IComparable\u00601",
+        "T:System.IConvertible",
+        "T:System.IEquatable\u00601",
+        "T:System.IFormattable",
+        "T:System.IParsable\u00601",
+        "T:System.ISpanFormattable",
+        "T:System.ISpanParsable\u00601",
+        "T:System.IUtf8SpanFormattable",
+        "T:System.IUtf8SpanParsable\u00601",
+        "T:System.Numerics.IAdditionOperators\u00603",
+        "T:System.Numerics.IAdditiveIdentity\u00602",
+        "T:System.Numerics.IComparisonOperators\u00603",
+        "T:System.Numerics.IDecrementOperators\u00601",
+        "T:System.Numerics.IDivisionOperators\u00603",
+        "T:System.Numerics.IEqualityOperators\u00603",
+        "T:System.Numerics.IFloatingPointConstants\u00601",
+        "T:System.Numerics.IFloatingPoint\u00601",
+        "T:System.Numerics.IIncrementOperators\u00601",
+        "T:System.Numerics.IMinMaxValue\u00601",
+        "T:System.Numerics.IModulusOperators\u00603",
+        "T:System.Numerics.IMultiplicativeIdentity\u00602",
+        "T:System.Numerics.IMultiplyOperators\u00603",
+        "T:System.Numerics.INumberBase\u00601",
+        "T:System.Numerics.INumber\u00601",
+        "T:System.Numerics.ISignedNumber\u00601",
+        "T:System.Numerics.ISubtractionOperators\u00603",
+        "T:System.Numerics.IUnaryNegationOperators\u00602",
+        "T:System.Numerics.IUnaryPlusOperators\u00602",
+        "T:System.Runtime.Serialization.IDeserializationCallback",
+        "T:System.Runtime.Serialization.ISerializable"
+      ]
     },
     {
       "id": "T:System.Guid",
@@ -4616,7 +6432,138 @@
       "methods": 27,
       "properties": 0,
       "events": 0,
-      "abstract_returns": []
+      "abstract_returns": [],
+      "base_type": "T:System.ValueType",
+      "interfaces": [
+        "T:System.IComparable",
+        "T:System.IComparable\u00601",
+        "T:System.IEquatable\u00601",
+        "T:System.IFormattable",
+        "T:System.IParsable\u00601",
+        "T:System.ISpanFormattable",
+        "T:System.ISpanParsable\u00601",
+        "T:System.IUtf8SpanFormattable"
+      ]
+    },
+    {
+      "id": "T:System.ICloneable",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "ICloneable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.IComparable",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "IComparable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.IComparable\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "IComparable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.IConvertible",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "IConvertible",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 17,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.IDisposable",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "IDisposable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.IEquatable\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "IEquatable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.IFormattable",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "IFormattable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.IParsable\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "IParsable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 2,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
     },
     {
       "id": "T:System.IServiceProvider",
@@ -4629,7 +6576,73 @@
       "methods": 1,
       "properties": 0,
       "events": 0,
-      "abstract_returns": []
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.ISpanFormattable",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "ISpanFormattable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:System.IFormattable"
+      ]
+    },
+    {
+      "id": "T:System.ISpanParsable\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "ISpanParsable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 2,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:System.IParsable\u00601"
+      ]
+    },
+    {
+      "id": "T:System.IUtf8SpanFormattable",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "IUtf8SpanFormattable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.IUtf8SpanParsable\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "IUtf8SpanParsable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 2,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
     },
     {
       "id": "T:System.Int32",
@@ -4642,7 +6655,599 @@
       "methods": 52,
       "properties": 9,
       "events": 0,
-      "abstract_returns": []
+      "abstract_returns": [],
+      "base_type": "T:System.ValueType",
+      "interfaces": [
+        "T:System.IComparable",
+        "T:System.IComparable\u00601",
+        "T:System.IConvertible",
+        "T:System.IEquatable\u00601",
+        "T:System.IFormattable",
+        "T:System.IParsable\u00601",
+        "T:System.ISpanFormattable",
+        "T:System.ISpanParsable\u00601",
+        "T:System.IUtf8SpanFormattable",
+        "T:System.IUtf8SpanParsable\u00601",
+        "T:System.Numerics.IAdditionOperators\u00603",
+        "T:System.Numerics.IAdditiveIdentity\u00602",
+        "T:System.Numerics.IBinaryInteger\u00601",
+        "T:System.Numerics.IBinaryNumber\u00601",
+        "T:System.Numerics.IBitwiseOperators\u00603",
+        "T:System.Numerics.IComparisonOperators\u00603",
+        "T:System.Numerics.IDecrementOperators\u00601",
+        "T:System.Numerics.IDivisionOperators\u00603",
+        "T:System.Numerics.IEqualityOperators\u00603",
+        "T:System.Numerics.IIncrementOperators\u00601",
+        "T:System.Numerics.IMinMaxValue\u00601",
+        "T:System.Numerics.IModulusOperators\u00603",
+        "T:System.Numerics.IMultiplicativeIdentity\u00602",
+        "T:System.Numerics.IMultiplyOperators\u00603",
+        "T:System.Numerics.INumberBase\u00601",
+        "T:System.Numerics.INumber\u00601",
+        "T:System.Numerics.IShiftOperators\u00603",
+        "T:System.Numerics.ISignedNumber\u00601",
+        "T:System.Numerics.ISubtractionOperators\u00603",
+        "T:System.Numerics.IUnaryNegationOperators\u00602",
+        "T:System.Numerics.IUnaryPlusOperators\u00602"
+      ]
+    },
+    {
+      "id": "T:System.Numerics.IAdditionOperators\u00603",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IAdditionOperators",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 3,
+      "methods": 0,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Numerics.IAdditiveIdentity\u00602",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IAdditiveIdentity",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 2,
+      "methods": 0,
+      "properties": 1,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Numerics.IBinaryInteger\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IBinaryInteger",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 24,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:System.IComparable",
+        "T:System.IComparable\u00601",
+        "T:System.IEquatable\u00601",
+        "T:System.IFormattable",
+        "T:System.IParsable\u00601",
+        "T:System.ISpanFormattable",
+        "T:System.ISpanParsable\u00601",
+        "T:System.IUtf8SpanFormattable",
+        "T:System.IUtf8SpanParsable\u00601",
+        "T:System.Numerics.IAdditionOperators\u00603",
+        "T:System.Numerics.IAdditiveIdentity\u00602",
+        "T:System.Numerics.IBinaryNumber\u00601",
+        "T:System.Numerics.IBitwiseOperators\u00603",
+        "T:System.Numerics.IComparisonOperators\u00603",
+        "T:System.Numerics.IDecrementOperators\u00601",
+        "T:System.Numerics.IDivisionOperators\u00603",
+        "T:System.Numerics.IEqualityOperators\u00603",
+        "T:System.Numerics.IIncrementOperators\u00601",
+        "T:System.Numerics.IModulusOperators\u00603",
+        "T:System.Numerics.IMultiplicativeIdentity\u00602",
+        "T:System.Numerics.IMultiplyOperators\u00603",
+        "T:System.Numerics.INumberBase\u00601",
+        "T:System.Numerics.INumber\u00601",
+        "T:System.Numerics.IShiftOperators\u00603",
+        "T:System.Numerics.ISubtractionOperators\u00603",
+        "T:System.Numerics.IUnaryNegationOperators\u00602",
+        "T:System.Numerics.IUnaryPlusOperators\u00602"
+      ]
+    },
+    {
+      "id": "T:System.Numerics.IBinaryNumber\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IBinaryNumber",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 2,
+      "properties": 1,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:System.IComparable",
+        "T:System.IComparable\u00601",
+        "T:System.IEquatable\u00601",
+        "T:System.IFormattable",
+        "T:System.IParsable\u00601",
+        "T:System.ISpanFormattable",
+        "T:System.ISpanParsable\u00601",
+        "T:System.IUtf8SpanFormattable",
+        "T:System.IUtf8SpanParsable\u00601",
+        "T:System.Numerics.IAdditionOperators\u00603",
+        "T:System.Numerics.IAdditiveIdentity\u00602",
+        "T:System.Numerics.IBitwiseOperators\u00603",
+        "T:System.Numerics.IComparisonOperators\u00603",
+        "T:System.Numerics.IDecrementOperators\u00601",
+        "T:System.Numerics.IDivisionOperators\u00603",
+        "T:System.Numerics.IEqualityOperators\u00603",
+        "T:System.Numerics.IIncrementOperators\u00601",
+        "T:System.Numerics.IModulusOperators\u00603",
+        "T:System.Numerics.IMultiplicativeIdentity\u00602",
+        "T:System.Numerics.IMultiplyOperators\u00603",
+        "T:System.Numerics.INumberBase\u00601",
+        "T:System.Numerics.INumber\u00601",
+        "T:System.Numerics.ISubtractionOperators\u00603",
+        "T:System.Numerics.IUnaryNegationOperators\u00602",
+        "T:System.Numerics.IUnaryPlusOperators\u00602"
+      ]
+    },
+    {
+      "id": "T:System.Numerics.IBitwiseOperators\u00603",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IBitwiseOperators",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 3,
+      "methods": 0,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Numerics.IComparisonOperators\u00603",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IComparisonOperators",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 3,
+      "methods": 0,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:System.Numerics.IEqualityOperators\u00603"
+      ]
+    },
+    {
+      "id": "T:System.Numerics.IDecrementOperators\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IDecrementOperators",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 0,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Numerics.IDivisionOperators\u00603",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IDivisionOperators",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 3,
+      "methods": 0,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Numerics.IEqualityOperators\u00603",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IEqualityOperators",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 3,
+      "methods": 0,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Numerics.IFloatingPointConstants\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IFloatingPointConstants",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 0,
+      "properties": 3,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:System.IEquatable\u00601",
+        "T:System.IFormattable",
+        "T:System.IParsable\u00601",
+        "T:System.ISpanFormattable",
+        "T:System.ISpanParsable\u00601",
+        "T:System.IUtf8SpanFormattable",
+        "T:System.IUtf8SpanParsable\u00601",
+        "T:System.Numerics.IAdditionOperators\u00603",
+        "T:System.Numerics.IAdditiveIdentity\u00602",
+        "T:System.Numerics.IDecrementOperators\u00601",
+        "T:System.Numerics.IDivisionOperators\u00603",
+        "T:System.Numerics.IEqualityOperators\u00603",
+        "T:System.Numerics.IIncrementOperators\u00601",
+        "T:System.Numerics.IMultiplicativeIdentity\u00602",
+        "T:System.Numerics.IMultiplyOperators\u00603",
+        "T:System.Numerics.INumberBase\u00601",
+        "T:System.Numerics.ISubtractionOperators\u00603",
+        "T:System.Numerics.IUnaryNegationOperators\u00602",
+        "T:System.Numerics.IUnaryPlusOperators\u00602"
+      ]
+    },
+    {
+      "id": "T:System.Numerics.IFloatingPoint\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IFloatingPoint",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 27,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:System.IComparable",
+        "T:System.IComparable\u00601",
+        "T:System.IEquatable\u00601",
+        "T:System.IFormattable",
+        "T:System.IParsable\u00601",
+        "T:System.ISpanFormattable",
+        "T:System.ISpanParsable\u00601",
+        "T:System.IUtf8SpanFormattable",
+        "T:System.IUtf8SpanParsable\u00601",
+        "T:System.Numerics.IAdditionOperators\u00603",
+        "T:System.Numerics.IAdditiveIdentity\u00602",
+        "T:System.Numerics.IComparisonOperators\u00603",
+        "T:System.Numerics.IDecrementOperators\u00601",
+        "T:System.Numerics.IDivisionOperators\u00603",
+        "T:System.Numerics.IEqualityOperators\u00603",
+        "T:System.Numerics.IFloatingPointConstants\u00601",
+        "T:System.Numerics.IIncrementOperators\u00601",
+        "T:System.Numerics.IModulusOperators\u00603",
+        "T:System.Numerics.IMultiplicativeIdentity\u00602",
+        "T:System.Numerics.IMultiplyOperators\u00603",
+        "T:System.Numerics.INumberBase\u00601",
+        "T:System.Numerics.INumber\u00601",
+        "T:System.Numerics.ISignedNumber\u00601",
+        "T:System.Numerics.ISubtractionOperators\u00603",
+        "T:System.Numerics.IUnaryNegationOperators\u00602",
+        "T:System.Numerics.IUnaryPlusOperators\u00602"
+      ]
+    },
+    {
+      "id": "T:System.Numerics.IIncrementOperators\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IIncrementOperators",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 0,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Numerics.IMinMaxValue\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IMinMaxValue",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 0,
+      "properties": 2,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Numerics.IModulusOperators\u00603",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IModulusOperators",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 3,
+      "methods": 0,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Numerics.IMultiplicativeIdentity\u00602",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IMultiplicativeIdentity",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 2,
+      "methods": 0,
+      "properties": 1,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Numerics.IMultiplyOperators\u00603",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IMultiplyOperators",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 3,
+      "methods": 0,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Numerics.INumberBase\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "INumberBase",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 37,
+      "properties": 3,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:System.IEquatable\u00601",
+        "T:System.IFormattable",
+        "T:System.IParsable\u00601",
+        "T:System.ISpanFormattable",
+        "T:System.ISpanParsable\u00601",
+        "T:System.IUtf8SpanFormattable",
+        "T:System.IUtf8SpanParsable\u00601",
+        "T:System.Numerics.IAdditionOperators\u00603",
+        "T:System.Numerics.IAdditiveIdentity\u00602",
+        "T:System.Numerics.IDecrementOperators\u00601",
+        "T:System.Numerics.IDivisionOperators\u00603",
+        "T:System.Numerics.IEqualityOperators\u00603",
+        "T:System.Numerics.IIncrementOperators\u00601",
+        "T:System.Numerics.IMultiplicativeIdentity\u00602",
+        "T:System.Numerics.IMultiplyOperators\u00603",
+        "T:System.Numerics.ISubtractionOperators\u00603",
+        "T:System.Numerics.IUnaryNegationOperators\u00602",
+        "T:System.Numerics.IUnaryPlusOperators\u00602"
+      ]
+    },
+    {
+      "id": "T:System.Numerics.INumber\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "INumber",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 7,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:System.IComparable",
+        "T:System.IComparable\u00601",
+        "T:System.IEquatable\u00601",
+        "T:System.IFormattable",
+        "T:System.IParsable\u00601",
+        "T:System.ISpanFormattable",
+        "T:System.ISpanParsable\u00601",
+        "T:System.IUtf8SpanFormattable",
+        "T:System.IUtf8SpanParsable\u00601",
+        "T:System.Numerics.IAdditionOperators\u00603",
+        "T:System.Numerics.IAdditiveIdentity\u00602",
+        "T:System.Numerics.IComparisonOperators\u00603",
+        "T:System.Numerics.IDecrementOperators\u00601",
+        "T:System.Numerics.IDivisionOperators\u00603",
+        "T:System.Numerics.IEqualityOperators\u00603",
+        "T:System.Numerics.IIncrementOperators\u00601",
+        "T:System.Numerics.IModulusOperators\u00603",
+        "T:System.Numerics.IMultiplicativeIdentity\u00602",
+        "T:System.Numerics.IMultiplyOperators\u00603",
+        "T:System.Numerics.INumberBase\u00601",
+        "T:System.Numerics.ISubtractionOperators\u00603",
+        "T:System.Numerics.IUnaryNegationOperators\u00602",
+        "T:System.Numerics.IUnaryPlusOperators\u00602"
+      ]
+    },
+    {
+      "id": "T:System.Numerics.IShiftOperators\u00603",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IShiftOperators",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 3,
+      "methods": 0,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Numerics.ISignedNumber\u00601",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "ISignedNumber",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 0,
+      "properties": 1,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": [
+        "T:System.IEquatable\u00601",
+        "T:System.IFormattable",
+        "T:System.IParsable\u00601",
+        "T:System.ISpanFormattable",
+        "T:System.ISpanParsable\u00601",
+        "T:System.IUtf8SpanFormattable",
+        "T:System.IUtf8SpanParsable\u00601",
+        "T:System.Numerics.IAdditionOperators\u00603",
+        "T:System.Numerics.IAdditiveIdentity\u00602",
+        "T:System.Numerics.IDecrementOperators\u00601",
+        "T:System.Numerics.IDivisionOperators\u00603",
+        "T:System.Numerics.IEqualityOperators\u00603",
+        "T:System.Numerics.IIncrementOperators\u00601",
+        "T:System.Numerics.IMultiplicativeIdentity\u00602",
+        "T:System.Numerics.IMultiplyOperators\u00603",
+        "T:System.Numerics.INumberBase\u00601",
+        "T:System.Numerics.ISubtractionOperators\u00603",
+        "T:System.Numerics.IUnaryNegationOperators\u00602",
+        "T:System.Numerics.IUnaryPlusOperators\u00602"
+      ]
+    },
+    {
+      "id": "T:System.Numerics.ISubtractionOperators\u00603",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "ISubtractionOperators",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 3,
+      "methods": 0,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Numerics.IUnaryNegationOperators\u00602",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IUnaryNegationOperators",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 2,
+      "methods": 0,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Numerics.IUnaryPlusOperators\u00602",
+      "assembly": "System.Runtime",
+      "namespace": "System.Numerics",
+      "name": "IUnaryPlusOperators",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 2,
+      "methods": 0,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Object",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "Object",
+      "kind": "class",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 7,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [
+        "T:System.Type"
+      ],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Runtime.Serialization.IDeserializationCallback",
+      "assembly": "System.Runtime",
+      "namespace": "System.Runtime.Serialization",
+      "name": "IDeserializationCallback",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
+    },
+    {
+      "id": "T:System.Runtime.Serialization.ISerializable",
+      "assembly": "System.Runtime",
+      "namespace": "System.Runtime.Serialization",
+      "name": "ISerializable",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 1,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": null,
+      "interfaces": []
     },
     {
       "id": "T:System.String",
@@ -4655,12 +7260,59 @@
       "methods": 159,
       "properties": 2,
       "events": 0,
-      "abstract_returns": []
+      "abstract_returns": [],
+      "base_type": "T:System.Object",
+      "interfaces": [
+        "T:System.Collections.Generic.IEnumerable\u00601",
+        "T:System.Collections.IEnumerable",
+        "T:System.ICloneable",
+        "T:System.IComparable",
+        "T:System.IComparable\u00601",
+        "T:System.IConvertible",
+        "T:System.IEquatable\u00601",
+        "T:System.IParsable\u00601",
+        "T:System.ISpanParsable\u00601"
+      ]
+    },
+    {
+      "id": "T:System.Threading.CancellationToken",
+      "assembly": "System.Runtime",
+      "namespace": "System.Threading",
+      "name": "CancellationToken",
+      "kind": "struct",
+      "is_abstract": false,
+      "arity": 0,
+      "methods": 11,
+      "properties": 4,
+      "events": 0,
+      "abstract_returns": [
+        "T:System.Threading.WaitHandle"
+      ],
+      "base_type": "T:System.ValueType",
+      "interfaces": [
+        "T:System.IEquatable\u00601"
+      ]
+    },
+    {
+      "id": "T:System.ValueType",
+      "assembly": "System.Runtime",
+      "namespace": "System",
+      "name": "ValueType",
+      "kind": "class",
+      "is_abstract": true,
+      "arity": 0,
+      "methods": 3,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": [],
+      "base_type": "T:System.Object",
+      "interfaces": []
     }
   ],
   "registrations": [
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
       "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "AddScoped",
       "type_arguments": [
@@ -4676,6 +7328,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
       "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "AddScoped",
       "type_arguments": [
@@ -4691,6 +7344,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
       "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "AddScoped",
       "type_arguments": [
@@ -4706,6 +7360,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
       "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Type,System.Type)",
       "method_name": "AddScoped",
       "type_arguments": [],
@@ -4721,6 +7376,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
       "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00601(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Func{System.IServiceProvider,\u0060\u00600})",
       "method_name": "AddSingleton",
       "type_arguments": [
@@ -4737,6 +7393,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
       "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "AddSingleton",
       "type_arguments": [
@@ -4752,6 +7409,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
       "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "AddSingleton",
       "type_arguments": [
@@ -4767,6 +7425,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
       "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "AddSingleton",
       "type_arguments": [
@@ -4782,6 +7441,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
       "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00601(Microsoft.Extensions.DependencyInjection.IServiceCollection,\u0060\u00600)",
       "method_name": "AddSingleton",
       "type_arguments": [
@@ -4796,6 +7456,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
       "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00601(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "AddScoped",
       "type_arguments": [
@@ -4810,6 +7471,79 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
+      "method": "M:Microsoft.Extensions.DependencyInjection.MemoryCacheServiceCollectionExtensions.AddMemoryCache(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
+      "method_name": "AddMemoryCache",
+      "type_arguments": [],
+      "typeof_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 27
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
+      "method_name": "AddScoped",
+      "type_arguments": [
+        "T:Shop.Api.Infrastructure.IAuditStore",
+        "T:Shop.Api.Infrastructure.MemoryAuditStore"
+      ],
+      "typeof_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 28
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00601(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
+      "method_name": "AddScoped",
+      "type_arguments": [
+        "T:Shop.Api.Infrastructure.AuditSink"
+      ],
+      "typeof_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 29
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
+      "method": "M:Microsoft.Extensions.DependencyInjection.HealthCheckServiceCollectionExtensions.AddHealthChecks(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
+      "method_name": "AddHealthChecks",
+      "type_arguments": [],
+      "typeof_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 30
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IHealthChecksBuilder",
+      "method": "M:Microsoft.Extensions.DependencyInjection.HealthChecksBuilderAddCheckExtensions.AddCheck\u0060\u00601(Microsoft.Extensions.DependencyInjection.IHealthChecksBuilder,System.String,System.Nullable{Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus},System.Collections.Generic.IEnumerable{System.String},System.Nullable{System.TimeSpan})",
+      "method_name": "AddCheck",
+      "type_arguments": [
+        "T:Shop.Api.Infrastructure.PingCheck"
+      ],
+      "typeof_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Api/Program.cs",
+      "line": 30
+    },
+    {
+      "site": "M:Shop.Api.Program.Main(System.String[])",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
       "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions.BuildServiceProvider(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "BuildServiceProvider",
       "type_arguments": [],
@@ -4818,8 +7552,59 @@
       "has_lambda": false,
       "conditional": false,
       "file": "Shop.Api/Program.cs",
-      "line": 27
+      "line": 31
+    },
+    {
+      "site": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
+      "method_name": "AddSingleton",
+      "type_arguments": [
+        "T:Shop.Api.Infrastructure.IClock",
+        "T:Shop.Tests.FakeClock"
+      ],
+      "typeof_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Tests/OrdersTests.cs",
+      "line": 17
+    },
+    {
+      "site": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
+      "method_name": "AddSingleton",
+      "type_arguments": [
+        "T:Shop.Api.Infrastructure.IAudit",
+        "T:Shop.Tests.FakeAudit"
+      ],
+      "typeof_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Tests/OrdersTests.cs",
+      "line": 18
+    },
+    {
+      "site": "M:Shop.Tests.OrdersTests.Clock_is_wired_for_tests",
+      "receiver": "T:Microsoft.Extensions.DependencyInjection.IServiceCollection",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions.BuildServiceProvider(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
+      "method_name": "BuildServiceProvider",
+      "type_arguments": [],
+      "typeof_arguments": [],
+      "constructs": [],
+      "has_lambda": false,
+      "conditional": false,
+      "file": "Shop.Tests/OrdersTests.cs",
+      "line": 19
     }
   ],
-  "diagnostics": []
+  "diagnostics": [
+    {
+      "severity": "error",
+      "project": null,
+      "message": "Msbuild failed when processing the file \u0027/home/user/product-cli/product-cli/tests/fixtures/csharp-inventory/Fixture/Shop.Api/Shop.Api.csproj\u0027 with message: Package \u0027Microsoft.Extensions.Caching.Memory\u0027 8.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-qj66-m88j-hmgj"
+    }
+  ]
 }

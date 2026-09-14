@@ -6,10 +6,13 @@
 //! service-locator argument — is where the container chooses an
 //! implementation: its target's role is read from [`csharp_roles`], roles
 //! outside the denominator are recorded as excluded, factory/provider
-//! targets are recorded as *partial*, an external abstraction nothing in the
-//! solution implements or registers is a *boundary* edge (CG-R-68 — the used
-//! library surface, outside the denominator), and the rest are resolved
-//! through [`Resolver`] or recorded unresolved with the reason (CG-R-62).
+//! targets are recorded as *partial*, an external type a reached but
+//! unparsed framework call registers is *registration-not-read* (CG-R-75),
+//! an external abstraction nothing in the solution implements or registers
+//! is a *boundary* edge (CG-R-68 — the used library surface, outside the
+//! denominator), and the rest are resolved through [`Resolver`] or recorded
+//! unresolved with the reason (CG-R-62). Container-constructed is the root
+//! set plus every implementation a reached registration names (O-17).
 //! A property carrying a property-injection attribute (matched by symbol id)
 //! on a container-constructed type is a composition edge too. Registrations
 //! count once the member holding them is reached, so the walk repeats to a
@@ -32,6 +35,9 @@ pub enum EdgeState {
     /// An external abstraction with no in-solution implementation and no
     /// registration naming it: satisfied by the library itself (CG-R-68).
     Boundary,
+    /// Registered by a framework call the resolver does not parse (the
+    /// call's name): a reader gap, not a boundary (CG-R-75).
+    RegistrationNotRead(&'static str),
     Unresolved(Reason),
     Excluded(Role),
 }
@@ -104,6 +110,15 @@ fn walk<'a>(ix: &Index<'a>, resolver: &Resolver, start: &BTreeSet<&'a str>, site
         w.c.container_types.insert(type_id);
         w.queue.extend(ix.members_of.get(id).into_iter().flatten().copied());
     }
+    // O-17: every implementation a reached registration names is constructed
+    // by the container, whether or not an edge asks for it.
+    for implementation in resolver.implementations_at(&|s: &str| sites.contains(s)) {
+        if let Some(t) = ix.types.get(implementation).map(|t| t.id.as_str()) {
+            w.c.container_types.insert(t);
+            w.queue.push_back(t);
+            w.queue.extend(ix.members_of.get(t).into_iter().flatten().copied());
+        }
+    }
     while let Some(id) = w.queue.pop_front() {
         w.visit(id);
     }
@@ -168,8 +183,12 @@ impl<'a> Walk<'_, 'a> {
         }
         let registered = self.resolver.is_registered(target);
         let role = role_of(self.ix, target, registered);
-        let state = if self.is_boundary(target, registered) {
-            EdgeState::Boundary
+        let sites = self.sites;
+        let state = if self.is_library_provided(target, registered) {
+            match self.resolver.provider_of(target, &|s: &str| sites.contains(s)) {
+                Some(call) => EdgeState::RegistrationNotRead(call),
+                None => EdgeState::Boundary,
+            }
         } else if !role.in_denominator() {
             EdgeState::Excluded(role)
         } else {
@@ -195,15 +214,15 @@ impl<'a> Walk<'_, 'a> {
         self.c.edges.insert(CompositionEdge { from: from_type.to_string(), target: target.to_string(), role, state });
     }
 
-    /// CG-R-68: declared outside the solution, an abstraction, implemented by
-    /// no in-solution type, named by no registration — the library satisfies
-    /// it, so there is nothing for the container to choose. Read before the
-    /// role, so the boundary set is the whole used library surface.
-    fn is_boundary(&self, target: &str, registered: bool) -> bool {
-        self.ix.external.contains_key(target)
-            && self.ix.abstract_types.contains(target)
-            && !registered
-            && self.ix.implementors.get(target).is_none_or(|v| v.is_empty())
+    /// Declared outside the solution, subclassed or implemented by no
+    /// production type, named by no registration the resolver read — the
+    /// library (or a call the resolver cannot parse) supplies it, so there is
+    /// nothing in the solution for the container to choose (CG-R-68; shape
+    /// is not the test, CG-R-75). Read before the role, so the boundary set
+    /// is the whole used library surface; test projects do not count
+    /// (CG-R-75).
+    fn is_library_provided(&self, target: &str, registered: bool) -> bool {
+        self.ix.external.contains_key(target) && !registered && self.ix.production_implementors(target).next().is_none()
     }
 }
 
