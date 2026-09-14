@@ -88,6 +88,14 @@ pub struct Resolver {
     decorated: BTreeSet<String>,
     /// Calls that register by scanning an assembly (`Scan`, `AddMediatR`, …).
     pub scanning_sites: usize,
+    /// Projects a scanning call names through a `typeof` marker — the
+    /// assemblies it scans. A service is attributed to scanning only when
+    /// one of its implementors lives in such a project.
+    scanned_projects: BTreeSet<String>,
+    /// Type id → project id, for that attribution.
+    project_of: BTreeMap<String, String>,
+    /// Interface/base → implementing/deriving type ids.
+    implementors: BTreeMap<String, Vec<String>>,
     /// Calls on `IServiceCollection` the resolver read as registrations.
     pub registrations_read: usize,
     /// Calls on `IServiceCollection` it did not (AddControllers, Build…, …).
@@ -115,11 +123,30 @@ const SCANNING: &[&str] = &[
 impl Resolver {
     /// Read every registration fact once.
     pub fn build(inv: &Inventory) -> Resolver {
-        let mut r = Resolver::default();
+        let mut implementors: BTreeMap<String, Vec<String>> = BTreeMap::new();
+        for e in inv.references.iter().filter(|e| e.kind == "implement" || e.kind == "inherit") {
+            implementors.entry(e.to.clone()).or_default().push(e.from.clone());
+        }
+        let mut r = Resolver {
+            project_of: inv.types.iter().map(|t| (t.id.clone(), t.project.clone())).collect(),
+            implementors,
+            ..Default::default()
+        };
         for reg in &inv.registrations {
             r.read(reg);
         }
         r
+    }
+
+    /// Does an implementor of `service` live in a project some scanning
+    /// call names? Scanning registers the handlers it finds, so the scanned
+    /// assembly is the implementors', not the interface's.
+    fn scanned(&self, service: &str) -> bool {
+        self.implementors
+            .get(service)
+            .into_iter()
+            .flatten()
+            .any(|t| self.project_of.get(t).is_some_and(|p| self.scanned_projects.contains(p)))
     }
 
     fn read(&mut self, reg: &Registration) {
@@ -131,6 +158,11 @@ impl Resolver {
         if SCANNING.contains(&name) {
             self.scanning_sites += 1;
             self.registrations_read += 1;
+            for marker in &reg.typeof_arguments {
+                if let Some(p) = self.project_of.get(marker) {
+                    self.scanned_projects.insert(p.clone());
+                }
+            }
         } else if name.contains("Keyed") {
             if let Some(service) = reg.type_arguments.first().or(reg.typeof_arguments.first()) {
                 self.keyed.insert(service.clone());
@@ -218,7 +250,7 @@ impl Resolver {
             return Err(Reason::DecoratorChain);
         }
         let Some(entries) = self.entries.get(service) else {
-            return Err(if self.scanning_sites > 0 { Reason::AssemblyScanning } else { Reason::NoRegistration });
+            return Err(if self.scanned(service) { Reason::AssemblyScanning } else { Reason::NoRegistration });
         };
         let live: Vec<&Resolved> = entries
             .iter()

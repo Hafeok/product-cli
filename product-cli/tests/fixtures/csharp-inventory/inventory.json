@@ -5,10 +5,10 @@
     "tool_version": "0.1.0",
     "roslyn_version": "5.0.0.0"
   },
-  "produced_at": "2026-09-14T04:11:39.3940421Z",
+  "produced_at": "2026-09-14T04:14:52.3102079Z",
   "solution": {
     "path": "Fixture.sln",
-    "git_head": "60277925296c7c601f14f0483090b5406e499a15"
+    "git_head": "4ad2ce39e90c32aa1e4a05ce8e21420c1ca55032"
   },
   "projects": [
     {
@@ -3234,7 +3234,7 @@
   "registrations": [
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
-      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "AddScoped",
       "type_arguments": [
         "T:Shop.Api.Persistence.IOrderRepository",
@@ -3249,7 +3249,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
-      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "AddScoped",
       "type_arguments": [
         "T:Shop.Api.Orders.ICartReader",
@@ -3264,7 +3264,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
-      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "AddScoped",
       "type_arguments": [
         "T:Shop.Api.Infrastructure.IHandler\u00601",
@@ -3279,7 +3279,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
-      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped(System.Type,System.Type)",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Type,System.Type)",
       "method_name": "AddScoped",
       "type_arguments": [],
       "typeof_arguments": [
@@ -3294,7 +3294,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
-      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00601(System.Func{System.IServiceProvider,\u0060\u00600})",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00601(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Func{System.IServiceProvider,\u0060\u00600})",
       "method_name": "AddSingleton",
       "type_arguments": [
         "T:Shop.Api.Infrastructure.IIdGenerator"
@@ -3310,7 +3310,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
-      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00602",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton\u0060\u00602(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "AddSingleton",
       "type_arguments": [
         "T:Shop.Api.Infrastructure.IAudit",
@@ -3325,7 +3325,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
-      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00601",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddScoped\u0060\u00601(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "AddScoped",
       "type_arguments": [
         "T:Shop.Api.Orders.OrdersEndpoints"
@@ -3339,7 +3339,7 @@
     },
     {
       "site": "M:Shop.Api.Program.Main(System.String[])",
-      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions.BuildServiceProvider",
+      "method": "M:Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions.BuildServiceProvider(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
       "method_name": "BuildServiceProvider",
       "type_arguments": [],
       "typeof_arguments": [],

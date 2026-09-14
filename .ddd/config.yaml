@@ -45,3 +45,12 @@ detect:
 ignore:
   - "ddd-cli/tests/fixtures/**"
   - "ddd-cli/tests/corpus/**"
+  # The C# stack binding's reader and its fixture solution (2026-09-14).
+  # Both are C#, and this workspace's CI has no .NET host by decision
+  # (dec/ddd/fixtures-not-sdk): the C# adapter cannot classify them here,
+  # and an unclassifiable file fails `diff-contracts`. The fixture is fixture
+  # source under the same rule as the entries above; the reader is governed
+  # by dec/ddd/batch-inventory-reader's constraints, read-enforced, not by
+  # the interceptor. Proposed by the binding session; awaiting ratification.
+  - "product-cli/tests/fixtures/csharp-inventory/**"
+  - "tools/csharp-inventory/**"

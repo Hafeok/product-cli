@@ -65,8 +65,13 @@ public sealed class References
                     case InvocationExpressionSyntax inv:
                         if (Resolve(model, inv) is IMethodSymbol callee)
                         {
-                            Edge(from, callee.OriginalDefinition, "call");
-                            if (OnServiceCollection(model, inv, callee)) _register(RegistrationOf(model, from, inv, callee));
+                            // A reduced extension method (`services.AddX()`) has a
+                            // documentation id without its receiver parameter, which
+                            // matches nothing declared; the unreduced method is the
+                            // symbol the solution declares.
+                            var declared = callee.ReducedFrom ?? callee;
+                            Edge(from, declared.OriginalDefinition, "call");
+                            if (OnServiceCollection(model, inv, callee)) _register(RegistrationOf(model, from, inv, callee, declared));
                         }
                         break;
                     case BaseObjectCreationExpressionSyntax creation:
@@ -99,7 +104,7 @@ public sealed class References
             || receiver.AllInterfaces.Any(i => Ids.Of(i.OriginalDefinition) == ServiceCollection);
     }
 
-    private Registration RegistrationOf(SemanticModel model, string site, InvocationExpressionSyntax inv, IMethodSymbol callee)
+    private Registration RegistrationOf(SemanticModel model, string site, InvocationExpressionSyntax inv, IMethodSymbol callee, IMethodSymbol declared)
     {
         var args = inv.ArgumentList.DescendantNodes().ToList();
         var typeofs = args.OfType<TypeOfExpressionSyntax>()
@@ -112,7 +117,7 @@ public sealed class References
         return new Registration
         {
             Site = site,
-            Method = Ids.Of(callee.OriginalDefinition),
+            Method = Ids.Of(declared.OriginalDefinition),
             MethodName = callee.Name,
             TypeArguments = callee.TypeArguments.Select(t => Ids.Of(t.OriginalDefinition)).ToList(),
             TypeofArguments = typeofs,

@@ -104,6 +104,14 @@ the container resolves the service, not when the site runs.
   "framework-registered handlers" as a root convention. The conventions used in run 2 are stated
   in §4 and the bases they name were read off the inventories' `inherit` facts, not guessed.
 
+- **Run 2 (2026-09-14) is also void**, for two reader/resolver defects its numbers exposed:
+  calls to extension methods were dropped (a reduced extension method's documentation id omits
+  the receiver parameter and matched nothing declared — the whole of ASP.NET startup), and
+  `assembly-scanning` was attributed to every unregistered service whenever any scanning call
+  existed. Both fixed; run 2 retained under `gate1a-measurement/run2-superseded/` with its
+  README, which also states the order of events: the figures were seen, then the fixes made.
+  No threshold or prediction was touched.
+
 ## 3. The solutions, as found — and where they differ from the message
 
 **A — `NimblePros/eShopOnWeb`**, `main` at `03d8cffb305976e55a0b2079f5582eb6b3924302`, cloned
@@ -212,3 +220,23 @@ unresolved count is large relative to the undeclared population it would reclass
 form fixed at the measurement, the prediction first). And what neither solution establishes.
 
 **Hold.** §2 is Emil's.
+
+---
+
+## Appended note — 2026-09-14
+
+§2 arrived (`prediction-emil-gate1a.md`, committed with the §12.1 form before any run). The
+measurement ran three times: runs 1 and 2 are void for reader defects and retained under
+`gate1a-measurement/run{1,2}-superseded/`; run 3 is the measurement and is reported in
+`gate1a-measurement.md`. Nothing above is amended.
+
+**A CI-facing defect found while committing run 3, reported.** `ddd diff-contracts` fails on
+this branch with "12 file(s) could not be classified": the reader's and the fixture's `.cs`
+files route to the C# adapter, whose host (`roslyn-language-server`) is absent here and in CI by
+decision (`dec/ddd/fixtures-not-sdk`). It has been so since the first Gate 1a commit; the
+session's gate runs filtered the command's output to the undischarged count and missed the
+skipped-file failure — an instrument reading its own instrument through a grep. Fixed by two
+`ignore` globs in `.ddd/config.yaml`, commented, **proposed and awaiting ratification**: the
+fixture under the existing fixture rule, the reader as governed by `dec/ddd/batch-inventory-reader`'s
+read-enforced constraints rather than by the interceptor. No pull request exists yet, so no CI
+run has failed on it.
