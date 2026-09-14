@@ -1,0 +1,98 @@
+format: 2
+id: seam/rust/product-core-src-pf-csharp-di-report-rs
+boundary: contract surface of product-core/src/pf/csharp_di_report.rs
+verdict_knowledge: authored
+contract_location: product-core/src/pf/csharp_di_report.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: impl Resolver
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:937cc73974b47bd29e918c708cef8419408b47ba5d5abb9d404018fc42fb707e
+- symbol: Call
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:1c7b062ab011bae22cf40ef11284eedfaf0aee33a1d1fe0ba6d2e729ba556a26
+- symbol: TableCoverage
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:dcdce59b69df792c26979eb7f26c3572613fb3fe53524aac5b68b665f89ab87d
+- symbol: external
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:692a207b57dba8064e21892134796662cd40065ea555891fc87484c237b23784
+- symbol: method
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:89330933f1b542ebed2763d564eb130ffe9e5c35b46ab0a60f65f7710af63189
+- symbol: name
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:c356b8dc99ed876f26091e1d13d8b4f079fbcf0c740b582d9ec18ddb24157843
+- symbol: read
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:0775ee9470273f5daa67c4c695d9009526883b26281e7616c80f110bcbf7cf6e
+- symbol: site
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:cbc24f68845c5a1da54ae63d69ce0e9821bd25c687822e17a653994614e2cf1e
+- symbol: known
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:c6b12fcc1553e50f6b8f77016a669c191854e2ccdcfc8089357917ea100a2be0
+- symbol: parsed
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:7b4942d6cab6454794158256bbb1e2ec13be371c51e63a7a404852933811fa4c
+- symbol: reached
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:926c7a205a004409a460fcd08c0059a0ff801d7e482b9a23f13bc74ef62d3524
+- symbol: unknown
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:be92be956fd99afd0cf52e6955d824b4a0a93f8ea04d03388dd9012fc131b09a
+- symbol: ignored_split
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:8bcb96a60d756aacc5488cc0cb6a25e65b0999cd03eddc3329fb9e67064f1182
+- symbol: table_coverage
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:e3ba253b2da6afcc30c38f0aa31f565a961aef60449a6eec6226bb37802d2b34
+- symbol: unlearned
+  file: product-core/src/pf/csharp_di_report.rs
+  before: absent
+  after: sha256:8fb008a01a972f384884d809c2af3c462da9667b5715fdbf5d3cf8e3f03e403d
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:c50f48937a98938e3ee73b5a82cb89a27cc50f992d29cec3464eafee28730d27

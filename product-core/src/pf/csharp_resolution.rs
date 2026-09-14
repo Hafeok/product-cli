@@ -90,17 +90,7 @@ pub fn resolution_of(ix: &Index<'_>, c: &Closure<'_>) -> Resolution {
     let unresolved = c.count(|s| matches!(s, EdgeState::Unresolved(_)));
     let boundary = c.count(|s| *s == EdgeState::Boundary);
     let registration_not_read = c.count(|s| matches!(s, EdgeState::RegistrationNotRead(_)));
-    let mut by_reason: BTreeMap<String, usize> = BTreeMap::new();
-    let mut excluded: BTreeMap<String, usize> = BTreeMap::new();
-    let mut by_provider: BTreeMap<String, usize> = BTreeMap::new();
-    for e in &c.edges {
-        match e.state {
-            EdgeState::Unresolved(r) => *by_reason.entry(r.label().to_string()).or_insert(0) += 1,
-            EdgeState::Excluded(role) => *excluded.entry(role.label().to_string()).or_insert(0) += 1,
-            EdgeState::RegistrationNotRead(call) => *by_provider.entry(call.to_string()).or_insert(0) += 1,
-            _ => {}
-        }
-    }
+    let (by_reason, excluded, by_provider) = tallies(c);
     Resolution {
         composition_edges: c.edges.len(),
         scored: resolved + unresolved,
@@ -129,6 +119,22 @@ pub fn resolution_of(ix: &Index<'_>, c: &Closure<'_>) -> Resolution {
         proxies: PROXIES,
         retired_proxies: RETIRED_PROXIES,
     }
+}
+
+type Tally = BTreeMap<String, usize>;
+
+/// Unresolved edges by reason, excluded edges by role, not-read edges by call.
+fn tallies(c: &Closure<'_>) -> (Tally, Tally, Tally) {
+    let (mut by_reason, mut excluded, mut by_provider) = (Tally::new(), Tally::new(), Tally::new());
+    for e in &c.edges {
+        match e.state {
+            EdgeState::Unresolved(r) => *by_reason.entry(r.label().to_string()).or_insert(0) += 1,
+            EdgeState::Excluded(role) => *excluded.entry(role.label().to_string()).or_insert(0) += 1,
+            EdgeState::RegistrationNotRead(call) => *by_provider.entry(call.to_string()).or_insert(0) += 1,
+            _ => {}
+        }
+    }
+    (by_reason, excluded, by_provider)
 }
 
 fn surface(ix: &Index<'_>, c: &Closure<'_>, pred: impl Fn(&EdgeState) -> bool) -> Vec<BoundaryRow> {
