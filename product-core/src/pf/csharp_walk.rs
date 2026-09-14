@@ -6,8 +6,12 @@
 //! service-locator argument — is where the container chooses an
 //! implementation: its target's role is read from [`csharp_roles`], roles
 //! outside the denominator are recorded as excluded, factory/provider
-//! targets are recorded as *partial*, and the rest are resolved through
-//! [`Resolver`] or recorded unresolved with the reason (CG-R-62). Registrations
+//! targets are recorded as *partial*, an external abstraction nothing in the
+//! solution implements or registers is a *boundary* edge (CG-R-68 — the used
+//! library surface, outside the denominator), and the rest are resolved
+//! through [`Resolver`] or recorded unresolved with the reason (CG-R-62).
+//! A property carrying a property-injection attribute (matched by symbol id)
+//! on a container-constructed type is a composition edge too. Registrations
 //! count once the member holding them is reached, so the walk repeats to a
 //! fixpoint.
 
@@ -25,9 +29,21 @@ use super::csharp_roles::{role_of, Role};
 pub enum EdgeState {
     Resolved,
     Partial,
+    /// An external abstraction with no in-solution implementation and no
+    /// registration naming it: satisfied by the library itself (CG-R-68).
+    Boundary,
     Unresolved(Reason),
     Excluded(Role),
 }
+
+/// Property-injection attributes, by resolved symbol id: a property the
+/// framework satisfies from the container at composition time is a
+/// composition edge by the criterion (CG-R-68). Method injection needs the
+/// parameter's attributes, which the reader does not emit — a stated gap.
+pub const PROPERTY_INJECTION_ATTRIBUTES: &[&str] = &[
+    "T:Microsoft.AspNetCore.Components.InjectAttribute",
+    "T:Microsoft.AspNetCore.Mvc.FromServicesAttribute",
+];
 
 /// One composition edge, from the referencing type to the abstraction.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
@@ -107,12 +123,15 @@ impl<'a> Walk<'_, 'a> {
         }
         let from_type = m.declaring_type.as_str();
         self.c.types.insert(from_type);
-        let is_ctor = m.kind == "constructor" && self.c.container_types.contains(from_type);
+        let composed = self.c.container_types.contains(from_type);
+        let is_ctor = m.kind == "constructor" && composed;
+        let is_injected = m.kind == "property" && composed && m.attributes.iter().any(|a| PROPERTY_INJECTION_ATTRIBUTES.contains(&a.attribute_type.as_str()));
         for r in self.ix.out.get(id).into_iter().flatten() {
             let to = r.to.as_str();
             match r.kind.as_str() {
                 "resolve" => self.composition(from_type, to),
                 "parameter" if is_ctor => self.composition(from_type, to),
+                "signature" if is_injected => self.composition(from_type, to),
                 "call" | "construct" | "access" | "type-reference" => self.direct(id, to, &r.kind),
                 _ => {}
             }
@@ -149,7 +168,9 @@ impl<'a> Walk<'_, 'a> {
         }
         let registered = self.resolver.is_registered(target);
         let role = role_of(self.ix, target, registered);
-        let state = if !role.in_denominator() {
+        let state = if self.is_boundary(target, registered) {
+            EdgeState::Boundary
+        } else if !role.in_denominator() {
             EdgeState::Excluded(role)
         } else {
             let sites = self.sites;
@@ -172,6 +193,17 @@ impl<'a> Walk<'_, 'a> {
             self.c.types.insert(target);
         }
         self.c.edges.insert(CompositionEdge { from: from_type.to_string(), target: target.to_string(), role, state });
+    }
+
+    /// CG-R-68: declared outside the solution, an abstraction, implemented by
+    /// no in-solution type, named by no registration — the library satisfies
+    /// it, so there is nothing for the container to choose. Read before the
+    /// role, so the boundary set is the whole used library surface.
+    fn is_boundary(&self, target: &str, registered: bool) -> bool {
+        self.ix.external.contains_key(target)
+            && self.ix.abstract_types.contains(target)
+            && !registered
+            && self.ix.implementors.get(target).is_none_or(|v| v.is_empty())
     }
 }
 

@@ -241,8 +241,9 @@ The reference What lives in `.product/products/product-cli/`. `product mcp
 ## C# stack binding (`product csharp`, `tools/csharp-inventory/`)
 
 **As at 2026-09-14, Gate 1a of the binding session.** Built: the reader (schema v3), the consumer,
-the DI resolver, the per-edge denominator criterion with declared proxies, reachability with
-unresolved and partial as their own categories, and the act-indexed delta. Not built (Gate 2,
+the DI resolver, the per-edge denominator criterion with declared proxies (ratified CG-R-68),
+reachability with unresolved, partial and **boundary** as their own categories, and the
+act-indexed delta. Not built (Gate 2,
 dated here so nobody reads it as present): the `Slice`/`RealisesFact` checks, profiles, the
 determination loader, declaration-supplied edges (CG-R-61).
 
@@ -264,7 +265,11 @@ The binding connects the domain state change binding's act vocabulary (`eventmod
   *composition edge* — a constructor parameter of a container-constructed type, or a
   service-locator argument — the target's role (service, generic-dispatch, factory-provider →
   *partial*, marker, data-contract, abstract-data, value) is read through proxies that print with
-  their divergences; **`pf/csharp_walk.rs`** is the walk; `pf/csharp_reach.rs` runs it from a
+  their divergences; an external abstraction no in-solution type implements and no registration
+  names is a **boundary** edge (CG-R-68) — the used library surface, reported with type and
+  assembly, outside the resolved/unresolved denominator; a `[Inject]`/`[FromServices]` property
+  (matched by symbol id) on a container-constructed type is a composition edge, method injection
+  is not (the reader emits no parameter attributes — a stated gap); **`pf/csharp_walk.rs`** is the walk; `pf/csharp_reach.rs` runs it from a
   *stated* root convention (`entry-point`, `public`, `attribute:<T:…>`, `implements:<T:…>`,
   `member:<M:…>`) and reports reached / **unresolved** / **partial** / unreached — never folded
   together (CG-R-62), no figure without the others beside it, resolution coverage first;

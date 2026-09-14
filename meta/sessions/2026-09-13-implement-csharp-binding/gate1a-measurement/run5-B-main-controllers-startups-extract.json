@@ -1,0 +1,1204 @@
+{
+  "roots": [
+    "member:M:Program.{Main}$(System.String[])@OrchardCore.Cms.Web",
+    "implements:T:Microsoft.AspNetCore.Mvc.Controller",
+    "implements:T:OrchardCore.Modules.StartupBase"
+  ],
+  "total": {
+    "label": "total",
+    "partial": 13,
+    "reached": 2572,
+    "types": 6470,
+    "unreached": 3867,
+    "unresolved": 18
+  },
+  "percent_reached": 39.75270479134467,
+  "resolution": {
+    "composition_edges": 1450,
+    "in_denominator": 967,
+    "resolved": 504,
+    "partial": 333,
+    "unresolved": 130,
+    "boundary": 27,
+    "coverage_percent": 79.49526813880126,
+    "by_role": {
+      "abstract-data": 8,
+      "data-contract": 181,
+      "factory-provider": 346,
+      "generic-dispatch": 44,
+      "marker": 274,
+      "service": 594,
+      "value": 3
+    },
+    "excluded_by_role": {
+      "abstract-data": 1,
+      "data-contract": 178,
+      "marker": 274,
+      "value": 3
+    },
+    "by_reason": {
+      "conditional-registration": 4,
+      "factory": 7,
+      "keyed-service": 7,
+      "module-configuration": 86,
+      "no-registration": 26
+    },
+    "boundary_surface": [
+      {
+        "assembly": "Microsoft.AspNetCore.DataProtection.Abstractions",
+        "edges": 8,
+        "role": "factory-provider",
+        "target": "T:Microsoft.AspNetCore.DataProtection.IDataProtectionProvider"
+      },
+      {
+        "assembly": "Microsoft.AspNetCore.Mvc.ViewFeatures",
+        "edges": 2,
+        "role": "factory-provider",
+        "target": "T:Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider"
+      },
+      {
+        "assembly": "Microsoft.AspNetCore.Routing.Abstractions",
+        "edges": 2,
+        "role": "abstract-data",
+        "target": "T:Microsoft.AspNetCore.Routing.LinkGenerator"
+      },
+      {
+        "assembly": "Microsoft.AspNetCore.SignalR.Core",
+        "edges": 2,
+        "role": "data-contract",
+        "target": "T:Microsoft.AspNetCore.SignalR.IHubContext`1"
+      },
+      {
+        "assembly": "Microsoft.Extensions.Hosting.Abstractions",
+        "edges": 2,
+        "role": "service",
+        "target": "T:Microsoft.Extensions.Hosting.IHostApplicationLifetime"
+      },
+      {
+        "assembly": "System.Text.Encodings.Web",
+        "edges": 2,
+        "role": "abstract-data",
+        "target": "T:System.Text.Encodings.Web.JavaScriptEncoder"
+      },
+      {
+        "assembly": "AWSSDK.S3",
+        "edges": 1,
+        "role": "factory-provider",
+        "target": "T:Amazon.S3.IAmazonS3"
+      },
+      {
+        "assembly": "Microsoft.AspNetCore.Antiforgery",
+        "edges": 1,
+        "role": "service",
+        "target": "T:Microsoft.AspNetCore.Antiforgery.IAntiforgery"
+      },
+      {
+        "assembly": "Microsoft.AspNetCore.Mvc.Core",
+        "edges": 1,
+        "role": "data-contract",
+        "target": "T:Microsoft.AspNetCore.Mvc.Infrastructure.IActionDescriptorCollectionProvider"
+      },
+      {
+        "assembly": "Microsoft.AspNetCore.Mvc.Razor",
+        "edges": 1,
+        "role": "service",
+        "target": "T:Microsoft.AspNetCore.Mvc.Razor.ITagHelperFactory"
+      },
+      {
+        "assembly": "Microsoft.AspNetCore.Mvc.ViewFeatures",
+        "edges": 1,
+        "role": "factory-provider",
+        "target": "T:Microsoft.AspNetCore.Mvc.Rendering.IHtmlHelper"
+      },
+      {
+        "assembly": "Microsoft.Extensions.DependencyInjection.Abstractions",
+        "edges": 1,
+        "role": "factory-provider",
+        "target": "T:Microsoft.Extensions.DependencyInjection.IServiceScopeFactory"
+      },
+      {
+        "assembly": "Microsoft.Extensions.Http",
+        "edges": 1,
+        "role": "abstract-data",
+        "target": "T:Microsoft.Extensions.Http.HttpMessageHandlerBuilder"
+      },
+      {
+        "assembly": "System.Runtime",
+        "edges": 1,
+        "role": "abstract-data",
+        "target": "T:System.Reflection.MethodInfo"
+      },
+      {
+        "assembly": "System.Runtime",
+        "edges": 1,
+        "role": "abstract-data",
+        "target": "T:System.Reflection.PropertyInfo"
+      }
+    ],
+    "unresolved_edges": [
+      {
+        "from": "T:Microsoft.Extensions.DependencyInjection.OrchardCoreBuilderExtensions@OrchardCore.Infrastructure",
+        "role": "service",
+        "state": {
+          "unresolved": "conditional-registration"
+        },
+        "target": "T:OrchardCore.Caching.Distributed.IMessageBus"
+      },
+      {
+        "from": "T:OrchardCore.AdminDashboard.Controllers.DashboardController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.AdminMenu.Controllers.MenuController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.AdminMenu.Controllers.NodeController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Apis.GraphQL.GraphQLMiddleware",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:GraphQL.IGraphQLSerializer"
+      },
+      {
+        "from": "T:OrchardCore.Apis.GraphQL.GraphQLMiddleware",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:GraphQL.IGraphQLTextSerializer"
+      },
+      {
+        "from": "T:OrchardCore.Apis.GraphQL.GraphQLMiddleware",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authentication.IAuthenticationService"
+      },
+      {
+        "from": "T:OrchardCore.Apis.GraphQL.GraphQLMiddleware",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Apis.GraphQL.Services.SchemaService",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:GraphQL.Types.Schema"
+      },
+      {
+        "from": "T:OrchardCore.Apis.GraphQL.ValidationRules.RequiresPermissionValidationRule",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.AuditTrail.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.BackgroundTasks.Controllers.BackgroundTaskController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.ContentFields.Controllers.ContentPickerAdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.ContentFields.Controllers.LocalizationSetContentPickerAdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.ContentFields.Controllers.UserPickerAdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.ContentLocalization.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.ContentPreview.Controllers.PreviewController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.ContentTypes.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Contents.AuditTrail.Controllers.AuditTrailContentController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Contents.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Contents.Controllers.ItemController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Contents.Deployment.AddToDeploymentPlan.AddToDeploymentPlanController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Contents.Deployment.Download.DownloadController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Contents.Services.DefaultContentsAdminListFilterProvider",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Cors.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.DataLocalization.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Demo.Controllers.ContentController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Deployment.Controllers.DeploymentPlanController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Deployment.Controllers.ExportFileController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Deployment.Controllers.ImportController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Deployment.Controllers.StepController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Deployment.Remote.Controllers.ExportRemoteInstanceController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Deployment.Remote.Controllers.ExportRemoteInstanceController",
+        "role": "service",
+        "state": {
+          "unresolved": "factory"
+        },
+        "target": "T:System.Net.Http.IHttpClientFactory"
+      },
+      {
+        "from": "T:OrchardCore.Deployment.Remote.Controllers.RemoteClientController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Deployment.Remote.Controllers.RemoteInstanceController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.DisplayManagement.Liquid.TagHelpers.LiquidTagHelperActivator",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:Microsoft.AspNetCore.Mvc.ViewFeatures.ModelExpressionProvider"
+      },
+      {
+        "from": "T:OrchardCore.Elasticsearch.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Elasticsearch.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:OrchardCore.Elasticsearch.Core.Services.ElasticsearchIndexManager"
+      },
+      {
+        "from": "T:OrchardCore.Elasticsearch.Core.Services.ElasticsearchQueryService",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:OrchardCore.Elasticsearch.Core.Services.ElasticsearchIndexManager"
+      },
+      {
+        "from": "T:OrchardCore.Email.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Email.Services.DefaultEmailProviderResolver",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:OrchardCore.Email.IEmailProvider"
+      },
+      {
+        "from": "T:OrchardCore.Environment.Shell.ShellSettings",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:OrchardCore.Environment.Shell.Configuration.ShellConfiguration"
+      },
+      {
+        "from": "T:OrchardCore.Features.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Indexing.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Indexing.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "keyed-service"
+        },
+        "target": "T:OrchardCore.Indexing.IIndexManager"
+      },
+      {
+        "from": "T:OrchardCore.Indexing.Core.DefaultIndexProfileManager",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:OrchardCore.Indexing.IIndexProfileHandler"
+      },
+      {
+        "from": "T:OrchardCore.Layers.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Layers.Controllers.LayerRuleController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Lists.Controllers.OrderController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Lucene.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Lucene.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:OrchardCore.Lucene.LuceneIndexManager"
+      },
+      {
+        "from": "T:OrchardCore.Media.AmazonS3.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Media.AmazonS3.Startup",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:OrchardCore.Media.Events.IMediaCreatingEventHandler"
+      },
+      {
+        "from": "T:OrchardCore.Media.Azure.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Media.Azure.Startup",
+        "role": "service",
+        "state": {
+          "unresolved": "conditional-registration"
+        },
+        "target": "T:OrchardCore.FileStorage.AzureBlob.BlobFileStore"
+      },
+      {
+        "from": "T:OrchardCore.Media.Azure.Startup",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:OrchardCore.Media.Events.IMediaCreatingEventHandler"
+      },
+      {
+        "from": "T:OrchardCore.Media.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Media.Controllers.MediaCacheController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Media.Controllers.MediaCacheController",
+        "role": "service",
+        "state": {
+          "unresolved": "conditional-registration"
+        },
+        "target": "T:OrchardCore.Media.IMediaFileStoreCache"
+      },
+      {
+        "from": "T:OrchardCore.Media.Controllers.MediaProfilesController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Media.MediaTusStartup",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Media.Startup",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:OrchardCore.Media.Events.IMediaCreatingEventHandler"
+      },
+      {
+        "from": "T:OrchardCore.Media.Startup",
+        "role": "service",
+        "state": {
+          "unresolved": "conditional-registration"
+        },
+        "target": "T:OrchardCore.Media.IMediaFileStoreCache"
+      },
+      {
+        "from": "T:OrchardCore.Menu.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Modules.StartupActionsStartup",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:Microsoft.Extensions.DependencyInjection.StartupActions"
+      },
+      {
+        "from": "T:OrchardCore.Notifications.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.OpenApi.Startup",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.OpenId.Controllers.AccessController",
+        "role": "service",
+        "state": {
+          "unresolved": "factory"
+        },
+        "target": "T:OrchardCore.OpenId.Abstractions.Managers.IOpenIdAuthorizationManager"
+      },
+      {
+        "from": "T:OrchardCore.OpenId.Controllers.AccessController",
+        "role": "service",
+        "state": {
+          "unresolved": "factory"
+        },
+        "target": "T:OrchardCore.OpenId.Abstractions.Managers.IOpenIdScopeManager"
+      },
+      {
+        "from": "T:OrchardCore.OpenId.Controllers.ApplicationController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.OpenId.Controllers.ApplicationController",
+        "role": "service",
+        "state": {
+          "unresolved": "factory"
+        },
+        "target": "T:OrchardCore.OpenId.Abstractions.Managers.IOpenIdScopeManager"
+      },
+      {
+        "from": "T:OrchardCore.OpenId.Controllers.ScopeController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.OpenId.Controllers.ScopeController",
+        "role": "service",
+        "state": {
+          "unresolved": "factory"
+        },
+        "target": "T:OrchardCore.OpenId.Abstractions.Managers.IOpenIdScopeManager"
+      },
+      {
+        "from": "T:OrchardCore.OpenId.Controllers.ServerConfigurationController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.OpenId.Controllers.ValidationConfigurationController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.OpenId.Services.OpenIdValidationService",
+        "role": "service",
+        "state": {
+          "unresolved": "factory"
+        },
+        "target": "T:OrchardCore.OpenId.Abstractions.Managers.IOpenIdScopeManager"
+      },
+      {
+        "from": "T:OrchardCore.Placements.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Queries.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Queries.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "keyed-service"
+        },
+        "target": "T:OrchardCore.Queries.IQuerySource"
+      },
+      {
+        "from": "T:OrchardCore.Queries.Core.Services.DefaultQueryManager",
+        "role": "service",
+        "state": {
+          "unresolved": "keyed-service"
+        },
+        "target": "T:OrchardCore.Queries.IQuerySource"
+      },
+      {
+        "from": "T:OrchardCore.Queries.Sql.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.RateLimits.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.RateLimits.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "keyed-service"
+        },
+        "target": "T:OrchardCore.RateLimits.Core.IRateLimiterSource"
+      },
+      {
+        "from": "T:OrchardCore.RateLimits.Controllers.LimiterController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.RateLimits.Controllers.LimiterController",
+        "role": "service",
+        "state": {
+          "unresolved": "keyed-service"
+        },
+        "target": "T:OrchardCore.RateLimits.Core.IRateLimiterSource"
+      },
+      {
+        "from": "T:OrchardCore.Recipes.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Recipes.Services.RecipeExecutor",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:OrchardCore.Recipes.Services.IRecipeStepHandler"
+      },
+      {
+        "from": "T:OrchardCore.Roles.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Rules.Startup",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:OrchardCore.Rules.Drivers.ContentTypeConditionEvaluatorDriver"
+      },
+      {
+        "from": "T:OrchardCore.Search.SearchController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Search.SearchController",
+        "role": "service",
+        "state": {
+          "unresolved": "factory"
+        },
+        "target": "T:OrchardCore.Search.Abstractions.ISearchService"
+      },
+      {
+        "from": "T:OrchardCore.Settings.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Shortcodes.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Sitemaps.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Sitemaps.Controllers.SitemapCacheController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Sitemaps.Controllers.SitemapIndexController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Sitemaps.Controllers.SourceController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Sms.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Sms.Services.DefaultSmsProviderResolver",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:OrchardCore.Sms.ISmsProvider"
+      },
+      {
+        "from": "T:OrchardCore.Taxonomies.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Taxonomies.Controllers.TagController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Templates.Controllers.PreviewController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Templates.Controllers.TemplateController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Tenants.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Tenants.Controllers.FeatureProfilesController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Themes.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.UrlRewriting.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.UrlRewriting.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "keyed-service"
+        },
+        "target": "T:OrchardCore.UrlRewriting.IUrlRewriteRuleSource"
+      },
+      {
+        "from": "T:OrchardCore.UrlRewriting.Services.RewriteRulesManager",
+        "role": "service",
+        "state": {
+          "unresolved": "keyed-service"
+        },
+        "target": "T:OrchardCore.UrlRewriting.IUrlRewriteRuleSource"
+      },
+      {
+        "from": "T:OrchardCore.Users.AuditTrail.Controllers.AuditTrailAdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Users.AuditTrail.Handlers.UserEventHandler",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:Microsoft.AspNetCore.Identity.UserManager`1"
+      },
+      {
+        "from": "T:OrchardCore.Users.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Users.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:Microsoft.AspNetCore.Identity.SignInManager`1"
+      },
+      {
+        "from": "T:OrchardCore.Users.Controllers.AdminController",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:Microsoft.AspNetCore.Identity.UserManager`1"
+      },
+      {
+        "from": "T:OrchardCore.Users.Controllers.AdminTwoFactorAuthenticationController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Users.Controllers.AdminTwoFactorAuthenticationController",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:Microsoft.AspNetCore.Identity.UserManager`1"
+      },
+      {
+        "from": "T:OrchardCore.Users.Controllers.ChangeEmailController",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:Microsoft.AspNetCore.Identity.UserManager`1"
+      },
+      {
+        "from": "T:OrchardCore.Users.Controllers.EmailConfirmationController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Users.Controllers.EmailConfirmationController",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:Microsoft.AspNetCore.Identity.UserManager`1"
+      },
+      {
+        "from": "T:OrchardCore.Users.Controllers.ResetPasswordController",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:Microsoft.AspNetCore.Identity.UserManager`1"
+      },
+      {
+        "from": "T:OrchardCore.Users.Services.DefaultUsersAdminListFilterProvider",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:Microsoft.AspNetCore.Identity.UserManager`1"
+      },
+      {
+        "from": "T:OrchardCore.Users.Services.RolesAdminListFilterProvider",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Users.Services.UserEmailService",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:Microsoft.AspNetCore.Identity.UserManager`1"
+      },
+      {
+        "from": "T:OrchardCore.Users.Services.UserEmailService",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:System.Text.Encodings.Web.HtmlEncoder"
+      },
+      {
+        "from": "T:OrchardCore.Users.Services.UserService",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:Microsoft.AspNetCore.Identity.SignInManager`1"
+      },
+      {
+        "from": "T:OrchardCore.Users.Services.UserService",
+        "role": "service",
+        "state": {
+          "unresolved": "no-registration"
+        },
+        "target": "T:Microsoft.AspNetCore.Identity.UserManager`1"
+      },
+      {
+        "from": "T:OrchardCore.Workflows.Controllers.ActivityController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Workflows.Controllers.WorkflowController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Workflows.Controllers.WorkflowTypeController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      },
+      {
+        "from": "T:OrchardCore.Workflows.Http.Controllers.HttpWorkflowController",
+        "role": "service",
+        "state": {
+          "unresolved": "module-configuration"
+        },
+        "target": "T:Microsoft.AspNetCore.Authorization.IAuthorizationService"
+      }
+    ]
+  },
+  "registrations_read": 1348,
+  "calls_ignored": 1554,
+  "by_root": [
+    {
+      "reached_types": 262,
+      "root": "member:M:Program.{Main}$(System.String[])@OrchardCore.Cms.Web",
+      "root_symbols": 1,
+      "unresolved_edges": 4
+    },
+    {
+      "reached_types": 931,
+      "root": "implements:T:Microsoft.AspNetCore.Mvc.Controller",
+      "root_symbols": 101,
+      "unresolved_edges": 339
+    },
+    {
+      "reached_types": 1339,
+      "root": "implements:T:OrchardCore.Modules.StartupBase",
+      "root_symbols": 363,
+      "unresolved_edges": 59
+    }
+  ],
+  "tracked": []
+}

@@ -41,7 +41,7 @@ fn composition_edges_are_classified_by_role() {
     let report = reach(&inv, &opts(&["entry-point"], &[]));
     let r = &report.resolution;
     assert_eq!(r.in_denominator, r.resolved + r.partial + r.unresolved);
-    assert!(r.partial >= 2, "IClockFactory and IServiceProvider are factory/provider: {:?}", r.by_role);
+    assert!(r.partial >= 1, "IClockFactory is a factory: {:?}", r.by_role);
     assert_eq!(r.by_reason.get("conditional-registration"), Some(&1), "{:?}", r.by_reason);
     assert!(r.by_role.contains_key("generic-dispatch"), "IHandler<T>, IValidator<T>: {:?}", r.by_role);
     // A marker and a data contract arriving as constructor parameters are
@@ -49,7 +49,39 @@ fn composition_edges_are_classified_by_role() {
     // a data contract as a method parameter are not composition edges at all.
     assert_eq!(r.excluded_by_role.get("marker"), Some(&1), "{:?}", r.excluded_by_role);
     assert_eq!(r.excluded_by_role.get("data-contract"), Some(&1), "{:?}", r.excluded_by_role);
-    assert_eq!(r.composition_edges, r.in_denominator + 2);
+    assert_eq!(r.composition_edges, r.in_denominator + r.boundary + 2);
+}
+
+#[test]
+fn boundary_edges_are_their_own_state() {
+    let inv = load_inventory(FIXTURE).expect("loads");
+    let report = reach(&inv, &opts(&["entry-point", "implements:T:Microsoft.AspNetCore.Components.ComponentBase"], &[]));
+    let r = &report.resolution;
+    // ILogger<T> at the OrdersEndpoints constructor and at OrdersPanel's [Inject]
+    // property, IServiceProvider at the constructor: external, unimplemented,
+    // unregistered — the library satisfies them (CG-R-68).
+    let logger = r.boundary_surface.iter().find(|b| b.target == "T:Microsoft.Extensions.Logging.ILogger`1").expect("ILogger<T> is boundary");
+    assert_eq!(logger.assembly, "Microsoft.Extensions.Logging.Abstractions");
+    assert_eq!(logger.edges, 2);
+    assert!(r.boundary_surface.iter().any(|b| b.target == "T:System.IServiceProvider"));
+    assert_eq!(r.boundary, 3);
+    assert_eq!(r.in_denominator, r.resolved + r.partial + r.unresolved, "boundary is outside the denominator");
+    // An external abstraction with an in-solution registration is resolved, not boundary.
+    assert!(!r.boundary_surface.iter().any(|b| b.target == "T:System.Collections.Generic.IComparer`1"));
+    let text = render_reach(&report);
+    assert!(text.contains("boundary — the used library surface"));
+}
+
+#[test]
+fn property_injection_is_a_composition_edge() {
+    let inv = load_inventory(FIXTURE).expect("loads");
+    let entry = reach(&inv, &opts(&["entry-point"], &[]));
+    let with_component = reach(&inv, &opts(&["entry-point", "implements:T:Microsoft.AspNetCore.Components.ComponentBase"], &[]));
+    // OrdersPanel's two [Inject] properties add one resolved edge (ICartReader,
+    // through the registration Main reaches) and one boundary edge (ILogger<T>).
+    assert_eq!(with_component.resolution.resolved, entry.resolution.resolved + 1);
+    assert_eq!(with_component.resolution.boundary, entry.resolution.boundary + 1);
+    assert_eq!(entry.resolution.boundary, 2, "ILogger<T> and IServiceProvider at the constructor");
 }
 
 #[test]

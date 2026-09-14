@@ -49,6 +49,7 @@ fn reach_prints_its_convention_first() {
         .success()
         .stdout(predicate::str::starts_with("roots: entry-point, public\n"))
         .stdout(predicate::str::contains("resolution coverage:"))
+        .stdout(predicate::str::contains("boundary (external abstractions the library satisfies, outside the denominator)"))
         .stdout(predicate::str::contains("by namespace:"));
 }
 

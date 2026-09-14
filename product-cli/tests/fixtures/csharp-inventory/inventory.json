@@ -5,10 +5,10 @@
     "tool_version": "0.1.0",
     "roslyn_version": "5.0.0.0"
   },
-  "produced_at": "2026-09-14T07:04:13.4156216Z",
+  "produced_at": "2026-09-14T08:53:34.1420139Z",
   "solution": {
     "path": "Fixture.sln",
-    "git_head": "a1141443fcec6c6962c9762e02628a75a81df2e8"
+    "git_head": "4c2171bf35308772e355ba6cb8009ba96d8fa531"
   },
   "projects": [
     {
@@ -85,6 +85,22 @@
           }
         }
       ]
+    },
+    {
+      "id": "T:Shop.Api.Admin.OrdersPanel",
+      "project": "P:Shop.Api",
+      "namespace": "Shop.Api.Admin",
+      "name": "OrdersPanel",
+      "kind": "class",
+      "accessibility": "public",
+      "is_static": false,
+      "is_abstract": false,
+      "is_partial": false,
+      "base_type": "T:Microsoft.AspNetCore.Components.ComponentBase",
+      "interfaces": [],
+      "file": "Shop.Api/Admin.cs",
+      "line": 10,
+      "attributes": []
     },
     {
       "id": "T:Shop.Api.Infrastructure.AlwaysValid\u00601",
@@ -327,7 +343,7 @@
       "base_type": "T:System.Object",
       "interfaces": [],
       "file": "Shop.Api/Orders.cs",
-      "line": 90,
+      "line": 91,
       "attributes": [
         {
           "type": "T:Product.Binding.SliceAttribute",
@@ -356,7 +372,7 @@
         "T:Shop.Api.Orders.ICartReader"
       ],
       "file": "Shop.Api/Orders.cs",
-      "line": 42,
+      "line": 43,
       "attributes": []
     },
     {
@@ -372,7 +388,7 @@
       "base_type": "T:System.Object",
       "interfaces": [],
       "file": "Shop.Api/Orders.cs",
-      "line": 68,
+      "line": 69,
       "attributes": []
     },
     {
@@ -388,7 +404,7 @@
       "base_type": null,
       "interfaces": [],
       "file": "Shop.Api/Orders.cs",
-      "line": 37,
+      "line": 38,
       "attributes": []
     },
     {
@@ -404,7 +420,7 @@
       "base_type": "T:System.Object",
       "interfaces": [],
       "file": "Shop.Api/Orders.cs",
-      "line": 95,
+      "line": 96,
       "attributes": []
     },
     {
@@ -422,7 +438,7 @@
         "T:System.IEquatable\u00601"
       ],
       "file": "Shop.Api/Orders.cs",
-      "line": 9,
+      "line": 10,
       "attributes": []
     },
     {
@@ -440,7 +456,7 @@
         "T:Shop.Api.Infrastructure.IHandler\u00601"
       ],
       "file": "Shop.Api/Orders.cs",
-      "line": 14,
+      "line": 15,
       "attributes": [
         {
           "type": "T:Product.Binding.SliceAttribute",
@@ -830,7 +846,7 @@
       "parameters": [],
       "return_type": "T:System.Collections.Generic.Dictionary\u00602",
       "file": "Shop.Api/Orders.cs",
-      "line": 44,
+      "line": 45,
       "attributes": []
     },
     {
@@ -844,7 +860,7 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Orders.ICartReader",
       "file": "Shop.Api/Orders.cs",
-      "line": 70,
+      "line": 71,
       "attributes": []
     },
     {
@@ -858,7 +874,7 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Persistence.IOrderRepository",
       "file": "Shop.Api/Orders.cs",
-      "line": 71,
+      "line": 72,
       "attributes": []
     },
     {
@@ -872,7 +888,7 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IAudit",
       "file": "Shop.Api/Orders.cs",
-      "line": 102,
+      "line": 103,
       "attributes": []
     },
     {
@@ -886,7 +902,7 @@
       "parameters": [],
       "return_type": "T:System.Collections.Generic.IComparer\u00601",
       "file": "Shop.Api/Orders.cs",
-      "line": 101,
+      "line": 102,
       "attributes": []
     },
     {
@@ -900,7 +916,21 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IClockFactory",
       "file": "Shop.Api/Orders.cs",
-      "line": 99,
+      "line": 100,
+      "attributes": []
+    },
+    {
+      "id": "F:Shop.Api.Orders.OrdersEndpoints._log",
+      "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
+      "name": "_log",
+      "kind": "field",
+      "accessibility": "private",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Microsoft.Extensions.Logging.ILogger\u00601",
+      "file": "Shop.Api/Orders.cs",
+      "line": 105,
       "attributes": []
     },
     {
@@ -914,7 +944,7 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IHandler\u00601",
       "file": "Shop.Api/Orders.cs",
-      "line": 97,
+      "line": 98,
       "attributes": []
     },
     {
@@ -928,7 +958,7 @@
       "parameters": [],
       "return_type": "T:System.IServiceProvider",
       "file": "Shop.Api/Orders.cs",
-      "line": 100,
+      "line": 101,
       "attributes": []
     },
     {
@@ -942,7 +972,7 @@
       "parameters": [],
       "return_type": "T:System.Collections.Generic.IReadOnlyList\u00601",
       "file": "Shop.Api/Orders.cs",
-      "line": 103,
+      "line": 104,
       "attributes": []
     },
     {
@@ -956,7 +986,7 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Infrastructure.IValidator\u00601",
       "file": "Shop.Api/Orders.cs",
-      "line": 98,
+      "line": 99,
       "attributes": []
     },
     {
@@ -970,7 +1000,7 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Orders.ICartReader",
       "file": "Shop.Api/Orders.cs",
-      "line": 17,
+      "line": 18,
       "attributes": []
     },
     {
@@ -984,7 +1014,7 @@
       "parameters": [],
       "return_type": "T:Shop.Api.Persistence.IOrderRepository",
       "file": "Shop.Api/Orders.cs",
-      "line": 16,
+      "line": 17,
       "attributes": []
     },
     {
@@ -1041,6 +1071,25 @@
       "return_type": null,
       "file": "Product.Binding/SliceAttribute.cs",
       "line": 12,
+      "attributes": []
+    },
+    {
+      "id": "M:Shop.Api.Admin.OrdersPanel.Count(System.Guid)",
+      "declaring_type": "T:Shop.Api.Admin.OrdersPanel",
+      "name": "Count",
+      "kind": "method",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [
+        {
+          "name": "cartId",
+          "type": "T:System.Guid"
+        }
+      ],
+      "return_type": "T:System.Int32",
+      "file": "Shop.Api/Admin.cs",
+      "line": 16,
       "attributes": []
     },
     {
@@ -1280,7 +1329,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 92,
+      "line": 93,
       "attributes": []
     },
     {
@@ -1299,7 +1348,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 56,
+      "line": 57,
       "attributes": []
     },
     {
@@ -1318,7 +1367,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 49,
+      "line": 50,
       "attributes": []
     },
     {
@@ -1337,7 +1386,7 @@
       ],
       "return_type": "T:System.Boolean",
       "file": "Shop.Api/Orders.cs",
-      "line": 59,
+      "line": 60,
       "attributes": []
     },
     {
@@ -1356,7 +1405,7 @@
       ],
       "return_type": "T:Shop.Domain.CartState",
       "file": "Shop.Api/Orders.cs",
-      "line": 46,
+      "line": 47,
       "attributes": []
     },
     {
@@ -1375,7 +1424,7 @@
       ],
       "return_type": "T:Shop.Domain.Money",
       "file": "Shop.Api/Orders.cs",
-      "line": 62,
+      "line": 63,
       "attributes": []
     },
     {
@@ -1398,7 +1447,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 73,
+      "line": 74,
       "attributes": []
     },
     {
@@ -1421,7 +1470,7 @@
       ],
       "return_type": "T:Shop.Domain.OrderConfirmed",
       "file": "Shop.Api/Orders.cs",
-      "line": 79,
+      "line": 80,
       "attributes": []
     },
     {
@@ -1440,11 +1489,11 @@
       ],
       "return_type": "T:Shop.Domain.CartState",
       "file": "Shop.Api/Orders.cs",
-      "line": 39,
+      "line": 40,
       "attributes": []
     },
     {
-      "id": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "id": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "declaring_type": "T:Shop.Api.Orders.OrdersEndpoints",
       "name": ".ctor",
       "kind": "constructor",
@@ -1483,11 +1532,15 @@
         {
           "name": "last",
           "type": "T:Shop.Domain.IDomainEvent"
+        },
+        {
+          "name": "log",
+          "type": "T:Microsoft.Extensions.Logging.ILogger\u00601"
         }
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 108,
+      "line": 111,
       "attributes": []
     },
     {
@@ -1506,7 +1559,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 124,
+      "line": 128,
       "attributes": [
         {
           "type": "T:Shop.Api.Infrastructure.EndpointAttribute",
@@ -1533,7 +1586,7 @@
       ],
       "return_type": "T:System.Boolean",
       "file": "Shop.Api/Orders.cs",
-      "line": 120,
+      "line": 124,
       "attributes": []
     },
     {
@@ -1560,7 +1613,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 9,
+      "line": 10,
       "attributes": []
     },
     {
@@ -1583,7 +1636,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 19,
+      "line": 20,
       "attributes": []
     },
     {
@@ -1602,7 +1655,7 @@
       ],
       "return_type": null,
       "file": "Shop.Api/Orders.cs",
-      "line": 25,
+      "line": 26,
       "attributes": []
     },
     {
@@ -2036,6 +2089,46 @@
       "attributes": []
     },
     {
+      "id": "P:Shop.Api.Admin.OrdersPanel.Cart",
+      "declaring_type": "T:Shop.Api.Admin.OrdersPanel",
+      "name": "Cart",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Shop.Api.Orders.ICartReader",
+      "file": "Shop.Api/Admin.cs",
+      "line": 12,
+      "attributes": [
+        {
+          "type": "T:Microsoft.AspNetCore.Components.InjectAttribute",
+          "positional": [],
+          "named": {}
+        }
+      ]
+    },
+    {
+      "id": "P:Shop.Api.Admin.OrdersPanel.Logger",
+      "declaring_type": "T:Shop.Api.Admin.OrdersPanel",
+      "name": "Logger",
+      "kind": "property",
+      "accessibility": "public",
+      "is_static": false,
+      "is_entry_point": false,
+      "parameters": [],
+      "return_type": "T:Microsoft.Extensions.Logging.ILogger\u00601",
+      "file": "Shop.Api/Admin.cs",
+      "line": 14,
+      "attributes": [
+        {
+          "type": "T:Microsoft.AspNetCore.Components.InjectAttribute",
+          "positional": [],
+          "named": {}
+        }
+      ]
+    },
+    {
       "id": "P:Shop.Api.Infrastructure.EndpointAttribute.Route",
       "declaring_type": "T:Shop.Api.Infrastructure.EndpointAttribute",
       "name": "Route",
@@ -2060,7 +2153,7 @@
       "parameters": [],
       "return_type": "T:Shop.Domain.Money",
       "file": "Shop.Api/Orders.cs",
-      "line": 9,
+      "line": 10,
       "attributes": []
     },
     {
@@ -2074,7 +2167,7 @@
       "parameters": [],
       "return_type": "T:System.Guid",
       "file": "Shop.Api/Orders.cs",
-      "line": 9,
+      "line": 10,
       "attributes": []
     },
     {
@@ -2088,7 +2181,7 @@
       "parameters": [],
       "return_type": "T:System.String",
       "file": "Shop.Api/Orders.cs",
-      "line": 9,
+      "line": 10,
       "attributes": []
     },
     {
@@ -2465,6 +2558,16 @@
       "kind": "signature"
     },
     {
+      "from": "F:Shop.Api.Orders.OrdersEndpoints._log",
+      "to": "T:Microsoft.Extensions.Logging.ILogger\u00601",
+      "kind": "signature"
+    },
+    {
+      "from": "F:Shop.Api.Orders.OrdersEndpoints._log",
+      "to": "T:Shop.Api.Orders.OrdersEndpoints",
+      "kind": "generic-argument"
+    },
+    {
       "from": "F:Shop.Api.Orders.OrdersEndpoints._placeOrder",
       "to": "T:Shop.Api.Infrastructure.IHandler\u00601",
       "kind": "signature"
@@ -2537,6 +2640,31 @@
     {
       "from": "M:Product.Binding.SliceAttribute.#ctor(System.String,System.String)",
       "to": "T:System.String",
+      "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Api.Admin.OrdersPanel.Count(System.Guid)",
+      "to": "M:Shop.Api.Orders.ICartReader.Read(System.Guid)",
+      "kind": "call"
+    },
+    {
+      "from": "M:Shop.Api.Admin.OrdersPanel.Count(System.Guid)",
+      "to": "P:Shop.Api.Admin.OrdersPanel.Cart",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Admin.OrdersPanel.Count(System.Guid)",
+      "to": "P:Shop.Domain.CartState.Lines",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Admin.OrdersPanel.Count(System.Guid)",
+      "to": "P:System.Collections.Generic.IReadOnlyCollection\u00601.Count",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Admin.OrdersPanel.Count(System.Guid)",
+      "to": "T:System.Guid",
       "kind": "parameter"
     },
     {
@@ -2965,137 +3093,162 @@
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._audit",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._byAmount",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._clocks",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._log",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._placeOrder",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._provider",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._routes",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._validator",
       "kind": "access"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "to": "T:Microsoft.Extensions.Logging.ILogger\u00601",
+      "kind": "parameter"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "to": "T:Microsoft.Extensions.Logging.ILogger\u00601",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:Shop.Api.Infrastructure.IAudit",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:Shop.Api.Infrastructure.IAudit",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:Shop.Api.Infrastructure.IClockFactory",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:Shop.Api.Infrastructure.IClockFactory",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:Shop.Api.Infrastructure.IHandler\u00601",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:Shop.Api.Infrastructure.IHandler\u00601",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:Shop.Api.Infrastructure.IValidator\u00601",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:Shop.Api.Infrastructure.IValidator\u00601",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "to": "T:Shop.Api.Orders.OrdersEndpoints",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
+      "to": "T:Shop.Api.Orders.OrdersEndpoints",
+      "kind": "type-reference"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:Shop.Api.Orders.PlaceOrderCommand",
       "kind": "generic-argument"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:Shop.Api.Orders.PlaceOrderCommand",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:Shop.Domain.IDomainEvent",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:Shop.Domain.IDomainEvent",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:Shop.Domain.Money",
       "kind": "generic-argument"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:Shop.Domain.Money",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:System.Collections.Generic.IComparer\u00601",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:System.Collections.Generic.IComparer\u00601",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:System.Collections.Generic.IReadOnlyList\u00601",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:System.Collections.Generic.IReadOnlyList\u00601",
       "kind": "type-reference"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:System.IServiceProvider",
       "kind": "parameter"
     },
     {
-      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent)",
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.#ctor(Shop.Api.Infrastructure.IHandler{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IValidator{Shop.Api.Orders.PlaceOrderCommand},Shop.Api.Infrastructure.IClockFactory,System.IServiceProvider,System.Collections.Generic.IComparer{Shop.Domain.Money},Shop.Api.Infrastructure.IAudit,System.Collections.Generic.IReadOnlyList{System.String},Shop.Domain.IDomainEvent,Microsoft.Extensions.Logging.ILogger{Shop.Api.Orders.OrdersEndpoints})",
       "to": "T:System.IServiceProvider",
       "kind": "type-reference"
     },
@@ -3181,6 +3334,11 @@
     },
     {
       "from": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
+      "to": "F:Shop.Api.Orders.OrdersEndpoints._log",
+      "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
       "to": "F:Shop.Api.Orders.OrdersEndpoints._routes",
       "kind": "access"
     },
@@ -3213,6 +3371,16 @@
       "from": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
       "to": "P:System.Collections.Generic.IReadOnlyCollection\u00601.Count",
       "kind": "access"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
+      "to": "T:Microsoft.Extensions.Logging.ILogger\u00601",
+      "kind": "type-test"
+    },
+    {
+      "from": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
+      "to": "T:Shop.Api.Orders.OrdersEndpoints",
+      "kind": "generic-argument"
     },
     {
       "from": "M:Shop.Api.Orders.OrdersEndpoints.Serve(System.String[])",
@@ -3880,6 +4048,46 @@
       "kind": "parameter"
     },
     {
+      "from": "P:Shop.Api.Admin.OrdersPanel.Cart",
+      "to": "T:Microsoft.AspNetCore.Components.InjectAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "P:Shop.Api.Admin.OrdersPanel.Cart",
+      "to": "T:Shop.Api.Orders.ICartReader",
+      "kind": "signature"
+    },
+    {
+      "from": "P:Shop.Api.Admin.OrdersPanel.Cart",
+      "to": "T:Shop.Api.Orders.ICartReader",
+      "kind": "type-reference"
+    },
+    {
+      "from": "P:Shop.Api.Admin.OrdersPanel.Logger",
+      "to": "T:Microsoft.AspNetCore.Components.InjectAttribute",
+      "kind": "attribute"
+    },
+    {
+      "from": "P:Shop.Api.Admin.OrdersPanel.Logger",
+      "to": "T:Microsoft.Extensions.Logging.ILogger\u00601",
+      "kind": "signature"
+    },
+    {
+      "from": "P:Shop.Api.Admin.OrdersPanel.Logger",
+      "to": "T:Microsoft.Extensions.Logging.ILogger\u00601",
+      "kind": "type-reference"
+    },
+    {
+      "from": "P:Shop.Api.Admin.OrdersPanel.Logger",
+      "to": "T:Shop.Api.Admin.OrdersPanel",
+      "kind": "generic-argument"
+    },
+    {
+      "from": "P:Shop.Api.Admin.OrdersPanel.Logger",
+      "to": "T:Shop.Api.Admin.OrdersPanel",
+      "kind": "type-reference"
+    },
+    {
       "from": "P:Shop.Api.Orders.PlaceOrderCommand.Budget",
       "to": "T:Shop.Domain.Money",
       "kind": "signature"
@@ -3993,6 +4201,11 @@
       "from": "T:Product.Binding.SliceAttribute",
       "to": "T:System.AttributeUsageAttribute",
       "kind": "attribute"
+    },
+    {
+      "from": "T:Shop.Api.Admin.OrdersPanel",
+      "to": "T:Microsoft.AspNetCore.Components.ComponentBase",
+      "kind": "inherit"
     },
     {
       "from": "T:Shop.Api.Infrastructure.AlwaysValid\u00601",
@@ -4311,6 +4524,19 @@
     }
   ],
   "external_types": [
+    {
+      "id": "T:Microsoft.Extensions.Logging.ILogger\u00601",
+      "assembly": "Microsoft.Extensions.Logging.Abstractions",
+      "namespace": "Microsoft.Extensions.Logging",
+      "name": "ILogger",
+      "kind": "interface",
+      "is_abstract": false,
+      "arity": 1,
+      "methods": 0,
+      "properties": 0,
+      "events": 0,
+      "abstract_returns": []
+    },
     {
       "id": "T:System.Array",
       "assembly": "System.Runtime",

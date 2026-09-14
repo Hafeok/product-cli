@@ -1,0 +1,209 @@
+roots: public
+reached: 349 of 393 types (88.8%) — unresolved: 0 — partial: 0 — unreached: 44
+resolution coverage: 46 resolved of 108 scored composition edges (42.6%) — 62 unresolved — 0 partial (factory/provider, not divided) — 41 boundary (external abstractions the library satisfies, outside the denominator)
+  composition edges: 237 — in denominator: 108 — boundary: 41 — excluded by role: 88
+  registrations read: 64 — IServiceCollection calls ignored: 58
+  edges by role:        abstract-data              2
+  edges by role:        data-contract              4
+  edges by role:        factory-provider           12
+  edges by role:        generic-dispatch           9
+  edges by role:        marker                     32
+  edges by role:        service                    108
+  edges by role:        value                      70
+  unresolved by reason: conditional-registration   6
+  unresolved by reason: module-configuration       5
+  unresolved by reason: no-registration            51
+  ignored call:         Configure                  7
+  ignored call:         AddAuthentication          3
+  ignored call:         AddOpenTelemetry           3
+  ignored call:         AddBlazorServices          2
+  ignored call:         AddBlazoredLocalStorage    2
+  ignored call:         AddHealthChecks            2
+  ignored call:         AddIdentity                2
+  ignored call:         AddMediator                2
+  ignored call:         AddMemoryCache             2
+  ignored call:         AddMetronome               2
+  ignored call:         ConfigureLocalDatabaseContexts 2
+  ignored call:         AddAuthorizationCore       1
+
+role proxies (each a proxy for the criterion, with its divergence):
+  marker             proxy: an interface declaring no methods, properties or events
+                     divergence: an empty interface used as a DI key or a type-test target is excluded although the container may register it
+  data-contract      proxy: an interface declaring properties only
+                     divergence: a service whose API is property-shaped (an options accessor, IOptions<T>.Value) is excluded although composition chooses it
+  factory-provider   proxy: Func<>, Lazy<>, IServiceProvider, IServiceScopeFactory, or an interface with a method or property returning an abstraction
+                     divergence: a service that merely returns another service's result (a repository returning an IReadOnlyList) reads as a factory
+  generic-dispatch   proxy: an interface with generic arity above zero that is not a factory
+                     divergence: a generic service abstraction that is not dispatch (IRepository<T>) reads as dispatch; resolved by registration until a declaration supplies the edge (CG-R-61)
+  abstract-data      proxy: an abstract class no registration names as a service
+                     divergence: an abstract class registered only through a wrapper the resolver does not read is excluded although it is a service
+  value              proxy: a struct, enum, delegate, string or object
+                     divergence: a primitive the container does supply (an options-bound connection string) is excluded
+
+by root convention:
+  public                                               roots=1017  reached types=349   unresolved edges=62
+
+by namespace:
+  (global)                                             types=5     reached=1     unresolved=0    partial=0    unreached=4
+  Ardalis.GuardClauses                                 types=1     reached=1     unresolved=0    partial=0    unreached=0
+  BlazorAdmin                                          types=2     reached=2     unresolved=0    partial=0    unreached=0
+  BlazorAdmin.Authorization                            types=2     reached=2     unresolved=0    partial=0    unreached=0
+  BlazorAdmin.Helpers                                  types=4     reached=4     unresolved=0    partial=0    unreached=0
+  BlazorAdmin.Interfaces                               types=2     reached=2     unresolved=0    partial=0    unreached=0
+  BlazorAdmin.JavaScript                               types=4     reached=4     unresolved=0    partial=0    unreached=0
+  BlazorAdmin.Models                                   types=17    reached=17    unresolved=0    partial=0    unreached=0
+  BlazorAdmin.Pages.CatalogItemPage                    types=1     reached=1     unresolved=0    partial=0    unreached=0
+  BlazorAdmin.Pages.RolePage                           types=1     reached=1     unresolved=0    partial=0    unreached=0
+  BlazorAdmin.Pages.UserPage                           types=1     reached=1     unresolved=0    partial=0    unreached=0
+  BlazorAdmin.Services                                 types=10    reached=10    unresolved=0    partial=0    unreached=0
+  BlazorAdmin.Shared                                   types=1     reached=0     unresolved=0    partial=0    unreached=1
+  BlazorShared                                         types=1     reached=1     unresolved=0    partial=0    unreached=0
+  BlazorShared.Attributes                              types=1     reached=1     unresolved=0    partial=0    unreached=0
+  BlazorShared.Authorization                           types=3     reached=3     unresolved=0    partial=0    unreached=0
+  BlazorShared.Interfaces                              types=3     reached=3     unresolved=0    partial=0    unreached=0
+  BlazorShared.Models                                  types=11    reached=11    unresolved=0    partial=0    unreached=0
+  FastEndpoints.Swagger                                types=1     reached=0     unresolved=0    partial=0    unreached=1
+  Mediator                                             types=4     reached=4     unresolved=0    partial=0    unreached=0
+  Mediator.Internals                                   types=20    reached=4     unresolved=0    partial=0    unreached=16
+  Microsoft.AspNetCore.Mvc                             types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.CodeAnalysis                               types=1     reached=0     unresolved=0    partial=0    unreached=1
+  Microsoft.Extensions.DependencyInjection             types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.Extensions.Hosting                         types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.Extensions.Validation.Embedded             types=1     reached=0     unresolved=0    partial=0    unreached=1
+  Microsoft.eShopWeb                                   types=2     reached=2     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.ApplicationCore.Constants         types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.ApplicationCore.Entities          types=5     reached=5     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate types=2     reached=2     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.ApplicationCore.Entities.BuyerAggregate types=2     reached=2     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate types=4     reached=4     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Events types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Handlers types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.ApplicationCore.Exceptions        types=4     reached=4     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.ApplicationCore.Interfaces        types=10    reached=9     unresolved=0    partial=0    unreached=1
+  Microsoft.eShopWeb.ApplicationCore.Services          types=3     reached=3     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.ApplicationCore.Specifications    types=8     reached=8     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.EndToEndTests                     types=1     reached=0     unresolved=0    partial=0    unreached=1
+  Microsoft.eShopWeb.EndToEndTests.AutoGenerated       types=1     reached=0     unresolved=0    partial=0    unreached=1
+  Microsoft.eShopWeb.EndToEndTests.Playwright          types=4     reached=4     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.EndToEndTests.Playwright.Pages    types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.FunctionalTests                   types=1     reached=0     unresolved=0    partial=0    unreached=1
+  Microsoft.eShopWeb.FunctionalTests.AutoGenerated     types=1     reached=0     unresolved=0    partial=0    unreached=1
+  Microsoft.eShopWeb.FunctionalTests.PublicApi         types=1     reached=0     unresolved=0    partial=0    unreached=1
+  Microsoft.eShopWeb.FunctionalTests.Web               types=2     reached=2     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.FunctionalTests.Web.Api           types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.FunctionalTests.Web.Controllers   types=3     reached=3     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.FunctionalTests.Web.Pages         types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.FunctionalTests.Web.Pages.Basket  types=3     reached=3     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Infrastructure                    types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Infrastructure.Data               types=4     reached=4     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Infrastructure.Data.Config        types=7     reached=7     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Infrastructure.Data.Migrations    types=6     reached=0     unresolved=0    partial=0    unreached=6
+  Microsoft.eShopWeb.Infrastructure.Data.Queries       types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Infrastructure.Identity           types=5     reached=5     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Infrastructure.Identity.Migrations types=2     reached=0     unresolved=0    partial=0    unreached=2
+  Microsoft.eShopWeb.Infrastructure.Logging            types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Infrastructure.Services           types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.IntegrationTests                  types=1     reached=0     unresolved=0    partial=0    unreached=1
+  Microsoft.eShopWeb.IntegrationTests.AutoGenerated    types=1     reached=0     unresolved=0    partial=0    unreached=1
+  Microsoft.eShopWeb.IntegrationTests.Repositories.BasketRepositoryTests types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.IntegrationTests.Repositories.OrderRepositoryTests types=2     reached=2     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.PublicApi                         types=5     reached=4     unresolved=0    partial=0    unreached=1
+  Microsoft.eShopWeb.PublicApi.AuthEndpoints           types=5     reached=5     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.PublicApi.CatalogBrandEndpoints   types=3     reached=3     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.PublicApi.CatalogItemEndpoints    types=15    reached=15    unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.PublicApi.CatalogTypeEndpoints    types=3     reached=3     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.PublicApi.Extensions              types=4     reached=4     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.PublicApi.Middleware              types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.PublicApi.RoleManagementEndpoints types=13    reached=13    unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.PublicApi.RoleMembershipEndpoints types=5     reached=5     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.PublicApi.UserManagementEndpoints types=19    reached=19    unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.PublicApi.UserManagementEndpoints.Models types=2     reached=2     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.UnitTests                         types=1     reached=0     unresolved=0    partial=0    unreached=1
+  Microsoft.eShopWeb.UnitTests.ApplicationCore.Entities.BasketTests types=3     reached=3     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.UnitTests.ApplicationCore.Entities.OrderTests types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.UnitTests.ApplicationCore.Extensions types=3     reached=3     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.UnitTests.ApplicationCore.Services.BasketServiceTests types=4     reached=4     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.UnitTests.ApplicationCore.Specifications types=5     reached=5     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.UnitTests.AutoGenerated           types=1     reached=0     unresolved=0    partial=0    unreached=1
+  Microsoft.eShopWeb.UnitTests.Builders                types=3     reached=3     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.UnitTests.MediatorHandlers.OrdersTests types=2     reached=2     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.UnitTests.Web.Extensions.CacheHelpersTests types=3     reached=3     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web                               types=3     reached=3     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Areas.Identity                types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Areas.Identity.Helpers        types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Areas.Identity.Pages.Account  types=6     reached=6     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Configuration                 types=5     reached=5     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Controllers                   types=3     reached=3     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Controllers.Api               types=1     reached=0     unresolved=0    partial=0    unreached=1
+  Microsoft.eShopWeb.Web.Extensions                    types=5     reached=5     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Features.MyOrders             types=2     reached=2     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Features.OrderDetails         types=2     reached=2     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.HealthChecks                  types=2     reached=2     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Interfaces                    types=2     reached=2     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Pages                         types=3     reached=3     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Pages.Admin                   types=2     reached=2     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Pages.Basket                  types=5     reached=5     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Pages.Shared.Components.BasketComponent types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Services                      types=6     reached=6     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.ViewModels                    types=7     reached=7     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.ViewModels.Account            types=4     reached=4     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.ViewModels.File               types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.ViewModels.Manage             types=8     reached=8     unresolved=0    partial=0    unreached=0
+  Microsoft.eShopWeb.Web.Views.Manage                  types=1     reached=1     unresolved=0    partial=0    unreached=0
+  Projects                                             types=4     reached=4     unresolved=0    partial=0    unreached=0
+  PublicApiIntegrationTests                            types=1     reached=1     unresolved=0    partial=0    unreached=0
+  PublicApiIntegrationTests.AuthEndpoints              types=2     reached=2     unresolved=0    partial=0    unreached=0
+  PublicApiIntegrationTests.CatalogItemEndpoints       types=3     reached=3     unresolved=0    partial=0    unreached=0
+  PublicApiIntegrationTests.Helpers                    types=2     reached=2     unresolved=0    partial=0    unreached=0
+  PublicApiIntegrationTests.RoleManagementEndpoints    types=4     reached=4     unresolved=0    partial=0    unreached=0
+  PublicApiIntegrationTests.RoleMembershipEndpoints    types=2     reached=2     unresolved=0    partial=0    unreached=0
+  PublicApiIntegrationTests.UserManagementEndpoints    types=7     reached=7     unresolved=0    partial=0    unreached=0
+
+tracked:
+  implements:T:Mediator.IRequestHandler`2              types=2     reached=2     unresolved=0    partial=0    unreached=0
+  implements:T:Mediator.INotificationHandler`1         types=1     reached=1     unresolved=0    partial=0    unreached=0
+
+boundary — the used library surface (first 16 of 16 external types; each needs declaring at member level):
+  T:Microsoft.Extensions.Logging.ILogger`1                               Microsoft.Extensions.Logging.Abstractions    marker             edges=14
+  T:Microsoft.Extensions.Caching.Memory.IMemoryCache                     Microsoft.Extensions.Caching.Abstractions    factory-provider   edges=4
+  T:AutoMapper.IMapper                                                   AutoMapper                                   factory-provider   edges=3
+  T:Microsoft.Extensions.Options.IOptions`1                              Microsoft.Extensions.Options                 data-contract      edges=3
+  T:Microsoft.JSInterop.IJSRuntime                                       Microsoft.JSInterop                          service            edges=3
+  T:Blazored.LocalStorage.ILocalStorageService                           Blazored.LocalStorage                        service            edges=2
+  T:Microsoft.Extensions.Logging.ILoggerFactory                          Microsoft.Extensions.Logging.Abstractions    factory-provider   edges=2
+  T:System.IServiceProvider                                              System.ComponentModel                        factory-provider   edges=2
+  T:Mediator.IPipelineBehavior`2                                         Mediator                                     generic-dispatch   edges=1
+  T:Microsoft.AspNetCore.Http.IHttpContextAccessor                       Microsoft.AspNetCore.Http.Abstractions       data-contract      edges=1
+  T:Microsoft.AspNetCore.Identity.UI.Services.IEmailSender               Microsoft.AspNetCore.Identity                service            edges=1
+  T:Microsoft.Playwright.IPage                                           Microsoft.Playwright                         factory-provider   edges=1
+  T:System.Net.Http.IHttpClientFactory                                   Microsoft.Extensions.Http                    service            edges=1
+  T:System.Reflection.Assembly                                           System.Runtime                               abstract-data      edges=1
+  T:System.Text.Encodings.Web.UrlEncoder                                 System.Text.Encodings.Web                    abstract-data      edges=1
+  T:Xunit.ITestOutputHelper                                              xunit.v3.core                                service            edges=1
+
+unresolved edges (first 25 of 62):
+  service            Unresolved(ModuleConfiguration) T:BlazorAdmin.Pages.RolePage.List -> T:BlazorAdmin.Interfaces.IRoleManagementService
+  service            Unresolved(ModuleConfiguration) T:BlazorAdmin.Pages.UserPage.List -> T:BlazorAdmin.Interfaces.IUserManagementService
+  service            Unresolved(ModuleConfiguration) T:BlazorAdmin.Pages.UserPage.List -> T:Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Events.OrderCreatedEvent -> T:Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Order
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Order -> T:Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Address
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Order -> T:System.Collections.Generic.List`1
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.OrderItem -> T:Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.CatalogItemOrdered
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.ApplicationCore.Exceptions.EmptyBasketOnCheckoutException -> T:System.Exception
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.ApplicationCore.Services.UriComposer -> T:Microsoft.eShopWeb.CatalogSettings
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.EndToEndTests.Playwright.BasketTests -> T:Microsoft.eShopWeb.EndToEndTests.Playwright.BrowserFixture
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.EndToEndTests.Playwright.CatalogTests -> T:Microsoft.eShopWeb.EndToEndTests.Playwright.BrowserFixture
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.EndToEndTests.Playwright.SmokeTests -> T:Microsoft.eShopWeb.EndToEndTests.Playwright.BrowserFixture
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.FunctionalTests.Web.Controllers.AccountControllerSignIn -> T:Microsoft.eShopWeb.FunctionalTests.Web.TestApplication
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.FunctionalTests.Web.Controllers.CatalogControllerIndex -> T:Microsoft.eShopWeb.FunctionalTests.Web.TestApplication
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.FunctionalTests.Web.Controllers.OrderIndexOnGet -> T:Microsoft.eShopWeb.FunctionalTests.Web.TestApplication
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.FunctionalTests.Web.Pages.Basket.BasketPageCheckout -> T:Microsoft.eShopWeb.FunctionalTests.Web.TestApplication
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.FunctionalTests.Web.Pages.Basket.CheckoutTest -> T:Microsoft.eShopWeb.FunctionalTests.Web.TestApplication
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.FunctionalTests.Web.Pages.Basket.IndexTest -> T:Microsoft.eShopWeb.FunctionalTests.Web.TestApplication
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.FunctionalTests.Web.Pages.HomePageOnGet -> T:Microsoft.eShopWeb.FunctionalTests.Web.TestApplication
+  service            Unresolved(ModuleConfiguration) T:Microsoft.eShopWeb.Infrastructure.Data.CatalogContext -> T:Microsoft.EntityFrameworkCore.DbContextOptions`1
+  service            Unresolved(ConditionalRegistration) T:Microsoft.eShopWeb.Infrastructure.Data.EfRepository`1 -> T:Microsoft.eShopWeb.Infrastructure.Data.CatalogContext
+  service            Unresolved(ConditionalRegistration) T:Microsoft.eShopWeb.Infrastructure.Data.Queries.BasketQueryService -> T:Microsoft.eShopWeb.Infrastructure.Data.CatalogContext
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.Infrastructure.Dependencies -> T:DbCallCountingInterceptor
+  service            Unresolved(ModuleConfiguration) T:Microsoft.eShopWeb.Infrastructure.Identity.AppIdentityDbContext -> T:Microsoft.EntityFrameworkCore.DbContextOptions`1
+  service            Unresolved(NoRegistration) T:Microsoft.eShopWeb.Infrastructure.Identity.IdentityTokenClaimService -> T:Microsoft.AspNetCore.Identity.UserManager`1

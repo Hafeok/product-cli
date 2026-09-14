@@ -7,7 +7,9 @@
 //! `csharp_roles`. A type is *reached*, *unresolved* (it implements an
 //! abstraction an unresolved composition edge landed on), *partial* (likewise
 //! for a partial edge) or *unreached*; no reachability figure prints without
-//! those counts beside it (CG-R-62). Change coupling is not a cluster
+//! those counts beside it (CG-R-62). Edges to external abstractions nothing in
+//! the solution implements or registers are *boundary* — the used library
+//! surface, reported with type and assembly, outside the denominator (CG-R-68). Change coupling is not a cluster
 //! dimension here — it needs the solution's git history, which the inventory
 //! does not carry (not built, 2026-09-13).
 
@@ -19,6 +21,16 @@ use super::csharp_di::Resolver;
 use super::csharp_inventory::{Index, Inventory};
 use super::csharp_roles::{RoleProxy, PROXIES};
 use super::csharp_walk::{by_role, closure, implementors_of, Closure, CompositionEdge, EdgeState};
+
+/// One external abstraction on the boundary: the library satisfies it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct BoundaryRow {
+    pub target: String,
+    pub assembly: String,
+    pub role: String,
+    /// Composition edges landing on it.
+    pub edges: usize,
+}
 
 /// One root convention. Which symbols it selects is a fact about the
 /// inventory; that it is a root is this module's choice, printed.
@@ -84,12 +96,20 @@ pub struct Resolution {
     pub resolved: usize,
     pub partial: usize,
     pub unresolved: usize,
+    /// Edges to external abstractions no in-solution type implements and no
+    /// registration names (CG-R-68): outside the denominator, listed below.
+    pub boundary: usize,
     /// resolved / (resolved + unresolved); partial is reported, not divided.
     pub coverage_percent: f64,
     pub by_role: BTreeMap<String, usize>,
     pub excluded_by_role: BTreeMap<String, usize>,
     pub by_reason: BTreeMap<String, usize>,
     pub unresolved_edges: Vec<CompositionEdge>,
+    /// Every composition edge with its role and state — the data the counts
+    /// above summarise (JSON; the text report prints the unresolved ones).
+    pub edges: Vec<CompositionEdge>,
+    /// The used library surface, by external type, most edges first.
+    pub boundary_surface: Vec<BoundaryRow>,
     pub proxies: &'static [RoleProxy],
 }
 
@@ -196,7 +216,7 @@ pub fn reach(inv: &Inventory, opts: &ReachOptions) -> ReachReport {
         roots: opts.roots.iter().map(Root::label).collect(),
         percent_reached: if every.is_empty() { 0.0 } else { 100.0 * total.reached as f64 / every.len() as f64 },
         total,
-        resolution: resolution_of(&c),
+        resolution: resolution_of(&ix, &c),
         registrations_read: resolver.registrations_read,
         calls_ignored: resolver.calls_ignored,
         ignored_by_method: resolver.ignored_by_method.clone(),
@@ -207,10 +227,11 @@ pub fn reach(inv: &Inventory, opts: &ReachOptions) -> ReachReport {
     }
 }
 
-pub fn resolution_of(c: &Closure<'_>) -> Resolution {
+pub fn resolution_of(ix: &Index<'_>, c: &Closure<'_>) -> Resolution {
     let resolved = c.count(|s| *s == EdgeState::Resolved);
     let partial = c.count(|s| *s == EdgeState::Partial);
     let unresolved = c.count(|s| matches!(s, EdgeState::Unresolved(_)));
+    let boundary = c.count(|s| *s == EdgeState::Boundary);
     let mut by_reason: BTreeMap<String, usize> = BTreeMap::new();
     let mut excluded: BTreeMap<String, usize> = BTreeMap::new();
     for e in &c.edges {
@@ -227,13 +248,27 @@ pub fn resolution_of(c: &Closure<'_>) -> Resolution {
         resolved,
         partial,
         unresolved,
+        boundary,
         coverage_percent: if scored == 0 { 100.0 } else { 100.0 * resolved as f64 / scored as f64 },
         by_role: by_role(c),
         excluded_by_role: excluded,
         by_reason,
         unresolved_edges: c.edges.iter().filter(|e| matches!(e.state, EdgeState::Unresolved(_))).cloned().collect(),
+        edges: c.edges.iter().cloned().collect(),
+        boundary_surface: boundary_surface(ix, c),
         proxies: PROXIES,
     }
+}
+
+fn boundary_surface(ix: &Index<'_>, c: &Closure<'_>) -> Vec<BoundaryRow> {
+    let mut rows: BTreeMap<&str, BoundaryRow> = BTreeMap::new();
+    for e in c.edges.iter().filter(|e| e.state == EdgeState::Boundary) {
+        let assembly = ix.external.get(e.target.as_str()).map(|x| x.assembly.clone()).unwrap_or_default();
+        rows.entry(e.target.as_str()).or_insert_with(|| BoundaryRow { target: e.target.clone(), assembly, role: e.role.label().to_string(), edges: 0 }).edges += 1;
+    }
+    let mut out: Vec<BoundaryRow> = rows.into_values().collect();
+    out.sort_by(|a, b| b.edges.cmp(&a.edges).then(a.target.cmp(&b.target)));
+    out
 }
 
 fn namespace_rows<'a>(inv: &'a Inventory, c: &Closure<'a>, s: &Sets<'a>) -> Vec<Disposition> {
