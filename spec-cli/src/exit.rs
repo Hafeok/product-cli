@@ -1,4 +1,4 @@
-//! The flow's exit codes, as `docs/spec-flow-act-record-v1.md` §6 fixes them.
+//! The flow's exit codes, as `docs/spec-flow-store-v1.md` §6 fixes them.
 
 /// Conformant.
 pub const CONFORMANT: i32 = 0;

@@ -15,7 +15,7 @@ use crate::digest::{self, RECORD_FORM};
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ActRecord {
-    /// Format discriminator; see `docs/spec-flow-act-record-v1.md`.
+    /// Format discriminator; see `docs/spec-flow-store-v1.md`.
     pub form: String,
     /// ULID, minted at open.
     pub id: String,

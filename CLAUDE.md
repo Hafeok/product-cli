@@ -379,17 +379,25 @@ UPDATE_SKILL=1 cargo test -p product-cli --test agent_context
 
 A fourth stack, and the first in this repo that is **not all Rust**. It
 implements the specification flow's write-back leg
-([format](docs/spec-flow-act-record-v1.md), normative) and is deliberately
+([format](docs/spec-flow-store-v1.md), normative) and is deliberately
 split across two runtimes at the flow's own accountability boundary:
 
 - **Rust — `spec-core` / `spec-cli` (the `spec` binary).** The act-time record
   store under `.spec/records/`, the `close` verb, and the `check` gate. This is
   the half a model may not call.
 - **.NET — `spec-flow/` on the [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/)
-  (`Microsoft.Agents.AI` 1.21.0, net10.0).** The `implement` workflow: a
-  MAF graph that opens a record, builds a slice, puts a draft to a reviewer
-  through a typed `RequestPort`, and hands over a `spec close …` command it
-  cannot run. See `spec-flow/README.md`.
+  (`Microsoft.Agents.AI` 1.21.0, net10.0).** Two verbs. `specflow import` is
+  the Roslyn scanner — symbols, composition edges, entry points, candidates →
+  `.spec/inventory.json`, a rebuildable projection that carries no verdict.
+  `specflow implement` is a MAF workflow graph that opens a record, builds a
+  slice, puts a draft to a reviewer through a typed `RequestPort`, and hands
+  over a `spec close …` command it cannot run. See `spec-flow/README.md`.
+- **Rust verbs:** `candidates` · `accept` · `reject` · `map` · `implement` ·
+  `close` · `check`. The importer never names an act: candidates carry
+  observed transport fields and the unfilled slots `name` / `settles`, and a
+  principal fills them. `model` deliberately does not read candidates — an
+  accrual vocabulary authored by walking a transport-shaped list inherits the
+  defect and every act becomes an endpoint with a better name.
 
 **The boundary is the design, not packaging.** The agent host does not link the
 code that writes a closure, so there is no call it could make — the PRD's
@@ -407,12 +415,20 @@ over the exported surface, and a graph with no edge to a closure.
   positive declaration with its own discriminant, the same shape as
   `asserted-none`. A `close` with neither `--determination` nor
   `--nothing-arose` is refused, never defaulted.
-- **Verdict classes are closed at four** — `S001` unclosed, `S002` machine
-  principal, `S003` closure that does not bind its opening, `S004` kind
-  disagreeing with its payload. All structural, none project-configurable;
-  adding a fifth is a change to the format doc, not a patch. `S002` delegates
-  to `ledger_core::identity::Identity::model_or_bot_reason` — the same test
+- **Verdict classes are closed at seven** — `S001` unclosed record, `S002`
+  machine principal (on a closure, a ratification *or* a refusal), `S003`
+  closure not binding its opening, `S004` kind disagreeing with its payload,
+  `S005` entry point no act covers, `S006` record naming an unratified act,
+  `S007` ratification/refusal not binding its content. All structural, none
+  project-configurable; adding an eighth is a change to the format doc, not a
+  patch. `S002` delegates to
+  `ledger_core::identity::Identity::model_or_bot_reason` — the same test
   `L006` applies to an acceptor. **One identity law, two gates.**
+- **`map` reports, `check` gates.** merge / split / unmapped-entry-point /
+  unmapped-act are a restructuring work list, not verdicts, and the metrics
+  beneath the verdicts (coverage included) are reported and never gated.
+  A refused candidate *covers* its entry point: `S005` fails on silence, not
+  on the absence of an act.
 - **Hashing rides the ledger's canonical law** (`ledger_core::canon` +
   `domain_hash`) under two prefixes, `spec.act-record.v1` and
   `spec.act-closure.v1`. Each digest builder destructures its subject with **no

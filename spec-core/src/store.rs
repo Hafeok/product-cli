@@ -82,6 +82,20 @@ pub fn load_all(repo_root: &Path) -> Result<Vec<ActRecord>> {
     paths.iter().map(|p| load(p)).collect()
 }
 
+/// Everything the flow has filed, plus the last import's projection.
+///
+/// One load, so every verb judges the same store. A verb that assembled its
+/// own view could disagree with the gate about what exists, which is the
+/// class of bug that makes a gate untrustworthy rather than merely wrong.
+pub fn load_store(repo_root: &Path) -> Result<crate::gate::SpecStore> {
+    Ok(crate::gate::SpecStore {
+        records: load_all(repo_root)?,
+        acts: crate::ratify::load_acts(repo_root)?,
+        rejections: crate::ratify::load_rejections(repo_root)?,
+        inventory: crate::inventory::Inventory::load_opt(repo_root)?,
+    })
+}
+
 /// Read one record.
 pub fn load(path: &Path) -> Result<ActRecord> {
     let text = std::fs::read_to_string(path)

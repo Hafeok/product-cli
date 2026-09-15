@@ -30,3 +30,29 @@ pub fn emit(report: &Report) {
         None => println!("{}", report.text),
     }
 }
+
+/// The report a refused write prints.
+///
+/// Same class, same message the gate would report — the refusal *is* the gate,
+/// not a second opinion about it.
+pub fn refusal(
+    subject: &str,
+    verb: &str,
+    findings: &[spec_core::check::Finding],
+    as_json: bool,
+) -> Report {
+    let listed = findings.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n  ");
+    let text = format!("refusing to {verb} {subject} — the write would introduce:\n  {listed}");
+    let body = as_json.then(|| {
+        serde_json::json!({
+            "subject": subject,
+            "status": "refused",
+            "findings": findings.iter().map(|f| serde_json::json!({
+                "class": f.class.to_string(),
+                "subject": f.record,
+                "message": f.message,
+            })).collect::<Vec<_>>(),
+        })
+    });
+    Report::text(crate::exit::FINDINGS, text).with_json(body)
+}

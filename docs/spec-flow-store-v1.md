@@ -1,12 +1,13 @@
-# The act-time record — format v1
+# The specification-flow store — format v1
 
 **Status:** normative. The code follows this document, not the other way round.
 Companion to `docs/ledger-format-v1.md`, which it borrows its hashing law and
 its closed-class discipline from.
 
-**What this covers.** The file the specification flow's `implement` verb opens
-and its `close` verb closes, the closed set of verdict classes a store of these
-files can fail, and the rule that keeps a machine from closing one.
+**What this covers.** Every file the specification flow writes — act-time
+records, ratified acts, filed refusals — the closed set of verdict classes the
+store can fail, and the rules that keep a machine from writing the ones that
+name a principal.
 
 **Why it is a file and not a suspended process.** `implement` can be run by an
 agent; `close` cannot. Those two acts are separated by an unbounded amount of
@@ -23,13 +24,21 @@ coupling §5 of the specification-flow PRD exists to break.
 
 ```
 .spec/
-  records/
-    <ulid>.yml        # one act-time record
+  inventory.json      # the importer's projection — derived, never authority
+  records/<ulid>.yml  # one act-time record
+  acts/<slug>.yml     # one ratified act
+  rejections/<slug>.yml   # one filed refusal
 ```
 
-One record per file, named by its own id. Records are never edited after
-closure; a correction is a new record, the same rule the ledger's log files
+One subject per file, named by its own id. Nothing is edited after it is
+written; a correction is a new file, the same rule the ledger's log files
 carry.
+
+**`inventory.json` is a projection, not a record.** It is rebuilt wholesale by
+every `import`, carries no verdict, no ratification and no decision, and is
+written by the agent host rather than by `spec`. Deleting it loses nothing a
+re-run does not restore. Everything else under `.spec/` is authority, is
+written only by `spec`, and names a principal where one is owed.
 
 ## 2. The open record
 
@@ -98,23 +107,82 @@ opening it discharges. Editing an opened record after it was closed breaks the
 binding and fails `S003` — the same mechanism as a seam binding naming its
 transition, applied to the write-back.
 
+## 4a. Acts and refusals
+
+A **ratified act** (`acts/<slug>.yml`) is what a principal said the codebase
+does. It carries `name` and `settles` — the two things a tick cannot supply —
+plus `realised_at`, the entry points it is realised at. Several is a legitimate
+answer: transport boundaries are often finer than act boundaries.
+
+A **filed refusal** (`rejections/<slug>.yml`) is a candidate a principal looked
+at and declined, with the reason. Filed rather than discarded, because a
+refusal is a decision and a flow that forgets its refusals re-asks the same
+question at every import.
+
+Both bind their content the way a closure binds its opening — `spec.act.v1`
+and `spec.rejection.v1`, same law, own prefixes — so editing a ratified act
+after the fact breaks its binding and fails `S007`.
+
+**A refusal covers an entry point.** `S005` fails on silence, not on the
+absence of an act: a principal who looked at an endpoint and said *this is not
+an act* has made exactly the decision the class exists to require.
+
 ## 5. Verdict classes
 
-The set is **closed**. A store fails for a schema fault plus these four classes
-and nothing else; adding a fifth is a change to this document, not a patch.
+The set is **closed**. The store fails for a schema fault plus these seven
+classes and nothing else; adding an eighth is a change to this document, not a
+patch.
 
 | Class | Fails when |
 |---|---|
 | `S001` | a record carries no `closure` — the write did not happen |
-| `S002` | a closure's `principal` resolves to a model or a CI identity |
+| `S002` | a `principal` resolves to a model or a CI identity — on a closure, a ratification or a refusal |
 | `S003` | a closure's `binds` does not match the record it claims to close |
 | `S004` | a closure declares `determinations` with an empty list, or `nothing-arose` with a non-empty one |
+| `S005` | an entry point no ratified act covers, and no principal has refused |
+| `S006` | a record names an act that is not ratified |
+| `S007` | a ratification or refusal whose `binds` does not match its content |
 
-All four are **structural**. None is configurable by project policy: a project
+All seven are **structural**. None is configurable by project policy: a project
 that could switch `S001` off would have a tool that reports what it was told to
 report.
 
-`S002` is the accountability leg made mechanical. It delegates to
+**One judgement to flag.** The PRD is not consistent about drift. §6 puts *an
+entry point with no accepted act* in the fail list and calls it "the one worth
+a build failure"; §7's structural table omits it, and §12 shows the
+seam-scoped `unmapped_entry_points_on_seam` as a *policy* verdict with a basis.
+This format follows §6 and makes `S005` structural, on the reading that §12's
+metric is a narrower, seam-scoped gate a project may add on top. If the
+intended reading was the other way round — drift reported, gated only by
+policy — this is the line to change, and it is one line.
+
+`S006` is not judged until at least one act is ratified. A repo mid-adoption
+is not a broken one, and failing every record in it would make the first
+`implement` impossible to run.
+
+## 5a. What reports rather than fails
+
+`map` produces a restructuring work list, and none of it is a verdict:
+
+| Finding | Meaning |
+|---|---|
+| **merge** | several entry points, one act — transport boundaries finer than act boundaries |
+| **split** | one entry point, several acts — an entry point spanning an act boundary |
+| **unmapped entry point** | drift, or an act nobody has named |
+| **unmapped act** | specified and unrealised |
+
+The metrics beneath the verdicts — entry points, candidates, unreviewed
+candidates, mapping coverage — are likewise reported and never gated. A
+codebase with unspecified regions is unspecified, not non-conformant. A
+codebase with dangling references is broken.
+
+Coverage with nothing to cover reads `null`, not 100%: an empty codebase is
+not fully specified, and a figure that says otherwise is the kind of
+flattering default that makes a metric useless.
+
+`S002` is the accountability leg made mechanical, and it applies wherever a
+principal is named — closing a record, ratifying a candidate, refusing one. It
+delegates to
 `ledger_core::identity::Identity::model_or_bot_reason`, which is the same test
 the ledger's `L006` applies to an acceptor — one identity law, two gates. That
 test is a floor and not a proof: it catches the identities a CI system or an

@@ -1,4 +1,6 @@
-use super::*;
+use super::record::{closure_kind, CloseArgs};
+use super::resolve_identity;
+use spec_core::closure::ClosureKind;
 
 fn close_args(nothing_arose: bool, dets: &[&str]) -> CloseArgs {
     CloseArgs {
@@ -47,4 +49,10 @@ fn a_malformed_identity_is_refused_rather_than_normalised() {
     let err = resolve_identity(std::path::Path::new("."), Some("not-an-address"))
         .expect_err("an identity resolves by email");
     assert!(err.to_string().contains("not-an-address"), "{err}");
+}
+
+#[test]
+fn an_act_address_derives_from_the_name_a_principal_typed() {
+    assert_eq!(super::ratify::slugify("Settle a basket"), "settle-a-basket");
+    assert_eq!(super::ratify::slugify("  "), "unnamed");
 }

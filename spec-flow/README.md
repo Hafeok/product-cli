@@ -10,12 +10,37 @@ decision — it is the accountability boundary of the flow itself.
 
 | Verb | Where | Why |
 |---|---|---|
-| `import`, `candidates`, `map` | .NET (not yet built) | read-only or re-derivable; Roslyn gives entry points from the semantic model |
+| `import` | **.NET, here** | Roslyn scan → `.spec/inventory.json`; re-derivable, so delegating it is straightforwardly good |
 | `implement` | **.NET, here** | builds a slice; produces a **pending** record |
-| `check` | Rust | the gate; a closed class set, none of it configurable |
-| **`close`** | **Rust only** | names a principal, and a machine cannot be one |
+| `candidates`, `map`, `check` | Rust | read-only over the store; the gate is a closed class set |
+| **`accept`**, **`reject`**, **`close`** | **Rust only** | each names a principal, and a machine cannot be one |
 
 A model may do everything up to the decision. It may not commit it.
+
+## `import`
+
+```bash
+dotnet run --project spec-flow/src/SpecFlow.Cli -- import --root . --source ../their-repo
+```
+
+Syntax-first over parsed trees, with whatever references happen to resolve. It
+does not need a restored, buildable project: an importer that only works on a
+green build is one that does not run on the codebases most worth importing.
+
+Recognised: controller routes (`[HttpGet]`/`[HttpPost]`/`[Route]`), minimal-api
+maps, `IHostedService`/`BackgroundService`, `IConsumer`/`IRequestHandler` and
+friends, `static Main`. A convention it misses shows up as a *missing* entry
+point, never a wrong one — an under-reporting importer loses candidates, an
+over-reporting one manufactures acts nobody has.
+
+**It never guesses an act name.** Candidates carry observed transport fields
+and the unfilled slots `name` and `settles`. A route's name accepted as an
+act's name is how every act becomes an endpoint with a better label, which is
+the whole reason the candidate vocabulary is graded measurement-only.
+
+The inventory is a **projection**: rebuilt wholesale each run, carrying no
+verdict and no ratification, and ordered so an unchanged codebase scans
+byte-identically. Without that, every re-run would read as drift.
 
 ## Why the process boundary is the point
 
@@ -109,4 +134,4 @@ To wire a model, set `SPECFLOW_MODEL_ENDPOINT` (any OpenAI-compatible endpoint
   request and conversation ids out of them.
 - **No signing.** `S002` establishes that the named principal does not *look*
   like a machine. It does not establish that the named human closed it. See
-  §5 of `docs/spec-flow-act-record-v1.md`.
+  §5 of `docs/spec-flow-store-v1.md`.

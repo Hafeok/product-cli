@@ -1,8 +1,8 @@
 //! The structural verdicts over a store of act-time records.
 //!
-//! The class set is closed at four. A store fails for a schema fault plus
-//! `S001`–`S004`, never for a fifth thing a caller thought of: adding one is
-//! a change to `docs/spec-flow-act-record-v1.md`, not a patch here. None is
+//! The class set is closed at seven. A store fails for a schema fault plus
+//! `S001`–`S007`, never for an eighth thing a caller thought of: adding one is
+//! a change to `docs/spec-flow-store-v1.md`, not a patch here. None is
 //! configurable, because a project that could switch `S001` off would have a
 //! tool that reports what it was told to report.
 
@@ -19,12 +19,20 @@ use crate::record::ActRecord;
 pub enum Class {
     /// A record carries no closure — the write did not happen.
     S001,
-    /// A closure's principal resolves to a model or a CI identity.
+    /// A principal resolves to a model or a CI identity. Applies wherever a
+    /// principal is named — a closure, a ratification, a refusal.
     S002,
     /// A closure's binding does not match the record it claims to close.
     S003,
     /// A closure's kind disagrees with the determinations it carries.
     S004,
+    /// An entry point no ratified act covers — an unspecified integration
+    /// point in production, which is what the scheme exists to make visible.
+    S005,
+    /// A reference to an act that does not exist.
+    S006,
+    /// A ratification or refusal whose binding does not match its content.
+    S007,
 }
 
 impl fmt::Display for Class {
@@ -34,6 +42,9 @@ impl fmt::Display for Class {
             Self::S002 => "S002",
             Self::S003 => "S003",
             Self::S004 => "S004",
+            Self::S005 => "S005",
+            Self::S006 => "S006",
+            Self::S007 => "S007",
         };
         f.write_str(code)
     }
@@ -45,6 +56,13 @@ pub struct Finding {
     pub class: Class,
     pub record: String,
     pub message: String,
+}
+
+impl Finding {
+    /// One finding against one subject.
+    pub fn new(class: Class, subject: &str, message: &str) -> Self {
+        Self { class, record: subject.to_string(), message: message.to_string() }
+    }
 }
 
 impl fmt::Display for Finding {
@@ -109,11 +127,7 @@ fn judge_closure(record: &ActRecord, closure: &Closure) -> Vec<Finding> {
 }
 
 fn finding(class: Class, record: &ActRecord, message: &str) -> Finding {
-    Finding {
-        class,
-        record: record.id.clone(),
-        message: message.to_string(),
-    }
+    Finding::new(class, &record.id, message)
 }
 
 #[path = "check_tests.rs"]
