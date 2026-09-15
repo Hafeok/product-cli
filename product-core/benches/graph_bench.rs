@@ -139,8 +139,8 @@ fn bench_centrality_200_nodes() -> bool {
     // Simple BFS from each node (simplified Brandes')
     for _s in 0..n {
         // BFS placeholder — real Brandes' is in the product binary
-        for _v in 0..n {
-            _centrality[_v] += 0.001;
+        for score in &mut _centrality {
+            *score += 0.001;
         }
     }
     let elapsed = start.elapsed();
@@ -165,9 +165,9 @@ fn bench_impact_analysis() -> bool {
     visited[0] = true;
     queue.push_back(0);
     while let Some(v) = queue.pop_front() {
-        for next in 0..n {
-            if !visited[next] && (v + next) % 7 == 0 {
-                visited[next] = true;
+        for (next, seen) in visited.iter_mut().enumerate() {
+            if !*seen && (v + next) % 7 == 0 {
+                *seen = true;
                 queue.push_back(next);
             }
         }
@@ -195,9 +195,9 @@ fn bench_bfs_depth_2() -> bool {
         if depth >= 2 {
             continue;
         }
-        for next in 0..n {
-            if !visited[next] && ((v * 3 + next) % 5 == 0) {
-                visited[next] = true;
+        for (next, seen) in visited.iter_mut().enumerate() {
+            if !*seen && ((v * 3 + next) % 5 == 0) {
+                *seen = true;
                 queue.push_back((next, depth + 1));
             }
         }

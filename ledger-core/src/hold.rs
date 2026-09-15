@@ -52,7 +52,7 @@ mod tests {
 
     #[test]
     fn an_indeterminate_basis_holds_the_entry() {
-        let held = hold(["indeterminate:DDD-arch-03@sha256:aa".into()].iter().copied())
+        let held = hold(["indeterminate:DDD-arch-03@sha256:aa"].iter().copied())
             .expect("held");
         assert_eq!(held.pointer, "indeterminate:DDD-arch-03@sha256:aa");
         assert!(held.reason.contains("sign that indeterminacy in as settled"), "{held:?}");

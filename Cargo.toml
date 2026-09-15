@@ -9,6 +9,9 @@ members = [
     "ddd-cli",
     "ledger-core",
     "ledger-cli",
+    "spec-core",
+    "spec-cli",
+    "spec-mcp",
     "ground-cli",
     "xtask",
 ]

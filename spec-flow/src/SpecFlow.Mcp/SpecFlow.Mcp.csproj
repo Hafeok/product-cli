@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SpecFlow.Mcp</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../SpecFlow.Flow/SpecFlow.Flow.csproj" />
+    <ProjectReference Include="../SpecFlow.Import/SpecFlow.Import.csproj" />
+  </ItemGroup>
+</Project>

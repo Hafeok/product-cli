@@ -1,7 +1,6 @@
 //! Tests for the in-loop add_* operations.
 
 use super::*;
-use crate::pf::model::*;
 use crate::pf::session::DomainSession;
 
 fn session() -> DomainSession {

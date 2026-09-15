@@ -95,6 +95,29 @@ jobs:
         # Zero-unwrap policy (#![deny(clippy::unwrap_used)] across the workspace).
         run: cargo clippy --workspace -- -D warnings -D clippy::unwrap_used
 
+      - name: Set up .NET
+        # The specification flow's agent host (spec-flow/) is the delegable
+        # half of the flow; its tests drive the real `spec` binary built
+        # above, so the boundary between the two runtimes is exercised
+        # rather than asserted.
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Specification-flow agent host
+        # SPEC_MCP_BIN is the Rust MCP server the .NET agent consumes as tools;
+        # the governed-tool tests require it rather than skipping without it.
+        env:
+          SPEC_BIN: ${{ github.workspace }}/target/debug/spec
+          SPEC_MCP_BIN: ${{ github.workspace }}/target/debug/spec-mcp
+        run: dotnet test spec-flow/SpecFlow.slnx --configuration Release
+
+      - name: Specification flow (cross-runtime)
+        # The seam no single-runtime test can reach: the agent host opens
+        # records the Rust gate then refuses to let through until a principal
+        # closes them.
+        run: scripts/checks/spec-flow-e2e.sh
+
       - name: Ledger gate
         # L0 of docs/decision-ledger-prd.md: the decision record must be
         # readable, unallocated decisions and stale acceptances must not

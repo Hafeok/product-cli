@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SpecFlow.Flow.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/SpecFlow.Flow/SpecFlow.Flow.csproj" />
+    <ProjectReference Include="../../src/SpecFlow.Import/SpecFlow.Import.csproj" />
+    <ProjectReference Include="../../src/SpecFlow.Mcp/SpecFlow.Mcp.csproj" />
+  </ItemGroup>
+</Project>

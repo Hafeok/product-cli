@@ -375,6 +375,146 @@ Agent-facing context lives in three places, all **derived from
 UPDATE_SKILL=1 cargo test -p product-cli --test agent_context
 ```
 
+## Specification flow (`.spec/`, the `spec` binary + `spec-flow/`)
+
+A fourth stack, and the first in this repo that is **not all Rust**. It
+implements the specification flow's write-back leg
+([format](docs/spec-flow-store-v1.md), normative) and is deliberately
+split across two runtimes at the flow's own accountability boundary:
+
+- **Rust — `spec-core` / `spec-cli` (the `spec` binary).** The act-time record
+  store under `.spec/records/`, the `close` verb, and the `check` gate. This is
+  the half a model may not call.
+- **.NET — `spec-flow/` on the [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/)
+  (`Microsoft.Agents.AI` 1.21.0, net10.0).** Two verbs. `specflow import` is
+  the Roslyn scanner — symbols, composition edges, entry points, candidates →
+  `.spec/inventory.json`, a rebuildable projection that carries no verdict.
+  `specflow implement` is a MAF workflow graph that opens a record, builds a
+  slice, puts a draft to a reviewer through a typed `RequestPort`, and hands
+  over a `spec close …` command it cannot run. See `spec-flow/README.md`.
+- **MCP — two servers, one subset.** Both offer the delegable verbs only;
+  `accept`, `reject`, `close` and `policy set` are withheld, each because it
+  names a principal.
+  - **`spec-mcp` (Rust binary)** — in-process over the store, no .NET needed:
+    `spec_candidates`, `spec_map`, `spec_check`, `spec_records`,
+    `spec_policy_show`, `spec_implement`. Rides `product-mcp`'s
+    `ToolRegistry::with_tools` + stdio, same as `ddd serve`. Held by the
+    registry (the tools are absent) *and* a dispatcher that refuses
+    `tools::WITHHELD`. **Honest limit:** a registry boundary, not a linkage
+    one — the process links `spec-core`.
+  - **`specflow mcp` (.NET, MCP C# SDK 2.2.0)** — the **complete** delegable
+    surface, because it adds `spec_import` (Roslyn, native). Reads are
+    *proxied* to the `spec` binary through `SpecCli`, never reimplemented, so
+    an MCP client and a CI run cannot be told different things. Tools carry
+    MCP annotations (`ReadOnly` on the five reads, `Idempotent` on import).
+    Its boundary is the strong one: the assembly contains no code that writes
+    a closure, and `SpecCli.ForbiddenVerbs` throws if one is assembled.
+- **The agent consumes MCP too.** `GovernedTools.ConnectAsync` connects the
+  slice-building `AIAgent` to `spec-mcp` over stdio and hands it those tools
+  and nothing else — so escape through un-governed tooling is structurally
+  excluded, and it re-filters `Server.Withheld` rather than trusting what the
+  server hands back. A missing server degrades to no tools rather than
+  failing: the record, not the agent's reading, is what the write-back leg
+  depends on.
+- **Code may claim back.** `[Slice("id")]` and `[RealisesFact("det/…")]` are
+  recognised by the Roslyn scan **by name**, so a project declares its own
+  one-line attribute classes and takes no dependency on this tool. An orphan
+  claim fails `S012`/`S013`: code asserting a link to a specification that does
+  not exist reads as governed and is not. The attribute names are the PRD's;
+  their argument shape and the reading of *fact* as *a filed determination* are
+  this repo's, and the format doc says so — `prd-csharp-stack-binding.md` is
+  still missing, and the PRD's C-1…C-3 / CS-1…CS-4 conditions stay unbuilt
+  because they cannot be reconstructed from their names.
+- **`model` is `product domain`.** The flow's event-model verb is not
+  reimplemented — product-core already owns the What (§3.1/§3.2), and a second
+  event-model editor is exactly the duplication this file warns about. The
+  PRD's §3 rule (*`model` does not display candidates*) therefore holds as a
+  **crate boundary**: `product-core` does not depend on `spec-core`, so it
+  cannot read `.spec/inventory.json`, and `map` is where acts and entry points
+  meet for the first time. Asserted in `spec-cli/tests/boundaries.rs` along
+  with the other separations the flow rests on.
+- **Rust verbs:** `candidates` · `accept` · `reject` · `map` · `implement` ·
+  `close` · `check` · `policy show|set`. The importer never names an act: candidates carry
+  observed transport fields and the unfilled slots `name` / `settles`, and a
+  principal fills them. `model` deliberately does not read candidates — an
+  accrual vocabulary authored by walking a transport-shaped list inherits the
+  defect and every act becomes an endpoint with a better name.
+
+**The boundary is the design, not packaging.** The agent host does not link the
+code that writes a closure, so there is no call it could make — the PRD's
+"structural, not instructed" requirement, held by a process boundary rather
+than by a rule someone remembers. Three independent guards:
+`SpecCli.ForbiddenVerbs` (throws on an assembled `close`), a reflection test
+over the exported surface, and a graph with no edge to a closure.
+
+- **A slice can be built unattended; it cannot be closed unattended.**
+  `spec implement` always exits **3** — *work completed, closure pending*.
+  Distinct from `1` on purpose: it lets an agent harness say "I finished my
+  half" without it reading as "I broke something". `spec check` fails on an
+  open record, so a branch carrying a built slice and no closure does not merge.
+- **Closing declares something; silence is neither.** `--nothing-arose` is a
+  positive declaration with its own discriminant, the same shape as
+  `asserted-none`. A `close` with neither `--determination` nor
+  `--nothing-arose` is refused, never defaulted.
+- **Verdict classes are closed at fifteen** — `S001` unclosed record, `S002`
+  machine principal (on a closure, a ratification *or* a refusal), `S003`
+  closure not binding its opening, `S004` kind disagreeing with its payload,
+  `S005` entry point no act covers, `S006` record naming an unratified act,
+  `S007` ratification/refusal not binding its content, `S008`–`S011` the
+  policy's own well-formedness (B-1/B-2/B-3 plus the uncovered set), `S012`
+  orphan `[Slice]`, `S013` orphan `[RealisesFact]`, `S014` unsigned in a
+  signing repo, `S015` a signature that does not verify. All structural, none
+  project-configurable; adding a sixteenth is a change to the format doc, not
+  a patch. `S002` delegates to
+  `ledger_core::identity::Identity::model_or_bot_reason` — the same test
+  `L006` applies to an acceptor. **One identity law, two gates.**
+- **`map` reports, `check` gates.** merge / split / unmapped-entry-point /
+  unmapped-act are a restructuring work list, not verdicts, and the metrics
+  beneath the verdicts (coverage included) are reported and never gated.
+  A refused candidate *covers* its entry point: `S005` fails on silence, not
+  on the absence of an act.
+- **Hashing rides the ledger's canonical law** (`ledger_core::canon` +
+  `domain_hash`) under two prefixes, `spec.act-record.v1` and
+  `spec.act-closure.v1`. Each digest builder destructures its subject with **no
+  `..` rest pattern**, so a new wire field is a compile error until someone
+  decides whether it is hashed.
+- **One writer.** Every verb builds the record it would write, judges it with
+  `check`, and refuses on a finding — same class, same message, no second
+  validation copy. `store::close` returns `Closed::Refused(findings)` rather
+  than an error, so the caller exits `1` for a finding and `2` only when it
+  genuinely could not run.
+- **Two classes of verdict, only one configurable.** Structural verdicts
+  (`S001`–`S011`) are not project business. **Policy verdicts** are: filed as
+  append-only versions under `.spec/policy/<ulid>.yml`, each with
+  `fires_when`, `basis` and `principal`, and the version in force is the tip
+  of the `supersedes` chain — never id order, and a forked chain is a finding.
+  `basis_binds` is the hash of the `fires_when` it was written against and is
+  **not** auto-filled: moving a threshold without revisiting the argument
+  fails `S009`, and the gate reports the digest to paste the way `ledger
+  verify` does. **The default is structural only** — no shipped thresholds,
+  because that would presume a basis nobody stated.
+- **Signing (§4e), opt-in at the repo.** ed25519 via `spec trust generate`;
+  off until `.spec/trust/` carries a key, and turning it off means deleting
+  keys — a reviewable edit, not a per-record flag. Signatures cover the
+  **recomputed** digest, so tampering breaks `S015` directly rather than
+  leaning on `S003`; and because every digest already covers its principal, a
+  signature cannot be lifted onto another principal's record. Secret keys are
+  refused a path inside the repo. **Adopting later does not invalidate the
+  past**: an act nobody could have signed is graced for *absence* only — a
+  signature that is present is always verified. Honest limit: this says a key
+  holder acted, not that the human did; custody, rotation and revocation are
+  not modelled, and the ledger's own `Acceptance.signature` is still empty at
+  L0, so the two stores are not yet on the same footing.
+
+Build and test both halves:
+
+```bash
+cargo build -p spec-cli                 # the Rust half, required by the .NET tests
+dotnet test spec-flow/SpecFlow.slnx     # drives the real binary in a temp repo
+```
+
+The .NET tests locate the binary at `target/debug/spec`, or via `SPEC_BIN`.
+
 ## Phase-gated session (What → How → Build)
 
 `product session start <product>` (or `product mcp --workflow --session <id>`)

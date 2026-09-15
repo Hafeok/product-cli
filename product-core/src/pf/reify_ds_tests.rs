@@ -44,16 +44,23 @@ fn ctx(id: &str, dim: &str, value: &str) -> ContextOfUse {
 }
 
 fn graph() -> DomainGraph {
-    let mut g = DomainGraph::default();
-    g.contexts_of_use = vec![ctx("phone", "form_factor", "phone"), ctx("tablet", "form_factor", "tablet")];
-    g.wireframe_steps = vec![WireframeStep {
-        id: "pick-shipping".to_string(),
-        label: "Pick shipping".to_string(),
-        surfaces: vec![Surface { projection: "ShippingOptions".to_string(), aio: "single-select".to_string() }],
-        offers: vec![Offer { command: "ConfirmShipping".to_string(), aio: "trigger-action".to_string() }],
+    DomainGraph {
+        contexts_of_use: vec![ctx("phone", "form_factor", "phone"), ctx("tablet", "form_factor", "tablet")],
+        wireframe_steps: vec![WireframeStep {
+            id: "pick-shipping".to_string(),
+            label: "Pick shipping".to_string(),
+            surfaces: vec![Surface {
+                projection: "ShippingOptions".to_string(),
+                aio: "single-select".to_string(),
+            }],
+            offers: vec![Offer {
+                command: "ConfirmShipping".to_string(),
+                aio: "trigger-action".to_string(),
+            }],
+            ..Default::default()
+        }],
         ..Default::default()
-    }];
-    g
+    }
 }
 
 #[test]
