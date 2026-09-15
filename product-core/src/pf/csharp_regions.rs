@@ -104,13 +104,15 @@ pub struct SpanningType {
     pub acts_touching: Vec<String>,
 }
 
+/// §12.1 read as CG-R-89 replaced it and CG-R-122 confirmed: the bound against
+/// the effect it qualifies, never against a constant. Fires when the bound
+/// exceeds the reachable share it bounds.
 #[derive(Debug, Clone, Serialize)]
 pub struct TwelveOne {
+    pub subset: String,
     pub reachable_percent: f64,
     pub error_bound_percent: f64,
-    pub threshold_percent: f64,
-    pub distance_percent: f64,
-    pub bound_smaller_than_distance: bool,
+    pub fires: bool,
     pub statement: String,
 }
 
@@ -229,10 +231,11 @@ pub fn regions(inv: &Inventory, rat: &Ratification) -> RegionsReport {
         *by_kind_region.entry(e.kind.clone()).or_default().entry(e.region.label().to_string()).or_insert(0) += 1;
         *by_project_region.entry(e.project.clone()).or_default().entry(e.region.label().to_string()).or_insert(0) += 1;
     }
-    let ratios = ratios(inv, &ix, &cr.candidates, &rows);
+    let grade = if rat.vocabulary_grade.is_empty() { "ungraded — the worksheet carries no grade".to_string() } else { rat.vocabulary_grade.clone() };
+    let ratios = ratios(inv, &ix, &cr.candidates, &rows, grade.split(':').next().unwrap_or(&grade).trim());
     let twelve_one = twelve_one(&ratios);
     RegionsReport {
-        grade: if rat.vocabulary_grade.is_empty() { "ungraded — the worksheet carries no grade".to_string() } else { rat.vocabulary_grade.clone() },
+        grade,
         labels: LABELS.to_vec(),
         acts,
         entries,
@@ -248,16 +251,15 @@ pub fn regions(inv: &Inventory, rat: &Ratification) -> RegionsReport {
 }
 
 fn twelve_one(r: &Ratios) -> TwelveOne {
-    let distance = (90.0 - r.reachable_percent).abs();
-    let smaller = r.error_bound_percent < distance;
+    let fires = r.error_bound_percent >= r.reachable_percent;
     let statement = format!(
-        "{:.1}% of undeclared production types are reachable from the accepted entry points, with an error bound of {:.1} points (CG-R-120: unfollowed edges); the distance to §12.1's ~90% is {:.1} points, so the split {} (CG-R-89: no fire/clear form; the bound is reported beside the split)",
+        "[{}] {:.1}% of undeclared production types reachable, bound {:.1} points (CG-R-120: unfollowed edges); §12.1 {} — a split whose bound exceeds the effect it qualifies does not discriminate (CG-R-89, CG-R-122: no constant, no distance to a threshold)",
+        r.subset,
         r.reachable_percent,
         r.error_bound_percent,
-        distance,
-        if smaller { "discriminates" } else { "does not discriminate — the bound exceeds the difference it would reveal" }
+        if fires { "FIRES: the bound exceeds the reachable share it bounds; the split cannot be trusted as instrumented" } else { "does not fire: the bound is smaller than the reachable share it bounds" }
     );
-    TwelveOne { reachable_percent: r.reachable_percent, error_bound_percent: r.error_bound_percent, threshold_percent: 90.0, distance_percent: distance, bound_smaller_than_distance: smaller, statement }
+    TwelveOne { subset: r.subset.clone(), reachable_percent: r.reachable_percent, error_bound_percent: r.error_bound_percent, fires, statement }
 }
 
 #[cfg(test)]

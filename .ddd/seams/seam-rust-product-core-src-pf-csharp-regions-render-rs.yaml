@@ -12,3 +12,9 @@ bindings:
   after: sha256:819c48701bb715375fefeea5de4d2a331faebc58a5ab4e249c0b0c32f8f948fb
   base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
   hash: sha256:32fb8a78fc48fcc19908f8607acdddb6129d593ea487f7114ec8a461d4320ed7
+- symbol: render_regions
+  file: product-core/src/pf/csharp_regions_render.rs
+  before: absent
+  after: sha256:db9b783ba6aa02a203c1258d5c0e62d9a08895509211d2ce38e4f7205fda4d22
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:5e09aeafdc015e4029b4047fb46021c7916c0ddcd7f0846bd1559cc88eb2df0a

@@ -39,8 +39,15 @@ pub struct Ratios {
     pub unresolved_edges: usize,
     pub not_read_edges: usize,
     pub unfollowed: usize,
+    /// Unfollowed edges whose target is declared outside the solution — reported
+    /// as composition, never subtracted (CG-R-123): an external target still gates
+    /// the in-solution types behind it.
+    pub unfollowed_external_targets: usize,
     /// The bound in force: unfollowed / composition edges (CG-R-120).
     pub error_bound_percent: f64,
+    /// The subset every reachable/isolated figure was computed from, with its
+    /// grade — travels with the headline (CG-R-124).
+    pub subset: String,
     /// (namespace, reachable, unresolved, isolated)
     pub by_namespace: Vec<(String, usize, usize, usize)>,
     /// (project, reachable, unresolved, isolated)
@@ -55,7 +62,7 @@ fn pct(n: usize, d: usize) -> f64 {
 }
 
 /// The split, from the accepted rows' candidates.
-pub fn ratios<'a>(inv: &'a Inventory, ix: &Index<'a>, cands: &[Candidate], rows: &BTreeMap<&str, &RatifiedRow>) -> Ratios {
+pub fn ratios<'a>(inv: &'a Inventory, ix: &Index<'a>, cands: &[Candidate], rows: &BTreeMap<&str, &RatifiedRow>, grade: &str) -> Ratios {
     let resolver = Resolver::build(inv);
     let accepted: Vec<&Candidate> = cands.iter().filter(|c| rows.get(c.id.as_str()).is_some_and(|r| r.decision.as_deref() == Some("accept"))).collect();
     let roots: BTreeSet<&'a str> = accepted
@@ -68,7 +75,8 @@ pub fn ratios<'a>(inv: &'a Inventory, ix: &Index<'a>, cands: &[Candidate], rows:
     let cl = closure_from(ix, &resolver, &roots, &base, false);
     let s = sets(ix, &cl);
     let own: BTreeSet<&str> = accepted.iter().map(|c| c.type_id.as_str()).collect();
-    let mut r = Ratios { accepted_entry_points: accepted.len(), roots: roots.len(), ..Default::default() };
+    let subset = format!("{grade}, {} of {} entry points", accepted.len(), cands.len());
+    let mut r = Ratios { accepted_entry_points: accepted.len(), roots: roots.len(), subset, ..Default::default() };
     let (mut by_ns, mut by_pr): (Tally<'_>, Tally<'_>) = (BTreeMap::new(), BTreeMap::new());
     for t in inv.types.iter().filter(|t| !ix.is_test(&t.id) && !own.contains(t.id.as_str())) {
         r.undeclared_types += 1;
@@ -87,7 +95,7 @@ pub fn ratios<'a>(inv: &'a Inventory, ix: &Index<'a>, cands: &[Candidate], rows:
             pr.2 += 1;
         }
     }
-    bound(&cl, &mut r);
+    bound(ix, &cl, &mut r);
     r.reachable_percent = pct(r.reachable_undeclared, r.undeclared_types);
     r.isolated_percent = pct(r.isolated_undeclared, r.undeclared_types);
     r.by_namespace = by_ns.into_iter().map(|(k, (a, b, c))| (if k.is_empty() { "(global)".to_string() } else { k.to_string() }, a, b, c)).collect();
@@ -96,13 +104,14 @@ pub fn ratios<'a>(inv: &'a Inventory, ix: &Index<'a>, cands: &[Candidate], rows:
 }
 
 /// The edge figures: the CG-R-120 bound (unfollowed) and the CG-R-89 form (unscored) beside it.
-fn bound(cl: &Closure<'_>, r: &mut Ratios) {
+fn bound(ix: &Index<'_>, cl: &Closure<'_>, r: &mut Ratios) {
     r.composition_edges = cl.edges.len();
     r.scored = cl.count(|e| matches!(e, EdgeState::Resolved | EdgeState::Unresolved(_) | EdgeState::RegistrationNotRead(_)));
     r.unscored = r.composition_edges - r.scored;
     r.unresolved_edges = cl.count(|e| matches!(e, EdgeState::Unresolved(_)));
     r.not_read_edges = cl.count(|e| matches!(e, EdgeState::RegistrationNotRead(_)));
     r.unfollowed = r.unresolved_edges + r.not_read_edges;
+    r.unfollowed_external_targets = cl.edges.iter().filter(|e| matches!(e.state, EdgeState::Unresolved(_) | EdgeState::RegistrationNotRead(_)) && ix.external.contains_key(e.target.as_str())).count();
     r.unscored_fraction_percent = pct(r.unscored, r.composition_edges);
     r.error_bound_percent = pct(r.unfollowed, r.composition_edges);
 }

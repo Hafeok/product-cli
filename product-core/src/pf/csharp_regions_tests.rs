@@ -68,7 +68,10 @@ fn the_split_walks_from_accepted_roots_with_its_bound() {
     assert_eq!(x.unfollowed, 1);
     assert!((x.error_bound_percent - 50.0).abs() < 1e-9, "1 unfollowed of 2 edges");
     assert_eq!(x.unscored, 0, "the prior form counts nothing here");
-    assert!(r.twelve_one.bound_smaller_than_distance);
-    assert!(r.twelve_one.statement.contains("discriminates"));
+    assert_eq!(x.unfollowed_external_targets, 0, "IRepository`1 is declared in the solution");
+    assert_eq!(x.subset, "stand-in (test), 1 of 8 entry points");
+    assert!(r.twelve_one.fires, "a 50-point bound on a 30% share: the bound exceeds the effect");
+    assert!(r.twelve_one.statement.starts_with("[stand-in (test), 1 of 8 entry points]"), "{}", r.twelve_one.statement);
+    assert!(r.twelve_one.statement.contains("FIRES"));
     assert!(r.labels.iter().any(|l| l.contains("stand-in")));
 }
