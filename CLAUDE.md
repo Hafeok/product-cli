@@ -375,6 +375,67 @@ Agent-facing context lives in three places, all **derived from
 UPDATE_SKILL=1 cargo test -p product-cli --test agent_context
 ```
 
+## Specification flow (`.spec/`, the `spec` binary + `spec-flow/`)
+
+A fourth stack, and the first in this repo that is **not all Rust**. It
+implements the specification flow's write-back leg
+([format](docs/spec-flow-act-record-v1.md), normative) and is deliberately
+split across two runtimes at the flow's own accountability boundary:
+
+- **Rust — `spec-core` / `spec-cli` (the `spec` binary).** The act-time record
+  store under `.spec/records/`, the `close` verb, and the `check` gate. This is
+  the half a model may not call.
+- **.NET — `spec-flow/` on the [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/)
+  (`Microsoft.Agents.AI` 1.21.0, net10.0).** The `implement` workflow: a
+  MAF graph that opens a record, builds a slice, puts a draft to a reviewer
+  through a typed `RequestPort`, and hands over a `spec close …` command it
+  cannot run. See `spec-flow/README.md`.
+
+**The boundary is the design, not packaging.** The agent host does not link the
+code that writes a closure, so there is no call it could make — the PRD's
+"structural, not instructed" requirement, held by a process boundary rather
+than by a rule someone remembers. Three independent guards:
+`SpecCli.ForbiddenVerbs` (throws on an assembled `close`), a reflection test
+over the exported surface, and a graph with no edge to a closure.
+
+- **A slice can be built unattended; it cannot be closed unattended.**
+  `spec implement` always exits **3** — *work completed, closure pending*.
+  Distinct from `1` on purpose: it lets an agent harness say "I finished my
+  half" without it reading as "I broke something". `spec check` fails on an
+  open record, so a branch carrying a built slice and no closure does not merge.
+- **Closing declares something; silence is neither.** `--nothing-arose` is a
+  positive declaration with its own discriminant, the same shape as
+  `asserted-none`. A `close` with neither `--determination` nor
+  `--nothing-arose` is refused, never defaulted.
+- **Verdict classes are closed at four** — `S001` unclosed, `S002` machine
+  principal, `S003` closure that does not bind its opening, `S004` kind
+  disagreeing with its payload. All structural, none project-configurable;
+  adding a fifth is a change to the format doc, not a patch. `S002` delegates
+  to `ledger_core::identity::Identity::model_or_bot_reason` — the same test
+  `L006` applies to an acceptor. **One identity law, two gates.**
+- **Hashing rides the ledger's canonical law** (`ledger_core::canon` +
+  `domain_hash`) under two prefixes, `spec.act-record.v1` and
+  `spec.act-closure.v1`. Each digest builder destructures its subject with **no
+  `..` rest pattern**, so a new wire field is a compile error until someone
+  decides whether it is hashed.
+- **One writer.** Every verb builds the record it would write, judges it with
+  `check`, and refuses on a finding — same class, same message, no second
+  validation copy. `store::close` returns `Closed::Refused(findings)` rather
+  than an error, so the caller exits `1` for a finding and `2` only when it
+  genuinely could not run.
+- **No signing yet.** `S002` says the principal does not *look* like a machine;
+  it does not say the named human closed it. `Acceptance.signature` is reserved
+  and empty on the ledger side, and this format inherits the same honest limit.
+
+Build and test both halves:
+
+```bash
+cargo build -p spec-cli                 # the Rust half, required by the .NET tests
+dotnet test spec-flow/SpecFlow.slnx     # drives the real binary in a temp repo
+```
+
+The .NET tests locate the binary at `target/debug/spec`, or via `SPEC_BIN`.
+
 ## Phase-gated session (What → How → Build)
 
 `product session start <product>` (or `product mcp --workflow --session <id>`)
