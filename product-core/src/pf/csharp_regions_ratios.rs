@@ -2,8 +2,11 @@
 //!
 //! One walk from the union of the accepted entry points' roots, through the
 //! union of the hosts' registration sites, O-17 off — the same walk the
-//! candidate paths use — with its unscored fraction as the error bound on
-//! the split (CG-R-89). Unresolved is never folded into isolated (CG-R-62).
+//! candidate paths use. The error bound on the split is the fraction of
+//! composition edges the walk could not follow — `unresolved` and
+//! `registration-not-read` together, composition printed beneath (CG-R-120);
+//! the CG-R-89 unscored fraction is printed beside it as the prior form.
+//! Unresolved is never folded into isolated (CG-R-62).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -15,7 +18,7 @@ use super::csharp_di::Resolver;
 use super::csharp_inventory::{Index, Inventory};
 use super::csharp_reach::sets;
 use super::csharp_regions::RatifiedRow;
-use super::csharp_walk::{closure_from, EdgeState};
+use super::csharp_walk::{closure_from, Closure, EdgeState};
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct Ratios {
@@ -30,6 +33,13 @@ pub struct Ratios {
     pub composition_edges: usize,
     pub scored: usize,
     pub unscored: usize,
+    /// CG-R-89's form: unscored (partial, boundary, excluded) / edges — the prior form.
+    pub unscored_fraction_percent: f64,
+    /// Edges the walk could not follow: unresolved + registration-not-read (CG-R-120).
+    pub unresolved_edges: usize,
+    pub not_read_edges: usize,
+    pub unfollowed: usize,
+    /// The bound in force: unfollowed / composition edges (CG-R-120).
     pub error_bound_percent: f64,
     /// (namespace, reachable, unresolved, isolated)
     pub by_namespace: Vec<(String, usize, usize, usize)>,
@@ -77,13 +87,22 @@ pub fn ratios<'a>(inv: &'a Inventory, ix: &Index<'a>, cands: &[Candidate], rows:
             pr.2 += 1;
         }
     }
-    r.composition_edges = cl.edges.len();
-    r.scored = cl.count(|e| matches!(e, EdgeState::Resolved | EdgeState::Unresolved(_) | EdgeState::RegistrationNotRead(_)));
-    r.unscored = r.composition_edges - r.scored;
+    bound(&cl, &mut r);
     r.reachable_percent = pct(r.reachable_undeclared, r.undeclared_types);
     r.isolated_percent = pct(r.isolated_undeclared, r.undeclared_types);
-    r.error_bound_percent = pct(r.unscored, r.composition_edges);
     r.by_namespace = by_ns.into_iter().map(|(k, (a, b, c))| (if k.is_empty() { "(global)".to_string() } else { k.to_string() }, a, b, c)).collect();
     r.by_project = by_pr.into_iter().map(|(k, (a, b, c))| (k.to_string(), a, b, c)).collect();
     r
+}
+
+/// The edge figures: the CG-R-120 bound (unfollowed) and the CG-R-89 form (unscored) beside it.
+fn bound(cl: &Closure<'_>, r: &mut Ratios) {
+    r.composition_edges = cl.edges.len();
+    r.scored = cl.count(|e| matches!(e, EdgeState::Resolved | EdgeState::Unresolved(_) | EdgeState::RegistrationNotRead(_)));
+    r.unscored = r.composition_edges - r.scored;
+    r.unresolved_edges = cl.count(|e| matches!(e, EdgeState::Unresolved(_)));
+    r.not_read_edges = cl.count(|e| matches!(e, EdgeState::RegistrationNotRead(_)));
+    r.unfollowed = r.unresolved_edges + r.not_read_edges;
+    r.unscored_fraction_percent = pct(r.unscored, r.composition_edges);
+    r.error_bound_percent = pct(r.unfollowed, r.composition_edges);
 }

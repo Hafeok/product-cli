@@ -251,7 +251,7 @@ fn twelve_one(r: &Ratios) -> TwelveOne {
     let distance = (90.0 - r.reachable_percent).abs();
     let smaller = r.error_bound_percent < distance;
     let statement = format!(
-        "{:.1}% of undeclared production types are reachable from the accepted entry points, with an error bound of {:.1} points; the distance to §12.1's ~90% is {:.1} points, so the split {} (CG-R-89: no fire/clear form; the bound is reported beside the split)",
+        "{:.1}% of undeclared production types are reachable from the accepted entry points, with an error bound of {:.1} points (CG-R-120: unfollowed edges); the distance to §12.1's ~90% is {:.1} points, so the split {} (CG-R-89: no fire/clear form; the bound is reported beside the split)",
         r.reachable_percent,
         r.error_bound_percent,
         distance,

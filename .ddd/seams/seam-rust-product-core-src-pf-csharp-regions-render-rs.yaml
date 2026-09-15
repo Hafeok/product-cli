@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/product-core-src-pf-csharp-regions-render-rs
+boundary: contract surface of product-core/src/pf/csharp_regions_render.rs
+verdict_knowledge: authored
+contract_location: product-core/src/pf/csharp_regions_render.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: render_regions
+  file: product-core/src/pf/csharp_regions_render.rs
+  before: absent
+  after: sha256:819c48701bb715375fefeea5de4d2a331faebc58a5ab4e249c0b0c32f8f948fb
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:32fb8a78fc48fcc19908f8607acdddb6129d593ea487f7114ec8a461d4320ed7
