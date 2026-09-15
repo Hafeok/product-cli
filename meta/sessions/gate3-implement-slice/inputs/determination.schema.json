@@ -1,0 +1,255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Hafeok/specification-languages/domain-state-change/schema/determination.schema.json",
+  "title": "Determination — domain state change binding",
+
+  "$comment": "This schema is the enforcement mechanism for PR-1, PR-2 and PR-3. The prohibitions are not advice: the forbidden shapes have no valid representation here. A conformance claim citing this file cites required fields and closed unions, not prose.",
+
+  "$defs": {
+
+    "address": {
+      "$comment": "PR-1. An act address. Type plus bound parameter; the parameter is drawn from the act vocabulary, which makes the instance set computable rather than authored.",
+      "type": "object",
+      "required": ["act_type", "act_instance"],
+      "additionalProperties": false,
+      "properties": {
+        "act_type": {
+          "type": "string",
+          "enum": ["command", "read-model", "automation", "translation"],
+          "$comment": "Event modelling's slice types. Closed."
+        },
+        "act_instance": {
+          "type": "string",
+          "minLength": 1,
+          "$comment": "A name in the act vocabulary, e.g. PlaceOrder. Checked against the event model by the validator, not by this schema."
+        },
+        "scale": {
+          "type": "string",
+          "enum": ["act", "slice", "context", "system"],
+          "default": "act",
+          "$comment": "Composition granularity. Independent of projection depth."
+        }
+      }
+    },
+
+    "extent": {
+      "$comment": "DP-1. Four states, and silence is one of them. A determination filed before an axis existed is SILENT on it; one deliberately bounded is DOES-NOT-TRAVEL. Collapsing them makes the revisit computation unsound the first time an axis is added.",
+      "type": "object",
+      "required": ["axes"],
+      "additionalProperties": false,
+      "properties": {
+        "axes": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "required": ["state"],
+            "additionalProperties": false,
+            "properties": {
+              "state": {
+                "type": "string",
+                "enum": ["bound-here", "travels-to", "does-not-travel", "silent"]
+              },
+              "region": {
+                "type": "string",
+                "$comment": "Required when state is travels-to or does-not-travel."
+              },
+              "reason": { "type": "string" }
+            },
+            "allOf": [
+              {
+                "if": { "properties": { "state": { "enum": ["travels-to", "does-not-travel"] } } },
+                "then": { "required": ["state", "region"] }
+              },
+              {
+                "if": { "properties": { "state": { "const": "silent" } } },
+                "then": {
+                  "not": { "required": ["region"] },
+                  "$comment": "Silence has no region. A silent axis was not considered; naming a region would make it a stated boundary."
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+
+    "allocation": {
+      "$comment": "PR-2 and DP-4. Every determination is allocated. Residual requires a carrying actor kind AND an accountable principal, and the principal cannot be a machine.",
+      "type": "object",
+      "required": ["class"],
+      "properties": {
+        "class": { "type": "string", "enum": ["pinned", "checked", "residual"] }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "class": { "const": "pinned" },
+            "settled_by": { "type": "string", "minLength": 1 }
+          },
+          "required": ["class", "settled_by"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "class": { "const": "checked" },
+            "acceptance": { "$ref": "#/$defs/acceptance" }
+          },
+          "required": ["class", "acceptance"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "class": { "const": "residual" },
+            "carried_by": {
+              "type": "string",
+              "enum": ["human", "machine", "team", "external-party"]
+            },
+            "principal": {
+              "type": "object",
+              "required": ["kind", "identifier"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": ["human", "team", "external-party"],
+                  "$comment": "Machine is absent by design. A model identity cannot be an accepting principal."
+                },
+                "identifier": { "type": "string", "minLength": 1 }
+              }
+            }
+          },
+          "required": ["class", "carried_by", "principal"],
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "acceptance": {
+      "$comment": "PR-3, DP-2, DP-3, DP-5. A coverage claim with no stated uncovered set has no representation: does_not_cover is required and may not be empty by omission. Absence of uncovered properties must be asserted explicitly.",
+      "type": "object",
+      "required": ["predicate", "closure", "ranges_over", "covers", "does_not_cover"],
+      "additionalProperties": false,
+      "properties": {
+        "predicate": {
+          "type": "string",
+          "minLength": 1,
+          "$comment": "Predicate form, not extension. Scenarios are evidence about a predicate; they are not the predicate."
+        },
+        "closure": {
+          "$comment": "DP-2. Logical closure and operational closure are different claims and the notation records which was established.",
+          "type": "object",
+          "required": ["kind"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "type": "string", "enum": ["operational", "logical-only", "unestablished"] },
+            "runnable_by": { "type": "string" },
+            "terminates": { "type": "boolean" },
+            "tolerance": { "type": "string" }
+          },
+          "allOf": [
+            {
+              "if": { "properties": { "kind": { "const": "operational" } } },
+              "then": { "required": ["kind", "runnable_by", "terminates"] }
+            }
+          ]
+        },
+        "ranges_over": {
+          "$comment": "C-3 of the resolution condition. The facts this predicate is evaluated against. A check over something no act produces is not a check, so this is required and the resolution check verifies each entry is written by some act in scope.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "covers": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "$comment": "Property categories this predicate reaches."
+        },
+        "does_not_cover": {
+          "$comment": "DP-3. Required. Use the explicit sentinel to assert the empty case; omission is not permitted, because an omitted uncovered set is indistinguishable from an unconsidered one.",
+          "oneOf": [
+            { "type": "array", "minItems": 1, "items": { "type": "string" } },
+            { "type": "string", "const": "asserted-none" }
+          ]
+        },
+        "proxy": {
+          "$comment": "DP-5. A proxy without its divergence is a coverage claim that overstates itself, so divergence is required whenever proxy is present.",
+          "type": "object",
+          "required": ["stands_in_for", "known_divergence"],
+          "additionalProperties": false,
+          "properties": {
+            "stands_in_for": { "type": "string", "minLength": 1 },
+            "known_divergence": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+
+    "position": {
+      "$comment": "DP-6. Ground and verdict are positions relative to an act, not separate vocabularies. Read position is ground; write position is verdict. Both resolve into the fact vocabulary.",
+      "type": "object",
+      "required": ["fact_type", "role"],
+      "additionalProperties": false,
+      "properties": {
+        "fact_type": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "enum": ["read", "write"] },
+        "boundary": {
+          "$comment": "DP-7. external: read here, produced by no act in scope. terminal: written here, read by no act in scope. internal: resolves within scope.",
+          "type": "object",
+          "required": ["kind"],
+          "properties": {
+            "kind": { "type": "string", "enum": ["internal", "external", "terminal"] },
+            "source": { "type": "string" },
+            "consumer": { "type": "string" },
+            "read_provenance": { "type": "string" },
+            "tick_rate": { "type": "string", "enum": ["static", "slow", "fast", "unknown"] },
+            "consumption_observable": { "type": "boolean" }
+          },
+          "allOf": [
+            {
+              "if": { "properties": { "kind": { "const": "external" } } },
+              "then": { "required": ["kind", "source", "read_provenance", "tick_rate"] }
+            },
+            {
+              "if": { "properties": { "kind": { "const": "terminal" } } },
+              "then": { "required": ["kind", "consumer", "consumption_observable"] }
+            }
+          ]
+        }
+      }
+    },
+
+    "provenance": {
+      "type": "object",
+      "required": ["made_at", "made_by", "recorded"],
+      "additionalProperties": false,
+      "properties": {
+        "made_at": {
+          "$comment": "SR-1. The ONLY field that distinguishes a build-time determination from an act-time one. The schema is otherwise identical, which is what stops the store bifurcating.",
+          "type": "string",
+          "enum": ["build-time", "act-time"]
+        },
+        "made_by": { "type": "string", "minLength": 1 },
+        "recorded": { "type": "string", "format": "date-time" },
+        "supersedes": { "type": "string" }
+      }
+    }
+  },
+
+  "type": "object",
+  "required": ["id", "address", "statement", "extent", "allocation", "provenance"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^DSC-[0-9]{4}$" },
+    "address": { "$ref": "#/$defs/address" },
+    "statement": { "type": "string", "minLength": 1 },
+    "extent": { "$ref": "#/$defs/extent" },
+    "allocation": { "$ref": "#/$defs/allocation" },
+    "positions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/position" }
+    },
+    "provenance": { "$ref": "#/$defs/provenance" }
+  }
+}
