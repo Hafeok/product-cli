@@ -197,3 +197,25 @@ not.
 
 Gate 1b is complete as specified: the candidate set (Gate A), the delta over the ratified set
 (Gate B), and this report (Gate C). The session stops here.
+
+---
+
+## Appended — 2026-09-15, closed under CG-R-125
+
+**Nothing above is amended.** Emil closed Gate 1b as specified. Two corrections to the reading
+of §7 above, recorded here rather than by rewriting it:
+
+- **F-EP-3 and F-EP-5 carry different weights and do not belong under one heading.** F-EP-3 is a
+  finding about A — small, real, a class name disagreeing with its file name. F-EP-5 is **not a
+  finding about A**: the ordering side reads as unstructured because no ordering entry point was
+  ratified, a consequence of the subset (CG-R-124). §7 lists both under "About A"; read F-EP-5
+  as a finding about the ratification.
+- What Gate 1b established: the entry-point vocabulary works mechanically (68/71, 68/68);
+  ratification produces what derivation cannot (two merges, one deferral that found a defect,
+  three rejected renders); the split fires §12.1 with a bounded, named cause — the instrument
+  is blind to exactly the subsystem carrying most of A's undeclared edges. What it did not:
+  anything about A's specification coverage, anything about the identity half, anything about
+  whether the flow works for anyone who did not design it.
+
+Order of the outstanding work (CG-R-126): Gate 3 greenfield; CG-R-101's table ground truth;
+the flow session; the notation falsifier. B out of scope. The session's records end here.

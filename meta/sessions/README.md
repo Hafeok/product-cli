@@ -16,4 +16,4 @@ committed under this directory.
 | Session | Type |
 |---|---|
 | `2026-09-13-implement-csharp-binding/` | Implementation under five gates — the C# stack binding beneath the domain state change binding |
-| `2026-09-15-gate1b-candidates/` | Measurement under three gates — Gate 1b of the C# binding on the entry-point vocabulary (CG-R-105) |
+| `2026-09-15-gate1b-candidates/` | Measurement under three gates — Gate 1b of the C# binding on the entry-point vocabulary (CG-R-105). **Closed as specified, CG-R-125** |

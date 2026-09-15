@@ -96,3 +96,11 @@ prediction; CG-R-120 the bound's form).
 
 **No table above is amended and no hash has changed.** One further input, filed verbatim:
 `inputs/rulings-cg-r-121-124.md`, sha256 `f7ff2a950cf243d234603c022f2df6d4d7ff3f114c521a15317b2000375bb114` — rulings in force (CG-R-121 … CG-R-124).
+
+---
+
+## Appended note — 2026-09-15, Gate 1b closed
+
+**No table above is amended and no hash has changed.** One further input, filed verbatim:
+`inputs/rulings-cg-r-125-126.md`, sha256 `662456c90b033383b7b985d4c82020fba65053e4d5f0803eefaab0ca63c42f8b` — rulings in force; the chat text is in
+`invocation-close.md`. Nothing further arrives for this session: Gate 1b is closed.
