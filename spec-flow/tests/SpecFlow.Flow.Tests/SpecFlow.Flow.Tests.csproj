@@ -10,5 +10,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/SpecFlow.Flow/SpecFlow.Flow.csproj" />
+    <ProjectReference Include="../../src/SpecFlow.Import/SpecFlow.Import.csproj" />
   </ItemGroup>
 </Project>

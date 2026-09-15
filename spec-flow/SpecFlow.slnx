@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/SpecFlow.Cli/SpecFlow.Cli.csproj" />
     <Project Path="src/SpecFlow.Flow/SpecFlow.Flow.csproj" />
+    <Project Path="src/SpecFlow.Import/SpecFlow.Import.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/SpecFlow.Flow.Tests/SpecFlow.Flow.Tests.csproj" />
