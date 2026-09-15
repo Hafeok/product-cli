@@ -1,0 +1,6 @@
+gateA-r3 instrument record — 2026-09-15T09:08:37Z
+commit: 15412d380cd1043e945b0407f4bc33ddd244a916 (working tree: 0 uncommitted paths, captured before this record was created)
+binary: target/release/product sha256 1a15ebc2cffd90ab
+inventory: A 6 sha256 3197d7e07c5a0b46 (the run-8 artefact; reader not re-run)
+ground truth: f78dcfa49e0dd294
+regression: run-8 A primary reach output byte-identical

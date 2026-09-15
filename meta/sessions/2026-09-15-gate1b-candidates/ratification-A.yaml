@@ -1,0 +1,2320 @@
+worksheet: ratification of A's candidate set — Gate 1b, Gate A
+vocabulary_grade: 'stand-in (CG-R-115): no intent-holder for eShopOnWeb; every figure computed against the accepted subset
+  carries this grade'
+ratifier: Emil, as stand-in
+rules:
+- accepting a candidate supplies its act name, what it settles and the principal (CG-R-106); the session fills none of these
+- expected actor kinds reference Layer 1 kinds; population and rate are orders of magnitude (CG-R-108)
+- 'supported throughput is a determination: sustained, peak, window, behaviour above the limit (CG-R-109)'
+- channel is a named extent axis (CG-R-107); the Blazor client is an actor kind, not a candidate (CG-R-113)
+- a candidate with identity incomplete is accepted only with its route supplied by hand from the source (CG-R-114); route_source_reading_for_confirmation
+  is the session's reading, not a supplied route
+- a rejection carries a reason (CG-R-106); candidates outside the signal-bearing subset default to the CG-R-115 reason unless
+  named
+counts:
+  derived: 68
+  signal_bearing: 25
+  hand_supplied: 3
+  identity_incomplete: 23
+candidates:
+- id: controller-action:ManageController@Controllers.ChangePassword#GET
+  kind: controller-action
+  method: GET
+  route: /Manage/ChangePassword
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.ChangePassword#POST
+  kind: controller-action
+  method: POST
+  route: /Manage/ChangePassword
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.Disable2fa#POST
+  kind: controller-action
+  method: POST
+  route: /Manage/Disable2fa
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.Disable2faWarning#GET
+  kind: controller-action
+  method: GET
+  route: /Manage/Disable2faWarning
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.EnableAuthenticator#GET
+  kind: controller-action
+  method: GET
+  route: /Manage/EnableAuthenticator
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.EnableAuthenticator#POST
+  kind: controller-action
+  method: POST
+  route: /Manage/EnableAuthenticator
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.ExternalLogins#GET
+  kind: controller-action
+  method: GET
+  route: /Manage/ExternalLogins
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.GenerateRecoveryCodes#POST
+  kind: controller-action
+  method: POST
+  route: /Manage/GenerateRecoveryCodes
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.GenerateRecoveryCodesWarning#GET
+  kind: controller-action
+  method: GET
+  route: /Manage/GenerateRecoveryCodesWarning
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.LinkLogin#POST
+  kind: controller-action
+  method: POST
+  route: /Manage/LinkLogin
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.LinkLoginCallback#GET
+  kind: controller-action
+  method: GET
+  route: /Manage/LinkLoginCallback
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.MyAccount#GET
+  kind: controller-action
+  method: GET
+  route: /Manage/MyAccount
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.MyAccount#POST
+  kind: controller-action
+  method: POST
+  route: /Manage/MyAccount
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.RemoveLogin#POST
+  kind: controller-action
+  method: POST
+  route: /Manage/RemoveLogin
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.ResetAuthenticator#POST
+  kind: controller-action
+  method: POST
+  route: /Manage/ResetAuthenticator
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.ResetAuthenticatorWarning#GET
+  kind: controller-action
+  method: GET
+  route: /Manage/ResetAuthenticatorWarning
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.SendVerificationEmail#POST
+  kind: controller-action
+  method: POST
+  route: /Manage/SendVerificationEmail
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.SetPassword#GET
+  kind: controller-action
+  method: GET
+  route: /Manage/SetPassword
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.SetPassword#POST
+  kind: controller-action
+  method: POST
+  route: /Manage/SetPassword
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.ShowRecoveryCodes#GET
+  kind: controller-action
+  method: GET
+  route: /Manage/ShowRecoveryCodes
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:ManageController@Controllers.TwoFactorAuthentication#GET
+  kind: controller-action
+  method: GET
+  route: /Manage/TwoFactorAuthentication
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:OrderController@Controllers.Detail#GET
+  kind: controller-action
+  method: GET
+  route: /Order/Detail/{orderId}
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 2
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Order
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:OrderController@Controllers.MyOrders#GET
+  kind: controller-action
+  method: GET
+  route: /Order/MyOrders
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 2
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Order
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: controller-action:UserController@Controllers.GetCurrentUser#GET
+  kind: controller-action
+  method: GET
+  route: /User
+  identity: complete
+  signal_bearing: true
+  observed:
+    authorisation:
+    - Authorize on member
+    - AllowAnonymous on member
+    argument_symbols: []
+    identity_checks: 3
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+- id: controller-action:UserController@Controllers.Logout#POST
+  kind: controller-action
+  method: POST
+  route: /User/Logout
+  identity: complete
+  signal_bearing: true
+  observed:
+    authorisation:
+    - Authorize on member
+    - AllowAnonymous on member
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+- id: razor-page-handler:CheckoutModel@Basket.OnGet#GET
+  kind: razor-page-handler
+  method: GET
+  route: /Basket/Checkout
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 3
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Order
+    written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    possibly_written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Order
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: razor-page-handler:CheckoutModel@Basket.OnPost#POST
+  kind: razor-page-handler
+  method: POST
+  route: /Basket/Checkout
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 3
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Order
+    written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    possibly_written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Order
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: razor-page-handler:ConfirmEmailModel@Account.OnGetAsync#GET
+  kind: razor-page-handler
+  method: GET
+  route: /Identity/Account/ConfirmEmail
+  identity: complete
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AllowAnonymous on type
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+- id: razor-page-handler:EditCatalogItemModel@Admin.OnGet#GET
+  kind: razor-page-handler
+  method: GET
+  route: /Admin/EditCatalogItem
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type (Roles=Administrators)
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: razor-page-handler:EditCatalogItemModel@Admin.OnPostAsync#POST
+  kind: razor-page-handler
+  method: POST
+  route: /Admin/EditCatalogItem
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type (Roles=Administrators)
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: razor-page-handler:ErrorModel@Pages.OnGet#GET
+  kind: razor-page-handler
+  method: GET
+  route: /Error
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation: []
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: razor-page-handler:IndexModel@Admin.(render)#GET
+  kind: razor-page-handler
+  method: GET
+  route: /Admin/Index
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type (Roles=Administrators)
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: razor-page-handler:IndexModel@Basket.OnGet#GET
+  kind: razor-page-handler
+  method: GET
+  route: /Basket/Index
+  identity: complete
+  signal_bearing: true
+  observed:
+    authorisation: []
+    argument_symbols: []
+    identity_checks: 3
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    possibly_written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+- id: razor-page-handler:IndexModel@Basket.OnPost#POST
+  kind: razor-page-handler
+  method: POST
+  route: /Basket/Index
+  identity: complete
+  signal_bearing: true
+  observed:
+    authorisation: []
+    argument_symbols: []
+    identity_checks: 3
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    possibly_written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+- id: razor-page-handler:IndexModel@Basket.OnPostUpdate#POST
+  kind: razor-page-handler
+  method: POST
+  route: /Basket/Index?handler=Update
+  identity: complete
+  signal_bearing: true
+  observed:
+    authorisation: []
+    argument_symbols: []
+    identity_checks: 3
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    possibly_written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+- id: razor-page-handler:IndexModel@Pages.OnGet#GET
+  kind: razor-page-handler
+  method: GET
+  route: /Index
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation: []
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogBrand
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogType
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: razor-page-handler:LoginModel@Account.OnGetAsync#GET
+  kind: razor-page-handler
+  method: GET
+  route: /Identity/Account/Login
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - AllowAnonymous on type
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: razor-page-handler:LoginModel@Account.OnPostAsync#POST
+  kind: razor-page-handler
+  method: POST
+  route: /Identity/Account/Login
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - AllowAnonymous on type
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: razor-page-handler:LogoutModel@Account.OnGet#GET
+  kind: razor-page-handler
+  method: GET
+  route: /Identity/Account/Logout
+  identity: complete
+  signal_bearing: true
+  observed:
+    authorisation: []
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+- id: razor-page-handler:LogoutModel@Account.OnPost#POST
+  kind: razor-page-handler
+  method: POST
+  route: /Identity/Account/Logout
+  identity: complete
+  signal_bearing: true
+  observed:
+    authorisation: []
+    argument_symbols: []
+    identity_checks: 1
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+- id: razor-page-handler:PrivacyModel@Pages.OnGet#GET
+  kind: razor-page-handler
+  method: GET
+  route: /Privacy
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation: []
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: razor-page-handler:RegisterModel@Account.OnGet#GET
+  kind: razor-page-handler
+  method: GET
+  route: /Identity/Account/Register
+  identity: complete
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AllowAnonymous on type
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+- id: razor-page-handler:RegisterModel@Account.OnPostAsync#POST
+  kind: razor-page-handler
+  method: POST
+  route: /Identity/Account/Register
+  identity: complete
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AllowAnonymous on type
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+- id: razor-page-handler:SuccessModel@Basket.OnGet#GET
+  kind: razor-page-handler
+  method: GET
+  route: /Basket/Success
+  identity: complete
+  signal_bearing: false
+  observed:
+    authorisation:
+    - Authorize on type
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: view-component:Basket@BasketComponent.InvokeAsync#view-component
+  kind: view-component
+  method: view-component
+  route: (invoked from a Razor view the reader does not read, CG-R-78)
+  identity: complete
+  signal_bearing: true
+  observed:
+    authorisation: []
+    argument_symbols: []
+    identity_checks: 3
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    written: []
+    possibly_written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate.Basket
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+- id: fastendpoints:AuthenticateEndpoint@AuthEndpoints.(type)#POST
+  kind: fastendpoints
+  method: POST
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AllowAnonymous(..) called in AuthenticateEndpoint.#ctor, AuthenticateEndpoint.Configure
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: POST
+    route: api/authenticate
+    file: src/PublicApi/AuthEndpoints/AuthenticateEndpoint.cs:21
+- id: fastendpoints:CatalogBrandListEndpoint@CatalogBrandEndpoints.(type)#GET
+  kind: fastendpoints
+  method: GET
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: false
+  observed:
+    authorisation:
+    - AllowAnonymous(..) called in CatalogBrandListEndpoint.#ctor, CatalogBrandListEndpoint.Configure
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogBrand
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: GET
+    route: api/catalog-brands
+    file: src/PublicApi/CatalogBrandEndpoints/CatalogBrandListEndpoint.cs:19
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: fastendpoints:CatalogItemGetByIdEndpoint@CatalogItemEndpoints.(type)#GET
+  kind: fastendpoints
+  method: GET
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AllowAnonymous(..) called in CatalogItemGetByIdEndpoint.#ctor, CatalogItemGetByIdEndpoint.Configure
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: GET
+    route: api/catalog-items/{catalogItemId}
+    file: src/PublicApi/CatalogItemEndpoints/CatalogItemGetByIdEndpoint.cs:19
+- id: fastendpoints:CatalogItemListPagedEndpoint@CatalogItemEndpoints.(type)#GET
+  kind: fastendpoints
+  method: GET
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AllowAnonymous(..) called in CatalogItemListPagedEndpoint.#ctor, CatalogItemListPagedEndpoint.Configure
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: GET
+    route: api/catalog-items
+    file: src/PublicApi/CatalogItemEndpoints/CatalogItemListPagedEndpoint.cs:22
+- id: fastendpoints:CatalogTypeListEndpoint@CatalogTypeEndpoints.(type)#GET
+  kind: fastendpoints
+  method: GET
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: false
+  observed:
+    authorisation:
+    - AllowAnonymous(..) called in CatalogTypeListEndpoint.#ctor, CatalogTypeListEndpoint.Configure
+    argument_symbols: []
+    identity_checks: 0
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogType
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: GET
+    route: api/catalog-types
+    file: src/PublicApi/CatalogTypeEndpoints/CatalogTypeListEndpoint.cs:19
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: fastendpoints:CreateCatalogItemEndpoint@CatalogItemEndpoints.(type)#POST
+  kind: fastendpoints
+  method: POST
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in CreateCatalogItemEndpoint.#ctor, CreateCatalogItemEndpoint.Configure
+    - Roles(..) called in CreateCatalogItemEndpoint.#ctor, CreateCatalogItemEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.PRODUCT_MANAGERS
+    identity_checks: 0
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: POST
+    route: api/catalog-items
+    file: src/PublicApi/CatalogItemEndpoints/CreateCatalogItemEndpoint.cs:21
+- id: fastendpoints:CreateRoleEndpoint@RoleManagementEndpoints.(type)#POST
+  kind: fastendpoints
+  method: POST
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: false
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in CreateRoleEndpoint.#ctor, CreateRoleEndpoint.Configure
+    - Roles(..) called in CreateRoleEndpoint.#ctor, CreateRoleEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: POST
+    route: api/roles
+    file: src/PublicApi/RoleManagementEndpoints/CreateRoleEndpoint.cs:16
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: fastendpoints:CreateUserEndpoint@UserManagementEndpoints.(type)#POST
+  kind: fastendpoints
+  method: POST
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: false
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in CreateUserEndpoint.#ctor, CreateUserEndpoint.Configure
+    - Roles(..) called in CreateUserEndpoint.#ctor, CreateUserEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    - F:Microsoft.eShopWeb.ApplicationCore.Constants.AuthorizationConstants.DEFAULT_PASSWORD
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: POST
+    route: api/users
+    file: src/PublicApi/UserManagementEndpoints/CreateUserEndpoint.cs:18
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: fastendpoints:DeleteCatalogItemEndpoint@CatalogItemEndpoints.(type)#DELETE
+  kind: fastendpoints
+  method: DELETE
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: false
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in DeleteCatalogItemEndpoint.#ctor, DeleteCatalogItemEndpoint.Configure
+    - Roles(..) called in DeleteCatalogItemEndpoint.#ctor, DeleteCatalogItemEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.PRODUCT_MANAGERS
+    identity_checks: 0
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: DELETE
+    route: api/catalog-items/{catalogItemId}
+    file: src/PublicApi/CatalogItemEndpoints/DeleteCatalogItemEndpoint.cs:19
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: fastendpoints:DeleteRoleEndpoint@RoleManagementEndpoints.(type)#DELETE
+  kind: fastendpoints
+  method: DELETE
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in DeleteRoleEndpoint.#ctor, DeleteRoleEndpoint.Configure
+    - Roles(..) called in DeleteRoleEndpoint.#ctor, DeleteRoleEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: DELETE
+    route: api/roles/{roleId}
+    file: src/PublicApi/RoleManagementEndpoints/DeleteRoleEndpoint.cs:18
+- id: fastendpoints:DeleteUserEndpoint@UserManagementEndpoints.(type)#DELETE
+  kind: fastendpoints
+  method: DELETE
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in DeleteUserEndpoint.#ctor, DeleteUserEndpoint.Configure
+    - Roles(..) called in DeleteUserEndpoint.#ctor, DeleteUserEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: DELETE
+    route: api/users/{userId}
+    file: src/PublicApi/UserManagementEndpoints/DeleteUserEndpoint.cs:16
+- id: fastendpoints:DeleteUserFromRoleEndpoint@RoleMembershipEndpoints.(type)#DELETE
+  kind: fastendpoints
+  method: DELETE
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in DeleteUserFromRoleEndpoint.#ctor, DeleteUserFromRoleEndpoint.Configure
+    - Roles(..) called in DeleteUserFromRoleEndpoint.#ctor, DeleteUserFromRoleEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: DELETE
+    route: api/roles/{RoleId}/members/{UserId}
+    file: src/PublicApi/RoleMembershipEndpoints/DeleteUserFromRoleEndpoint.cs:16
+- id: fastendpoints:RoleGetByIdEndpoint@RoleManagementEndpoints.(type)#GET
+  kind: fastendpoints
+  method: GET
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: false
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in RoleGetByIdEndpoint.#ctor, RoleGetByIdEndpoint.Configure
+    - Roles(..) called in RoleGetByIdEndpoint.#ctor, RoleGetByIdEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: GET
+    route: api/roles/{roleId}
+    file: src/PublicApi/RoleManagementEndpoints/RoleGetByIdEndpoint.cs:15
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: fastendpoints:RoleListEndpoint@RoleManagementEndpoints.(type)#GET
+  kind: fastendpoints
+  method: GET
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: false
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in RoleListEndpoint.#ctor, RoleListEndpoint.Configure
+    - Roles(..) called in RoleListEndpoint.#ctor, RoleListEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: GET
+    route: api/roles
+    file: src/PublicApi/RoleManagementEndpoints/RoleListEndpoint.cs:16
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: fastendpoints:RoleMembershipGetByNameEndpoint@RoleMembershipEndpoints.(type)#GET
+  kind: fastendpoints
+  method: GET
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: false
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in RoleMembershipGetByNameEndpoint.#ctor, RoleMembershipGetByNameEndpoint.Configure
+    - Roles(..) called in RoleMembershipGetByNameEndpoint.#ctor, RoleMembershipGetByNameEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: GET
+    route: api/roles/{roleName}/members
+    file: src/PublicApi/RoleMembershipEndpoints/RoleMembershipGetByNameEndpoint.cs:17
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: fastendpoints:SaveRolesForUserEndpoint@UserManagementEndpoints.(type)#PUT
+  kind: fastendpoints
+  method: PUT
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in SaveRolesForUserEndpoint.#ctor, SaveRolesForUserEndpoint.Configure
+    - Roles(..) called in SaveRolesForUserEndpoint.#ctor, SaveRolesForUserEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: PUT
+    route: api/users/{userId}/roles
+    file: src/PublicApi/UserManagementEndpoints/SaveRolesForUserEndpoint.cs:18
+- id: fastendpoints:UpdateCatalogItemEndpoint@CatalogItemEndpoints.(type)#PUT
+  kind: fastendpoints
+  method: PUT
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in UpdateCatalogItemEndpoint.#ctor, UpdateCatalogItemEndpoint.Configure
+    - Roles(..) called in UpdateCatalogItemEndpoint.#ctor, UpdateCatalogItemEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.PRODUCT_MANAGERS
+    identity_checks: 0
+  facts_by_proxy:
+    read:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    written:
+    - T:Microsoft.eShopWeb.ApplicationCore.Entities.CatalogItem
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: PUT
+    route: api/catalog-items
+    file: src/PublicApi/CatalogItemEndpoints/UpdateCatalogItemEndpoint.cs:20
+- id: fastendpoints:UpdateRoleEndpoint@RoleManagementEndpoints.(type)#PUT
+  kind: fastendpoints
+  method: PUT
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: false
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in UpdateRoleEndpoint.#ctor, UpdateRoleEndpoint.Configure
+    - Roles(..) called in UpdateRoleEndpoint.#ctor, UpdateRoleEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: PUT
+    route: api/roles
+    file: src/PublicApi/RoleManagementEndpoints/UpdateRoleEndpoint.cs:15
+  default_if_unnamed: reject — not ratified; no intent-holder available (CG-R-115)
+- id: fastendpoints:UpdateRoleEndpoint@UserManagementEndpoints.(type)#PUT
+  kind: fastendpoints
+  method: PUT
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in UpdateRoleEndpoint.#ctor, UpdateRoleEndpoint.Configure
+    - Roles(..) called in UpdateRoleEndpoint.#ctor, UpdateRoleEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: PUT
+    route: api/users
+    file: src/PublicApi/UserManagementEndpoints/UpdateUserEndpoint.cs:17
+- id: fastendpoints:UserGetByIdEndpoint@UserManagementEndpoints.(type)#GET
+  kind: fastendpoints
+  method: GET
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in UserGetByIdEndpoint.#ctor, UserGetByIdEndpoint.Configure
+    - Roles(..) called in UserGetByIdEndpoint.#ctor, UserGetByIdEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: GET
+    route: api/users/{userId}
+    file: src/PublicApi/UserManagementEndpoints/UserGetByIdEndpoint.cs:18
+- id: fastendpoints:UserGetByUserNameEndpoint@UserManagementEndpoints.(type)#GET
+  kind: fastendpoints
+  method: GET
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in UserGetByUserNameEndpoint.#ctor, UserGetByUserNameEndpoint.Configure
+    - Roles(..) called in UserGetByUserNameEndpoint.#ctor, UserGetByUserNameEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: GET
+    route: api/users/name/{userName}
+    file: src/PublicApi/UserManagementEndpoints/UserGetByUserNameEndpoint.cs:18
+- id: fastendpoints:UserGetRolesByIdEndpoint@UserManagementEndpoints.(type)#GET
+  kind: fastendpoints
+  method: GET
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in UserGetRolesByIdEndpoint.#ctor, UserGetRolesByIdEndpoint.Configure
+    - Roles(..) called in UserGetRolesByIdEndpoint.#ctor, UserGetRolesByIdEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: GET
+    route: api/users/{userId}/roles
+    file: src/PublicApi/UserManagementEndpoints/UserGetRolesByIdEndpoint.cs:18
+- id: fastendpoints:UserListEndpoint@UserManagementEndpoints.(type)#GET
+  kind: fastendpoints
+  method: GET
+  route: null
+  identity: 'incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification,
+    CG-R-114)'
+  signal_bearing: true
+  observed:
+    authorisation:
+    - AuthSchemes(..) called in UserListEndpoint.#ctor, UserListEndpoint.Configure
+    - Roles(..) called in UserListEndpoint.#ctor, UserListEndpoint.Configure
+    argument_symbols:
+    - F:BlazorShared.Authorization.Constants.Roles.ADMINISTRATORS
+    identity_checks: 0
+  facts_by_proxy:
+    read: []
+    written: []
+    possibly_written: []
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
+  route_supplied_at_ratification: null
+  route_source_reading_for_confirmation:
+    verb: GET
+    route: api/users
+    file: src/PublicApi/UserManagementEndpoints/UserListEndpoint.cs:18
+- id: health-check:MapHealthChecks#GET (home_page_health_check)
+  kind: health-check
+  method: GET
+  route: home_page_health_check
+  identity: hand-supplied — not derivable by the instrument (L-EP-1); enters under CG-R-112
+  signal_bearing: false
+  decision: reject
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: supplies no determination; liveness signal only
+  ruled_by: CG-R-112
+- id: health-check:MapHealthChecks#GET (api_health_check)
+  kind: health-check
+  method: GET
+  route: api_health_check
+  identity: hand-supplied — not derivable by the instrument (L-EP-1); enters under CG-R-112
+  signal_bearing: false
+  decision: reject
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: supplies no determination; liveness signal only
+  ruled_by: CG-R-112
+- id: fallback-file:MapFallbackToFile#GET (index.html (the BlazorAdmin client))
+  kind: fallback-file
+  method: GET
+  route: index.html (the BlazorAdmin client)
+  identity: hand-supplied — not derivable by the instrument (L-EP-1); enters under CG-R-112
+  signal_bearing: false
+  decision: null
+  act: null
+  settles: null
+  principal: null
+  expected_actor_kinds: null
+  population_order_of_magnitude: null
+  rate_order_of_magnitude: null
+  channel: null
+  supported_throughput:
+    sustained: null
+    peak: null
+    window: null
+    behaviour_above_limit: null
+  reject_reason: null
