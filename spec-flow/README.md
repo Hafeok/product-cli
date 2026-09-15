@@ -15,9 +15,33 @@ decision — it is the accountability boundary of the flow itself.
 | `candidates`, `map`, `check` | Rust | read-only over the store; the gate is a closed class set |
 | **`accept`**, **`reject`**, **`close`**, **`policy set`** | **Rust only** | each names a principal, and a machine cannot be one |
 
-The same subset is served over MCP by the `spec-mcp` binary: six delegable
-tools, and a dispatcher that refuses the withheld names even though the
-registry already omits them.
+## MCP
+
+Two servers, one subset. Both withhold every verb that names a principal.
+
+```bash
+specflow mcp --root . --spec target/debug/spec     # .NET — the complete surface
+spec-mcp .                                          # Rust — no .NET required
+```
+
+`specflow mcp` is the complete one because it adds **`spec_import`** natively.
+Its five read tools are *proxied* to the `spec` binary rather than
+reimplemented — one implementation of what the store means, so an MCP client
+and a CI run cannot be told different things about the same repo. Tools carry
+MCP annotations: `ReadOnly` on the reads, `Idempotent` on import.
+
+Its boundary is the strong one. The assembly contains no code that writes a
+closure, every call out goes through `SpecCli`, and `ForbiddenVerbs` throws on
+a withheld verb. The Rust server's is weaker and says so: a registry boundary,
+not a linkage one.
+
+**The agent is an MCP client too.** `GovernedTools.ConnectAsync` connects the
+slice-building `AIAgent` to `spec-mcp` and gives it those tools and nothing
+else. An agent holding only governed surfaces cannot escape through
+un-governed tooling; what it can still do is mismanage its own context, and
+that is an honest limit rather than a gap. The client re-filters
+`Server.Withheld` instead of trusting the server — a surface that trusts what
+it is handed inherits the other side's next mistake.
 
 A model may do everything up to the decision. It may not commit it.
 

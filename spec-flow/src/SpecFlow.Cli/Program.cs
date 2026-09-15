@@ -25,6 +25,7 @@ internal static class Program
             {
                 "import" => ImportCommand.Run(options),
                 "implement" => await ImplementCommand.RunAsync(options).ConfigureAwait(false),
+                "mcp" => await McpCommand.RunAsync(options).ConfigureAwait(false),
                 _ => Unknown(options.Verb),
             };
         }

@@ -17,6 +17,10 @@ internal sealed record Options(string Verb, IReadOnlyDictionary<string, string> 
                      Build a slice and open its act-time record. Always exits 3:
                      the closure is a principal's act, and this process is not one.
 
+          mcp        [--root <path>] [--spec <path>] [--source <path>]
+                     Serve the delegable verbs over MCP on stdio. accept, reject,
+                     close and policy set are withheld — each names a principal.
+
         Shared flags:
           --root <path>          repo holding .spec/ (default: .)
           --spec <path>          the spec binary (default: `spec` on PATH)

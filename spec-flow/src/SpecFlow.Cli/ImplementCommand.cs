@@ -3,6 +3,7 @@ using Microsoft.Agents.AI;
 using OpenAI;
 using OpenAI.Chat;
 using SpecFlow.Flow;
+using SpecFlow.Mcp;
 
 namespace SpecFlow.Cli;
 
@@ -20,7 +21,10 @@ internal static class ImplementCommand
         }
 
         var cli = new SpecCli(options.SpecBinary, options.Root);
-        var driver = new ImplementDriver(cli, BuildStrategy(options), ReviewAtTheTerminal);
+        var tools = await GovernedTools
+            .ConnectAsync(new SpecFlowOptions(options.Root, options.SpecBinary))
+            .ConfigureAwait(false);
+        var driver = new ImplementDriver(cli, BuildStrategy(options, tools), ReviewAtTheTerminal);
         var outcome = await driver
             .RunAsync(new ImplementRequest(slice, actRef, options.Get("by") ?? "agent@example.invalid"))
             .ConfigureAwait(false);
@@ -34,7 +38,9 @@ internal static class ImplementCommand
     /// still happens and still opens a record — the drafting is what is
     /// missing, not the write-back leg.
     /// </summary>
-    private static Func<ActRecordOpened, CancellationToken, ValueTask<SliceBuilt>> BuildStrategy(Options options)
+    private static Func<ActRecordOpened, CancellationToken, ValueTask<SliceBuilt>> BuildStrategy(
+        Options options,
+        IReadOnlyList<Microsoft.Extensions.AI.AITool> tools)
     {
         var endpoint = Environment.GetEnvironmentVariable("SPECFLOW_MODEL_ENDPOINT");
         if (string.IsNullOrWhiteSpace(endpoint))
@@ -55,6 +61,9 @@ internal static class ImplementCommand
             // every checkpoint its own unresumable lineage.
             Id = "slice-builder",
             Name = "SliceBuilder",
+            // The flow's own read surface, and nothing else. An agent holding
+            // only these can act only through governed surfaces.
+            ChatOptions = new() { Tools = [.. tools] },
         });
         return new AgentSliceBuilder(agent, options.Get("instructions")).BuildAsync;
     }

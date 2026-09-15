@@ -108,6 +108,32 @@ public sealed class SpecCli(string executable, string repoRoot)
         return new ActRecordOpened(recordId, request.Slice, request.ActRef);
     }
 
+    /// <summary>
+    /// Run a read verb with <c>--json</c> and return its parsed body.
+    /// </summary>
+    /// <remarks>
+    /// Exit 1 is a legitimate answer, not a failure: the gate found something.
+    /// Only exit 2 — could not run — is an error worth raising, which keeps a
+    /// red build from reaching a caller as a broken tool.
+    /// </remarks>
+    public async Task<System.Text.Json.JsonElement> ReadJsonAsync(
+        IReadOnlyList<string> arguments,
+        CancellationToken cancellationToken = default)
+    {
+        var withJson = arguments.Append("--json").ToList();
+        var result = await RunAsync(withJson, cancellationToken).ConfigureAwait(false);
+        if (result.ExitCode > 1)
+        {
+            throw new InvalidOperationException(
+                $"`spec {string.Join(' ', arguments)}` could not run: {result.Stderr}{result.Stdout}");
+        }
+        if (string.IsNullOrWhiteSpace(result.Stdout))
+        {
+            return System.Text.Json.JsonDocument.Parse("null").RootElement.Clone();
+        }
+        return System.Text.Json.JsonDocument.Parse(result.Stdout).RootElement.Clone();
+    }
+
     private static string? ReadJsonString(string json, string property)
     {
         using var document = System.Text.Json.JsonDocument.Parse(json);

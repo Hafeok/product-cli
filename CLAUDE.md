@@ -392,15 +392,30 @@ split across two runtimes at the flow's own accountability boundary:
   `specflow implement` is a MAF workflow graph that opens a record, builds a
   slice, puts a draft to a reviewer through a typed `RequestPort`, and hands
   over a `spec close …` command it cannot run. See `spec-flow/README.md`.
-- **MCP — `spec-mcp` (the `spec-mcp` binary).** A **strict subset, not a
-  mirror**: `spec_candidates`, `spec_map`, `spec_check`, `spec_records`,
-  `spec_policy_show`, `spec_implement`. `accept`, `reject`, `close` and
-  `policy set` are withheld — each names a principal. Held by the registry
-  (the tools are absent) *and* by a dispatcher that refuses the names in
-  `tools::WITHHELD`. Honest limit: this is a registry boundary, not a linkage
-  one — the process links `spec-core`, so it is weaker than the `spec-flow`
-  host's, where the code to write a closure is absent from the binary. Rides
-  `product-mcp`'s `ToolRegistry::with_tools` + stdio, same as `ddd serve`.
+- **MCP — two servers, one subset.** Both offer the delegable verbs only;
+  `accept`, `reject`, `close` and `policy set` are withheld, each because it
+  names a principal.
+  - **`spec-mcp` (Rust binary)** — in-process over the store, no .NET needed:
+    `spec_candidates`, `spec_map`, `spec_check`, `spec_records`,
+    `spec_policy_show`, `spec_implement`. Rides `product-mcp`'s
+    `ToolRegistry::with_tools` + stdio, same as `ddd serve`. Held by the
+    registry (the tools are absent) *and* a dispatcher that refuses
+    `tools::WITHHELD`. **Honest limit:** a registry boundary, not a linkage
+    one — the process links `spec-core`.
+  - **`specflow mcp` (.NET, MCP C# SDK 2.2.0)** — the **complete** delegable
+    surface, because it adds `spec_import` (Roslyn, native). Reads are
+    *proxied* to the `spec` binary through `SpecCli`, never reimplemented, so
+    an MCP client and a CI run cannot be told different things. Tools carry
+    MCP annotations (`ReadOnly` on the five reads, `Idempotent` on import).
+    Its boundary is the strong one: the assembly contains no code that writes
+    a closure, and `SpecCli.ForbiddenVerbs` throws if one is assembled.
+- **The agent consumes MCP too.** `GovernedTools.ConnectAsync` connects the
+  slice-building `AIAgent` to `spec-mcp` over stdio and hands it those tools
+  and nothing else — so escape through un-governed tooling is structurally
+  excluded, and it re-filters `Server.Withheld` rather than trusting what the
+  server hands back. A missing server degrades to no tools rather than
+  failing: the record, not the agent's reading, is what the write-back leg
+  depends on.
 - **`model` is `product domain`.** The flow's event-model verb is not
   reimplemented — product-core already owns the What (§3.1/§3.2), and a second
   event-model editor is exactly the duplication this file warns about. The
