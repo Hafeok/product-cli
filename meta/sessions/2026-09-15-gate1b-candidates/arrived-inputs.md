@@ -89,3 +89,10 @@ it as `ratification-A.yaml`, unchanged).
 **No table above is amended and no hash has changed.** One further input, filed verbatim:
 `inputs/rulings-cg-r-119-120.md`, sha256 `8f9b199df66a228a06b6a632fe354f1e3634860ad3fb6787e8d9a97cba1f6434` — rulings in force (CG-R-119 Emil's
 prediction; CG-R-120 the bound's form).
+
+---
+
+## Appended note — 2026-09-15, Gate B rulings
+
+**No table above is amended and no hash has changed.** One further input, filed verbatim:
+`inputs/rulings-cg-r-121-124.md`, sha256 `f7ff2a950cf243d234603c022f2df6d4d7ff3f114c521a15317b2000375bb114` — rulings in force (CG-R-121 … CG-R-124).
