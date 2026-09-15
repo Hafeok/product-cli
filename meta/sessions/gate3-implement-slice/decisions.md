@@ -1,6 +1,6 @@
 # Decisions — every point the specification does not settle, resolved by this session
 
-Thirty-six. Each is marked at its site in the source with the same `D-nn` tag
+Thirty-seven. Each is marked at its site in the source with the same `D-nn` tag
 (`grep -rn 'D-[0-9][0-9]' solution/src`), so the code and this record cannot drift.
 
 **INVENTED** = the specification is silent and this session supplied something.
@@ -49,6 +49,7 @@ that is the finding.
 | D-33 | DECIDED | **`IPlaceOrderHandler` resolves to the unroled decorator, not to the handler.** The controller's source text calls "exactly one type declaring the handler role" while at run time the first type it reaches declares none and does the forbidden persistence. One DI line. | `Program.cs` |
 | D-34 | DECIDED | `Program` made public so tests can drive the slice. | `Program.cs` |
 | D-35 | DECIDED | Tests are written at all, and are marked as evidence rather than as discharge of any `checked` allocation. | `tests/` |
+| D-37 | DECIDED | The handler entry point is synchronous; no `CancellationToken`. Predicted by the Gate A list (item 7), decided, and **not marked until the Gate C report caught it** — the one silent resolution in this run. | `Slices/PlaceOrder/PlaceOrderHandler.cs` |
 | D-36 | DECIDED | The mechanical profile check inspects the shape of the outcome type, not the emissions. A handler constructing a second event type and dropping it would pass. | `ProfileConformanceTests.cs` |
 
 ---

@@ -61,6 +61,14 @@ public interface IOrderIdentityMint
 /// check in this handler, and its absence is a reading of the specification rather than
 /// an oversight. The residual is live and someone carries it. Q-17.
 ///
+/// D-37 — DECIDED, AND CAUGHT LATE. The entry point is SYNCHRONOUS. Nothing in any
+/// input settles whether a handler is sync or async, whether a CancellationToken is
+/// propagated, or what an async decision would mean for "performs I/O directly". The
+/// Gate A expectation list predicted this one (item 7) and this session then decided it
+/// and failed to mark it; the omission was found while writing the Gate C report, not
+/// by any check. That failure mode — a predicted invention resolved silently — is
+/// exactly what the instrumentation exists to prevent, and it happened once here.
+///
 /// NOT SETTLED ANYWHERE, AND NOT DONE (see decisions.md):
 ///   * the cart is not emptied. `PlaceOrder` writes `OrderPlaced` and nothing else; the
 ///     act vocabulary gives `CartEmptied` to `EmptyCart`. So a placed order leaves its
