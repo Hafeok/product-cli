@@ -283,4 +283,4 @@ pub fn namespace_tail(t: &TypeFact) -> &str {
 
 #[cfg(test)]
 #[path = "csharp_candidates_tests.rs"]
-mod tests;
+pub(crate) mod tests;

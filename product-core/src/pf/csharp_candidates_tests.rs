@@ -89,7 +89,7 @@ fn references() -> serde_json::Value {
 }
 
 /// A solution with one of each kind, a test project, DI through `Main`, a repository write.
-fn inventory() -> Inventory {
+pub(crate) fn inventory() -> Inventory {
     let v = json!({
         "inventory_version": "6", "produced_by": {"tool": "t", "tool_version": "0"}, "produced_at": "now", "solution": {"path": "s.sln"},
         "projects": [

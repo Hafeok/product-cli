@@ -84,3 +84,39 @@ bindings:
   after: sha256:b83e5b6d318cdf96f8cf2a4627d7efcf205557262cff936fad4cec741358a73e
   base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
   hash: sha256:cde7525f0b506c4cb9981662c5a5a0b9eff792fb7368337bf67e78de5ab9f912
+- symbol: CsharpCommands
+  file: product-cli/src/commands/csharp.rs
+  before: absent
+  after: sha256:04b50ca275f6fedc32b379ed6297065766c51b6297ec52aa10a6333ad6616bce
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:caf9b70641d7e5413fb0c8092db9c361641c1b1e1b831e7a27673ac2de440f81
+- symbol: Candidates
+  file: product-cli/src/commands/csharp.rs
+  before: absent
+  after: sha256:04b50ca275f6fedc32b379ed6297065766c51b6297ec52aa10a6333ad6616bce
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:de3643996e36e9bb781959d731ddccc76ae74105302726f83a2ddfab9f3696a8
+- symbol: Delta
+  file: product-cli/src/commands/csharp.rs
+  before: absent
+  after: sha256:04b50ca275f6fedc32b379ed6297065766c51b6297ec52aa10a6333ad6616bce
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:1baf9bef11bf93935a00072309a73cb18c22c2e428bd59ff6fee83be0d0199ef
+- symbol: Inventory
+  file: product-cli/src/commands/csharp.rs
+  before: absent
+  after: sha256:04b50ca275f6fedc32b379ed6297065766c51b6297ec52aa10a6333ad6616bce
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:3452d7a62ed700f5ca6c885a3270f0e6da327658fd45e74db86ab36a5f0c57de
+- symbol: Reach
+  file: product-cli/src/commands/csharp.rs
+  before: absent
+  after: sha256:04b50ca275f6fedc32b379ed6297065766c51b6297ec52aa10a6333ad6616bce
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:a17fca464e3ad3d1079e89e58184c404191b5d421a743a89541c795ad0232b26
+- symbol: Regions
+  file: product-cli/src/commands/csharp.rs
+  before: absent
+  after: sha256:04b50ca275f6fedc32b379ed6297065766c51b6297ec52aa10a6333ad6616bce
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:302594e10535177ccbb7afea8379e4baa6a57ee6f72d97b8a01a69047529c7c3

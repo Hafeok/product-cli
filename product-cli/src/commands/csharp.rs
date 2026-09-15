@@ -17,6 +17,8 @@ use product_core::pf::csharp_candidates_report::{candidates, EntryPointTruth};
 use product_core::pf::csharp_delta::{delta, render_delta, DeltaOptions};
 use product_core::pf::csharp_inventory::{load_inventory, schema_findings, Inventory};
 use product_core::pf::csharp_reach::{reach, render_reach, ReachOptions, Root};
+use product_core::pf::csharp_regions::{regions, Ratification};
+use product_core::pf::csharp_regions_render::render_regions;
 use product_core::pf::eventmodel::load_event_model;
 use serde_json::json;
 
@@ -76,6 +78,18 @@ pub enum CsharpCommands {
         #[arg(long = "ground-truth")]
         ground_truth: Option<PathBuf>,
     },
+    /// The three-region delta over a ratified candidate set (Gate 1b): declared,
+    /// declarable, unstructured or no-facts-under-proxy per entry point, the
+    /// reachable/unresolved/isolated split over undeclared types with its
+    /// error bound, and §12.1 read against it — transport-derived, graded as
+    /// the worksheet is
+    Regions {
+        /// Path to the inventory JSON
+        file: PathBuf,
+        /// The filled ratification worksheet (YAML)
+        #[arg(long)]
+        ratification: PathBuf,
+    },
 }
 
 pub(crate) fn handle_csharp(cmd: CsharpCommands) -> CmdResult {
@@ -83,6 +97,7 @@ pub(crate) fn handle_csharp(cmd: CsharpCommands) -> CmdResult {
         CsharpCommands::Candidates { file, ground_truth } => candidates_cmd(&file, ground_truth.as_deref()),
         CsharpCommands::Inventory { file } => inventory_cmd(&file),
         CsharpCommands::Reach { file, roots, track, ground_truth } => reach_cmd(&file, &roots, &track, ground_truth.as_deref()),
+        CsharpCommands::Regions { file, ratification } => regions_cmd(&file, &ratification),
         CsharpCommands::Delta { file, event_model, slice_attribute, realises_fact_attribute } => {
             delta_cmd(&file, &event_model, DeltaOptions { slice_attribute, realises_fact_attribute })
         }
@@ -172,6 +187,15 @@ fn candidates_cmd(file: &Path, ground_truth: Option<&Path>) -> CmdResult {
     };
     let report = candidates(&inv, truth.as_ref());
     let text = render_candidates(&report);
+    let json = serde_json::to_value(&report).map_err(|e| ProductError::Internal(e.to_string()))?;
+    Ok(Output::both(text, json))
+}
+
+fn regions_cmd(file: &Path, ratification: &Path) -> CmdResult {
+    let inv = load(file)?;
+    let rat: Ratification = serde_yaml::from_str(&read(ratification)?).map_err(|e| ProductError::ConfigError(format!("ratification {}: {e}", ratification.display())))?;
+    let report = regions(&inv, &rat);
+    let text = render_regions(&report);
     let json = serde_json::to_value(&report).map_err(|e| ProductError::Internal(e.to_string()))?;
     Ok(Output::both(text, json))
 }

@@ -308,8 +308,13 @@ The binding connects the domain state change binding's act vocabulary (`eventmod
   P-EP-4, **unfilled** actor/population/rate slots (CG-R-108) and the supported-throughput
   determination **empty** (CG-R-109). It never names an act (CG-R-106). A candidate whose
   route the reader cannot see keeps its place with `identity: incomplete — missing: route`
-  (CG-R-114). Every figure is transport-derived. Not built (Gate B/C): the delta over
-  accepted candidates.
+  (CG-R-114). Every figure is transport-derived. **Gate B:** `product csharp regions <inventory>
+  --ratification <filled worksheet>` builds the act vocabulary from the accepted rows (positions by
+  P-EP-4), classifies every undeclared entry point *declarable* / *unstructured* /
+  *no-facts-under-proxy* by CG-R-52's separator per type, and reports the reachable / unresolved /
+  isolated split over undeclared types with its error bound (CG-R-89) and §12.1 read against it
+  (`pf/csharp_regions*.rs`); graded as the worksheet is (`stand-in`, CG-R-115). Not built (Gate C):
+  the report.
 
 Rules the code encodes: the reader never pattern-matches names, namespaces or base types —
 attributes and framework APIs are matched by resolved symbol id; no output lists symbols as

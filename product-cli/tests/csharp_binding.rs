@@ -109,3 +109,14 @@ fn candidates_json_carries_proxies_limits_and_empty_slots() {
     assert_eq!(v["limits"].as_array().map(Vec::len), Some(4));
     assert!(v["recall"].is_null());
 }
+
+#[test]
+fn regions_read_a_ratification_and_print_the_grade_first() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let rat = dir.path().join("ratification.yaml");
+    std::fs::write(&rat, "vocabulary_grade: stand-in (test)\ncandidates: []\n").expect("write");
+    let out = product().args(["csharp", "regions"]).arg(fixture("inventory.json")).arg("--ratification").arg(&rat).assert().success().get_output().stdout.clone();
+    let text = String::from_utf8_lossy(&out);
+    assert!(text.starts_with("grade: stand-in (test)"), "{text}");
+    assert!(text.contains("acts (ratified): 0") && text.contains("§12.1:"), "{text}");
+}
