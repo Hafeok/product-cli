@@ -1,0 +1,6 @@
+gate A instrument record — 2026-09-15T07:53:52Z
+commit: ca58cd9d60d607149a2eb109dacd880bb1a87955 (working tree: 0 uncommitted paths, captured before this record was created)
+binary: target/release/product sha256 86225ad84edaf43f
+inventory: A 6 sha256 3197d7e07c5a0b46 (the run-8 artefact; reader not re-run)
+ground truth: f78dcfa49e0dd294
+regression: run-8 A primary reach output byte-identical
