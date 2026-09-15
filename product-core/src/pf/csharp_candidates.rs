@@ -155,6 +155,10 @@ pub struct Candidate {
     pub method: String,
     pub path: String,
     pub path_source: String,
+    /// `complete`, or `incomplete — missing: <field>`: a candidate without its
+    /// route keeps its place, labelled; the route is supplied by hand at
+    /// ratification, from the source (CG-R-114).
+    pub identity: String,
     pub observed: Observed,
     pub path_types: Vec<String>,
     pub path_edges: BTreeMap<String, usize>,

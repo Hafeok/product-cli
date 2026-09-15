@@ -35,7 +35,7 @@ fn opt(o: &Option<String>) -> &str {
 }
 
 fn render_candidate(c: &Candidate) -> String {
-    let mut s = format!("[{}] {}.{}  {}  {}\n    path source:  {}\n", c.kind.label(), short(&c.type_id), c.member, c.method, c.path, c.path_source);
+    let mut s = format!("[{}] {}.{}  {}  {}\n    path source:  {}\n    identity:     {}\n", c.kind.label(), short(&c.type_id), c.member, c.method, c.path, c.path_source, c.identity);
     let auth = if c.observed.authorisation.is_empty() { "(none found)".to_string() } else { c.observed.authorisation.join("; ") };
     s.push_str(&format!("    observed:     {auth}; anti-forgery: {}; identity checks: {}", if c.observed.anti_forgery { "yes" } else { "no" }, c.observed.identity_checks.len()));
     if !c.observed.identity_checks.is_empty() {

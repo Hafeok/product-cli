@@ -54,3 +54,19 @@ here; only the extended file arrived, and the hash above is the one this session
 | Rulings CG-R-99 … CG-R-104 | Emil | nothing — complied with as the prompt restates them |
 | Ratification of the candidate set | Emil | Gate B |
 | Slice declarations against accepted candidates | Emil (naming is ratification, CG-R-106) | Gate B |
+
+---
+
+## Appended note — 2026-09-15, rulings CG-R-111 … CG-R-115
+
+**No table above is amended and no hash has changed.** One further input, filed verbatim:
+
+| File | sha256 | Lines | Status |
+|---|---|---|---|
+| `inputs/rulings-cg-r-111-115.md` | `331a2f5792dcb07f3a44c239d9fd728b08ebae690c0eed773cbc4fdb2d3030dc` | 81 | **rulings in force** — CG-R-111 … CG-R-115 |
+
+**CG-R-111 applied here, by appended note not amendment:** the received hash `565cc7cc…` of
+`inputs/rulings-cg-r-105-110.md` is authoritative; that file's title ("105 … 108") and its
+register line are known to be behind its body ("105 … 110") — Emil's, corrected by this note.
+**Still not arrived:** rulings CG-R-99 … CG-R-104, which CG-R-111 says are supplied before
+Gate B. Gate B does not start without them.

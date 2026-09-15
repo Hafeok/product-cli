@@ -306,8 +306,10 @@ The binding connects the domain state change binding's act vocabulary (`eventmod
   transport name, path, method, the observed authorisation positions, the path (its own walk
   through the host's registration sites, O-17 off — `csharp_walk::closure_from`), facts by proxy
   P-EP-4, **unfilled** actor/population/rate slots (CG-R-108) and the supported-throughput
-  determination **empty** (CG-R-109). It never names an act (CG-R-106). Every figure is
-  transport-derived. Not built (Gate B/C): the delta over accepted candidates.
+  determination **empty** (CG-R-109). It never names an act (CG-R-106). A candidate whose
+  route the reader cannot see keeps its place with `identity: incomplete — missing: route`
+  (CG-R-114). Every figure is transport-derived. Not built (Gate B/C): the delta over
+  accepted candidates.
 
 Rules the code encodes: the reader never pattern-matches names, namespaces or base types —
 attributes and framework APIs are matched by resolved symbol id; no output lists symbols as

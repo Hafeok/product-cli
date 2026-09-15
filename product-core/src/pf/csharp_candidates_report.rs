@@ -113,14 +113,15 @@ pub fn candidates(inv: &Inventory, truth: Option<&EntryPointTruth>) -> Candidate
     }
     let blind_spot = inv.projects.iter().filter(|p| !p.is_test()).fold(BlindSpot::default(), |b, p| BlindSpot { razor_files: b.razor_files + p.razor_files, razor_inject_directives: b.razor_inject_directives + p.razor_inject_directives });
     let recall = truth.map(|t| recall(&ix, t, &s.candidates));
-    let limits = limits(inv, &s, &blind_spot);
+    let overlaps = overlaps(&s.candidates);
+    let limits = limits(inv, &s, &blind_spot, &overlaps);
     CandidateReport {
         vocabulary: VOCABULARY,
         criterion: CRITERION,
         hosts: h.rows,
         count: s.candidates.len(),
         by_kind,
-        overlaps: overlaps(&s.candidates),
+        overlaps,
         proxies: proxies(&s),
         limits,
         blind_spot,
@@ -157,7 +158,7 @@ fn proxies(s: &Seeds) -> Vec<ProxyIncidence> {
     ]
 }
 
-fn limits(inv: &Inventory, s: &Seeds, blind: &BlindSpot) -> Vec<Limit> {
+fn limits(inv: &Inventory, s: &Seeds, blind: &BlindSpot, o: &Overlaps) -> Vec<Limit> {
     let builder_calls = inv.references.iter().filter(|r| r.to.starts_with("M:Microsoft.AspNetCore.Builder.")).count();
     let fe = s.candidates.iter().filter(|c| c.kind == Kind::FastEndpoints).count();
     vec![
@@ -175,6 +176,11 @@ fn limits(inv: &Inventory, s: &Seeds, blind: &BlindSpot) -> Vec<Limit> {
             id: "L-EP-3",
             limit: "Razor is not read (CG-R-78): custom @page templates, view-side component invocation, @inject",
             incidence: format!("{} razor files, {} @inject directives in production projects", blind.razor_files, blind.razor_inject_directives),
+        },
+        Limit {
+            id: "L-EP-4",
+            limit: "the path is type-granular beyond its first hop: a resolved dependency opens the whole implementing type, so handlers on one type reach the same set whatever they do; the overlap measure discriminates only across types, and a codebase whose acts live on shared types reads as fully merged",
+            incidence: format!("{} of {} overlapping pairs (Jaccard ≥ 0.5) are within one type", o.pairs.len() - o.cross_type_pairs.len(), o.pairs.len()),
         },
     ]
 }

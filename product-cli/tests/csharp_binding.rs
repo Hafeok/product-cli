@@ -106,6 +106,6 @@ fn candidates_json_carries_proxies_limits_and_empty_slots() {
     let v: serde_json::Value = serde_json::from_slice(&out).expect("json");
     assert_eq!(v["count"], 0);
     assert_eq!(v["proxies"].as_array().map(Vec::len), Some(4));
-    assert_eq!(v["limits"].as_array().map(Vec::len), Some(3));
+    assert_eq!(v["limits"].as_array().map(Vec::len), Some(4));
     assert!(v["recall"].is_null());
 }

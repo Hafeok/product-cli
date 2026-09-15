@@ -44,6 +44,7 @@ fn base(t: &TypeFact, spec: &Spec<'_>, roots: Vec<String>) -> Candidate {
         method: spec.method.to_string(),
         path: spec.path.to_string(),
         path_source: spec.path_source.to_string(),
+        identity: "complete".to_string(),
         observed: Observed { note: OBSERVED_NOTE, ..Default::default() },
         ..Default::default()
     }
@@ -88,6 +89,9 @@ fn controller(ix: &Index<'_>, t: &TypeFact, s: &mut Seeds) {
         let (path, path_source) = route(ix, t, m);
         let spec = Spec { kind: Kind::ControllerAction, member: &m.name, transport: "HTTP", method: &method, path: &path, path_source: &path_source };
         let mut c = base(t, &spec, with_roots(ix, t, m));
+        if path == "conventional" {
+            c.identity = "incomplete — missing: route (the conventional template is a call argument, L-EP-1; CG-R-114)".to_string();
+        }
         (c.observed.authorisation, c.observed.anti_forgery) = authorisation(ix, &t.id, Some(m));
         s.candidates.push(c);
     }
@@ -180,6 +184,7 @@ fn fast_endpoint(ix: &Index<'_>, t: &TypeFact, s: &mut Seeds) {
     let method = if verbs.is_empty() { "not read".to_string() } else { verbs.join("|") };
     let spec = Spec { kind: Kind::FastEndpoints, member: "(type)", transport: "HTTP", method: &method, path: "not read (L-EP-2)", path_source: "the route is an argument to the configuring call, which the reader does not emit (L-EP-2)" };
     let mut c = base(t, &spec, vec![t.id.clone()]);
+    c.identity = "incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)".to_string();
     (c.observed.authorisation, c.observed.anti_forgery) = authorisation(ix, &t.id, None);
     c.observed.authorisation.extend(auth.into_iter().map(|(call, members)| format!("{call}(..) called in {}", members.join(", "))));
     c.observed.argument_symbols = symbols;

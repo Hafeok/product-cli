@@ -1,0 +1,14 @@
+format: 2
+id: seam/rust/product-core-src-pf-csharp-candidates-render-rs
+boundary: contract surface of product-core/src/pf/csharp_candidates_render.rs
+verdict_knowledge: authored
+contract_location: product-core/src/pf/csharp_candidates_render.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: render_candidates
+  file: product-core/src/pf/csharp_candidates_render.rs
+  before: absent
+  after: sha256:f9a9fe0d4bc6a758c8188d1972e19ae19c9c9dca547c0e144c8e11fdfcddd40c
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:9f43e7ab198c3dcea6c7cc177eb81e5ccbf318b6c1322bb7b9bbb934763ccee6

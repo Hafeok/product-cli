@@ -1,0 +1,50 @@
+format: 2
+id: seam/rust/product-core-src-pf-csharp-candidates-seed-rs
+boundary: contract surface of product-core/src/pf/csharp_candidates_seed.rs
+verdict_knowledge: authored
+contract_location: product-core/src/pf/csharp_candidates_seed.rs
+obligations: []
+metadata: {}
+bindings:
+- symbol: seeds
+  file: product-core/src/pf/csharp_candidates_seed.rs
+  before: absent
+  after: sha256:bc7f30c6dc59b49dbbadc0fbeaa582fd8700464b931a2dc6d76dfb7e010ae458
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:8b7e5a1d7bc9ac8f8caa0151df4d38f37ce319feb9e438347aeaae82ce226159
+- symbol: short
+  file: product-core/src/pf/csharp_candidates_seed.rs
+  before: absent
+  after: sha256:bc7f30c6dc59b49dbbadc0fbeaa582fd8700464b931a2dc6d76dfb7e010ae458
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:6879474bbf25b11dd3de1baf7b20a2253575a496478516e4a1b52ce4d515e566
+- symbol: Seeds
+  file: product-core/src/pf/csharp_candidates_seed.rs
+  before: absent
+  after: sha256:bc7f30c6dc59b49dbbadc0fbeaa582fd8700464b931a2dc6d76dfb7e010ae458
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:8727e8418ce583a02d0a2dbed0c33c94959d97212f770c2d530afcfa9f25db03
+- symbol: candidates
+  file: product-core/src/pf/csharp_candidates_seed.rs
+  before: absent
+  after: sha256:bc7f30c6dc59b49dbbadc0fbeaa582fd8700464b931a2dc6d76dfb7e010ae458
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:30ac2ee5407b7eb685b9dfe152baa0a3a5cac660789b626978ea35f918e68842
+- symbol: excluded
+  file: product-core/src/pf/csharp_candidates_seed.rs
+  before: absent
+  after: sha256:bc7f30c6dc59b49dbbadc0fbeaa582fd8700464b931a2dc6d76dfb7e010ae458
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:7689b50f618a2f2fbbcc5d13034dc782e0fbd219e60e7f0a90c31e3ecf804316
+- symbol: handler_rule
+  file: product-core/src/pf/csharp_candidates_seed.rs
+  before: absent
+  after: sha256:bc7f30c6dc59b49dbbadc0fbeaa582fd8700464b931a2dc6d76dfb7e010ae458
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:1783701e0af9e7901625175961e83378481fa45dbd10fa45cd618e4de76c1803
+- symbol: invoke_rule
+  file: product-core/src/pf/csharp_candidates_seed.rs
+  before: absent
+  after: sha256:bc7f30c6dc59b49dbbadc0fbeaa582fd8700464b931a2dc6d76dfb7e010ae458
+  base_revision: d0f429741fd06e6d09d25937efcb61f440b94472
+  hash: sha256:40ca47474b325df17c177427a49f9d6ccd44eca30469737e5070109b61a8e962

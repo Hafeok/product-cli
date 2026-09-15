@@ -173,6 +173,9 @@ fn pages_view_components_endpoints_and_hosted_services() {
     let fe = r.candidates.iter().find(|c| c.kind == Kind::FastEndpoints).expect("endpoint");
     assert_eq!(fe.method, "POST");
     assert_eq!(fe.path, "not read (L-EP-2)");
+    assert!(fe.identity.starts_with("incomplete — missing: route"), "{}", fe.identity);
+    assert!(r.candidates.iter().filter(|c| c.kind != Kind::FastEndpoints).all(|c| c.identity == "complete"));
+    assert!(r.limits.iter().any(|l| l.id == "L-EP-4" && l.incidence.starts_with("1 of 1 overlapping pairs")), "{:?}", r.limits.iter().map(|l| &l.incidence).collect::<Vec<_>>());
     assert_eq!(fe.observed.authorisation, vec!["Roles(..) called in CreateOrderEndpoint.Configure"]);
     assert_eq!(fe.observed.argument_symbols, vec!["F:Web.Roles.ADMIN"]);
     assert!(r.candidates.iter().any(|c| c.kind == Kind::HostedService && c.type_id == "T:Web.Worker"));
