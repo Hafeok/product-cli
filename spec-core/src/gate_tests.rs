@@ -20,7 +20,13 @@ fn rejection(candidate: &str) -> Rejection {
 }
 
 fn store_with(acts: Vec<Act>, rejections: Vec<Rejection>) -> SpecStore {
-    SpecStore { records: Vec::new(), acts, rejections, inventory: Some(sample()) }
+    SpecStore {
+        records: Vec::new(),
+        acts,
+        rejections,
+        inventory: Some(sample()),
+        ..SpecStore::default()
+    }
 }
 
 fn classes(findings: &[Finding]) -> Vec<Class> {

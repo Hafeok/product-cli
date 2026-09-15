@@ -28,6 +28,7 @@ coupling §5 of the specification-flow PRD exists to break.
   records/<ulid>.yml  # one act-time record
   acts/<slug>.yml     # one ratified act
   rejections/<slug>.yml   # one filed refusal
+  policy/<ulid>.yml   # one version of the check policy, append-only
 ```
 
 One subject per file, named by its own id. Nothing is edited after it is
@@ -127,10 +128,55 @@ after the fact breaks its binding and fails `S007`.
 absence of an act: a principal who looked at an endpoint and said *this is not
 an act* has made exactly the decision the class exists to require.
 
+## 4b. The check policy
+
+`policy/<ulid>.yml` is a **determination, not a config file**. Versions are
+append-only and a change is a supersession, so three things follow:
+
+- *who lowered this, when, and on what basis* has an answer;
+- the old threshold stays readable beside the argument that justified it — a
+  policy loosened twice is evidence about the original claim, and editing one
+  in place would destroy exactly that;
+- project policy stays a determination rather than tool configuration.
+
+**The version in force is the tip of the supersession chain**, derived from
+`supersedes` and never from id order. A chain with two tips is forked: no
+ordering heuristic may pick a side, so the gate says so rather than quietly
+choosing one.
+
+Every policy verdict declares three things, and the file is rejected if any is
+missing:
+
+| Field | |
+|---|---|
+| `fires_when` | the condition, mechanically evaluable |
+| `basis` | why this threshold and not another |
+| `principal` | who answers for it |
+
+`principal.kind` is `human` or `team`. **There is no `machine` member**, and the
+restriction is inherited from the type rather than applied by a check — which
+is what makes it structural instead of instructed.
+
+`fires_when` is deliberately tiny: `count <op> <number>` or `percent <op>
+<number>`, with `op` one of `> >= < <= == !=`. A policy language rich enough to
+be interesting is one rich enough to hide a threshold in, and the point of the
+condition is that a reader can check it against the basis at a glance. A
+percentage condition over a metric with no population never fires — firing on
+an undefined figure would be a verdict about the absence of data.
+
+`basis_binds` carries `basis_digest(fires_when)` and is **not** filled in on
+the author's behalf. Moving a threshold must cost an edit at the basis; the
+gate reports the digest to paste, the way `ledger verify` reports a version
+hash for a hand-authored file.
+
+**The default is structural only.** A project with no policy gets verdicts on
+broken things and nothing else. Shipping default thresholds would presume a
+basis nobody stated.
+
 ## 5. Verdict classes
 
-The set is **closed**. The store fails for a schema fault plus these seven
-classes and nothing else; adding an eighth is a change to this document, not a
+The set is **closed**. The store fails for a schema fault plus these eleven
+classes and nothing else; adding a twelfth is a change to this document, not a
 patch.
 
 | Class | Fails when |
@@ -142,8 +188,12 @@ patch.
 | `S005` | an entry point no ratified act covers, and no principal has refused |
 | `S006` | a record names an act that is not ratified |
 | `S007` | a ratification or refusal whose `binds` does not match its content |
+| `S008` | a policy verdict that cannot be evaluated: a missing field, an unparsable condition, or a metric that does not exist (**B-1**) |
+| `S009` | a basis that does not bind the threshold it justifies (**B-2**) |
+| `S010` | one argument repeated — two verdicts in a policy carrying the same basis (**B-3**) |
+| `S011` | a policy that lists nothing it deliberately does not gate |
 
-All seven are **structural**. None is configurable by project policy: a project
+All eleven are **structural**. None is configurable by project policy: a project
 that could switch `S001` off would have a tool that reports what it was told to
 report.
 
@@ -159,6 +209,24 @@ policy — this is the line to change, and it is one line.
 `S006` is not judged until at least one act is ratified. A repo mid-adoption
 is not a broken one, and failing every record in it would make the first
 `implement` impossible to run.
+
+**`S008`–`S011` are about the policy, not the project's thresholds.** A policy
+whose basis does not bind is malformed, the same class as a dangling
+reference; what the project chooses to gate is its own business. The two are
+reported apart so a reader can always tell which is which.
+
+**`S009` and `S010`, declared as a proxy with their divergence.** The proxy is
+*basis present, bound to its threshold, not duplicated*. The original predicate
+is *the threshold was reasoned rather than reached for*. The known divergence:
+a padded, unique basis bound to its threshold passes — *because we said so, at
+length* is admitted. Incidence unmeasured; no corpus exists. What `S009` does
+catch on day one is the degeneration path exactly: quietly lower a number and
+leave the argument that justified the old one.
+
+`S011` admits an explicit `not_gated_asserted_none: true` — the same shape as
+an `asserted-none` for an uncovered set. An *empty* `not_gated` with no
+assertion is rejected, because a policy listing what fires without listing what
+it deliberately does not is a coverage claim with no uncovered set.
 
 ## 5a. What reports rather than fails
 

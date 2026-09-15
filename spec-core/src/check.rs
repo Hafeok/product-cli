@@ -1,7 +1,7 @@
 //! The structural verdicts over a store of act-time records.
 //!
-//! The class set is closed at seven. A store fails for a schema fault plus
-//! `S001`–`S007`, never for an eighth thing a caller thought of: adding one is
+//! The class set is closed at eleven. A store fails for a schema fault plus
+//! `S001`–`S011`, never for a twelfth thing a caller thought of: adding one is
 //! a change to `docs/spec-flow-store-v1.md`, not a patch here. None is
 //! configurable, because a project that could switch `S001` off would have a
 //! tool that reports what it was told to report.
@@ -33,6 +33,15 @@ pub enum Class {
     S006,
     /// A ratification or refusal whose binding does not match its content.
     S007,
+    /// A policy verdict that cannot be evaluated: a missing field, an
+    /// unparsable condition, or a metric that does not exist.
+    S008,
+    /// A basis that does not bind the threshold it justifies.
+    S009,
+    /// One argument repeated: two verdicts in a policy carrying the same basis.
+    S010,
+    /// A policy that lists nothing it deliberately does not gate.
+    S011,
 }
 
 impl fmt::Display for Class {
@@ -45,6 +54,10 @@ impl fmt::Display for Class {
             Self::S005 => "S005",
             Self::S006 => "S006",
             Self::S007 => "S007",
+            Self::S008 => "S008",
+            Self::S009 => "S009",
+            Self::S010 => "S010",
+            Self::S011 => "S011",
         };
         f.write_str(code)
     }

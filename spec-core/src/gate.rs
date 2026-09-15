@@ -7,6 +7,9 @@
 use crate::act::{Act, Rejection};
 use crate::check::{self, Class, Finding};
 use crate::inventory::Inventory;
+use crate::metrics;
+use crate::policy::{self, Policy};
+use crate::policy_check::{self, PolicyFinding};
 use crate::record::ActRecord;
 
 /// Everything the flow has filed, plus what the last import observed.
@@ -16,6 +19,9 @@ pub struct SpecStore {
     pub acts: Vec<Act>,
     pub rejections: Vec<Rejection>,
     pub inventory: Option<Inventory>,
+    /// Every filed policy version. The one in force is derived from the
+    /// supersession chain, never from id order.
+    pub policy_versions: Vec<Policy>,
 }
 
 impl SpecStore {
@@ -27,6 +33,15 @@ impl SpecStore {
     pub fn is_unreviewed(&self, candidate_id: &str) -> bool {
         !self.rejections.iter().any(|r| r.candidate == candidate_id)
             && !self.acts.iter().any(|a| a.from_candidate.as_deref() == Some(candidate_id))
+    }
+
+    /// The policy in force, or `None` where a project has filed none.
+    ///
+    /// The default is structural only. A project with no policy gets verdicts
+    /// on broken things and nothing else, because shipping default thresholds
+    /// would presume a basis nobody stated.
+    pub fn policy_in_force(&self) -> std::result::Result<Option<&Policy>, Vec<&Policy>> {
+        policy::in_force(&self.policy_versions)
     }
 
     /// Acts claiming realisation at a given entry point.
@@ -43,7 +58,36 @@ pub fn judge_store(store: &SpecStore) -> Vec<Finding> {
     findings.extend(store.rejections.iter().flat_map(judge_rejection));
     findings.extend(judge_references(store));
     findings.extend(judge_drift(store));
+    findings.extend(judge_policy(store));
     findings
+}
+
+/// `S008`–`S011` over the policy in force.
+///
+/// A forked policy chain is itself a finding: no ordering heuristic may pick
+/// a side, so the caller is told rather than quietly given one of them.
+pub fn judge_policy(store: &SpecStore) -> Vec<Finding> {
+    match store.policy_in_force() {
+        Ok(None) => Vec::new(),
+        Ok(Some(policy)) => policy_check::judge_policy(policy, &metrics::compute(store)),
+        Err(tips) => vec![Finding::new(
+            Class::S008,
+            "policy",
+            &format!(
+                "the policy chain forks at {} tips ({}) — only a recorded supersession settles it",
+                tips.len(),
+                tips.iter().map(|p| p.id.as_str()).collect::<Vec<_>>().join(", ")
+            ),
+        )],
+    }
+}
+
+/// Run the project's own verdicts. Empty where no policy is in force.
+pub fn run_policy(store: &SpecStore) -> Vec<PolicyFinding> {
+    match store.policy_in_force() {
+        Ok(Some(policy)) => policy_check::run(policy, &metrics::compute(store)),
+        _ => Vec::new(),
+    }
 }
 
 /// `S002` and `S007` over one ratified act.

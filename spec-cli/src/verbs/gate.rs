@@ -1,13 +1,16 @@
 //! The CI gate, plus the join a restructuring work list comes from.
+//!
+//! Two classes of verdict, reported apart so a reader can always tell which is
+//! which. Structural verdicts say something is broken and are not
+//! configurable. Policy verdicts are the project's own, each with a threshold,
+//! a basis and a principal.
 
 use std::path::Path;
 
 use clap::Args;
 use product_core::error::Result;
 use serde_json::json;
-use spec_core::gate;
-use spec_core::map;
-use spec_core::store;
+use spec_core::{gate, map, metrics, store};
 
 use crate::exit;
 use crate::render::Report;
@@ -34,34 +37,25 @@ pub struct MapArgs {
 ///
 /// One computed set, selected differently — never three report modes that
 /// drift. `--ci` prints the verdicts, the default adds the metrics beneath
-/// them, and `--assessment` adds the candidate set and the delta.
+/// them, and `--assessment` adds the join.
 pub fn check(root: &Path, args: &CheckArgs) -> Result<Report> {
     let spec = store::load_store(root)?;
-    let findings = gate::judge_store(&spec);
-    let code = if findings.is_empty() { exit::CONFORMANT } else { exit::FINDINGS };
+    let structural = gate::judge_store(&spec);
+    let policy = gate::run_policy(&spec);
+    let observed = metrics::compute(&spec);
 
-    let verdicts = findings.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n");
-    let text = if args.ci {
-        verdicts
-    } else {
-        let mut sections = Vec::new();
-        if !verdicts.is_empty() {
-            sections.push(verdicts);
-        }
-        sections.push(metrics(&spec));
-        if args.assessment {
-            sections.push(assessment(&spec));
-        }
-        sections.join("\n\n")
-    };
+    let failed = !structural.is_empty() || !policy.is_empty();
+    let code = if failed { exit::FINDINGS } else { exit::CONFORMANT };
 
+    let text = render(args, &structural, &policy, &observed, &spec);
     let body = args.json.then(|| json!({
-        "findings": findings.iter().map(|f| json!({
+        "structural": structural.iter().map(|f| json!({
             "class": f.class.to_string(),
             "subject": f.record,
             "message": f.message,
         })).collect::<Vec<_>>(),
-        "metrics": metric_values(&spec),
+        "policy": policy,
+        "metrics": observed,
     }));
     Ok(Report::text(code, text).with_json(body))
 }
@@ -79,63 +73,65 @@ pub fn map(root: &Path, args: &MapArgs) -> Result<Report> {
     Ok(Report::text(exit::CONFORMANT, text).with_json(body))
 }
 
-/// The reported figures.
-///
-/// Reported, never gated. A codebase with unspecified regions is unspecified,
-/// not non-conformant, and a flow that made the unmapped count fall quickly
-/// would be doing the wrong work fast.
-fn metrics(spec: &gate::SpecStore) -> String {
-    let values = metric_values(spec);
-    let lines = values
-        .as_object()
-        .map(|o| {
-            o.iter()
-                .map(|(k, v)| format!("  {k:<26} {v}"))
-                .collect::<Vec<_>>()
-                .join("\n")
-        })
-        .unwrap_or_default();
-    format!("metrics (reported, not gated):\n{lines}")
-}
-
-fn metric_values(spec: &gate::SpecStore) -> serde_json::Value {
-    let entry_points = spec.inventory.as_ref().map_or(0, |i| i.entry_points.len());
-    let candidates = spec.inventory.as_ref().map_or(0, |i| i.candidates.len());
-    let unreviewed = spec
-        .inventory
-        .as_ref()
-        .map_or(0, |i| i.candidates.iter().filter(|c| spec.is_unreviewed(&c.id)).count());
-    let mapped = spec
-        .inventory
-        .as_ref()
-        .map_or(0, |i| i.entry_points.iter().filter(|e| !spec.acts_at(&e.id).is_empty()).count());
-    json!({
-        "entry_points": entry_points,
-        "candidates": candidates,
-        "candidates_unreviewed": unreviewed,
-        "acts_ratified": spec.acts.len(),
-        "candidates_refused": spec.rejections.len(),
-        "entry_points_mapped": mapped,
-        "mapping_coverage": coverage(mapped, entry_points),
-        "records_open": spec.records.iter().filter(|r| r.is_open()).count(),
-    })
-}
-
-/// Coverage as a percentage, or `null` where there is nothing to cover.
-///
-/// Null rather than 100%: an empty codebase is not fully specified, and a
-/// figure that says otherwise is the kind of flattering default that makes a
-/// metric useless.
-fn coverage(mapped: usize, total: usize) -> serde_json::Value {
-    if total == 0 {
-        return serde_json::Value::Null;
+fn render(
+    args: &CheckArgs,
+    structural: &[spec_core::check::Finding],
+    policy: &[spec_core::policy_check::PolicyFinding],
+    observed: &std::collections::BTreeMap<String, metrics::Metric>,
+    spec: &gate::SpecStore,
+) -> String {
+    let verdicts = verdict_lines(structural, policy);
+    if args.ci {
+        return verdicts;
     }
-    #[allow(clippy::cast_precision_loss)]
-    let ratio = (mapped as f64 / total as f64) * 100.0;
-    json!(format!("{ratio:.0}%"))
+
+    let mut sections = Vec::new();
+    if !verdicts.is_empty() {
+        sections.push(verdicts);
+    }
+    sections.push(metric_section(observed, spec));
+    if args.assessment {
+        sections.push(assessment(spec));
+    }
+    sections.join("\n\n")
 }
 
-/// The assessment surface: the candidate set and the delta, by cluster.
+fn verdict_lines(
+    structural: &[spec_core::check::Finding],
+    policy: &[spec_core::policy_check::PolicyFinding],
+) -> String {
+    let mut lines: Vec<String> = structural.iter().map(ToString::to_string).collect();
+    lines.extend(policy.iter().map(ToString::to_string));
+    lines.join("\n")
+}
+
+/// The reported figures, each marked with whether anything gates it.
+///
+/// A metric with no verdict attached is a metric, and saying so beside the
+/// number is what keeps the two from being confused at a glance.
+fn metric_section(
+    observed: &std::collections::BTreeMap<String, metrics::Metric>,
+    spec: &gate::SpecStore,
+) -> String {
+    let gated: Vec<&str> = spec
+        .policy_in_force()
+        .ok()
+        .flatten()
+        .map(|p| p.policy_verdicts.iter().map(|v| v.metric.as_str()).collect())
+        .unwrap_or_default();
+
+    let lines = observed
+        .iter()
+        .map(|(name, metric)| {
+            let mark = if gated.contains(&name.as_str()) { "gated" } else { "" };
+            format!("  {name:<24} {:<16} {mark}", metric.render())
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!("metrics (reported; only those marked `gated` can fail a build):\n{lines}")
+}
+
+/// The assessment surface: the join, by cluster.
 fn assessment(spec: &gate::SpecStore) -> String {
     let joined = map::join(spec);
     let list = if joined.is_empty() {

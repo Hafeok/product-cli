@@ -183,6 +183,16 @@ fn coverage_is_reported_and_never_gated() {
     let dir = repo();
     let (code, text) = run(dir.path(), &["check", "--json"]);
     assert_eq!(code, 1, "the findings are what fail, not the coverage");
+
     let parsed: serde_json::Value = serde_json::from_str(&text).expect("json");
-    assert_eq!(parsed["metrics"]["mapping_coverage"], "0%");
+    assert_eq!(parsed["metrics"]["mapping_coverage"], serde_json::json!({"count": 0, "of": 2}));
+    assert!(
+        parsed["policy"].as_array().is_some_and(Vec::is_empty),
+        "with no policy filed, nothing the metrics say can fail a build"
+    );
+    let classes: Vec<&str> = parsed["structural"]
+        .as_array()
+        .map(|a| a.iter().filter_map(|f| f["class"].as_str()).collect())
+        .unwrap_or_default();
+    assert!(classes.iter().all(|c| *c != "S008"), "coverage carries no verdict: {classes:?}");
 }

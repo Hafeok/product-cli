@@ -13,7 +13,11 @@ decision — it is the accountability boundary of the flow itself.
 | `import` | **.NET, here** | Roslyn scan → `.spec/inventory.json`; re-derivable, so delegating it is straightforwardly good |
 | `implement` | **.NET, here** | builds a slice; produces a **pending** record |
 | `candidates`, `map`, `check` | Rust | read-only over the store; the gate is a closed class set |
-| **`accept`**, **`reject`**, **`close`** | **Rust only** | each names a principal, and a machine cannot be one |
+| **`accept`**, **`reject`**, **`close`**, **`policy set`** | **Rust only** | each names a principal, and a machine cannot be one |
+
+The same subset is served over MCP by the `spec-mcp` binary: six delegable
+tools, and a dispatcher that refuses the withheld names even though the
+registry already omits them.
 
 A model may do everything up to the decision. It may not commit it.
 

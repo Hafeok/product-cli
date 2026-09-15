@@ -11,6 +11,7 @@ members = [
     "ledger-cli",
     "spec-core",
     "spec-cli",
+    "spec-mcp",
     "ground-cli",
     "xtask",
 ]

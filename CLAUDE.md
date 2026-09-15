@@ -392,8 +392,17 @@ split across two runtimes at the flow's own accountability boundary:
   `specflow implement` is a MAF workflow graph that opens a record, builds a
   slice, puts a draft to a reviewer through a typed `RequestPort`, and hands
   over a `spec close …` command it cannot run. See `spec-flow/README.md`.
+- **MCP — `spec-mcp` (the `spec-mcp` binary).** A **strict subset, not a
+  mirror**: `spec_candidates`, `spec_map`, `spec_check`, `spec_records`,
+  `spec_policy_show`, `spec_implement`. `accept`, `reject`, `close` and
+  `policy set` are withheld — each names a principal. Held by the registry
+  (the tools are absent) *and* by a dispatcher that refuses the names in
+  `tools::WITHHELD`. Honest limit: this is a registry boundary, not a linkage
+  one — the process links `spec-core`, so it is weaker than the `spec-flow`
+  host's, where the code to write a closure is absent from the binary. Rides
+  `product-mcp`'s `ToolRegistry::with_tools` + stdio, same as `ddd serve`.
 - **Rust verbs:** `candidates` · `accept` · `reject` · `map` · `implement` ·
-  `close` · `check`. The importer never names an act: candidates carry
+  `close` · `check` · `policy show|set`. The importer never names an act: candidates carry
   observed transport fields and the unfilled slots `name` / `settles`, and a
   principal fills them. `model` deliberately does not read candidates — an
   accrual vocabulary authored by walking a transport-shaped list inherits the
@@ -415,13 +424,14 @@ over the exported surface, and a graph with no edge to a closure.
   positive declaration with its own discriminant, the same shape as
   `asserted-none`. A `close` with neither `--determination` nor
   `--nothing-arose` is refused, never defaulted.
-- **Verdict classes are closed at seven** — `S001` unclosed record, `S002`
+- **Verdict classes are closed at eleven** — `S001` unclosed record, `S002`
   machine principal (on a closure, a ratification *or* a refusal), `S003`
   closure not binding its opening, `S004` kind disagreeing with its payload,
   `S005` entry point no act covers, `S006` record naming an unratified act,
-  `S007` ratification/refusal not binding its content. All structural, none
-  project-configurable; adding an eighth is a change to the format doc, not a
-  patch. `S002` delegates to
+  `S007` ratification/refusal not binding its content, `S008`–`S011` the
+  policy's own well-formedness (B-1/B-2/B-3 plus the uncovered set). All
+  structural, none project-configurable; adding a twelfth is a change to the
+  format doc, not a patch. `S002` delegates to
   `ledger_core::identity::Identity::model_or_bot_reason` — the same test
   `L006` applies to an acceptor. **One identity law, two gates.**
 - **`map` reports, `check` gates.** merge / split / unmapped-entry-point /
@@ -439,6 +449,16 @@ over the exported surface, and a graph with no edge to a closure.
   validation copy. `store::close` returns `Closed::Refused(findings)` rather
   than an error, so the caller exits `1` for a finding and `2` only when it
   genuinely could not run.
+- **Two classes of verdict, only one configurable.** Structural verdicts
+  (`S001`–`S011`) are not project business. **Policy verdicts** are: filed as
+  append-only versions under `.spec/policy/<ulid>.yml`, each with
+  `fires_when`, `basis` and `principal`, and the version in force is the tip
+  of the `supersedes` chain — never id order, and a forked chain is a finding.
+  `basis_binds` is the hash of the `fires_when` it was written against and is
+  **not** auto-filled: moving a threshold without revisiting the argument
+  fails `S009`, and the gate reports the digest to paste the way `ledger
+  verify` does. **The default is structural only** — no shipped thresholds,
+  because that would presume a basis nobody stated.
 - **No signing yet.** `S002` says the principal does not *look* like a machine;
   it does not say the named human closed it. `Acceptance.signature` is reserved
   and empty on the ledger side, and this format inherits the same honest limit.

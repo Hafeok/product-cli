@@ -93,6 +93,7 @@ pub fn load_store(repo_root: &Path) -> Result<crate::gate::SpecStore> {
         acts: crate::ratify::load_acts(repo_root)?,
         rejections: crate::ratify::load_rejections(repo_root)?,
         inventory: crate::inventory::Inventory::load_opt(repo_root)?,
+        policy_versions: crate::policy::load_versions(repo_root)?,
     })
 }
 

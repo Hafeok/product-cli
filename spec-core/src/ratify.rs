@@ -133,7 +133,7 @@ pub fn load_rejections(repo_root: &Path) -> Result<Vec<Rejection>> {
     load_dir(&rejections_dir(repo_root))
 }
 
-fn load_dir<T: serde::de::DeserializeOwned>(dir: &Path) -> Result<Vec<T>> {
+pub(crate) fn load_dir<T: serde::de::DeserializeOwned>(dir: &Path) -> Result<Vec<T>> {
     if !dir.exists() {
         return Ok(Vec::new());
     }
@@ -157,7 +157,7 @@ fn read_yaml<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T> {
     })
 }
 
-fn write_yaml<T: serde::Serialize>(path: &Path, value: &T) -> Result<()> {
+pub(crate) fn write_yaml<T: serde::Serialize>(path: &Path, value: &T) -> Result<()> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|e| ProductError::WriteError {
             path: parent.to_path_buf(),

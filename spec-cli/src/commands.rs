@@ -25,10 +25,22 @@ pub enum Commands {
     Implement(verbs::ImplementArgs),
     /// Join acts to entry points and report the disagreements.
     Map(verbs::MapArgs),
+    /// Show or file the check policy.
+    #[command(subcommand)]
+    Policy(PolicyCommands),
     /// List act-time records.
     Records(verbs::RecordsArgs),
     /// Refuse a candidate, filing the reason. Names a principal.
     Reject(verbs::RejectArgs),
+}
+
+/// The policy family.
+#[derive(Subcommand)]
+pub enum PolicyCommands {
+    /// File a new policy version. A change is a supersession, never an edit.
+    Set(verbs::PolicySetArgs),
+    /// Show the policy in force.
+    Show(verbs::PolicyShowArgs),
 }
 
 /// Run one subcommand, returning its process exit code.
@@ -40,6 +52,8 @@ pub fn run(command: Commands, root: &Path) -> i32 {
         Commands::Close(args) => verbs::close(root, &args),
         Commands::Implement(args) => verbs::implement(root, &args),
         Commands::Map(args) => verbs::map(root, &args),
+        Commands::Policy(PolicyCommands::Set(args)) => verbs::policy_set(root, &args),
+        Commands::Policy(PolicyCommands::Show(args)) => verbs::policy_show(root, &args),
         Commands::Records(args) => verbs::records(root, &args),
         Commands::Reject(args) => verbs::reject(root, &args),
     };
