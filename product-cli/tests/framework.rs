@@ -17,6 +17,12 @@ pub struct Output {
     pub exit_code: i32,
 }
 
+impl Default for Harness {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Harness {
     pub fn new() -> Self {
         let dir = tempfile::tempdir().expect("tempdir");

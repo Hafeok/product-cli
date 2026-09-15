@@ -21,8 +21,8 @@ fn arb_project_name() -> impl Strategy<Value = String> {
     "[a-z][a-z0-9-]{0,49}".prop_map(|s| s.trim_end_matches('-').to_string())
 }
 
-/// TC-438: init generated toml parses as valid ProductConfig
-/// Property: any combination of flags produces a toml parseable by ProductConfig::load()
+// TC-438: init generated toml parses as valid ProductConfig
+// Property: any combination of flags produces a toml parseable by ProductConfig::load()
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(20))]
 

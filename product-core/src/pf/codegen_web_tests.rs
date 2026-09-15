@@ -34,26 +34,34 @@ fn opts_with_ds() -> ReifyOptions {
 }
 
 fn graph() -> DomainGraph {
-    let mut g = DomainGraph::default();
-    g.wireframe_steps = vec![
-        WireframeStep {
-            id: "review-order".into(),
-            label: "Review order".into(),
-            intent: Some("Confirm before paying".into()),
-            surfaces: vec![Surface { projection: "OrderSummary".into(), aio: "display-value".into() }],
-            offers: vec![Offer { command: "PlaceOrder".into(), aio: "trigger-action".into() }],
-            transitions_to: vec!["confirmation".into()],
+    DomainGraph {
+        wireframe_steps: vec![
+            WireframeStep {
+                id: "review-order".into(),
+                label: "Review order".into(),
+                intent: Some("Confirm before paying".into()),
+                surfaces: vec![Surface {
+                    projection: "OrderSummary".into(),
+                    aio: "display-value".into(),
+                }],
+                offers: vec![Offer { command: "PlaceOrder".into(), aio: "trigger-action".into() }],
+                transitions_to: vec!["confirmation".into()],
+                ..Default::default()
+            },
+            WireframeStep {
+                id: "confirmation".into(),
+                label: "Confirmation".into(),
+                ..Default::default()
+            },
+        ],
+        flows: vec![Flow {
+            id: "checkout".into(),
+            label: "Checkout".into(),
+            steps: vec!["review-order".into(), "confirmation".into()],
             ..Default::default()
-        },
-        WireframeStep { id: "confirmation".into(), label: "Confirmation".into(), ..Default::default() },
-    ];
-    g.flows = vec![Flow {
-        id: "checkout".into(),
-        label: "Checkout".into(),
-        steps: vec!["review-order".into(), "confirmation".into()],
+        }],
         ..Default::default()
-    }];
-    g
+    }
 }
 
 fn find<'a>(plan: &'a ReifyPlan, path: &str) -> &'a str {

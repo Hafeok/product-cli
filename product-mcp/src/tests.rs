@@ -1,7 +1,7 @@
 //! Unit tests for MCP registry (ADR-020)
 
 use super::registry::ToolRegistry;
-use super::{JsonRpcRequest, JsonRpcResponse};
+use super::JsonRpcRequest;
 
 #[test]
 fn tool_registry_has_read_tools() {

@@ -62,7 +62,7 @@ fn cell_with_mismatched_blueprint_warns() {
     // load under a different name → the cell's blueprint field no longer matches
     let arch = Blueprint::load_from_dir(&tmp.path().join("example-rest-api"), "other-arch").expect("load");
     let results = arch.validate(None);
-    assert!(results.iter().any(|v| v.severity == "warning" && v.focus.starts_with("add-crud-resource/") == false && v.path == "blueprint"));
+    assert!(results.iter().any(|v| v.severity == "warning" && !v.focus.starts_with("add-crud-resource/") && v.path == "blueprint"));
 }
 
 #[test]

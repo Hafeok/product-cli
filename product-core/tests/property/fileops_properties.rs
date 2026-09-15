@@ -3,8 +3,8 @@
 use proptest::prelude::*;
 use product_core::fileops;
 
-/// TC-P011: Write + re-read is identity
-/// ∀content:String: read(atomic_write(path, content)) = content
+// TC-P011: Write + re-read is identity
+// ∀content:String: read(atomic_write(path, content)) = content
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(500))]
 
@@ -18,8 +18,8 @@ proptest! {
     }
 }
 
-/// TC-P010: Atomic write never leaves partial content
-/// After write, file is either the new content or does not exist (never partial)
+// TC-P010: Atomic write never leaves partial content
+// After write, file is either the new content or does not exist (never partial)
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(200))]
 

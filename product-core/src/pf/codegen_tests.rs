@@ -56,7 +56,7 @@ fn typed_contracts_are_emitted() {
     assert!(types.contains("public string WireId => \"PlaceOrder\";"));
     assert!(types.contains("public sealed record OrderPlaced(long? Amount = null) : IOrderEvent"));
     assert!(types.contains("if (Amount is not null) d[\"amount\"] = Amount;"));
-    assert!(types.contains("public string Status { get; init; } = \"placed\";") == false);
+    assert!(!types.contains("public string Status { get; init; } = \"placed\";"));
     assert!(types.contains("public string Status { get; init; } = \"new\";"));
     let domain = &file(&p, "Domain.g.cs").content;
     assert!(domain.contains("public sealed record Order(string? CustomerId = null);"));
