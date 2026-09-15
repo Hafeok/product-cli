@@ -1,0 +1,80 @@
+# Hand enumeration of A's external integration points — the recall ground truth (CG-R-71's form)
+# Enumerated from src/Web and src/PublicApi of eShopOnWeb at 03d8cff, 2026-09-15, before the
+# derivation ran. Keyed by (kind, type, member, method); the derivation matches on those four.
+# `path` is what the source states and is for the reader; it is not matched.
+# Entries under `not_visible` are expected recall misses (L-EP-1) and are counted in the denominator.
+solution: eShopOnWeb@03d8cff
+source: src/Web, src/PublicApi (hand-read)
+entry_points:
+  - {kind: razor-page-handler, type: ConfirmEmailModel, member: OnGetAsync, method: GET, path: "/Identity/Account/ConfirmEmail"}
+  - {kind: razor-page-handler, type: LoginModel, member: OnGetAsync, method: GET, path: "/Identity/Account/Login"}
+  - {kind: razor-page-handler, type: LoginModel, member: OnPostAsync, method: POST, path: "/Identity/Account/Login"}
+  - {kind: razor-page-handler, type: LogoutModel, member: OnGet, method: GET, path: "/Identity/Account/Logout"}
+  - {kind: razor-page-handler, type: LogoutModel, member: OnPost, method: POST, path: "/Identity/Account/Logout"}
+  - {kind: razor-page-handler, type: RegisterModel, member: OnGet, method: GET, path: "/Identity/Account/Register"}
+  - {kind: razor-page-handler, type: RegisterModel, member: OnPostAsync, method: POST, path: "/Identity/Account/Register"}
+  - {kind: razor-page-handler, type: EditCatalogItemModel, member: OnGet, method: GET, path: "/Admin/EditCatalogItem"}
+  - {kind: razor-page-handler, type: EditCatalogItemModel, member: OnPostAsync, method: POST, path: "/Admin/EditCatalogItem"}
+  - {kind: razor-page-handler, type: IndexModel@Admin, member: (render), method: GET, path: "/Admin/Index"}
+  - {kind: razor-page-handler, type: CheckoutModel, member: OnGet, method: GET, path: "/Basket/Checkout"}
+  - {kind: razor-page-handler, type: CheckoutModel, member: OnPost, method: POST, path: "/Basket/Checkout"}
+  - {kind: razor-page-handler, type: IndexModel@Basket, member: OnGet, method: GET, path: "/Basket/Index"}
+  - {kind: razor-page-handler, type: IndexModel@Basket, member: OnPost, method: POST, path: "/Basket/Index"}
+  - {kind: razor-page-handler, type: IndexModel@Basket, member: OnPostUpdate, method: POST, path: "/Basket/Index/Update (template {handler?})"}
+  - {kind: razor-page-handler, type: SuccessModel, member: OnGet, method: GET, path: "/Basket/Success"}
+  - {kind: razor-page-handler, type: ErrorModel, member: OnGet, method: GET, path: "/Error"}
+  - {kind: razor-page-handler, type: IndexModel, member: OnGet, method: GET, path: "/Index"}
+  - {kind: razor-page-handler, type: PrivacyModel, member: OnGet, method: GET, path: "/Privacy"}
+  - {kind: controller-action, type: ManageController, member: ChangePassword, method: GET, path: "/Manage/ChangePassword"}
+  - {kind: controller-action, type: ManageController, member: ChangePassword, method: POST, path: "/Manage/ChangePassword"}
+  - {kind: controller-action, type: ManageController, member: Disable2fa, method: POST, path: "/Manage/Disable2fa"}
+  - {kind: controller-action, type: ManageController, member: Disable2faWarning, method: GET, path: "/Manage/Disable2faWarning"}
+  - {kind: controller-action, type: ManageController, member: EnableAuthenticator, method: GET, path: "/Manage/EnableAuthenticator"}
+  - {kind: controller-action, type: ManageController, member: EnableAuthenticator, method: POST, path: "/Manage/EnableAuthenticator"}
+  - {kind: controller-action, type: ManageController, member: ExternalLogins, method: GET, path: "/Manage/ExternalLogins"}
+  - {kind: controller-action, type: ManageController, member: GenerateRecoveryCodes, method: POST, path: "/Manage/GenerateRecoveryCodes"}
+  - {kind: controller-action, type: ManageController, member: GenerateRecoveryCodesWarning, method: GET, path: "/Manage/GenerateRecoveryCodesWarning"}
+  - {kind: controller-action, type: ManageController, member: LinkLogin, method: POST, path: "/Manage/LinkLogin"}
+  - {kind: controller-action, type: ManageController, member: LinkLoginCallback, method: GET, path: "/Manage/LinkLoginCallback"}
+  - {kind: controller-action, type: ManageController, member: MyAccount, method: GET, path: "/Manage/MyAccount"}
+  - {kind: controller-action, type: ManageController, member: MyAccount, method: POST, path: "/Manage/MyAccount"}
+  - {kind: controller-action, type: ManageController, member: RemoveLogin, method: POST, path: "/Manage/RemoveLogin"}
+  - {kind: controller-action, type: ManageController, member: ResetAuthenticator, method: POST, path: "/Manage/ResetAuthenticator"}
+  - {kind: controller-action, type: ManageController, member: ResetAuthenticatorWarning, method: GET, path: "/Manage/ResetAuthenticatorWarning"}
+  - {kind: controller-action, type: ManageController, member: SendVerificationEmail, method: POST, path: "/Manage/SendVerificationEmail"}
+  - {kind: controller-action, type: ManageController, member: SetPassword, method: GET, path: "/Manage/SetPassword"}
+  - {kind: controller-action, type: ManageController, member: SetPassword, method: POST, path: "/Manage/SetPassword"}
+  - {kind: controller-action, type: ManageController, member: ShowRecoveryCodes, method: GET, path: "/Manage/ShowRecoveryCodes"}
+  - {kind: controller-action, type: ManageController, member: TwoFactorAuthentication, method: GET, path: "/Manage/TwoFactorAuthentication"}
+  - {kind: controller-action, type: OrderController, member: Detail, method: GET, path: "/Order/Detail/{orderId}"}
+  - {kind: controller-action, type: OrderController, member: MyOrders, method: GET, path: "/Order/MyOrders"}
+  - {kind: controller-action, type: UserController, member: GetCurrentUser, method: GET, path: "/User"}
+  - {kind: controller-action, type: UserController, member: Logout, method: POST, path: "/User/Logout"}
+  - {kind: view-component, type: Basket, member: InvokeAsync, method: view-component, path: "(invoked from a Razor view)"}
+  - {kind: fastendpoints, type: AuthenticateEndpoint, member: HandleAsync, method: POST, path: "api/authenticate"}
+  - {kind: fastendpoints, type: CatalogBrandListEndpoint, member: HandleAsync, method: GET, path: "api/catalog-brands"}
+  - {kind: fastendpoints, type: CatalogItemGetByIdEndpoint, member: HandleAsync, method: GET, path: "api/catalog-items/{catalogItemId}"}
+  - {kind: fastendpoints, type: CatalogItemListPagedEndpoint, member: HandleAsync, method: GET, path: "api/catalog-items"}
+  - {kind: fastendpoints, type: CreateCatalogItemEndpoint, member: HandleAsync, method: POST, path: "api/catalog-items"}
+  - {kind: fastendpoints, type: DeleteCatalogItemEndpoint, member: HandleAsync, method: DELETE, path: "api/catalog-items/{catalogItemId}"}
+  - {kind: fastendpoints, type: UpdateCatalogItemEndpoint, member: HandleAsync, method: PUT, path: "api/catalog-items"}
+  - {kind: fastendpoints, type: CatalogTypeListEndpoint, member: HandleAsync, method: GET, path: "api/catalog-types"}
+  - {kind: fastendpoints, type: CreateRoleEndpoint, member: HandleAsync, method: POST, path: "api/roles"}
+  - {kind: fastendpoints, type: DeleteRoleEndpoint, member: HandleAsync, method: DELETE, path: "api/roles/{roleId}"}
+  - {kind: fastendpoints, type: RoleGetByIdEndpoint, member: HandleAsync, method: GET, path: "api/roles/{roleId}"}
+  - {kind: fastendpoints, type: RoleListEndpoint, member: HandleAsync, method: GET, path: "api/roles"}
+  - {kind: fastendpoints, type: UpdateRoleEndpoint@RoleManagement, member: HandleAsync, method: PUT, path: "api/roles"}
+  - {kind: fastendpoints, type: DeleteUserFromRoleEndpoint, member: HandleAsync, method: DELETE, path: "api/roles/{RoleId}/members/{UserId}"}
+  - {kind: fastendpoints, type: RoleMembershipGetByNameEndpoint, member: HandleAsync, method: GET, path: "api/roles/{roleName}/members"}
+  - {kind: fastendpoints, type: CreateUserEndpoint, member: HandleAsync, method: POST, path: "api/users"}
+  - {kind: fastendpoints, type: DeleteUserEndpoint, member: HandleAsync, method: DELETE, path: "api/users/{userId}"}
+  - {kind: fastendpoints, type: SaveRolesForUserEndpoint, member: HandleAsync, method: PUT, path: "api/users/{userId}/roles"}
+  - {kind: fastendpoints, type: UpdateRoleEndpoint@UserManagement, member: HandleAsync, method: PUT, path: "api/users (file UpdateUserEndpoint.cs; class named UpdateRoleEndpoint)"}
+  - {kind: fastendpoints, type: UserGetByIdEndpoint, member: HandleAsync, method: GET, path: "api/users/{userId}"}
+  - {kind: fastendpoints, type: UserGetByUserNameEndpoint, member: HandleAsync, method: GET, path: "api/users/name/{userName}"}
+  - {kind: fastendpoints, type: UserGetRolesByIdEndpoint, member: HandleAsync, method: GET, path: "api/users/{userId}/roles"}
+  - {kind: fastendpoints, type: UserListEndpoint, member: HandleAsync, method: GET, path: "api/users"}
+not_visible:
+  - {kind: health-check, type: (none), member: MapHealthChecks, method: GET, path: "home_page_health_check", why: L-EP-1}
+  - {kind: health-check, type: (none), member: MapHealthChecks, method: GET, path: "api_health_check", why: L-EP-1}
+  - {kind: fallback-file, type: (none), member: MapFallbackToFile, method: GET, path: "index.html (the BlazorAdmin client)", why: L-EP-1}
