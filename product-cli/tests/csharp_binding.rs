@@ -90,3 +90,22 @@ fn delta_reports_by_act_with_the_proxy_stated() {
         .stdout(predicate::str::contains("boundary runs through T:Shop.Api.Orders.CheckoutService"))
         .stdout(predicate::str::contains("declares act 'Nonexistent'"));
 }
+
+#[test]
+fn candidates_print_the_vocabulary_label_and_the_fixture_yields_none() {
+    let out = product().args(["csharp", "candidates"]).arg(fixture("inventory.json")).assert().success().get_output().stdout.clone();
+    let text = String::from_utf8_lossy(&out);
+    assert!(text.starts_with("vocabulary: measurement vocabulary, transport-derived (CG-R-105)"), "{text}");
+    assert!(text.contains("candidates: 0 (transport-derived)"), "the fixture has a Blazor component, no controller, page, ViewComponent, FastEndpoints endpoint or hosted service: {text}");
+    assert!(text.contains("P-EP-1") && text.contains("L-EP-1") && text.contains("reported, not repaired"), "{text}");
+}
+
+#[test]
+fn candidates_json_carries_proxies_limits_and_empty_slots() {
+    let out = product().args(["--format", "json", "csharp", "candidates"]).arg(fixture("inventory.json")).assert().success().get_output().stdout.clone();
+    let v: serde_json::Value = serde_json::from_slice(&out).expect("json");
+    assert_eq!(v["count"], 0);
+    assert_eq!(v["proxies"].as_array().map(Vec::len), Some(4));
+    assert_eq!(v["limits"].as_array().map(Vec::len), Some(3));
+    assert!(v["recall"].is_null());
+}

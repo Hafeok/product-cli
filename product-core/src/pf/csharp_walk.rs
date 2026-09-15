@@ -95,26 +95,46 @@ impl Closure<'_> {
 
 /// Walk to a fixpoint over the site-reached set.
 pub fn closure<'a>(ix: &Index<'a>, resolver: &Resolver, start: &BTreeSet<&'a str>) -> Closure<'a> {
+    closure_from(ix, resolver, start, &BTreeSet::new(), true)
+}
+
+/// Walk to a fixpoint with registration sites the walk itself need not reach
+/// (`base_sites`, e.g. a host's own closure), optionally without O-17's pull
+/// — the per-candidate path of Gate 1b. With no base sites and O-17 on, this
+/// is [`closure`] exactly.
+pub fn closure_from<'a>(ix: &Index<'a>, resolver: &Resolver, start: &BTreeSet<&'a str>, base_sites: &BTreeSet<&'a str>, o17: bool) -> Closure<'a> {
     let mut previous: BTreeSet<&'a str> = BTreeSet::new();
     for _ in 0..8 {
-        let c = walk(ix, resolver, start, &previous);
+        let c = walk(ix, resolver, start, &Sites { own: &previous, base: base_sites }, o17);
         if c.members == previous {
             return c;
         }
         previous = c.members;
     }
-    walk(ix, resolver, start, &previous)
+    walk(ix, resolver, start, &Sites { own: &previous, base: base_sites }, o17)
+}
+
+/// The registration sites a walk may read: its own previous pass plus a base set.
+struct Sites<'w, 'a> {
+    own: &'w BTreeSet<&'a str>,
+    base: &'w BTreeSet<&'a str>,
+}
+
+impl Sites<'_, '_> {
+    fn reached(&self, s: &str) -> bool {
+        self.own.contains(s) || self.base.contains(s)
+    }
 }
 
 struct Walk<'w, 'a> {
     ix: &'w Index<'a>,
     resolver: &'w Resolver,
-    sites: &'w BTreeSet<&'a str>,
+    sites: &'w Sites<'w, 'a>,
     queue: VecDeque<&'a str>,
     c: Closure<'a>,
 }
 
-fn walk<'a>(ix: &Index<'a>, resolver: &Resolver, start: &BTreeSet<&'a str>, sites: &BTreeSet<&'a str>) -> Closure<'a> {
+fn walk<'a>(ix: &Index<'a>, resolver: &Resolver, start: &BTreeSet<&'a str>, sites: &Sites<'_, 'a>, o17: bool) -> Closure<'a> {
     let mut w = Walk { ix, resolver, sites, queue: start.iter().copied().collect(), c: Closure::default() };
     for id in start {
         let type_id = ix.members.get(id).map(|m| m.declaring_type.as_str()).unwrap_or(id);
@@ -123,7 +143,8 @@ fn walk<'a>(ix: &Index<'a>, resolver: &Resolver, start: &BTreeSet<&'a str>, site
     }
     // O-17: every implementation a reached registration names is constructed
     // by the container, whether or not an edge asks for it.
-    for implementation in resolver.implementations_at(&|s: &str| sites.contains(s)) {
+    let pulled = if o17 { resolver.implementations_at(&|s: &str| sites.reached(s)) } else { BTreeSet::new() };
+    for implementation in pulled {
         if let Some(t) = ix.types.get(implementation).map(|t| t.id.as_str()) {
             w.c.container_types.insert(t);
             w.queue.push_back(t);
@@ -220,15 +241,14 @@ impl<'a> Walk<'_, 'a> {
         } else if role == Role::Value {
             EdgeState::Excluded(role)
         } else if self.is_library_provided(target, registered) {
-            match self.resolver.provider_of(target, &|s: &str| sites.contains(s)) {
+            match self.resolver.provider_of(target, &|s: &str| sites.reached(s)) {
                 Some(call) => EdgeState::RegistrationNotRead(call),
                 None => EdgeState::Boundary,
             }
         } else if !role.in_denominator() {
             EdgeState::Excluded(role)
         } else {
-            let sites = self.sites;
-            match self.resolver.resolve(target, &|s: &str| sites.contains(s)) {
+            match self.resolver.resolve(target, &|s: &str| sites.reached(s)) {
                 Ok(impls) => {
                     for i in impls {
                         if let Some(impl_id) = self.ix.types.get(i.implementation.as_str()).map(|t| t.id.as_str()) {

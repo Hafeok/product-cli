@@ -297,6 +297,17 @@ The binding connects the domain state change binding's act vocabulary (`eventmod
   The declarable/unstructured separator is a declared proxy (CG-R-52) and the spanning-type
   attribution rule is graded **authored** (CG-R-57); every delta output prints both.
   `pf/eventmodel.rs` loads the binding's event model unchanged.
+  **Gate 1b (as at 2026-09-15, Gate A):** `product csharp candidates <inventory> [--ground-truth <yaml>]`
+  derives the **measurement vocabulary** of CG-R-105 — one candidate per external integration
+  point, by resolved symbol id: controller actions, Razor page handlers (the framework's name
+  rule, declared proxy P-EP-1; route from the code-behind path, P-EP-2), ViewComponents,
+  FastEndpoints endpoints (verb from the configuring call; the route is a call argument the reader
+  does not emit, L-EP-2), hosted services (`pf/csharp_candidates*.rs`). A candidate carries the
+  transport name, path, method, the observed authorisation positions, the path (its own walk
+  through the host's registration sites, O-17 off — `csharp_walk::closure_from`), facts by proxy
+  P-EP-4, **unfilled** actor/population/rate slots (CG-R-108) and the supported-throughput
+  determination **empty** (CG-R-109). It never names an act (CG-R-106). Every figure is
+  transport-derived. Not built (Gate B/C): the delta over accepted candidates.
 
 Rules the code encodes: the reader never pattern-matches names, namespaces or base types —
 attributes and framework APIs are matched by resolved symbol id; no output lists symbols as

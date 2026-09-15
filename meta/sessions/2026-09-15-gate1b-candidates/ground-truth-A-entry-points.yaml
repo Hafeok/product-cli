@@ -2,6 +2,9 @@
 # Enumerated from src/Web and src/PublicApi of eShopOnWeb at 03d8cff, 2026-09-15, before the
 # derivation ran. Keyed by (kind, type, member, method); the derivation matches on those four.
 # `path` is what the source states and is for the reader; it is not matched.
+# Key correction 2026-09-15, before the run: the two UpdateRoleEndpoint keys were written with an
+# abbreviated namespace tail (@RoleManagement, @UserManagement); the tail is the last namespace
+# segment in full (@RoleManagementEndpoints, @UserManagementEndpoints). No entry added or removed.
 # Entries under `not_visible` are expected recall misses (L-EP-1) and are counted in the denominator.
 solution: eShopOnWeb@03d8cff
 source: src/Web, src/PublicApi (hand-read)
@@ -63,13 +66,13 @@ entry_points:
   - {kind: fastendpoints, type: DeleteRoleEndpoint, member: HandleAsync, method: DELETE, path: "api/roles/{roleId}"}
   - {kind: fastendpoints, type: RoleGetByIdEndpoint, member: HandleAsync, method: GET, path: "api/roles/{roleId}"}
   - {kind: fastendpoints, type: RoleListEndpoint, member: HandleAsync, method: GET, path: "api/roles"}
-  - {kind: fastendpoints, type: UpdateRoleEndpoint@RoleManagement, member: HandleAsync, method: PUT, path: "api/roles"}
+  - {kind: fastendpoints, type: UpdateRoleEndpoint@RoleManagementEndpoints, member: HandleAsync, method: PUT, path: "api/roles"}
   - {kind: fastendpoints, type: DeleteUserFromRoleEndpoint, member: HandleAsync, method: DELETE, path: "api/roles/{RoleId}/members/{UserId}"}
   - {kind: fastendpoints, type: RoleMembershipGetByNameEndpoint, member: HandleAsync, method: GET, path: "api/roles/{roleName}/members"}
   - {kind: fastendpoints, type: CreateUserEndpoint, member: HandleAsync, method: POST, path: "api/users"}
   - {kind: fastendpoints, type: DeleteUserEndpoint, member: HandleAsync, method: DELETE, path: "api/users/{userId}"}
   - {kind: fastendpoints, type: SaveRolesForUserEndpoint, member: HandleAsync, method: PUT, path: "api/users/{userId}/roles"}
-  - {kind: fastendpoints, type: UpdateRoleEndpoint@UserManagement, member: HandleAsync, method: PUT, path: "api/users (file UpdateUserEndpoint.cs; class named UpdateRoleEndpoint)"}
+  - {kind: fastendpoints, type: UpdateRoleEndpoint@UserManagementEndpoints, member: HandleAsync, method: PUT, path: "api/users (file UpdateUserEndpoint.cs; class named UpdateRoleEndpoint)"}
   - {kind: fastendpoints, type: UserGetByIdEndpoint, member: HandleAsync, method: GET, path: "api/users/{userId}"}
   - {kind: fastendpoints, type: UserGetByUserNameEndpoint, member: HandleAsync, method: GET, path: "api/users/name/{userName}"}
   - {kind: fastendpoints, type: UserGetRolesByIdEndpoint, member: HandleAsync, method: GET, path: "api/users/{userId}/roles"}

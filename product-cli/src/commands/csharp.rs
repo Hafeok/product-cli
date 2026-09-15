@@ -12,6 +12,8 @@ use std::path::{Path, PathBuf};
 
 use clap::Subcommand;
 use product_core::error::ProductError;
+use product_core::pf::csharp_candidates_render::render_candidates;
+use product_core::pf::csharp_candidates_report::{candidates, EntryPointTruth};
 use product_core::pf::csharp_delta::{delta, render_delta, DeltaOptions};
 use product_core::pf::csharp_inventory::{load_inventory, schema_findings, Inventory};
 use product_core::pf::csharp_reach::{reach, render_reach, ReachOptions, Root};
@@ -22,6 +24,18 @@ use super::output::{CmdResult, Output};
 
 #[derive(Subcommand)]
 pub enum CsharpCommands {
+    /// Entry-point candidates (Gate 1b): one per external integration point —
+    /// controller action, Razor page handler, ViewComponent, FastEndpoints
+    /// endpoint, hosted service — with observed positions, the path, and
+    /// unfilled ground slots; a measurement vocabulary, transport-derived
+    Candidates {
+        /// Path to the inventory JSON
+        file: PathBuf,
+        /// A hand enumeration of the solution's integration points (YAML:
+        /// entry_points[{kind,type,member,method}], not_visible[…]) for recall
+        #[arg(long = "ground-truth")]
+        ground_truth: Option<PathBuf>,
+    },
     /// The act-indexed delta against an event model: declared, declarable,
     /// unstructured or unrealised per act, plus the two undeclared ratios
     Delta {
@@ -66,6 +80,7 @@ pub enum CsharpCommands {
 
 pub(crate) fn handle_csharp(cmd: CsharpCommands) -> CmdResult {
     match cmd {
+        CsharpCommands::Candidates { file, ground_truth } => candidates_cmd(&file, ground_truth.as_deref()),
         CsharpCommands::Inventory { file } => inventory_cmd(&file),
         CsharpCommands::Reach { file, roots, track, ground_truth } => reach_cmd(&file, &roots, &track, ground_truth.as_deref()),
         CsharpCommands::Delta { file, event_model, slice_attribute, realises_fact_attribute } => {
@@ -145,6 +160,18 @@ fn reach_cmd(file: &Path, roots: &str, track: &[String], ground_truth: Option<&P
     let opts = ReachOptions { roots: parse_roots(&root_specs)?, track: parse_roots(&track_specs)?, ground_truth };
     let report = reach(&inv, &opts);
     let text = render_reach(&report);
+    let json = serde_json::to_value(&report).map_err(|e| ProductError::Internal(e.to_string()))?;
+    Ok(Output::both(text, json))
+}
+
+fn candidates_cmd(file: &Path, ground_truth: Option<&Path>) -> CmdResult {
+    let inv = load(file)?;
+    let truth: Option<EntryPointTruth> = match ground_truth {
+        Some(p) => Some(serde_yaml::from_str(&read(p)?).map_err(|e| ProductError::ConfigError(format!("ground truth {}: {e}", p.display())))?),
+        None => None,
+    };
+    let report = candidates(&inv, truth.as_ref());
+    let text = render_candidates(&report);
     let json = serde_json::to_value(&report).map_err(|e| ProductError::Internal(e.to_string()))?;
     Ok(Output::both(text, json))
 }
