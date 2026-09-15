@@ -85,3 +85,14 @@ the distance to 90, and whether the bound is smaller than that distance. No fire
 The session's is `prediction-session-gateB.md`, committed with this criterion. Emil's has not
 been requested for Gate B; the measurement is built and its run held for it, or for an explicit
 waiver — CG-R-59's two-prediction design has governed every measurement so far.
+
+---
+
+## Appended — CG-R-120, before the run
+
+**§3 is not amended.** CG-R-120 rules the bound's form: the error bound is computed over every
+edge the walk could not follow — `unresolved` and `registration-not-read` together — and printed
+as one bound with its composition beneath. The instrument prints that bound as the bound in
+force, and the CG-R-89 unscored fraction (§3 as written) beside it, labelled as the prior form,
+because the session's prediction was committed against it. Each prediction is scored against
+its own form. §12.1's statement uses the CG-R-120 bound.

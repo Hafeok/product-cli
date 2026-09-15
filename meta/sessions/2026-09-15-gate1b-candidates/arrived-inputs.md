@@ -81,3 +81,11 @@ hashes in `invocation-gateB.md`: `inputs/rulings-cg-r-99-103.md` (rulings in for
 filed late with its supersession; CG-R-116 … CG-R-118 in force), `ratification-A-filled.yaml`
 (**the ratification — Emil's, stand-in graded**; the session's delivered worksheet stays beside
 it as `ratification-A.yaml`, unchanged).
+
+---
+
+## Appended note — 2026-09-15, Gate B predictions
+
+**No table above is amended and no hash has changed.** One further input, filed verbatim:
+`inputs/rulings-cg-r-119-120.md`, sha256 `8f9b199df66a228a06b6a632fe354f1e3634860ad3fb6787e8d9a97cba1f6434` — rulings in force (CG-R-119 Emil's
+prediction; CG-R-120 the bound's form).
