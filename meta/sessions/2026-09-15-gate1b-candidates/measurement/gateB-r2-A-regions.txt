@@ -1,0 +1,225 @@
+grade: stand-in (CG-R-115): no intent-holder for eShopOnWeb; every figure computed against the accepted subset carries this grade
+  · transport-derived (CG-R-105): the vocabulary is entry points ratified, not domain modelling
+  · stand-in (CG-R-115): the ratifier holds no intent for this codebase; every figure carries the grade
+  · positions by proxy P-EP-4 (incidence unmeasured): writes are a superset — a possible write counts as a write
+  · separator: CG-R-52's proxy per type — a type whose P-EP-4 facts no single act covers is spanning
+  · the registration table is unvalidated (CG-R-101 outstanding): registration-not-read verdicts on the paths rest on it
+  · L-EP-1 … L-EP-4 as the candidate derivation prints them; F-EP-1 does not touch composition edges
+
+acts (ratified): 20
+  AddItemToBasket            entry points 1 · channel [web-cookie] · reads [BasketAggregate.Basket, Entities.CatalogItem] · writes [BasketAggregate.Basket, Entities.CatalogItem]
+  ConfirmEmailAddress        entry points 1 · channel [web-cookie] · reads [—] · writes [—]
+  CreateCatalogItem          entry points 1 · channel [api-jwt] · reads [Entities.CatalogItem] · writes [Entities.CatalogItem]
+  DeleteRole                 entry points 1 · channel [api-jwt] · reads [—] · writes [—]
+  DeleteUser                 entry points 1 · channel [api-jwt] · reads [—] · writes [—]
+  EndSession                 entry points 2 · channel [web-cookie] · reads [—] · writes [—]
+  EstablishSession           entry points 1 · channel [api-jwt] · reads [—] · writes [—]
+  ReadBasket                 entry points 1 · channel [web-cookie] · reads [BasketAggregate.Basket, Entities.CatalogItem] · writes [BasketAggregate.Basket, Entities.CatalogItem]
+  ReadBasketSummary          entry points 1 · channel [web-cookie] · reads [BasketAggregate.Basket, Entities.CatalogItem] · writes [BasketAggregate.Basket, Entities.CatalogItem]
+  ReadCatalogItem            entry points 1 · channel [api-jwt] · reads [Entities.CatalogItem] · writes [—]
+  ReadCatalogItemList        entry points 1 · channel [api-jwt] · reads [Entities.CatalogItem] · writes [—]
+  ReadCurrentActorIdentity   entry points 1 · channel [web-cookie] · reads [—] · writes [—]
+  ReadUserDetails            entry points 2 · channel [api-jwt] · reads [—] · writes [—]
+  ReadUserList               entry points 1 · channel [api-jwt] · reads [—] · writes [—]
+  ReadUserRoles              entry points 1 · channel [api-jwt] · reads [—] · writes [—]
+  RegisterAccount            entry points 1 · channel [web-cookie] · reads [—] · writes [—]
+  RemoveUserFromRole         entry points 1 · channel [api-jwt] · reads [—] · writes [—]
+  SetBasketItemQuantities    entry points 1 · channel [web-cookie] · reads [BasketAggregate.Basket, Entities.CatalogItem] · writes [BasketAggregate.Basket, Entities.CatalogItem]
+  SetUserRoles               entry points 1 · channel [api-jwt] · reads [—] · writes [—]
+  UpdateCatalogItem          entry points 1 · channel [api-jwt] · reads [Entities.CatalogItem] · writes [Entities.CatalogItem]
+
+regions (entry points):
+  declarable             5
+  declared               22
+  no-facts-under-proxy   34
+  unstructured           7
+
+by kind:
+  controller-action      declared 2 · no-facts-under-proxy 21 · unstructured 2
+  fastendpoints          declarable 1 · declared 13 · no-facts-under-proxy 7 · unstructured 2
+  razor-page-handler     declarable 4 · declared 6 · no-facts-under-proxy 6 · unstructured 3
+  view-component         declared 1
+
+by project:
+  P:PublicApi            declarable 1 · declared 13 · no-facts-under-proxy 7 · unstructured 2
+  P:Web                  declarable 4 · declared 9 · no-facts-under-proxy 27 · unstructured 5
+
+entry points:
+  [declared            ] controller-action:UserController@Controllers.GetCurrentUser#GET             accept               acts [ReadCurrentActorIdentity] — accepted at ratification
+  [declared            ] controller-action:UserController@Controllers.Logout#POST                    accept               acts [EndSession] — accepted at ratification
+  [declared            ] razor-page-handler:ConfirmEmailModel@Account.OnGetAsync#GET                 accept               acts [ConfirmEmailAddress] — accepted at ratification
+  [declared            ] razor-page-handler:IndexModel@Basket.OnGet#GET                              accept               acts [ReadBasket] — accepted at ratification
+  [declared            ] razor-page-handler:IndexModel@Basket.OnPost#POST                            accept               acts [AddItemToBasket] — accepted at ratification
+  [declared            ] razor-page-handler:IndexModel@Basket.OnPostUpdate#POST                      accept               acts [SetBasketItemQuantities] — accepted at ratification
+  [declared            ] razor-page-handler:LogoutModel@Account.OnPost#POST                          accept               acts [EndSession] — accepted at ratification
+  [declared            ] razor-page-handler:RegisterModel@Account.OnPostAsync#POST                   accept               acts [RegisterAccount] — accepted at ratification
+  [declared            ] view-component:Basket@BasketComponent.InvokeAsync#view-component            accept               acts [ReadBasketSummary] — accepted at ratification
+  [declared            ] fastendpoints:AuthenticateEndpoint@AuthEndpoints.(type)#POST                accept               acts [EstablishSession] — accepted at ratification
+  [declared            ] fastendpoints:CatalogItemGetByIdEndpoint@CatalogItemEndpoints.(type)#GET    accept               acts [ReadCatalogItem] — accepted at ratification
+  [declared            ] fastendpoints:CatalogItemListPagedEndpoint@CatalogItemEndpoints.(type)#GET  accept               acts [ReadCatalogItemList] — accepted at ratification
+  [declared            ] fastendpoints:CreateCatalogItemEndpoint@CatalogItemEndpoints.(type)#POST    accept               acts [CreateCatalogItem] — accepted at ratification
+  [declared            ] fastendpoints:DeleteRoleEndpoint@RoleManagementEndpoints.(type)#DELETE      accept               acts [DeleteRole] — accepted at ratification
+  [declared            ] fastendpoints:DeleteUserEndpoint@UserManagementEndpoints.(type)#DELETE      accept               acts [DeleteUser] — accepted at ratification
+  [declared            ] fastendpoints:DeleteUserFromRoleEndpoint@RoleMembershipEndpoints.(type)#DELETE accept               acts [RemoveUserFromRole] — accepted at ratification
+  [declared            ] fastendpoints:SaveRolesForUserEndpoint@UserManagementEndpoints.(type)#PUT   accept               acts [SetUserRoles] — accepted at ratification
+  [declared            ] fastendpoints:UpdateCatalogItemEndpoint@CatalogItemEndpoints.(type)#PUT     accept               acts [UpdateCatalogItem] — accepted at ratification
+  [declared            ] fastendpoints:UserGetByIdEndpoint@UserManagementEndpoints.(type)#GET        accept               acts [ReadUserDetails] — accepted at ratification
+  [declared            ] fastendpoints:UserGetByUserNameEndpoint@UserManagementEndpoints.(type)#GET  accept               acts [ReadUserDetails] — accepted at ratification
+  [declared            ] fastendpoints:UserGetRolesByIdEndpoint@UserManagementEndpoints.(type)#GET   accept               acts [ReadUserRoles] — accepted at ratification
+  [declared            ] fastendpoints:UserListEndpoint@UserManagementEndpoints.(type)#GET           accept               acts [ReadUserList] — accepted at ratification
+  [declarable          ] razor-page-handler:EditCatalogItemModel@Admin.OnGet#GET                     default (CG-R-115)   acts [AddItemToBasket, CreateCatalogItem, ReadBasket, ReadBasketSummary, ReadCatalogItem, ReadCatalogItemList, SetBasketItemQuantities, UpdateCatalogItem] — a clean path: one act's positions cover every fact on it
+  [declarable          ] razor-page-handler:EditCatalogItemModel@Admin.OnPostAsync#POST              default (CG-R-115)   acts [AddItemToBasket, CreateCatalogItem, ReadBasket, ReadBasketSummary, ReadCatalogItem, ReadCatalogItemList, SetBasketItemQuantities, UpdateCatalogItem] — a clean path: one act's positions cover every fact on it
+  [declarable          ] razor-page-handler:LoginModel@Account.OnGetAsync#GET                        default (CG-R-115)   acts [AddItemToBasket, ReadBasket, ReadBasketSummary, SetBasketItemQuantities] — a clean path: one act's positions cover every fact on it
+  [declarable          ] razor-page-handler:LoginModel@Account.OnPostAsync#POST                      default (CG-R-115)   acts [AddItemToBasket, ReadBasket, ReadBasketSummary, SetBasketItemQuantities] — a clean path: one act's positions cover every fact on it
+  [declarable          ] fastendpoints:DeleteCatalogItemEndpoint@CatalogItemEndpoints.(type)#DELETE  default (CG-R-115)   acts [AddItemToBasket, CreateCatalogItem, ReadBasket, ReadBasketSummary, ReadCatalogItem, ReadCatalogItemList, SetBasketItemQuantities, UpdateCatalogItem] — a clean path: one act's positions cover every fact on it
+  [unstructured        ] controller-action:OrderController@Controllers.Detail#GET                    default (CG-R-115)   acts [] — a spanning type lies on the path, and no single act covers the path's facts
+  [unstructured        ] controller-action:OrderController@Controllers.MyOrders#GET                  default (CG-R-115)   acts [] — a spanning type lies on the path, and no single act covers the path's facts
+  [unstructured        ] razor-page-handler:CheckoutModel@Basket.OnGet#GET                           default (CG-R-115)   acts [] — a spanning type lies on the path, and no single act covers the path's facts
+  [unstructured        ] razor-page-handler:CheckoutModel@Basket.OnPost#POST                         default (CG-R-115)   acts [] — a spanning type lies on the path, and no single act covers the path's facts
+  [unstructured        ] razor-page-handler:IndexModel@Pages.OnGet#GET                               default (CG-R-115)   acts [] — a spanning type lies on the path, and no single act covers the path's facts
+  [unstructured        ] fastendpoints:CatalogBrandListEndpoint@CatalogBrandEndpoints.(type)#GET     default (CG-R-115)   acts [] — a spanning type lies on the path, and no single act covers the path's facts
+  [unstructured        ] fastendpoints:CatalogTypeListEndpoint@CatalogTypeEndpoints.(type)#GET       default (CG-R-115)   acts [] — a spanning type lies on the path, and no single act covers the path's facts
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.ChangePassword#GET           default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.ChangePassword#POST          default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.Disable2fa#POST              default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.Disable2faWarning#GET        default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.EnableAuthenticator#GET      default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.EnableAuthenticator#POST     default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.ExternalLogins#GET           default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.GenerateRecoveryCodes#POST   default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.GenerateRecoveryCodesWarning#GET default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.LinkLogin#POST               default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.LinkLoginCallback#GET        default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.MyAccount#GET                default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.MyAccount#POST               default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.RemoveLogin#POST             default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.ResetAuthenticator#POST      default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.ResetAuthenticatorWarning#GET default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.SendVerificationEmail#POST   default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.SetPassword#GET              default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.SetPassword#POST             default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.ShowRecoveryCodes#GET        default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] controller-action:ManageController@Controllers.TwoFactorAuthentication#GET  default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] razor-page-handler:ErrorModel@Pages.OnGet#GET                               default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] razor-page-handler:IndexModel@Admin.(render)#GET                            default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] razor-page-handler:LogoutModel@Account.OnGet#GET                            reject               acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] razor-page-handler:PrivacyModel@Pages.OnGet#GET                             default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] razor-page-handler:RegisterModel@Account.OnGet#GET                          reject               acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] razor-page-handler:SuccessModel@Basket.OnGet#GET                            default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] fastendpoints:CreateRoleEndpoint@RoleManagementEndpoints.(type)#POST        default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] fastendpoints:CreateUserEndpoint@UserManagementEndpoints.(type)#POST        default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] fastendpoints:RoleGetByIdEndpoint@RoleManagementEndpoints.(type)#GET        default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] fastendpoints:RoleListEndpoint@RoleManagementEndpoints.(type)#GET           default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] fastendpoints:RoleMembershipGetByNameEndpoint@RoleMembershipEndpoints.(type)#GET default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] fastendpoints:UpdateRoleEndpoint@RoleManagementEndpoints.(type)#PUT         default (CG-R-115)   acts [] — P-EP-4 reads no fact on the path
+  [no-facts-under-proxy] fastendpoints:UpdateRoleEndpoint@UserManagementEndpoints.(type)#PUT         defer                acts [] — P-EP-4 reads no fact on the path
+
+boundary runs through Services.OrderService — facts [BasketAggregate.Basket, Entities.CatalogItem, OrderAggregate.Order] — acts touching [AddItemToBasket, CreateCatalogItem, ReadBasket, ReadBasketSummary, ReadCatalogItem, ReadCatalogItemList, SetBasketItemQuantities, UpdateCatalogItem]
+boundary runs through CatalogBrandEndpoints.CatalogBrandListEndpoint — facts [Entities.CatalogBrand] — acts touching []
+boundary runs through CatalogTypeEndpoints.CatalogTypeListEndpoint — facts [Entities.CatalogType] — acts touching []
+boundary runs through MyOrders.GetMyOrdersHandler — facts [OrderAggregate.Order] — acts touching []
+boundary runs through OrderDetails.GetOrderDetailsHandler — facts [OrderAggregate.Order] — acts touching []
+boundary runs through Services.CatalogViewModelService — facts [Entities.CatalogBrand, Entities.CatalogItem, Entities.CatalogType] — acts touching [AddItemToBasket, CreateCatalogItem, ReadBasket, ReadBasketSummary, ReadCatalogItem, ReadCatalogItemList, SetBasketItemQuantities, UpdateCatalogItem]
+separator incidence (CG-R-52 on P-EP-4): 6 spanning of 16 path types with facts under P-EP-4 (171 path types in all)
+
+worksheet rows with no derived path (hand-supplied; outside the regions): health-check:MapHealthChecks#GET (home_page_health_check); health-check:MapHealthChecks#GET (api_health_check); fallback-file:MapFallbackToFile#GET (index.html (the BlazorAdmin client))
+
+split over undeclared production types — computed from the subset [stand-in (CG-R-115), 22 of 68 entry points] (walk from 28 roots, hosts' sites, O-17 off; CG-R-124: a different subset gives a different split):
+  reachable-undeclared:  66 of 301 (21.9%)  [stand-in (CG-R-115), 22 of 68 entry points]
+  unresolved-undeclared: 0 of 301
+  isolated-undeclared:   235 of 301 (78.1%)  [stand-in (CG-R-115), 22 of 68 entry points] — not reached by the ratified subset, which is not the same as unspecified
+  error bound (CG-R-120, in force): 29 unfollowed of 48 composition edges = 60.4%
+      composition: unresolved 3 · registration-not-read 26 (the table deciding the latter is unvalidated, CG-R-101) · with external targets 26 (reported, never subtracted — an external target still gates the in-solution types behind it, CG-R-123)
+  prior form (CG-R-89, beside it): 0 unscored of 48 = 0.0%
+  by project:
+    P:ApplicationCore                        reachable=22 unresolved=0 isolated=22
+    P:BlazorAdmin                            reachable=2 unresolved=0 isolated=46
+    P:BlazorShared                           reachable=2 unresolved=0 isolated=17
+    P:Infrastructure                         reachable=7 unresolved=0 isolated=21
+    P:PublicApi                              reachable=24 unresolved=0 isolated=40
+    P:Web                                    reachable=9 unresolved=0 isolated=83
+    P:eShopWeb.AppHost                       reachable=0 unresolved=0 isolated=5
+    P:eShopWeb.AspireServiceDefaults         reachable=0 unresolved=0 isolated=1
+  by namespace:
+    (global)                                                     reachable=0 unresolved=0 isolated=4
+    Ardalis.GuardClauses                                         reachable=0 unresolved=0 isolated=1
+    BlazorAdmin                                                  reachable=0 unresolved=0 isolated=2
+    BlazorAdmin.Authorization                                    reachable=2 unresolved=0 isolated=0
+    BlazorAdmin.Helpers                                          reachable=0 unresolved=0 isolated=4
+    BlazorAdmin.Interfaces                                       reachable=0 unresolved=0 isolated=2
+    BlazorAdmin.JavaScript                                       reachable=0 unresolved=0 isolated=4
+    BlazorAdmin.Models                                           reachable=0 unresolved=0 isolated=17
+    BlazorAdmin.Pages.CatalogItemPage                            reachable=0 unresolved=0 isolated=1
+    BlazorAdmin.Pages.RolePage                                   reachable=0 unresolved=0 isolated=1
+    BlazorAdmin.Pages.UserPage                                   reachable=0 unresolved=0 isolated=1
+    BlazorAdmin.Services                                         reachable=0 unresolved=0 isolated=10
+    BlazorAdmin.Shared                                           reachable=0 unresolved=0 isolated=1
+    BlazorShared                                                 reachable=0 unresolved=0 isolated=1
+    BlazorShared.Attributes                                      reachable=0 unresolved=0 isolated=1
+    BlazorShared.Authorization                                   reachable=2 unresolved=0 isolated=1
+    BlazorShared.Interfaces                                      reachable=0 unresolved=0 isolated=3
+    BlazorShared.Models                                          reachable=0 unresolved=0 isolated=11
+    FastEndpoints.Swagger                                        reachable=0 unresolved=0 isolated=1
+    Mediator                                                     reachable=0 unresolved=0 isolated=4
+    Mediator.Internals                                           reachable=0 unresolved=0 isolated=20
+    Microsoft.AspNetCore.Mvc                                     reachable=0 unresolved=0 isolated=1
+    Microsoft.CodeAnalysis                                       reachable=0 unresolved=0 isolated=1
+    Microsoft.Extensions.DependencyInjection                     reachable=0 unresolved=0 isolated=1
+    Microsoft.Extensions.Hosting                                 reachable=0 unresolved=0 isolated=1
+    Microsoft.Extensions.Validation.Embedded                     reachable=0 unresolved=0 isolated=1
+    Microsoft.eShopWeb                                           reachable=1 unresolved=0 isolated=1
+    Microsoft.eShopWeb.ApplicationCore.Constants                 reachable=1 unresolved=0 isolated=0
+    Microsoft.eShopWeb.ApplicationCore.Entities                  reachable=3 unresolved=0 isolated=2
+    Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate  reachable=2 unresolved=0 isolated=0
+    Microsoft.eShopWeb.ApplicationCore.Entities.BuyerAggregate   reachable=0 unresolved=0 isolated=2
+    Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate   reachable=0 unresolved=0 isolated=4
+    Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Events reachable=0 unresolved=0 isolated=1
+    Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate.Handlers reachable=0 unresolved=0 isolated=1
+    Microsoft.eShopWeb.ApplicationCore.Exceptions                reachable=2 unresolved=0 isolated=2
+    Microsoft.eShopWeb.ApplicationCore.Interfaces                reachable=6 unresolved=0 isolated=4
+    Microsoft.eShopWeb.ApplicationCore.Services                  reachable=2 unresolved=0 isolated=1
+    Microsoft.eShopWeb.ApplicationCore.Specifications            reachable=5 unresolved=0 isolated=3
+    Microsoft.eShopWeb.Infrastructure                            reachable=0 unresolved=0 isolated=1
+    Microsoft.eShopWeb.Infrastructure.Data                       reachable=2 unresolved=0 isolated=2
+    Microsoft.eShopWeb.Infrastructure.Data.Config                reachable=0 unresolved=0 isolated=7
+    Microsoft.eShopWeb.Infrastructure.Data.Migrations            reachable=0 unresolved=0 isolated=6
+    Microsoft.eShopWeb.Infrastructure.Data.Queries               reachable=1 unresolved=0 isolated=0
+    Microsoft.eShopWeb.Infrastructure.Identity                   reachable=3 unresolved=0 isolated=2
+    Microsoft.eShopWeb.Infrastructure.Identity.Migrations        reachable=0 unresolved=0 isolated=2
+    Microsoft.eShopWeb.Infrastructure.Logging                    reachable=1 unresolved=0 isolated=0
+    Microsoft.eShopWeb.Infrastructure.Services                   reachable=0 unresolved=0 isolated=1
+    Microsoft.eShopWeb.PublicApi                                 reachable=1 unresolved=0 isolated=4
+    Microsoft.eShopWeb.PublicApi.AuthEndpoints                   reachable=2 unresolved=0 isolated=2
+    Microsoft.eShopWeb.PublicApi.CatalogBrandEndpoints           reachable=0 unresolved=0 isolated=3
+    Microsoft.eShopWeb.PublicApi.CatalogItemEndpoints            reachable=9 unresolved=0 isolated=2
+    Microsoft.eShopWeb.PublicApi.CatalogTypeEndpoints            reachable=0 unresolved=0 isolated=3
+    Microsoft.eShopWeb.PublicApi.Extensions                      reachable=1 unresolved=0 isolated=3
+    Microsoft.eShopWeb.PublicApi.Middleware                      reachable=0 unresolved=0 isolated=1
+    Microsoft.eShopWeb.PublicApi.RoleManagementEndpoints         reachable=1 unresolved=0 isolated=11
+    Microsoft.eShopWeb.PublicApi.RoleMembershipEndpoints         reachable=1 unresolved=0 isolated=3
+    Microsoft.eShopWeb.PublicApi.UserManagementEndpoints         reachable=7 unresolved=0 isolated=6
+    Microsoft.eShopWeb.PublicApi.UserManagementEndpoints.Models  reachable=2 unresolved=0 isolated=0
+    Microsoft.eShopWeb.Web                                       reachable=1 unresolved=0 isolated=2
+    Microsoft.eShopWeb.Web.Areas.Identity                        reachable=0 unresolved=0 isolated=1
+    Microsoft.eShopWeb.Web.Areas.Identity.Helpers                reachable=0 unresolved=0 isolated=1
+    Microsoft.eShopWeb.Web.Areas.Identity.Pages.Account          reachable=1 unresolved=0 isolated=2
+    Microsoft.eShopWeb.Web.Configuration                         reachable=1 unresolved=0 isolated=4
+    Microsoft.eShopWeb.Web.Controllers                           reachable=0 unresolved=0 isolated=2
+    Microsoft.eShopWeb.Web.Controllers.Api                       reachable=0 unresolved=0 isolated=1
+    Microsoft.eShopWeb.Web.Extensions                            reachable=0 unresolved=0 isolated=5
+    Microsoft.eShopWeb.Web.Features.MyOrders                     reachable=0 unresolved=0 isolated=2
+    Microsoft.eShopWeb.Web.Features.OrderDetails                 reachable=0 unresolved=0 isolated=2
+    Microsoft.eShopWeb.Web.HealthChecks                          reachable=0 unresolved=0 isolated=2
+    Microsoft.eShopWeb.Web.Interfaces                            reachable=1 unresolved=0 isolated=1
+    Microsoft.eShopWeb.Web.Pages                                 reachable=0 unresolved=0 isolated=3
+    Microsoft.eShopWeb.Web.Pages.Admin                           reachable=0 unresolved=0 isolated=2
+    Microsoft.eShopWeb.Web.Pages.Basket                          reachable=2 unresolved=0 isolated=2
+    Microsoft.eShopWeb.Web.Services                              reachable=1 unresolved=0 isolated=5
+    Microsoft.eShopWeb.Web.ViewModels                            reachable=2 unresolved=0 isolated=5
+    Microsoft.eShopWeb.Web.ViewModels.Account                    reachable=0 unresolved=0 isolated=4
+    Microsoft.eShopWeb.Web.ViewModels.File                       reachable=0 unresolved=0 isolated=1
+    Microsoft.eShopWeb.Web.ViewModels.Manage                     reachable=0 unresolved=0 isolated=8
+    Microsoft.eShopWeb.Web.Views.Manage                          reachable=0 unresolved=0 isolated=1
+    Projects                                                     reachable=0 unresolved=0 isolated=4
+
+§12.1: [stand-in (CG-R-115), 22 of 68 entry points] 21.9% of undeclared production types reachable, bound 60.4 points (CG-R-120: unfollowed edges); §12.1 FIRES: the bound exceeds the reachable share it bounds; the split cannot be trusted as instrumented — a split whose bound exceeds the effect it qualifies does not discriminate (CG-R-89, CG-R-122: no constant, no distance to a threshold)

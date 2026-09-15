@@ -173,3 +173,22 @@ Gate C — the report — waits on Emil's reading of this gate: whether the regi
 the split §12.1 asked about, and whether the bound's composition is to be reported as it is or
 split further (not-read edges whose targets are external framework types cannot reclassify an
 in-solution type directly, but the session has not established that and does not claim it).
+
+---
+
+## Appended — 2026-09-15, rulings CG-R-121 … CG-R-124 applied; run 2
+
+**Nothing above is amended.** §4 above reads §12.1 as "does not fire, by 7.7 points"; **CG-R-122
+rules that it fires** — the bound (60.4) is read against the effect it qualifies (21.9), never
+against a constant, and the residual numeric form is struck. The instrument now prints it so.
+CG-R-123: the bound's composition carries a third line — unfollowed edges with external
+targets: **26 of 29**, all of the registration-not-read edges; reported, never subtracted.
+CG-R-124: every reachable/isolated figure now carries the subset it was computed from,
+`stand-in (CG-R-115), 22 of 68 entry points`.
+
+**Run 2** (`measurement/gateB-r2-*`, commit `8246e6a`, gates before measurement green, tree
+clean, regression byte-identical) differs from run 1 only in those lines; no figure moved. The
+Gate C report (`gateC-report.md`) is written from run 2 and leads with CG-R-124's reading.
+
+CG-R-121 scores the predictions as §5 above has them, and names the cause both bound
+predictions share: a quantity whose composition neither party had established.

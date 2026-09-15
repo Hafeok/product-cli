@@ -313,8 +313,11 @@ The binding connects the domain state change binding's act vocabulary (`eventmod
   P-EP-4), classifies every undeclared entry point *declarable* / *unstructured* /
   *no-facts-under-proxy* by CG-R-52's separator per type, and reports the reachable / unresolved /
   isolated split over undeclared types with its error bound (CG-R-89) and §12.1 read against it
-  (`pf/csharp_regions*.rs`); graded as the worksheet is (`stand-in`, CG-R-115). Not built (Gate C):
-  the report.
+  (`pf/csharp_regions*.rs`); graded as the worksheet is (`stand-in`, CG-R-115); §12.1 is read as
+  the bound against the effect it qualifies (CG-R-122), the bound's composition carries the
+  external-target line (CG-R-123), and every reachable figure carries its subset (CG-R-124).
+  Gate C's report is a session record (`meta/sessions/2026-09-15-gate1b-candidates/gateC-report.md`).
+  Outstanding: CG-R-101's table ground truth, Gate 3.
 
 Rules the code encodes: the reader never pattern-matches names, namespaces or base types —
 attributes and framework APIs are matched by resolved symbol id; no output lists symbols as

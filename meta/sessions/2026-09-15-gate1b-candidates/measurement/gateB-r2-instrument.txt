@@ -1,0 +1,7 @@
+gateB-r2 instrument record — 2026-09-15T11:29:52Z
+gates before measurement (CG-R-102): cargo t 52 binaries ok, 0 failed; clippy ok; xtask ok
+commit: 8246e6ad46e4b9cc6d123332d7737d7f1becce45 (working tree: 0 uncommitted paths, captured before this record was created)
+binary: target/release/product sha256 f90690def545db6e
+inventory: A 6 sha256 3197d7e07c5a0b46 (the run-8 artefact; reader not re-run)
+ratification: dff974baac758904 (Emil's, stand-in graded)
+regression: run-8 A primary reach output byte-identical
