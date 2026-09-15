@@ -70,3 +70,14 @@ here; only the extended file arrived, and the hash above is the one this session
 register line are known to be behind its body ("105 … 110") — Emil's, corrected by this note.
 **Still not arrived:** rulings CG-R-99 … CG-R-104, which CG-R-111 says are supplied before
 Gate B. Gate B does not start without them.
+
+---
+
+## Appended note — 2026-09-15, Gate B inputs
+
+**No table above is amended and no hash has changed.** Three further inputs, filed verbatim;
+hashes in `invocation-gateB.md`: `inputs/rulings-cg-r-99-103.md` (rulings in force, issued
+2026-09-14 — the citation gap of §4 closes), `inputs/rulings-cg-r-104-and-116-118.md` (CG-R-104
+filed late with its supersession; CG-R-116 … CG-R-118 in force), `ratification-A-filled.yaml`
+(**the ratification — Emil's, stand-in graded**; the session's delivered worksheet stays beside
+it as `ratification-A.yaml`, unchanged).
