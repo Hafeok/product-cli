@@ -109,6 +109,12 @@ jobs:
           SPEC_BIN: ${{ github.workspace }}/target/debug/spec
         run: dotnet test spec-flow/SpecFlow.slnx --configuration Release
 
+      - name: Specification flow (cross-runtime)
+        # The seam no single-runtime test can reach: the agent host opens
+        # records the Rust gate then refuses to let through until a principal
+        # closes them.
+        run: scripts/checks/spec-flow-e2e.sh
+
       - name: Ledger gate
         # L0 of docs/decision-ledger-prd.md: the decision record must be
         # readable, unallocated decisions and stale acceptances must not

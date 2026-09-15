@@ -173,6 +173,20 @@ hash for a hand-authored file.
 broken things and nothing else. Shipping default thresholds would presume a
 basis nobody stated.
 
+## 4c. Where the event model lives
+
+The flow's `model` verb is **`product domain`**, not a second editor. The What
+graph (§3.1/§3.2 of the framework) is already owned by `product-core`, and
+re-implementing it here would give the repo two vocabularies for the same
+thing.
+
+This is also how §3 of the PRD is satisfied. *The domain model must be
+authorable without candidates in view* is not enforced by a UI rule that
+someone could relax; `product-core` does not depend on `spec-core`, so nothing
+in the model path can read `.spec/inventory.json` at all. `map` is where the
+two vocabularies meet for the first time, which is where the PRD puts them.
+`spec-cli/tests/boundaries.rs` fails if that edge is ever added.
+
 ## 5. Verdict classes
 
 The set is **closed**. The store fails for a schema fault plus these eleven

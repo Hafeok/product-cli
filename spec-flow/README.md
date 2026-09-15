@@ -124,6 +124,18 @@ spec check                                     # 0 only once every record is clo
 To wire a model, set `SPECFLOW_MODEL_ENDPOINT` (any OpenAI-compatible endpoint
 — Scaleway, Ollama, vLLM), plus `SPECFLOW_MODEL` and `SPECFLOW_MODEL_KEY`.
 
+## The whole flow, end to end
+
+```bash
+cargo build -p spec-cli
+scripts/checks/spec-flow-e2e.sh
+```
+
+Walks a throwaway repo through import → check (drift) → accept → reject →
+implement → check (open record) → close → check (green), asserting the
+refusals along the way: a machine cannot ratify, a machine cannot close,
+`implement` exits 3. It runs in CI.
+
 ## Known gaps
 
 - **Checkpointing is not wired.** MAF takes checkpoints at superstep

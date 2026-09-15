@@ -401,6 +401,14 @@ split across two runtimes at the flow's own accountability boundary:
   one — the process links `spec-core`, so it is weaker than the `spec-flow`
   host's, where the code to write a closure is absent from the binary. Rides
   `product-mcp`'s `ToolRegistry::with_tools` + stdio, same as `ddd serve`.
+- **`model` is `product domain`.** The flow's event-model verb is not
+  reimplemented — product-core already owns the What (§3.1/§3.2), and a second
+  event-model editor is exactly the duplication this file warns about. The
+  PRD's §3 rule (*`model` does not display candidates*) therefore holds as a
+  **crate boundary**: `product-core` does not depend on `spec-core`, so it
+  cannot read `.spec/inventory.json`, and `map` is where acts and entry points
+  meet for the first time. Asserted in `spec-cli/tests/boundaries.rs` along
+  with the other separations the flow rests on.
 - **Rust verbs:** `candidates` · `accept` · `reject` · `map` · `implement` ·
   `close` · `check` · `policy show|set`. The importer never names an act: candidates carry
   observed transport fields and the unfilled slots `name` / `settles`, and a
