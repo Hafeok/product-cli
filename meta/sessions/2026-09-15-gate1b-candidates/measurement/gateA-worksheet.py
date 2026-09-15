@@ -13,7 +13,7 @@ from pathlib import Path
 
 D = Path(__file__).resolve().parent.parent
 SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else None  # the eShopOnWeb checkout (optional)
-r = json.load(open(D / "measurement/gateA-A-candidates.json"))
+r = json.load(open(D / "measurement/gateA-r3-A-candidates.json"))
 gt = yaml.safe_load(open(D / "ground-truth-A-entry-points.yaml"))
 
 signal = set()

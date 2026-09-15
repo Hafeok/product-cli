@@ -191,6 +191,9 @@ fn ground_slots_stay_unfilled_and_the_determination_empty() {
     }
     let v = serde_json::to_value(&r).expect("json");
     assert!(v["candidates"][0]["ground"]["expected_actor_kinds"].is_null(), "unfilled serialises as null, never as an empty list");
+    for (c, j) in r.candidates.iter().zip(v["candidates"].as_array().expect("array")) {
+        assert_eq!(j["kind"].as_str(), Some(c.kind.label()), "the JSON kind is the label");
+    }
 }
 
 #[test]

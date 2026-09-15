@@ -1,0 +1,751 @@
+vocabulary: measurement vocabulary, transport-derived (CG-R-105): good for computing the delta, not for accruing determinations; every figure here is transport-derived; no candidate is an act until someone names it (CG-R-106)
+criterion:  meta/sessions/2026-09-15-gate1b-candidates/gateA-criterion.md — E-1 controller actions (base chain reaches ControllerBase; public instance methods without [NonAction]); E-2 Razor page handlers (chain reaches PageModel; On{Verb}[{Handler}][Async], P-EP-1; route from the code-behind path, P-EP-2); E-3 ViewComponents (Invoke/InvokeAsync, P-EP-3); E-4 FastEndpoints (chain reaches FastEndpoints.BaseEndpoint; verb from the configuring call by member id; route not read, L-EP-2); E-5 hosted services (IHostedService/BackgroundService). Test projects excluded. A candidate walks from its handler(s) plus constructors through its host's registration sites, O-17 off
+host: P:BlazorAdmin — entry point Program.{Main}$ (111 registration sites in its own closure)
+host: P:PublicApi — entry point Program.{Main}$ (50 registration sites in its own closure)
+host: P:Web — entry point Program.{Main}$ (352 registration sites in its own closure)
+host: P:eShopWeb.AppHost — entry point Program.{Main}$ (1 registration sites in its own closure)
+
+blind spot (CG-R-78): 71 razor files, 45 @inject directives in production projects
+
+candidates: 68 (transport-derived)
+  controller-action    25
+  fastendpoints        23
+  razor-page-handler   19
+  view-component       1
+
+[controller-action] Controllers.ManageController.ChangePassword  GET  /Manage/ChangePassword
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         8 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.ChangePassword  POST  /Manage/ChangePassword
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: yes; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         8 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.Disable2fa  POST  /Manage/Disable2fa
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: yes; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         7 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.Disable2faWarning  GET  /Manage/Disable2faWarning
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         7 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.EnableAuthenticator  GET  /Manage/EnableAuthenticator
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         8 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.EnableAuthenticator  POST  /Manage/EnableAuthenticator
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: yes; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         8 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.ExternalLogins  GET  /Manage/ExternalLogins
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         8 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.GenerateRecoveryCodes  POST  /Manage/GenerateRecoveryCodes
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: yes; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         8 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.GenerateRecoveryCodesWarning  GET  /Manage/GenerateRecoveryCodesWarning
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         7 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.LinkLogin  POST  /Manage/LinkLogin
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: yes; identity checks: 1 (ManageController.LinkLogin → ControllerBase.User)
+    path:         6 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.LinkLoginCallback  GET  /Manage/LinkLoginCallback
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         8 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.MyAccount  GET  /Manage/MyAccount
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         8 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.MyAccount  POST  /Manage/MyAccount
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: yes; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         8 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.RemoveLogin  POST  /Manage/RemoveLogin
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: yes; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         8 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.ResetAuthenticator  POST  /Manage/ResetAuthenticator
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: yes; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         7 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.ResetAuthenticatorWarning  GET  /Manage/ResetAuthenticatorWarning
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 0
+    path:         6 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.SendVerificationEmail  POST  /Manage/SendVerificationEmail
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: yes; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         10 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.SetPassword  GET  /Manage/SetPassword
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         8 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.SetPassword  POST  /Manage/SetPassword
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: yes; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         8 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.ShowRecoveryCodes  GET  /Manage/ShowRecoveryCodes
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 0
+    path:         7 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.ManageController.TwoFactorAuthentication  GET  /Manage/TwoFactorAuthentication
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 1 (ManageController.GetCurrentUserAsync → ControllerBase.User)
+    path:         8 production types; edges resolved 3, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.OrderController.Detail  GET  /Order/Detail/{orderId}
+    path source:  attribute template: [controller]/[action]/{orderId}
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 2 (OrderController.Detail → ControllerBase.User, OrderController.Detail → IIdentity.Name)
+    path:         24 production types; edges resolved 9, unresolved 1, partial 2, boundary 1, registration-not-read 0, excluded 1 — unscored 4 of 14
+    facts P-EP-4: read [OrderAggregate.Order] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.OrderController.MyOrders  GET  /Order/MyOrders
+    path source:  attribute template: [controller]/[action]
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 2 (OrderController.MyOrders → ControllerBase.User, OrderController.MyOrders → IIdentity.Name)
+    path:         24 production types; edges resolved 9, unresolved 1, partial 2, boundary 1, registration-not-read 0, excluded 1 — unscored 4 of 14
+    facts P-EP-4: read [OrderAggregate.Order] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.UserController.GetCurrentUser  GET  /User
+    path source:  attribute template: [controller]
+    identity:     complete
+    observed:     Authorize on member; AllowAnonymous on member; anti-forgery: no; identity checks: 3 (UserController.CreateUserInfo → IIdentity.IsAuthenticated, UserController.CreateUserInfo → IIdentity.Name, UserController.GetCurrentUser → ControllerBase.User)
+    path:         8 production types; edges resolved 1, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 5
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[controller-action] Controllers.UserController.Logout  POST  /User/Logout
+    path source:  attribute template: [controller]/Logout
+    identity:     complete
+    observed:     Authorize on member; AllowAnonymous on member; anti-forgery: no; identity checks: 1 (UserController.Logout → HttpContext.User)
+    path:         7 production types; edges resolved 1, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 5
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Basket.CheckoutModel.OnGet  GET  /Basket/Checkout
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 3 (CheckoutModel.SetBasketModelAsync → HttpContext.User, CheckoutModel.SetBasketModelAsync → IIdentity.Name, CheckoutModel.SetBasketModelAsync → PageModel.User)
+    path:         49 production types; edges resolved 20, unresolved 3, partial 2, boundary 1, registration-not-read 2, excluded 1 — unscored 4 of 29
+    facts P-EP-4: read [BasketAggregate.Basket, Entities.CatalogItem, OrderAggregate.Order] written [BasketAggregate.Basket] possibly written [BasketAggregate.Basket, Entities.CatalogItem, OrderAggregate.Order] DbSet [BasketAggregate.Basket]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Basket.CheckoutModel.OnPost  POST  /Basket/Checkout
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 3 (CheckoutModel.SetBasketModelAsync → HttpContext.User, CheckoutModel.SetBasketModelAsync → IIdentity.Name, CheckoutModel.SetBasketModelAsync → PageModel.User)
+    path:         49 production types; edges resolved 20, unresolved 3, partial 2, boundary 1, registration-not-read 2, excluded 1 — unscored 4 of 29
+    facts P-EP-4: read [BasketAggregate.Basket, Entities.CatalogItem, OrderAggregate.Order] written [BasketAggregate.Basket] possibly written [BasketAggregate.Basket, Entities.CatalogItem, OrderAggregate.Order] DbSet [BasketAggregate.Basket]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Account.ConfirmEmailModel.OnGetAsync  GET  /Identity/Account/ConfirmEmail
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     AllowAnonymous on type; anti-forgery: no; identity checks: 0
+    path:         2 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 1
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Admin.EditCatalogItemModel.OnGet  GET  /Admin/EditCatalogItem
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     Authorize on type (Roles=Administrators); anti-forgery: no; identity checks: 0
+    path:         9 production types; edges resolved 2, unresolved 1, partial 0, boundary 0, registration-not-read 0, excluded 0 — unscored 0 of 3
+    facts P-EP-4: read [Entities.CatalogItem] written [Entities.CatalogItem] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Admin.EditCatalogItemModel.OnPostAsync  POST  /Admin/EditCatalogItem
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     Authorize on type (Roles=Administrators); anti-forgery: no; identity checks: 0
+    path:         9 production types; edges resolved 2, unresolved 1, partial 0, boundary 0, registration-not-read 0, excluded 0 — unscored 0 of 3
+    facts P-EP-4: read [Entities.CatalogItem] written [Entities.CatalogItem] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Pages.ErrorModel.OnGet  GET  /Error
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     (none found); anti-forgery: no; identity checks: 0
+    path:         1 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 0, excluded 0 — unscored 0 of 0
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Admin.IndexModel.(render)  GET  /Admin/Index
+    path source:  code-behind file path (P-EP-2); no handler method — the page renders on GET
+    identity:     complete
+    observed:     Authorize on type (Roles=Administrators); anti-forgery: no; identity checks: 0
+    path:         1 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 0, excluded 0 — unscored 0 of 0
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Basket.IndexModel.OnGet  GET  /Basket/Index
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     (none found); anti-forgery: no; identity checks: 3 (IndexModel.GetOrSetBasketCookieAndUserName → HttpContext.User, IndexModel.GetOrSetBasketCookieAndUserName → IIdentity.IsAuthenticated, IndexModel.GetOrSetBasketCookieAndUserName → IIdentity.Name)
+    path:         24 production types; edges resolved 8, unresolved 3, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 12
+    facts P-EP-4: read [BasketAggregate.Basket, Entities.CatalogItem] written [BasketAggregate.Basket] possibly written [BasketAggregate.Basket, Entities.CatalogItem] DbSet [BasketAggregate.Basket]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Basket.IndexModel.OnPost  POST  /Basket/Index
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     (none found); anti-forgery: no; identity checks: 3 (IndexModel.GetOrSetBasketCookieAndUserName → HttpContext.User, IndexModel.GetOrSetBasketCookieAndUserName → IIdentity.IsAuthenticated, IndexModel.GetOrSetBasketCookieAndUserName → IIdentity.Name)
+    path:         25 production types; edges resolved 8, unresolved 3, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 12
+    facts P-EP-4: read [BasketAggregate.Basket, Entities.CatalogItem] written [BasketAggregate.Basket] possibly written [BasketAggregate.Basket, Entities.CatalogItem] DbSet [BasketAggregate.Basket]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Basket.IndexModel.OnPostUpdate  POST  /Basket/Index?handler=Update
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     (none found); anti-forgery: no; identity checks: 3 (IndexModel.GetOrSetBasketCookieAndUserName → HttpContext.User, IndexModel.GetOrSetBasketCookieAndUserName → IIdentity.IsAuthenticated, IndexModel.GetOrSetBasketCookieAndUserName → IIdentity.Name)
+    path:         24 production types; edges resolved 8, unresolved 3, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 12
+    facts P-EP-4: read [BasketAggregate.Basket, Entities.CatalogItem] written [BasketAggregate.Basket] possibly written [BasketAggregate.Basket, Entities.CatalogItem] DbSet [BasketAggregate.Basket]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Pages.IndexModel.OnGet  GET  /Index
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     (none found); anti-forgery: no; identity checks: 0
+    path:         21 production types; edges resolved 4, unresolved 2, partial 0, boundary 0, registration-not-read 2, excluded 0 — unscored 0 of 8
+    facts P-EP-4: read [Entities.CatalogBrand, Entities.CatalogItem, Entities.CatalogType] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Account.LoginModel.OnGetAsync  GET  /Identity/Account/Login
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     AllowAnonymous on type; anti-forgery: no; identity checks: 0
+    path:         13 production types; edges resolved 3, unresolved 1, partial 0, boundary 0, registration-not-read 3, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [BasketAggregate.Basket] written [BasketAggregate.Basket] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Account.LoginModel.OnPostAsync  POST  /Identity/Account/Login
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     AllowAnonymous on type; anti-forgery: no; identity checks: 0
+    path:         15 production types; edges resolved 3, unresolved 1, partial 0, boundary 0, registration-not-read 3, excluded 0 — unscored 0 of 7
+    facts P-EP-4: read [BasketAggregate.Basket] written [BasketAggregate.Basket] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Account.LogoutModel.OnGet  GET  /Identity/Account/Logout
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     (none found); anti-forgery: no; identity checks: 0
+    path:         2 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 3, excluded 0 — unscored 0 of 3
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Account.LogoutModel.OnPost  POST  /Identity/Account/Logout
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     (none found); anti-forgery: no; identity checks: 1 (LogoutModel.OnPost → HttpContext.User)
+    path:         3 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 3, excluded 0 — unscored 0 of 3
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Pages.PrivacyModel.OnGet  GET  /Privacy
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     (none found); anti-forgery: no; identity checks: 0
+    path:         1 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 0, excluded 0 — unscored 0 of 0
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Account.RegisterModel.OnGet  GET  /Identity/Account/Register
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     AllowAnonymous on type; anti-forgery: no; identity checks: 0
+    path:         2 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 4
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Account.RegisterModel.OnPostAsync  POST  /Identity/Account/Register
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     AllowAnonymous on type; anti-forgery: no; identity checks: 0
+    path:         3 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 4, excluded 0 — unscored 0 of 4
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[razor-page-handler] Basket.SuccessModel.OnGet  GET  /Basket/Success
+    path source:  code-behind file path (P-EP-2)
+    identity:     complete
+    observed:     Authorize on type; anti-forgery: no; identity checks: 0
+    path:         1 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 0, excluded 0 — unscored 0 of 0
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[view-component] BasketComponent.Basket.InvokeAsync  view-component  (invoked from a Razor view the reader does not read, CG-R-78)
+    path source:  framework-activated from a view (E-3)
+    identity:     complete
+    observed:     (none found); anti-forgery: no; identity checks: 3 (Basket.CountTotalBasketItems → HttpContext.User, Basket.CountTotalBasketItems → IIdentity.Name, Basket.CountTotalBasketItems → ViewComponent.User)
+    path:         22 production types; edges resolved 4, unresolved 3, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 8
+    facts P-EP-4: read [BasketAggregate.Basket, Entities.CatalogItem] written [—] possibly written [BasketAggregate.Basket, Entities.CatalogItem] DbSet [BasketAggregate.Basket]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] AuthEndpoints.AuthenticateEndpoint.(type)  POST  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AllowAnonymous(..) called in AuthenticateEndpoint.#ctor, AuthenticateEndpoint.Configure; anti-forgery: no; identity checks: 0
+    path:         9 production types; edges resolved 1, unresolved 0, partial 0, boundary 0, registration-not-read 2, excluded 0 — unscored 0 of 3
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] CatalogBrandEndpoints.CatalogBrandListEndpoint.(type)  GET  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AllowAnonymous(..) called in CatalogBrandListEndpoint.#ctor, CatalogBrandListEndpoint.Configure; anti-forgery: no; identity checks: 0
+    path:         7 production types; edges resolved 1, unresolved 1, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 3
+    facts P-EP-4: read [Entities.CatalogBrand] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] CatalogItemEndpoints.CatalogItemGetByIdEndpoint.(type)  GET  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AllowAnonymous(..) called in CatalogItemGetByIdEndpoint.#ctor, CatalogItemGetByIdEndpoint.Configure; anti-forgery: no; identity checks: 0
+    path:         13 production types; edges resolved 2, unresolved 2, partial 0, boundary 0, registration-not-read 0, excluded 0 — unscored 0 of 4
+    facts P-EP-4: read [Entities.CatalogItem] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] CatalogItemEndpoints.CatalogItemListPagedEndpoint.(type)  GET  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AllowAnonymous(..) called in CatalogItemListPagedEndpoint.#ctor, CatalogItemListPagedEndpoint.Configure; anti-forgery: no; identity checks: 0
+    path:         14 production types; edges resolved 2, unresolved 2, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 5
+    facts P-EP-4: read [Entities.CatalogItem] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] CatalogTypeEndpoints.CatalogTypeListEndpoint.(type)  GET  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AllowAnonymous(..) called in CatalogTypeListEndpoint.#ctor, CatalogTypeListEndpoint.Configure; anti-forgery: no; identity checks: 0
+    path:         7 production types; edges resolved 1, unresolved 1, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 3
+    facts P-EP-4: read [Entities.CatalogType] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] CatalogItemEndpoints.CreateCatalogItemEndpoint.(type)  POST  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in CreateCatalogItemEndpoint.#ctor, CreateCatalogItemEndpoint.Configure; Roles(..) called in CreateCatalogItemEndpoint.#ctor, CreateCatalogItemEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.PRODUCT_MANAGERS
+    path:         18 production types; edges resolved 2, unresolved 2, partial 0, boundary 0, registration-not-read 0, excluded 0 — unscored 0 of 4
+    facts P-EP-4: read [Entities.CatalogItem] written [Entities.CatalogItem] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] RoleManagementEndpoints.CreateRoleEndpoint.(type)  POST  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in CreateRoleEndpoint.#ctor, CreateRoleEndpoint.Configure; Roles(..) called in CreateRoleEndpoint.#ctor, CreateRoleEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS
+    path:         8 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 1
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] UserManagementEndpoints.CreateUserEndpoint.(type)  POST  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in CreateUserEndpoint.#ctor, CreateUserEndpoint.Configure; Roles(..) called in CreateUserEndpoint.#ctor, CreateUserEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS, AuthorizationConstants.DEFAULT_PASSWORD
+    path:         12 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 1
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] CatalogItemEndpoints.DeleteCatalogItemEndpoint.(type)  DELETE  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in DeleteCatalogItemEndpoint.#ctor, DeleteCatalogItemEndpoint.Configure; Roles(..) called in DeleteCatalogItemEndpoint.#ctor, DeleteCatalogItemEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.PRODUCT_MANAGERS
+    path:         8 production types; edges resolved 1, unresolved 1, partial 0, boundary 0, registration-not-read 0, excluded 0 — unscored 0 of 2
+    facts P-EP-4: read [Entities.CatalogItem] written [Entities.CatalogItem] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] RoleManagementEndpoints.DeleteRoleEndpoint.(type)  DELETE  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in DeleteRoleEndpoint.#ctor, DeleteRoleEndpoint.Configure; Roles(..) called in DeleteRoleEndpoint.#ctor, DeleteRoleEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS
+    path:         6 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 2, excluded 0 — unscored 0 of 2
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] UserManagementEndpoints.DeleteUserEndpoint.(type)  DELETE  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in DeleteUserEndpoint.#ctor, DeleteUserEndpoint.Configure; Roles(..) called in DeleteUserEndpoint.#ctor, DeleteUserEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS
+    path:         5 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 1
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] RoleMembershipEndpoints.DeleteUserFromRoleEndpoint.(type)  DELETE  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in DeleteUserFromRoleEndpoint.#ctor, DeleteUserFromRoleEndpoint.Configure; Roles(..) called in DeleteUserFromRoleEndpoint.#ctor, DeleteUserFromRoleEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS
+    path:         5 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 2, excluded 0 — unscored 0 of 2
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] RoleManagementEndpoints.RoleGetByIdEndpoint.(type)  GET  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in RoleGetByIdEndpoint.#ctor, RoleGetByIdEndpoint.Configure; Roles(..) called in RoleGetByIdEndpoint.#ctor, RoleGetByIdEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS
+    path:         6 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 1
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] RoleManagementEndpoints.RoleListEndpoint.(type)  GET  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in RoleListEndpoint.#ctor, RoleListEndpoint.Configure; Roles(..) called in RoleListEndpoint.#ctor, RoleListEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS
+    path:         4 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 1
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] RoleMembershipEndpoints.RoleMembershipGetByNameEndpoint.(type)  GET  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in RoleMembershipGetByNameEndpoint.#ctor, RoleMembershipGetByNameEndpoint.Configure; Roles(..) called in RoleMembershipGetByNameEndpoint.#ctor, RoleMembershipGetByNameEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS
+    path:         7 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 1
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] UserManagementEndpoints.SaveRolesForUserEndpoint.(type)  PUT  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in SaveRolesForUserEndpoint.#ctor, SaveRolesForUserEndpoint.Configure; Roles(..) called in SaveRolesForUserEndpoint.#ctor, SaveRolesForUserEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS
+    path:         5 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 1
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] CatalogItemEndpoints.UpdateCatalogItemEndpoint.(type)  PUT  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in UpdateCatalogItemEndpoint.#ctor, UpdateCatalogItemEndpoint.Configure; Roles(..) called in UpdateCatalogItemEndpoint.#ctor, UpdateCatalogItemEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.PRODUCT_MANAGERS
+    path:         16 production types; edges resolved 2, unresolved 2, partial 0, boundary 0, registration-not-read 0, excluded 0 — unscored 0 of 4
+    facts P-EP-4: read [Entities.CatalogItem] written [Entities.CatalogItem] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] RoleManagementEndpoints.UpdateRoleEndpoint.(type)  PUT  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in UpdateRoleEndpoint.#ctor, UpdateRoleEndpoint.Configure; Roles(..) called in UpdateRoleEndpoint.#ctor, UpdateRoleEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS
+    path:         6 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 1
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] UserManagementEndpoints.UpdateRoleEndpoint.(type)  PUT  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in UpdateRoleEndpoint.#ctor, UpdateRoleEndpoint.Configure; Roles(..) called in UpdateRoleEndpoint.#ctor, UpdateRoleEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS
+    path:         9 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 1
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] UserManagementEndpoints.UserGetByIdEndpoint.(type)  GET  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in UserGetByIdEndpoint.#ctor, UserGetByIdEndpoint.Configure; Roles(..) called in UserGetByIdEndpoint.#ctor, UserGetByIdEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS
+    path:         9 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 1
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] UserManagementEndpoints.UserGetByUserNameEndpoint.(type)  GET  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in UserGetByUserNameEndpoint.#ctor, UserGetByUserNameEndpoint.Configure; Roles(..) called in UserGetByUserNameEndpoint.#ctor, UserGetByUserNameEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS
+    path:         9 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 1
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] UserManagementEndpoints.UserGetRolesByIdEndpoint.(type)  GET  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in UserGetRolesByIdEndpoint.#ctor, UserGetRolesByIdEndpoint.Configure; Roles(..) called in UserGetRolesByIdEndpoint.#ctor, UserGetRolesByIdEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS
+    path:         8 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 1
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+[fastendpoints] UserManagementEndpoints.UserListEndpoint.(type)  GET  not read (L-EP-2)
+    path source:  the route is an argument to the configuring call, which the reader does not emit (L-EP-2)
+    identity:     incomplete — missing: route (a call argument the reader does not emit, L-EP-2; supplied by hand at ratification, CG-R-114)
+    observed:     AuthSchemes(..) called in UserListEndpoint.#ctor, UserListEndpoint.Configure; Roles(..) called in UserListEndpoint.#ctor, UserListEndpoint.Configure; anti-forgery: no; identity checks: 0
+    arg symbols:  Roles.ADMINISTRATORS
+    path:         7 production types; edges resolved 0, unresolved 0, partial 0, boundary 0, registration-not-read 1, excluded 0 — unscored 0 of 1
+    facts P-EP-4: read [—] written [—] possibly written [—] DbSet [—]
+    ground:       expected actor kinds: not stated · population: not stated · rate: not stated   (unfilled — not stated, never no actors, CG-R-108)
+    invited:      supported throughput — sustained —, peak —, window —, above the limit —   (a determination, not authored here, CG-R-109)
+
+overlaps — the merge signal (CG-R-106), reported not decided:
+  identical path sets: 11 group(s)
+    razor-page-handler:CheckoutModel@Basket.OnGet#GET | razor-page-handler:CheckoutModel@Basket.OnPost#POST
+    controller-action:OrderController@Controllers.Detail#GET | controller-action:OrderController@Controllers.MyOrders#GET
+    razor-page-handler:IndexModel@Basket.OnGet#GET | razor-page-handler:IndexModel@Basket.OnPostUpdate#POST
+    razor-page-handler:EditCatalogItemModel@Admin.OnGet#GET | razor-page-handler:EditCatalogItemModel@Admin.OnPostAsync#POST
+    controller-action:ManageController@Controllers.Disable2fa#POST | controller-action:ManageController@Controllers.Disable2faWarning#GET | controller-action:ManageController@Controllers.GenerateRecoveryCodesWarning#GET | controller-action:ManageController@Controllers.ResetAuthenticator#POST
+    controller-action:ManageController@Controllers.ChangePassword#GET | controller-action:ManageController@Controllers.ChangePassword#POST
+    controller-action:ManageController@Controllers.EnableAuthenticator#GET | controller-action:ManageController@Controllers.EnableAuthenticator#POST
+    controller-action:ManageController@Controllers.MyAccount#GET | controller-action:ManageController@Controllers.MyAccount#POST
+    controller-action:ManageController@Controllers.SetPassword#GET | controller-action:ManageController@Controllers.SetPassword#POST
+    controller-action:ManageController@Controllers.LinkLogin#POST | controller-action:ManageController@Controllers.ResetAuthenticatorWarning#GET
+    razor-page-handler:ConfirmEmailModel@Account.OnGetAsync#GET | razor-page-handler:LogoutModel@Account.OnGet#GET | razor-page-handler:RegisterModel@Account.OnGet#GET
+  pairs with Jaccard ≥ 0.5: 250 — of which across types: 30 (within a type the overlap is structural: constructor injection is per type)
+    1.00  razor-page-handler:ConfirmEmailModel@Account.OnGetAsync#GET ~ razor-page-handler:LogoutModel@Account.OnGet#GET  (1 shared)
+    1.00  razor-page-handler:ConfirmEmailModel@Account.OnGetAsync#GET ~ razor-page-handler:RegisterModel@Account.OnGet#GET  (1 shared)
+    1.00  razor-page-handler:LogoutModel@Account.OnGet#GET ~ razor-page-handler:RegisterModel@Account.OnGet#GET  (1 shared)
+    0.78  fastendpoints:UserGetByIdEndpoint@UserManagementEndpoints.(type)#GET ~ fastendpoints:UserGetByUserNameEndpoint@UserManagementEndpoints.(type)#GET  (7 shared)
+    0.76  razor-page-handler:IndexModel@Basket.OnGet#GET ~ view-component:Basket@BasketComponent.InvokeAsync#view-component  (19 shared)
+    0.76  razor-page-handler:IndexModel@Basket.OnPostUpdate#POST ~ view-component:Basket@BasketComponent.InvokeAsync#view-component  (19 shared)
+    0.73  razor-page-handler:IndexModel@Basket.OnPost#POST ~ view-component:Basket@BasketComponent.InvokeAsync#view-component  (19 shared)
+    0.60  fastendpoints:CreateCatalogItemEndpoint@CatalogItemEndpoints.(type)#POST ~ fastendpoints:UpdateCatalogItemEndpoint@CatalogItemEndpoints.(type)#PUT  (12 shared)
+    0.60  fastendpoints:DeleteUserEndpoint@UserManagementEndpoints.(type)#DELETE ~ fastendpoints:DeleteUserFromRoleEndpoint@RoleMembershipEndpoints.(type)#DELETE  (3 shared)
+    0.60  fastendpoints:DeleteUserEndpoint@UserManagementEndpoints.(type)#DELETE ~ fastendpoints:SaveRolesForUserEndpoint@UserManagementEndpoints.(type)#PUT  (3 shared)
+    0.60  fastendpoints:DeleteUserFromRoleEndpoint@RoleMembershipEndpoints.(type)#DELETE ~ fastendpoints:SaveRolesForUserEndpoint@UserManagementEndpoints.(type)#PUT  (3 shared)
+    0.60  fastendpoints:UpdateRoleEndpoint@UserManagementEndpoints.(type)#PUT ~ fastendpoints:UserGetByIdEndpoint@UserManagementEndpoints.(type)#GET  (6 shared)
+    0.60  fastendpoints:UpdateRoleEndpoint@UserManagementEndpoints.(type)#PUT ~ fastendpoints:UserGetByUserNameEndpoint@UserManagementEndpoints.(type)#GET  (6 shared)
+    0.59  fastendpoints:CatalogItemGetByIdEndpoint@CatalogItemEndpoints.(type)#GET ~ fastendpoints:UpdateCatalogItemEndpoint@CatalogItemEndpoints.(type)#PUT  (10 shared)
+    0.56  fastendpoints:CatalogItemGetByIdEndpoint@CatalogItemEndpoints.(type)#GET ~ fastendpoints:CatalogItemListPagedEndpoint@CatalogItemEndpoints.(type)#GET  (9 shared)
+    0.56  controller-action:UserController@Controllers.Logout#POST ~ fastendpoints:AuthenticateEndpoint@AuthEndpoints.(type)#POST  (5 shared)
+    0.56  fastendpoints:UpdateRoleEndpoint@UserManagementEndpoints.(type)#PUT ~ fastendpoints:UserListEndpoint@UserManagementEndpoints.(type)#GET  (5 shared)
+    0.56  fastendpoints:UserGetByIdEndpoint@UserManagementEndpoints.(type)#GET ~ fastendpoints:UserListEndpoint@UserManagementEndpoints.(type)#GET  (5 shared)
+    0.56  fastendpoints:UserGetByUserNameEndpoint@UserManagementEndpoints.(type)#GET ~ fastendpoints:UserListEndpoint@UserManagementEndpoints.(type)#GET  (5 shared)
+    0.53  fastendpoints:CatalogItemGetByIdEndpoint@CatalogItemEndpoints.(type)#GET ~ fastendpoints:CreateCatalogItemEndpoint@CatalogItemEndpoints.(type)#POST  (10 shared)
+    0.50  controller-action:UserController@Controllers.GetCurrentUser#GET ~ fastendpoints:AuthenticateEndpoint@AuthEndpoints.(type)#POST  (5 shared)
+    0.50  fastendpoints:DeleteRoleEndpoint@RoleManagementEndpoints.(type)#DELETE ~ fastendpoints:DeleteUserEndpoint@UserManagementEndpoints.(type)#DELETE  (3 shared)
+    0.50  fastendpoints:DeleteRoleEndpoint@RoleManagementEndpoints.(type)#DELETE ~ fastendpoints:DeleteUserFromRoleEndpoint@RoleMembershipEndpoints.(type)#DELETE  (3 shared)
+    0.50  fastendpoints:DeleteRoleEndpoint@RoleManagementEndpoints.(type)#DELETE ~ fastendpoints:SaveRolesForUserEndpoint@UserManagementEndpoints.(type)#PUT  (3 shared)
+    0.50  fastendpoints:UserGetByIdEndpoint@UserManagementEndpoints.(type)#GET ~ fastendpoints:UserGetRolesByIdEndpoint@UserManagementEndpoints.(type)#GET  (5 shared)
+    0.50  fastendpoints:UserGetByUserNameEndpoint@UserManagementEndpoints.(type)#GET ~ fastendpoints:UserGetRolesByIdEndpoint@UserManagementEndpoints.(type)#GET  (5 shared)
+    0.50  razor-page-handler:ConfirmEmailModel@Account.OnGetAsync#GET ~ razor-page-handler:LogoutModel@Account.OnPost#POST  (1 shared)
+    0.50  razor-page-handler:ConfirmEmailModel@Account.OnGetAsync#GET ~ razor-page-handler:RegisterModel@Account.OnPostAsync#POST  (1 shared)
+    0.50  razor-page-handler:LogoutModel@Account.OnGet#GET ~ razor-page-handler:RegisterModel@Account.OnPostAsync#POST  (1 shared)
+    0.50  razor-page-handler:LogoutModel@Account.OnPost#POST ~ razor-page-handler:RegisterModel@Account.OnGet#GET  (1 shared)
+  types reached by two or more candidates (top 25):
+      45  Identity.ApplicationUser
+      28  Interfaces.IAppLogger`1
+      28  Logging.LoggerAdapter`1
+      21  Interfaces.IEmailSender
+      21  Identity.UserNotFoundException
+      21  Services.LoggerEmailSender
+      20  Data.CatalogContext
+      20  Data.EfRepository`1
+      18  Authorization.Constants
+      18  Constants.Roles
+      18  Interfaces.IRepository`1
+      14  Entities.BaseEntity
+      14  Entities.CatalogItem
+      14  PublicApi.BaseMessage
+      11  Interfaces.IUriComposer
+      11  Services.UriComposer
+      11  eShopWeb.CatalogSettings
+       8  BasketAggregate.Basket
+       8  BasketAggregate.BasketItem
+       8  Specifications.BasketWithItemsSpecification
+       8  Web.Constants
+       7  Interfaces.IBasketService
+       7  Services.BasketService
+       6  Interfaces.IBasketQueryService
+       6  Specifications.CatalogItemsSpecification
+
+proxies (CG-R-77):
+  P-EP-1: a public method on a PageModel named On{Verb}[{Handler}][Async] is a handler
+      framework rule: ASP.NET Core Razor Pages handler discovery is this name rule
+      divergence:     a public helper named OnXxx reads as a handler; a handler with a non-standard name is invisible
+      incidence:      18 public PageModel methods match the rule, 0 do not
+  P-EP-2: the page route is the code-behind's path under Pages/ (or Areas/<A>/Pages/) without .cshtml.cs
+      framework rule: ASP.NET Core Razor Pages file-path routing
+      divergence:     a @page "template" directive appends to or replaces the route; it lives in the .cshtml the reader does not read (CG-R-78)
+      incidence:      not measurable by the instrument; measured by hand per solution in the gate report
+  P-EP-3: a public Invoke / InvokeAsync on a ViewComponent is its entry
+      framework rule: ASP.NET Core ViewComponent invocation
+      divergence:     none known
+      incidence:      1 ViewComponents with Invoke/InvokeAsync, 0 without
+  P-EP-4: P-EP-4: read = type arguments of repository-typed constructor parameters (chain reaches IReadRepositoryBase`1 or IRepositoryBase`1) on path types, plus DbSet<T> properties accessed on the path; written = the type argument of a write-capable repository parameter on a path type that calls a write member of IRepositoryBase`1 by member id; more than one write-capable parameter → all listed as possibly written (the call site's type argument is not in the inventory). Original predicate: the facts an act reads and writes. Divergence: an entity type is where state lives, not a state change; DbSet accesses do not distinguish read from write. Incidence: unmeasured — first use
+      framework rule: none — a reading of persistence abstractions
+      divergence:     stated in the proxy
+      incidence:      unmeasured — first use; no ground truth over facts exists
+
+instrument limits bearing on the set (reported, not repaired — CG-R-103):
+  L-EP-1: calls to Microsoft.AspNetCore.Builder.* extension members are absent from the reference graph: MapControllerRoute, MapRazorPages, MapHealthChecks, MapFallbackToFile, UseFastEndpoints — endpoints mapped there are invisible, and so are the routing conventions they carry
+      incidence: 0 references to M:Microsoft.AspNetCore.Builder.* in 6992
+  L-EP-2: call arguments are not emitted (emission rule 5): FastEndpoints routes, FastEndpoints role/scheme strings, Razor Pages authorisation conventions
+      incidence: 23 of 23 FastEndpoints routes unread
+  L-EP-3: Razor is not read (CG-R-78): custom @page templates, view-side component invocation, @inject
+      incidence: 71 razor files, 45 @inject directives in production projects
+  L-EP-4: the path is type-granular beyond its first hop: a resolved dependency opens the whole implementing type, so handlers on one type reach the same set whatever they do; the overlap measure discriminates only across types, and a codebase whose acts live on shared types reads as fully merged
+      incidence: 220 of 250 overlapping pairs (Jaccard ≥ 0.5) are within one type
+
+admitted by base, no candidate:
+  T:Microsoft.eShopWeb.Web.Controllers.Api.BaseApiController: controller type with no action
+
+recall against the hand enumeration (CG-R-71's form): 68 of 71 found (95.8%), 3 not visible by stated limit; precision 68 of 68 derived (100.0%)
+  miss:  health-check:(none).MapHealthChecks#GET (home_page_health_check) — not visible: L-EP-1
+  miss:  health-check:(none).MapHealthChecks#GET (api_health_check) — not visible: L-EP-1
+  miss:  fallback-file:(none).MapFallbackToFile#GET (index.html (the BlazorAdmin client)) — not visible: L-EP-1

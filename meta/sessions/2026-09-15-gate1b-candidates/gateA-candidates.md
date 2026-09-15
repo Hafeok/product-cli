@@ -277,3 +277,73 @@ Gate B needs two things that are Emil's: ratification of this set (with each acc
 candidate named — naming is ratification, CG-R-106 — and each rejection given a reason), and
 slice declarations against the accepted ones. The session does not proceed past this gate
 without them.
+
+---
+
+## Appended — 2026-09-15, rulings CG-R-111 … CG-R-115 applied
+
+**Nothing above is amended.** What the rulings changed on the session's side, and two further
+runs of the same derivation, each with its own instrument record.
+
+### Runs 2 and 3
+
+- **Run 2** (`measurement/gateA-r2-*`, commit `68472af`, working tree clean, regression
+  byte-identical): CG-R-114 — every candidate now carries `identity`: `complete` on 45, and
+  `incomplete — missing: route` on the 23 FastEndpoints candidates, the missing field named.
+  CG-R-115's "Also" — the type-granular path limit is now **L-EP-4** with its incidence printed
+  by the instrument: *220 of 250 overlapping pairs (Jaccard ≥ 0.5) are within one type*. The
+  run-2 text differs from run 1 only by the 68 identity lines and the L-EP-4 entry; no figure
+  moved.
+- **Run 3** (`measurement/gateA-r3-*`): a defect of the session's own output, found while
+  building the worksheet — the JSON serialised the FastEndpoints kind as `fast-endpoints` while
+  the text and the by-kind table said `fastendpoints`, so a consumer keyed on the label found
+  no endpoint rows. Fixed (the JSON kind is the label, tested) and re-run. The text output is
+  byte-identical to run 2; the JSON differs in that one string on 23 rows. Recorded because
+  it was a defect in a committed output, caught by the first consumer of it.
+
+### CG-R-112 — health probes
+
+The instrument cannot derive them (L-EP-1), so they enter the worksheet from the hand
+enumeration as **hand-supplied** rows with identity so labelled, pre-filled `reject` with the
+ruling's reason and `ruled_by: CG-R-112`. The fallback-file endpoint enters the same way with
+no decision pre-filled: no ruling names it.
+
+### CG-R-113 — BlazorAdmin as observed actor evidence
+
+Where the reader can see which endpoints the client calls, that is actor evidence on those
+candidates. Measured: **0 of 23** endpoints carry it. BlazorAdmin's 48 production types make
+no symbol reference into PublicApi; its HTTP traffic goes through `HttpService` wrapping
+`HttpClient`, and of those calls only `HttpContent.ReadAsStringAsync` (5 references) reaches
+the graph — the request calls themselves are absent, the same class as L-EP-1 — and the route
+strings would be unread in any case (L-EP-2). Two `BlazorShared` model types carry
+`[Endpoint(Name = "catalog-brands" | "catalog-types")]`, a declared attribute naming an
+endpoint *by string*; binding it to a candidate would be string matching against routes the
+instrument has not read, so it is reported, not used. The client is therefore an actor kind
+Emil supplies at ratification, not one the instrument observed.
+
+### CG-R-114 / CG-R-115 — the ratification worksheet
+
+`ratification-A.yaml`, built by `measurement/gateA-worksheet.py` from the run-3 JSON, the hand
+enumeration and — for the 23 incomplete rows — the route string as written in the source file
+the inventory names for the type, with file and line, labelled
+`route_source_reading_for_confirmation`. It is the session's reading of source, offered for
+confirmation; the `route_supplied_at_ratification` field beside it is empty and Emil's.
+
+- 71 rows: 68 derived + 3 hand-supplied.
+- **25 candidates are signal-bearing** — the distinct candidates in the 30 cross-type pairs.
+  They carry no default; every decision field is empty. The first Emil named, the cross-host
+  overlap, is rows `UserController@Controllers.Logout#POST`,
+  `UserController@Controllers.GetCurrentUser#GET` and
+  `AuthenticateEndpoint@AuthEndpoints.(type)#POST`; `channel` is on every row (CG-R-107).
+- The other 43 derived rows carry `default_if_unnamed: reject — not ratified; no intent-holder
+  available (CG-R-115)`; Emil may name any of them.
+- Every row carries `act`, `settles`, `principal`, `expected_actor_kinds`,
+  `population_order_of_magnitude`, `rate_order_of_magnitude`, `channel` and the four
+  throughput fields, all empty. The session filled none.
+- The vocabulary that results is graded **`stand-in`** in the file's header; Gate B's every
+  figure will carry that grade.
+
+### Still not arrived
+
+Rulings CG-R-99 … CG-R-104 (CG-R-111: supplied before Gate B). Gate B does not start without
+them, nor without the filled worksheet.

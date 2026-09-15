@@ -78,6 +78,8 @@ pub enum Kind {
     ControllerAction,
     RazorPageHandler,
     ViewComponent,
+    /// Serialised as its label, `fastendpoints`, so JSON and text agree.
+    #[serde(rename = "fastendpoints")]
     FastEndpoints,
     HostedService,
 }
