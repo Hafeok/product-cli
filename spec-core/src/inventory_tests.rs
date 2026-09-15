@@ -22,6 +22,12 @@ pub(crate) const SAMPLE: &str = r#"{
      "entry_point":"Shop.Api.BasketController.Settle#HttpPost",
      "observed":{"kind":"http-route","transport":"HttpPost /baskets/{id}/settle"},
      "unfilled_slots":["name","settles"]}
+  ],
+  "claims": [
+    {"kind":"slice","value":"checkout-totals","symbol":"Shop.Api.BasketController",
+     "file":"src/BasketController.cs","line":6},
+    {"kind":"realises-fact","value":"det/basket-rounding-is-half-even",
+     "symbol":"Shop.Api.BasketController.Settle","file":"src/BasketController.cs","line":10}
   ]
 }"#;
 
@@ -67,6 +73,22 @@ fn a_malformed_inventory_names_its_file() {
     std::fs::write(&path, "{ not json").expect("write");
     let err = Inventory::load_opt(dir.path()).expect_err("malformed");
     assert!(err.to_string().contains("inventory.json"), "{err}");
+}
+
+#[test]
+fn claims_are_read_back_by_kind() {
+    let inventory = sample();
+    assert_eq!(inventory.claims_of("slice").len(), 1);
+    assert_eq!(inventory.claims_of("realises-fact")[0].value, "det/basket-rounding-is-half-even");
+    assert!(inventory.claims_of("invented-kind").is_empty());
+}
+
+#[test]
+fn an_inventory_written_before_claims_existed_still_parses() {
+    let older = r#"{"form":"spec.inventory.v1","root":".","revision":"r","scanned_at":"t"}"#;
+    let parsed: Inventory = serde_json::from_str(older).expect("older inventories stay readable");
+    assert!(parsed.claims.is_empty());
+    assert!(parsed.entry_points.is_empty());
 }
 
 #[test]

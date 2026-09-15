@@ -29,6 +29,7 @@ coupling §5 of the specification-flow PRD exists to break.
   acts/<slug>.yml     # one ratified act
   rejections/<slug>.yml   # one filed refusal
   policy/<ulid>.yml   # one version of the check policy, append-only
+  trust/<id>.yml      # one trusted public key
 ```
 
 One subject per file, named by its own id. Nothing is edited after it is
@@ -187,11 +188,92 @@ in the model path can read `.spec/inventory.json` at all. `map` is where the
 two vocabularies meet for the first time, which is where the PRD puts them.
 `spec-cli/tests/boundaries.rs` fails if that edge is ever added.
 
+## 4d. What code may claim
+
+Two attributes let code point back at the specification. Both are recognised
+**by name**, so a project declares its own one-line attribute classes and takes
+no package dependency on this tool — the importer has to run on codebases that
+have never heard of it.
+
+```csharp
+[Slice("checkout-totals")]
+public class Settlement
+{
+    [RealisesFact("det/basket-rounding-is-half-even")]
+    public Money Round(Money m) => m;
+}
+```
+
+| Attribute | Claims | Orphan when |
+|---|---|---|
+| `[Slice(id)]` | this code is part of a slice built against the spec | no act-time record declares that slice (`S012`) |
+| `[RealisesFact(address)]` | this code realises a filed determination | no closure filed that determination (`S013`) |
+
+An orphan is code asserting a link to a specification that does not exist. It
+reads as governed and is not, which is worse than being plainly ungoverned.
+
+> **Provenance of this section.** The specification-flow PRD names these two
+> attributes in its fail list but does not define them; the document that would
+> (`prd-csharp-stack-binding.md`) is not in this repo. The attribute names are
+> the PRD's; the argument shape, the by-name recognition, and the reading of
+> *fact* as *a determination some closure filed* are this format's, and are the
+> lines to change if the missing document says otherwise. The PRD's other
+> code-side conditions — the resolution conditions C-1…C-3 and the cross-scope
+> seam disagreements CS-1…CS-4 — are **not** implemented, because they cannot
+> be reconstructed from their names.
+
+## 4e. Signing
+
+`S002` establishes only that a named principal does not *look* like a machine.
+A **signature** establishes that the holder of a key bound to that principal
+actually acted. That is the difference between an accountability claim and an
+accountability fact.
+
+**Opt-in, at the repo.** Signing is off until `.spec/trust/` carries a key, and
+turning it off means deleting trusted keys — a reviewable edit, not a flag on
+one write. There is no per-record escape: once a key is trusted, every closure,
+ratification and refusal needs one.
+
+```bash
+spec trust generate --id emil-2026 --principal emil@example.com --out ~/.keys/emil-2026.key
+spec close <id> --principal emil@example.com --nothing-arose --key-file ~/.keys/emil-2026.key
+```
+
+The secret key is written outside the repo — a path inside it is refused,
+because a secret key in a working tree is one commit from being public — with
+owner-only permissions where the platform has them. `SPEC_SIGNING_KEY` carries
+the same hex for CI-less environments.
+
+| | |
+|---|---|
+| Algorithm | ed25519, hex-encoded, same as the `sha256:` digests |
+| Signed subject | `spec.signature.v1` ‖ `
+` ‖ the record's **recomputed** digest |
+| Verified against | keys in `.spec/trust/` **bound to the principal the record names** |
+
+Two properties fall out of signing the recomputed digest rather than the stored
+one. Editing a signed record breaks its signature directly, so `S015` is a
+guarantee on its own rather than one that leans on `S003` also being checked.
+And because every digest already covers the principal it names, a signature
+cannot be lifted onto another principal's record — there is no separate replay
+guard to get wrong.
+
+**Adopting later does not invalidate the past.** An act performed before the
+repo trusted any key could not have been signed, so its *absence* of a
+signature is graced. The grace is for absence only: a signature that is present
+is verified whenever it was written. What pre-adoption records have instead is
+`S003`/`S007` and the git history, and that is the limit rather than a claim.
+
+**What this still does not establish.** That the human, rather than something
+holding their key, acted. Key custody, rotation and revocation are not modelled
+in v1: a compromised key is removed by deleting its file, which stops future
+signatures and does not re-judge past ones.
+
 ## 5. Verdict classes
 
-The set is **closed**. The store fails for a schema fault plus these eleven
-classes and nothing else; adding a twelfth is a change to this document, not a
-patch.
+The set is **closed**. The store fails for a schema fault plus these fifteen
+classes and nothing else; adding a sixteenth is a change to this document, not
+a patch.
 
 | Class | Fails when |
 |---|---|
@@ -206,8 +288,12 @@ patch.
 | `S009` | a basis that does not bind the threshold it justifies (**B-2**) |
 | `S010` | one argument repeated — two verdicts in a policy carrying the same basis (**B-3**) |
 | `S011` | a policy that lists nothing it deliberately does not gate |
+| `S012` | an orphan `[Slice]` attribute — code naming a slice nothing declares |
+| `S013` | an orphan `[RealisesFact]` attribute — code naming a determination no closure filed |
+| `S014` | unsigned, in a repo that trusts keys (and not graced by §4e) |
+| `S015` | a signature that verifies under no key trusted for the named principal |
 
-All eleven are **structural**. None is configurable by project policy: a project
+All fifteen are **structural**. None is configurable by project policy: a project
 that could switch `S001` off would have a tool that reports what it was told to
 report.
 
@@ -271,13 +357,14 @@ test is a floor and not a proof: it catches the identities a CI system or an
 agent harness produces by default, which is where the failure actually occurs,
 and it cannot catch a model configured with a human-looking address.
 
-**What v1 does not claim.** A closure is not cryptographically signed. `S002`
-establishes that the named principal does not *look* like a machine; it does
-not establish that the named human closed it. The ledger reserves
-`Acceptance.signature` for that upgrade and leaves it empty at L0, and this
-format inherits the same honest limit. Any statement that a machine "cannot
-forge a closure because it does not hold the key" is false until that field is
-populated on both sides.
+**What v1 claims, and does not.** With a trust root, a closure *is*
+cryptographically signed (§4e) and a machine cannot forge one without the key.
+Without a trust root, `S002` establishes only that the named principal does not
+look like a machine. Neither establishes that the human, rather than something
+holding their key, acted — that is a custody question no file format answers.
+The ledger still reserves `Acceptance.signature` and leaves it empty at L0, so
+its acceptances remain unsigned; the two stores are not yet on the same footing
+here.
 
 ## 6. Exit codes
 

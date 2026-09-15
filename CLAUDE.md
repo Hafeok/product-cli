@@ -416,6 +416,15 @@ split across two runtimes at the flow's own accountability boundary:
   server hands back. A missing server degrades to no tools rather than
   failing: the record, not the agent's reading, is what the write-back leg
   depends on.
+- **Code may claim back.** `[Slice("id")]` and `[RealisesFact("det/…")]` are
+  recognised by the Roslyn scan **by name**, so a project declares its own
+  one-line attribute classes and takes no dependency on this tool. An orphan
+  claim fails `S012`/`S013`: code asserting a link to a specification that does
+  not exist reads as governed and is not. The attribute names are the PRD's;
+  their argument shape and the reading of *fact* as *a filed determination* are
+  this repo's, and the format doc says so — `prd-csharp-stack-binding.md` is
+  still missing, and the PRD's C-1…C-3 / CS-1…CS-4 conditions stay unbuilt
+  because they cannot be reconstructed from their names.
 - **`model` is `product domain`.** The flow's event-model verb is not
   reimplemented — product-core already owns the What (§3.1/§3.2), and a second
   event-model editor is exactly the duplication this file warns about. The
@@ -447,14 +456,16 @@ over the exported surface, and a graph with no edge to a closure.
   positive declaration with its own discriminant, the same shape as
   `asserted-none`. A `close` with neither `--determination` nor
   `--nothing-arose` is refused, never defaulted.
-- **Verdict classes are closed at eleven** — `S001` unclosed record, `S002`
+- **Verdict classes are closed at fifteen** — `S001` unclosed record, `S002`
   machine principal (on a closure, a ratification *or* a refusal), `S003`
   closure not binding its opening, `S004` kind disagreeing with its payload,
   `S005` entry point no act covers, `S006` record naming an unratified act,
   `S007` ratification/refusal not binding its content, `S008`–`S011` the
-  policy's own well-formedness (B-1/B-2/B-3 plus the uncovered set). All
-  structural, none project-configurable; adding a twelfth is a change to the
-  format doc, not a patch. `S002` delegates to
+  policy's own well-formedness (B-1/B-2/B-3 plus the uncovered set), `S012`
+  orphan `[Slice]`, `S013` orphan `[RealisesFact]`, `S014` unsigned in a
+  signing repo, `S015` a signature that does not verify. All structural, none
+  project-configurable; adding a sixteenth is a change to the format doc, not
+  a patch. `S002` delegates to
   `ledger_core::identity::Identity::model_or_bot_reason` — the same test
   `L006` applies to an acceptor. **One identity law, two gates.**
 - **`map` reports, `check` gates.** merge / split / unmapped-entry-point /
@@ -482,9 +493,18 @@ over the exported surface, and a graph with no edge to a closure.
   fails `S009`, and the gate reports the digest to paste the way `ledger
   verify` does. **The default is structural only** — no shipped thresholds,
   because that would presume a basis nobody stated.
-- **No signing yet.** `S002` says the principal does not *look* like a machine;
-  it does not say the named human closed it. `Acceptance.signature` is reserved
-  and empty on the ledger side, and this format inherits the same honest limit.
+- **Signing (§4e), opt-in at the repo.** ed25519 via `spec trust generate`;
+  off until `.spec/trust/` carries a key, and turning it off means deleting
+  keys — a reviewable edit, not a per-record flag. Signatures cover the
+  **recomputed** digest, so tampering breaks `S015` directly rather than
+  leaning on `S003`; and because every digest already covers its principal, a
+  signature cannot be lifted onto another principal's record. Secret keys are
+  refused a path inside the repo. **Adopting later does not invalidate the
+  past**: an act nobody could have signed is graced for *absence* only — a
+  signature that is present is always verified. Honest limit: this says a key
+  holder acted, not that the human did; custody, rotation and revocation are
+  not modelled, and the ledger's own `Acceptance.signature` is still empty at
+  L0, so the two stores are not yet on the same footing.
 
 Build and test both halves:
 

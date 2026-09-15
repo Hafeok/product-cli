@@ -8,6 +8,7 @@ fn close_args(nothing_arose: bool, dets: &[&str]) -> CloseArgs {
         principal: None,
         determinations: dets.iter().map(|s| (*s).to_string()).collect(),
         nothing_arose,
+        key_file: None,
         json: false,
     }
 }

@@ -38,6 +38,9 @@ pub struct Act {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub from_candidate: Option<String>,
     pub binds: String,
+    /// Signature over [`Self::binds`], hex. See [`crate::signing`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub signature: Option<String>,
 }
 
 impl Act {
@@ -53,6 +56,8 @@ impl Act {
             ratified_at,
             from_candidate,
             binds: _,
+            // A signature covers the digest; it cannot be inside it.
+            signature: _,
         } = self;
 
         let mut m = Map::new();
@@ -87,12 +92,15 @@ pub struct Rejection {
     pub principal: Identity,
     pub at: DateTime<Utc>,
     pub binds: String,
+    /// Signature over [`Self::binds`], hex. See [`crate::signing`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub signature: Option<String>,
 }
 
 impl Rejection {
     /// The digest this rejection's content computes to.
     pub fn computed_binds(&self) -> String {
-        let Self { form: _, candidate, reason, principal, at, binds: _ } = self;
+        let Self { form: _, candidate, reason, principal, at, binds: _, signature: _ } = self;
         let mut m = Map::new();
         put(&mut m, "at", Some(at.to_rfc3339()));
         put(&mut m, "candidate", Some(candidate.clone()));

@@ -11,6 +11,7 @@ fn closure(kind: ClosureKind, dets: &[&str]) -> Closure {
         at: Utc::now(),
         determinations: dets.iter().map(|s| (*s).to_string()).collect(),
         binds: "sha256:00".into(),
+        signature: None,
     }
 }
 

@@ -49,7 +49,12 @@ pub enum Closed {
 
 /// Close a record. Refuses any closure that would introduce a finding, with
 /// the same class and the same message the gate would report.
-pub fn close(repo_root: &Path, id: &str, closing: Closing) -> Result<Closed> {
+pub fn close(
+    repo_root: &Path,
+    id: &str,
+    closing: Closing,
+    signer: Option<&ed25519_dalek::SigningKey>,
+) -> Result<Closed> {
     let mut record = load(&record_path(repo_root, id))?;
     if let Some(existing) = &record.closure {
         return Err(ProductError::ConfigError(format!(
@@ -57,8 +62,18 @@ pub fn close(repo_root: &Path, id: &str, closing: Closing) -> Result<Closed> {
             existing.principal.as_str()
         )));
     }
-    record.closure = Some(seal(&record, closing));
-    let findings = check::judge(&record);
+    record.closure = Some(seal(&record, closing, signer));
+    let trust = crate::signing::load_trust(repo_root)?;
+    let mut findings = check::judge(&record);
+    if let Some(closure) = &record.closure {
+        findings.extend(crate::gate::judge_signature(
+            &record.id,
+            &closure.binds,
+            &closure.principal,
+            closure.signature.as_deref(),
+            &trust,
+        ));
+    }
     if !findings.is_empty() {
         return Ok(Closed::Refused(findings));
     }
@@ -94,6 +109,7 @@ pub fn load_store(repo_root: &Path) -> Result<crate::gate::SpecStore> {
         rejections: crate::ratify::load_rejections(repo_root)?,
         inventory: crate::inventory::Inventory::load_opt(repo_root)?,
         policy_versions: crate::policy::load_versions(repo_root)?,
+        trust: crate::signing::load_trust(repo_root)?,
     })
 }
 
@@ -117,15 +133,21 @@ pub struct Closing {
     pub determinations: Vec<String>,
 }
 
-fn seal(record: &ActRecord, closing: Closing) -> Closure {
+fn seal(
+    record: &ActRecord,
+    closing: Closing,
+    signer: Option<&ed25519_dalek::SigningKey>,
+) -> Closure {
     let mut closure = Closure {
         kind: closing.kind,
         principal: closing.principal,
         at: closing.at,
         determinations: closing.determinations,
         binds: String::new(),
+        signature: None,
     };
     closure.binds = closure_digest(&record.computed_binds(), &closure);
+    closure.signature = crate::signing::sign_if_keyed(&closure.binds, signer);
     closure
 }
 
@@ -142,4 +164,4 @@ fn write(repo_root: &Path, record: &ActRecord) -> Result<()> {
 
 #[path = "store_tests.rs"]
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

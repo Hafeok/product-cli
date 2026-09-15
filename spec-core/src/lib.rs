@@ -17,6 +17,7 @@ pub mod policy;
 pub mod policy_check;
 pub mod ratify;
 pub mod record;
+pub mod signing;
 pub mod store;
 
 pub use act::{Act, Rejection};

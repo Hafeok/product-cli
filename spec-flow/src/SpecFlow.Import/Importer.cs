@@ -20,6 +20,7 @@ public static class Importer
         var symbols = new List<SymbolEntry>();
         var edges = new List<CompositionEdge>();
         var entryPoints = new List<EntryPoint>();
+        var claims = new List<SpecClaim>();
 
         foreach (var file in SourceFiles(root))
         {
@@ -29,6 +30,7 @@ public static class Importer
             symbols.AddRange(fileSymbols);
             edges.AddRange(fileEdges);
             entryPoints.AddRange(EntryPointScan.Scan(tree, relative));
+            claims.AddRange(AttributeScan.Scan(tree, relative));
         }
 
         return new Inventory(
@@ -39,7 +41,8 @@ public static class Importer
             symbols,
             edges,
             entryPoints,
-            CandidateBuild.From(entryPoints)).Canonical();
+            CandidateBuild.From(entryPoints),
+            claims).Canonical();
     }
 
     /// <summary>Scan and write, returning where it landed.</summary>

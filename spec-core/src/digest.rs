@@ -51,6 +51,8 @@ pub fn closure_digest(opening: &str, closure: &Closure) -> String {
         at,
         determinations,
         binds: _,
+        // A signature covers the digest; it cannot be inside it.
+        signature: _,
     } = closure;
 
     let mut m = Map::new();

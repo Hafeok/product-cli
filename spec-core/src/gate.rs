@@ -22,6 +22,8 @@ pub struct SpecStore {
     /// Every filed policy version. The one in force is derived from the
     /// supersession chain, never from id order.
     pub policy_versions: Vec<Policy>,
+    /// Trusted public keys. Empty means signing is off for this repo.
+    pub trust: Vec<crate::signing::TrustKey>,
 }
 
 impl SpecStore {
@@ -59,7 +61,175 @@ pub fn judge_store(store: &SpecStore) -> Vec<Finding> {
     findings.extend(judge_references(store));
     findings.extend(judge_drift(store));
     findings.extend(judge_policy(store));
+    findings.extend(judge_claims(store));
+    findings.extend(judge_signatures(store));
     findings
+}
+
+/// `S014` and `S015` over one signed thing.
+///
+/// Both classes are inert until the repo carries a trust root. That is the
+/// adoption cost made honest: a team without keys set up can still run the
+/// whole flow, and turning signing on is filing a key rather than flipping a
+/// flag. What it is not is a per-record escape — once a key is trusted, every
+/// act a principal owns needs one.
+pub fn judge_signature(
+    subject: &str,
+    digest: &str,
+    principal: &ledger_core::identity::Identity,
+    signature: Option<&str>,
+    trust: &[crate::signing::TrustKey],
+) -> Vec<Finding> {
+    judge_signature_at(subject, digest, principal, signature, trust, None)
+}
+
+/// [`judge_signature`], for an act with a known time.
+///
+/// An act performed before the repo trusted any key **could not** have been
+/// signed, so it is not judged as unsigned. That is not a loophole a writer can
+/// reach: the time is inside the digest, and adopting signing does not
+/// retroactively invalidate a history nobody could have signed. What those
+/// records have instead is `S003`/`S007` and the git history — stated as the
+/// limit it is, rather than papered over by failing every old record at once.
+pub fn judge_signature_at(
+    subject: &str,
+    digest: &str,
+    principal: &ledger_core::identity::Identity,
+    signature: Option<&str>,
+    trust: &[crate::signing::TrustKey],
+    acted_at: Option<chrono::DateTime<chrono::Utc>>,
+) -> Vec<Finding> {
+    if trust.is_empty() {
+        return Vec::new();
+    }
+    let predates_adoption = matches!(
+        (acted_at, adopted_at(trust)),
+        (Some(acted), Some(adopted)) if acted < adopted
+    );
+    match signature {
+        // Absence is graced before adoption, and only absence. A signature
+        // that is present is verified whenever it was written: the grace
+        // exists because nobody could have signed, not because anything goes.
+        None if predates_adoption => Vec::new(),
+        None => vec![Finding::new(
+            Class::S014,
+            subject,
+            "unsigned, and this repo trusts keys — a named principal is not a signed one",
+        )],
+        Some(signature) if !crate::signing::verifies(digest, signature, principal, trust) => {
+            vec![Finding::new(
+                Class::S015,
+                subject,
+                &format!(
+                    "the signature does not verify under any key trusted for `{}`",
+                    principal.as_str()
+                ),
+            )]
+        }
+        Some(_) => Vec::new(),
+    }
+}
+
+/// When this repo started trusting keys: the earliest key's `added_at`.
+fn adopted_at(trust: &[crate::signing::TrustKey]) -> Option<chrono::DateTime<chrono::Utc>> {
+    trust.iter().map(|k| k.added_at).min()
+}
+
+/// `S014`/`S015` across every signed thing in the store.
+///
+/// Every subject is verified against its **recomputed** digest, never the one
+/// it carries. Verifying the stored digest would check that the file agrees
+/// with itself: an edited act keeps its old `binds`, so its old signature
+/// would still verify and only `S007` would notice. Recomputing makes the
+/// signature a guarantee on its own rather than one that leans on another
+/// class being checked too.
+pub fn judge_signatures(store: &SpecStore) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    for record in &store.records {
+        if let Some(closure) = &record.closure {
+            findings.extend(judge_signature_at(
+                &record.id,
+                &crate::digest::closure_digest(&record.computed_binds(), closure),
+                &closure.principal,
+                closure.signature.as_deref(),
+                &store.trust,
+                Some(closure.at),
+            ));
+        }
+    }
+    for act in &store.acts {
+        findings.extend(judge_signature_at(
+            &act.id,
+            &act.computed_binds(),
+            &act.ratified_by,
+            act.signature.as_deref(),
+            &store.trust,
+            Some(act.ratified_at),
+        ));
+    }
+    for rejection in &store.rejections {
+        findings.extend(judge_signature_at(
+            &rejection.candidate,
+            &rejection.computed_binds(),
+            &rejection.principal,
+            rejection.signature.as_deref(),
+            &store.trust,
+            Some(rejection.at),
+        ));
+    }
+    findings
+}
+
+/// `S012` and `S013` — code claiming something the store does not carry.
+///
+/// The two attributes are references, and these are the classes that make them
+/// worth writing: a `[Slice]` naming a slice nobody declared, or a
+/// `[RealisesFact]` naming a determination no closure filed, is code asserting
+/// a link to a specification that does not exist. It reads as governed and
+/// is not, which is worse than being plainly ungoverned.
+pub fn judge_claims(store: &SpecStore) -> Vec<Finding> {
+    let Some(inventory) = &store.inventory else {
+        return Vec::new();
+    };
+    let mut findings = Vec::new();
+
+    for claim in inventory.claims_of("slice") {
+        if !store.records.iter().any(|r| r.slice == claim.value) {
+            findings.push(Finding::new(
+                Class::S012,
+                &claim.symbol,
+                &format!(
+                    "`[Slice(\"{}\")]` at {}:{} — no act-time record declares that slice",
+                    claim.value, claim.file, claim.line
+                ),
+            ));
+        }
+    }
+
+    for claim in inventory.claims_of("realises-fact") {
+        if !filed_determinations(store).contains(&claim.value) {
+            findings.push(Finding::new(
+                Class::S013,
+                &claim.symbol,
+                &format!(
+                    "`[RealisesFact(\"{}\")]` at {}:{} — no closure filed that determination",
+                    claim.value, claim.file, claim.line
+                ),
+            ));
+        }
+    }
+
+    findings
+}
+
+/// Every determination any closure filed.
+fn filed_determinations(store: &SpecStore) -> std::collections::BTreeSet<String> {
+    store
+        .records
+        .iter()
+        .filter_map(|r| r.closure.as_ref())
+        .flat_map(|c| c.determinations.iter().cloned())
+        .collect()
 }
 
 /// `S008`–`S011` over the policy in force.
@@ -187,4 +357,8 @@ fn refused(store: &SpecStore, inventory: &Inventory, entry_point: &str) -> bool 
 
 #[path = "gate_tests.rs"]
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
+
+#[path = "gate_signing_tests.rs"]
+#[cfg(test)]
+mod signing_tests;

@@ -42,6 +42,18 @@ public sealed record EntryPoint(
     int Line);
 
 /// <summary>
+/// A claim code makes about the specification.
+/// </summary>
+/// <param name="Kind"><c>slice</c> or <c>realises-fact</c>.</param>
+/// <param name="Value">The slice id, or the determination address.</param>
+public sealed record SpecClaim(
+    string Kind,
+    string Value,
+    string Symbol,
+    string File,
+    int Line);
+
+/// <summary>
 /// A candidate act: an entry point with the slots ratification must fill.
 /// </summary>
 /// <remarks>
@@ -73,7 +85,8 @@ public sealed record Inventory(
     IReadOnlyList<SymbolEntry> Symbols,
     IReadOnlyList<CompositionEdge> CompositionEdges,
     IReadOnlyList<EntryPoint> EntryPoints,
-    IReadOnlyList<Candidate> Candidates)
+    IReadOnlyList<Candidate> Candidates,
+    IReadOnlyList<SpecClaim> Claims)
 {
     public const string FormV1 = "spec.inventory.v1";
 
@@ -111,5 +124,9 @@ public sealed record Inventory(
             .ThenBy(e => e.Via, StringComparer.Ordinal)],
         EntryPoints = [.. EntryPoints.OrderBy(e => e.Id, StringComparer.Ordinal)],
         Candidates = [.. Candidates.OrderBy(c => c.Id, StringComparer.Ordinal)],
+        Claims = [.. Claims
+            .OrderBy(c => c.Kind, StringComparer.Ordinal)
+            .ThenBy(c => c.Value, StringComparer.Ordinal)
+            .ThenBy(c => c.Symbol, StringComparer.Ordinal)],
     };
 }

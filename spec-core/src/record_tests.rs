@@ -53,6 +53,7 @@ fn a_closure_does_not_change_the_opening_digest() {
         at: Utc::now(),
         determinations: Vec::new(),
         binds: "sha256:00".into(),
+        signature: None,
     });
     assert_eq!(record.computed_binds(), sealed);
 }

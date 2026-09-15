@@ -15,6 +15,22 @@ fn repo() -> tempfile::TempDir {
     tempfile::tempdir().expect("tempdir")
 }
 
+/// A closed-but-unsigned record, for the signing tests.
+pub(crate) fn closed_unsigned() -> crate::ActRecord {
+    let dir = repo();
+    let opened = open(dir.path(), opening("checkout-totals")).expect("open");
+    let Closed::Sealed(record) = close(
+        dir.path(),
+        &opened.id,
+        closing("emil@example.com", ClosureKind::NothingArose, &[]),
+        None,
+    )
+    .expect("close") else {
+        panic!("a well-formed closure seals");
+    };
+    *record
+}
+
 #[test]
 fn an_opened_record_lands_on_disk_and_reads_back() {
     let dir = repo();
@@ -32,6 +48,7 @@ fn closing_seals_a_binding_the_gate_accepts() {
         dir.path(),
         &opened.id,
         closing("emil@example.com", ClosureKind::NothingArose, &[]),
+        None,
     )
     .expect("close") else {
         panic!("a well-formed closure must seal");
@@ -48,6 +65,7 @@ fn close_refuses_a_machine_principal_with_the_gate_class() {
         dir.path(),
         &opened.id,
         closing("ci@example.com", ClosureKind::NothingArose, &[]),
+        None,
     )
     .expect("the gate answers rather than erroring") else {
         panic!("a machine must not close a record");
@@ -63,6 +81,7 @@ fn a_refused_close_leaves_the_record_open_on_disk() {
         dir.path(),
         &opened.id,
         closing("ci@example.com", ClosureKind::NothingArose, &[]),
+        None,
     );
     let reloaded = load(&record_path(dir.path(), &opened.id)).expect("load");
     assert!(reloaded.is_open(), "the refused write must not have landed");
@@ -76,6 +95,7 @@ fn close_refuses_a_kind_that_disagrees_with_its_payload() {
         dir.path(),
         &opened.id,
         closing("emil@example.com", ClosureKind::Determinations, &[]),
+        None,
     )
     .expect("the gate answers rather than erroring") else {
         panic!("determinations with nothing filed must be refused");
@@ -87,12 +107,18 @@ fn close_refuses_a_kind_that_disagrees_with_its_payload() {
 fn a_closed_record_cannot_be_closed_again() {
     let dir = repo();
     let opened = open(dir.path(), opening("checkout-totals")).expect("open");
-    close(dir.path(), &opened.id, closing("emil@example.com", ClosureKind::NothingArose, &[]))
-        .expect("first close");
+    close(
+        dir.path(),
+        &opened.id,
+        closing("emil@example.com", ClosureKind::NothingArose, &[]),
+        None,
+    )
+    .expect("first close");
     let err = close(
         dir.path(),
         &opened.id,
         closing("emil@example.com", ClosureKind::NothingArose, &[]),
+        None,
     )
     .expect_err("a correction is a new record");
     assert!(err.to_string().contains("already closed"), "{err}");
@@ -113,8 +139,13 @@ fn load_all_finds_every_record_and_the_gate_sees_the_open_one() {
     second.id = "01K5CJ7Q3S8XN2VYB4M6E9TZR2".into();
     open(dir.path(), first).expect("open a");
     let b = open(dir.path(), second).expect("open b");
-    close(dir.path(), &b.id, closing("emil@example.com", ClosureKind::NothingArose, &[]))
-        .expect("close b");
+    close(
+        dir.path(),
+        &b.id,
+        closing("emil@example.com", ClosureKind::NothingArose, &[]),
+        None,
+    )
+    .expect("close b");
 
     let all = load_all(dir.path()).expect("load_all");
     assert_eq!(all.len(), 2);

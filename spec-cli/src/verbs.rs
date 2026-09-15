@@ -10,11 +10,15 @@ pub mod git;
 pub mod policy;
 pub mod ratify;
 pub mod record;
+pub mod trust;
 
 pub use gate::{check, map, CheckArgs, MapArgs};
 pub use policy::{set as policy_set, show as policy_show, PolicySetArgs, PolicyShowArgs};
 pub use ratify::{accept, candidates, reject, AcceptArgs, CandidatesArgs, RejectArgs};
 pub use record::{close, implement, records, CloseArgs, ImplementArgs, RecordsArgs};
+pub use trust::{
+    generate as trust_generate, list as trust_list, TrustGenerateArgs, TrustListArgs,
+};
 
 use ledger_core::identity::Identity;
 use product_core::error::{ProductError, Result};

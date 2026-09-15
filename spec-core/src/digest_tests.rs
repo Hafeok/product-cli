@@ -13,6 +13,7 @@ fn fixed_closure(kind: ClosureKind, dets: &[&str]) -> Closure {
             .expect("fixed timestamp parses"),
         determinations: dets.iter().map(|s| (*s).to_string()).collect(),
         binds: String::new(),
+        signature: None,
     }
 }
 

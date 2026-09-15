@@ -91,6 +91,44 @@ public class ImporterTests
     }
 
     [Fact]
+    public void Slice_and_realises_fact_attributes_are_scanned_as_claims()
+    {
+        using var fixture = new ImportFixture();
+        var inventory = Importer.Scan(fixture.Root);
+
+        Assert.Contains(inventory.Claims,
+            c => c.Kind is "slice" && c.Value is "checkout-totals"
+                 && c.Symbol is "Shop.Domain.Settlement");
+        Assert.Contains(inventory.Claims,
+            c => c.Kind is "realises-fact" && c.Value is "det/basket-rounding-is-half-even"
+                 && c.Symbol is "Shop.Domain.Settlement.Round");
+    }
+
+    [Fact]
+    public void An_attribute_this_tool_does_not_know_is_not_a_claim()
+    {
+        using var fixture = new ImportFixture();
+        var inventory = Importer.Scan(fixture.Root);
+
+        // The fixture is full of [HttpPost], [ApiController] and friends.
+        Assert.All(inventory.Claims, c => Assert.Contains(c.Kind, new[] { "slice", "realises-fact" }));
+    }
+
+    [Fact]
+    public void An_attribute_with_no_argument_claims_nothing()
+    {
+        using var fixture = new ImportFixture();
+        fixture.Upsert("src/Bare.cs", """
+            namespace Shop.Domain;
+            [Slice]
+            public class Bare { }
+            """);
+        var inventory = Importer.Scan(fixture.Root);
+
+        Assert.DoesNotContain(inventory.Claims, c => c.Symbol is "Shop.Domain.Bare");
+    }
+
+    [Fact]
     public void An_unchanged_codebase_scans_byte_identically()
     {
         using var fixture = new ImportFixture();

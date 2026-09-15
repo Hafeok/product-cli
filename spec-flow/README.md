@@ -172,6 +172,7 @@ refusals along the way: a machine cannot ratify, a machine cannot close,
   matching executor identities, and ids assigned later do not repair earlier
   checkpoints. `ExecutorIds` holds logical-role constants for this reason; keep
   request and conversation ids out of them.
-- **No signing.** `S002` establishes that the named principal does not *look*
-  like a machine. It does not establish that the named human closed it. See
-  §5 of `docs/spec-flow-store-v1.md`.
+- **Signing says a key holder acted, not that the human did.** Custody,
+  rotation and revocation are not modelled in v1, and the ledger's own
+  `Acceptance.signature` is still empty at L0. See §4e of
+  `docs/spec-flow-store-v1.md`.

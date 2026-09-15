@@ -86,4 +86,55 @@ step "close — a principal declares that nothing arose"
 step "check — green"
 "$SPEC" --root "$WORK" check --ci || fail "the store should be conformant"
 
+# ---------------------------------------------------------------------------
+# Signing. Off until a key is filed; on for the whole repo once one is; and
+# adopting it does not invalidate the history nobody could have signed.
+# ---------------------------------------------------------------------------
+KEYS="$(mktemp -d)"
+trap 'rm -rf "$KEYS"' EXIT
+
+step "trust list — signing is off"
+"$SPEC" --root "$WORK" trust list | head -1
+
+step "a secret key inside the repo is refused"
+"$SPEC" --root "$WORK" trust generate --id inside --principal emil@example.com \
+  --out "$WORK/secret.key" && fail "a key inside the repo must be refused"
+
+step "adopt signing"
+"$SPEC" --root "$WORK" trust generate --id emil-2026 --principal emil@example.com \
+  --out "$KEYS/emil-2026.key" | head -1
+
+step "check — the pre-adoption history is graced"
+"$SPEC" --root "$WORK" check --ci || fail "adopting signing must not invalidate the past"
+
+step "implement again, then close unsigned — refused"
+set +e
+echo "-" | dotnet run --project "$HOST" -- implement \
+  --slice refund-totals --act act/settle-a-basket \
+  --root "$WORK" --spec "$SPEC" > "$WORK/implement2.log"
+set -e
+RECORD2="$("$SPEC" --root "$WORK" records --open --json \
+  | python3 -c 'import sys,json; print(json.load(sys.stdin)[0]["record"])')"
+"$SPEC" --root "$WORK" close "$RECORD2" --principal emil@example.com --nothing-arose \
+  && fail "an unsigned close must be refused once signing is on"
+
+step "close with the key — signed"
+"$SPEC" --root "$WORK" close "$RECORD2" --principal emil@example.com --nothing-arose \
+  --key-file "$KEYS/emil-2026.key"
+
+step "check — green, signed"
+"$SPEC" --root "$WORK" check --ci || fail "the signed store should be conformant"
+
+step "tampering with a signed record breaks its signature"
+sed -i 's/slice: refund-totals/slice: tampered/' "$WORK/.spec/records/$RECORD2.yml"
+# `check` exits 1 on findings, and `pipefail` would read that as the pipeline
+# failing — so capture first, then look.
+set +e
+TAMPER_REPORT="$("$SPEC" --root "$WORK" check --ci)"
+set -e
+case "$TAMPER_REPORT" in
+  *S015*) printf '%s\n' "$TAMPER_REPORT" ;;
+  *) fail "S015 should catch the tamper, got: $TAMPER_REPORT" ;;
+esac
+
 printf '\nOK — the flow held end to end at %s\n' "$WORK"

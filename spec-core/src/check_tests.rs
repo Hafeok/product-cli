@@ -11,6 +11,7 @@ fn closed_with(principal: &str, kind: ClosureKind, dets: &[&str]) -> ActRecord {
         at: Utc::now(),
         determinations: dets.iter().map(|s| (*s).to_string()).collect(),
         binds: String::new(),
+        signature: None,
     };
     closure.binds = closure_digest(&record.computed_binds(), &closure);
     record.closure = Some(closure);

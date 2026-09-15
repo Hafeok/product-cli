@@ -6,6 +6,11 @@ use crate::record::tests::opening;
 const SETTLE: &str = "Shop.Api.BasketController.Settle#HttpPost";
 const SETTLE_CANDIDATE: &str = "cand/shop-api-basketcontroller-settle-httppost";
 
+/// An unsigned refusal, for the signing tests next door.
+pub(crate) fn unsigned_rejection() -> Rejection {
+    rejection(SETTLE_CANDIDATE)
+}
+
 fn rejection(candidate: &str) -> Rejection {
     let mut refused = Rejection {
         form: crate::act::REJECTION_FORM.into(),
@@ -14,6 +19,7 @@ fn rejection(candidate: &str) -> Rejection {
         principal: "emil@example.com".parse().expect("identity parses"),
         at: chrono::Utc::now(),
         binds: String::new(),
+        signature: None,
     };
     refused.binds = refused.computed_binds();
     refused
@@ -121,6 +127,70 @@ fn ratifying_a_candidate_marks_it_reviewed() {
     ratified.binds = ratified.computed_binds();
     let store = store_with(vec![ratified], Vec::new());
     assert!(!store.is_unreviewed(SETTLE_CANDIDATE));
+}
+
+fn with_closure(slice: &str, determinations: &[&str]) -> ActRecord {
+    let mut record_opening = opening(slice);
+    record_opening.act_ref = "act/settle-basket".into();
+    let mut record = ActRecord::open(record_opening);
+    let mut closure = crate::Closure {
+        kind: if determinations.is_empty() {
+            crate::ClosureKind::NothingArose
+        } else {
+            crate::ClosureKind::Determinations
+        },
+        principal: "emil@example.com".parse().expect("identity parses"),
+        at: chrono::Utc::now(),
+        determinations: determinations.iter().map(|d| (*d).to_string()).collect(),
+        binds: String::new(),
+        signature: None,
+    };
+    closure.binds = crate::digest::closure_digest(&record.computed_binds(), &closure);
+    record.closure = Some(closure);
+    record
+}
+
+#[test]
+fn s012_a_slice_attribute_naming_nothing_declared_is_an_orphan() {
+    let store = store_with(Vec::new(), Vec::new());
+    let classes = classes(&judge_claims(&store));
+    assert!(classes.contains(&Class::S012), "{classes:?}");
+}
+
+#[test]
+fn a_slice_attribute_resolves_once_a_record_declares_that_slice() {
+    let mut store = store_with(Vec::new(), Vec::new());
+    store.records = vec![ActRecord::open(opening("checkout-totals"))];
+    assert!(!classes(&judge_claims(&store)).contains(&Class::S012));
+}
+
+#[test]
+fn s013_a_realises_fact_attribute_no_closure_filed_is_an_orphan() {
+    let mut store = store_with(Vec::new(), Vec::new());
+    store.records = vec![ActRecord::open(opening("checkout-totals"))];
+    let classes = classes(&judge_claims(&store));
+    assert!(classes.contains(&Class::S013), "{classes:?}");
+}
+
+#[test]
+fn a_realises_fact_attribute_resolves_once_a_closure_files_it() {
+    let mut store = store_with(Vec::new(), Vec::new());
+    store.records = vec![with_closure("checkout-totals", &["det/basket-rounding-is-half-even"])];
+    let found = classes(&judge_claims(&store));
+    assert!(found.is_empty(), "{found:?}");
+}
+
+#[test]
+fn a_determination_a_closure_did_not_file_stays_an_orphan() {
+    let mut store = store_with(Vec::new(), Vec::new());
+    store.records = vec![with_closure("checkout-totals", &["det/something-else"])];
+    assert!(classes(&judge_claims(&store)).contains(&Class::S013));
+}
+
+#[test]
+fn claims_are_not_judged_without_an_inventory() {
+    let store = SpecStore { records: vec![ActRecord::open(opening("x"))], ..SpecStore::default() };
+    assert!(judge_claims(&store).is_empty());
 }
 
 #[test]

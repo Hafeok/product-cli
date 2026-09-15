@@ -43,6 +43,20 @@ pub struct EntryPoint {
     pub line: u32,
 }
 
+/// A claim code makes about the specification.
+///
+/// `slice` says this code is part of a slice built against the spec;
+/// `realises-fact` says it realises a determination someone filed. Both are
+/// references, and a reference to something that does not exist is broken.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SpecClaim {
+    pub kind: String,
+    pub value: String,
+    pub symbol: String,
+    pub file: String,
+    pub line: u32,
+}
+
 /// An entry point with the slots ratification must fill.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Candidate {
@@ -69,6 +83,8 @@ pub struct Inventory {
     pub entry_points: Vec<EntryPoint>,
     #[serde(default)]
     pub candidates: Vec<Candidate>,
+    #[serde(default)]
+    pub claims: Vec<SpecClaim>,
 }
 
 impl Inventory {
@@ -101,6 +117,11 @@ impl Inventory {
     /// Look one entry point up by id.
     pub fn entry_point(&self, id: &str) -> Option<&EntryPoint> {
         self.entry_points.iter().find(|e| e.id == id)
+    }
+
+    /// Every claim of one kind.
+    pub fn claims_of(&self, kind: &str) -> Vec<&SpecClaim> {
+        self.claims.iter().filter(|c| c.kind == kind).collect()
     }
 
     /// The symbols a given file declares, for showing an act its realisation.

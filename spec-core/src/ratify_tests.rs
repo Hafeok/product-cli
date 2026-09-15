@@ -29,7 +29,7 @@ fn refusal(principal: &str) -> Refusal {
 #[test]
 fn a_principal_ratifies_and_it_reads_back() {
     let dir = repo();
-    let Ratified::Filed(act) = accept(dir.path(), ratification("emil@example.com")).expect("accept")
+    let Ratified::Filed(act) = accept(dir.path(), ratification("emil@example.com"), None).expect("accept")
     else {
         panic!("a well-formed ratification files");
     };
@@ -42,7 +42,7 @@ fn a_principal_ratifies_and_it_reads_back() {
 #[test]
 fn a_machine_cannot_ratify() {
     let dir = repo();
-    let Ratified::Refused(findings) = accept(dir.path(), ratification("ci@example.com"))
+    let Ratified::Refused(findings) = accept(dir.path(), ratification("ci@example.com"), None)
         .expect("the gate answers rather than erroring")
     else {
         panic!("a machine must not ratify");
@@ -54,15 +54,15 @@ fn a_machine_cannot_ratify() {
 #[test]
 fn ratifying_twice_refuses_rather_than_overwriting() {
     let dir = repo();
-    accept(dir.path(), ratification("emil@example.com")).expect("first");
-    let err = accept(dir.path(), ratification("emil@example.com")).expect_err("second");
+    accept(dir.path(), ratification("emil@example.com"), None).expect("first");
+    let err = accept(dir.path(), ratification("emil@example.com"), None).expect_err("second");
     assert!(err.to_string().contains("already ratified"), "{err}");
 }
 
 #[test]
 fn a_principal_refuses_and_the_reason_is_filed() {
     let dir = repo();
-    let Refused::Filed(rejection) = reject(dir.path(), refusal("emil@example.com")).expect("reject")
+    let Refused::Filed(rejection) = reject(dir.path(), refusal("emil@example.com"), None).expect("reject")
     else {
         panic!("a well-formed refusal files");
     };
@@ -73,7 +73,7 @@ fn a_principal_refuses_and_the_reason_is_filed() {
 #[test]
 fn a_machine_cannot_refuse() {
     let dir = repo();
-    let Refused::Blocked(findings) = reject(dir.path(), refusal("dependabot@example.com"))
+    let Refused::Blocked(findings) = reject(dir.path(), refusal("dependabot@example.com"), None)
         .expect("the gate answers rather than erroring")
     else {
         panic!("a machine must not refuse");
@@ -85,8 +85,8 @@ fn a_machine_cannot_refuse() {
 #[test]
 fn refusing_twice_refuses_rather_than_overwriting() {
     let dir = repo();
-    reject(dir.path(), refusal("emil@example.com")).expect("first");
-    let err = reject(dir.path(), refusal("emil@example.com")).expect_err("second");
+    reject(dir.path(), refusal("emil@example.com"), None).expect("first");
+    let err = reject(dir.path(), refusal("emil@example.com"), None).expect_err("second");
     assert!(err.to_string().contains("already refused"), "{err}");
 }
 

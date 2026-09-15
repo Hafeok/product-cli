@@ -13,6 +13,7 @@ pub(crate) fn act(id: &str, entry_points: &[&str]) -> Act {
             .expect("fixed timestamp"),
         from_candidate: Some("cand/x".into()),
         binds: String::new(),
+        signature: None,
     };
     built.binds = built.computed_binds();
     built
@@ -67,6 +68,7 @@ fn a_rejection_seals_its_reason() {
         principal: "emil@example.com".parse().expect("identity parses"),
         at: Utc::now(),
         binds: String::new(),
+        signature: None,
     };
     refused.binds = refused.computed_binds();
     assert_eq!(refused.binds, refused.computed_binds());

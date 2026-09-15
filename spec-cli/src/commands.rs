@@ -32,6 +32,18 @@ pub enum Commands {
     Records(verbs::RecordsArgs),
     /// Refuse a candidate, filing the reason. Names a principal.
     Reject(verbs::RejectArgs),
+    /// Trusted signing keys.
+    #[command(subcommand)]
+    Trust(TrustCommands),
+}
+
+/// The trust family.
+#[derive(Subcommand)]
+pub enum TrustCommands {
+    /// Generate a keypair, trust the public half, write the secret outside the repo.
+    Generate(verbs::TrustGenerateArgs),
+    /// List trusted keys.
+    List(verbs::TrustListArgs),
 }
 
 /// The policy family.
@@ -56,6 +68,8 @@ pub fn run(command: Commands, root: &Path) -> i32 {
         Commands::Policy(PolicyCommands::Show(args)) => verbs::policy_show(root, &args),
         Commands::Records(args) => verbs::records(root, &args),
         Commands::Reject(args) => verbs::reject(root, &args),
+        Commands::Trust(TrustCommands::Generate(args)) => verbs::trust_generate(root, &args),
+        Commands::Trust(TrustCommands::List(args)) => verbs::trust_list(root, &args),
     };
     match outcome {
         Ok(report) => {

@@ -43,6 +43,10 @@ pub struct AcceptArgs {
     /// Who answers for the ratification. Defaults to the git identity.
     #[arg(long)]
     pub principal: Option<String>,
+    /// The signing key, when this repo trusts keys. Falls back to
+    /// `SPEC_SIGNING_KEY`.
+    #[arg(long)]
+    pub key_file: Option<std::path::PathBuf>,
     #[arg(long)]
     pub json: bool,
 }
@@ -58,6 +62,10 @@ pub struct RejectArgs {
     /// Who answers for the refusal. Defaults to the git identity.
     #[arg(long)]
     pub principal: Option<String>,
+    /// The signing key, when this repo trusts keys. Falls back to
+    /// `SPEC_SIGNING_KEY`.
+    #[arg(long)]
+    pub key_file: Option<std::path::PathBuf>,
     #[arg(long)]
     pub json: bool,
 }
@@ -114,7 +122,8 @@ pub fn accept(root: &Path, args: &AcceptArgs) -> Result<Report> {
     };
     let act_id = ratification.act_id.clone();
 
-    match ratify::accept(root, ratification)? {
+    let signer = crate::verbs::trust::signing_key(args.key_file.as_deref())?;
+    match ratify::accept(root, ratification, signer.as_ref())? {
         Ratified::Refused(findings) => {
             Ok(crate::render::refusal(&act_id, "ratify", &findings, args.json))
         }
@@ -146,7 +155,8 @@ pub fn reject(root: &Path, args: &RejectArgs) -> Result<Report> {
         principal: resolve_identity(root, args.principal.as_deref())?,
         at: Utc::now(),
     };
-    match ratify::reject(root, refusal)? {
+    let signer = crate::verbs::trust::signing_key(args.key_file.as_deref())?;
+    match ratify::reject(root, refusal, signer.as_ref())? {
         Refused::Blocked(findings) => {
             Ok(crate::render::refusal(&args.candidate, "refuse", &findings, args.json))
         }

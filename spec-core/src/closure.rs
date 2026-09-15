@@ -44,6 +44,13 @@ pub struct Closure {
     pub determinations: Vec<String>,
     /// Digest binding this closure to the exact opening it discharges.
     pub binds: String,
+    /// Signature over [`Self::binds`], hex. Required once the repo carries a
+    /// trust root; absent before that.
+    ///
+    /// Outside the digest on purpose: a signature over a hash cannot be part
+    /// of the hash it signs.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub signature: Option<String>,
 }
 
 impl Closure {

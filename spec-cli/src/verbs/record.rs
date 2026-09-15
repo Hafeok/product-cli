@@ -47,6 +47,10 @@ pub struct CloseArgs {
     /// not an absence — silence closes nothing.
     #[arg(long)]
     pub nothing_arose: bool,
+    /// The signing key, when this repo trusts keys. Falls back to
+    /// `SPEC_SIGNING_KEY`.
+    #[arg(long)]
+    pub key_file: Option<std::path::PathBuf>,
     #[arg(long)]
     pub json: bool,
 }
@@ -97,7 +101,8 @@ pub fn close(root: &Path, args: &CloseArgs) -> Result<Report> {
         at: Utc::now(),
         determinations: args.determinations.clone(),
     };
-    match store::close(root, &args.id, closing)? {
+    let signer = crate::verbs::trust::signing_key(args.key_file.as_deref())?;
+    match store::close(root, &args.id, closing, signer.as_ref())? {
         store::Closed::Refused(findings) => {
             Ok(crate::render::refusal(&args.id, "close", &findings, args.json))
         }

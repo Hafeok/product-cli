@@ -65,7 +65,11 @@ pub enum Refused {
 }
 
 /// Ratify a candidate as an act.
-pub fn accept(repo_root: &Path, ratification: Ratification) -> Result<Ratified> {
+pub fn accept(
+    repo_root: &Path,
+    ratification: Ratification,
+    signer: Option<&ed25519_dalek::SigningKey>,
+) -> Result<Ratified> {
     let path = acts_dir(repo_root).join(format!("{}.yml", slug(&ratification.act_id)));
     if path.exists() {
         return Err(ProductError::ConfigError(format!(
@@ -84,10 +88,20 @@ pub fn accept(repo_root: &Path, ratification: Ratification) -> Result<Ratified> 
         ratified_at: ratification.at,
         from_candidate: ratification.from_candidate,
         binds: String::new(),
+        signature: None,
     };
     act.binds = act.computed_binds();
+    act.signature = crate::signing::sign_if_keyed(&act.binds, signer);
 
-    let findings = crate::gate::judge_act(&act);
+    let trust = crate::signing::load_trust(repo_root)?;
+    let mut findings = crate::gate::judge_act(&act);
+    findings.extend(crate::gate::judge_signature(
+        &act.id,
+        &act.binds,
+        &act.ratified_by,
+        act.signature.as_deref(),
+        &trust,
+    ));
     if !findings.is_empty() {
         return Ok(Ratified::Refused(findings));
     }
@@ -96,7 +110,11 @@ pub fn accept(repo_root: &Path, ratification: Ratification) -> Result<Ratified> 
 }
 
 /// Refuse a candidate, filing the reason.
-pub fn reject(repo_root: &Path, refusal: Refusal) -> Result<Refused> {
+pub fn reject(
+    repo_root: &Path,
+    refusal: Refusal,
+    signer: Option<&ed25519_dalek::SigningKey>,
+) -> Result<Refused> {
     let path = rejections_dir(repo_root).join(format!("{}.yml", slug(&refusal.candidate)));
     if path.exists() {
         return Err(ProductError::ConfigError(format!(
@@ -112,10 +130,20 @@ pub fn reject(repo_root: &Path, refusal: Refusal) -> Result<Refused> {
         principal: refusal.principal,
         at: refusal.at,
         binds: String::new(),
+        signature: None,
     };
     rejection.binds = rejection.computed_binds();
+    rejection.signature = crate::signing::sign_if_keyed(&rejection.binds, signer);
 
-    let findings = crate::gate::judge_rejection(&rejection);
+    let trust = crate::signing::load_trust(repo_root)?;
+    let mut findings = crate::gate::judge_rejection(&rejection);
+    findings.extend(crate::gate::judge_signature(
+        &rejection.candidate,
+        &rejection.binds,
+        &rejection.principal,
+        rejection.signature.as_deref(),
+        &trust,
+    ));
     if !findings.is_empty() {
         return Ok(Refused::Blocked(findings));
     }

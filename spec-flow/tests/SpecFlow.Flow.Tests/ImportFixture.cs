@@ -30,6 +30,20 @@ public sealed class ImportFixture : IDisposable
             }
             """);
 
+        Write("src/Settlement.cs", """
+            namespace Shop.Domain;
+
+            [Slice("checkout-totals")]
+            public class Settlement
+            {
+                [RealisesFact("det/basket-rounding-is-half-even")]
+                public Money Round(Money m) => m;
+
+                [RealisesFact("det/nobody-filed-this")]
+                public void Orphaned() { }
+            }
+            """);
+
         Write("src/Money.cs", """
             namespace Shop.Domain;
 
